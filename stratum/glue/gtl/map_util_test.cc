@@ -10,20 +10,20 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/node_hash_set.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/container/node_hash_map.h"
-#include "stratum/glue/logging.h"
+#include "absl/container/node_hash_set.h"
 #include "gtest/gtest.h"
-
-using std::string;
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
+namespace gtl {
+namespace {
 
 TEST(MapUtil, Find) {
-  typedef std::map<string, string> Map;
+  typedef std::map<std::string, std::string> Map;
   Map m;
 
   // Check that I can use a type that's implicitly convertible to the
@@ -32,13 +32,13 @@ TEST(MapUtil, Find) {
   m["foo"] = "bar";
   EXPECT_EQ("bar", gtl::FindWithDefault(m, "foo", ""));
   EXPECT_EQ("bar", *gtl::FindOrNull(m, "foo"));
-  string str;
+  std::string str;
   EXPECT_GT(m.count("foo"), 0);
   EXPECT_EQ(m["foo"], "bar");
 }
 
 TEST(MapUtil, LookupOrInsert) {
-  typedef std::map<string, string> Map;
+  typedef std::map<std::string, std::string> Map;
   Map m;
 
   // Check that I can use a type that's implicitly convertible to the
@@ -58,7 +58,7 @@ TEST(MapUtil, InsertIfNotPresent) {
 }
 
 TEST(MapUtil, FindOrDie) {
-  std::map<string, int> map;
+  std::map<std::string, int> map;
   EXPECT_DEATH(gtl::FindOrDie(map, "foo"), "");
   gtl::InsertOrDie(&map, "foo", 5);
   auto val = gtl::FindOrDie(map, "foo");
@@ -72,9 +72,9 @@ class MapUtilSet : public ::testing::Test {
  public:
   T collection_;
 };
-using SetTypes = ::testing::Types<
-  std::set<int>, std::unordered_set<int>, ::absl::flat_hash_set<int>,
-  ::absl::node_hash_set<int>>;
+using SetTypes =
+    ::testing::Types<std::set<int>, std::unordered_set<int>,
+                     ::absl::flat_hash_set<int>, ::absl::node_hash_set<int>>;
 TYPED_TEST_SUITE(MapUtilSet, SetTypes);
 
 TYPED_TEST(MapUtilSet, ContainsKey) {
@@ -94,9 +94,10 @@ class MapUtilMap : public ::testing::Test {
  public:
   T collection_;
 };
-using MapTypes = ::testing::Types<
-  std::map<int, string>, std::unordered_map<int, string>,
-  ::absl::flat_hash_map<int, string>, ::absl::node_hash_map<int, string>>;
+using MapTypes = ::testing::Types<std::map<int, std::string>,
+                                  std::unordered_map<int, std::string>,
+                                  ::absl::flat_hash_map<int, std::string>,
+                                  ::absl::node_hash_map<int, std::string>>;
 TYPED_TEST_SUITE(MapUtilMap, MapTypes);
 
 TYPED_TEST(MapUtilMap, ContainsKey) {
@@ -111,4 +112,6 @@ TYPED_TEST(MapUtilMap, InsertOrDie) {
   EXPECT_DEATH(gtl::InsertOrDie(&this->collection_, 0, "foo"), "");
 }
 
+}  // namespace
+}  // namespace gtl
 }  // namespace stratum

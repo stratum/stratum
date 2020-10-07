@@ -1,12 +1,13 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -25,18 +26,18 @@ cc_library(
 
 cc_test(
     name = "map_util_test",
+    size = "small",
     srcs = ["map_util_test.cc"],
     deps = [
         ":map_util",
-        "@com_google_googletest//:gtest_main",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
-        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/container:node_hash_set",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:node_hash_map",
+        "@com_google_absl//absl/container:node_hash_set",
+        "@com_google_googletest//:gtest_main",
     ],
-    size="small",
 )
 
 cc_library(
@@ -57,7 +58,7 @@ cc_test(
     srcs = ["cleanup_test.cc"],
     deps = [
         ":cleanup",
-        "@com_google_googletest//:gtest_main",
         "//stratum/glue:integral_types",
+        "@com_google_googletest//:gtest_main",
     ],
 )

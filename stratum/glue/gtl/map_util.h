@@ -21,6 +21,7 @@ limitations under the License.
 #define STRATUM_GLUE_GTL_MAP_UTIL_H_
 
 #include <stddef.h>
+
 #include <iterator>
 #include <memory>
 #include <string>
@@ -34,9 +35,8 @@ namespace gtl {
 // Test to see if a set, map, hash_set or hash_map contains a particular key.
 // Returns true if the key is in the collection.
 template <class Collection>
-bool ContainsKey(
-    const Collection& collection,
-    const typename Collection::key_type& key) {
+bool ContainsKey(const Collection& collection,
+                 const typename Collection::key_type& key) {
   typename Collection::const_iterator it = collection.find(key);
   return it != collection.end();
 }
@@ -99,9 +99,9 @@ typename Collection::value_type::second_type FindPtrOrNull(
 // This version assumes the key is printable, and includes it in the fatal log
 // message.
 template <class Collection>
-const typename Collection::value_type::second_type&
-FindOrDie(const Collection& collection,
-          const typename Collection::value_type::first_type& key) {
+const typename Collection::value_type::second_type& FindOrDie(
+    const Collection& collection,
+    const typename Collection::value_type::first_type& key) {
   typename Collection::const_iterator it = collection.find(key);
   CHECK(it != collection.end()) << "Map key not found: " << key;
   return it->second;
@@ -109,9 +109,9 @@ FindOrDie(const Collection& collection,
 
 // Same as above, but returns a non-const reference.
 template <class Collection>
-typename Collection::value_type::second_type&
-FindOrDie(Collection& collection,  // NOLINT
-          const typename Collection::value_type::first_type& key) {
+typename Collection::value_type::second_type& FindOrDie(
+    Collection& collection,  // NOLINT
+    const typename Collection::value_type::first_type& key) {
   typename Collection::iterator it = collection.find(key);
   CHECK(it != collection.end()) << "Map key not found: " << key;
   return it->second;
