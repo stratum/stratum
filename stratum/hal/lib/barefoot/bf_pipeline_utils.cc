@@ -23,7 +23,7 @@ DEFINE_bool(incompatible_enable_p4_device_config_tar, false,
 
 namespace stratum {
 namespace {
-// Helper function to see in an archive can be read
+// Helper function to check if a binary string is a valid archive.
 bool IsArchive(const std::string& archive) {
   struct archive* a = archive_read_new();
   auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
