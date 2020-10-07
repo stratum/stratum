@@ -7,6 +7,7 @@
 #include <string>
 
 #include "absl/strings/strip.h"
+#include "gflags/gflags.h"
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
 #include "nlohmann/json.hpp"
@@ -15,6 +16,10 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
+
+DEFINE_bool(incompatible_enable_p4_device_config_tar, false,
+            "Enables support for p4_device_config as a tarball.");
+
 
 namespace stratum {
 namespace {
@@ -82,7 +87,8 @@ namespace barefoot {
   }
 
   // Format 2: p4_device_config is an archive of the compiler output.
-  if (IsArchive(config.p4_device_config())) {
+  if (FLAGS_incompatible_enable_p4_device_config_tar &&
+      IsArchive(config.p4_device_config())) {
     // Find <prog_name>.conf file.
     nlohmann::json conf;
     ASSIGN_OR_RETURN(auto conf_content,

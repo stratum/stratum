@@ -6,10 +6,13 @@
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 
 #include "absl/strings/escaping.h"
+#include "gflags/gflags.h"
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
+
+DECLARE_bool(incompatible_enable_p4_device_config_tar);
 
 namespace stratum {
 namespace hal {
@@ -183,11 +186,19 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
     std::string(my_pipe_tgz, sizeof(my_pipe_tgz)));
   *(p4_config.mutable_p4info()) = bf_config.programs()[0].p4info();
 
+  bool tar_flag = FLAGS_incompatible_enable_p4_device_config_tar;
+
   BfPipelineConfig extracted_bf_config;
+  FLAGS_incompatible_enable_p4_device_config_tar = false;
+  EXPECT_FALSE(ExtractBfPipelineConfig(p4_config, &extracted_bf_config).ok());
+
+  FLAGS_incompatible_enable_p4_device_config_tar = true;
   EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
   VLOG(1) << extracted_bf_config.DebugString();
 
   EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
+
+  FLAGS_incompatible_enable_p4_device_config_tar = tar_flag;
 }
 
 TEST(ExtractBfPipelineTest, RandomBytes) {

@@ -257,6 +257,38 @@ docker run --rm -v $PWD:$PWD stratumproject/stratum-bf-pipeline-builder:latest \
 The output goes into the `p4_device_config` field of the P4Runtime
 `ForwardingPipelineConfig` message as usual.
 
+### bf-p4c Archive Format
+
+You can enable a special archive format by passing the
+`-incompatible_enable_p4_device_config_tar` flag when starting Stratum.
+
+*Note: Support for this format may disappear at any time.*
+
+The format accepts a tar archive of the bf-p4c compiler output:
+
+```bash
+mkdir -p /tmp/p4out
+bf-p4c <options...> \
+  -o /tmp/p4out -I ${P4_SRC_DIR} \
+  --p4runtime-files /tmp/p4out/p4info.txt \
+  --p4runtime-force-std-externs \
+  ${P4_SRC_DIR}/my_prog.p4
+tar -czf "pipeline.tgz" -C "/tmp/p4out" .
+```
+
+The structure of the tar archive should look something like this:
+
+```bash
+$ tar -tf pipeline.tgz
+./
+./bfrt.json
+./my_prog.conf
+./p4info.txt
+./pipe/
+./pipe/context.json
+./pipe/tofino.bin
+```
+
 ## Using p4runtime-shell
 
 [p4runtime-shell](https://github.com/p4lang/p4runtime-shell) is an interactive
