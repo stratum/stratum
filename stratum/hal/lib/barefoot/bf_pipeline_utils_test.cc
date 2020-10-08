@@ -12,7 +12,6 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
 
-using gflags::FlagSaver;
 DECLARE_bool(incompatible_enable_p4_device_config_tar);
 
 namespace stratum {
@@ -188,7 +187,7 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
   *p4_config.mutable_p4info() = bf_config.programs(0).p4info();
 
   // Reverts FLAGS_incompatible_enable_p4_device_config_tar to default.
-  FlagSaver flag_saver_;
+  ::gflags::FlagSaver flag_saver_;
 
   BfPipelineConfig extracted_bf_config;
   FLAGS_incompatible_enable_p4_device_config_tar = false;
