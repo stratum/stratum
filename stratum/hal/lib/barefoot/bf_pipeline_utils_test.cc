@@ -19,7 +19,7 @@ namespace hal {
 namespace barefoot {
 
 static constexpr char bf_config_1pipe_str[] =
-   R"PROTO(device: 1
+   R"PROTO(
         programs {
             name: "prog1"
             bfrt: "{json: true}"
@@ -31,7 +31,7 @@ static constexpr char bf_config_1pipe_str[] =
         })PROTO";
 
 static constexpr char bf_config_2pipe_str[] =
-   R"PROTO(device: 1
+   R"PROTO(
         programs {
             name: "prog1"
             bfrt: "{json: true}"
@@ -48,7 +48,7 @@ static constexpr char bf_config_2pipe_str[] =
         })PROTO";
 
 static constexpr char bf_config_tar_str[] =
-   R"PROTO(device:1
+   R"PROTO(
         programs {
             name: "my_prog"
             bfrt: "{\"bfrt\": 1}"
