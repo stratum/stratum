@@ -59,7 +59,6 @@ static ::util::Status Main(int argc, char* argv[]) {
         << "Stratum only supports single devices.";
     // Only support single devices for now.
     const auto& device = conf["p4_devices"][0];
-    bf_config.set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
       auto p = bf_config.add_programs();
       p->set_name(program["program-name"]);

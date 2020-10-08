@@ -26,6 +26,5 @@ message BfPipelineConfig {
     repeated P4Pipeline pipelines = 4;
   }
 
-  int32 device = 1; // Zero-based device id.
-  repeated P4Program programs = 2;
+  repeated P4Program programs = 1;
 }
