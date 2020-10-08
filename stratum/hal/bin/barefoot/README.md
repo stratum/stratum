@@ -257,6 +257,15 @@ docker run --rm -v $PWD:$PWD stratumproject/stratum-bf-pipeline-builder:latest \
 The output goes into the `p4_device_config` field of the P4Runtime
 `ForwardingPipelineConfig` message as usual.
 
+To inspect a `BfPipelineConfig` message, the tool provides an unpacking mode,
+which recreates the original compiler output files:
+
+```bash
+bazel run //stratum/hal/bin/barefoot:bf_pipeline_builder -- \
+    -bf_pipeline_config_binary_file=$PWD/device_config.pb.bin \
+    -unpack_dir=$PWD
+```
+
 ### bf-p4c Archive Format
 
 You can enable a special archive format by passing the
