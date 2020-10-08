@@ -1,10 +1,6 @@
 // Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/security/credentials.h>
-#include <grpcpp/security/tls_credentials_options.h>
-
 #include <csignal>
 #include <iostream>
 #include <memory>
@@ -15,6 +11,9 @@
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "grpcpp/security/credentials.h"
+#include "grpcpp/security/tls_credentials_options.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
