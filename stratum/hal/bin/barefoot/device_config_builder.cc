@@ -48,49 +48,42 @@ static ::util::Status Main(int argc, char* argv[]) {
 
   // Translate compiler output JSON conf to protobuf.
   // Taken from bfrt_node.cc
-  BfrtDeviceConfig bfrt_config;
+  BfP4PipelineConfig bf_pipeline_config;
   try {
     CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";
     // Only support single devices for now.
     const auto& device = conf["p4_devices"][0];
-    bfrt_config.set_device(device["device-id"]);
-    for (const auto& program : device["p4_programs"]) {
-      auto p = bfrt_config.add_programs();
-      p->set_name(program["program-name"]);
-      LOG(INFO) << "Found P4 program: " << p->name();
-      std::string bfrt_content;
-      RETURN_IF_ERROR(ReadFileToString(program["bfrt-config"], &bfrt_content));
-      p->set_bfrt(bfrt_content);
-      ::p4::config::v1::P4Info p4info;
-      RETURN_IF_ERROR(ReadProtoFromTextFile(
-          absl::StrCat(DirName(program["bfrt-config"]), "/p4info.txt"),
-          &p4info));
-      *p->mutable_p4info() = p4info;
-      for (const auto& pipeline : program["p4_pipelines"]) {
-        auto pipe = p->add_pipelines();
-        pipe->set_name(pipeline["p4_pipeline_name"]);
-        LOG(INFO) << "\tFound pipeline: " << pipe->name();
-        for (const auto& scope : pipeline["pipe_scope"]) {
-          pipe->add_scope(scope);
-        }
-        std::string context_content;
-        RETURN_IF_ERROR(
-            ReadFileToString(pipeline["context"], &context_content));
-        pipe->set_context(context_content);
-        std::string config_content;
-        RETURN_IF_ERROR(ReadFileToString(pipeline["config"], &config_content));
-        pipe->set_config(config_content);
+    CHECK_RETURN_IF_FALSE(device["p4_programs"].size() == 1)
+        << "BfP4PipelineConfig only supports single P4 programs.";
+    const auto& program = device["p4_programs"][0];
+    bf_pipeline_config.set_p4_name(program["program-name"]);
+    LOG(INFO) << "Found P4 program: " << bf_pipeline_config.p4_name();
+    std::string bfrt_content;
+    RETURN_IF_ERROR(ReadFileToString(program["bfrt-config"], &bfrt_content));
+    bf_pipeline_config.set_bfruntime_info(bfrt_content);
+    for (const auto& pipeline : program["p4_pipelines"]) {
+      auto pipe = bf_pipeline_config.add_profiles();
+      pipe->set_profile_name(pipeline["p4_pipeline_name"]);
+      LOG(INFO) << "\tFound pipeline: " << pipe->profile_name();
+      for (const auto& scope : pipeline["pipe_scope"]) {
+        pipe->add_pipe_scope(scope);
       }
+      std::string context_content;
+      RETURN_IF_ERROR(ReadFileToString(pipeline["context"], &context_content));
+      pipe->set_context(context_content);
+      std::string config_content;
+      RETURN_IF_ERROR(ReadFileToString(pipeline["config"], &config_content));
+      pipe->set_binary(config_content);
     }
   } catch (nlohmann::json::exception& e) {
     return MAKE_ERROR(ERR_INTERNAL) << e.what();
   }
 
-  RETURN_IF_ERROR(
-      WriteProtoToTextFile(bfrt_config, FLAGS_bfrt_device_config_text_file));
-  RETURN_IF_ERROR(
-      WriteProtoToBinFile(bfrt_config, FLAGS_bfrt_device_config_binary_file));
+  RETURN_IF_ERROR(WriteProtoToTextFile(bf_pipeline_config,
+                                       FLAGS_bfrt_device_config_text_file));
+  RETURN_IF_ERROR(WriteProtoToBinFile(bf_pipeline_config,
+                                      FLAGS_bfrt_device_config_binary_file));
 
   return ::util::OkStatus();
 }

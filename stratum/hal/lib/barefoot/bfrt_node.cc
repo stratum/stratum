@@ -102,12 +102,26 @@ BfrtNode::~BfrtNode() = default;
     cookie = config.cookie().cookie();
   }
 
-  // Try a parse of BfrtDeviceConfig.
+  // Try parsing as BfP4PipelineConfig.
   {
-    BfrtDeviceConfig device_config;
+    BfP4PipelineConfig pipeline_config;
     // The pipeline config is stored as raw bytes in the p4_device_config.
-    if (device_config.ParseFromString(config.p4_device_config())) {
-      bfrt_config_ = device_config;
+    if (pipeline_config.ParseFromString(config.p4_device_config())) {
+      VLOG(1) << "Pipeline is in BfP4PipelineConfig format.";
+      BfrtDeviceConfig bfrt_config;
+      auto program = bfrt_config.add_programs();
+      program->set_name(pipeline_config.p4_name());
+      program->set_bfrt(pipeline_config.bfruntime_info());
+      *program->mutable_p4info() = config.p4info();
+      for (const auto& profile : pipeline_config.profiles()) {
+        auto pipeline = program->add_pipelines();
+        pipeline->set_name(profile.profile_name());
+        pipeline->set_context(profile.context());
+        pipeline->set_config(profile.binary());
+        *pipeline->mutable_scope() = profile.pipe_scope();
+      }
+      bfrt_config_ = bfrt_config;
+      VLOG(2) << bfrt_config_.DebugString();
       return ::util::OkStatus();
     }
   }
@@ -129,7 +143,6 @@ BfrtNode::~BfrtNode() = default;
         << "Stratum only supports single devices.";
     // Only support single devices for now
     const auto& device = conf["p4_devices"][0];
-    bfrt_config.set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
       auto p = bfrt_config.add_programs();
       p->set_name(program["program-name"]);
@@ -170,7 +183,6 @@ BfrtNode::~BfrtNode() = default;
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(initialized_) << "Not initialized";
   CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
-  CHECK_RETURN_IF_FALSE(bfrt_config_.device() >= 0);
 
   if (pipeline_initialized_) {
     // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
