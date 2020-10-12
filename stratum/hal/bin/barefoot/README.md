@@ -267,6 +267,18 @@ HugePages_Surp:        0
 
 To enable them or allocate more, follow the steps from the [post install script](deb/postinst).
 
+### SDE Timeouts / DMA pool error / Multiple Stratum instances
+
+`ERROR: bf_sys_dma_pool_create failed(-1) for dev_id 0 pool BF_DMA_CPU_PKT_TRANSMIT_1_Pool`
+
+`2020-10-12 19:54:37.746013 BF_PORT ERROR - SDS: ERROR: sbus: INT : addr=17 : int_code=0000 : int_data=0000 : retval=0002ffff ***TIMEOUT***`
+
+These errors can occur if there are multiple Stratum instances running at the
+same time, which is absolutely not supported. Make sure there are no systemd or
+Docker managed instances running in the background.
+
+**If this happens, you have to reboot the device before attempting any further starts!**
+
 ### ONLP / BMC errors on Wedge100BF
 
 `07-24 23:10:16.072010 [x86_64_accton_wedge100bf_32x] ERROR: bmc_send_command(cat /sys/bus/i2c/drivers/com_e_driver/4-0033/temp2_input
