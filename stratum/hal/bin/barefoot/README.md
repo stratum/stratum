@@ -292,7 +292,6 @@ $ tar -tf pipeline.tgz
 ./
 ./bfrt.json
 ./my_prog.conf
-./p4info.txt
 ./pipe/
 ./pipe/context.json
 ./pipe/tofino.bin

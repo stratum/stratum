@@ -19,54 +19,39 @@ namespace hal {
 namespace barefoot {
 
 static constexpr char bf_config_1pipe_str[] = R"PROTO(
-  programs {
-    name: "prog1"
-    bfrt: "{json: true}"
-    pipelines {
-      name: "pipe1"
-      context: "{json: true}"
-      config: "<raw bin>"
-    }
+  p4_name: "prog1"
+  bfruntime_info: "{json: true}"
+  profiles {
+    profile_name: "pipe1"
+    context: "{json: true}"
+    binary: "<raw bin>"
   })PROTO";
 
 static constexpr char bf_config_2pipe_str[] = R"PROTO(
-  programs {
-    name: "prog1"
-    bfrt: "{json: true}"
-    pipelines {
-      name: "pipe1"
-      context: "{json: true}"
-      config: "<raw bin>"
-    }
-    pipelines {
-      name: "pipe2"
-      context: "{json: true}"
-      config: "<raw bin>"
-    }
+  p4_name: "prog1"
+  bfruntime_info: "{json: true}"
+  profiles {
+    profile_name: "pipe1"
+    context: "{json: true}"
+    binary: "<raw bin>"
+  }
+  profiles {
+    profile_name: "pipe2"
+    context: "{json: true}"
+    binary: "<raw bin>"
   })PROTO";
 
 static constexpr char bf_config_tar_str[] = R"PROTO(
-  programs {
-    name: "my_prog"
-    bfrt: "{\"bfrt\": 1}"
-    p4info {
-      actions {
-        preamble {
-          id: 3
-          name: "my_pipe.drop"
-          alias: "drop"
-        }
-      }
-    }
-    pipelines {
-      name: "pipe"
-      scope: 0
-      scope: 1
-      scope: 2
-      scope: 3
-      context: "{\"ctx\":2}"
-      config: "<bin data>"
-    }
+  p4_name: "my_prog"
+  bfruntime_info: "{\"bfrt\": 1}"
+  profiles {
+    profile_name: "pipe"
+    pipe_scope: 0
+    pipe_scope: 1
+    pipe_scope: 2
+    pipe_scope: 3
+    context: "{\"ctx\":2}"
+    binary: "<bin data>"
   })PROTO";
 
 TEST(ExtractBfPipelineTest, FromProto) {
@@ -180,7 +165,6 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
 
   ::p4::v1::ForwardingPipelineConfig p4_config;
   p4_config.set_p4_device_config(std::string(my_pipe_tgz, sizeof(my_pipe_tgz)));
-  *p4_config.mutable_p4info() = bf_config.programs(0).p4info();
 
   // Reverts FLAGS_incompatible_enable_p4_device_config_tar to default.
   ::gflags::FlagSaver flag_saver_;

@@ -54,30 +54,26 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
   std::string base_path(resolved_path);
   free(resolved_path);
 
-  for (const auto& program : bf_config.programs()) {
-    CHECK_RETURN_IF_FALSE(!program.name().empty());
-    LOG(INFO) << "Found P4 program: " << program.name();
-    RETURN_IF_ERROR(
-        RecursivelyCreateDir(absl::StrCat(base_path, "/", program.name())));
+  CHECK_RETURN_IF_FALSE(!bf_config.p4_name().empty());
+  LOG(INFO) << "Found P4 program: " << bf_config.p4_name();
+  RETURN_IF_ERROR(
+      RecursivelyCreateDir(absl::StrCat(base_path, "/", bf_config.p4_name())));
+  RETURN_IF_ERROR(WriteStringToFile(
+      bf_config.bfruntime_info(),
+      absl::StrCat(base_path, "/", bf_config.p4_name(), "/", "bfrt.json")));
+  for (const auto& profile : bf_config.profiles()) {
+    CHECK_RETURN_IF_FALSE(!profile.profile_name().empty());
+    LOG(INFO) << "\tFound profile: " << profile.profile_name();
+    RETURN_IF_ERROR(RecursivelyCreateDir(absl::StrCat(
+        base_path, "/", bf_config.p4_name(), "/", profile.profile_name())));
     RETURN_IF_ERROR(WriteStringToFile(
-        program.bfrt(),
-        absl::StrCat(base_path, "/", program.name(), "/", "bfrt.json")));
-    RETURN_IF_ERROR(WriteProtoToTextFile(
-        program.p4info(),
-        absl::StrCat(base_path, "/", program.name(), "/", "p4info.txt")));
-    for (const auto& pipeline : program.pipelines()) {
-      CHECK_RETURN_IF_FALSE(!pipeline.name().empty());
-      LOG(INFO) << "\tFound pipeline: " << pipeline.name();
-      RETURN_IF_ERROR(RecursivelyCreateDir(
-          absl::StrCat(base_path, "/", program.name(), "/", pipeline.name())));
-      RETURN_IF_ERROR(WriteStringToFile(
-          pipeline.context(),
-          absl::StrCat(base_path, "/", program.name(), "/", pipeline.name(),
-                       "/", "context.json")));
-      RETURN_IF_ERROR(WriteStringToFile(
-          pipeline.config(), absl::StrCat(base_path, "/", program.name(), "/",
-                                          pipeline.name(), "/", "tofino.bin")));
-    }
+        profile.context(),
+        absl::StrCat(base_path, "/", bf_config.p4_name(), "/",
+                     profile.profile_name(), "/", "context.json")));
+    RETURN_IF_ERROR(WriteStringToFile(
+        profile.binary(),
+        absl::StrCat(base_path, "/", bf_config.p4_name(), "/",
+                     profile.profile_name(), "/", "tofino.bin")));
   }
 
   return ::util::OkStatus();
@@ -113,33 +109,27 @@ static ::util::Status Main(int argc, char* argv[]) {
         << "Stratum only supports single devices.";
     // Only support single devices for now.
     const auto& device = conf["p4_devices"][0];
-    for (const auto& program : device["p4_programs"]) {
-      auto p = bf_config.add_programs();
-      p->set_name(program["program-name"]);
-      LOG(INFO) << "Found P4 program: " << p->name();
-      std::string bfrt_content;
-      RETURN_IF_ERROR(ReadFileToString(program["bfrt-config"], &bfrt_content));
-      p->set_bfrt(bfrt_content);
-      ::p4::config::v1::P4Info p4info;
-      RETURN_IF_ERROR(ReadProtoFromTextFile(
-          absl::StrCat(DirName(program["bfrt-config"]), "/p4info.txt"),
-          &p4info));
-      *p->mutable_p4info() = p4info;
-      for (const auto& pipeline : program["p4_pipelines"]) {
-        auto pipe = p->add_pipelines();
-        pipe->set_name(pipeline["p4_pipeline_name"]);
-        LOG(INFO) << "\tFound pipeline: " << pipe->name();
-        for (const auto& scope : pipeline["pipe_scope"]) {
-          pipe->add_scope(scope);
-        }
-        std::string context_content;
-        RETURN_IF_ERROR(
-            ReadFileToString(pipeline["context"], &context_content));
-        pipe->set_context(context_content);
-        std::string config_content;
-        RETURN_IF_ERROR(ReadFileToString(pipeline["config"], &config_content));
-        pipe->set_config(config_content);
+    CHECK_RETURN_IF_FALSE(device["p4_programs"].size() == 1)
+        << "BfPipelineConfig only supports single P4 programs.";
+    const auto& program = device["p4_programs"][0];
+    bf_config.set_p4_name(program["program-name"]);
+    LOG(INFO) << "Found P4 program: " << bf_config.p4_name();
+    std::string bfrt_content;
+    RETURN_IF_ERROR(ReadFileToString(program["bfrt-config"], &bfrt_content));
+    bf_config.set_bfruntime_info(bfrt_content);
+    for (const auto& pipeline : program["p4_pipelines"]) {
+      auto profile = bf_config.add_profiles();
+      profile->set_profile_name(pipeline["p4_pipeline_name"]);
+      LOG(INFO) << "\tFound pipeline: " << profile->profile_name();
+      for (const auto& scope : pipeline["pipe_scope"]) {
+        profile->add_pipe_scope(scope);
       }
+      std::string context_content;
+      RETURN_IF_ERROR(ReadFileToString(pipeline["context"], &context_content));
+      profile->set_context(context_content);
+      std::string config_content;
+      RETURN_IF_ERROR(ReadFileToString(pipeline["config"], &config_content));
+      profile->set_binary(config_content);
     }
   } catch (nlohmann::json::exception& e) {
     return MAKE_ERROR(ERR_INTERNAL) << e.what();

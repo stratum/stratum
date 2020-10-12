@@ -4,6 +4,7 @@
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 
 #include <arpa/inet.h>
+
 #include <string>
 
 #include "absl/strings/strip.h"
@@ -19,7 +20,6 @@
 
 DEFINE_bool(incompatible_enable_p4_device_config_tar, false,
             "Enables support for p4_device_config as a tarball.");
-
 
 namespace stratum {
 namespace hal {
@@ -90,7 +90,7 @@ std::string Uint32ToLeByteStream(uint32 val) {
     // Find <prog_name>.conf file.
     nlohmann::json conf;
     ASSIGN_OR_RETURN(auto conf_content,
-                    ExtractFromArchive(config.p4_device_config(), ".conf"));
+                     ExtractFromArchive(config.p4_device_config(), ".conf"));
     conf = nlohmann::json::parse(conf_content, nullptr, false);
     CHECK_RETURN_IF_FALSE(!conf.is_discarded()) << "Failed to parse .conf";
     VLOG(1) << ".conf content: " << conf.dump();
@@ -102,46 +102,36 @@ std::string Uint32ToLeByteStream(uint32 val) {
       // Only support single devices for now
       const auto& device = conf["p4_devices"][0];
       for (const auto& program : device["p4_programs"]) {
-      auto p = bf_config->add_programs();
-      // name
-      p->set_name(program["program-name"]);
-      // bfrt.json
-      ASSIGN_OR_RETURN(
-          auto bfrt_content,
-          ExtractFromArchive(config.p4_device_config(), "bfrt.json"));
-      p->set_bfrt(bfrt_content);
-      // p4info.txt
-      *p->mutable_p4info() = config.p4info();
-      ASSIGN_OR_RETURN(
-          auto p4info_content,
-          ExtractFromArchive(config.p4_device_config(), "p4info.txt"));
-      ::p4::config::v1::P4Info p4info_from_tar;
-      RETURN_IF_ERROR_WITH_APPEND(
-        ParseProtoFromString(p4info_content, &p4info_from_tar)) <<
-          "Invalid p4info.txt file";
-      CHECK_RETURN_IF_FALSE(ProtoEqual(p4info_from_tar, config.p4info())) <<
-          "P4Info from P4 ForwardingPipelineConfig and archive do not match";
-      // pipes
-      for (const auto& pipeline : program["p4_pipelines"]) {
-        auto pipe = p->add_pipelines();
-        // pipe name
-        pipe->set_name(pipeline["p4_pipeline_name"]);
-        // pipe scope
-        for (const auto& scope : pipeline["pipe_scope"]) {
-        pipe->add_scope(scope);
-        }
-        // pipe context.json
+        // p4 name
+        bf_config->set_p4_name(program["program-name"]);
+        // bfrt.json
         ASSIGN_OR_RETURN(
-            const auto context_content,
-            ExtractFromArchive(config.p4_device_config(),
-                            absl::StrCat(pipe->name(), "/context.json")));
-        pipe->set_context(context_content);
-        // pipe tofino.bin
-        ASSIGN_OR_RETURN(
-            const auto config_content,
-            ExtractFromArchive(config.p4_device_config(),
-                            absl::StrCat(pipe->name(), "/tofino.bin")));
-        pipe->set_config(config_content);
+            auto bfrt_content,
+            ExtractFromArchive(config.p4_device_config(), "bfrt.json"));
+        bf_config->set_bfruntime_info(bfrt_content);
+        // pipes
+        for (const auto& pipeline : program["p4_pipelines"]) {
+          auto profile = bf_config->add_profiles();
+          // profile name
+          profile->set_profile_name(pipeline["p4_pipeline_name"]);
+          // profile scope
+          for (const auto& scope : pipeline["pipe_scope"]) {
+            profile->add_pipe_scope(scope);
+          }
+          // profile context.json
+          ASSIGN_OR_RETURN(
+              const auto context_content,
+              ExtractFromArchive(
+                  config.p4_device_config(),
+                  absl::StrCat(profile->profile_name(), "/context.json")));
+          profile->set_context(context_content);
+          // profile tofino.bin
+          ASSIGN_OR_RETURN(
+              const auto config_content,
+              ExtractFromArchive(
+                  config.p4_device_config(),
+                  absl::StrCat(profile->profile_name(), "/tofino.bin")));
+          profile->set_binary(config_content);
         }
       }
       VLOG(2) << bf_config->DebugString();
@@ -159,23 +149,20 @@ std::string Uint32ToLeByteStream(uint32 val) {
   CHECK_RETURN_IF_FALSE(pi_node_config) << "null pointer.";
 
   // Validate restrictions.
-  CHECK_RETURN_IF_FALSE(bf_config.programs_size() == 1)
-      << "Only single program P4 configs are supported.";
-  const auto& program = bf_config.programs(0);
-  CHECK_RETURN_IF_FALSE(program.pipelines_size() == 1)
+  CHECK_RETURN_IF_FALSE(bf_config.profiles_size() == 1)
       << "Only single pipeline P4 configs are supported.";
-  const auto& pipeline = program.pipelines(0);
+  const auto& profile = bf_config.profiles(0);
 
   pi_node_config->clear();
   // Program name
-  pi_node_config->append(Uint32ToLeByteStream(program.name().size()));
-  pi_node_config->append(program.name());
+  pi_node_config->append(Uint32ToLeByteStream(bf_config.p4_name().size()));
+  pi_node_config->append(bf_config.p4_name());
   // Tofino bin
-  pi_node_config->append(Uint32ToLeByteStream(pipeline.config().size()));
-  pi_node_config->append(pipeline.config());
+  pi_node_config->append(Uint32ToLeByteStream(profile.binary().size()));
+  pi_node_config->append(profile.binary());
   // Context json
-  pi_node_config->append(Uint32ToLeByteStream(pipeline.context().size()));
-  pi_node_config->append(pipeline.context());
+  pi_node_config->append(Uint32ToLeByteStream(profile.context().size()));
+  pi_node_config->append(profile.context());
   VLOG(1) << "First 16 bytes of converted PI node config: "
           << StringToHex(pi_node_config->substr(0, 16));
 
