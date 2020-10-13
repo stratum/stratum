@@ -99,7 +99,7 @@ std::string Uint32ToLeByteStream(uint32 val) {
     try {
       CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
           << "Stratum only supports single devices.";
-      // Only support single devices for now
+      // Only support single devices for now.
       const auto& device = conf["p4_devices"][0];
       for (const auto& program : device["p4_programs"]) {
         // p4 name
