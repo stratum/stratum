@@ -11,13 +11,14 @@ namespace gtl {
 
 class source_location {
  public:
-    source_location(const std::string file, const int line) : file_(file),
-      line_(line) {}
-    std::string file_name() const { return file_; }
-    int line() const { return line_; }
+  source_location(const std::string file, const int line)
+      : file_(file), line_(line) {}
+  std::string file_name() const { return file_; }
+  int line() const { return line_; }
+
  private:
-    const std::string file_;
-    const int         line_;
+  const std::string file_;
+  const int line_;
 };
 
 }  // namespace gtl
