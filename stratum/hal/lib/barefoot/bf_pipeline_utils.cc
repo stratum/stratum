@@ -93,7 +93,7 @@ std::string Uint32ToLeByteStream(uint32 val) {
                      ExtractFromArchive(config.p4_device_config(), ".conf"));
     conf = nlohmann::json::parse(conf_content, nullptr, false);
     CHECK_RETURN_IF_FALSE(!conf.is_discarded()) << "Failed to parse .conf";
-    VLOG(1) << ".conf content: " << conf.dump();
+    VLOG(2) << ".conf content: " << conf.dump();
 
     // Translate JSON conf to protobuf.
     try {
@@ -163,7 +163,7 @@ std::string Uint32ToLeByteStream(uint32 val) {
   // Context json
   pi_node_config->append(Uint32ToLeByteStream(profile.context().size()));
   pi_node_config->append(profile.context());
-  VLOG(1) << "First 16 bytes of converted PI node config: "
+  VLOG(2) << "First 16 bytes of converted PI node config: "
           << StringToHex(pi_node_config->substr(0, 16));
 
   return util::OkStatus();
