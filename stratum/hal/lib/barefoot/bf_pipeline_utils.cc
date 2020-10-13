@@ -62,7 +62,7 @@ bool IsArchive(const std::string& archive) {
       return content;
     }
   }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
+  RETURN_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
 }
 
 // Helper function to convert a uint32 to a little-endian byte string.
@@ -137,11 +137,11 @@ std::string Uint32ToLeByteStream(uint32 val) {
       VLOG(2) << bf_config->DebugString();
       return util::OkStatus();
     } catch (nlohmann::json::exception& e) {
-      return MAKE_ERROR(ERR_INTERNAL) << e.what();
+      RETURN_ERROR(ERR_INTERNAL) << e.what();
     }
   }
 
-  return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown format for p4_device_config";
+  RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown format for p4_device_config";
 }
 
 ::util::Status BfPipelineConfigToPiConfig(const BfPipelineConfig& bf_config,
