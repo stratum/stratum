@@ -54,44 +54,39 @@ static constexpr char bf_config_tar_str[] = R"PROTO(
     binary: "<bin data>"
   })PROTO";
 
-TEST(ExtractBfPipelineTest, FromProto) {
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProtoSuccess) {
   BfPipelineConfig bf_config;
   ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
-
-  std::string bf_config_bytes;
-  ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
-
   ::p4::v1::ForwardingPipelineConfig p4_config;
-  p4_config.set_p4_device_config(bf_config_bytes);
-
+  {
+    std::string bf_config_bytes;
+    ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
+    p4_config.set_p4_device_config(bf_config_bytes);
+  }
   BfPipelineConfig extracted_bf_config;
   EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
-  VLOG(1) << extracted_bf_config.DebugString();
-
-  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config))
+      << "Expected: " << bf_config.ShortDebugString()
+      << ", got: " << extracted_bf_config.ShortDebugString();
 }
 
-TEST(ExtractBfPipelineTest, FromProto2Pipe) {
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProto2PipesSuccess) {
   BfPipelineConfig bf_config;
   ASSERT_OK(ParseProtoFromString(bf_config_2pipe_str, &bf_config));
-
-  std::string bf_config_bytes;
-  ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
-
   ::p4::v1::ForwardingPipelineConfig p4_config;
-  p4_config.set_p4_device_config(bf_config_bytes);
-
+  {
+    std::string bf_config_bytes;
+    ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
+    p4_config.set_p4_device_config(bf_config_bytes);
+  }
   BfPipelineConfig extracted_bf_config;
   EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
-  VLOG(1) << extracted_bf_config.DebugString();
-
-  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config))
+      << "Expected: " << bf_config.ShortDebugString()
+      << ", got: " << extracted_bf_config.ShortDebugString();
 }
 
-TEST(ExtractBfPipelineTest, FromTarGzip) {
-  BfPipelineConfig bf_config;
-  ASSERT_OK(ParseProtoFromString(bf_config_tar_str, &bf_config));
-
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromTarGzip) {
   // embedded my_pipe.tgz
   //
   //   Generated using:
@@ -163,6 +158,8 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
       "\x07\x19\x72\x23\xa2\x82\x3e\x42\x2e\x00\x00\x00\x00\x00\x00\x00"
       "\x00\x00\x00\xc0\x5c\xf9\x00\xbe\x32\xc5\x34\x00\x28\x00\x00";
 
+  BfPipelineConfig bf_config;
+  ASSERT_OK(ParseProtoFromString(bf_config_tar_str, &bf_config));
   ::p4::v1::ForwardingPipelineConfig p4_config;
   p4_config.set_p4_device_config(std::string(my_pipe_tgz, sizeof(my_pipe_tgz)));
 
@@ -175,12 +172,12 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
 
   FLAGS_incompatible_enable_p4_device_config_tar = true;
   EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
-  VLOG(1) << extracted_bf_config.DebugString();
-
-  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config))
+      << "Expected: " << bf_config.ShortDebugString()
+      << ", got: " << extracted_bf_config.ShortDebugString();
 }
 
-TEST(ExtractBfPipelineTest, RandomBytes) {
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromRandomBytesFail) {
   ::p4::v1::ForwardingPipelineConfig p4_config;
   p4_config.set_p4_device_config("<random vendor blob>");
 
@@ -188,27 +185,21 @@ TEST(ExtractBfPipelineTest, RandomBytes) {
   EXPECT_FALSE(ExtractBfPipelineConfig(p4_config, &extracted_bf_config).ok());
 }
 
-TEST(BfPipelineConvertTest, ToLegacyBfPiFormat) {
-  BfPipelineConfig bf_config;
-  ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
-
+TEST(BfPipelineConvertTest, BfPipelineConfigToLegacyBfPiConfigSuccess) {
   static constexpr char expected_bytes[] =
       "\x5\0\0\0prog1\x9\0\0\0<raw bin>\xc\0\0\0{json: true}";
-  // convert to a string, excluding the implict null terminator
-  std::string expected_config(expected_bytes, sizeof(expected_bytes) - 1);
-  VLOG(1) << absl::CHexEscape(expected_config);
-
+  BfPipelineConfig bf_config;
+  ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
   std::string extracted_config;
   EXPECT_OK(BfPipelineConfigToPiConfig(bf_config, &extracted_config));
-  VLOG(1) << absl::CHexEscape(extracted_config);
-
+  // Convert to a string, excluding the implicit null terminator.
+  std::string expected_config(expected_bytes, sizeof(expected_bytes) - 1);
   EXPECT_EQ(expected_config, extracted_config);
 }
 
-TEST(BfPipelineConvertTest, MultiPipeFail) {
+TEST(BfPipelineConvertTest, BfPipelineConfigToLegacyBfPiConfigMultiPipeFail) {
   BfPipelineConfig bf_config;
   ASSERT_OK(ParseProtoFromString(bf_config_2pipe_str, &bf_config));
-
   std::string extracted_config;
   EXPECT_FALSE(BfPipelineConfigToPiConfig(bf_config, &extracted_config).ok());
 }
