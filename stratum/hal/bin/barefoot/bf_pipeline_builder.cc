@@ -28,8 +28,8 @@ DEFINE_string(unpack_dir, "",
 namespace stratum {
 namespace hal {
 namespace barefoot {
-
 namespace {
+
 constexpr char kUsage[] =
     R"USAGE(usage: -p4c_conf_file=/path/to/bf-p4c/output/program.conf -bf_pipeline_config_binary_file=$PWD/bf-pipeline.pb.bin
 
@@ -78,9 +78,8 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
 
   return ::util::OkStatus();
 }
-}  // namespace
 
-static ::util::Status Main(int argc, char* argv[]) {
+::util::Status Main(int argc, char* argv[]) {
   ::gflags::SetUsageMessage(kUsage);
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
@@ -143,6 +142,7 @@ static ::util::Status Main(int argc, char* argv[]) {
   return ::util::OkStatus();
 }
 
+}  // namespace
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
