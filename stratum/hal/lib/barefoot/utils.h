@@ -16,7 +16,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/barefoot/bfrt.pb.h"
+#include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 
 namespace stratum {

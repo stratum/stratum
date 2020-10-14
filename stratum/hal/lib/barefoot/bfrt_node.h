@@ -13,7 +13,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/barefoot/bfrt.pb.h"
+#include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"

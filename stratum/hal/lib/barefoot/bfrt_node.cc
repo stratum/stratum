@@ -102,12 +102,12 @@ BfrtNode::~BfrtNode() = default;
     cookie = config.cookie().cookie();
   }
 
-  // Try parsing as BfP4PipelineConfig.
+  // Try parsing as BfPipelineConfig.
   {
-    BfP4PipelineConfig pipeline_config;
+    BfPipelineConfig pipeline_config;
     // The pipeline config is stored as raw bytes in the p4_device_config.
     if (pipeline_config.ParseFromString(config.p4_device_config())) {
-      VLOG(1) << "Pipeline is in BfP4PipelineConfig format.";
+      VLOG(1) << "Pipeline is in BfPipelineConfig format.";
       BfrtDeviceConfig bfrt_config;
       auto program = bfrt_config.add_programs();
       program->set_name(pipeline_config.p4_name());

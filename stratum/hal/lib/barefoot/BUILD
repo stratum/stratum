@@ -2,8 +2,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
@@ -22,8 +22,10 @@ stratum_cc_library(
     srcs = ["bf_switch.cc"],
     hdrs = ["bf_switch.h"],
     deps = [
+        ":bf_cc_proto",
         ":bf_chassis_manager",
         ":bf_pd_interface",
+        ":bf_pipeline_utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -190,6 +192,42 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "bf_pipeline_utils",
+    srcs = ["bf_pipeline_utils.cc"],
+    hdrs = ["bf_pipeline_utils.h"],
+    deps = [
+        ":bf_cc_proto",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue/gtl:cleanup",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/public/lib:error",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_libarchive_libarchive//:libarchive",
+        "@com_github_nlohmann_json//:json",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_test(
+    name = "bf_pipeline_utils_test",
+    srcs = ["bf_pipeline_utils_test.cc"],
+    deps = [
+        ":bf_pipeline_utils",
+        ":test_main",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
@@ -202,16 +240,16 @@ stratum_cc_library(
 )
 
 proto_library(
-    name = "bfrt_proto",
-    srcs = ["bfrt.proto"],
+    name = "bf_proto",
+    srcs = ["bf.proto"],
     deps = [
         "@com_github_p4lang_p4runtime//:p4info_proto",
     ],
 )
 
 cc_proto_library(
-    name = "bfrt_cc_proto",
-    deps = [":bfrt_proto"],
+    name = "bf_cc_proto",
+    deps = [":bf_proto"],
 )
 
 stratum_cc_library(
@@ -220,7 +258,7 @@ stratum_cc_library(
     hdrs = ["bfrt_node.h"],
     deps = [
         ":bfrt_action_profile_manager",
-        ":bfrt_cc_proto",
+        ":bf_cc_proto",
         ":bfrt_counter_manager",
         ":bfrt_id_mapper",
         ":bfrt_packetio_manager",
@@ -251,7 +289,7 @@ stratum_cc_library(
     srcs = ["bfrt_table_manager.cc"],
     hdrs = ["bfrt_table_manager.h"],
     deps = [
-        ":bfrt_cc_proto",
+        ":bf_cc_proto",
         ":bfrt_id_mapper",
         ":macros",
         ":utils",
@@ -284,7 +322,7 @@ stratum_cc_library(
     srcs = ["bfrt_id_mapper.cc"],
     hdrs = ["bfrt_id_mapper.h"],
     deps = [
-        ":bfrt_cc_proto",
+        ":bf_cc_proto",
         ":bfrt_constants",
         ":macros",
         "//stratum/glue:integral_types",
@@ -329,7 +367,7 @@ stratum_cc_library(
     srcs = ["bfrt_action_profile_manager.cc"],
     hdrs = ["bfrt_action_profile_manager.h"],
     deps = [
-        ":bfrt_cc_proto",
+        ":bf_cc_proto",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",
@@ -358,7 +396,7 @@ stratum_cc_library(
     srcs = ["bfrt_packetio_manager.cc"],
     hdrs = ["bfrt_packetio_manager.h"],
     deps = [
-        ":bfrt_cc_proto",
+        ":bf_cc_proto",
         ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -382,7 +420,7 @@ stratum_cc_library(
     srcs = ["bfrt_pre_manager.cc"],
     hdrs = ["bfrt_pre_manager.h"],
     deps = [
-        ":bfrt_cc_proto",
+        ":bf_cc_proto",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",
