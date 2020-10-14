@@ -296,8 +296,18 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Enforce Bazel style for select targets with buildifier
+          command: |
+            buildifier --lint=warn --mode=check -r \
+              bazel/external \
+              stratum/hal/lib/barefoot/ \
+              stratum/hal/bin/barefoot/ \
+              stratum/hal/lib/bcm/ \
+              stratum/hal/bin/bcm/
+
+      - run:
           name: Run buildifier
-          command: buildifier --lint=warn -r ./ || true
+          command: buildifier --lint=warn --mode=check -r ./ || true
 
 workflows:
   version: 2
