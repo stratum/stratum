@@ -2,6 +2,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
@@ -20,8 +22,10 @@ stratum_cc_library(
     srcs = ["bf_switch.cc"],
     hdrs = ["bf_switch.h"],
     deps = [
+        ":bf_cc_proto",
         ":bf_chassis_manager",
         ":bf_pd_interface",
+        ":bf_pipeline_utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -166,6 +170,42 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "bf_pipeline_utils",
+    srcs = ["bf_pipeline_utils.cc"],
+    hdrs = ["bf_pipeline_utils.h"],
+    deps = [
+        ":bf_cc_proto",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue/gtl:cleanup",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/public/lib:error",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_libarchive_libarchive//:libarchive",
+        "@com_github_nlohmann_json//:json",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_test(
+    name = "bf_pipeline_utils_test",
+    srcs = ["bf_pipeline_utils_test.cc"],
+    deps = [
+        ":bf_pipeline_utils",
+        ":test_main",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
@@ -175,4 +215,17 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
     ],
+)
+
+proto_library(
+    name = "bf_proto",
+    srcs = ["bf.proto"],
+    deps = [
+        "@com_github_p4lang_p4runtime//:p4info_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "bf_cc_proto",
+    deps = [":bf_proto"],
 )

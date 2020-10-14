@@ -175,6 +175,28 @@ def stratum_deps():
             build_file = "@//bazel:external/yang.BUILD",
         )
 
+    if "com_github_libarchive_libarchive" not in native.existing_rules():
+        http_archive(
+            name = "com_github_libarchive_libarchive",
+            url = "https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.gz",
+            strip_prefix = "libarchive-3.4.3",
+            sha256 = "ee1e749213c108cb60d53147f18c31a73d6717d7e3d2481c157e1b34c881ea39",
+            patch_cmds = [
+                "./configure --prefix $(realpath ./local-install/) --enable-shared=no --without-openssl",
+                "make -j",
+                "make install",
+            ],
+            build_file = "@//bazel:external/libarchive.BUILD",
+        )
+
+    if "com_github_nlohmann_json" not in native.existing_rules():
+        http_archive(
+            name = "com_github_nlohmann_json",
+            url = "https://github.com/nlohmann/json/releases/download/v3.7.3/include.zip",
+            sha256 = "87b5884741427220d3a33df1363ae0e8b898099fbc59f1c451113f6732891014",
+            build_file = "@//bazel:external/json.BUILD",
+        )
+
     # -----------------------------------------------------------------------------
     #        TAI library
     # -----------------------------------------------------------------------------

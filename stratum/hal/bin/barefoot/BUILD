@@ -12,6 +12,23 @@ package(
 )
 
 stratum_cc_binary(
+    name = "bf_pipeline_builder",
+    srcs = [
+        "bf_pipeline_builder.cc",
+    ],
+    arches = HOST_ARCHES,
+    deps = [
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/barefoot:bf_cc_proto",
+        "//stratum/lib:utils",
+        "@com_github_nlohmann_json//:json",
+    ],
+)
+
+stratum_cc_binary(
     name = "stratum_bf",
     srcs = [
         "main.cc",
@@ -44,6 +61,7 @@ pkg_tar(
     name = "stratum_binaries",
     srcs = [
         "deb/start-stratum.sh",
+        ":bf_pipeline_builder",
         ":stratum_bf",
     ],
     mode = "0755",

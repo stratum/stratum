@@ -1,0 +1,25 @@
+// Copyright 2020-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal.barefoot;
+
+import "p4/config/v1/p4info.proto";
+
+// This message describes the public Barefoot specific definition of a single P4
+// program. It is passed to Stratum as the p4 device config of the P4Runtime
+// ForwardingPipelineConfig message.
+message BfPipelineConfig {
+  message Profile {
+    string profile_name = 1;         // name for this profile
+    bytes context = 2;               // context.json file
+    bytes binary = 3;                // tofino.bin file
+    repeated uint32 pipe_scope = 4;  // list of hardware pipes for this profile
+  }
+  string p4_name = 1;                // name for this P4 program
+  bytes bfruntime_info = 2;          // bfrt.json file
+  repeated Profile profiles = 3;     // list of profiles for this program
+}
