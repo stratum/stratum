@@ -80,6 +80,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bfrt_table_manager",
         "//stratum/hal/lib/barefoot:bfrt_counter_manager",
         "@local_barefoot_bin//:bfsde",
+        #"@local_barefoot_bin//:bfruntime_server",
     ] + stratum_bf_common_deps,
 )
 

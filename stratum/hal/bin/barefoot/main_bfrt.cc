@@ -27,6 +27,9 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
+//FIXME(bocon): Get this working
+//#include "bf_rt/proto/bf_rt_server.h"
+
 DEFINE_string(bf_sde_install, "/usr",
               "Absolute path to the directory where the BF SDE is installed");
 DEFINE_bool(bf_switchd_background, false,
@@ -138,6 +141,9 @@ namespace barefoot {
         << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
+
+  //FIXME(bocon): get this working
+  //bf_rt_grpc_server_run("unused", false);
 
   RETURN_IF_ERROR(hal->Run());  // blocking
   LOG(INFO) << "See you later!";
