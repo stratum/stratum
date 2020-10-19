@@ -3,13 +3,13 @@
 
 #include <memory>
 
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/synchronization/mutex.h"
 
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BF_PAL_WRAPPER_H_
 #define STRATUM_HAL_LIB_BAREFOOT_BF_PAL_WRAPPER_H_
@@ -22,11 +22,11 @@ class BFPalWrapper : public BFPalInterface {
  public:
   static constexpr int32 kDefaultMtu = 10 * 1024;  // 10K
 
-  ::util::StatusOr<PortState> PortOperStateGet(
-      int unit, uint32 port_id) override;
+  ::util::StatusOr<PortState> PortOperStateGet(int unit,
+                                               uint32 port_id) override;
 
-  ::util::Status PortAllStatsGet(
-      int unit, uint32 port_id, PortCounters* counters) override;
+  ::util::Status PortAllStatsGet(int unit, uint32 port_id,
+                                 PortCounters* counters) override;
 
   ::util::Status PortStatusChangeRegisterEventWriter(
       std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer) override
@@ -35,8 +35,8 @@ class BFPalWrapper : public BFPalInterface {
   ::util::Status PortStatusChangeUnregisterEventWriter() override
       LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
 
-  ::util::Status PortAdd(
-       int unit, uint32 port_id, uint64 speed_bps, FecMode fec_mode) override;
+  ::util::Status PortAdd(int unit, uint32 port_id, uint64 speed_bps,
+                         FecMode fec_mode) override;
 
   ::util::Status PortDelete(int unit, uint32 port_id) override;
 
@@ -44,8 +44,8 @@ class BFPalWrapper : public BFPalInterface {
 
   ::util::Status PortDisable(int unit, uint32 port_id) override;
 
-  ::util::Status PortAutonegPolicySet(
-      int unit, uint32 port_id, TriState autoneg) override;
+  ::util::Status PortAutonegPolicySet(int unit, uint32 port_id,
+                                      TriState autoneg) override;
 
   ::util::Status PortMtuSet(int unit, uint32 port_id, int32 mtu) override;
 
@@ -66,13 +66,13 @@ class BFPalWrapper : public BFPalInterface {
   // Private constructor, use GetSingleton()
   BFPalWrapper();
 
-  friend ::util::Status PortStatusChangeCb(int unit, uint32 port_id,
-                                           bool up, void *cookie)
+  friend ::util::Status PortStatusChangeCb(int unit, uint32 port_id, bool up,
+                                           void* cookie)
       LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
 
   std::unique_ptr<ChannelWriter<PortStatusChangeEvent> >
       port_status_change_event_writer_
-      GUARDED_BY(port_status_change_event_writer_lock_);
+          GUARDED_BY(port_status_change_event_writer_lock_);
 
   mutable absl::Mutex port_status_change_event_writer_lock_;
 };

@@ -41,6 +41,7 @@ docker run -it --rm --privileged \
     $ONLP_MOUNT \
     -p 28000:28000 \
     -p 9339:9339 \
+    -p 9559:9559 \
     $FLAG_FILE_MOUNT \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \

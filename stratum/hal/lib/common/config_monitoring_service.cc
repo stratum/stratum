@@ -2,14 +2,20 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <utility>
-#include <string>
-
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
+#include <string>
+#include <utility>
+
+#include "absl/container/flat_hash_set.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "openconfig/openconfig.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -17,10 +23,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
-#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",
               "The latest verified ChassisConfig proto pushed to the switch. "
@@ -111,6 +113,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 ::util::Status ConfigMonitoringService::PushChassisConfig(
     bool warmboot, std::unique_ptr<ChassisConfig> config) {
   absl::WriterMutexLock l(&config_lock_);
+  RETURN_IF_ERROR(VerifyChassisConfig(*config));
   // Push the config to hardware only if it is a coltboot setup.
   if (!warmboot) {
     ::util::Status status = switch_interface_->PushChassisConfig(*config);
@@ -127,6 +130,35 @@ ConfigMonitoringService::~ConfigMonitoringService() {
   // Notify the gNMI GnmiPublisher that the config has changed.
   RETURN_IF_ERROR(gnmi_publisher_.HandleChange(
       ConfigHasBeenPushedEvent(*running_chassis_config_)));
+
+  return ::util::OkStatus();
+}
+
+namespace {
+// Helper function to determine whether all protobuf messages in a container
+// have an unique name field.
+template <typename T>
+bool ContainsUniqueNames(const T& values) {
+  absl::flat_hash_set<std::string> unique_names;
+  for (const auto& e : values) {
+    if (e.name().empty()) continue;
+    if (!gtl::InsertIfNotPresent(&unique_names, e.name())) {
+      return false;
+    }
+  }
+  return true;
+}
+}  // namespace
+
+::util::Status ConfigMonitoringService::VerifyChassisConfig(
+    const ChassisConfig& config) {
+  // Validate the names of the components, if given.
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.nodes()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.singleton_ports()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.trunk_ports()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.port_groups()));
+  CHECK_RETURN_IF_FALSE(
+      ContainsUniqueNames(config.optical_network_interfaces()));
 
   return ::util::OkStatus();
 }
@@ -207,7 +239,12 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 
   if (config.HasBeenChanged()) {
     // ChassisConfig has changed, so, we need to push it now!
-    ::util::Status status = switch_interface_->PushChassisConfig(*config);
+    ::util::Status status = VerifyChassisConfig(*config);
+    if (!status.ok()) {
+      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                            status.error_message());
+    }
+    status = switch_interface_->PushChassisConfig(*config);
     // If the config push was successful or reported reboot required, save the
     // config on the switch. Any other config push error is considered
     // blocking.

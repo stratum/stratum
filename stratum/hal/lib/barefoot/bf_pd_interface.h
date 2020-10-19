@@ -13,7 +13,7 @@ namespace barefoot {
 
 class BFPdInterface {
  public:
-  virtual ~BFPdInterface() { }
+  virtual ~BFPdInterface() {}
   // Gets the CPU port of an unit(device).
   virtual ::util::StatusOr<int> GetPcieCpuPort(int unit) = 0;
 

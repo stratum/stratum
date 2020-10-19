@@ -10,6 +10,8 @@ extern "C" {
 #include <memory>
 #include <utility>
 
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
@@ -17,8 +19,6 @@ extern "C" {
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/constants.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {
@@ -27,26 +27,24 @@ namespace barefoot {
 /* static */
 constexpr int32 BFPalWrapper::kDefaultMtu;
 
-::util::StatusOr<PortState> BFPalWrapper::PortOperStateGet(
-    int unit, uint32 port_id) {
+::util::StatusOr<PortState> BFPalWrapper::PortOperStateGet(int unit,
+                                                           uint32 port_id) {
   int state;
-  auto bf_status = bf_pal_port_oper_state_get(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id),
-      &state);
+  auto bf_status =
+      bf_pal_port_oper_state_get(static_cast<bf_dev_id_t>(unit),
+                                 static_cast<bf_dev_port_t>(port_id), &state);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when querying port oper status";
   }
   return state ? PORT_STATE_UP : PORT_STATE_DOWN;
 }
 
-::util::Status BFPalWrapper::PortAllStatsGet(
-    int unit, uint32 port_id, PortCounters* counters) {
+::util::Status BFPalWrapper::PortAllStatsGet(int unit, uint32 port_id,
+                                             PortCounters* counters) {
   uint64_t stats[BF_NUM_RMON_COUNTERS];
-  auto bf_status = bf_pal_port_all_stats_get(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id),
-      stats);
+  auto bf_status =
+      bf_pal_port_all_stats_get(static_cast<bf_dev_id_t>(unit),
+                                static_cast<bf_dev_port_t>(port_id), stats);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when querying counters for port "
                                     << port_id << " in unit " << unit;
@@ -65,7 +63,7 @@ constexpr int32 BFPalWrapper::kDefaultMtu;
   counters->set_out_multicast_pkts(
       stats[bf_mac_stat_FramesTransmittedMulticast]);
   counters->set_in_discards(stats[bf_mac_stat_FramesDroppedBufferFull]);
-  counters->set_out_discards(0);  // stat not available
+  counters->set_out_discards(0);       // stat not available
   counters->set_in_unknown_protos(0);  // stat not meaningful
   counters->set_in_errors(stats[bf_mac_stat_FrameswithanyError]);
   counters->set_out_errors(stats[bf_mac_stat_FramesTransmittedwithError]);
@@ -74,15 +72,12 @@ constexpr int32 BFPalWrapper::kDefaultMtu;
   return ::util::OkStatus();
 }
 
-::util::Status PortStatusChangeCb(int unit,
-                                  uint32 port_id,
-                                  bool up,
-                                  void *cookie) {
+::util::Status PortStatusChangeCb(int unit, uint32 port_id, bool up,
+                                  void* cookie) {
   using PortStatusChangeEvent = BFPalInterface::PortStatusChangeEvent;
   auto* wrapper = static_cast<BFPalWrapper*>(cookie);
   absl::ReaderMutexLock l(&wrapper->port_status_change_event_writer_lock_);
-  if (!wrapper->port_status_change_event_writer_)
-    return ::util::OkStatus();
+  if (!wrapper->port_status_change_event_writer_) return ::util::OkStatus();
   PortState new_state = up ? PORT_STATE_UP : PORT_STATE_DOWN;
   return wrapper->port_status_change_event_writer_->Write(
       PortStatusChangeEvent{unit, port_id, new_state},
@@ -92,13 +87,10 @@ constexpr int32 BFPalWrapper::kDefaultMtu;
 namespace {
 
 bf_status_t PortStatusChangeCbInternal(bf_dev_id_t dev_id,
-                                       bf_dev_port_t dev_port,
-                                       bool up,
-                                       void *cookie) {
+                                       bf_dev_port_t dev_port, bool up,
+                                       void* cookie) {
   auto status = PortStatusChangeCb(static_cast<int>(dev_id),
-                                   static_cast<uint64>(dev_port),
-                                   up,
-                                   cookie);
+                                   static_cast<uint64>(dev_port), up, cookie);
   return status.ok() ? BF_SUCCESS : BF_INTERNAL_ERROR;
 }
 
@@ -108,11 +100,11 @@ bf_status_t PortStatusChangeCbInternal(bf_dev_id_t dev_id,
     std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer) {
   absl::WriterMutexLock l(&port_status_change_event_writer_lock_);
   port_status_change_event_writer_ = std::move(writer);
-  auto bf_status = bf_pal_port_status_notif_reg(
-      PortStatusChangeCbInternal, this);
+  auto bf_status =
+      bf_pal_port_status_notif_reg(PortStatusChangeCbInternal, this);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Error when registering port status notification callback";
+           << "Error when registering port status notification callback";
   }
   return ::util::OkStatus();
 }
@@ -182,30 +174,29 @@ namespace {
   RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode.";
 }
 
-::util::StatusOr<bf_loopback_mode_e>
-LoopbackModeToBf(LoopbackState loopback_mode) {
+::util::StatusOr<bf_loopback_mode_e> LoopbackModeToBf(
+    LoopbackState loopback_mode) {
   switch (loopback_mode) {
     case LOOPBACK_STATE_NONE:
       return BF_LPBK_NONE;
     case LOOPBACK_STATE_MAC:
       return BF_LPBK_MAC_NEAR;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported loopback mode: "
-          << LoopbackState_Name(loopback_mode) << ".";
+      RETURN_ERROR(ERR_INVALID_PARAM)
+          << "Unsupported loopback mode: " << LoopbackState_Name(loopback_mode)
+          << ".";
   }
 }
 
 }  // namespace
 
-::util::Status BFPalWrapper::PortAdd(
-     int unit, uint32 port_id, uint64 speed_bps, FecMode fec_mode) {
+::util::Status BFPalWrapper::PortAdd(int unit, uint32 port_id, uint64 speed_bps,
+                                     FecMode fec_mode) {
   ASSIGN_OR_RETURN(auto bf_speed, PortSpeedHalToBf(speed_bps));
   ASSIGN_OR_RETURN(auto bf_fec_mode, FecModeHalToBf(fec_mode, speed_bps));
-  auto bf_status = bf_pal_port_add(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id),
-      bf_speed,
-      bf_fec_mode);
+  auto bf_status = bf_pal_port_add(static_cast<bf_dev_id_t>(unit),
+                                   static_cast<bf_dev_port_t>(port_id),
+                                   bf_speed, bf_fec_mode);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when adding port with BF_PAL.";
   }
@@ -213,9 +204,8 @@ LoopbackModeToBf(LoopbackState loopback_mode) {
 }
 
 ::util::Status BFPalWrapper::PortDelete(int unit, uint32 port_id) {
-  auto bf_status = bf_pal_port_del(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id));
+  auto bf_status = bf_pal_port_del(static_cast<bf_dev_id_t>(unit),
+                                   static_cast<bf_dev_port_t>(port_id));
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when deleting port with BF_PAL.";
   }
@@ -223,9 +213,8 @@ LoopbackModeToBf(LoopbackState loopback_mode) {
 }
 
 ::util::Status BFPalWrapper::PortEnable(int unit, uint32 port_id) {
-  auto bf_status = bf_pal_port_enable(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id));
+  auto bf_status = bf_pal_port_enable(static_cast<bf_dev_id_t>(unit),
+                                      static_cast<bf_dev_port_t>(port_id));
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when enabling port with BF_PAL.";
   }
@@ -233,25 +222,23 @@ LoopbackModeToBf(LoopbackState loopback_mode) {
 }
 
 ::util::Status BFPalWrapper::PortDisable(int unit, uint32 port_id) {
-  auto bf_status = bf_pal_port_disable(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id));
+  auto bf_status = bf_pal_port_disable(static_cast<bf_dev_id_t>(unit),
+                                       static_cast<bf_dev_port_t>(port_id));
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when disabling port with BF_PAL.";
   }
   return ::util::OkStatus();
 }
 
-::util::Status BFPalWrapper::PortAutonegPolicySet(
-    int unit, uint32 port_id, TriState autoneg) {
+::util::Status BFPalWrapper::PortAutonegPolicySet(int unit, uint32 port_id,
+                                                  TriState autoneg) {
   ASSIGN_OR_RETURN(auto autoneg_v, AutonegHalToBf(autoneg));
   auto bf_status = bf_pal_port_autoneg_policy_set(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id),
+      static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
       autoneg_v);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Error when setting autoneg policy with BF_PAL.";
+           << "Error when setting autoneg policy with BF_PAL.";
   }
   return ::util::OkStatus();
 }
@@ -262,13 +249,11 @@ LoopbackModeToBf(LoopbackState loopback_mode) {
   }
   if (mtu == 0) mtu = kDefaultMtu;
   auto bf_status = bf_pal_port_mtu_set(
-      static_cast<bf_dev_id_t>(unit),
-      static_cast<bf_dev_port_t>(port_id),
-      static_cast<uint32>(mtu),
-      static_cast<uint32>(mtu));
+      static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
+      static_cast<uint32>(mtu), static_cast<uint32>(mtu));
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Error when setting port MTU with BF_PAL.";
+           << "Error when setting port MTU with BF_PAL.";
   }
   return ::util::OkStatus();
 }
@@ -284,20 +269,18 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
     return ::util::OkStatus();
   }
   ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
-  auto bf_status =
-      bf_pal_port_loopback_mode_set(static_cast<bf_dev_id_t>(unit),
-                                    static_cast<bf_dev_port_t>(port_id),
-                                    lp_mode);
+  auto bf_status = bf_pal_port_loopback_mode_set(
+      static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
+      lp_mode);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Error when setting loopback mode on dev " << unit << " port "
-        << port_id << ".";
+           << "Error when setting loopback mode on dev " << unit << " port "
+           << port_id << ".";
   }
   return ::util::OkStatus();
 }
 
-BFPalWrapper::BFPalWrapper()
-    : port_status_change_event_writer_(nullptr) { }
+BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}
 
 /* static */
 BFPalWrapper* BFPalWrapper::GetSingleton() {

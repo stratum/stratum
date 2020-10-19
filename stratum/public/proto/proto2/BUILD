@@ -22,8 +22,6 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-licenses(["notice"])  # Apache v2
-
 genrule(
     name = "proto2_srcs",
     srcs = ["//stratum/public/proto:proto_srcs"],

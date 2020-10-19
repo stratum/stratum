@@ -33,7 +33,8 @@ stratum_cc_library(
         "init_google.h",
     ],
     deps = [
-        "@com_github_google_glog//:glog",
+        ":logging",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )
 

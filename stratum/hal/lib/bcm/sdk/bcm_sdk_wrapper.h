@@ -1,20 +1,26 @@
-// Copyright 2018 Google LLC
-// Copyright 2018-present Open Networking Foundation
-// Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries. NOLINT
+// Copyright 2018-2019 Google LLC
+// Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
-#define STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
+/*
+ * The Broadcom Switch API header code upon which this file depends is:
+ * Copyright 2007-2020 Broadcom Inc.
+ *
+ * This file depends on Broadcom's OpenNSA SDK.
+ * Additional license terms for OpenNSA are available from Broadcom or online:
+ *     https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
+ */
+
+#ifndef STRATUM_HAL_LIB_BCM_SDK_BCM_SDK_WRAPPER_H_
+#define STRATUM_HAL_LIB_BCM_SDK_BCM_SDK_WRAPPER_H_
 
 #include <pthread.h>
 
 #include <functional>
-#include <string>
-#include <set>
-#include <map>
-#include <vector>
-#include <utility>
 #include <memory>
+#include <set>
+#include <string>
+#include <vector>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -25,6 +31,18 @@
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/common/constants.h"
 
+extern "C" {
+#include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+#include "sdk_build_flags.h"  // NOLINT
+#include "bcm/field.h"
+#include "bcm/port.h"
+#include "bcm/types.h"
+#include "ibde.h"             // NOLINT
+#include "linux-bde.h"        // NOLINT
+#include "soc/cmext.h"
+#include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+}
+
 namespace stratum {
 namespace hal {
 namespace bcm {
@@ -34,10 +52,13 @@ namespace bcm {
 struct BcmSocDevice {
   // Internal BDE device number for a unit.
   int dev_num;
+  // BDE device vector.
+  soc_cm_device_vectors_t* dev_vec;
   // SDK checkpoint file descriptor.
   int sdk_checkpoint_fd;
-  BcmSocDevice() : dev_num(-1), sdk_checkpoint_fd(-1) {}
+  BcmSocDevice() : dev_num(-1), dev_vec(nullptr), sdk_checkpoint_fd(-1) {}
   ~BcmSocDevice() {
+    if (dev_vec) delete dev_vec;
     if (sdk_checkpoint_fd != -1) close(sdk_checkpoint_fd);
   }
 };
@@ -79,8 +100,15 @@ class BcmSdkWrapper : public BcmSdkInterface {
   static constexpr int kRedCounterIndex = 2;
   // Index of first green counter (bytes) in colored stat entry array.
   static constexpr int kGreenCounterIndex = 0;
+  // Array of colored stat counter types,.
+  static constexpr bcm_field_stat_t kColoredStatEntry[kColoredStatCount] = {
+      bcmFieldStatGreenPackets, bcmFieldStatGreenBytes, bcmFieldStatRedPackets,
+      bcmFieldStatRedBytes};
   // Index of first total counter (bytes) in uncolored stat entry array.
   static constexpr int kTotalCounterIndex = 0;
+  // Array of uncolored stat counter types.
+  static constexpr bcm_field_stat_t kUncoloredStatEntry[kUncoloredStatCount] = {
+      bcmFieldStatPackets, bcmFieldStatBytes};
 
   ~BcmSdkWrapper() override;
 
@@ -89,6 +117,9 @@ class BcmSdkWrapper : public BcmSdkInterface {
       const std::string& config_file_path,
       const std::string& config_flush_file_path,
       const std::string& bcm_shell_log_file_path) override;
+  ::util::StatusOr<std::string> GenerateBcmConfigFile(
+      const BcmChassisMap& base_bcm_chassis_map,
+      const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) override;
   ::util::Status FindUnit(int unit, int pci_bus, int pci_slot,
                           BcmChip::BcmChipType chip_type) override
       LOCKS_EXCLUDED(data_lock_);
@@ -105,8 +136,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                 BcmPortOptions* options) override;
   ::util::Status GetPortCounters(int unit, int port, PortCounters* pc) override;
   ::util::Status StartDiagShellServer() override;
-  ::util::Status StartLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
-  ::util::Status StopLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status StartLinkscan(int unit) override;
+  ::util::Status StopLinkscan(int unit) override;
   void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
@@ -238,17 +269,17 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::StatusOr<int> InsertAclFlow(int unit, const BcmFlowEntry& flow,
                                       bool add_stats,
                                       bool color_aware) override;
-  ::util::Status ModifyAclFlow(
-      int unit, int flow_id, const BcmFlowEntry& flow) override;
+  ::util::Status ModifyAclFlow(int unit, int flow_id,
+                               const BcmFlowEntry& flow) override;
   ::util::Status RemoveAclFlow(int unit, int flow_id) override;
   ::util::Status GetAclUdfChunks(int unit, BcmUdfSet* udfs) override;
   ::util::Status GetAclTable(int unit, int table_id,
                              BcmAclTable* table) override;
   ::util::Status GetAclFlow(int unit, int flow_id, BcmFlowEntry* flow) override;
-  ::util::StatusOr<std::string> MatchAclFlow(
-      int unit, int flow_id, const BcmFlowEntry& flow) override;
-  ::util::Status GetAclTableFlowIds(
-      int unit, int table_id, std::vector<int>* flow_ids) override;
+  ::util::StatusOr<std::string> MatchAclFlow(int unit, int flow_id,
+                                             const BcmFlowEntry& flow) override;
+  ::util::Status GetAclTableFlowIds(int unit, int table_id,
+                                    std::vector<int>* flow_ids) override;
   ::util::Status AddAclStats(int unit, int table_id, int flow_id,
                              bool color_aware) override;
   ::util::Status RemoveAclStats(int unit, int flow_id) override;
@@ -275,8 +306,17 @@ class BcmSdkWrapper : public BcmSdkInterface {
   // Return the FD for the SDK checkpoint file.
   ::util::StatusOr<int> GetSdkCheckpointFd(int unit) LOCKS_EXCLUDED(data_lock_);
 
+  // Pointer to the BDE. Error is returned if bde_ is not initialized yet.
+  ::util::StatusOr<ibde_t*> GetBde() const;
+
   // Thread id for the currently running diag shell thread.
   pthread_t GetDiagShellThreadId() const;
+
+  // Called whenever a linkscan event is received from SDK. It forwards the
+  // linkscan event to the module who registered a callback by calling
+  // RegisterLinkscanEventWriter().
+  void OnLinkscanEvent(int unit, int port, bcm_port_info_t* info)
+      LOCKS_EXCLUDED(linkscan_writers_lock_);
 
   // BcmSdkWrapper is neither copyable nor movable.
   BcmSdkWrapper(const BcmSdkWrapper&) = delete;
@@ -290,6 +330,11 @@ class BcmSdkWrapper : public BcmSdkInterface {
   // Cleanup existing KNET filters and KNET intfs for a given unit. Can be
   // overloaded by children which do no support KNET.
   virtual ::util::Status CleanupKnet(int unit);
+
+  // Provides access to SDK's low level system functions. This pointer is owned
+  // by the kernel. We are not in charge of deleting it. And there is not need
+  // to have a lock for this.
+  ibde_t* bde_;
 
   // RW mutex lock for protecting the singleton instance initialization and
   // reading it back from other threads. Unlike other singleton classes, we
@@ -335,7 +380,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                            const std::string& attr,
                                            uint32 value);
 
-  // Helper function called in InitializeSdk() to spawn a SDKLT shell.
+  // Helper function called in InitializeSdk() to spawn a BCM SDK shell.
   ::util::Status InitCLI();
 
   // Helper function to create a Knet filter for software multicast.
@@ -368,221 +413,6 @@ class BcmSdkWrapper : public BcmSdkInterface {
   absl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
       GUARDED_BY(data_lock_);
 
-  // Map from index to usage flag
-  typedef std::map<int, bool> InUseMap;
-
-  // Map from pair of Acl stage, correspoding logical table id, and
-  // software maintained table id
-  typedef std::map<std::pair<BcmAclStage, int>, int> AclIds;
-
-  typedef AclIds AclGroupIds;
-  typedef AclIds AclRuleIds;
-  typedef AclIds AclPolicyIds;
-  typedef AclIds AclMeterIds;
-
-  // Map from unit number to logical ports and associated port macro id,
-  // physical device port number
-  absl::flat_hash_map<int, std::map<int, std::pair<int, int>>>
-      unit_to_logical_ports_ GUARDED_BY(data_lock_);
-
-  // This struct encapsulates all the data required to handle mystation
-  // entries associated with a unit.
-  struct MyStationEntry {
-    int vlan;
-    int vlan_mask;
-    uint64 dst_mac;
-    uint64 dst_mac_mask;
-    MyStationEntry()
-       : vlan(0),
-         vlan_mask(0),
-         dst_mac(0),
-         dst_mac_mask(0xffffffffffffULL) {}
-    MyStationEntry(int _vlan, int _vlan_mask, uint64 _dst_mac,
-                   uint64 _dst_mac_mask)
-        : vlan(_vlan),
-          vlan_mask(_vlan_mask),
-          dst_mac(_dst_mac),
-          dst_mac_mask(_dst_mac_mask) {}
-    bool operator<(const MyStationEntry& other) const {
-      return (vlan < other.vlan ||
-             (vlan == other.vlan &&
-             (vlan_mask < other.vlan_mask ||
-             (vlan_mask == other.vlan_mask &&
-             (dst_mac < other.dst_mac ||
-             (dst_mac == other.dst_mac &&
-             (dst_mac_mask < other.dst_mac_mask)))))));
-    }
-    bool operator==(const MyStationEntry& other) const {
-      return (vlan == other.vlan &&
-              vlan_mask == other.vlan_mask && dst_mac == other.dst_mac &&
-              dst_mac_mask == other.dst_mac_mask);
-    }
-    std::string ToString() const {
-      return absl::StrCat("(vlan:", vlan,
-                          ", vlan_mask:", absl::Hex(vlan_mask),
-                          ", dst_mac:", absl::Hex(dst_mac),
-                          ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
-    }
-  };
-
-  // Map from unit number to mystation maximum entries
-  absl::flat_hash_map<int, int> unit_to_my_station_max_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to mystation minimum entries
-  absl::flat_hash_map<int, int> unit_to_my_station_min_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to mystation entries
-  absl::flat_hash_map<int, std::map<MyStationEntry, int>> my_station_ids_
-      GUARDED_BY(data_lock_);
-
-  // This struct encapsulates all the data required to handle l3 interfaces
-  // associated with a unit.
-  struct L3Interfaces {
-    uint64 mac;
-    int vlan;
-    L3Interfaces()
-      : mac(0),
-        vlan(0) {}
-    L3Interfaces(uint64 _mac, int _vlan)
-      : mac(_mac),
-        vlan(_vlan) {}
-    bool operator<(const L3Interfaces& other) const {
-      return (mac < other.mac || (mac == other.mac && vlan < other.vlan));
-    }
-    bool operator==(const L3Interfaces& other) const {
-      return (vlan == other.vlan &&
-              mac == other.mac);
-    }
-    std::string ToString() const {
-      return absl::StrCat("(vlan:", vlan,
-                          ", mac:", absl::Hex(mac), ")");
-    }
-    template <typename H>
-    friend H AbslHashValue(H h, const L3Interfaces& i) {
-      return H::combine(std::move(h), i.mac, i.vlan);
-    }
-  };
-
-  // This struct encapsulates all the data required to handle
-  // UDF chunks associated with a unit.
-  struct UdfDataQualifier {
-    BcmUdfSet::PacketLayer packet_layer;
-    uint64 offset;
-    int length;
-    std::vector<int> idxs;
-  };
-
-  // Map from unit number to UDF chunks
-  typedef std::map<int, UdfDataQualifier> ChunkIds;
-
-  // Map from unit number to l3 interfaces maximum entries
-  absl::flat_hash_map<int, int> unit_to_l3_intf_max_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to l3 interfaces minimum entries
-  absl::flat_hash_map<int, int> unit_to_l3_intf_min_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to l3 interfaces
-  absl::flat_hash_map<int, std::map<L3Interfaces, int>> l3_interface_ids_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to l3 egress interfaces
-  absl::flat_hash_map<int, InUseMap> l3_egress_interface_ids_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to ecmp interfaces
-  absl::flat_hash_map<int, InUseMap> l3_ecmp_egress_interface_ids_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to max ACL Groups supported
-  absl::flat_hash_map<int, int> unit_to_fp_groups_max_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of IFP group
-  absl::flat_hash_map<int, InUseMap> ifp_group_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of EFP group
-  absl::flat_hash_map<int, InUseMap> efp_group_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of VFP group
-  absl::flat_hash_map<int, InUseMap> vfp_group_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to ACL groups
-  absl::flat_hash_map<int, AclGroupIds*> fp_group_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to maximum ACL Rules supported
-  absl::flat_hash_map<int, int> unit_to_fp_rules_max_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of IFP rules
-  absl::flat_hash_map<int, InUseMap> ifp_rule_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of EFP rules
-  absl::flat_hash_map<int, InUseMap> efp_rule_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of VFP rules
-  absl::flat_hash_map<int, InUseMap> vfp_rule_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to ACL rules
-  absl::flat_hash_map<int, AclRuleIds*> fp_rule_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to maximum ACL Policies supported
-  absl::flat_hash_map<int, int> unit_to_fp_policy_max_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of IFP policies
-  absl::flat_hash_map<int, InUseMap> ifp_policy_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of EFP policies
-  absl::flat_hash_map<int, InUseMap> efp_policy_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of VFP policies
-  absl::flat_hash_map<int, InUseMap> vfp_policy_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to ACL policies
-  absl::flat_hash_map<int, AclPolicyIds*> fp_policy_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to maximum ACL meters supported
-  absl::flat_hash_map<int, int> unit_to_fp_meter_max_limit_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of IFP meters
-  absl::flat_hash_map<int, InUseMap> ifp_meter_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of EFP meters
-  absl::flat_hash_map<int, InUseMap> efp_meter_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to ACL meters
-  absl::flat_hash_map<int, AclMeterIds*> fp_meter_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to maximum ACLs supported
-  absl::flat_hash_map<int, int> unit_to_fp_max_limit_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of IFP ACLs
-  absl::flat_hash_map<int, InUseMap> ifp_acl_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of EFP ACLs
-  absl::flat_hash_map<int, InUseMap> efp_acl_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to logical table indexes of VFP ACLs
-  absl::flat_hash_map<int, InUseMap> vfp_acl_ids_ GUARDED_BY(data_lock_);
-
-  // Map from unit number to ACLs
-  absl::flat_hash_map<int, AclIds*> fp_acl_ids_ GUARDED_BY(data_lock_);
-
-  // maximum number of UDFs
-  static constexpr int kUdfMaxChunks = 16;
-
-  // Map from unit number to logical table indexes of UDF
-  absl::flat_hash_map<int, InUseMap> unit_to_udf_chunk_ids_
-      GUARDED_BY(data_lock_);
-
-  // Map from unit number to UDF chunks
-  absl::flat_hash_map<int, ChunkIds*> unit_to_chunk_ids_ GUARDED_BY(data_lock_);
-
   // Pointer to BcmDiagShell singleton instance. Not owned by this class.
   BcmDiagShell* bcm_diag_shell_;
 
@@ -601,4 +431,4 @@ class BcmSdkWrapper : public BcmSdkInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_BCM_SDK_BCM_SDK_WRAPPER_H_

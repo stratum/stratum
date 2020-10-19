@@ -38,14 +38,14 @@ optional arguments:
 
 ```
 # To get port index
-bazel run //tools/gnmi:gnmi-cli -- get /interfaces/interface[name=1/1/1]/state/ifindex
+bazel run //stratum/tools/gnmi:gnmi-cli -- get /interfaces/interface[name=1/1/1]/state/ifindex
 
 # To set port health indicator
-bazel run //tools/gnmi:gnmi-cli -- set /interfaces/interface[name=1/1/1]/config/health-indicator --string-val GOOD
+bazel run //stratum/tools/gnmi:gnmi-cli -- set /interfaces/interface[name=1/1/1]/config/health-indicator --string-val GOOD
 
 # To subscribe one sample of port operation status per second
-bazel run //tools/gnmi:gnmi-cli -- sub-sample /interfaces/interface[name=1/1/1]/state/oper-status --inverval 1000
+bazel run //stratum/tools/gnmi:gnmi-cli -- sub-sample /interfaces/interface[name=1/1/1]/state/oper-status --interval 1000
 
 # To push chassis config
-bazel run //tools/gnmi:gnmi-cli -- --replace --bytes_val_file [chassis config file] set /
+bazel run //stratum/tools/gnmi:gnmi-cli -- --replace --bytes_val_file [chassis config file] set /
 ```

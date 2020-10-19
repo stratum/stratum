@@ -7,16 +7,18 @@
 #include <map>
 #include <vector>
 
-#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/pi/pi_node.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
+#include "stratum/hal/lib/pi/pi_node.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 using ::stratum::hal::pi::PINode;
 
@@ -43,6 +45,9 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
 BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::PushChassisConfig(const ChassisConfig& config) {
+  // Verify the config first. No need to continue if verification is not OK.
+  // Push config to PHAL first and then the rest of the managers.
+  RETURN_IF_ERROR(VerifyChassisConfig(config));
   absl::WriterMutexLock l(&chassis_lock);
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
@@ -63,13 +68,68 @@ BFSwitch::~BFSwitch() {}
 }
 
 ::util::Status BFSwitch::VerifyChassisConfig(const ChassisConfig& config) {
-  (void)config;
-  return ::util::OkStatus();
+  // First make sure PHAL is happy with the config then continue with the rest
+  // of the managers and nodes.
+  absl::ReaderMutexLock l(&chassis_lock);
+  ::util::Status status = ::util::OkStatus();
+  APPEND_STATUS_IF_ERROR(status, phal_interface_->VerifyChassisConfig(config));
+  APPEND_STATUS_IF_ERROR(status,
+                         bf_chassis_manager_->VerifyChassisConfig(config));
+
+  // Get the current copy of the node_id_to_unit from chassis manager. If this
+  // fails with ERR_NOT_INITIALIZED, do not verify anything at the node level.
+  // Note that we do not expect any change in node_id_to_unit. Any change in
+  // this map will be detected in bcm_chassis_manager_->VerifyChassisConfig.
+  auto ret = bf_chassis_manager_->GetNodeIdToUnitMap();
+  if (!ret.ok()) {
+    if (ret.status().error_code() != ERR_NOT_INITIALIZED) {
+      APPEND_STATUS_IF_ERROR(status, ret.status());
+    }
+  } else {
+    const auto& node_id_to_unit = ret.ValueOrDie();
+    for (const auto& entry : node_id_to_unit) {
+      uint64 node_id = entry.first;
+      int unit = entry.second;
+      ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromUnit(unit));
+      APPEND_STATUS_IF_ERROR(status,
+                             pi_node->VerifyChassisConfig(config, node_id));
+    }
+  }
+
+  if (status.ok()) {
+    LOG(INFO) << "Chassis config verified successfully.";
+  }
+
+  return status;
 }
 
+namespace {
+// Parses the P4 ForwardingPipelineConfig to check the format of the
+// p4_device_config. If it uses a newer Stratum format, this method converts
+// it to the legacy format used by the Barefoot PI implementation. Otherwise,
+// the provided value is used as is.
+::util::Status ConvertToLegacyForwardingPipelineConfig(
+    const ::p4::v1::ForwardingPipelineConfig& forwarding_config,
+    ::p4::v1::ForwardingPipelineConfig* legacy_config) {
+  *legacy_config = forwarding_config;
+  BfPipelineConfig bf_config;
+  if (ExtractBfPipelineConfig(forwarding_config, &bf_config).ok()) {
+    std::string pi_p4_device_config;
+    RETURN_IF_ERROR(
+        BfPipelineConfigToPiConfig(bf_config, &pi_p4_device_config));
+    legacy_config->set_p4_device_config(pi_p4_device_config);
+  }
+  return ::util::OkStatus();
+}
+}  // namespace
+
 ::util::Status BFSwitch::PushForwardingPipelineConfig(
-    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
+
+  ::p4::v1::ForwardingPipelineConfig config;
+  RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
+
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->PushForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
@@ -89,8 +149,12 @@ BFSwitch::~BFSwitch() {}
 }
 
 ::util::Status BFSwitch::SaveForwardingPipelineConfig(
-    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
+
+  ::p4::v1::ForwardingPipelineConfig config;
+  RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
+
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->SaveForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
@@ -112,7 +176,10 @@ BFSwitch::~BFSwitch() {}
 }
 
 ::util::Status BFSwitch::VerifyForwardingPipelineConfig(
-    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
+  ::p4::v1::ForwardingPipelineConfig config;
+  RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
+
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->VerifyForwardingPipelineConfig(config);
 }
@@ -123,13 +190,9 @@ BFSwitch::~BFSwitch() {}
   return status;
 }
 
-::util::Status BFSwitch::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status BFSwitch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status BFSwitch::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status BFSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
@@ -187,7 +250,8 @@ BFSwitch::~BFSwitch() {}
                                        std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
-    ::util::StatusOr<DataResponse> resp;
+    DataResponse resp;
+    ::util::Status status = ::util::OkStatus();
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
@@ -196,19 +260,34 @@ BFSwitch::~BFSwitch() {}
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
-      case DataRequest::Request::kLoopbackStatus:
-        resp = bf_chassis_manager_->GetPortData(req);
+      case DataRequest::Request::kLoopbackStatus: {
+        auto port_data = bf_chassis_manager_->GetPortData(req);
+        if (!port_data.ok()) {
+          status.Update(port_data.status());
+        } else {
+          resp = port_data.ConsumeValueOrDie();
+        }
         break;
+      }
+      case DataRequest::Request::kNodeInfo: {
+        auto* node_info = resp.mutable_node_info();
+        node_info->set_vendor_name("Barefoot");
+        node_info->set_chip_name("Generic Tofino");
+        break;
+      }
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
+        status =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "Request type "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
-    if (resp.ok()) {
+    if (status.ok()) {
       // If everything is OK send it to the caller.
-      writer->Write(resp.ValueOrDie());
+      writer->Write(resp);
     }
-    if (details) details->push_back(resp.status());
+    if (details) details->push_back(status);
   }
   return ::util::OkStatus();
 }
@@ -229,13 +308,11 @@ BFSwitch::~BFSwitch() {}
 }
 
 std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
-    PhalInterface* phal_interface,
-    BFChassisManager* bf_chassis_manager,
+    PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
     BFPdInterface* bf_pd_interface,
     const std::map<int, PINode*>& unit_to_pi_node) {
-  return absl::WrapUnique(
-      new BFSwitch(phal_interface, bf_chassis_manager, bf_pd_interface,
-                   unit_to_pi_node));
+  return absl::WrapUnique(new BFSwitch(phal_interface, bf_chassis_manager,
+                                       bf_pd_interface, unit_to_pi_node));
 }
 
 ::util::StatusOr<PINode*> BFSwitch::GetPINodeFromUnit(int unit) const {
@@ -246,8 +323,7 @@ std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
   return pi_node;
 }
 
-::util::StatusOr<PINode*> BFSwitch::GetPINodeFromNodeId(
-    uint64 node_id) const {
+::util::StatusOr<PINode*> BFSwitch::GetPINodeFromNodeId(uint64 node_id) const {
   PINode* pi_node = gtl::FindPtrOrNull(node_id_to_pi_node_, node_id);
   if (pi_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM)

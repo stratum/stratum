@@ -12,8 +12,8 @@ def proto_gen_deps():
             remote = "https://github.com/bocon13/gnmi",
             commit = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a",
             patch_cmds = [
-                "sed -i 's#//gnmi_ext#//proto/gnmi_ext#g' proto/gnmi/BUILD.bazel",
-                "sed -i 's#import \"gnmi_ext#import \"proto/gnmi_ext#g' proto/gnmi/gnmi.proto",
+                "sed -i.bak 's#//gnmi_ext#//proto/gnmi_ext#g' proto/gnmi/BUILD.bazel",
+                "sed -i.bak 's#import \"gnmi_ext#import \"proto/gnmi_ext#g' proto/gnmi/gnmi.proto",
             ],
             vcs = "git",
         )

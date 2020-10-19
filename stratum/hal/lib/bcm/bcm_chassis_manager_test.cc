@@ -423,6 +423,8 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
                                               FLAGS_bcm_sdk_config_flush_file,
                                               FLAGS_bcm_sdk_shell_log_file))
         .WillOnce(Return(::util::OkStatus()));
+    EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+        .WillRepeatedly(Return(std::string("")));
     EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
         .WillOnce(Return(::util::OkStatus()));
     EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -589,6 +591,8 @@ TEST_P(BcmChassisManagerTest, NonGracefulShutdownAfterConfigPush) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -723,6 +727,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1201,6 +1207,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1475,6 +1483,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1569,7 +1579,7 @@ TEST_P(BcmChassisManagerTest,
   }
   // Verify config.bcm in this case. Logical ports start from 1 and go and up.
   std::string bcm_sdk_config;
-  /* SDK6 Only
+  /* BCM SDK Only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.0=0x2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_oversubscribe.0=0x2"));
@@ -1769,6 +1779,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1881,7 +1893,7 @@ TEST_P(BcmChassisManagerTest,
   }
   // Verify config.bcm in this case. Logical ports start from 1 and go and up.
   std::string bcm_sdk_config;
-  /* SDK6 only
+  /* BCM SDK only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.0=0x1E"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_oversubscribe.0=0x1E"));
@@ -1954,7 +1966,7 @@ TEST_P(BcmChassisManagerTest,
     EXPECT_EQ(PORT_STATE_UNKNOWN, ret.ValueOrDie());
   }
   bcm_sdk_config.clear();
-  /* SDK6 only
+  /* BCM SDK only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   // This is the same as the previous case.
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.0=0x1E"));
@@ -2085,6 +2097,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithAutoAddSlot) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(2, 5, 0, BcmChip::TRIDENT2))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(2, false))
@@ -2186,7 +2200,7 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithAutoAddSlot) {
 
   // Verify config.bcm in this case. Logical ports start from 1 and go and up.
   std::string bcm_sdk_config;
-  /* SDK6 only
+  /* BCM SDK only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.2=0x2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_oversubscribe.2=0x2"));
@@ -2306,6 +2320,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithTrunks) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -2685,6 +2701,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithGePortOnTridentPlus) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 21, 0, BcmChip::TRIDENT_PLUS))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4182,6 +4200,8 @@ TEST_P(BcmChassisManagerTest, VerifyChassisConfigReportsRebootRequired) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4512,6 +4532,8 @@ TEST_P(BcmChassisManagerTest, GetPortStateAfterConfigPushAndLinkEvent) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4922,6 +4944,8 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsSuccess) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4955,7 +4979,7 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsSuccess) {
   ASSERT_OK(InitializeBcmChips(base_bcm_chassis_map, target_bcm_chassis_map));
   ASSERT_FALSE(Initialized());
   std::string bcm_sdk_config;
-  /* SDK6 only
+  /* BCM SDK only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("property1=1234"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("property2=5678"));
@@ -5161,6 +5185,8 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsFailure) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(error));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_EQ(error,
             InitializeBcmChips(base_bcm_chassis_map, target_bcm_chassis_map));
   EXPECT_FALSE(Initialized());

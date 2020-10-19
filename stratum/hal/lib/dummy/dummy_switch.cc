@@ -256,6 +256,7 @@ namespace dummy_switch {
         break;
       case Request::kMemoryErrorAlarm:
       case Request::kFlowProgrammingExceptionAlarm:
+      case Request::kNodeInfo:
         resp = chassis_mgr_->RetrieveChassisData(request);
         break;
       case Request::kPortQosCounters:

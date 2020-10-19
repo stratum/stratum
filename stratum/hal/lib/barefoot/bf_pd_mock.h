@@ -13,10 +13,8 @@ namespace barefoot {
 
 class BFPdMock : public BFPdInterface {
  public:
-  MOCK_METHOD1(GetPcieCpuPort,
-               ::util::StatusOr<int>(int unit));
-  MOCK_METHOD2(SetTmCpuPort,
-               ::util::Status(int unit, int port));
+  MOCK_METHOD1(GetPcieCpuPort, ::util::StatusOr<int>(int unit));
+  MOCK_METHOD2(SetTmCpuPort, ::util::Status(int unit, int port));
 };
 
 }  // namespace barefoot

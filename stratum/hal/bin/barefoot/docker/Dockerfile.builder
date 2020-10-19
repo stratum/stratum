@@ -20,6 +20,13 @@ ENV SDE /bf-sde
 ENV SDE_INSTALL $SDE/install
 RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
 
+# Install an older version of pyresistent before running the P4 studio
+# since the pip will try to install newer version of it when pip install
+# the jsonschema library. And the new version of pyresistent(0.17.x) requires
+# Python >= 3.5
+# TODO: Remove this once we moved to Python3
+RUN pip install pyrsistent==0.14.0
+
 WORKDIR $SDE/p4studio_build
 
 ARG JOBS=4

@@ -8,17 +8,17 @@
 #include <memory>
 #include <thread>  // NOLINT
 
+#include "absl/base/thread_annotations.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/types/optional.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/glue/integral_types.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/memory/memory.h"
-#include "absl/types/optional.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -47,15 +47,14 @@ class BFChassisManager {
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   virtual ::util::StatusOr<DataResponse> GetPortData(
-      const DataRequest::Request& request)
+      const DataRequest::Request& request) SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
+                                                   uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<PortState> GetPortState(
-      uint64 node_id, uint32 port_id)
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
-  virtual ::util::Status GetPortCounters(
-      uint64 node_id, uint32 port_id, PortCounters* counters)
+  virtual ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
+                                         PortCounters* counters)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   virtual ::util::Status ReplayPortsConfig(uint64 node_id)
@@ -66,15 +65,17 @@ class BFChassisManager {
 
   virtual ::util::Status GetFrontPanelPortInfo(uint64 node_id, uint32 port_id,
                                                FrontPanelPortInfo* fp_port_info)
-  SHARED_LOCKS_REQUIRED(chassis_lock);
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
+  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
-      PhalInterface* phal_interface,
-      BFPalInterface* bf_pal_interface);
+      PhalInterface* phal_interface, BFPalInterface* bf_pal_interface);
 
   // BFChassisManager is neither copyable nor movable.
   BFChassisManager(const BFChassisManager&) = delete;
@@ -97,26 +98,21 @@ class BFChassisManager {
     // configuration, and the port add wasn't event attempted or failed.
     AdminState admin_state;
     absl::optional<uint64> speed_bps;  // empty if port add failed
-    absl::optional<int32> mtu;  // empty if MTU configuration failed
+    absl::optional<int32> mtu;         // empty if MTU configuration failed
     absl::optional<TriState> autoneg;  // empty if Autoneg configuration failed
     absl::optional<FecMode> fec_mode;  // empty if port add failed
     // empty if loopback mode configuration failed
     absl::optional<LoopbackState> loopback_mode;
 
-    PortConfig()
-        : admin_state(ADMIN_STATE_UNKNOWN) { }
+    PortConfig() : admin_state(ADMIN_STATE_UNKNOWN) {}
   };
 
-  ::util::StatusOr<const PortConfig*> GetPortConfig(
-      uint64 node_id, uint32 port_id) const
+  ::util::StatusOr<const PortConfig*> GetPortConfig(uint64 node_id,
+                                                    uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
-  ::util::Status UnregisterEventWriters()
-      LOCKS_EXCLUDED(chassis_lock);
-
-  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
-      SHARED_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status UnregisterEventWriters() LOCKS_EXCLUDED(chassis_lock);
 
   // Cleans up the internal state. Resets all the internal port maps and
   // deletes the pointers.
@@ -154,10 +150,10 @@ class BFChassisManager {
 
   bool initialized_ GUARDED_BY(chassis_lock);
 
-  std::shared_ptr<Channel<BFPalInterface::PortStatusChangeEvent> >
+  std::shared_ptr<Channel<BFPalInterface::PortStatusChangeEvent>>
       port_status_change_event_channel_ GUARDED_BY(chassis_lock);
 
-  std::unique_ptr<ChannelReader<BFPalInterface::PortStatusChangeEvent> >
+  std::unique_ptr<ChannelReader<BFPalInterface::PortStatusChangeEvent>>
       port_status_change_event_reader_;
 
   std::thread port_status_change_event_thread_;
@@ -167,10 +163,10 @@ class BFChassisManager {
   // remove the handler later if needed.
   int xcvr_event_writer_id_;
 
-  std::shared_ptr<Channel<PhalInterface::TransceiverEvent> >
-      xcvr_event_channel_ GUARDED_BY(chassis_lock);
+  std::shared_ptr<Channel<PhalInterface::TransceiverEvent>> xcvr_event_channel_
+      GUARDED_BY(chassis_lock);
 
-  std::unique_ptr<ChannelReader<PhalInterface::TransceiverEvent> >
+  std::unique_ptr<ChannelReader<PhalInterface::TransceiverEvent>>
       xcvr_event_reader_;
 
   std::thread xcvr_event_thread_;

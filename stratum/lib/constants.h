@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_LIB_CONSTANTS_H_
 #define STRATUM_LIB_CONSTANTS_H_
 
@@ -34,8 +33,11 @@ constexpr char kDefaultAuthPolicyFilePath[] =
 constexpr char kLocalStratumUrl[] = "localhost:28000";
 
 // This URL is used by external gNMI, gNOI and P4Runtime clients.
-// This TCP port 9339 is an IANA-reserve port for gNMI and gNOI.
-constexpr char kExternalStratumUrls[] = "0.0.0.0:28000,0.0.0.0:9339";
+// TCP port 9339 is an IANA-reserved port for gNMI and gNOI.
+// TCP port 9559 is an IANA-reserved port for P4Runtime.
+// TODO(max): Remove the deprecated port 28000 from default list.
+constexpr char kExternalStratumUrls[] =
+    "0.0.0.0:28000,0.0.0.0:9339,0.0.0.0:9559";
 
 // Default URLs for the Sandcastle services Stratum service will connect to
 // over gRPC.

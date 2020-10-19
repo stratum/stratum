@@ -7,22 +7,22 @@
 #include <memory>
 #include <utility>
 
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "stratum/hal/lib/barefoot/bf_pal_interface.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/hal/lib/common/gnmi_events.h"
-#include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/hal/lib/common/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "stratum/lib/channel/channel.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/barefoot/bf_pal_interface.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/lib/channel/channel.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -52,9 +52,9 @@ BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
 BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::AddPortHelper(
-     uint64 node_id, int unit, uint32 port_id,
-     const SingletonPort& singleton_port /* desired config */,
-     /* out */ PortConfig* config /* new config */) {
+    uint64 node_id, int unit, uint32 port_id,
+    const SingletonPort& singleton_port /* desired config */,
+    /* out */ PortConfig* config /* new config */) {
   config->admin_state = ADMIN_STATE_UNKNOWN;
 
   const auto& config_params = singleton_port.config_params();
@@ -64,8 +64,8 @@ BFChassisManager::~BFChassisManager() = default;
   }
   if (config_params.admin_state() == ADMIN_STATE_DIAG) {
     RETURN_ERROR(ERR_UNIMPLEMENTED)
-        << "Unsupported 'diags' admin state for port " << port_id
-        << " in node " << node_id;
+        << "Unsupported 'diags' admin state for port " << port_id << " in node "
+        << node_id;
   }
 
   LOG(INFO) << "Adding port " << port_id << " in node " << node_id << ".";
@@ -76,8 +76,8 @@ BFChassisManager::~BFChassisManager() = default;
   config->fec_mode = config_params.fec_mode();
 
   if (config_params.mtu() != 0) {
-    RETURN_IF_ERROR(bf_pal_interface_->PortMtuSet(
-        unit, port_id, config_params.mtu()));
+    RETURN_IF_ERROR(
+        bf_pal_interface_->PortMtuSet(unit, port_id, config_params.mtu()));
   }
   config->mtu = config_params.mtu();
   if (config_params.autoneg() != TRI_STATE_UNKNOWN) {
@@ -88,7 +88,7 @@ BFChassisManager::~BFChassisManager() = default;
 
   if (config_params.loopback_mode() != LOOPBACK_STATE_UNKNOWN) {
     LOG(INFO) << "Setting port " << port_id << " to loopback mode "
-        << config_params.loopback_mode() << ".";
+              << config_params.loopback_mode() << ".";
     RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
         unit, port_id, config_params.loopback_mode()));
   }
@@ -104,10 +104,10 @@ BFChassisManager::~BFChassisManager() = default;
 }
 
 ::util::Status BFChassisManager::UpdatePortHelper(
-     uint64 node_id, int unit, uint32 port_id,
-     const SingletonPort& singleton_port /* desired config */,
-     const PortConfig& config_old /* current config */,
-     /* out */ PortConfig* config /* new config */) {
+    uint64 node_id, int unit, uint32 port_id,
+    const SingletonPort& singleton_port /* desired config */,
+    const PortConfig& config_old /* current config */,
+    /* out */ PortConfig* config /* new config */) {
   *config = config_old;
 
   if (!bf_pal_interface_->PortIsValid(unit, port_id)) {
@@ -143,9 +143,8 @@ BFChassisManager::~BFChassisManager() = default;
         port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
       AddPortHelper(node_id, unit, port_id, port_old, config);
       RETURN_ERROR(ERR_INVALID_PARAM)
-          << "Could not add port " << port_id
-          << " with new speed " << singleton_port.speed_bps()
-          << " to BF SDE.";
+          << "Could not add port " << port_id << " with new speed "
+          << singleton_port.speed_bps() << " to BF SDE.";
     }
   }
   // same for FEC mode
@@ -161,8 +160,8 @@ BFChassisManager::~BFChassisManager() = default;
   }
   if (config_params.admin_state() == ADMIN_STATE_DIAG) {
     RETURN_ERROR(ERR_UNIMPLEMENTED)
-        << "Unsupported 'diags' admin state for port " << port_id
-        << " in node " << node_id;
+        << "Unsupported 'diags' admin state for port " << port_id << " in node "
+        << node_id;
   }
 
   bool config_changed = false;
@@ -171,8 +170,8 @@ BFChassisManager::~BFChassisManager() = default;
     VLOG(1) << "Mtu for port " << port_id << " in node " << node_id
             << " changed.";
     config->mtu.reset();
-    RETURN_IF_ERROR(bf_pal_interface_->PortMtuSet(
-        unit, port_id, config_params.mtu()));
+    RETURN_IF_ERROR(
+        bf_pal_interface_->PortMtuSet(unit, port_id, config_params.mtu()));
     config->mtu = config_params.mtu();
     config_changed = true;
   }
@@ -225,7 +224,7 @@ BFChassisManager::~BFChassisManager() = default;
 }
 
 ::util::Status BFChassisManager::PushChassisConfig(
-     const ChassisConfig& config) {
+    const ChassisConfig& config) {
   if (!initialized_) RETURN_IF_ERROR(RegisterEventWriters());
 
   // new maps
@@ -279,8 +278,8 @@ BFChassisManager::~BFChassisManager() = default;
     // Tofino device port.
 
     const PortConfig* config_old = nullptr;
-    const auto* port_id_to_port_config_old = gtl::FindOrNull(
-        node_id_to_port_id_to_port_config_, node_id);
+    const auto* port_id_to_port_config_old =
+        gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
     if (port_id_to_port_config_old != nullptr) {
       config_old = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
     }
@@ -289,9 +288,8 @@ BFChassisManager::~BFChassisManager() = default;
     if (config_old == nullptr) {  // new port
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      APPEND_STATUS_IF_ERROR(
-          status,
-          AddPortHelper(node_id, unit, port_id, singleton_port, &config));
+      APPEND_STATUS_IF_ERROR(status, AddPortHelper(node_id, unit, port_id,
+                                                   singleton_port, &config));
     } else {  // port already exists, config may have changed
       if (config_old->admin_state == ADMIN_STATE_UNKNOWN) {
         // something is wrong with the port, we make sure the port is deleted
@@ -300,9 +298,8 @@ BFChassisManager::~BFChassisManager() = default;
         if (bf_pal_interface_->PortIsValid(unit, port_id)) {
           bf_pal_interface_->PortDelete(unit, port_id);
         }
-        APPEND_STATUS_IF_ERROR(
-            status,
-            AddPortHelper(node_id, unit, port_id, singleton_port, &config));
+        APPEND_STATUS_IF_ERROR(status, AddPortHelper(node_id, unit, port_id,
+                                                     singleton_port, &config));
         continue;
       }
 
@@ -319,9 +316,8 @@ BFChassisManager::~BFChassisManager() = default;
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
       APPEND_STATUS_IF_ERROR(
-          status,
-          UpdatePortHelper(
-              node_id, unit, port_id, singleton_port, *config_old, &config));
+          status, UpdatePortHelper(node_id, unit, port_id, singleton_port,
+                                   *config_old, &config));
     }
   }
 
@@ -336,8 +332,8 @@ BFChassisManager::~BFChassisManager() = default;
       auto unit = node_id_to_unit_[node_id];
       // remove ports which are no longer present in the ChassisConfig
       LOG(INFO) << "Deleting port " << port_id << " in node " << node_id << ".";
-      APPEND_STATUS_IF_ERROR(
-          status, bf_pal_interface_->PortDelete(unit, port_id));
+      APPEND_STATUS_IF_ERROR(status,
+                             bf_pal_interface_->PortDelete(unit, port_id));
     }
   }
 
@@ -354,7 +350,39 @@ BFChassisManager::~BFChassisManager() = default;
 }
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
-     const ChassisConfig& config) {
+    const ChassisConfig& config) {
+  if (config.trunk_ports_size()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Trunk ports are not supported on Tofino.";
+  }
+  if (config.port_groups_size()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Port groups are not supported on Tofino.";
+  }
+
+  // If the class is initialized, we also need to check if the new config will
+  // require a change in the port layout. If so, report reboot required.
+  if (initialized_) {
+    std::map<uint64, std::map<uint32, PortKey>>
+        node_id_to_port_id_to_singleton_port_key;
+
+    for (const auto& singleton_port : config.singleton_ports()) {
+      uint32 port_id = singleton_port.id();
+      uint64 node_id = singleton_port.node();
+
+      node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
+          PortKey(singleton_port.slot(), singleton_port.port(),
+                  singleton_port.channel());
+    }
+
+    if (node_id_to_port_id_to_singleton_port_key !=
+        node_id_to_port_id_to_singleton_port_key_) {
+      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
+             << "The switch is already initialized, but we detected the "
+             << "newly pushed config requires a change in the port layout. "
+             << "The stack needs to be rebooted to finish config push.";
+    }
+  }
   return ::util::OkStatus();
 }
 
@@ -385,7 +413,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 }
 
 ::util::StatusOr<DataResponse> BFChassisManager::GetPortData(
-     const DataRequest::Request& request) {
+    const DataRequest::Request& request) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -393,69 +421,73 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   using Request = DataRequest::Request;
   switch (request.request_case()) {
     case Request::kOperStatus: {
-      ASSIGN_OR_RETURN(auto port_state, GetPortState(
-          request.oper_status().node_id(), request.oper_status().port_id()));
+      ASSIGN_OR_RETURN(auto port_state,
+                       GetPortState(request.oper_status().node_id(),
+                                    request.oper_status().port_id()));
       resp.mutable_oper_status()->set_state(port_state);
       break;
     }
     case Request::kAdminStatus: {
-      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.admin_status().node_id(), request.admin_status().port_id()));
+      ASSIGN_OR_RETURN(auto* config,
+                       GetPortConfig(request.admin_status().node_id(),
+                                     request.admin_status().port_id()));
       resp.mutable_admin_status()->set_state(config->admin_state);
       break;
     }
     case Request::kPortSpeed: {
-      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.port_speed().node_id(), request.port_speed().port_id()));
+      ASSIGN_OR_RETURN(auto* config,
+                       GetPortConfig(request.port_speed().node_id(),
+                                     request.port_speed().port_id()));
       if (config->speed_bps)
         resp.mutable_port_speed()->set_speed_bps(*config->speed_bps);
       break;
     }
     case Request::kNegotiatedPortSpeed: {
-      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.negotiated_port_speed().node_id(),
-          request.negotiated_port_speed().port_id()));
+      ASSIGN_OR_RETURN(
+          auto* config,
+          GetPortConfig(request.negotiated_port_speed().node_id(),
+                        request.negotiated_port_speed().port_id()));
       if (!config->speed_bps) break;
-      ASSIGN_OR_RETURN(auto port_state, GetPortState(
-          request.negotiated_port_speed().node_id(),
-          request.negotiated_port_speed().port_id()));
+      ASSIGN_OR_RETURN(auto port_state,
+                       GetPortState(request.negotiated_port_speed().node_id(),
+                                    request.negotiated_port_speed().port_id()));
       if (port_state != PORT_STATE_UP) break;
       resp.mutable_negotiated_port_speed()->set_speed_bps(*config->speed_bps);
       break;
     }
     case Request::kPortCounters: {
-      RETURN_IF_ERROR(GetPortCounters(
-          request.port_counters().node_id(),
-          request.port_counters().port_id(),
-          resp.mutable_port_counters()));
+      RETURN_IF_ERROR(GetPortCounters(request.port_counters().node_id(),
+                                      request.port_counters().port_id(),
+                                      resp.mutable_port_counters()));
       break;
     }
     case Request::kAutonegStatus: {
-      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.autoneg_status().node_id(),
-          request.autoneg_status().port_id()));
+      ASSIGN_OR_RETURN(auto* config,
+                       GetPortConfig(request.autoneg_status().node_id(),
+                                     request.autoneg_status().port_id()));
       if (config->autoneg)
         resp.mutable_autoneg_status()->set_state(*config->autoneg);
       break;
     }
     case Request::kFrontPanelPortInfo: {
-      RETURN_IF_ERROR(GetFrontPanelPortInfo(
-          request.front_panel_port_info().node_id(),
-          request.front_panel_port_info().port_id(),
-          resp.mutable_front_panel_port_info()));
+      RETURN_IF_ERROR(
+          GetFrontPanelPortInfo(request.front_panel_port_info().node_id(),
+                                request.front_panel_port_info().port_id(),
+                                resp.mutable_front_panel_port_info()));
       break;
     }
     case Request::kFecStatus: {
-      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.fec_status().node_id(), request.fec_status().port_id()));
+      ASSIGN_OR_RETURN(auto* config,
+                       GetPortConfig(request.fec_status().node_id(),
+                                     request.fec_status().port_id()));
       if (config->fec_mode)
         resp.mutable_fec_status()->set_mode(*config->fec_mode);
       break;
     }
     case Request::kLoopbackStatus: {
-      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.loopback_status().node_id(),
-          request.loopback_status().port_id()));
+      ASSIGN_OR_RETURN(auto* config,
+                       GetPortConfig(request.loopback_status().node_id(),
+                                     request.loopback_status().port_id()));
       if (config->loopback_mode)
         resp.mutable_loopback_status()->set_state(*config->loopback_mode);
       break;
@@ -466,8 +498,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return resp;
 }
 
-::util::StatusOr<PortState> BFChassisManager::GetPortState(
-    uint64 node_id, uint32 port_id) {
+::util::StatusOr<PortState> BFChassisManager::GetPortState(uint64 node_id,
+                                                           uint32 port_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -495,8 +527,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return port_state;
 }
 
-::util::Status BFChassisManager::GetPortCounters(
-    uint64 node_id, uint32 port_id, PortCounters* counters) {
+::util::Status BFChassisManager::GetPortCounters(uint64 node_id, uint32 port_id,
+                                                 PortCounters* counters) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -525,8 +557,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   LOG(INFO) << "Replaying ports for node " << node_id << ".";
 
   auto replay_one_port = [node_id, unit, this](
-      uint32 port_id, const PortConfig& config, PortConfig* config_new)
-      -> ::util::Status {
+                             uint32 port_id, const PortConfig& config,
+                             PortConfig* config_new) -> ::util::Status {
     VLOG(1) << "Replaying port " << port_id << " in node " << node_id << ".";
 
     if (config.admin_state == ADMIN_STATE_UNKNOWN) {
@@ -546,20 +578,20 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
           << "fec_mode field should contain a value";
     }
 
-    RETURN_IF_ERROR(bf_pal_interface_->PortAdd(
-        unit, port_id, *config.speed_bps, *config.fec_mode));
+    RETURN_IF_ERROR(bf_pal_interface_->PortAdd(unit, port_id, *config.speed_bps,
+                                               *config.fec_mode));
     config_new->speed_bps = *config.speed_bps;
     config_new->admin_state = ADMIN_STATE_DISABLED;
     config_new->fec_mode = *config.fec_mode;
 
     if (config.mtu) {
-      RETURN_IF_ERROR(bf_pal_interface_->PortMtuSet(
-          unit, port_id, *config.mtu));
+      RETURN_IF_ERROR(
+          bf_pal_interface_->PortMtuSet(unit, port_id, *config.mtu));
       config_new->mtu = *config.mtu;
     }
     if (config.autoneg) {
-      RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(
-          unit, port_id, *config.autoneg));
+      RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(unit, port_id,
+                                                              *config.autoneg));
       config_new->autoneg = *config.autoneg;
     }
     if (config.loopback_mode) {
@@ -581,8 +613,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   for (auto& p : node_id_to_port_id_to_port_config_[node_id]) {
     PortConfig config_new;
-    APPEND_STATUS_IF_ERROR(
-        status, replay_one_port(p.first, p.second, &config_new));
+    APPEND_STATUS_IF_ERROR(status,
+                           replay_one_port(p.first, p.second, &config_new));
     p.second = config_new;
   }
 
@@ -601,35 +633,34 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_state != nullptr)
       << "Node " << node_id << " has a configuration mismatch.";
-  for (auto& p : *port_id_to_config)
-    p.second = PortConfig();
-  for (auto& p : *port_id_to_state)
-    p.second = PORT_STATE_UNKNOWN;
+  for (auto& p : *port_id_to_config) p.second = PortConfig();
+  for (auto& p : *port_id_to_state) p.second = PORT_STATE_UNKNOWN;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::GetFrontPanelPortInfo(uint64 node_id,
-                    uint32 port_id, FrontPanelPortInfo* fp_port_info) {
+::util::Status BFChassisManager::GetFrontPanelPortInfo(
+    uint64 node_id, uint32 port_id, FrontPanelPortInfo* fp_port_info) {
   auto* port_id_to_port_key =
-          gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
+      gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_key != nullptr)
-        << "Node " << node_id << " is not configured or not known.";
+      << "Node " << node_id << " is not configured or not known.";
   auto* port_key = gtl::FindOrNull(*port_id_to_port_key, port_id);
   CHECK_RETURN_IF_FALSE(port_key != nullptr)
-        << "Node " << node_id << ", port " << port_id
-        << " is not configured or not known.";
+      << "Node " << node_id << ", port " << port_id
+      << " is not configured or not known.";
   return phal_interface_->GetFrontPanelPortInfo(port_key->slot, port_key->port,
                                                 fp_port_info);
 }
 
 std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(
     PhalInterface* phal_interface, BFPalInterface* bf_pal_interface) {
-  return absl::WrapUnique(new BFChassisManager(
-      phal_interface, bf_pal_interface));
+  return absl::WrapUnique(
+      new BFChassisManager(phal_interface, bf_pal_interface));
 }
 
-void BFChassisManager::SendPortOperStateGnmiEvent(
-    uint64 node_id, uint32 port_id, PortState new_state) {
+void BFChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
+                                                  uint32 port_id,
+                                                  PortState new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
   // Allocate and initialize a PortOperStateChangedEvent event and pass it to
@@ -652,8 +683,9 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
     // RegisterEventWriters and then left untouched until UnregisterEventWriters
     // is called. UnregisterEventWriters joins this thread before resetting the
     // reader.
-    int code = port_status_change_event_reader_->Read(
-        &event, absl::InfiniteDuration()).error_code();
+    int code =
+        port_status_change_event_reader_->Read(&event, absl::InfiniteDuration())
+            .error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -677,8 +709,8 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
         // instead.
         // LOG(ERROR) << "Unknown port " << event.port_id << " in node "
         //            << *node_id << ".";
-        VLOG(1) << "Unknown port " << event.port_id << " in node "
-                << *node_id << ".";
+        VLOG(1) << "Unknown port " << event.port_id << " in node " << *node_id
+                << ".";
         continue;
       }
       LOG(INFO) << "State of port " << event.port_id << " in node " << *node_id
@@ -697,8 +729,8 @@ void BFChassisManager::ReadTransceiverEvents() {
     // RegisterEventWriters and then left untouched until UnregisterEventWriters
     // is called. UnregisterEventWriters joins this thread before resetting the
     // reader.
-    int code = xcvr_event_reader_->Read(
-        &event, absl::InfiniteDuration()).error_code();
+    int code =
+        xcvr_event_reader_->Read(&event, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -755,8 +787,8 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
 
   // TODO(antonin): set autoneg based on media type...
   FrontPanelPortInfo fp_port_info;
-  auto status = phal_interface_->GetFrontPanelPortInfo(
-      slot, port, &fp_port_info);
+  auto status =
+      phal_interface_->GetFrontPanelPortInfo(slot, port, &fp_port_info);
   if (!status.ok()) {
     LOG(ERROR) << "Failure in TransceiverEventHandler: " << status;
     return;
@@ -778,8 +810,8 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   }
 
   {
-    port_status_change_event_channel_ = Channel<PortStatusChangeEvent>::Create(
-        kMaxPortStatusChangeEventDepth);
+    port_status_change_event_channel_ =
+        Channel<PortStatusChangeEvent>::Create(kMaxPortStatusChangeEventDepth);
     // Create and hand-off Writer to the BFPalInterface.
     auto writer = ChannelWriter<PortStatusChangeEvent>::Create(
         port_status_change_event_channel_);
@@ -790,26 +822,25 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
     port_status_change_event_reader_ =
         ChannelReader<PortStatusChangeEvent>::Create(
             port_status_change_event_channel_);
-    port_status_change_event_thread_ = std::thread(
-        [this]() { this->ReadPortStatusChangeEvents(); });
+    port_status_change_event_thread_ =
+        std::thread([this]() { this->ReadPortStatusChangeEvents(); });
   }
 
   if (xcvr_event_writer_id_ == kInvalidWriterId) {
     xcvr_event_channel_ = Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
     auto writer = ChannelWriter<TransceiverEvent>::Create(xcvr_event_channel_);
     int priority = PhalInterface::kTransceiverEventWriterPriorityHigh;
-    ASSIGN_OR_RETURN(
-        xcvr_event_writer_id_,
-        phal_interface_->RegisterTransceiverEventWriter(
-            std::move(writer), priority));
+    ASSIGN_OR_RETURN(xcvr_event_writer_id_,
+                     phal_interface_->RegisterTransceiverEventWriter(
+                         std::move(writer), priority));
 
-    xcvr_event_reader_ = ChannelReader<TransceiverEvent>::Create(
-        xcvr_event_channel_);
-    xcvr_event_thread_ = std::thread(
-        [this]() { this->ReadTransceiverEvents(); });
+    xcvr_event_reader_ =
+        ChannelReader<TransceiverEvent>::Create(xcvr_event_channel_);
+    xcvr_event_thread_ =
+        std::thread([this]() { this->ReadTransceiverEvents(); });
   } else {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Transceiver event handler already registered.";
+           << "Transceiver event handler already registered.";
   }
 
   return ::util::OkStatus();
@@ -830,12 +861,11 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
                                xcvr_event_writer_id_));
     xcvr_event_writer_id_ = kInvalidWriterId;
     if (!xcvr_event_channel_->Close()) {
-      APPEND_ERROR(status)
-          << "Error when closing transceiver event channel.";
+      APPEND_ERROR(status) << "Error when closing transceiver event channel.";
     }
   } else {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Transceiver event handler not registered.";
+           << "Transceiver event handler not registered.";
   }
 
   port_status_change_event_thread_.join();

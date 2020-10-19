@@ -4,7 +4,7 @@
 
 licenses(["notice"])  # Apache v2
 
-# This package contains message-passing libraries for Hercules.
+# This package contains message-passing libraries for Stratum.
 
 load(
     "//bazel:rules.bzl",
