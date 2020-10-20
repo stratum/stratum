@@ -3,34 +3,34 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-ARG BUILDER_IMAGE
-
-FROM $BUILDER_IMAGE as builder
+FROM stratumproject/build:build as builder
 
 # Copy stratum source code
 ADD . /stratum
-
-# Prepare the stratum_bf
 WORKDIR /stratum
 
+# Extract BF SDE install package
+ARG SDE_INSTALL_TAR_NAME
+ENV SDE_INSTALL_TAR /stratum/${SDE_INSTALL_TAR_NAME}
+ENV SDE_INSTALL /bf-sde-install
+WORKDIR ${SDE_INSTALL}
+RUN tar xf ${SDE_INSTALL_TAR}
+
 # Build Barefoot Kernel module if needed
+WORKDIR /stratum
 ARG KERNEL_HEADERS_TAR
-# Copy Linux headers tarball and build script
-COPY $KERNEL_HEADERS_TAR /stratum/
-COPY /stratum/hal/bin/barefoot/docker/build-kdrv.sh /build-kdrv.sh
-
 ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers
-ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
-RUN /build-kdrv.sh
-
-ENV OUTPUT_BASE /output
-ARG WITH_ONLP=true
+ENV KDRV_DIR=/bf-sde-install/src/kdrv/bf_kdrv
+RUN stratum/hal/bin/barefoot/docker/build-kdrv.sh
 
 # Stratum package
-RUN bazel build //stratum/hal/bin/barefoot:stratum_bf_deb \
+ARG STRATUM_TARGET=stratum_bf
+ARG WITH_ONLP=true
+RUN apt install libbz2-dev
+RUN bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
     --define phal_with_onlp=$WITH_ONLP
-RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb $OUTPUT_BASE
+RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output
 
 FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"

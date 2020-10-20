@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 KERNEL_HEADERS_PATH=${KERNEL_HEADERS_PATH:-/usr/src/kernel-headers}
-KDRV_DIR=${KDRV_DIR:-/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv}
+KDRV_DIR=${KDRV_DIR:-/bf-sde-install/src/kdrv/bf_kdrv}
 
 if [ -n "$KERNEL_HEADERS_TAR" ]; then
   mkdir -p "$KERNEL_HEADERS_PATH"

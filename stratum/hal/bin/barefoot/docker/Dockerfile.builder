@@ -35,8 +35,10 @@ RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yam
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 
-# Strip symbols from all .so files
-RUN strip --strip-all $SDE_INSTALL/lib/*.so*
+# Create BF SDE install package
+ARG SDE_INSTALL_TAR_NAME
+COPY build-bf-sde-install-tar.sh /output/
+RUN /output/build-bf-sde-install-tar.sh /output/$SDE_INSTALL_TAR_NAME
 
 # Remove SDE and Linux headers tarball
 RUN rm -r /stratum/*
