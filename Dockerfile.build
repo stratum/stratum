@@ -24,6 +24,9 @@ ARG JOBS
 # + software-properties-common for add-apt-repository
 # OpenNSA dependencies
 # + libelf-dev to build the kernel modules
+# BF SDE dependecies
+# + libelf-dev to build the kernel modules
+# + libbz2-dev for tar archive p4_device_config format
 ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
     libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
