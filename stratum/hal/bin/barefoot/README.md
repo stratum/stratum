@@ -37,7 +37,10 @@ This package installs all dependencies, configuration files and the `stratum_bf`
 In the future we might provide pre-built Debian packages, but for now, you have
 to build them yourself as lined out in this document.
 
-## Installing the SDE
+## Building Stratum for Barefoot Tofino
+
+### Prerequisites
+#### Installing the SDE
 
 Before you can build Stratum, the Barefoot SDE needs to be installed.
 
@@ -70,7 +73,7 @@ are building modules for a specific version other than the host's.
 As there are some issues with building the SDE on ONL switches, it's better to
 do that on a separate server.
 
-### Supported SDE versions
+#### Supported SDE versions
 
  - 8.9.2
  - 9.0.0
@@ -103,7 +106,17 @@ export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
 ./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
 ```
 
-## Building Stratum
+### Packing the SDE install tar archive
+Stratum prefers a tarball of the release artifacts, which can be created using:
+
+```bash
+export SDE_INSTALL_TAR=`pwd`/bf-sde-<SDE_VERSION>-install.tgz
+<STRATUM_ROOT>/stratum/hal/bin/barefoot/docker/build-bf-sde-install-tar.sh
+```
+
+*Note: This script depends on `SDE` and `SDE_INSTALL`.*
+
+### Building Stratum
 
 The [SDE](#installing-the-sde) needs to be installed and set up for this step.
 
