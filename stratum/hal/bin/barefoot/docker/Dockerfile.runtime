@@ -18,7 +18,7 @@ RUN tar xf ${SDE_INSTALL_TAR}
 
 # Build Barefoot Kernel module if needed
 WORKDIR /stratum
-ARG KERNEL_HEADERS_TAR
+ARG KERNEL_HEADERS_TAR_NAME
 ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers
 ENV KDRV_DIR=/bf-sde-install/src/kdrv/bf_kdrv
 RUN stratum/hal/bin/barefoot/docker/build-kdrv.sh
@@ -26,7 +26,7 @@ RUN stratum/hal/bin/barefoot/docker/build-kdrv.sh
 # Stratum package
 ARG STRATUM_TARGET=stratum_bf
 ARG WITH_ONLP=true
-RUN apt install libbz2-dev
+RUN apt-get update && apt-get install -y libbz2-dev
 RUN bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
     --define phal_with_onlp=$WITH_ONLP

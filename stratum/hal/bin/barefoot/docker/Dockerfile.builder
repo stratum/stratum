@@ -13,12 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libelf-dev && \
     rm -rf /var/lib/apt/lists/*
 
-ARG SDE_TAR
-COPY $SDE_TAR /stratum/
+ARG SDE_TAR_NAME
+COPY $SDE_TAR_NAME /stratum/
 
 ENV SDE /bf-sde
 ENV SDE_INSTALL $SDE/install
-RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
+RUN mkdir $SDE && tar xf /stratum/$SDE_TAR_NAME -C $SDE --strip-components 1
 
 # Install an older version of pyresistent before running the P4 studio
 # since the pip will try to install newer version of it when pip install
