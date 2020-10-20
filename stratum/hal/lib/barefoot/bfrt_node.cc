@@ -65,7 +65,7 @@ BfrtNode::~BfrtNode() = default;
   absl::WriterMutexLock l(&lock_);
   // Extract and verify p4_device_config
   BfPipelineConfig bf_config;
-  RETURN_IF_ERROR(DoVerifyForwardingPipelineConfig(config, &bf_config));
+  RETURN_IF_ERROR(ExtractAndVerifyForwardingPipelineConfig(config, &bf_config));
   VLOG(2) << bf_config.DebugString();
 
   // Create internal BfrtDeviceConfig
@@ -192,9 +192,10 @@ BfrtNode::~BfrtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfrtNode::DoVerifyForwardingPipelineConfig(
+::util::Status BfrtNode::ExtractAndVerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config,
     BfPipelineConfig* bf_config) const {
+  CHECK_RETURN_IF_FALSE(bf_config != nullptr) << "bf_config is null";
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
       << "Missing P4 device config";
@@ -206,7 +207,7 @@ BfrtNode::~BfrtNode() = default;
 ::util::Status BfrtNode::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) const {
   BfPipelineConfig bf_config;
-  return DoVerifyForwardingPipelineConfig(config, &bf_config);
+  return ExtractAndVerifyForwardingPipelineConfig(config, &bf_config);
 }
 
 ::util::Status BfrtNode::Shutdown() {

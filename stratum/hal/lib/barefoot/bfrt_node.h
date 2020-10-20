@@ -93,7 +93,7 @@ class BfrtNode final {
            BfrtIdMapper* bfrt_id_mapper, int device_id);
 
   // Extract and verify p4_device_config
-  ::util::Status DoVerifyForwardingPipelineConfig(
+  ::util::Status ExtractAndVerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config,
       BfPipelineConfig* bf_config) const;
 
