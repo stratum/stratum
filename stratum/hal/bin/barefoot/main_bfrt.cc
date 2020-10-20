@@ -20,6 +20,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
+#include "stratum/hal/lib/barefoot/bfrt_grpc_server.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
@@ -138,6 +139,8 @@ namespace barefoot {
         << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
+
+  StartBfRtServerIfEnabled();
 
   RETURN_IF_ERROR(hal->Run());  // blocking
   LOG(INFO) << "See you later!";
