@@ -27,11 +27,11 @@ RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
 # TODO: Remove this once we moved to Python3
 RUN pip install pyrsistent==0.14.0
 
-WORKDIR $SDE/p4studio_build
 
+# Update SDE profile and build
+COPY stratum_profile.yaml $SDE/p4studio_build/profiles/
+WORKDIR $SDE/p4studio_build
 ARG JOBS=4
-# Remove Thrift dependency from the profile (for SDE <= 8.9.x)
-RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 

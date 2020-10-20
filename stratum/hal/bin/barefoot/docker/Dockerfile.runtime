@@ -17,6 +17,7 @@ WORKDIR ${SDE_INSTALL}
 RUN tar xf ${SDE_INSTALL_TAR}
 
 # Build Barefoot Kernel module if needed
+# FIXME(bocon): This is currently broken because we use the tar to build Stratum
 WORKDIR /stratum
 ARG KERNEL_HEADERS_TAR
 ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers

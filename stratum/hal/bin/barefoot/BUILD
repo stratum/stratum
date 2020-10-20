@@ -45,6 +45,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bf_pal_wrapper",
         "//stratum/hal/lib/barefoot:bf_pd_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
+        "//stratum/hal/lib/barefoot:bfrt_grpc_server",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/phal",
         "//stratum/hal/lib/phal:phal_sim",

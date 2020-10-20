@@ -1,0 +1,19 @@
+# SDE_VERSION : 9.2.0
+
+stratum_bf_profile:
+  # Global flags to configure
+  global_configure_options: ''
+
+  # SDE components to be installed
+  packages:
+    - bf-syslibs:
+      - bf_syslibs_configure_options: ''
+    - bf-utils:
+      - bf_utils_configure_options: ''
+    - bf-drivers:
+      - bf_drivers_configure_options: ''
+      - pi
+      - bf-runtime
+
+  # Tofino architecture
+  tofino_architecture: tofino
