@@ -32,6 +32,7 @@ bool IsArchive(const std::string& archive) {
   auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
   archive_read_support_filter_bzip2(a);
   archive_read_support_filter_gzip(a);
+  archive_read_support_filter_xz(a);
   archive_read_support_format_tar(a);
   int r = archive_read_open_memory(a, archive.c_str(), archive.size());
   return r == ARCHIVE_OK;
@@ -45,6 +46,7 @@ bool IsArchive(const std::string& archive) {
   auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
   archive_read_support_filter_bzip2(a);
   archive_read_support_filter_gzip(a);
+  archive_read_support_filter_xz(a);
   archive_read_support_format_tar(a);
   int r = archive_read_open_memory(a, archive.c_str(), archive.size());
   CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
