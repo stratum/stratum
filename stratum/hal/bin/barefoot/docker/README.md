@@ -34,21 +34,27 @@ To build the Docker image for runtime or development, first, you need to have th
 To build the Docker image, run `build-stratum-bf-container.sh` script with SDE and Linux header tarball, for example:
 
 ```bash
-$ ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.xz
+$ ./build-stratum-bf-container.sh -s ~/bf-sde-9.2.0.tgz -i ~/linux-4.14.49-ONL.tar.xz
 ```
 
 You can also build the container image without Kernel headers, and the script will skip building the Kernel module.
 
 ```bash
-$ ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz
+$ ./build-stratum-bf-container.sh -s ~/bf-sde-9.2.0.tgz
 ```
 
-Optional environment variables for this script:
+If you already have generated an SDE install tarball, you can provide it instead of the SDE tarball.
 
- - JOBS: The number of jobs to run simultaneously while building the SDE. Default is 4
- - WITH_ONLP: Includes ONLP library linking. The default is true.
+```bash
+$ ./build-stratum-bf-container.sh -s ~/bf-sde-9.2.0-install.tgz
+```
 
-__Note:__ This script saves an intermediate image named `stratumproject/stratum-bf-builder` for caching artifacts from building SDE, which could be used to speed up future builds when the same SDE tarballs are used as input to the script.
+For more build options, run:
+```bash
+$ ./build-stratum-bf-container.sh --help
+```
+
+__Note:__ If an SDE tarball is provided, this script saves an intermediate image named `stratumproject/stratum-bf-builder` for caching artifacts from building SDE. It also generates an SDE install tar that can be used for future builds.
 
 ## Deploy the container to the device
 
