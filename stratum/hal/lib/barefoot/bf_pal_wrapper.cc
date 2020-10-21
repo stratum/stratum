@@ -3,13 +3,13 @@
 
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 
+#include <memory>
+#include <utility>
+
 extern "C" {
 #include "tofino/bf_pal/bf_pal_port_intf.h"
 #include "tofino/bf_pal/pltfm_intf.h"
 }
-
-#include <memory>
-#include <utility>
 
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
