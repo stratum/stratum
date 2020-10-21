@@ -104,8 +104,9 @@ class BFChassisManagerTest : public ::testing::Test {
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
     bf_pal_mock_ = absl::make_unique<BFPalMock>();
-    bf_chassis_manager_ =
-        BFChassisManager::CreateInstance(phal_mock_.get(), bf_pal_mock_.get());
+    // TODO(max): create parametrized test suite over mode.
+    bf_chassis_manager_ = BFChassisManager::CreateInstance(
+        OPERATION_MODE_STANDALONE, phal_mock_.get(), bf_pal_mock_.get());
     ON_CALL(*bf_pal_mock_, PortIsValid(_, _)).WillByDefault(Return(true));
   }
 
