@@ -327,6 +327,7 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
-      - publish-docker-bf-pipeline-builder:
-          requires:
-            - publish-docker-build
+      - publish-docker-bf-pipeline-builder
+      # TODO(max): enable check before merging to master
+          # requires:
+          #   - publish-docker-build
