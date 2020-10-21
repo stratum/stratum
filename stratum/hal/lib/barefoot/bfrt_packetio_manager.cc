@@ -195,7 +195,7 @@ class BitBuffer {
 
   // Returns and empties the entire buffer.
   std::string PopAll(void) {
-    CHECK(bits_.size() % 8 == 0);
+    CHECK_EQ(bits_.size() % 8, 0);
     return PopField(bits_.size());
   }
 

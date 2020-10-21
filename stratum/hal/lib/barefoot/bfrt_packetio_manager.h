@@ -5,6 +5,7 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_PACKETIO_MANAGER_H_
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

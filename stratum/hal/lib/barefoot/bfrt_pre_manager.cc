@@ -4,6 +4,7 @@
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 
 #include <algorithm>
+#include <string>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"

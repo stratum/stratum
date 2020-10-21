@@ -49,7 +49,7 @@ class BfrtCounterManager {
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.

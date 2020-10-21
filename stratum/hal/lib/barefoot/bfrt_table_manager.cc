@@ -3,8 +3,10 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 
+#include <algorithm>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/match.h"
@@ -42,7 +44,8 @@ struct RegisterClearThreadData {
   std::vector<p4::config::v1::Register> registers;
   BfrtTableManager* mgr;
 
-  RegisterClearThreadData(BfrtTableManager* _mgr) : registers(), mgr(_mgr) {}
+  explicit RegisterClearThreadData(BfrtTableManager* _mgr)
+      : registers(), mgr(_mgr) {}
 };
 }  // namespace
 
@@ -870,7 +873,7 @@ struct RegisterClearThreadData {
     // 1. or 2.
     std::vector<::p4::v1::TableEntry> wanted_tables;
     if (ProtoEqual(table_entry, ::p4::v1::TableEntry::default_instance())) {
-      // TODO: remove workaround by fixing the interfaces?
+      // TODO(max): remove workaround by fixing the interfaces?
       ASSIGN_OR_RETURN(auto ids, GetP4TableIds());
       for (const auto& table_id : ids) {
         ::p4::v1::TableEntry te;
