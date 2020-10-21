@@ -182,6 +182,7 @@ def stratum_deps():
             strip_prefix = "libarchive-3.4.3",
             sha256 = "ee1e749213c108cb60d53147f18c31a73d6717d7e3d2481c157e1b34c881ea39",
             patch_cmds = [
+                "function realpath { echo $(cd $(dirname $1); pwd)/$(basename $1); };" +
                 "./configure --prefix $(realpath ./local-install/) --enable-shared=no --without-openssl",
                 "make -j",
                 "make install",
