@@ -21,7 +21,6 @@ cc_library(
     include_prefix = "libarchive",
     linkopts = [
         "-lbz2",
-        "-llzma"
     ],
     strip_include_prefix = "local-install/include",
 )
