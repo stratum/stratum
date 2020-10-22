@@ -584,6 +584,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     case PLT_GENERIC_TOMAHAWK_PLUS:
       supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
       break;
+    case PLT_GENERIC_TOMAHAWK2:
+      supported_chip_types.insert(BcmChip::TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      supported_chip_types.insert(BcmChip::TOMAHAWK3);
+      break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
              << "Unsupported platform: "
@@ -910,6 +916,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   }
 
   // Check for max num of ports per chip.
+  // TODO(max): find max port number fot TH2/TH3
   std::map<BcmChip::BcmChipType, size_t> chip_type_to_max_num_ports = {
       {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
       {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
