@@ -288,9 +288,9 @@ def stratum_deps():
     if "com_github_broadcom_opennsa" not in native.existing_rules():
         http_archive(
             name = "com_github_broadcom_opennsa",
-            sha256 = "80c3a26f688dd7fc08880fdbbad9ac3424b435697b0ccb889487f55f2bc425c4",
-            urls = ["https://docs.broadcom.com/docs-and-downloads/csg/opennsa-6.5.19.tgz"],
-            strip_prefix = "opennsa-6.5.19",
+            sha256 = "261a440454015122fbf9ac4cccf018b1c358a641d80690be1f1e972b6265d45c",
+            urls = ["https://docs.broadcom.com/docs-and-downloads/csg/opennsa-6.5.19.1.tgz"],
+            strip_prefix = "opennsa-6.5.19.1",
             build_file = "@//bazel:external/openNSA.BUILD",
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.
