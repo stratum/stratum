@@ -236,4 +236,37 @@ size_t ProtoHash(const google::protobuf::Message& m) {
   return string_hasher(s);
 }
 
+std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
+  std::stringstream ss;
+  if (!status.error_details().empty()) {
+    ss << "(overall error code: "
+       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
+       << ", overall error message: "
+       << (status.error_message().empty() ? "None" : status.error_message())
+       << "). Error details: ";
+    ::google::rpc::Status details;
+    if (!details.ParseFromString(status.error_details())) {
+      ss << "Failed to parse ::google::rpc::Status from GRPC status details.";
+    } else {
+      for (int i = 0; i < details.details_size(); ++i) {
+        ::google::rpc::Status detail;
+        if (details.details(i).UnpackTo(&detail)) {
+          ss << "\n(error #" << i + 1 << ": error code: "
+             << ::google::rpc::Code_Name(ToGoogleRpcCode(detail.code()))
+             << ", error message: "
+             << (detail.message().empty() ? "None" : detail.message()) << ") ";
+        }
+      }
+    }
+  } else {
+    ss << "(error code: "
+       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
+       << ", error message: "
+       << (status.error_message().empty() ? "None" : status.error_message())
+       << ").";
+  }
+
+  return ss.str();
+}
+
 }  // namespace stratum

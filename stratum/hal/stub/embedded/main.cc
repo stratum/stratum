@@ -212,45 +212,6 @@ class GetPath {
   ::gnmi::Path path_;
 };
 
-// Helper to convert a gRPC status with error details to a string. Assumes
-// ::grpc::Status includes a binary error detail which is encoding a serialized
-// version of ::google::rpc::Status proto in which the details are captured
-// using proto any messages.
-// TODO(unknown): As soon as we can use internal libraries here,
-// move to common/lib.
-std::string ToString(const ::grpc::Status& status) {
-  std::stringstream ss;
-  if (!status.error_details().empty()) {
-    ss << "(overall error code: "
-       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
-       << ", overall error message: "
-       << (status.error_message().empty() ? "None" : status.error_message())
-       << "). Error details: ";
-    ::google::rpc::Status details;
-    if (!details.ParseFromString(status.error_details())) {
-      ss << "Failed to parse ::google::rpc::Status from GRPC status details.";
-    } else {
-      for (int i = 0; i < details.details_size(); ++i) {
-        ::google::rpc::Status detail;
-        if (details.details(i).UnpackTo(&detail)) {
-          ss << "\n(error #" << i + 1 << ": error code: "
-             << ::google::rpc::Code_Name(ToGoogleRpcCode(detail.code()))
-             << ", error message: "
-             << (detail.message().empty() ? "None" : detail.message()) << ") ";
-        }
-      }
-    }
-  } else {
-    ss << "(error code: "
-       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
-       << ", error message: "
-       << (status.error_message().empty() ? "None" : status.error_message())
-       << ").";
-  }
-
-  return ss.str();
-}
-
 }  // namespace
 
 class HalServiceClient {
@@ -277,7 +238,7 @@ class HalServiceClient {
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
     oc_device.SerializeToString(replace->mutable_val()->mutable_bytes_val());
     CALL_RPC_AND_CHECK_RESULTS(config_monitoring_service_stub_, Set, context,
-                               req, resp, ToString);
+                               req, resp, P4RuntimeGrpcStatusToString);
   }
 
   void SetForwardingPipelineConfig(uint64 node_id, absl::uint128 election_id,
@@ -303,7 +264,7 @@ class HalServiceClient {
         ReadFileToString(p4_pipeline_config_file,
                          req.mutable_config()->mutable_p4_device_config()));
     CALL_RPC_AND_CHECK_RESULTS(p4_service_stub_, SetForwardingPipelineConfig,
-                               context, req, resp, ToString);
+                               context, req, resp, P4RuntimeGrpcStatusToString);
   }
 
   void WriteForwardingEntries(uint64 node_id, absl::uint128 election_id,
@@ -322,7 +283,7 @@ class HalServiceClient {
     req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
     CALL_RPC_AND_CHECK_RESULTS(p4_service_stub_, Write, context, req, resp,
-                               ToString);
+                               P4RuntimeGrpcStatusToString);
   }
 
   void ReadForwardingEntries(uint64 node_id) {
@@ -346,7 +307,7 @@ class HalServiceClient {
     ::grpc::Status status = reader->Finish();
     if (!status.ok()) {
       LOG(ERROR) << "Failed to read the forwarding entries with the following "
-                 << "error details: " << ToString(status);
+                 << "error details: " << P4RuntimeGrpcStatusToString(status);
     }
   }
 
