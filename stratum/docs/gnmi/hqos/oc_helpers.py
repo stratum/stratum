@@ -1,12 +1,17 @@
 
+from __future__ import print_function
 from st_bindings import openconfig_qos
 import json
+import sys
+
+# Drop Profile Info
+dps = {}            # Drop profiles
 
 # Queue Info
 num_tcs = 4         # Number of traffic classes per subscriber
 num_subs = 6        # Number of subscribers
 num_queues = num_tcs * (num_subs + 1)
-q = {}              # queue map
+qm = {}             # queue map
 next_qid = 0
 first_qid = 0
 last_qid = num_queues-1
@@ -28,11 +33,41 @@ ocq = openconfig_qos()
 
 #------------------------ Queue Stuff ----------------------------
 
-def add_drop_profile(name, type, max_q, minth=0, maxth=0, maxprob=0):
+def add_drop_profile(name, type, max_q):
     """Add a new drop profile
 
     :param string    name: the drop profile name
     :param string    type: the queue type
+    :param int      max_q: maximum queue size
+
+    :return: returns the drop profile
+    :rtype: drop_profile
+    """
+
+    dps[name] = ocq.qos.drop_profiles.drop_profile.add(name)
+    dps[name].config.queue_type = type
+    dps[name].config.max_queue_depth_packets = max_q
+
+    return dps[name]
+
+def add_taildrop_drop_profile(name, max_q):
+    """Add a new tail_drop drop profile
+
+    :param string    name: the drop profile name
+    :param int      max_q: maximum queue size
+
+    :return: returns the drop profile
+    :rtype: drop_profile
+    """
+
+    dp = add_drop_profile(name, "DROP_TAIL", max_q)
+
+    return dp
+
+def add_red_drop_profile(name, max_q, minth, maxth, maxprob):
+    """Add a new RED drop profile
+
+    :param string    name: the drop profile name
     :param int      max_q: maximum queue size
     :param int      minth: minimum threshold for RED
     :param int      maxth: maximum threshold for RED
@@ -42,12 +77,33 @@ def add_drop_profile(name, type, max_q, minth=0, maxth=0, maxprob=0):
     :rtype: drop_profile
     """
 
-    dp = ocq.qos.drop_profiles.drop_profile.add(name)
-    dp.config.queue_type = type
-    dp.config.max_queue_depth_packets = max_q
+    dp = add_drop_profile(name, "RED", max_q);
     dp.red.config.minth = minth
     dp.red.config.maxth = maxth
     dp.red.config.maxprob = maxprob
+
+    return dp
+
+def add_wred_drop_profile(name, max_q, classes):
+    """Add a new RED drop profile
+
+    :param string    name: the drop profile name
+    :param int      max_q: maximum queue size
+    :param dict   classes: WRED class parameters (i.e. minth, maxth, maxprob)
+
+    :return: returns the drop profile
+    :rtype: drop_profile
+    """
+
+    dp = add_drop_profile(name, "WRED", max_q);
+    # Add each class
+    for name in classes:
+      red = dp.wred.traffic_classes.traffic_class.add(name)
+      red.config.name = name
+      red.config.id = classes[name][0]
+      red.config.minth = classes[name][1]
+      red.config.maxth = classes[name][2]
+      red.config.maxprob = classes[name][3]
 
     return dp
 
@@ -56,13 +112,21 @@ def setup_drop_profiles():
 
     # Setup Residential Subscriber Drop Profiles
     # Voice - tail drop profile
-    add_drop_profile("voice", "DROP_TAIL", 20)
-
-    # Data - RED drop profile
-    add_drop_profile("data", "RED", 40, 10, 40, 60)
+    add_taildrop_drop_profile("voice", 20)
 
     # Video - RED drop profile
-    add_drop_profile("video", "RED", 30, 20, 40, 70)
+    add_red_drop_profile("video", 40, 20, 30, 70)
+
+    # Data - RED drop profile
+    add_red_drop_profile("data", 30, 10, 20, 60)
+
+    # WRED drop profile
+    classes = {
+      "voice":  ["EF", 10, 20, 25],
+      "video": ["CS4", 10, 20, 60],
+      "data": ["CS0", 20, 30, 70]
+    }
+    add_wred_drop_profile("wred", 40, classes)
 
     return
 
@@ -71,9 +135,9 @@ def setup_queues():
 
     for i in range(num_queues):
         name = "q"+str(i)
-        q[i] = ocq.qos.queues.queue.add(name)
-        q[i].config.name = name
-        q[i].config.drop_profile = "data"
+        qm[name] = ocq.qos.queues.queue.add(name)
+        qm[name].config.name = name
+        qm[name].config.drop_profile = "data"
 
     return
 
@@ -93,27 +157,76 @@ def add_queue_to_sched(name, sched, weight, priority, dp_name):
 
     global next_qid
 
+    # Check for Q
+    q_name = "q"+str(next_qid)
+    if q_name in qm.keys():
+      q = qm[q_name]
+    else:
+        msg = "add_queue_to_sched: Q name {} not found\n"
+        print(msg.format(q_name), file=sys.stderr)
+        sys.exit(1)
+
     tc = sched.inputs.input.add(name)
     tc.config.input_type = "QUEUE"
-    tc.config.queue = "q"+str(next_qid)
+    tc.config.queue = q_name
     tc.config.weight = weight
     tc.config.priority = priority
-    q[next_qid].config.drop_profile = dp_name
+
+    # Set drop profile config in queue config
+    # Note: not really necessary as drop_profile holds this info
+    if dp_name in dps.keys():
+        dp = dps[dp_name]
+
+        q.config.queue_type = dp.config.queue_type
+        q.config.drop_profile = dp_name
+
+        # Set RED config data from drop profile in queue
+        if dp.config.queue_type == "RED":
+            q.red.config.minth = dp.red.config.minth
+            q.red.config.maxth = dp.red.config.maxth
+            q.red.config.maxprob = dp.red.config.maxprob
+
+        # If it's a WRED drop profile add the classes for state to the queue
+        if dp.config.queue_type == "WRED":
+            dp_classes = dp.wred.traffic_classes.traffic_class
+            for name in dp_classes:
+                cl = q.wred.traffic_classes.traffic_class.add(name)
+                cl.config.name = name
+                cl.config.id = dp_classes[name].config.id
+                cl.config.minth = dp_classes[name].config.minth
+                cl.config.maxth = dp_classes[name].config.maxth
+                cl.config.maxprob = dp_classes[name].config.maxprob
+    else:
+        msg = "add_queue_to_sched: drop_profile name {} doesn't exist\n"
+        print(msg.format(dp_name), file=sys.stderr)
+        sys.exit(1)
+
+    # Increment next queue id
     next_qid += 1
 
     return
 
-def add_resi_queues(sched):
-    """Add a residential queues to the given scheduler
+def add_cos_queues(sched):
+    """Add a COS based queues to the given scheduler
 
     :param scheduler sched: scheduler object
 
     """
 
-    add_queue_to_sched("voice", sched, 10, 0, "tc_0")
-    add_queue_to_sched("data", sched, 20, 0, "tc_1")
-    add_queue_to_sched("video", sched, 30, 0, "tc_2")
-    add_queue_to_sched("other", sched, 40, 0, "tc_3")
+    add_queue_to_sched("voice", sched, 10, 0, "voice")
+    add_queue_to_sched("data", sched, 20, 0, "data")
+    add_queue_to_sched("video", sched, 30, 0, "video")
+
+    return
+
+def add_wred_queues(sched):
+    """Add a WRED based queues to the given scheduler
+
+    :param scheduler sched: scheduler object
+
+    """
+
+    add_queue_to_sched("wred", sched, 20, 0, "wred")
 
     return
 
@@ -272,7 +385,7 @@ def add_svg(iname, svg_name, weight, priority, cir):
 
     return
 
-def add_sub(iname, svg_name, sub_name, weight, priority, cir):
+def add_sub(iname, svg_name, sub_name, weight, priority, cir, cos_qs=True):
     """Add a subscriber scheduler
 
     :param string    iname: interface name
@@ -281,6 +394,7 @@ def add_sub(iname, svg_name, sub_name, weight, priority, cir):
     :param int      weight: weight for this scheduler
     :param int    priority: priority for this scheduler
     :param int         cir: committed information rate for this scheduler
+    :param boolean  cos_qs: Is this sub using COS based queues
     """
 
     # Add a subscriber
@@ -288,7 +402,13 @@ def add_sub(iname, svg_name, sub_name, weight, priority, cir):
         add_child_scheduler(sub_name, intf_sp[iname], 
                             svg_sched[svg_name], weight, priority)
     set_1r2c_scheduler_config(sub_sched[sub_name], cir)
-    add_resi_queues(sub_sched[sub_name])
+
+    # COS based queues
+    if cos_qs:
+        add_cos_queues(sub_sched[sub_name])
+    # Else WRED based queues
+    else:
+        add_wred_queues(sub_sched[sub_name])
 
     return
 
@@ -309,8 +429,8 @@ def add_hqos(iname):
     add_svg(iname, svg_name, 10, 0, 50000000000)
 
     # Add subscribers for svg2
-    add_sub(iname, svg_name, "sub4", 10, 0, 2000000)
-    add_sub(iname, svg_name, "sub5", 10, 0, 2000000)
+    add_sub(iname, svg_name, "sub4", 10, 0, 2000000, False)
+    add_sub(iname, svg_name, "sub5", 10, 0, 2000000, False)
 
     # Add Service Group 3
     svg_name = "svg3"
@@ -357,7 +477,7 @@ def setup_interfaces():
 def print_qos():
     """Print the QoS object"""
 
-    print "ocq: {}".format(json.dumps(ocq.get(), indent=4))
+    print("ocq: {}".format(json.dumps(ocq.get(), indent=4)))
 
     return
 

@@ -3640,7 +3640,7 @@ class yc_config_openconfig_qos__qos_queues_queue_red_config(PybindBase):
 
   YANG Description: Configuration data for RED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth',)
+  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth','__maxprob',)
 
   _yang_name = 'config'
 
@@ -3651,6 +3651,7 @@ class yc_config_openconfig_qos__qos_queues_queue_red_config(PybindBase):
     self._path_helper = False
 
     self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
     self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
     self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
 
@@ -3762,11 +3763,49 @@ packets are dropped (or marked if ECN is enabled).
   def _unset_maxth(self):
     self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
 
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/red/config/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/red/config/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+
   minth = __builtin__.property(_get_minth, _set_minth)
   maxth = __builtin__.property(_get_maxth, _set_maxth)
+  maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
 
 
-  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ])
+  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
 
 
 class yc_state_openconfig_qos__qos_queues_queue_red_state(PybindBase):
@@ -4116,16 +4155,279 @@ queues
   _pyangbind_elements = OrderedDict([('config', config), ('state', state), ])
 
 
-class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_state(PybindBase):
+class yc_config_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_config(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/precedences/precedence/state. Each member element of
+  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class/config. Each member element of
+  the container is represented as a class variable - with a specific
+  YANG type.
+
+  YANG Description: Configuration data for WRED queues
+  """
+  __slots__ = ('_path_helper', '_extmethods', '__name','__id','__minth','__maxth','__maxprob',)
+
+  _yang_name = 'config'
+
+  _pybind_generated_by = 'container'
+
+  def __init__(self, *args, **kwargs):
+
+    self._path_helper = False
+
+    self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+    load = kwargs.pop("load", None)
+    if args:
+      if len(args) > 1:
+        raise TypeError("cannot create a YANG container with >1 argument")
+      all_attr = True
+      for e in self._pyangbind_elements:
+        if not hasattr(args[0], e):
+          all_attr = False
+          break
+      if not all_attr:
+        raise ValueError("Supplied object did not have the correct attributes")
+      for e in self._pyangbind_elements:
+        nobj = getattr(args[0], e)
+        if nobj._changed() is False:
+          continue
+        setmethod = getattr(self, "_set_%s" % e)
+        if load is None:
+          setmethod(getattr(args[0], e))
+        else:
+          setmethod(getattr(args[0], e), load=load)
+
+  def _path(self):
+    if hasattr(self, "_parent"):
+      return self._parent._path()+[self._yang_name]
+    else:
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class', u'config']
+
+  def _get_name(self):
+    """
+    Getter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/name (string)
+
+    YANG Description: Descriptive name and key for the class
+    """
+    return self.__name
+      
+  def _set_name(self, v, load=False):
+    """
+    Setter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/name (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_name is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_name() directly.
+
+    YANG Description: Descriptive name and key for the class
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """name must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__name = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+
+  def _get_id(self):
+    """
+    Getter method for id, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/id (string)
+
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
+    """
+    return self.__id
+      
+  def _set_id(self, v, load=False):
+    """
+    Setter method for id, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/id (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_id is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_id() directly.
+
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """id must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__id = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_id(self):
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+
+  def _get_minth(self):
+    """
+    Getter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/minth (uint64)
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    return self.__minth
+      
+  def _set_minth(self, v, load=False):
+    """
+    Setter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/minth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_minth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_minth() directly.
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """minth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)""",
+        })
+
+    self.__minth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_minth(self):
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+
+
+  def _get_maxth(self):
+    """
+    Getter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxth (uint64)
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    return self.__maxth
+      
+  def _set_maxth(self, v, load=False):
+    """
+    Setter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxth() directly.
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)""",
+        })
+
+    self.__maxth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxth(self):
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+
+  name = __builtin__.property(_get_name, _set_name)
+  id = __builtin__.property(_get_id, _set_id)
+  minth = __builtin__.property(_get_minth, _set_minth)
+  maxth = __builtin__.property(_get_maxth, _set_maxth)
+  maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
+
+
+  _pyangbind_elements = OrderedDict([('name', name), ('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
+
+
+class yc_state_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_state(PybindBase):
+  """
+  This class was auto-generated by the PythonClass plugin for PYANG
+  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class/state. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
   YANG Description: Operational state data for WRED
   """
-  __slots__ = ('_path_helper', '_extmethods', '__random_dropped_pkts','__random_dropped_octets',)
+  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth','__maxprob','__random_dropped_pkts','__random_dropped_octets',)
 
   _yang_name = 'state'
 
@@ -4136,7 +4438,10 @@ class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_stat
     self._path_helper = False
 
     self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
     self.__random_dropped_octets = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="random-dropped-octets", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
     self.__random_dropped_pkts = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), is_leaf=True, yang_name="random-dropped-pkts", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=False)
 
     load = kwargs.pop("load", None)
@@ -4164,11 +4469,130 @@ class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_stat
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences', u'precedence', u'state']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class', u'state']
+
+  def _get_minth(self):
+    """
+    Getter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/minth (uint64)
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    return self.__minth
+      
+  def _set_minth(self, v, load=False):
+    """
+    Setter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/minth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_minth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_minth() directly.
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """minth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)""",
+        })
+
+    self.__minth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_minth(self):
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+
+
+  def _get_maxth(self):
+    """
+    Getter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxth (uint64)
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    return self.__maxth
+      
+  def _set_maxth(self, v, load=False):
+    """
+    Setter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxth() directly.
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)""",
+        })
+
+    self.__maxth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxth(self):
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+
 
   def _get_random_dropped_pkts(self):
     """
-    Getter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_pkts (uint32)
+    Getter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_pkts (uint32)
 
     YANG Description: The number of random drop packets.
     """
@@ -4176,7 +4600,7 @@ class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_stat
       
   def _set_random_dropped_pkts(self, v, load=False):
     """
-    Setter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_pkts (uint32)
+    Setter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_pkts (uint32)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_random_dropped_pkts is considered as a private
     method. Backends looking to populate this variable should
@@ -4205,7 +4629,7 @@ class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_stat
 
   def _get_random_dropped_octets(self):
     """
-    Getter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_octets (uint64)
+    Getter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_octets (uint64)
 
     YANG Description: The number of random drop bytes.
     """
@@ -4213,7 +4637,7 @@ class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_stat
       
   def _set_random_dropped_octets(self, v, load=False):
     """
-    Setter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_octets (uint64)
+    Setter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_octets (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_random_dropped_octets is considered as a private
     method. Backends looking to populate this variable should
@@ -4239,25 +4663,28 @@ class yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_stat
   def _unset_random_dropped_octets(self):
     self.__random_dropped_octets = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="random-dropped-octets", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
 
+  minth = __builtin__.property(_get_minth)
+  maxth = __builtin__.property(_get_maxth)
+  maxprob = __builtin__.property(_get_maxprob)
   random_dropped_pkts = __builtin__.property(_get_random_dropped_pkts)
   random_dropped_octets = __builtin__.property(_get_random_dropped_octets)
 
 
-  _pyangbind_elements = OrderedDict([('random_dropped_pkts', random_dropped_pkts), ('random_dropped_octets', random_dropped_octets), ])
+  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ('random_dropped_pkts', random_dropped_pkts), ('random_dropped_octets', random_dropped_octets), ])
 
 
-class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence(PybindBase):
+class yc_traffic_class_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/precedences/precedence. Each member element of
+  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: List of precedences
+  YANG Description: List of classes
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__state',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__config','__state',)
 
-  _yang_name = 'precedence'
+  _yang_name = 'traffic-class'
 
   _pybind_generated_by = 'container'
 
@@ -4266,8 +4693,9 @@ class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence
     self._path_helper = False
 
     self._extmethods = False
-    self.__state = YANGDynClass(base=yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+    self.__state = YANGDynClass(base=yc_state_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -4294,25 +4722,25 @@ class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences', u'precedence']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class']
 
-  def _get_id(self):
+  def _get_name(self):
     """
-    Getter method for id, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/id (leafref)
+    Getter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/name (leafref)
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
-    return self.__id
+    return self.__name
       
-  def _set_id(self, v, load=False):
+  def _set_name(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/id (leafref)
+    Setter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/name (leafref)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_id is considered as a private
+    source YANG file, then _set_name is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_id() directly.
+    do so via calling thisObj._set_name() directly.
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
     parent = getattr(self, "_parent", None)
     if parent is not None and load is False:
@@ -4322,25 +4750,62 @@ class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with leafref""",
+          'error-string': """name must be of a type compatible with leafref""",
           'defined-type': "leafref",
-          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
         })
 
-    self.__id = t
+    self.__name = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_id(self):
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+
+
+  def _get_config(self):
+    """
+    Getter method for config, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config (container)
+
+    YANG Description: Configuration data for WRED queues
+    """
+    return self.__config
+      
+  def _set_config(self, v, load=False):
+    """
+    Setter method for config, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config (container)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_config is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_config() directly.
+
+    YANG Description: Configuration data for WRED queues
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=yc_config_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """config must be of a type compatible with container""",
+          'defined-type': "container",
+          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+        })
+
+    self.__config = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_config(self):
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
 
   def _get_state(self):
     """
-    Getter method for state, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state (container)
+    Getter method for state, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state (container)
 
     YANG Description: Operational state data for WRED
     """
@@ -4348,7 +4813,7 @@ class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence
       
   def _set_state(self, v, load=False):
     """
-    Setter method for state, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state (container)
+    Setter method for state, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state (container)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_state is considered as a private
     method. Backends looking to populate this variable should
@@ -4359,12 +4824,12 @@ class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_state_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
           'error-string': """state must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_state_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
     self.__state = t
@@ -4372,27 +4837,28 @@ class yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence
       self._set()
 
   def _unset_state(self):
-    self.__state = YANGDynClass(base=yc_state_openconfig_qos__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__state = YANGDynClass(base=yc_state_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  id = __builtin__.property(_get_id, _set_id)
+  name = __builtin__.property(_get_name, _set_name)
+  config = __builtin__.property(_get_config, _set_config)
   state = __builtin__.property(_get_state, _set_state)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('state', state), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('config', config), ('state', state), ])
 
 
-class yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences(PybindBase):
+class yc_traffic_classes_openconfig_qos__qos_queues_queue_wred_traffic_classes(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/precedences. Each member element of
+  from YANG module openconfig-qos - based on the path /qos/queues/queue/wred/traffic-classes. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: A list of precedence configurations for Weighted RED QoS queues
+  YANG Description: A list of classes for Weighted RED QoS queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedence',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_class',)
 
-  _yang_name = 'precedences'
+  _yang_name = 'traffic-classes'
 
   _pybind_generated_by = 'container'
 
@@ -4401,7 +4867,7 @@ class yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences(PybindBas
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -4428,48 +4894,48 @@ class yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences(PybindBas
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes']
 
-  def _get_precedence(self):
+  def _get_traffic_class(self):
     """
-    Getter method for precedence, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence (list)
+    Getter method for traffic_class, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class (list)
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
-    return self.__precedence
+    return self.__traffic_class
       
-  def _set_precedence(self, v, load=False):
+  def _set_traffic_class(self, v, load=False):
     """
-    Setter method for precedence, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence (list)
+    Setter method for traffic_class, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class (list)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedence is considered as a private
+    source YANG file, then _set_traffic_class is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedence() directly.
+    do so via calling thisObj._set_traffic_class() directly.
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=YANGListType("id",yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+      t = YANGDynClass(v,base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedence must be of a type compatible with list""",
+          'error-string': """traffic_class must be of a type compatible with list""",
           'defined-type': "list",
-          'generated-type': """YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
+          'generated-type': """YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
         })
 
-    self.__precedence = t
+    self.__traffic_class = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedence(self):
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+  def _unset_traffic_class(self):
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
-  precedence = __builtin__.property(_get_precedence, _set_precedence)
+  traffic_class = __builtin__.property(_get_traffic_class, _set_traffic_class)
 
 
-  _pyangbind_elements = OrderedDict([('precedence', precedence), ])
+  _pyangbind_elements = OrderedDict([('traffic_class', traffic_class), ])
 
 
 class yc_wred_openconfig_qos__qos_queues_queue_wred(PybindBase):
@@ -4481,7 +4947,7 @@ class yc_wred_openconfig_qos__qos_queues_queue_wred(PybindBase):
 
   YANG Description: Top-level container for WRED data
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedences',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_classes',)
 
   _yang_name = 'wred'
 
@@ -4492,7 +4958,7 @@ class yc_wred_openconfig_qos__qos_queues_queue_wred(PybindBase):
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -4521,46 +4987,46 @@ class yc_wred_openconfig_qos__qos_queues_queue_wred(PybindBase):
     else:
       return [u'qos', u'queues', u'queue', u'wred']
 
-  def _get_precedences(self):
+  def _get_traffic_classes(self):
     """
-    Getter method for precedences, mapped from YANG variable /qos/queues/queue/wred/precedences (container)
+    Getter method for traffic_classes, mapped from YANG variable /qos/queues/queue/wred/traffic_classes (container)
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of classes for Weighted RED QoS queues
     """
-    return self.__precedences
+    return self.__traffic_classes
       
-  def _set_precedences(self, v, load=False):
+  def _set_traffic_classes(self, v, load=False):
     """
-    Setter method for precedences, mapped from YANG variable /qos/queues/queue/wred/precedences (container)
+    Setter method for traffic_classes, mapped from YANG variable /qos/queues/queue/wred/traffic_classes (container)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedences is considered as a private
+    source YANG file, then _set_traffic_classes is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedences() directly.
+    do so via calling thisObj._set_traffic_classes() directly.
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of classes for Weighted RED QoS queues
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_traffic_classes_openconfig_qos__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedences must be of a type compatible with container""",
+          'error-string': """traffic_classes must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_traffic_classes_openconfig_qos__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
-    self.__precedences = t
+    self.__traffic_classes = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedences(self):
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+  def _unset_traffic_classes(self):
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  precedences = __builtin__.property(_get_precedences, _set_precedences)
+  traffic_classes = __builtin__.property(_get_traffic_classes, _set_traffic_classes)
 
 
-  _pyangbind_elements = OrderedDict([('precedences', precedences), ])
+  _pyangbind_elements = OrderedDict([('traffic_classes', traffic_classes), ])
 
 
 class yc_queue_openconfig_qos__qos_queues_queue(PybindBase):
@@ -12803,16 +13269,16 @@ class yc_red_openconfig_qos__qos_drop_profiles_drop_profile_red(PybindBase):
   _pyangbind_elements = OrderedDict([('config', config), ])
 
 
-class yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence_config(PybindBase):
+class yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos - based on the path /qos/drop-profiles/drop-profile/wred/precedences/precedence/config. Each member element of
+  from YANG module openconfig-qos - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes/traffic-class/config. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
   YANG Description: Configuration data for WRED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__minth','__maxth','__maxprob',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__id','__minth','__maxth','__maxprob',)
 
   _yang_name = 'config'
 
@@ -12824,9 +13290,10 @@ class yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_
 
     self._extmethods = False
     self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
-    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
-    self.__id = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
     self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -12853,35 +13320,80 @@ class yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences', u'precedence', u'config']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes', u'traffic-class', u'config']
+
+  def _get_name(self):
+    """
+    Getter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/name (string)
+
+    YANG Description: Descriptive name and key for the class
+    """
+    return self.__name
+      
+  def _set_name(self, v, load=False):
+    """
+    Setter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/name (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_name is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_name() directly.
+
+    YANG Description: Descriptive name and key for the class
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """name must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__name = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
 
   def _get_id(self):
     """
-    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/id (uint32)
+    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/id (string)
 
-    YANG Description: IP Precedence ID for the Weighted RED queue
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
     """
     return self.__id
       
   def _set_id(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/id (uint32)
+    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/id (string)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_id is considered as a private
     method. Backends looking to populate this variable should
     do so via calling thisObj._set_id() directly.
 
-    YANG Description: IP Precedence ID for the Weighted RED queue
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with uint32""",
-          'defined-type': "uint32",
-          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)""",
+          'error-string': """id must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
         })
 
     self.__id = t
@@ -12889,12 +13401,12 @@ class yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_
       self._set()
 
   def _unset_id(self):
-    self.__id = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
 
 
   def _get_minth(self):
     """
-    Getter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/minth (uint64)
+    Getter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/minth (uint64)
 
     YANG Description: The mininum threshold parameter for a RED-managed queue.
 When the average queue length is less than minth, all
@@ -12904,7 +13416,7 @@ packets are admitted to the queue.
       
   def _set_minth(self, v, load=False):
     """
-    Setter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/minth (uint64)
+    Setter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/minth (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_minth is considered as a private
     method. Backends looking to populate this variable should
@@ -12935,7 +13447,7 @@ packets are admitted to the queue.
 
   def _get_maxth(self):
     """
-    Getter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxth (uint64)
+    Getter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxth (uint64)
 
     YANG Description: The maximum threshold parameter for a RED-managed queue.
 When the average queue length exceeds the maxth value, all
@@ -12945,7 +13457,7 @@ packets are dropped (or marked if ECN is enabled).
       
   def _set_maxth(self, v, load=False):
     """
-    Setter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxth (uint64)
+    Setter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxth (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_maxth is considered as a private
     method. Backends looking to populate this variable should
@@ -12976,7 +13488,7 @@ packets are dropped (or marked if ECN is enabled).
 
   def _get_maxprob(self):
     """
-    Getter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxprob (oc-types:percentage)
+    Getter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
 
     YANG Description: The RED maximum probability percentage.
     """
@@ -12984,7 +13496,7 @@ packets are dropped (or marked if ECN is enabled).
       
   def _set_maxprob(self, v, load=False):
     """
-    Setter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxprob (oc-types:percentage)
+    Setter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_maxprob is considered as a private
     method. Backends looking to populate this variable should
@@ -13010,27 +13522,28 @@ packets are dropped (or marked if ECN is enabled).
   def _unset_maxprob(self):
     self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
 
+  name = __builtin__.property(_get_name, _set_name)
   id = __builtin__.property(_get_id, _set_id)
   minth = __builtin__.property(_get_minth, _set_minth)
   maxth = __builtin__.property(_get_maxth, _set_maxth)
   maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
 
 
-class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence(PybindBase):
+class yc_traffic_class_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos - based on the path /qos/drop-profiles/drop-profile/wred/precedences/precedence. Each member element of
+  from YANG module openconfig-qos - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes/traffic-class. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: List of precedences
+  YANG Description: List of classes
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__config',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__config',)
 
-  _yang_name = 'precedence'
+  _yang_name = 'traffic-class'
 
   _pybind_generated_by = 'container'
 
@@ -13039,8 +13552,8 @@ class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_preceden
     self._path_helper = False
 
     self._extmethods = False
-    self.__config = YANGDynClass(base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -13067,25 +13580,25 @@ class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_preceden
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences', u'precedence']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes', u'traffic-class']
 
-  def _get_id(self):
+  def _get_name(self):
     """
-    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/id (leafref)
+    Getter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/name (leafref)
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
-    return self.__id
+    return self.__name
       
-  def _set_id(self, v, load=False):
+  def _set_name(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/id (leafref)
+    Setter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/name (leafref)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_id is considered as a private
+    source YANG file, then _set_name is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_id() directly.
+    do so via calling thisObj._set_name() directly.
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
     parent = getattr(self, "_parent", None)
     if parent is not None and load is False:
@@ -13095,25 +13608,25 @@ class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_preceden
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with leafref""",
+          'error-string': """name must be of a type compatible with leafref""",
           'defined-type': "leafref",
-          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
         })
 
-    self.__id = t
+    self.__name = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_id(self):
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
 
   def _get_config(self):
     """
-    Getter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config (container)
+    Getter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config (container)
 
     YANG Description: Configuration data for WRED queues
     """
@@ -13121,7 +13634,7 @@ class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_preceden
       
   def _set_config(self, v, load=False):
     """
-    Setter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config (container)
+    Setter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config (container)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_config is considered as a private
     method. Backends looking to populate this variable should
@@ -13132,12 +13645,12 @@ class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_preceden
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
           'error-string': """config must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
     self.__config = t
@@ -13145,27 +13658,27 @@ class yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_preceden
       self._set()
 
   def _unset_config(self):
-    self.__config = YANGDynClass(base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  id = __builtin__.property(_get_id, _set_id)
+  name = __builtin__.property(_get_name, _set_name)
   config = __builtin__.property(_get_config, _set_config)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('config', config), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('config', config), ])
 
 
-class yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences(PybindBase):
+class yc_traffic_classes_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos - based on the path /qos/drop-profiles/drop-profile/wred/precedences. Each member element of
+  from YANG module openconfig-qos - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: A list of precedence configurations for Weighted RED QoS queues
+  YANG Description: A list of Weighted RED class confgurations for QoS queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedence',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_class',)
 
-  _yang_name = 'precedences'
+  _yang_name = 'traffic-classes'
 
   _pybind_generated_by = 'container'
 
@@ -13174,7 +13687,7 @@ class yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precede
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -13201,48 +13714,48 @@ class yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precede
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes']
 
-  def _get_precedence(self):
+  def _get_traffic_class(self):
     """
-    Getter method for precedence, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence (list)
+    Getter method for traffic_class, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class (list)
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
-    return self.__precedence
+    return self.__traffic_class
       
-  def _set_precedence(self, v, load=False):
+  def _set_traffic_class(self, v, load=False):
     """
-    Setter method for precedence, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence (list)
+    Setter method for traffic_class, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class (list)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedence is considered as a private
+    source YANG file, then _set_traffic_class is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedence() directly.
+    do so via calling thisObj._set_traffic_class() directly.
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=YANGListType("id",yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+      t = YANGDynClass(v,base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedence must be of a type compatible with list""",
+          'error-string': """traffic_class must be of a type compatible with list""",
           'defined-type': "list",
-          'generated-type': """YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
+          'generated-type': """YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
         })
 
-    self.__precedence = t
+    self.__traffic_class = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedence(self):
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+  def _unset_traffic_class(self):
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
-  precedence = __builtin__.property(_get_precedence, _set_precedence)
+  traffic_class = __builtin__.property(_get_traffic_class, _set_traffic_class)
 
 
-  _pyangbind_elements = OrderedDict([('precedence', precedence), ])
+  _pyangbind_elements = OrderedDict([('traffic_class', traffic_class), ])
 
 
 class yc_wred_openconfig_qos__qos_drop_profiles_drop_profile_wred(PybindBase):
@@ -13254,7 +13767,7 @@ class yc_wred_openconfig_qos__qos_drop_profiles_drop_profile_wred(PybindBase):
 
   YANG Description: Top-level container for data related to Weighted RED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedences',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_classes',)
 
   _yang_name = 'wred'
 
@@ -13265,7 +13778,7 @@ class yc_wred_openconfig_qos__qos_drop_profiles_drop_profile_wred(PybindBase):
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -13294,46 +13807,46 @@ class yc_wred_openconfig_qos__qos_drop_profiles_drop_profile_wred(PybindBase):
     else:
       return [u'qos', u'drop-profiles', u'drop-profile', u'wred']
 
-  def _get_precedences(self):
+  def _get_traffic_classes(self):
     """
-    Getter method for precedences, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences (container)
+    Getter method for traffic_classes, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes (container)
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of Weighted RED class confgurations for QoS queues
     """
-    return self.__precedences
+    return self.__traffic_classes
       
-  def _set_precedences(self, v, load=False):
+  def _set_traffic_classes(self, v, load=False):
     """
-    Setter method for precedences, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences (container)
+    Setter method for traffic_classes, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes (container)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedences is considered as a private
+    source YANG file, then _set_traffic_classes is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedences() directly.
+    do so via calling thisObj._set_traffic_classes() directly.
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of Weighted RED class confgurations for QoS queues
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_traffic_classes_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedences must be of a type compatible with container""",
+          'error-string': """traffic_classes must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_traffic_classes_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
-    self.__precedences = t
+    self.__traffic_classes = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedences(self):
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+  def _unset_traffic_classes(self):
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  precedences = __builtin__.property(_get_precedences, _set_precedences)
+  traffic_classes = __builtin__.property(_get_traffic_classes, _set_traffic_classes)
 
 
-  _pyangbind_elements = OrderedDict([('precedences', precedences), ])
+  _pyangbind_elements = OrderedDict([('traffic_classes', traffic_classes), ])
 
 
 class yc_drop_profile_openconfig_qos__qos_drop_profiles_drop_profile(PybindBase):
@@ -17572,7 +18085,7 @@ class yc_config_openconfig_qos_interfaces__qos_queues_queue_red_config(PybindBas
 
   YANG Description: Configuration data for RED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth',)
+  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth','__maxprob',)
 
   _yang_name = 'config'
 
@@ -17583,6 +18096,7 @@ class yc_config_openconfig_qos_interfaces__qos_queues_queue_red_config(PybindBas
     self._path_helper = False
 
     self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
     self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
     self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
 
@@ -17694,11 +18208,49 @@ packets are dropped (or marked if ECN is enabled).
   def _unset_maxth(self):
     self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
 
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/red/config/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/red/config/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+
   minth = __builtin__.property(_get_minth, _set_minth)
   maxth = __builtin__.property(_get_maxth, _set_maxth)
+  maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
 
 
-  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ])
+  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
 
 
 class yc_state_openconfig_qos_interfaces__qos_queues_queue_red_state(PybindBase):
@@ -18048,16 +18600,279 @@ queues
   _pyangbind_elements = OrderedDict([('config', config), ('state', state), ])
 
 
-class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence_state(PybindBase):
+class yc_config_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_config(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/precedences/precedence/state. Each member element of
+  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class/config. Each member element of
+  the container is represented as a class variable - with a specific
+  YANG type.
+
+  YANG Description: Configuration data for WRED queues
+  """
+  __slots__ = ('_path_helper', '_extmethods', '__name','__id','__minth','__maxth','__maxprob',)
+
+  _yang_name = 'config'
+
+  _pybind_generated_by = 'container'
+
+  def __init__(self, *args, **kwargs):
+
+    self._path_helper = False
+
+    self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+    load = kwargs.pop("load", None)
+    if args:
+      if len(args) > 1:
+        raise TypeError("cannot create a YANG container with >1 argument")
+      all_attr = True
+      for e in self._pyangbind_elements:
+        if not hasattr(args[0], e):
+          all_attr = False
+          break
+      if not all_attr:
+        raise ValueError("Supplied object did not have the correct attributes")
+      for e in self._pyangbind_elements:
+        nobj = getattr(args[0], e)
+        if nobj._changed() is False:
+          continue
+        setmethod = getattr(self, "_set_%s" % e)
+        if load is None:
+          setmethod(getattr(args[0], e))
+        else:
+          setmethod(getattr(args[0], e), load=load)
+
+  def _path(self):
+    if hasattr(self, "_parent"):
+      return self._parent._path()+[self._yang_name]
+    else:
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class', u'config']
+
+  def _get_name(self):
+    """
+    Getter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/name (string)
+
+    YANG Description: Descriptive name and key for the class
+    """
+    return self.__name
+      
+  def _set_name(self, v, load=False):
+    """
+    Setter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/name (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_name is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_name() directly.
+
+    YANG Description: Descriptive name and key for the class
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """name must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__name = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+
+  def _get_id(self):
+    """
+    Getter method for id, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/id (string)
+
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
+    """
+    return self.__id
+      
+  def _set_id(self, v, load=False):
+    """
+    Setter method for id, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/id (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_id is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_id() directly.
+
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """id must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__id = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_id(self):
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+
+  def _get_minth(self):
+    """
+    Getter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/minth (uint64)
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    return self.__minth
+      
+  def _set_minth(self, v, load=False):
+    """
+    Setter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/minth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_minth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_minth() directly.
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """minth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)""",
+        })
+
+    self.__minth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_minth(self):
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+
+
+  def _get_maxth(self):
+    """
+    Getter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxth (uint64)
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    return self.__maxth
+      
+  def _set_maxth(self, v, load=False):
+    """
+    Setter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxth() directly.
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)""",
+        })
+
+    self.__maxth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxth(self):
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+
+  name = __builtin__.property(_get_name, _set_name)
+  id = __builtin__.property(_get_id, _set_id)
+  minth = __builtin__.property(_get_minth, _set_minth)
+  maxth = __builtin__.property(_get_maxth, _set_maxth)
+  maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
+
+
+  _pyangbind_elements = OrderedDict([('name', name), ('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
+
+
+class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_state(PybindBase):
+  """
+  This class was auto-generated by the PythonClass plugin for PYANG
+  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class/state. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
   YANG Description: Operational state data for WRED
   """
-  __slots__ = ('_path_helper', '_extmethods', '__random_dropped_pkts','__random_dropped_octets',)
+  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth','__maxprob','__random_dropped_pkts','__random_dropped_octets',)
 
   _yang_name = 'state'
 
@@ -18068,7 +18883,10 @@ class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_prec
     self._path_helper = False
 
     self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
     self.__random_dropped_octets = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="random-dropped-octets", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
     self.__random_dropped_pkts = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), is_leaf=True, yang_name="random-dropped-pkts", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=False)
 
     load = kwargs.pop("load", None)
@@ -18096,11 +18914,130 @@ class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_prec
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences', u'precedence', u'state']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class', u'state']
+
+  def _get_minth(self):
+    """
+    Getter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/minth (uint64)
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    return self.__minth
+      
+  def _set_minth(self, v, load=False):
+    """
+    Setter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/minth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_minth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_minth() directly.
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """minth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)""",
+        })
+
+    self.__minth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_minth(self):
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+
+
+  def _get_maxth(self):
+    """
+    Getter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxth (uint64)
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    return self.__maxth
+      
+  def _set_maxth(self, v, load=False):
+    """
+    Setter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxth() directly.
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)""",
+        })
+
+    self.__maxth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxth(self):
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+
 
   def _get_random_dropped_pkts(self):
     """
-    Getter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_pkts (uint32)
+    Getter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_pkts (uint32)
 
     YANG Description: The number of random drop packets.
     """
@@ -18108,7 +19045,7 @@ class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_prec
       
   def _set_random_dropped_pkts(self, v, load=False):
     """
-    Setter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_pkts (uint32)
+    Setter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_pkts (uint32)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_random_dropped_pkts is considered as a private
     method. Backends looking to populate this variable should
@@ -18137,7 +19074,7 @@ class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_prec
 
   def _get_random_dropped_octets(self):
     """
-    Getter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_octets (uint64)
+    Getter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_octets (uint64)
 
     YANG Description: The number of random drop bytes.
     """
@@ -18145,7 +19082,7 @@ class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_prec
       
   def _set_random_dropped_octets(self, v, load=False):
     """
-    Setter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_octets (uint64)
+    Setter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_octets (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_random_dropped_octets is considered as a private
     method. Backends looking to populate this variable should
@@ -18171,25 +19108,28 @@ class yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_prec
   def _unset_random_dropped_octets(self):
     self.__random_dropped_octets = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="random-dropped-octets", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
 
+  minth = __builtin__.property(_get_minth)
+  maxth = __builtin__.property(_get_maxth)
+  maxprob = __builtin__.property(_get_maxprob)
   random_dropped_pkts = __builtin__.property(_get_random_dropped_pkts)
   random_dropped_octets = __builtin__.property(_get_random_dropped_octets)
 
 
-  _pyangbind_elements = OrderedDict([('random_dropped_pkts', random_dropped_pkts), ('random_dropped_octets', random_dropped_octets), ])
+  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ('random_dropped_pkts', random_dropped_pkts), ('random_dropped_octets', random_dropped_octets), ])
 
 
-class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence(PybindBase):
+class yc_traffic_class_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/precedences/precedence. Each member element of
+  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: List of precedences
+  YANG Description: List of classes
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__state',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__config','__state',)
 
-  _yang_name = 'precedence'
+  _yang_name = 'traffic-class'
 
   _pybind_generated_by = 'container'
 
@@ -18198,8 +19138,9 @@ class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences
     self._path_helper = False
 
     self._extmethods = False
-    self.__state = YANGDynClass(base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+    self.__state = YANGDynClass(base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -18226,25 +19167,25 @@ class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences', u'precedence']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class']
 
-  def _get_id(self):
+  def _get_name(self):
     """
-    Getter method for id, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/id (leafref)
+    Getter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/name (leafref)
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
-    return self.__id
+    return self.__name
       
-  def _set_id(self, v, load=False):
+  def _set_name(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/id (leafref)
+    Setter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/name (leafref)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_id is considered as a private
+    source YANG file, then _set_name is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_id() directly.
+    do so via calling thisObj._set_name() directly.
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
     parent = getattr(self, "_parent", None)
     if parent is not None and load is False:
@@ -18254,25 +19195,62 @@ class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with leafref""",
+          'error-string': """name must be of a type compatible with leafref""",
           'defined-type': "leafref",
-          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
         })
 
-    self.__id = t
+    self.__name = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_id(self):
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+
+
+  def _get_config(self):
+    """
+    Getter method for config, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config (container)
+
+    YANG Description: Configuration data for WRED queues
+    """
+    return self.__config
+      
+  def _set_config(self, v, load=False):
+    """
+    Setter method for config, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config (container)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_config is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_config() directly.
+
+    YANG Description: Configuration data for WRED queues
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=yc_config_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """config must be of a type compatible with container""",
+          'defined-type': "container",
+          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+        })
+
+    self.__config = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_config(self):
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
 
   def _get_state(self):
     """
-    Getter method for state, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state (container)
+    Getter method for state, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state (container)
 
     YANG Description: Operational state data for WRED
     """
@@ -18280,7 +19258,7 @@ class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences
       
   def _set_state(self, v, load=False):
     """
-    Setter method for state, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state (container)
+    Setter method for state, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state (container)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_state is considered as a private
     method. Backends looking to populate this variable should
@@ -18291,12 +19269,12 @@ class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
           'error-string': """state must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
     self.__state = t
@@ -18304,27 +19282,28 @@ class yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences
       self._set()
 
   def _unset_state(self):
-    self.__state = YANGDynClass(base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__state = YANGDynClass(base=yc_state_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  id = __builtin__.property(_get_id, _set_id)
+  name = __builtin__.property(_get_name, _set_name)
+  config = __builtin__.property(_get_config, _set_config)
   state = __builtin__.property(_get_state, _set_state)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('state', state), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('config', config), ('state', state), ])
 
 
-class yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedences(PybindBase):
+class yc_traffic_classes_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/precedences. Each member element of
+  from YANG module openconfig-qos-interfaces - based on the path /qos/queues/queue/wred/traffic-classes. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: A list of precedence configurations for Weighted RED QoS queues
+  YANG Description: A list of classes for Weighted RED QoS queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedence',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_class',)
 
-  _yang_name = 'precedences'
+  _yang_name = 'traffic-classes'
 
   _pybind_generated_by = 'container'
 
@@ -18333,7 +19312,7 @@ class yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedence
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -18360,48 +19339,48 @@ class yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedence
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes']
 
-  def _get_precedence(self):
+  def _get_traffic_class(self):
     """
-    Getter method for precedence, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence (list)
+    Getter method for traffic_class, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class (list)
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
-    return self.__precedence
+    return self.__traffic_class
       
-  def _set_precedence(self, v, load=False):
+  def _set_traffic_class(self, v, load=False):
     """
-    Setter method for precedence, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence (list)
+    Setter method for traffic_class, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class (list)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedence is considered as a private
+    source YANG file, then _set_traffic_class is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedence() directly.
+    do so via calling thisObj._set_traffic_class() directly.
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+      t = YANGDynClass(v,base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedence must be of a type compatible with list""",
+          'error-string': """traffic_class must be of a type compatible with list""",
           'defined-type': "list",
-          'generated-type': """YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
+          'generated-type': """YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
         })
 
-    self.__precedence = t
+    self.__traffic_class = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedence(self):
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+  def _unset_traffic_class(self):
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
-  precedence = __builtin__.property(_get_precedence, _set_precedence)
+  traffic_class = __builtin__.property(_get_traffic_class, _set_traffic_class)
 
 
-  _pyangbind_elements = OrderedDict([('precedence', precedence), ])
+  _pyangbind_elements = OrderedDict([('traffic_class', traffic_class), ])
 
 
 class yc_wred_openconfig_qos_interfaces__qos_queues_queue_wred(PybindBase):
@@ -18413,7 +19392,7 @@ class yc_wred_openconfig_qos_interfaces__qos_queues_queue_wred(PybindBase):
 
   YANG Description: Top-level container for WRED data
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedences',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_classes',)
 
   _yang_name = 'wred'
 
@@ -18424,7 +19403,7 @@ class yc_wred_openconfig_qos_interfaces__qos_queues_queue_wred(PybindBase):
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -18453,46 +19432,46 @@ class yc_wred_openconfig_qos_interfaces__qos_queues_queue_wred(PybindBase):
     else:
       return [u'qos', u'queues', u'queue', u'wred']
 
-  def _get_precedences(self):
+  def _get_traffic_classes(self):
     """
-    Getter method for precedences, mapped from YANG variable /qos/queues/queue/wred/precedences (container)
+    Getter method for traffic_classes, mapped from YANG variable /qos/queues/queue/wred/traffic_classes (container)
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of classes for Weighted RED QoS queues
     """
-    return self.__precedences
+    return self.__traffic_classes
       
-  def _set_precedences(self, v, load=False):
+  def _set_traffic_classes(self, v, load=False):
     """
-    Setter method for precedences, mapped from YANG variable /qos/queues/queue/wred/precedences (container)
+    Setter method for traffic_classes, mapped from YANG variable /qos/queues/queue/wred/traffic_classes (container)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedences is considered as a private
+    source YANG file, then _set_traffic_classes is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedences() directly.
+    do so via calling thisObj._set_traffic_classes() directly.
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of classes for Weighted RED QoS queues
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_traffic_classes_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedences must be of a type compatible with container""",
+          'error-string': """traffic_classes must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_traffic_classes_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
-    self.__precedences = t
+    self.__traffic_classes = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedences(self):
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_interfaces__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+  def _unset_traffic_classes(self):
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_interfaces__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  precedences = __builtin__.property(_get_precedences, _set_precedences)
+  traffic_classes = __builtin__.property(_get_traffic_classes, _set_traffic_classes)
 
 
-  _pyangbind_elements = OrderedDict([('precedences', precedences), ])
+  _pyangbind_elements = OrderedDict([('traffic_classes', traffic_classes), ])
 
 
 class yc_queue_openconfig_qos_interfaces__qos_queues_queue(PybindBase):
@@ -26735,16 +27714,16 @@ class yc_red_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_red(Pybin
   _pyangbind_elements = OrderedDict([('config', config), ])
 
 
-class yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence_config(PybindBase):
+class yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-interfaces - based on the path /qos/drop-profiles/drop-profile/wred/precedences/precedence/config. Each member element of
+  from YANG module openconfig-qos-interfaces - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes/traffic-class/config. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
   YANG Description: Configuration data for WRED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__minth','__maxth','__maxprob',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__id','__minth','__maxth','__maxprob',)
 
   _yang_name = 'config'
 
@@ -26756,9 +27735,10 @@ class yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_p
 
     self._extmethods = False
     self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
-    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
-    self.__id = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
     self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -26785,35 +27765,80 @@ class yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_p
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences', u'precedence', u'config']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes', u'traffic-class', u'config']
+
+  def _get_name(self):
+    """
+    Getter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/name (string)
+
+    YANG Description: Descriptive name and key for the class
+    """
+    return self.__name
+      
+  def _set_name(self, v, load=False):
+    """
+    Setter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/name (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_name is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_name() directly.
+
+    YANG Description: Descriptive name and key for the class
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """name must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__name = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
 
   def _get_id(self):
     """
-    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/id (uint32)
+    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/id (string)
 
-    YANG Description: IP Precedence ID for the Weighted RED queue
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
     """
     return self.__id
       
   def _set_id(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/id (uint32)
+    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/id (string)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_id is considered as a private
     method. Backends looking to populate this variable should
     do so via calling thisObj._set_id() directly.
 
-    YANG Description: IP Precedence ID for the Weighted RED queue
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with uint32""",
-          'defined-type': "uint32",
-          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)""",
+          'error-string': """id must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
         })
 
     self.__id = t
@@ -26821,12 +27846,12 @@ class yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_p
       self._set()
 
   def _unset_id(self):
-    self.__id = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
 
 
   def _get_minth(self):
     """
-    Getter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/minth (uint64)
+    Getter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/minth (uint64)
 
     YANG Description: The mininum threshold parameter for a RED-managed queue.
 When the average queue length is less than minth, all
@@ -26836,7 +27861,7 @@ packets are admitted to the queue.
       
   def _set_minth(self, v, load=False):
     """
-    Setter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/minth (uint64)
+    Setter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/minth (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_minth is considered as a private
     method. Backends looking to populate this variable should
@@ -26867,7 +27892,7 @@ packets are admitted to the queue.
 
   def _get_maxth(self):
     """
-    Getter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxth (uint64)
+    Getter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxth (uint64)
 
     YANG Description: The maximum threshold parameter for a RED-managed queue.
 When the average queue length exceeds the maxth value, all
@@ -26877,7 +27902,7 @@ packets are dropped (or marked if ECN is enabled).
       
   def _set_maxth(self, v, load=False):
     """
-    Setter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxth (uint64)
+    Setter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxth (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_maxth is considered as a private
     method. Backends looking to populate this variable should
@@ -26908,7 +27933,7 @@ packets are dropped (or marked if ECN is enabled).
 
   def _get_maxprob(self):
     """
-    Getter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxprob (oc-types:percentage)
+    Getter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
 
     YANG Description: The RED maximum probability percentage.
     """
@@ -26916,7 +27941,7 @@ packets are dropped (or marked if ECN is enabled).
       
   def _set_maxprob(self, v, load=False):
     """
-    Setter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxprob (oc-types:percentage)
+    Setter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_maxprob is considered as a private
     method. Backends looking to populate this variable should
@@ -26942,27 +27967,28 @@ packets are dropped (or marked if ECN is enabled).
   def _unset_maxprob(self):
     self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
 
+  name = __builtin__.property(_get_name, _set_name)
   id = __builtin__.property(_get_id, _set_id)
   minth = __builtin__.property(_get_minth, _set_minth)
   maxth = __builtin__.property(_get_maxth, _set_maxth)
   maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
 
 
-class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence(PybindBase):
+class yc_traffic_class_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-interfaces - based on the path /qos/drop-profiles/drop-profile/wred/precedences/precedence. Each member element of
+  from YANG module openconfig-qos-interfaces - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes/traffic-class. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: List of precedences
+  YANG Description: List of classes
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__config',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__config',)
 
-  _yang_name = 'precedence'
+  _yang_name = 'traffic-class'
 
   _pybind_generated_by = 'container'
 
@@ -26971,8 +27997,8 @@ class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wr
     self._path_helper = False
 
     self._extmethods = False
-    self.__config = YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -26999,25 +28025,25 @@ class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wr
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences', u'precedence']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes', u'traffic-class']
 
-  def _get_id(self):
+  def _get_name(self):
     """
-    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/id (leafref)
+    Getter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/name (leafref)
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
-    return self.__id
+    return self.__name
       
-  def _set_id(self, v, load=False):
+  def _set_name(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/id (leafref)
+    Setter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/name (leafref)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_id is considered as a private
+    source YANG file, then _set_name is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_id() directly.
+    do so via calling thisObj._set_name() directly.
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
     parent = getattr(self, "_parent", None)
     if parent is not None and load is False:
@@ -27027,25 +28053,25 @@ class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wr
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with leafref""",
+          'error-string': """name must be of a type compatible with leafref""",
           'defined-type': "leafref",
-          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
         })
 
-    self.__id = t
+    self.__name = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_id(self):
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
 
   def _get_config(self):
     """
-    Getter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config (container)
+    Getter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config (container)
 
     YANG Description: Configuration data for WRED queues
     """
@@ -27053,7 +28079,7 @@ class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wr
       
   def _set_config(self, v, load=False):
     """
-    Setter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config (container)
+    Setter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config (container)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_config is considered as a private
     method. Backends looking to populate this variable should
@@ -27064,12 +28090,12 @@ class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wr
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
           'error-string': """config must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
     self.__config = t
@@ -27077,27 +28103,27 @@ class yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wr
       self._set()
 
   def _unset_config(self):
-    self.__config = YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  id = __builtin__.property(_get_id, _set_id)
+  name = __builtin__.property(_get_name, _set_name)
   config = __builtin__.property(_get_config, _set_config)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('config', config), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('config', config), ])
 
 
-class yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences(PybindBase):
+class yc_traffic_classes_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-interfaces - based on the path /qos/drop-profiles/drop-profile/wred/precedences. Each member element of
+  from YANG module openconfig-qos-interfaces - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: A list of precedence configurations for Weighted RED QoS queues
+  YANG Description: A list of Weighted RED class confgurations for QoS queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedence',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_class',)
 
-  _yang_name = 'precedences'
+  _yang_name = 'traffic-classes'
 
   _pybind_generated_by = 'container'
 
@@ -27106,7 +28132,7 @@ class yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_w
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -27133,48 +28159,48 @@ class yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_w
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes']
 
-  def _get_precedence(self):
+  def _get_traffic_class(self):
     """
-    Getter method for precedence, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence (list)
+    Getter method for traffic_class, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class (list)
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
-    return self.__precedence
+    return self.__traffic_class
       
-  def _set_precedence(self, v, load=False):
+  def _set_traffic_class(self, v, load=False):
     """
-    Setter method for precedence, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence (list)
+    Setter method for traffic_class, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class (list)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedence is considered as a private
+    source YANG file, then _set_traffic_class is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedence() directly.
+    do so via calling thisObj._set_traffic_class() directly.
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+      t = YANGDynClass(v,base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedence must be of a type compatible with list""",
+          'error-string': """traffic_class must be of a type compatible with list""",
           'defined-type': "list",
-          'generated-type': """YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
+          'generated-type': """YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
         })
 
-    self.__precedence = t
+    self.__traffic_class = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedence(self):
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+  def _unset_traffic_class(self):
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
-  precedence = __builtin__.property(_get_precedence, _set_precedence)
+  traffic_class = __builtin__.property(_get_traffic_class, _set_traffic_class)
 
 
-  _pyangbind_elements = OrderedDict([('precedence', precedence), ])
+  _pyangbind_elements = OrderedDict([('traffic_class', traffic_class), ])
 
 
 class yc_wred_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred(PybindBase):
@@ -27186,7 +28212,7 @@ class yc_wred_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred(Pyb
 
   YANG Description: Top-level container for data related to Weighted RED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedences',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_classes',)
 
   _yang_name = 'wred'
 
@@ -27197,7 +28223,7 @@ class yc_wred_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred(Pyb
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -27226,46 +28252,46 @@ class yc_wred_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred(Pyb
     else:
       return [u'qos', u'drop-profiles', u'drop-profile', u'wred']
 
-  def _get_precedences(self):
+  def _get_traffic_classes(self):
     """
-    Getter method for precedences, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences (container)
+    Getter method for traffic_classes, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes (container)
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of Weighted RED class confgurations for QoS queues
     """
-    return self.__precedences
+    return self.__traffic_classes
       
-  def _set_precedences(self, v, load=False):
+  def _set_traffic_classes(self, v, load=False):
     """
-    Setter method for precedences, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences (container)
+    Setter method for traffic_classes, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes (container)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedences is considered as a private
+    source YANG file, then _set_traffic_classes is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedences() directly.
+    do so via calling thisObj._set_traffic_classes() directly.
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of Weighted RED class confgurations for QoS queues
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_traffic_classes_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedences must be of a type compatible with container""",
+          'error-string': """traffic_classes must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_traffic_classes_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
-    self.__precedences = t
+    self.__traffic_classes = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedences(self):
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+  def _unset_traffic_classes(self):
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_interfaces__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  precedences = __builtin__.property(_get_precedences, _set_precedences)
+  traffic_classes = __builtin__.property(_get_traffic_classes, _set_traffic_classes)
 
 
-  _pyangbind_elements = OrderedDict([('precedences', precedences), ])
+  _pyangbind_elements = OrderedDict([('traffic_classes', traffic_classes), ])
 
 
 class yc_drop_profile_openconfig_qos_interfaces__qos_drop_profiles_drop_profile(PybindBase):
@@ -31505,7 +32531,7 @@ class yc_config_openconfig_qos_elements__qos_queues_queue_red_config(PybindBase)
 
   YANG Description: Configuration data for RED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth',)
+  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth','__maxprob',)
 
   _yang_name = 'config'
 
@@ -31516,6 +32542,7 @@ class yc_config_openconfig_qos_elements__qos_queues_queue_red_config(PybindBase)
     self._path_helper = False
 
     self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
     self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
     self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
 
@@ -31627,11 +32654,49 @@ packets are dropped (or marked if ECN is enabled).
   def _unset_maxth(self):
     self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://openconfig.net/yang/qos', defining_module='openconfig-qos', yang_type='uint64', is_config=True)
 
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/red/config/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/red/config/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+
   minth = __builtin__.property(_get_minth, _set_minth)
   maxth = __builtin__.property(_get_maxth, _set_maxth)
+  maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
 
 
-  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ])
+  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
 
 
 class yc_state_openconfig_qos_elements__qos_queues_queue_red_state(PybindBase):
@@ -31981,16 +33046,279 @@ queues
   _pyangbind_elements = OrderedDict([('config', config), ('state', state), ])
 
 
-class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence_state(PybindBase):
+class yc_config_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_config(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/precedences/precedence/state. Each member element of
+  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class/config. Each member element of
+  the container is represented as a class variable - with a specific
+  YANG type.
+
+  YANG Description: Configuration data for WRED queues
+  """
+  __slots__ = ('_path_helper', '_extmethods', '__name','__id','__minth','__maxth','__maxprob',)
+
+  _yang_name = 'config'
+
+  _pybind_generated_by = 'container'
+
+  def __init__(self, *args, **kwargs):
+
+    self._path_helper = False
+
+    self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+    load = kwargs.pop("load", None)
+    if args:
+      if len(args) > 1:
+        raise TypeError("cannot create a YANG container with >1 argument")
+      all_attr = True
+      for e in self._pyangbind_elements:
+        if not hasattr(args[0], e):
+          all_attr = False
+          break
+      if not all_attr:
+        raise ValueError("Supplied object did not have the correct attributes")
+      for e in self._pyangbind_elements:
+        nobj = getattr(args[0], e)
+        if nobj._changed() is False:
+          continue
+        setmethod = getattr(self, "_set_%s" % e)
+        if load is None:
+          setmethod(getattr(args[0], e))
+        else:
+          setmethod(getattr(args[0], e), load=load)
+
+  def _path(self):
+    if hasattr(self, "_parent"):
+      return self._parent._path()+[self._yang_name]
+    else:
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class', u'config']
+
+  def _get_name(self):
+    """
+    Getter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/name (string)
+
+    YANG Description: Descriptive name and key for the class
+    """
+    return self.__name
+      
+  def _set_name(self, v, load=False):
+    """
+    Setter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/name (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_name is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_name() directly.
+
+    YANG Description: Descriptive name and key for the class
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """name must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__name = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+
+  def _get_id(self):
+    """
+    Getter method for id, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/id (string)
+
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
+    """
+    return self.__id
+      
+  def _set_id(self, v, load=False):
+    """
+    Setter method for id, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/id (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_id is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_id() directly.
+
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """id must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__id = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_id(self):
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
+
+  def _get_minth(self):
+    """
+    Getter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/minth (uint64)
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    return self.__minth
+      
+  def _set_minth(self, v, load=False):
+    """
+    Setter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/minth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_minth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_minth() directly.
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """minth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)""",
+        })
+
+    self.__minth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_minth(self):
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+
+
+  def _get_maxth(self):
+    """
+    Getter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxth (uint64)
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    return self.__maxth
+      
+  def _set_maxth(self, v, load=False):
+    """
+    Setter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxth() directly.
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)""",
+        })
+
+    self.__maxth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxth(self):
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
+
+  name = __builtin__.property(_get_name, _set_name)
+  id = __builtin__.property(_get_id, _set_id)
+  minth = __builtin__.property(_get_minth, _set_minth)
+  maxth = __builtin__.property(_get_maxth, _set_maxth)
+  maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
+
+
+  _pyangbind_elements = OrderedDict([('name', name), ('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
+
+
+class yc_state_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_state(PybindBase):
+  """
+  This class was auto-generated by the PythonClass plugin for PYANG
+  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class/state. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
   YANG Description: Operational state data for WRED
   """
-  __slots__ = ('_path_helper', '_extmethods', '__random_dropped_pkts','__random_dropped_octets',)
+  __slots__ = ('_path_helper', '_extmethods', '__minth','__maxth','__maxprob','__random_dropped_pkts','__random_dropped_octets',)
 
   _yang_name = 'state'
 
@@ -32001,7 +33329,10 @@ class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_preced
     self._path_helper = False
 
     self._extmethods = False
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
     self.__random_dropped_octets = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="random-dropped-octets", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
     self.__random_dropped_pkts = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), is_leaf=True, yang_name="random-dropped-pkts", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=False)
 
     load = kwargs.pop("load", None)
@@ -32029,11 +33360,130 @@ class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_preced
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences', u'precedence', u'state']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class', u'state']
+
+  def _get_minth(self):
+    """
+    Getter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/minth (uint64)
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    return self.__minth
+      
+  def _set_minth(self, v, load=False):
+    """
+    Setter method for minth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/minth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_minth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_minth() directly.
+
+    YANG Description: The mininum threshold parameter for a RED-managed queue.
+When the average queue length is less than minth, all
+packets are admitted to the queue.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """minth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)""",
+        })
+
+    self.__minth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_minth(self):
+    self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+
+
+  def _get_maxth(self):
+    """
+    Getter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxth (uint64)
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    return self.__maxth
+      
+  def _set_maxth(self, v, load=False):
+    """
+    Setter method for maxth, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxth (uint64)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxth is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxth() directly.
+
+    YANG Description: The maximum threshold parameter for a RED-managed queue.
+When the average queue length exceeds the maxth value, all
+packets are dropped (or marked if ECN is enabled).
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxth must be of a type compatible with uint64""",
+          'defined-type': "uint64",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)""",
+        })
+
+    self.__maxth = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxth(self):
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
+
+
+  def _get_maxprob(self):
+    """
+    Getter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxprob (oc-types:percentage)
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    return self.__maxprob
+      
+  def _set_maxprob(self, v, load=False):
+    """
+    Setter method for maxprob, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/maxprob (oc-types:percentage)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_maxprob is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_maxprob() directly.
+
+    YANG Description: The RED maximum probability percentage.
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """maxprob must be of a type compatible with oc-types:percentage""",
+          'defined-type': "oc-types:percentage",
+          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)""",
+        })
+
+    self.__maxprob = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_maxprob(self):
+    self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=False)
+
 
   def _get_random_dropped_pkts(self):
     """
-    Getter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_pkts (uint32)
+    Getter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_pkts (uint32)
 
     YANG Description: The number of random drop packets.
     """
@@ -32041,7 +33491,7 @@ class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_preced
       
   def _set_random_dropped_pkts(self, v, load=False):
     """
-    Setter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_pkts (uint32)
+    Setter method for random_dropped_pkts, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_pkts (uint32)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_random_dropped_pkts is considered as a private
     method. Backends looking to populate this variable should
@@ -32070,7 +33520,7 @@ class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_preced
 
   def _get_random_dropped_octets(self):
     """
-    Getter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_octets (uint64)
+    Getter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_octets (uint64)
 
     YANG Description: The number of random drop bytes.
     """
@@ -32078,7 +33528,7 @@ class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_preced
       
   def _set_random_dropped_octets(self, v, load=False):
     """
-    Setter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state/random_dropped_octets (uint64)
+    Setter method for random_dropped_octets, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state/random_dropped_octets (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_random_dropped_octets is considered as a private
     method. Backends looking to populate this variable should
@@ -32104,25 +33554,28 @@ class yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_preced
   def _unset_random_dropped_octets(self):
     self.__random_dropped_octets = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="random-dropped-octets", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=False)
 
+  minth = __builtin__.property(_get_minth)
+  maxth = __builtin__.property(_get_maxth)
+  maxprob = __builtin__.property(_get_maxprob)
   random_dropped_pkts = __builtin__.property(_get_random_dropped_pkts)
   random_dropped_octets = __builtin__.property(_get_random_dropped_octets)
 
 
-  _pyangbind_elements = OrderedDict([('random_dropped_pkts', random_dropped_pkts), ('random_dropped_octets', random_dropped_octets), ])
+  _pyangbind_elements = OrderedDict([('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ('random_dropped_pkts', random_dropped_pkts), ('random_dropped_octets', random_dropped_octets), ])
 
 
-class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence(PybindBase):
+class yc_traffic_class_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/precedences/precedence. Each member element of
+  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/traffic-classes/traffic-class. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: List of precedences
+  YANG Description: List of classes
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__state',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__config','__state',)
 
-  _yang_name = 'precedence'
+  _yang_name = 'traffic-class'
 
   _pybind_generated_by = 'container'
 
@@ -32131,8 +33584,9 @@ class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_p
     self._path_helper = False
 
     self._extmethods = False
-    self.__state = YANGDynClass(base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+    self.__state = YANGDynClass(base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -32159,25 +33613,25 @@ class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_p
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences', u'precedence']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes', u'traffic-class']
 
-  def _get_id(self):
+  def _get_name(self):
     """
-    Getter method for id, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/id (leafref)
+    Getter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/name (leafref)
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
-    return self.__id
+    return self.__name
       
-  def _set_id(self, v, load=False):
+  def _set_name(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/id (leafref)
+    Setter method for name, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/name (leafref)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_id is considered as a private
+    source YANG file, then _set_name is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_id() directly.
+    do so via calling thisObj._set_name() directly.
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
     parent = getattr(self, "_parent", None)
     if parent is not None and load is False:
@@ -32187,25 +33641,62 @@ class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_p
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with leafref""",
+          'error-string': """name must be of a type compatible with leafref""",
           'defined-type': "leafref",
-          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
         })
 
-    self.__id = t
+    self.__name = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_id(self):
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+
+
+  def _get_config(self):
+    """
+    Getter method for config, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config (container)
+
+    YANG Description: Configuration data for WRED queues
+    """
+    return self.__config
+      
+  def _set_config(self, v, load=False):
+    """
+    Setter method for config, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/config (container)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_config is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_config() directly.
+
+    YANG Description: Configuration data for WRED queues
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=yc_config_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """config must be of a type compatible with container""",
+          'defined-type': "container",
+          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+        })
+
+    self.__config = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_config(self):
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
 
   def _get_state(self):
     """
-    Getter method for state, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state (container)
+    Getter method for state, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state (container)
 
     YANG Description: Operational state data for WRED
     """
@@ -32213,7 +33704,7 @@ class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_p
       
   def _set_state(self, v, load=False):
     """
-    Setter method for state, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence/state (container)
+    Setter method for state, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class/state (container)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_state is considered as a private
     method. Backends looking to populate this variable should
@@ -32224,12 +33715,12 @@ class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_p
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
           'error-string': """state must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
     self.__state = t
@@ -32237,27 +33728,28 @@ class yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_p
       self._set()
 
   def _unset_state(self):
-    self.__state = YANGDynClass(base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__state = YANGDynClass(base=yc_state_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class_state, is_container='container', yang_name="state", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  id = __builtin__.property(_get_id, _set_id)
+  name = __builtin__.property(_get_name, _set_name)
+  config = __builtin__.property(_get_config, _set_config)
   state = __builtin__.property(_get_state, _set_state)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('state', state), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('config', config), ('state', state), ])
 
 
-class yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences(PybindBase):
+class yc_traffic_classes_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/precedences. Each member element of
+  from YANG module openconfig-qos-elements - based on the path /qos/queues/queue/wred/traffic-classes. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: A list of precedence configurations for Weighted RED QoS queues
+  YANG Description: A list of classes for Weighted RED QoS queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedence',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_class',)
 
-  _yang_name = 'precedences'
+  _yang_name = 'traffic-classes'
 
   _pybind_generated_by = 'container'
 
@@ -32266,7 +33758,7 @@ class yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences(
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -32293,48 +33785,48 @@ class yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences(
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'queues', u'queue', u'wred', u'precedences']
+      return [u'qos', u'queues', u'queue', u'wred', u'traffic-classes']
 
-  def _get_precedence(self):
+  def _get_traffic_class(self):
     """
-    Getter method for precedence, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence (list)
+    Getter method for traffic_class, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class (list)
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
-    return self.__precedence
+    return self.__traffic_class
       
-  def _set_precedence(self, v, load=False):
+  def _set_traffic_class(self, v, load=False):
     """
-    Setter method for precedence, mapped from YANG variable /qos/queues/queue/wred/precedences/precedence (list)
+    Setter method for traffic_class, mapped from YANG variable /qos/queues/queue/wred/traffic_classes/traffic_class (list)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedence is considered as a private
+    source YANG file, then _set_traffic_class is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedence() directly.
+    do so via calling thisObj._set_traffic_class() directly.
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+      t = YANGDynClass(v,base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedence must be of a type compatible with list""",
+          'error-string': """traffic_class must be of a type compatible with list""",
           'defined-type': "list",
-          'generated-type': """YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
+          'generated-type': """YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
         })
 
-    self.__precedence = t
+    self.__traffic_class = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedence(self):
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_queues_queue_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+  def _unset_traffic_class(self):
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
-  precedence = __builtin__.property(_get_precedence, _set_precedence)
+  traffic_class = __builtin__.property(_get_traffic_class, _set_traffic_class)
 
 
-  _pyangbind_elements = OrderedDict([('precedence', precedence), ])
+  _pyangbind_elements = OrderedDict([('traffic_class', traffic_class), ])
 
 
 class yc_wred_openconfig_qos_elements__qos_queues_queue_wred(PybindBase):
@@ -32346,7 +33838,7 @@ class yc_wred_openconfig_qos_elements__qos_queues_queue_wred(PybindBase):
 
   YANG Description: Top-level container for WRED data
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedences',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_classes',)
 
   _yang_name = 'wred'
 
@@ -32357,7 +33849,7 @@ class yc_wred_openconfig_qos_elements__qos_queues_queue_wred(PybindBase):
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -32386,46 +33878,46 @@ class yc_wred_openconfig_qos_elements__qos_queues_queue_wred(PybindBase):
     else:
       return [u'qos', u'queues', u'queue', u'wred']
 
-  def _get_precedences(self):
+  def _get_traffic_classes(self):
     """
-    Getter method for precedences, mapped from YANG variable /qos/queues/queue/wred/precedences (container)
+    Getter method for traffic_classes, mapped from YANG variable /qos/queues/queue/wred/traffic_classes (container)
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of classes for Weighted RED QoS queues
     """
-    return self.__precedences
+    return self.__traffic_classes
       
-  def _set_precedences(self, v, load=False):
+  def _set_traffic_classes(self, v, load=False):
     """
-    Setter method for precedences, mapped from YANG variable /qos/queues/queue/wred/precedences (container)
+    Setter method for traffic_classes, mapped from YANG variable /qos/queues/queue/wred/traffic_classes (container)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedences is considered as a private
+    source YANG file, then _set_traffic_classes is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedences() directly.
+    do so via calling thisObj._set_traffic_classes() directly.
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of classes for Weighted RED QoS queues
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_traffic_classes_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedences must be of a type compatible with container""",
+          'error-string': """traffic_classes must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_traffic_classes_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
-    self.__precedences = t
+    self.__traffic_classes = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedences(self):
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_elements__qos_queues_queue_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+  def _unset_traffic_classes(self):
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_elements__qos_queues_queue_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  precedences = __builtin__.property(_get_precedences, _set_precedences)
+  traffic_classes = __builtin__.property(_get_traffic_classes, _set_traffic_classes)
 
 
-  _pyangbind_elements = OrderedDict([('precedences', precedences), ])
+  _pyangbind_elements = OrderedDict([('traffic_classes', traffic_classes), ])
 
 
 class yc_queue_openconfig_qos_elements__qos_queues_queue(PybindBase):
@@ -40668,16 +42160,16 @@ class yc_red_openconfig_qos_elements__qos_drop_profiles_drop_profile_red(PybindB
   _pyangbind_elements = OrderedDict([('config', config), ])
 
 
-class yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence_config(PybindBase):
+class yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-elements - based on the path /qos/drop-profiles/drop-profile/wred/precedences/precedence/config. Each member element of
+  from YANG module openconfig-qos-elements - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes/traffic-class/config. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
   YANG Description: Configuration data for WRED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__minth','__maxth','__maxprob',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__id','__minth','__maxth','__maxprob',)
 
   _yang_name = 'config'
 
@@ -40689,9 +42181,10 @@ class yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_pre
 
     self._extmethods = False
     self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
-    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
-    self.__id = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
     self.__minth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="minth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__maxth = YANGDynClass(base=RestrictedClassType(base_type=long, restriction_dict={'range':  ['0..18446744073709551615']}, int_size=64), is_leaf=True, yang_name="maxth", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint64', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -40718,35 +42211,80 @@ class yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_pre
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences', u'precedence', u'config']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes', u'traffic-class', u'config']
+
+  def _get_name(self):
+    """
+    Getter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/name (string)
+
+    YANG Description: Descriptive name and key for the class
+    """
+    return self.__name
+      
+  def _set_name(self, v, load=False):
+    """
+    Setter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/name (string)
+    If this variable is read-only (config: false) in the
+    source YANG file, then _set_name is considered as a private
+    method. Backends looking to populate this variable should
+    do so via calling thisObj._set_name() directly.
+
+    YANG Description: Descriptive name and key for the class
+    """
+    if hasattr(v, "_utype"):
+      v = v._utype(v)
+    try:
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+    except (TypeError, ValueError):
+      raise ValueError({
+          'error-string': """name must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
+        })
+
+    self.__name = t
+    if hasattr(self, '_set'):
+      self._set()
+
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
+
 
   def _get_id(self):
     """
-    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/id (uint32)
+    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/id (string)
 
-    YANG Description: IP Precedence ID for the Weighted RED queue
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
     """
     return self.__id
       
   def _set_id(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/id (uint32)
+    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/id (string)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_id is considered as a private
     method. Backends looking to populate this variable should
     do so via calling thisObj._set_id() directly.
 
-    YANG Description: IP Precedence ID for the Weighted RED queue
+    YANG Description: This is the WRED class id and will correlate to a
+IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+etc).
+
+Note: this string will be target implementation specific.
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with uint32""",
-          'defined-type': "uint32",
-          'generated-type': """YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)""",
+          'error-string': """id must be of a type compatible with string""",
+          'defined-type': "string",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)""",
         })
 
     self.__id = t
@@ -40754,12 +42292,12 @@ class yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_pre
       self._set()
 
   def _unset_id(self):
-    self.__id = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=long, restriction_dict={'range': ['0..4294967295']}, int_size=32), restriction_dict={u'range': [u'0..7']}), is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='uint32', is_config=True)
+    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='string', is_config=True)
 
 
   def _get_minth(self):
     """
-    Getter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/minth (uint64)
+    Getter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/minth (uint64)
 
     YANG Description: The mininum threshold parameter for a RED-managed queue.
 When the average queue length is less than minth, all
@@ -40769,7 +42307,7 @@ packets are admitted to the queue.
       
   def _set_minth(self, v, load=False):
     """
-    Setter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/minth (uint64)
+    Setter method for minth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/minth (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_minth is considered as a private
     method. Backends looking to populate this variable should
@@ -40800,7 +42338,7 @@ packets are admitted to the queue.
 
   def _get_maxth(self):
     """
-    Getter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxth (uint64)
+    Getter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxth (uint64)
 
     YANG Description: The maximum threshold parameter for a RED-managed queue.
 When the average queue length exceeds the maxth value, all
@@ -40810,7 +42348,7 @@ packets are dropped (or marked if ECN is enabled).
       
   def _set_maxth(self, v, load=False):
     """
-    Setter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxth (uint64)
+    Setter method for maxth, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxth (uint64)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_maxth is considered as a private
     method. Backends looking to populate this variable should
@@ -40841,7 +42379,7 @@ packets are dropped (or marked if ECN is enabled).
 
   def _get_maxprob(self):
     """
-    Getter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxprob (oc-types:percentage)
+    Getter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
 
     YANG Description: The RED maximum probability percentage.
     """
@@ -40849,7 +42387,7 @@ packets are dropped (or marked if ECN is enabled).
       
   def _set_maxprob(self, v, load=False):
     """
-    Setter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config/maxprob (oc-types:percentage)
+    Setter method for maxprob, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config/maxprob (oc-types:percentage)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_maxprob is considered as a private
     method. Backends looking to populate this variable should
@@ -40875,27 +42413,28 @@ packets are dropped (or marked if ECN is enabled).
   def _unset_maxprob(self):
     self.__maxprob = YANGDynClass(base=RestrictedClassType(base_type=RestrictedClassType(base_type=int, restriction_dict={'range': ['0..255']}, int_size=8), restriction_dict={u'range': [u'0..100']}), is_leaf=True, yang_name="maxprob", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='oc-types:percentage', is_config=True)
 
+  name = __builtin__.property(_get_name, _set_name)
   id = __builtin__.property(_get_id, _set_id)
   minth = __builtin__.property(_get_minth, _set_minth)
   maxth = __builtin__.property(_get_maxth, _set_maxth)
   maxprob = __builtin__.property(_get_maxprob, _set_maxprob)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('id', id), ('minth', minth), ('maxth', maxth), ('maxprob', maxprob), ])
 
 
-class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence(PybindBase):
+class yc_traffic_class_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-elements - based on the path /qos/drop-profiles/drop-profile/wred/precedences/precedence. Each member element of
+  from YANG module openconfig-qos-elements - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes/traffic-class. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: List of precedences
+  YANG Description: List of classes
   """
-  __slots__ = ('_path_helper', '_extmethods', '__id','__config',)
+  __slots__ = ('_path_helper', '_extmethods', '__name','__config',)
 
-  _yang_name = 'precedence'
+  _yang_name = 'traffic-class'
 
   _pybind_generated_by = 'container'
 
@@ -40904,8 +42443,8 @@ class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred
     self._path_helper = False
 
     self._extmethods = False
-    self.__config = YANGDynClass(base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -40932,25 +42471,25 @@ class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences', u'precedence']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes', u'traffic-class']
 
-  def _get_id(self):
+  def _get_name(self):
     """
-    Getter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/id (leafref)
+    Getter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/name (leafref)
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
-    return self.__id
+    return self.__name
       
-  def _set_id(self, v, load=False):
+  def _set_name(self, v, load=False):
     """
-    Setter method for id, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/id (leafref)
+    Setter method for name, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/name (leafref)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_id is considered as a private
+    source YANG file, then _set_name is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_id() directly.
+    do so via calling thisObj._set_name() directly.
 
-    YANG Description: Reference to the precedence id list key.
+    YANG Description: Reference to the class name list key.
     """
     parent = getattr(self, "_parent", None)
     if parent is not None and load is False:
@@ -40960,25 +42499,25 @@ class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+      t = YANGDynClass(v,base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """id must be of a type compatible with leafref""",
+          'error-string': """name must be of a type compatible with leafref""",
           'defined-type': "leafref",
-          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
+          'generated-type': """YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)""",
         })
 
-    self.__id = t
+    self.__name = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_id(self):
-    self.__id = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="id", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
+  def _unset_name(self):
+    self.__name = YANGDynClass(base=six.text_type, is_leaf=True, yang_name="name", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, is_keyval=True, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='leafref', is_config=True)
 
 
   def _get_config(self):
     """
-    Getter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config (container)
+    Getter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config (container)
 
     YANG Description: Configuration data for WRED queues
     """
@@ -40986,7 +42525,7 @@ class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred
       
   def _set_config(self, v, load=False):
     """
-    Setter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence/config (container)
+    Setter method for config, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class/config (container)
     If this variable is read-only (config: false) in the
     source YANG file, then _set_config is considered as a private
     method. Backends looking to populate this variable should
@@ -40997,12 +42536,12 @@ class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
           'error-string': """config must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
     self.__config = t
@@ -41010,27 +42549,27 @@ class yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred
       self._set()
 
   def _unset_config(self):
-    self.__config = YANGDynClass(base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__config = YANGDynClass(base=yc_config_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class_config, is_container='container', yang_name="config", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  id = __builtin__.property(_get_id, _set_id)
+  name = __builtin__.property(_get_name, _set_name)
   config = __builtin__.property(_get_config, _set_config)
 
 
-  _pyangbind_elements = OrderedDict([('id', id), ('config', config), ])
+  _pyangbind_elements = OrderedDict([('name', name), ('config', config), ])
 
 
-class yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences(PybindBase):
+class yc_traffic_classes_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes(PybindBase):
   """
   This class was auto-generated by the PythonClass plugin for PYANG
-  from YANG module openconfig-qos-elements - based on the path /qos/drop-profiles/drop-profile/wred/precedences. Each member element of
+  from YANG module openconfig-qos-elements - based on the path /qos/drop-profiles/drop-profile/wred/traffic-classes. Each member element of
   the container is represented as a class variable - with a specific
   YANG type.
 
-  YANG Description: A list of precedence configurations for Weighted RED QoS queues
+  YANG Description: A list of Weighted RED class confgurations for QoS queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedence',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_class',)
 
-  _yang_name = 'precedences'
+  _yang_name = 'traffic-classes'
 
   _pybind_generated_by = 'container'
 
@@ -41039,7 +42578,7 @@ class yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wre
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -41066,48 +42605,48 @@ class yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wre
     if hasattr(self, "_parent"):
       return self._parent._path()+[self._yang_name]
     else:
-      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'precedences']
+      return [u'qos', u'drop-profiles', u'drop-profile', u'wred', u'traffic-classes']
 
-  def _get_precedence(self):
+  def _get_traffic_class(self):
     """
-    Getter method for precedence, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence (list)
+    Getter method for traffic_class, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class (list)
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
-    return self.__precedence
+    return self.__traffic_class
       
-  def _set_precedence(self, v, load=False):
+  def _set_traffic_class(self, v, load=False):
     """
-    Setter method for precedence, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences/precedence (list)
+    Setter method for traffic_class, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes/traffic_class (list)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedence is considered as a private
+    source YANG file, then _set_traffic_class is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedence() directly.
+    do so via calling thisObj._set_traffic_class() directly.
 
-    YANG Description: List of precedences
+    YANG Description: List of classes
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+      t = YANGDynClass(v,base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedence must be of a type compatible with list""",
+          'error-string': """traffic_class must be of a type compatible with list""",
           'defined-type': "list",
-          'generated-type': """YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
+          'generated-type': """YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)""",
         })
 
-    self.__precedence = t
+    self.__traffic_class = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedence(self):
-    self.__precedence = YANGDynClass(base=YANGListType("id",yc_precedence_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences_precedence, yang_name="precedence", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='id', extensions=None), is_container='list', yang_name="precedence", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
+  def _unset_traffic_class(self):
+    self.__traffic_class = YANGDynClass(base=YANGListType("name",yc_traffic_class_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes_traffic_class, yang_name="traffic-class", parent=self, is_container='list', user_ordered=False, path_helper=self._path_helper, yang_keys='name', extensions=None), is_container='list', yang_name="traffic-class", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='list', is_config=True)
 
-  precedence = __builtin__.property(_get_precedence, _set_precedence)
+  traffic_class = __builtin__.property(_get_traffic_class, _set_traffic_class)
 
 
-  _pyangbind_elements = OrderedDict([('precedence', precedence), ])
+  _pyangbind_elements = OrderedDict([('traffic_class', traffic_class), ])
 
 
 class yc_wred_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred(PybindBase):
@@ -41119,7 +42658,7 @@ class yc_wred_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred(Pybin
 
   YANG Description: Top-level container for data related to Weighted RED queues
   """
-  __slots__ = ('_path_helper', '_extmethods', '__precedences',)
+  __slots__ = ('_path_helper', '_extmethods', '__traffic_classes',)
 
   _yang_name = 'wred'
 
@@ -41130,7 +42669,7 @@ class yc_wred_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred(Pybin
     self._path_helper = False
 
     self._extmethods = False
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
     load = kwargs.pop("load", None)
     if args:
@@ -41159,46 +42698,46 @@ class yc_wred_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred(Pybin
     else:
       return [u'qos', u'drop-profiles', u'drop-profile', u'wred']
 
-  def _get_precedences(self):
+  def _get_traffic_classes(self):
     """
-    Getter method for precedences, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences (container)
+    Getter method for traffic_classes, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes (container)
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of Weighted RED class confgurations for QoS queues
     """
-    return self.__precedences
+    return self.__traffic_classes
       
-  def _set_precedences(self, v, load=False):
+  def _set_traffic_classes(self, v, load=False):
     """
-    Setter method for precedences, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/precedences (container)
+    Setter method for traffic_classes, mapped from YANG variable /qos/drop_profiles/drop_profile/wred/traffic_classes (container)
     If this variable is read-only (config: false) in the
-    source YANG file, then _set_precedences is considered as a private
+    source YANG file, then _set_traffic_classes is considered as a private
     method. Backends looking to populate this variable should
-    do so via calling thisObj._set_precedences() directly.
+    do so via calling thisObj._set_traffic_classes() directly.
 
-    YANG Description: A list of precedence configurations for Weighted RED QoS queues
+    YANG Description: A list of Weighted RED class confgurations for QoS queues
     """
     if hasattr(v, "_utype"):
       v = v._utype(v)
     try:
-      t = YANGDynClass(v,base=yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+      t = YANGDynClass(v,base=yc_traffic_classes_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
     except (TypeError, ValueError):
       raise ValueError({
-          'error-string': """precedences must be of a type compatible with container""",
+          'error-string': """traffic_classes must be of a type compatible with container""",
           'defined-type': "container",
-          'generated-type': """YANGDynClass(base=yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
+          'generated-type': """YANGDynClass(base=yc_traffic_classes_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)""",
         })
 
-    self.__precedences = t
+    self.__traffic_classes = t
     if hasattr(self, '_set'):
       self._set()
 
-  def _unset_precedences(self):
-    self.__precedences = YANGDynClass(base=yc_precedences_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_precedences, is_container='container', yang_name="precedences", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
+  def _unset_traffic_classes(self):
+    self.__traffic_classes = YANGDynClass(base=yc_traffic_classes_openconfig_qos_elements__qos_drop_profiles_drop_profile_wred_traffic_classes, is_container='container', yang_name="traffic-classes", parent=self, path_helper=self._path_helper, extmethods=self._extmethods, register_paths=True, extensions=None, namespace='http://opennetworking.org/yang/openconfig-qos-stratum', defining_module='openconfig-qos-stratum', yang_type='container', is_config=True)
 
-  precedences = __builtin__.property(_get_precedences, _set_precedences)
+  traffic_classes = __builtin__.property(_get_traffic_classes, _set_traffic_classes)
 
 
-  _pyangbind_elements = OrderedDict([('precedences', precedences), ])
+  _pyangbind_elements = OrderedDict([('traffic_classes', traffic_classes), ])
 
 
 class yc_drop_profile_openconfig_qos_elements__qos_drop_profiles_drop_profile(PybindBase):

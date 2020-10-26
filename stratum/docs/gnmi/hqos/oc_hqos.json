@@ -1,0 +1,3110 @@
+ocq: {
+    "qos": {
+        "interfaces": {
+            "interface": {
+                "if1": {
+                    "interface-id": "if1", 
+                    "state": {
+                        "interface-id": ""
+                    }, 
+                    "config": {
+                        "interface-id": "if1"
+                    }, 
+                    "interface-ref": {
+                        "state": {
+                            "interface": "", 
+                            "subinterface": ""
+                        }, 
+                        "config": {
+                            "interface": "", 
+                            "subinterface": ""
+                        }
+                    }, 
+                    "output": {
+                        "queues": {
+                            "queue": {}
+                        }, 
+                        "interface-ref": {
+                            "state": {
+                                "interface": "", 
+                                "subinterface": ""
+                            }, 
+                            "config": {
+                                "interface": "", 
+                                "subinterface": ""
+                            }
+                        }, 
+                        "scheduler-policy": {
+                            "schedulers": {
+                                "scheduler": {}
+                            }, 
+                            "state": {
+                                "name": ""
+                            }, 
+                            "config": {
+                                "name": "if1"
+                            }
+                        }
+                    }
+                }, 
+                "if2": {
+                    "interface-id": "if2", 
+                    "state": {
+                        "interface-id": ""
+                    }, 
+                    "config": {
+                        "interface-id": "if2"
+                    }, 
+                    "interface-ref": {
+                        "state": {
+                            "interface": "", 
+                            "subinterface": ""
+                        }, 
+                        "config": {
+                            "interface": "", 
+                            "subinterface": ""
+                        }
+                    }, 
+                    "output": {
+                        "queues": {
+                            "queue": {}
+                        }, 
+                        "interface-ref": {
+                            "state": {
+                                "interface": "", 
+                                "subinterface": ""
+                            }, 
+                            "config": {
+                                "interface": "", 
+                                "subinterface": ""
+                            }
+                        }, 
+                        "scheduler-policy": {
+                            "schedulers": {
+                                "scheduler": {}
+                            }, 
+                            "state": {
+                                "name": ""
+                            }, 
+                            "config": {
+                                "name": ""
+                            }
+                        }
+                    }
+                }
+            }
+        }, 
+        "drop-profiles": {
+            "drop-profile": {
+                "voice": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "config": {
+                        "queue-type": "DROP_TAIL", 
+                        "max-queue-depth-packets": 20, 
+                        "name": ""
+                    }, 
+                    "name": "voice", 
+                    "red": {
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "video": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "max-queue-depth-packets": 40, 
+                        "name": ""
+                    }, 
+                    "name": "video", 
+                    "red": {
+                        "config": {
+                            "maxprob": 70, 
+                            "maxth": 30, 
+                            "minth": 20
+                        }
+                    }
+                }, 
+                "data": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "max-queue-depth-packets": 30, 
+                        "name": ""
+                    }, 
+                    "name": "data", 
+                    "red": {
+                        "config": {
+                            "maxprob": 60, 
+                            "maxth": 20, 
+                            "minth": 10
+                        }
+                    }
+                }, 
+                "wred": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {
+                                "data": {
+                                    "config": {
+                                        "maxprob": 70, 
+                                        "minth": 20, 
+                                        "maxth": 30, 
+                                        "name": "data", 
+                                        "id": "CS0"
+                                    }, 
+                                    "name": "data"
+                                }, 
+                                "voice": {
+                                    "config": {
+                                        "maxprob": 25, 
+                                        "minth": 10, 
+                                        "maxth": 20, 
+                                        "name": "voice", 
+                                        "id": "EF"
+                                    }, 
+                                    "name": "voice"
+                                }, 
+                                "video": {
+                                    "config": {
+                                        "maxprob": 60, 
+                                        "minth": 10, 
+                                        "maxth": 20, 
+                                        "name": "video", 
+                                        "id": "CS4"
+                                    }, 
+                                    "name": "video"
+                                }
+                            }
+                        }
+                    }, 
+                    "config": {
+                        "queue-type": "WRED", 
+                        "max-queue-depth-packets": 40, 
+                        "name": ""
+                    }, 
+                    "name": "wred", 
+                    "red": {
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }
+            }
+        }, 
+        "scheduler-policies": {
+            "scheduler-policy": {
+                "if1": {
+                    "schedulers": {
+                        "scheduler": {
+                            "0": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "svg1": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "1", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "svg1"
+                                            }, 
+                                            "id": "svg1"
+                                        }, 
+                                        "svg2": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "5", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "svg2"
+                                            }, 
+                                            "id": "svg2"
+                                        }, 
+                                        "svg3": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "8", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "svg3"
+                                            }, 
+                                            "id": "svg3"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "0", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 40000000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "INTERFACE", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 0, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "if1", 
+                                    "sequence": 0
+                                }
+                            }, 
+                            "1": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "sub1": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "2", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "sub1"
+                                            }, 
+                                            "id": "sub1"
+                                        }, 
+                                        "sub2": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "3", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "sub2"
+                                            }, 
+                                            "id": "sub2"
+                                        }, 
+                                        "sub3": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "4", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "sub3"
+                                            }, 
+                                            "id": "sub3"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "1", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 40000000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 1, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "svg1", 
+                                    "sequence": 1
+                                }
+                            }, 
+                            "2": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "voice": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "", 
+                                                "queue": "q0", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "voice"
+                                        }, 
+                                        "data": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "", 
+                                                "queue": "q1", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "data"
+                                        }, 
+                                        "video": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 30, 
+                                                "input-scheduler": "", 
+                                                "queue": "q2", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "video"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "2", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 10000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 2, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "sub1", 
+                                    "sequence": 2
+                                }
+                            }, 
+                            "3": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "voice": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "", 
+                                                "queue": "q3", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "voice"
+                                        }, 
+                                        "data": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "", 
+                                                "queue": "q4", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "data"
+                                        }, 
+                                        "video": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 30, 
+                                                "input-scheduler": "", 
+                                                "queue": "q5", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "video"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "3", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 10000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 2, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "sub2", 
+                                    "sequence": 3
+                                }
+                            }, 
+                            "4": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "voice": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "", 
+                                                "queue": "q6", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "voice"
+                                        }, 
+                                        "data": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "", 
+                                                "queue": "q7", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "data"
+                                        }, 
+                                        "video": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 30, 
+                                                "input-scheduler": "", 
+                                                "queue": "q8", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "video"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "4", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 10000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 2, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "sub3", 
+                                    "sequence": 4
+                                }
+                            }, 
+                            "5": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "sub4": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "6", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "sub4"
+                                            }, 
+                                            "id": "sub4"
+                                        }, 
+                                        "sub5": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "7", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "sub5"
+                                            }, 
+                                            "id": "sub5"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "5", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 50000000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 1, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "svg2", 
+                                    "sequence": 5
+                                }
+                            }, 
+                            "6": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "wred": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "", 
+                                                "queue": "q9", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "wred"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "6", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 2000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 2, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "sub4", 
+                                    "sequence": 6
+                                }
+                            }, 
+                            "7": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "wred": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "", 
+                                                "queue": "q10", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "wred"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "7", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 2000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 2, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "sub5", 
+                                    "sequence": 7
+                                }
+                            }, 
+                            "8": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "sub6": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "9", 
+                                                "queue": "", 
+                                                "input-type": "IN_PROFILE", 
+                                                "id": "sub6"
+                                            }, 
+                                            "id": "sub6"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "8", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 20000000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 1, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "svg3", 
+                                    "sequence": 8
+                                }
+                            }, 
+                            "9": {
+                                "two-rate-three-color": {
+                                    "state": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "pir-pct-remaining": 0, 
+                                        "bc": 0, 
+                                        "be": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "cir": 0, 
+                                        "cir-pct": 0, 
+                                        "pir": 0, 
+                                        "pir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "violate-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "inputs": {
+                                    "input": {
+                                        "voice": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 10, 
+                                                "input-scheduler": "", 
+                                                "queue": "q11", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "voice"
+                                        }, 
+                                        "data": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 20, 
+                                                "input-scheduler": "", 
+                                                "queue": "q12", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "data"
+                                        }, 
+                                        "video": {
+                                            "state": {
+                                                "queue": "", 
+                                                "input-type": "", 
+                                                "id": "", 
+                                                "weight": 0
+                                            }, 
+                                            "config": {
+                                                "priority": 0, 
+                                                "weight": 30, 
+                                                "input-scheduler": "", 
+                                                "queue": "q13", 
+                                                "input-type": "QUEUE", 
+                                                "id": ""
+                                            }, 
+                                            "id": "video"
+                                        }
+                                    }
+                                }, 
+                                "sequence": "9", 
+                                "state": {
+                                    "priority": "", 
+                                    "type": "", 
+                                    "sequence": 0
+                                }, 
+                                "one-rate-two-color": {
+                                    "state": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 0, 
+                                        "queuing-behavior": "", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "conform-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "set-dscp": 0
+                                        }
+                                    }, 
+                                    "config": {
+                                        "bc": 0, 
+                                        "cir-pct-remaining": 0, 
+                                        "max-queue-depth-bytes": 0, 
+                                        "cir": 10000000, 
+                                        "queuing-behavior": "SHAPE", 
+                                        "max-queue-depth-percent": 0, 
+                                        "max-queue-depth-packets": 0, 
+                                        "cir-pct": 0
+                                    }, 
+                                    "exceed-action": {
+                                        "state": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": False, 
+                                            "set-dscp": 0
+                                        }, 
+                                        "config": {
+                                            "set-dot1p": 0, 
+                                            "set-mpls-tc": 0, 
+                                            "drop": True, 
+                                            "set-dscp": 0
+                                        }
+                                    }
+                                }, 
+                                "output": {
+                                    "state": {
+                                        "output-type": "", 
+                                        "child-scheduler": "", 
+                                        "output-fwd-group": ""
+                                    }, 
+                                    "config": {
+                                        "output-type": "SCHEDULER", 
+                                        "output-fwd-group": ""
+                                    }
+                                }, 
+                                "config": {
+                                    "priority": "", 
+                                    "level": 2, 
+                                    "type": "ONE_RATE_TWO_COLOR", 
+                                    "name": "sub6", 
+                                    "sequence": 9
+                                }
+                            }
+                        }
+                    }, 
+                    "state": {
+                        "name": ""
+                    }, 
+                    "config": {
+                        "root-scheduler": "0", 
+                        "name": "if1"
+                    }, 
+                    "name": "if1"
+                }
+            }
+        }, 
+        "queues": {
+            "queue": {
+                "q0": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "DROP_TAIL", 
+                        "drop-profile": "voice", 
+                        "name": "q0"
+                    }, 
+                    "name": "q0", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q1": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "data", 
+                        "name": "q1"
+                    }, 
+                    "name": "q1", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 60, 
+                            "maxth": 20, 
+                            "minth": 10
+                        }
+                    }
+                }, 
+                "q2": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "video", 
+                        "name": "q2"
+                    }, 
+                    "name": "q2", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 70, 
+                            "maxth": 30, 
+                            "minth": 20
+                        }
+                    }
+                }, 
+                "q3": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "DROP_TAIL", 
+                        "drop-profile": "voice", 
+                        "name": "q3"
+                    }, 
+                    "name": "q3", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q4": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "data", 
+                        "name": "q4"
+                    }, 
+                    "name": "q4", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 60, 
+                            "maxth": 20, 
+                            "minth": 10
+                        }
+                    }
+                }, 
+                "q5": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "video", 
+                        "name": "q5"
+                    }, 
+                    "name": "q5", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 70, 
+                            "maxth": 30, 
+                            "minth": 20
+                        }
+                    }
+                }, 
+                "q6": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "DROP_TAIL", 
+                        "drop-profile": "voice", 
+                        "name": "q6"
+                    }, 
+                    "name": "q6", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q7": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "data", 
+                        "name": "q7"
+                    }, 
+                    "name": "q7", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 60, 
+                            "maxth": 20, 
+                            "minth": 10
+                        }
+                    }
+                }, 
+                "q8": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "video", 
+                        "name": "q8"
+                    }, 
+                    "name": "q8", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 70, 
+                            "maxth": 30, 
+                            "minth": 20
+                        }
+                    }
+                }, 
+                "q9": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {
+                                "data": {
+                                    "state": {
+                                        "maxprob": 0, 
+                                        "random-dropped-octets": 0, 
+                                        "random-dropped-pkts": 0, 
+                                        "maxth": 0, 
+                                        "minth": 0
+                                    }, 
+                                    "config": {
+                                        "maxprob": 70, 
+                                        "minth": 20, 
+                                        "maxth": 30, 
+                                        "name": "data", 
+                                        "id": "CS0"
+                                    }, 
+                                    "name": "data"
+                                }, 
+                                "voice": {
+                                    "state": {
+                                        "maxprob": 0, 
+                                        "random-dropped-octets": 0, 
+                                        "random-dropped-pkts": 0, 
+                                        "maxth": 0, 
+                                        "minth": 0
+                                    }, 
+                                    "config": {
+                                        "maxprob": 25, 
+                                        "minth": 10, 
+                                        "maxth": 20, 
+                                        "name": "voice", 
+                                        "id": "EF"
+                                    }, 
+                                    "name": "voice"
+                                }, 
+                                "video": {
+                                    "state": {
+                                        "maxprob": 0, 
+                                        "random-dropped-octets": 0, 
+                                        "random-dropped-pkts": 0, 
+                                        "maxth": 0, 
+                                        "minth": 0
+                                    }, 
+                                    "config": {
+                                        "maxprob": 60, 
+                                        "minth": 10, 
+                                        "maxth": 20, 
+                                        "name": "video", 
+                                        "id": "CS4"
+                                    }, 
+                                    "name": "video"
+                                }
+                            }
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "WRED", 
+                        "drop-profile": "wred", 
+                        "name": "q9"
+                    }, 
+                    "name": "q9", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q10": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {
+                                "data": {
+                                    "state": {
+                                        "maxprob": 0, 
+                                        "random-dropped-octets": 0, 
+                                        "random-dropped-pkts": 0, 
+                                        "maxth": 0, 
+                                        "minth": 0
+                                    }, 
+                                    "config": {
+                                        "maxprob": 70, 
+                                        "minth": 20, 
+                                        "maxth": 30, 
+                                        "name": "data", 
+                                        "id": "CS0"
+                                    }, 
+                                    "name": "data"
+                                }, 
+                                "voice": {
+                                    "state": {
+                                        "maxprob": 0, 
+                                        "random-dropped-octets": 0, 
+                                        "random-dropped-pkts": 0, 
+                                        "maxth": 0, 
+                                        "minth": 0
+                                    }, 
+                                    "config": {
+                                        "maxprob": 25, 
+                                        "minth": 10, 
+                                        "maxth": 20, 
+                                        "name": "voice", 
+                                        "id": "EF"
+                                    }, 
+                                    "name": "voice"
+                                }, 
+                                "video": {
+                                    "state": {
+                                        "maxprob": 0, 
+                                        "random-dropped-octets": 0, 
+                                        "random-dropped-pkts": 0, 
+                                        "maxth": 0, 
+                                        "minth": 0
+                                    }, 
+                                    "config": {
+                                        "maxprob": 60, 
+                                        "minth": 10, 
+                                        "maxth": 20, 
+                                        "name": "video", 
+                                        "id": "CS4"
+                                    }, 
+                                    "name": "video"
+                                }
+                            }
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "WRED", 
+                        "drop-profile": "wred", 
+                        "name": "q10"
+                    }, 
+                    "name": "q10", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q11": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "DROP_TAIL", 
+                        "drop-profile": "voice", 
+                        "name": "q11"
+                    }, 
+                    "name": "q11", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q12": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "data", 
+                        "name": "q12"
+                    }, 
+                    "name": "q12", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 60, 
+                            "maxth": 20, 
+                            "minth": 10
+                        }
+                    }
+                }, 
+                "q13": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "RED", 
+                        "drop-profile": "video", 
+                        "name": "q13"
+                    }, 
+                    "name": "q13", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 70, 
+                            "maxth": 30, 
+                            "minth": 20
+                        }
+                    }
+                }, 
+                "q14": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q14"
+                    }, 
+                    "name": "q14", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q15": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q15"
+                    }, 
+                    "name": "q15", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q16": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q16"
+                    }, 
+                    "name": "q16", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q17": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q17"
+                    }, 
+                    "name": "q17", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q18": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q18"
+                    }, 
+                    "name": "q18", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q19": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q19"
+                    }, 
+                    "name": "q19", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q20": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q20"
+                    }, 
+                    "name": "q20", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q21": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q21"
+                    }, 
+                    "name": "q21", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q22": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q22"
+                    }, 
+                    "name": "q22", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q23": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q23"
+                    }, 
+                    "name": "q23", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q24": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q24"
+                    }, 
+                    "name": "q24", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q25": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q25"
+                    }, 
+                    "name": "q25", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q26": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q26"
+                    }, 
+                    "name": "q26", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }, 
+                "q27": {
+                    "wred": {
+                        "traffic-classes": {
+                            "traffic-class": {}
+                        }
+                    }, 
+                    "state": {
+                        "name": "", 
+                        "queue-type": "", 
+                        "transmit-octets": 0, 
+                        "max-queue-len": 0, 
+                        "transmit-pkts": 0, 
+                        "dropped-pkts": 0, 
+                        "avg-queue-len": 0
+                    }, 
+                    "config": {
+                        "queue-type": "", 
+                        "drop-profile": "data", 
+                        "name": "q27"
+                    }, 
+                    "name": "q27", 
+                    "red": {
+                        "state": {
+                            "random-dropped-octets": 0, 
+                            "random-dropped-pkts": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }, 
+                        "config": {
+                            "maxprob": 0, 
+                            "maxth": 0, 
+                            "minth": 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

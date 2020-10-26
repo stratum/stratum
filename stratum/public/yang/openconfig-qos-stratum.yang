@@ -110,32 +110,40 @@ module openconfig-qos-stratum {
       description
         "Top-level container for data related to Weighted RED queues";
 
-      container precedences {
+      container traffic-classes {
         description
-          "A list of precedence configurations for Weighted RED QoS queues";
+          "A list of Weighted RED class confgurations for QoS queues";
 
-        list precedence {
-          key "id";
-          description "List of precedences";
+        list traffic-class {
+          key "name";
+          description "List of classes";
 
-          leaf id {
+          leaf name {
             type leafref {
-              path "../config/id";
+              path "../config/name";
             }
             description
-              "Reference to the precedence id list key.";
+              "Reference to the class name list key.";
           }
         
           container config {
             description
               "Configuration data for WRED queues";
 
-            leaf "id" {
-              type uint32 {
-                range "0..7";
-              }
+            leaf "name" {
+              type string;
               description
-                "IP Precedence ID for the Weighted RED queue";
+                "Descriptive name and key for the class";
+            }
+
+            leaf "id" {
+              type string;
+              description
+                "This is the WRED class id and will correlate to a 
+                 IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+                 etc).
+                 
+                 Note: this string will be target implementation specific.";
             }
 
             uses qos-drop-profile-red-config;
@@ -233,6 +241,26 @@ module openconfig-qos-stratum {
     uses oc-qos:qos-interface-queue-state;
   }
 
+  grouping qos-queue-red-config {
+    description
+      "Enhanced Configuration data for queues managed by RED";
+
+    leaf maxprob {
+      type oc-types:percentage;
+      description
+        "The RED maximum probability percentage.";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:red/oc-qos:config" {
+    description 
+      "Add RED max probability to RED config.
+
+       Note: this should be merged back into the standard OpenConfig model";
+
+    uses qos-queue-red-config;
+  }
+
   grouping qos-queue-red-state {
     description
       "Operational state data for queues managed with RED";
@@ -261,32 +289,57 @@ module openconfig-qos-stratum {
     uses qos-queue-red-state;
   }
 
-  grouping qos-queue-wred-precedences {
+  grouping qos-queue-traffic-classes {
     description
-      "Add IP precedences to the WRED-managed queues";
+      "Add WRED classes to QoS queues";
 
-    container precedences {
+    container traffic-classes {
       description
-        "A list of precedence configurations for Weighted RED QoS queues";
+        "A list of classes for Weighted RED QoS queues";
 
-      list precedence {
-        key "id";
-        description "List of precedences";
+      list traffic-class {
+        key "name";
+        description "List of classes";
 
-        leaf id {
+        leaf name {
           type leafref {
-            path "../../../../../../drop-profiles/drop-profile/" +
-                 "wred/precedences/precedence/config/id";
+            path "../config/name";
           }
           description
-            "Reference to the precedence id list key.";
+            "Reference to the class name list key.";
         }
         
+        container config {
+          description
+            "Configuration data for WRED queues";
+
+          leaf "name" {
+            type string;
+            description
+              "Descriptive name and key for the class";
+          }
+
+          leaf "id" {
+            type string;
+            description
+              "This is the WRED class id and will correlate to a 
+               IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+               etc).
+                 
+               Note: this string will be target implementation specific.";
+          }
+
+          uses oc-qos:qos-queue-red-config;
+          uses qos-queue-red-config;
+        }
+
         container state {
           config false;
           description
             "Operational state data for WRED";
 
+          uses oc-qos:qos-queue-red-config;
+          uses qos-queue-red-config;
           uses qos-queue-red-state;
         }
       }
@@ -295,11 +348,11 @@ module openconfig-qos-stratum {
 
   augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:wred" {
     description 
-      "Add IP Precedences to Weighted-RED managed queues.
+      "Add Weighted RED Classes to QoS queues.
 
        Note: this should be merged back into the standard OpenConfig model";
 
-    uses qos-queue-wred-precedences;
+    uses qos-queue-traffic-classes;
   }
 
   grouping qos-scheduler-config {
