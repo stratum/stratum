@@ -41,6 +41,8 @@ The top level OpenConfig QoS yang model tree is shown in the following diagram, 
 
 ![Top Level OpenConfig QoS Yang Model](img/oc-qos.png)
 
+The proposed yang model augmentations can be found in Stratum OpenConfig QoS yang file here [openconfig-qos-stratum.yang](../../../public/yang/openconfig-qos-stratum.yang)
+
 Each of the sub-trees will now be covered in detail in the following sections.
 
 ### QoS Drop Profiles (/qos/drop-profiles)
