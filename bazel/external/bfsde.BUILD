@@ -73,7 +73,7 @@ pkg_tar_with_symlinks(
 
 pkg_tar(
     name = "kernel_module",
-    srcs = glob(["barefoot-bin/lib/modules/*.ko"]),
+    srcs = glob(["barefoot-bin/lib/modules/**/*.ko"]),
     mode = "0644",
     package_dir = "/usr",
     strip_prefix = "barefoot-bin",
