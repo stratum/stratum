@@ -280,6 +280,23 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   return ::util::OkStatus();
 }
 
+::util::Status PortIdFromPortKeyGet(int unit, PortKey port_key,
+                                    uint32* sdk_port_id) {
+  std::string port_str = absl::StrFormat(
+      "%d/%d", port_key.port, port_key.channel);
+  bf_dev_port_t dev_port;
+  auto bf_status = bf_pal_port_str_to_dev_port_map(
+      static_cast<bf_dev_id_t>(unit), port_str.c_str(), &dev_port);
+  if (bf_status != BF_SUCCESS) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Error when translating front panel port "
+           << front_panel_port_str << " to device port on dev "
+           << unit << ".";
+  }
+  *sdk_port_id = static_cast<uint32>(dev_port);
+  return ::util::OkStatus();
+}
+
 BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}
 
 /* static */

@@ -46,6 +46,8 @@ class BFPalMock : public BFPalInterface {
   MOCK_METHOD3(PortLoopbackModeSet,
                ::util::Status(int uint, uint32 port_id,
                               LoopbackState loopback_mode));
+
+  // FIXME(bocon): PortIdFromFrontPanelGet
 };
 
 }  // namespace barefoot

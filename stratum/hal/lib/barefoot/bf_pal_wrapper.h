@@ -54,6 +54,9 @@ class BFPalWrapper : public BFPalInterface {
   ::util::Status PortLoopbackModeSet(int uint, uint32 port_id,
                                      LoopbackState loopback_mode) override;
 
+  ::util::Status PortIdFromPortKeyGet(int unit, PortKey port_key,
+                                      uint32* sdk_port_id) override;
+
   static BFPalWrapper* GetSingleton();
 
   // BFPalWrapper is neither copyable nor movable.
