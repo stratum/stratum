@@ -10,6 +10,7 @@ extern "C" {
 #include <memory>
 #include <utility>
 
+#include "absl/strings/strings.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "stratum/glue/integral_types.h"
