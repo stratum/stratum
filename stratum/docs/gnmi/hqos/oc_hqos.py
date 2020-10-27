@@ -1,3 +1,12 @@
+#!/usr/bin/env python2.7
+# Copyright 2020-present Open Networking Foundation
+# Copyright 2020-present Dell EMC
+# SPDX-License-Identifier: Apache-2.0
+
+'''
+This script populates the HQoS augmented OpenConfig QoS yang data model
+with an example HQoS configuration.
+'''
 
 import oc_helpers
 

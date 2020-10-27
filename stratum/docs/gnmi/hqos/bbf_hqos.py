@@ -1,3 +1,12 @@
+#!/usr/bin/env python2.7
+# Copyright 2020-present Open Networking Foundation
+# Copyright 2020-present Dell EMC
+# SPDX-License-Identifier: Apache-2.0
+
+'''
+This script populates the BroadBand Forum's QoS yang data model
+with an example HQoS configuration.
+'''
 
 from bbf_bindings import bbf_qos_traffic_mngt, ietf_interfaces
 import json
