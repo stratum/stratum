@@ -263,14 +263,14 @@ BFChassisManager::~BFChassisManager() = default;
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
 
   for (auto singleton_port : config.singleton_ports()) {
-    uint32 port_id = singleton_port.id(); //FIXME(bocon): sdn port id
+    uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
 
     auto* unit = gtl::FindOrNull(node_id_to_unit, node_id);
     if (unit == nullptr) {
       RETURN_ERROR(ERR_INVALID_PARAM)
           << "Invalid ChassisConfig, unknown node id " << node_id
-          << " for port " << port_id << "."; //FIXME(bocon): sdn
+          << " for port " << port_id << ".";
     }
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
@@ -296,7 +296,7 @@ BFChassisManager::~BFChassisManager() = default;
   }
 
   for (auto singleton_port : config.singleton_ports()) {
-    uint32 port_id = singleton_port.id(); //FIXME(bocon): sdn port
+    uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
     // we checked that node_id was valid in the previous loop
     auto unit = node_id_to_unit[node_id];
