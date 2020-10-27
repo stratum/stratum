@@ -62,7 +62,7 @@ RUN ./bazel-out/host/bin/external/com_google_protobuf/protoc \
 RUN touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py \
+    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py
 
