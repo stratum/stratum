@@ -50,7 +50,6 @@ Usage: stratum-replay [options] [p4runtime write log file]
     -ca_cert: CA certificate(optional), will use insecure credential if empty (default: "")
     -client_cert: Client certificate (optional) (default: "")
     -client_key: Client key (optional) (default: "")
-    -write_batch_size: Max size of P4Runtime updates in a write request (default: 1)
 )USAGE";
 
 using ClientStreamChannelReaderWriter =
@@ -63,6 +62,7 @@ using ClientStreamChannelReaderWriter =
     RETURN_ERROR(ERR_INVALID_PARAM).without_logging() << "";
   }
 
+  // Initialize the gRPC channel and P4Runtime service stub
   auto channel_credentials = ::grpc::InsecureChannelCredentials();
   if (!FLAGS_ca_cert.empty()) {
     ::grpc::string pem_root_certs;
@@ -89,10 +89,10 @@ using ClientStreamChannelReaderWriter =
     RETURN_IF_ERROR(status);
     channel_credentials = grpc::experimental::TlsCredentials(cred_opts);
   }
-
   auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
   auto stub = ::p4::v1::P4Runtime::NewStub(channel);
 
+  // Sends the arbitration update with given device id and election id.
   ::p4::v1::StreamMessageRequest stream_req;
   std::vector<std::string> election_ids =
       absl::StrSplit(FLAGS_election_id, ",");
@@ -121,6 +121,7 @@ using ClientStreamChannelReaderWriter =
         << "' to switch.";
   }
 
+  // Push the given pipeline config
   ::p4::v1::SetForwardingPipelineConfigRequest fwd_pipe_cfg_req;
   ::p4::v1::SetForwardingPipelineConfigResponse fwd_pipe_cfg_resp;
   fwd_pipe_cfg_req.set_device_id(FLAGS_device_id);
@@ -141,63 +142,75 @@ using ClientStreamChannelReaderWriter =
     status = stub->SetForwardingPipelineConfig(&context, fwd_pipe_cfg_req,
                                                &fwd_pipe_cfg_resp);
     CHECK_RETURN_IF_FALSE(status.ok())
-        << "Faild to send P4Runtime write request: "
+        << "Faild to push forwarding pipeline config: "
         << P4RuntimeGrpcStatusToString(status);
   }
 
+  // Parse the P4Runtime write log file and send write requests to the
+  // target device.
   std::string p4WriteLogs;
   RETURN_IF_ERROR(::stratum::ReadFileToString(argv[1], &p4WriteLogs));
   std::vector<std::string> lines =
       absl::StrSplit(p4WriteLogs, '\n', absl::SkipEmpty());
-  ::p4::v1::WriteRequest write_req;
-  ::p4::v1::WriteResponse write_resp;
-  int update_prepared = 0;
   for (std::string line : lines) {
+    ::p4::v1::WriteRequest write_req;
+    ::p4::v1::WriteResponse write_resp;
     // Log format: <timestamp>;<node_id>;<update proto>;<status>
-    // TODO(Yi): Is it better to use `absl::StrSplit(line, ':')` and
-    // use the third item?
-    std::regex write_req_regex(";(type[^;]*);");
-    std::smatch match;
-    if (!std::regex_search(line, match, write_req_regex)) {
+    // This regilar expression contains 4 sub-match groups which extracts
+    // elements from the log string.
+    std::regex write_req_regex(
+        "(\\d{4}-\\d{1,2}-\\d{1,2} "
+        "\\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{6});(\\d+);(type[^;]*);(.*)");
+    std::smatch matches;
+    if (!std::regex_match(line, matches, write_req_regex)) {
       // Can not find what we want in this line.
-      VLOG(1) << "Unable to find write request message, skip: " << line;
+      LOG(ERROR) << "Unable to find write request message, skip: " << line;
       continue;
     }
-    // The regular expression here we are using will put the protobuf text we
-    // need in the first sub-match group.
-    std::string write_request_text = match[1].str();
+
+    // The protobuf text is located at the 3rd sub-match group.
+    std::string write_request_text = matches[3].str();
+
+    // The error message is located at the 4th sub-match group.
+    // The message will be mpty if there is no error.
+    std::string error_msg = matches[4].str();
+
     auto update = write_req.add_updates();
     RETURN_IF_ERROR(ParseProtoFromString(write_request_text, update));
-    ++update_prepared;
-
-    if (update_prepared == FLAGS_write_batch_size) {
-      update_prepared = 0;
-      write_req.set_device_id(FLAGS_device_id);
-      write_req.mutable_election_id()->set_high(
-          absl::Uint128High64(election_id));
-      write_req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
-      VLOG(1) << "Sending request " << write_req.DebugString();
-      ::grpc::ClientContext context;
-      status = stub->Write(&context, write_req, &write_resp);
-      // CHECK_RETURN_IF_FALSE(status.ok())
-      //     << "Faild to send P4Runtime write request: "
-      //     << P4RuntimeGrpcStatusToString(status);
-      write_req.Clear();
-    }
-  }
-
-  if (update_prepared != 0) {
     write_req.set_device_id(FLAGS_device_id);
     write_req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     write_req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
     VLOG(1) << "Sending request " << write_req.DebugString();
     ::grpc::ClientContext context;
     status = stub->Write(&context, write_req, &write_resp);
-    // CHECK_RETURN_IF_FALSE(status.ok())
-    //     << "Faild to send P4Runtime write request: "
-    //     << P4RuntimeGrpcStatusToString(status);
+
+    if (!error_msg.empty()) {
+      // Here we expect to get an error, since we only send one update per
+      // write request, all we need to do is to check the first error detail.
+      CHECK_RETURN_IF_FALSE(!status.ok())
+          << "Expect to get error but the request successed.\n"
+          << "Expected error: " << error_msg << "\n"
+          << "Request: " << write_req.ShortDebugString();
+      ::google::rpc::Status details;
+      CHECK_RETURN_IF_FALSE(details.ParseFromString(status.error_details()))
+          << "Failed to parse error details from gRPC status.";
+      ::p4::v1::Error detail;
+      CHECK_RETURN_IF_FALSE(details.details(0).UnpackTo(&detail))
+          << "Failed to parse the P4Runtime error from detail message.";
+      if (detail.message() != error_msg) {
+        RETURN_ERROR(ERR_INTERNAL) << "The expected error message is different "
+                                      "to the actual error message:\n"
+                                   << "Expected: " << error_msg << "\n"
+                                   << "Actual: " << detail.message();
+      }
+    } else {
+      CHECK_RETURN_IF_FALSE(status.ok())
+          << "Faild to send P4Runtime write request: "
+          << P4RuntimeGrpcStatusToString(status);
+    }
   }
 
+  LOG(INFO) << "Done";
   return ::util::OkStatus();
 }
 
