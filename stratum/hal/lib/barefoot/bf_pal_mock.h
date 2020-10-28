@@ -51,8 +51,6 @@ class BFPalMock : public BFPalInterface {
   MOCK_METHOD3(PortIdFromPortKeyGet,
                ::util::Status(int unit, PortKey port_key,
                               uint32* sdk_port_id));
-
-  // FIXME(bocon): PortIdFromFrontPanelGet
 };
 
 }  // namespace barefoot
