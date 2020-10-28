@@ -178,6 +178,7 @@ NP4Switch::~NP4Switch() {}
                                         std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
+    DataResponse resp_val;
     ::util::StatusOr<DataResponse> resp;
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
@@ -190,8 +191,9 @@ NP4Switch::~NP4Switch() {}
         break;
       case DataRequest::Request::kSdkPortId:
         // Stratum hides the SDK port ID, so we just return the SDN port ID
-        resp.mutable_sdk_port_id()->set_sdk_port_id(
+        resp_val.mutable_sdk_port_id()->set_sdk_port_id(
             req.sdk_port_id().port_id());
+        resp = resp_val;
         break;
       default:
         // TODO(antonin)
