@@ -187,21 +187,27 @@ using ClientStreamChannelReaderWriter =
     if (!error_msg.empty()) {
       // Here we expect to get an error, since we only send one update per
       // write request, all we need to do is to check the first error detail.
-      CHECK_RETURN_IF_FALSE(!status.ok())
-          << "Expect to get error but the request successed.\n"
-          << "Expected error: " << error_msg << "\n"
-          << "Request: " << write_req.ShortDebugString();
-      ::google::rpc::Status details;
-      CHECK_RETURN_IF_FALSE(details.ParseFromString(status.error_details()))
-          << "Failed to parse error details from gRPC status.";
-      ::p4::v1::Error detail;
-      CHECK_RETURN_IF_FALSE(details.details(0).UnpackTo(&detail))
-          << "Failed to parse the P4Runtime error from detail message.";
-      if (detail.message() != error_msg) {
-        RETURN_ERROR(ERR_INTERNAL) << "The expected error message is different "
-                                      "to the actual error message:\n"
-                                   << "Expected: " << error_msg << "\n"
-                                   << "Actual: " << detail.message();
+      // For now, we only show the message if there is an error instead of
+      // return with an error status.
+      if (status.ok()) {
+        LOG(ERROR) << "Expect to get error but the request successed.\n"
+                   << "Expected error: " << error_msg << "\n"
+                   << "Request: " << write_req.ShortDebugString();
+      } else {
+        ::google::rpc::Status details;
+        CHECK_RETURN_IF_FALSE(details.ParseFromString(status.error_details()))
+            << "Failed to parse error details from gRPC status.";
+        if (details.details_size() != 0) {
+          ::p4::v1::Error detail;
+          CHECK_RETURN_IF_FALSE(details.details(0).UnpackTo(&detail))
+              << "Failed to parse the P4Runtime error from detail message.";
+          if (detail.message() != error_msg) {
+            LOG(ERROR) << "The expected error message is different "
+                          "to the actual error message:\n"
+                       << "Expected: " << error_msg << "\n"
+                       << "Actual: " << detail.message();
+          }
+        }
       }
     } else {
       CHECK_RETURN_IF_FALSE(status.ok())
