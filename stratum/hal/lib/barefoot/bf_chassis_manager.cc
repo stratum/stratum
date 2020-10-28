@@ -256,11 +256,13 @@ BFChassisManager::~BFChassisManager() = default;
       node_id_to_sdk_port_id_to_port_id;
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state;
 
-  int unit(0);
-  for (auto& node : config.nodes()) {
-    unit_to_node_id[unit] = node.id();
-    node_id_to_unit[node.id()] = unit;
-    unit++;
+  {
+    int unit(0);
+    for (auto& node : config.nodes()) {
+      unit_to_node_id[unit] = node.id();
+      node_id_to_unit[node.id()] = unit;
+      unit++;
+    }
   }
 
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
@@ -285,7 +287,7 @@ BFChassisManager::~BFChassisManager() = default;
     // Translate the logical SDN port to SDK port (device port ID)
     uint32 sdk_port_id;
     APPEND_STATUS_IF_ERROR(status, bf_pal_interface_->PortIdFromPortKeyGet(
-        unit, singleton_port_key, &sdk_port_id));
+        *unit, singleton_port_key, &sdk_port_id));
     node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port_id;
     node_id_to_sdk_port_id_to_port_id[node_id][sdk_port_id] = port_id;
 
@@ -381,7 +383,7 @@ BFChassisManager::~BFChassisManager() = default;
   node_id_to_port_id_to_singleton_port_key_ =
       node_id_to_port_id_to_singleton_port_key;
   node_id_to_port_id_to_sdk_port_id_ = node_id_to_port_id_to_sdk_port_id;
-  node_id_to_sdk_port_id_to_port_id_ = node_id_to_sdk_port_id_to_port_id_;
+  node_id_to_sdk_port_id_to_port_id_ = node_id_to_sdk_port_id_to_port_id;
   xcvr_port_key_to_xcvr_state_ = xcvr_port_key_to_xcvr_state;
   initialized_ = true;
 
@@ -390,6 +392,14 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
+  std::map<uint64, int> node_id_to_unit;
+  {
+    int unit(0);
+    for (auto& node : config.nodes()) {
+      node_id_to_unit[node.id()] = unit++;
+    }
+  }
+
   if (config.trunk_ports_size()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Trunk ports are not supported on Tofino.";
@@ -417,9 +427,15 @@ BFChassisManager::~BFChassisManager() = default;
           singleton_port_key;
 
       // Make sure that the port exists by getting the SDK port ID
-      uint32 sdk_port_id;
-      APPEND_STATUS_IF_ERROR(status, bf_pal_interface_->PortIdFromPortKeyGet(
-          unit, singleton_port_key, &sdk_port_id));
+      const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
+      if (unit == nullptr) {
+        APPEND_ERROR(status) << "Node " << node_id << " not found for port "
+                             << port_id << ".";
+      } else {
+        uint32 sdk_port_id;
+        APPEND_STATUS_IF_ERROR(status, bf_pal_interface_->PortIdFromPortKeyGet(
+            *unit, singleton_port_key, &sdk_port_id));
+      }
     }
 
     if (!status.ok()) {
@@ -544,11 +560,9 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       break;
     }
     case Request::kSdkPortId: {
-      const uint32* sdk_port_id =
-          gtl::FindOrNull(node_id_to_port_id_to_sdk_port_id_[
-            request.sdk_port_id().node_id()][request.sdk_port_id().port_id()]);
-      if (sdk_port_id != nullptr)
-          resp.mutable_sdk_port_id()->set_sdk_port_id(*sdk_port_id);
+      ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(
+          request.sdk_port_id().node_id(), request.sdk_port_id().port_id()));
+      resp.mutable_sdk_port_id()->set_sdk_port_id(sdk_port_id);
       break;
     }
     default:
@@ -579,8 +593,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   // If state is unknown, query the state
   LOG(INFO) << "Querying state of port " << port_id << " in node " << node_id
             << ".";
-  uint32 sdk_port_id =
-          node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
+  ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   ASSIGN_OR_RETURN(auto port_state,
                    bf_pal_interface_->PortOperStateGet(unit, sdk_port_id));
   LOG(INFO) << "State of port " << port_id << " in node " << node_id 
@@ -595,8 +608,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
-  uint32 sdk_port_id =
-      node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
+  ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   return bf_pal_interface_->PortAllStatsGet(unit, sdk_port_id, counters);
   return ::util::OkStatus();
 }
@@ -642,9 +654,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
           << "fec_mode field should contain a value";
     }
 
-    uint32 sdk_port_id =
-        node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
-
+    ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
     RETURN_IF_ERROR(bf_pal_interface_->PortAdd(unit, sdk_port_id, *config.speed_bps,
                                                *config.fec_mode));
     config_new->speed_bps = *config.speed_bps;
@@ -770,7 +780,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
         continue;
       }
       const uint32* port_id = gtl::FindOrNull(
-          node_id_to_sdk_port_id_to_port_id_[*node_id][event.port_id]);
+          node_id_to_sdk_port_id_to_port_id_[*node_id], event.port_id);
       if (port_id == nullptr) {
         // We get a notification for all ports, even ports that were not added,
         // when doing a Fast Refresh, which can be confusing, so we use VLOG
@@ -789,7 +799,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
       if (state == nullptr) {
         *state = event.state;
       } // else  FIXME(bocon)
-      SendPortOperStateGnmiEvent(*node_id, port_id, event.state);
+      SendPortOperStateGnmiEvent(*node_id, *port_id, event.state);
     }
   }
 }
@@ -962,6 +972,24 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
       << "Node " << node_id << " is not configured or not known.";
 
   return *unit;
+}
+
+::util::StatusOr<uint32> BFChassisManager::GetSdkPortId(
+    uint64 node_id, uint32 port_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
+  CHECK_RETURN_IF_FALSE(unit != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+
+  auto port_map = gtl::FindOrDie(node_id_to_port_id_to_sdk_port_id_, node_id);
+  const uint32* sdk_port_id = gtl::FindOrNull(port_map, port_id);
+  CHECK_RETURN_IF_FALSE(sdk_port_id != nullptr)
+      << "Port " << port_id << " for node " << node_id
+      << " is not configured or not known.";
+
+  return *sdk_port_id;
 }
 
 void BFChassisManager::CleanupInternalState() {
