@@ -92,9 +92,6 @@ using ClientStreamChannelReaderWriter =
 
   auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
   auto stub = ::p4::v1::P4Runtime::NewStub(channel);
-  ::grpc::ClientContext context;
-  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
-      stub->StreamChannel(&context);
 
   ::p4::v1::StreamMessageRequest stream_req;
   std::vector<std::string> election_ids =
@@ -114,10 +111,38 @@ using ClientStreamChannelReaderWriter =
       absl::Uint128High64(election_id));
   stream_req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(election_id));
+
+  ::grpc::ClientContext context;
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub->StreamChannel(&context);
   if (!stream->Write(stream_req)) {
     RETURN_ERROR(ERR_INTERNAL)
         << "Failed to send request '" << stream_req.ShortDebugString()
         << "' to switch.";
+  }
+
+  ::p4::v1::SetForwardingPipelineConfigRequest fwd_pipe_cfg_req;
+  ::p4::v1::SetForwardingPipelineConfigResponse fwd_pipe_cfg_resp;
+  fwd_pipe_cfg_req.set_device_id(FLAGS_device_id);
+  fwd_pipe_cfg_req.mutable_election_id()->set_high(
+      absl::Uint128High64(election_id));
+  fwd_pipe_cfg_req.mutable_election_id()->set_low(
+      absl::Uint128Low64(election_id));
+  fwd_pipe_cfg_req.set_action(
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+  RETURN_IF_ERROR(ReadProtoFromTextFile(
+      FLAGS_p4info, fwd_pipe_cfg_req.mutable_config()->mutable_p4info()));
+  RETURN_IF_ERROR(ReadFileToString(
+      FLAGS_pipeline_cfg,
+      fwd_pipe_cfg_req.mutable_config()->mutable_p4_device_config()));
+  ::grpc::Status status;
+  {
+    ::grpc::ClientContext context;
+    status = stub->SetForwardingPipelineConfig(&context, fwd_pipe_cfg_req,
+                                               &fwd_pipe_cfg_resp);
+    CHECK_RETURN_IF_FALSE(status.ok())
+        << "Faild to send P4Runtime write request: "
+        << P4RuntimeGrpcStatusToString(status);
   }
 
   std::string p4WriteLogs;
@@ -151,12 +176,12 @@ using ClientStreamChannelReaderWriter =
       write_req.mutable_election_id()->set_high(
           absl::Uint128High64(election_id));
       write_req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
-
       VLOG(1) << "Sending request " << write_req.DebugString();
-      ::grpc::Status status = stub->Write(&context, write_req, &write_resp);
-      CHECK_RETURN_IF_FALSE(status.ok())
-          << "Faild to send P4Runtime write request: "
-          << P4RuntimeGrpcStatusToString(status);
+      ::grpc::ClientContext context;
+      status = stub->Write(&context, write_req, &write_resp);
+      // CHECK_RETURN_IF_FALSE(status.ok())
+      //     << "Faild to send P4Runtime write request: "
+      //     << P4RuntimeGrpcStatusToString(status);
       write_req.Clear();
     }
   }
@@ -166,10 +191,11 @@ using ClientStreamChannelReaderWriter =
     write_req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     write_req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
     VLOG(1) << "Sending request " << write_req.DebugString();
-    ::grpc::Status status = stub->Write(&context, write_req, &write_resp);
-    CHECK_RETURN_IF_FALSE(status.ok())
-        << "Faild to send P4Runtime write request: "
-        << P4RuntimeGrpcStatusToString(status);
+    ::grpc::ClientContext context;
+    status = stub->Write(&context, write_req, &write_resp);
+    // CHECK_RETURN_IF_FALSE(status.ok())
+    //     << "Faild to send P4Runtime write request: "
+    //     << P4RuntimeGrpcStatusToString(status);
   }
 
   return ::util::OkStatus();
