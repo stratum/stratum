@@ -284,7 +284,7 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
 
 namespace {
 
-// PortKey uses three possibile values for channel:
+// PortKey uses three possible values for channel:
 //   > 0: port is channelized (first channel is 1)
 //   0: port is not channelized
 //   < 0: port channel is not important (e.g. for port groups)
