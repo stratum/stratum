@@ -229,3 +229,44 @@ cc_proto_library(
     name = "bf_cc_proto",
     deps = [":bf_proto"],
 )
+
+config_setting(
+    name = "with_bfrt_grpc_server",
+    define_values = {"with_bfrt_grpc_server": "true"},
+)
+
+stratum_cc_library(
+    name = "bfrt_grpc_server",
+    hdrs = ["bfrt_grpc_server.h"],
+    srcs = ["bfrt_grpc_server.cc"],
+    deps = [
+        "//stratum/glue:logging",
+        "@com_github_gflags_gflags//:gflags",
+    ] + select({
+        "with_bfrt_grpc_server": [
+            "@com_google_absl//absl/memory",
+            "@local_barefoot_bin//:bfsde",
+            "@local_barefoot_bin//:bfruntime_grpc_server",
+        ],
+        "//conditions:default": [],
+    }),
+    defines = select({
+        "with_bfrt_grpc_server": ["WITH_BFRT_GRPC_SERVER"],
+	    "//conditions:default": [],
+    }),
+)
+
+stratum_cc_test(
+    name = "bfrt_grpc_server_test",
+    srcs = [
+        "bfrt_grpc_server_test.cc",
+    ],
+    deps = [
+        ":bfrt_grpc_server",
+        "//stratum/glue/net_util:ports",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+

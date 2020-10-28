@@ -249,6 +249,29 @@ will configure device port 132 in 100G mode with Reed-Solomon (RS) FEC.
 
 FEC can also be configured when adding a port through gNMI.
 
+
+### Running the BFRuntime gRPC Server
+
+You can enable the BFRuntime gRPC server on compatible binaries by passing the
+`-incompatible_enable_bfrt_grpc_server` flag when starting Stratum.
+
+By default, the server listens for local connections on TCP port 50052. You can
+customize this with the `-incompatible_bfrt_grpc_server_addr` flag`.
+For example to listen to all connection on TCP port 12345, use:
+
+```bash
+start-stratum.sh \
+-incompatible_enable_bfrt_grpc_server \
+-incompatible_bfrt_grpc_server_addr=0.0.0.0:12345
+```
+
+*Note: If you see an error
+(`"Tried to enable BFRuntime gRPC server, but it was not compiled."`),
+then Stratum was not compiled with support for the BFRuntime gRPC server.
+See [the build guide](./README.build.md#bfruntime-grpc-server-support)
+for more details.*
+
+
 -----
 
 ## Troubleshooting

@@ -21,6 +21,7 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_switch.h"
+#include "stratum/hal/lib/barefoot/bfrt_grpc_server.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
@@ -167,6 +168,8 @@ void registerDeviceMgrLogger() {
         << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
+
+  StartBfRtServerIfEnabled();
 
   RETURN_IF_ERROR(hal->Run());  // blocking
   LOG(INFO) << "See you later!";
