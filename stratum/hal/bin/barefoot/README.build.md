@@ -263,6 +263,29 @@ Method 2:
 export WITH_ONLP=false
 ```
 
+### BFRuntime gRPC Server Support
+
+Stratum is designed to use P4Runtime and gNMI as the primary interfaces for
+programming and configuring the Tofino ASIC. However, if you need to use
+BFRuntime directly, you can compile Stratum with the
+`--define with_bfrt_grpc_server=true` flag which links the BFRuntime gRPC
+server into the Stratum binary.
+
+*Note: Even though the code is linked into the binary, it needs to be enabled
+at runtime with a special flag.
+See [the runtime guide](./README.run.md#running-the-bfruntime-grpc-server)
+for more details.*
+
+If you are having trouble building with the option, you may not have built
+you BF SDE correctly (e.g. without the `bf-runtime` option in `bf-drivers`).
+You can test to make sure the BFRuntime gRPC server is linked properly using:
+
+```bash
+bazel test \
+--define with_bfrt_grpc_server=true \
+//stratum/hal/lib/barefoot:bfrt_grpc_server_test
+```
+
 -----
 
 ## BF SDE Build Options

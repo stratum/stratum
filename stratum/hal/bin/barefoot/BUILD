@@ -50,6 +50,7 @@ stratum_cc_binary(
         "tofino_skip_p4_no_bsp.conf",
     ],
     deps = [
+        "//stratum/hal/lib/barefoot:bfrt_grpc_server",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
         "//stratum/hal/lib/barefoot:bf_pal_wrapper",
         "//stratum/hal/lib/barefoot:bf_pd_wrapper",
