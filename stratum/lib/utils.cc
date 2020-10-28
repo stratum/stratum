@@ -20,6 +20,7 @@
 #include "absl/strings/str_split.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
+#include "p4/v1/p4runtime.pb.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 
@@ -249,7 +250,7 @@ std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
       ss << "Failed to parse ::google::rpc::Status from GRPC status details.";
     } else {
       for (int i = 0; i < details.details_size(); ++i) {
-        ::google::rpc::Status detail;
+        ::p4::v1::Error detail;
         if (details.details(i).UnpackTo(&detail)) {
           ss << "\n(error #" << i + 1 << ": error code: "
              << ::google::rpc::Code_Name(ToGoogleRpcCode(detail.code()))
