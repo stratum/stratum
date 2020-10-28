@@ -41,7 +41,7 @@ class YangParseTreeTest : public ::testing::Test {
   using OnSetAction = GnmiSetHandler (TreeNode::*)() const;
 
   static constexpr int kInterface1NodeId = 3;
-  static constexpr int kInterface1PortId = 3;
+  static constexpr int kInterface1PortId = 33;
   static constexpr uint32 kInterface1QueueId = 0;
   static constexpr char kInterface1QueueName[] = "BE1";
   static constexpr int kOpticalInterface1ModuleId = 5;
@@ -1017,13 +1017,27 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
       GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
   ASSERT_NE(node, nullptr);
 
+  const int sdkPortId = 99;
+  // Mock implementation of RetrieveValue() that sends a response set to
+  // kSdkPortId.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_sdk_port_id()->set_sdk_port_id(
+                            sdkPortId);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
+
   // Get its OnPoll() handler and call it.
   const auto& handler = node->GetOnPollHandler();
   EXPECT_OK(handler(PollEvent(), &stream));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().uint_val(), 3);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), sdkPortId);
 }
 
 // Check if the 'state/mac-address' OnPoll action works correctly.
