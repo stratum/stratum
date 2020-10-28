@@ -188,6 +188,11 @@ NP4Switch::~NP4Switch() {}
       case DataRequest::Request::kAutonegStatus:
         resp = np4_chassis_manager_->GetPortData(req);
         break;
+      case DataRequest::Request::kSdkPortId:
+        // Stratum hides the SDK port ID, so we just return the SDN port ID
+        resp.mutable_sdk_port_id()->set_sdk_port_id(
+            req.sdk_port_id().port_id());
+        break;
       default:
         // TODO(antonin)
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";

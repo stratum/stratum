@@ -56,6 +56,7 @@ BFChassisManager::~BFChassisManager() = default;
     const SingletonPort& singleton_port /* desired config */,
     /* out */ PortConfig* config /* new config */) {
   config->admin_state = ADMIN_STATE_UNKNOWN;
+  // SingletonPort ID is the SDN/Stratum port ID
   uint32 port_id = singleton_port.id();
 
   const auto& config_params = singleton_port.config_params();
@@ -114,6 +115,8 @@ BFChassisManager::~BFChassisManager() = default;
     const PortConfig& config_old /* current config */,
     /* out */ PortConfig* config /* new config */) {
   *config = config_old;
+  // SingletonPort ID is the SDN/Stratum port ID
+  uint32 port_id = singleton_port.id();
 
   if (!bf_pal_interface_->PortIsValid(unit, sdk_port_id)) {
     config->admin_state = ADMIN_STATE_UNKNOWN;
@@ -538,6 +541,14 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
                                      request.loopback_status().port_id()));
       if (config->loopback_mode)
         resp.mutable_loopback_status()->set_state(*config->loopback_mode);
+      break;
+    }
+    case Request::kSdkPortId: {
+      const uint32* sdk_port_id =
+          gtl::FindOrNull(node_id_to_port_id_to_sdk_port_id_[
+            request.sdk_port_id().node_id()][request.sdk_port_id().port_id()]);
+      if (sdk_port_id != nullptr)
+          resp.mutable_sdk_port_id()->set_sdk_port_id(*sdk_port_id);
       break;
     }
     default:

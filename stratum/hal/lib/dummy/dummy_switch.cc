@@ -287,6 +287,11 @@ namespace dummy_switch {
         }
         break;
       }
+      case DataRequest::Request::kSdkPortId:
+        // Stratum hides the SDK port ID, so we just return the SDN port ID
+        resp.mutable_sdk_port_id()->set_sdk_port_id(
+            req.sdk_port_id().port_id());
+        break;
       default:
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;

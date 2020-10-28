@@ -927,17 +927,19 @@ void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/ifindex
 void SetUpInterfacesInterfaceStateIfindex(uint32 port_id, TreeNode* node) {
+  // Returns system assigned number for each interface
+  // If Stratum performs port translation (e.g. for the bcm target), we return
+  // the port_id. If Stratum does not perform port translation (e.g. for the
+  // bf target), we return the SDK port number.
+  auto poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree,
+                       &DataResponse::sdk_port_id,
+                       &DataResponse::has_sdk_port_id,
+                       &DataRequest::Request::mutable_sdk_port_id,
+                       &SdkPortId::sdk_port_id);
   auto on_change_functor = UnsupportedFunc();
-  node->SetOnTimerHandler([port_id](const GnmiEvent& event,
-                                    const ::gnmi::Path& path,
-                                    GnmiSubscribeStream* stream) {
-        return SendResponse(GetResponse(path, port_id), stream);
-      })
-      ->SetOnPollHandler([port_id](const GnmiEvent& event,
-                                   const ::gnmi::Path& path,
-                                   GnmiSubscribeStream* stream) {
-        return SendResponse(GetResponse(path, port_id), stream);
-      })
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
