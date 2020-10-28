@@ -595,7 +595,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   ASSIGN_OR_RETURN(auto port_state,
                    bf_pal_interface_->PortOperStateGet(unit, sdk_port_id));
-  LOG(INFO) << "State of port " << port_id << " in node " << node_id 
+  LOG(INFO) << "State of port " << port_id << " in node " << node_id
             << " (SDK port " << sdk_port_id << "): "
             << PrintPortState(port_state);
   return port_state;
@@ -654,7 +654,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
 
     ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-    RETURN_IF_ERROR(bf_pal_interface_->PortAdd(unit, sdk_port_id, *config.speed_bps,
+    RETURN_IF_ERROR(bf_pal_interface_->PortAdd(unit, sdk_port_id,
+                                               *config.speed_bps,
                                                *config.fec_mode));
     config_new->speed_bps = *config.speed_bps;
     config_new->admin_state = ADMIN_STATE_DISABLED;
