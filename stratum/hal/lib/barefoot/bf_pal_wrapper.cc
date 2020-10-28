@@ -298,8 +298,8 @@ int GetZeroBasedChannel(const PortKey* port_key) {
 
 }  // namespace
 
-::util::Status PortIdFromPortKeyGet(int unit, PortKey port_key,
-                                    uint32* sdk_port_id) {
+::util::Status BFPalWrapper::PortIdFromPortKeyGet(int unit, PortKey port_key,
+                                                  uint32* sdk_port_id) {
   int channel = GetZeroBasedChannel(&port_key);
   if (channel < 0) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Channel must be set for port "
