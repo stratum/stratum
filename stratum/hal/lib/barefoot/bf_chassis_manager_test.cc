@@ -126,9 +126,8 @@ class BFChassisManagerTest : public ::testing::Test {
   void RegisterSdkPortId(const SingletonPort* singleton_port) {
     RegisterSdkPortId(singleton_port->id(), singleton_port->slot(),
                       singleton_port->port(), singleton_port->channel(),
-                      kUnit); //FIXME
+                      kUnit);  // TODO(bocon): look up unit from node
   };
-
 
   ::util::Status CheckCleanInternalState() {
     CHECK_RETURN_IF_FALSE(bf_chassis_manager_->unit_to_node_id_.empty());

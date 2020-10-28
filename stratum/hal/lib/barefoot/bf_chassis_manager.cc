@@ -306,10 +306,9 @@ BFChassisManager::~BFChassisManager() = default;
     // we checked that node_id was valid in the previous loop
     auto unit = node_id_to_unit[node_id];
 
-    // TODO(antonin): we currently ignore slot, port and channel (note that
-    // Stratum requires slot and port to be set). We require id to be set to the
-    // Tofino device port.
-    // FIXME(bocon) ^^^^^^
+    // TODO(antonin): we currently ignore slot
+    // Stratum requires slot and port to be set. We use port and channel to
+    // get Tofino device port (called SDK port ID).
 
     const PortConfig* config_old = nullptr;
     const auto* port_id_to_port_config_old =
@@ -798,7 +797,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
                 << PrintPortState(event.state) << ".";
       if (state == nullptr) {
         *state = event.state;
-      } // else  FIXME(bocon)
+      }
       SendPortOperStateGnmiEvent(*node_id, *port_id, event.state);
     }
   }
