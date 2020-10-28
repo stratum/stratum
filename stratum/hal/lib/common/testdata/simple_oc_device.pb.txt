@@ -282,9 +282,6 @@ interface {
     id {
       value: 1
     }
-    ifindex {
-      value: 1
-    }
   }
 }
 interface {
@@ -304,9 +301,6 @@ interface {
     id {
       value: 2
     }
-    ifindex {
-      value: 2
-    }
   }
 }
 interface {
@@ -321,9 +315,6 @@ interface {
       }
     }
     id {
-      value: 3
-    }
-    ifindex {
       value: 3
     }
   }
@@ -342,9 +333,6 @@ interface {
     id {
       value: 4
     }
-    ifindex {
-      value: 4
-    }
   }
 }
 interface {
@@ -359,9 +347,6 @@ interface {
       }
     }
     id {
-      value: 5
-    }
-    ifindex {
       value: 5
     }
   }
@@ -380,9 +365,6 @@ interface {
     id {
       value: 6
     }
-    ifindex {
-      value: 6
-    }
   }
 }
 interface {
@@ -397,9 +379,6 @@ interface {
       }
     }
     id {
-      value: 7
-    }
-    ifindex {
       value: 7
     }
   }
@@ -418,9 +397,6 @@ interface {
     id {
       value: 8
     }
-    ifindex {
-      value: 8
-    }
   }
 }
 interface {
@@ -429,9 +405,6 @@ interface {
     enabled {
     }
     id {
-      value: 9
-    }
-    ifindex {
       value: 9
     }
     aggregation {
@@ -451,9 +424,6 @@ interface {
     enabled {
     }
     id {
-      value: 10
-    }
-    ifindex {
       value: 10
     }
     aggregation {
