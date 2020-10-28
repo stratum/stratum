@@ -926,7 +926,9 @@ void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/ifindex
-void SetUpInterfacesInterfaceStateIfindex(uint32 port_id, TreeNode* node) {
+void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
+                                          TreeNode* node,
+                                          YangParseTree* tree) {
   // Returns system assigned number for each interface
   // If Stratum performs port translation (e.g. for the bcm target), we return
   // the port_id. If Stratum does not perform port translation (e.g. for the
@@ -3251,7 +3253,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("ifindex")());
-  SetUpInterfacesInterfaceStateIfindex(port_id, node);
+  SetUpInterfacesInterfaceStateIfindex(node_id, port_id, node, tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("name")());
