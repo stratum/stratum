@@ -292,12 +292,13 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   //     > 0: port is channelized (first channel is 1)
   //     0: port is not channelized
   //     < 0: port channel is not important (e.g. for port groups)
-  int channel = port_key.channel;
+  // BF SDK expects the first channel to be 0
+  //     Convert base-1 channel to base-0 channel if port is channelized
+  //     Otherwise, port is already 0 in the non-channelized case
+  const int channel =
+      (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
   CHECK_RETURN_IF_FALSE(channel >= 0) << "Channel must be set for port "
         << port << " on dev " << unit << ".";
-  // BF SDK expects the first channel to be 0
-  if (channel > 0) channel--;  // Convert base-1 channel to base-0 channel
-  // Else, non-channelized port is already channel 0 (< 0 is already excluded)
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, MAX_PORT_HDL_STRING_LEN,

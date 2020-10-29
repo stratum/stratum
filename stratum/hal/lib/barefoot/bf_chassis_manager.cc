@@ -629,10 +629,12 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   for (auto& p : node_id_to_port_id_to_port_state_[node_id])
     p.second = PORT_STATE_UNKNOWN;
 
+
   LOG(INFO) << "Replaying ports for node " << node_id << ".";
 
   auto replay_one_port = [node_id, unit, this](
-                             uint32 port_id, const PortConfig& config,
+                             uint32 port_id, uint32 sdk_port_id,
+                             const PortConfig& config,
                              PortConfig* config_new) -> ::util::Status {
     VLOG(1) << "Replaying port " << port_id << " in node " << node_id << ".";
 
@@ -653,7 +655,6 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
           << "fec_mode field should contain a value";
     }
 
-    ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
     RETURN_IF_ERROR(bf_pal_interface_->PortAdd(unit, sdk_port_id,
                                                *config.speed_bps,
                                                *config.fec_mode));
@@ -690,9 +691,11 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
 
   for (auto& p : node_id_to_port_id_to_port_config_[node_id]) {
+    uint32 port_id = p.first;
+    ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
     PortConfig config_new;
-    APPEND_STATUS_IF_ERROR(status,
-                           replay_one_port(p.first, p.second, &config_new));
+    APPEND_STATUS_IF_ERROR(status, replay_one_port(port_id, sdk_port_id,
+                                                   p.second, &config_new));
     p.second = config_new;
   }
 
