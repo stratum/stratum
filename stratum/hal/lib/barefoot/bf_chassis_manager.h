@@ -73,8 +73,8 @@ class BFChassisManager {
   ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id, uint32 port_id) const
-      SHARED_LOCKS_REQUIRED(chassis_lock);
+  virtual ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id, uint32 port_id)
+      const SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
