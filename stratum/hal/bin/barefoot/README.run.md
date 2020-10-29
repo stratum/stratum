@@ -258,10 +258,10 @@ to function. Stratum now reads BF device port ID from the SDK using the `node`,
 the port `id` can now be set to a user-selected value.
 
 This port ID (SDN port ID) can be read using gNMI:
-`/interfaces/interface[<name>]/state/id`
+`/interfaces/interface[name=<name>]/state/id`
 
 The BF device port ID (SDK port ID) can be read using gNMI:
-`/interfaces/interface[<name>]/state/ifindex`
+`/interfaces/interface[name=<name>]/state/ifindex`
 
 In both cases, the `name` used in the gNMI paths should match the name provided
 in the `singleton_port` config.
