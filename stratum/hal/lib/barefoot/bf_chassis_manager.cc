@@ -391,8 +391,15 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
+
+  if (config.nodes_size()){
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "At least one node is required for Tofino.";
+  }
+
   std::map<uint64, int> node_id_to_unit;
   {
+    // Map node ids to 0-based units
     int unit(0);
     for (auto& node : config.nodes()) {
       node_id_to_unit[node.id()] = unit++;
@@ -426,14 +433,14 @@ BFChassisManager::~BFChassisManager() = default;
           singleton_port_key;
 
       // Make sure that the port exists by getting the SDK port ID
-      const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
+      const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
       if (unit == nullptr) {
         APPEND_ERROR(status) << "Node " << node_id << " not found for port "
                              << port_id << ".";
       } else {
-        uint32 sdk_port_id;
+        uint32 unused_sdk_port_id;
         APPEND_STATUS_IF_ERROR(status, bf_pal_interface_->PortIdFromPortKeyGet(
-            *unit, singleton_port_key, &sdk_port_id));
+            *unit, singleton_port_key, &unused_sdk_port_id));
       }
     }
 
