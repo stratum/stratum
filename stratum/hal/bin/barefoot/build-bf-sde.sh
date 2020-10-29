@@ -132,9 +132,9 @@ popd
 echo "BF SDE build complete."
 
 # Strip shared libraries and fix permissions
-find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 chmod +w
+find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 chmod u+w
 find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 strip --strip-all
-find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 chmod -w
+find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 chmod a-w
 
 # Build BF kernel modules
 if [ -n "$KERNEL_HEADERS_TARS" ]; then
