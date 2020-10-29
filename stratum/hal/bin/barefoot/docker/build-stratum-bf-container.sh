@@ -119,7 +119,7 @@ STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
-docker build --squash \
+docker build \
   -t "$RUNTIME_IMAGE" \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f "$DOCKERFILE_DIR/Dockerfile" \
