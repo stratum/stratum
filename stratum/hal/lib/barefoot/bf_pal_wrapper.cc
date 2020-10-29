@@ -8,10 +8,8 @@ extern "C" {
 }
 
 #include <memory>
-#include <string>
 #include <utility>
 
-#include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "stratum/glue/integral_types.h"
@@ -288,13 +286,13 @@ namespace {
 //   > 0: port is channelized (first channel is 1)
 //   0: port is not channelized
 //   < 0: port channel is not important (e.g. for port groups)
-int GetZeroBasedChannel(const PortKey* port_key) {
-  if (port_key->channel > 0) {
+int GetZeroBasedChannel(const PortKey& port_key) {
+  if (port_key.channel > 0) {
     // Convert base-1 channel to base-0 channel
-    return port_key->channel - 1;
+    return port_key.channel - 1;
   }
   // Non-channelized port uses channel 0, or return non-zero
-  return port_key->channel;
+  return port_key.channel;
 }
 
 }  // namespace
@@ -302,21 +300,35 @@ int GetZeroBasedChannel(const PortKey* port_key) {
 ::util::Status BFPalWrapper::PortIdFromPortKeyGet(int unit,
                                                   const PortKey& port_key,
                                                   uint32* sdk_port_id) {
-  int channel = GetZeroBasedChannel(&port_key);
+  const int port = port_key.port;
+  if (port < 0) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Port ID must be non-negative. "
+        << "Attempted to get port " << port_key.port << " on dev "
+        << unit << ".";
+  }
+
+  int channel = GetZeroBasedChannel(port_key);
   if (channel < 0) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Channel must be set for port "
-        << port_key.port << " on dev " << unit << ".";
+        << port << " on dev " << unit << ".";
   }
-  std::string port_str = absl::StrFormat("%d/%d", port_key.port, channel);
+
+  char port_string[MAX_PORT_HDL_STRING_LEN];
+  int r = snprintf(port_string, MAX_PORT_HDL_STRING_LEN,
+                   "%d/%d", port, channel);
+  if (r < 0 || r >= MAX_PORT_HDL_STRING_LEN) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to build port string"
+        << " for port " << port << " channel " << channel
+        << " on dev " << unit << ".";
+  }
+
   bf_dev_port_t dev_port;
   auto bf_status = bf_pal_port_str_to_dev_port_map(
-      static_cast<bf_dev_id_t>(unit),
-      const_cast<char*>(port_str.c_str()),
-      &dev_port);
+      static_cast<bf_dev_id_t>(unit), port_string, &dev_port);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "Error when translating front panel port "
-           << port_str << " to device port on dev "
+           << port_string << " to device port on dev "
            << unit << ".";
   }
   *sdk_port_id = static_cast<uint32>(dev_port);

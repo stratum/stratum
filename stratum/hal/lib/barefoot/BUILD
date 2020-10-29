@@ -133,7 +133,6 @@ stratum_cc_library(
         "//stratum/lib:constants",
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/strings",
         "@local_barefoot_bin//:bfsde",
     ],
 )
