@@ -266,7 +266,6 @@ BFChassisManager::~BFChassisManager() = default;
   }
 
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
-
   for (auto singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
@@ -396,16 +395,6 @@ BFChassisManager::~BFChassisManager() = default;
     return MAKE_ERROR(ERR_INVALID_PARAM)
         << "At least one node is required for Tofino.";
   }
-
-  std::map<uint64, int> node_id_to_unit;
-  {
-    // Map node ids to 0-based units
-    int unit(0);
-    for (auto& node : config.nodes()) {
-      node_id_to_unit[node.id()] = unit++;
-    }
-  }
-
   if (config.trunk_ports_size()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Trunk ports are not supported on Tofino.";
@@ -415,14 +404,18 @@ BFChassisManager::~BFChassisManager() = default;
            << "Port groups are not supported on Tofino.";
   }
 
-  // If the class is initialized, we also need to check if the new config will
-  // require a change in the port layout. If so, report reboot required.
-  if (initialized_) {
-    std::map<uint64, std::map<uint32, PortKey>>
-        node_id_to_port_id_to_singleton_port_key;
+  // Validate singleton ports
+  std::map<uint64, std::map<uint32, PortKey>>
+     node_id_to_port_id_to_singleton_port_key;
+  {
+    std::map<uint64, int> node_id_to_unit;
+    // Map node ids to 0-based units
+    int unit(0);
+    for (auto& node : config.nodes()) {
+      node_id_to_unit[node.id()] = unit++;
+    }
 
     ::util::Status status = ::util::OkStatus();  // errors to keep track of.
-
     for (const auto& singleton_port : config.singleton_ports()) {
       uint32 port_id = singleton_port.id();
       uint64 node_id = singleton_port.node();
@@ -443,11 +436,17 @@ BFChassisManager::~BFChassisManager() = default;
             *unit, singleton_port_key, &unused_sdk_port_id));
       }
     }
-
     if (!status.ok()) {
-      return status;
+      ::util::Status error = MAKE_ERROR(ERR_INVALID_PARAM)
+          << "Error in singleton ports configuration.";
+      error.Update(status);
+      return error;
     }
+  }
 
+  // If the class is initialized, we also need to check if the new config will
+  // require a change in the port layout. If so, report reboot required.
+  if (initialized_) {
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
       return MAKE_ERROR(ERR_REBOOT_REQUIRED)

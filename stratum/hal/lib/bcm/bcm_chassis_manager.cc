@@ -1375,7 +1375,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
   // TODO(unknown): Update the LED of all the ports.
 
-  return ::util::OkStatus();
+  return error;
 }
 
 ::util::Status BcmChassisManager::RegisterEventWriters() {
