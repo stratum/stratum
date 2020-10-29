@@ -54,7 +54,7 @@ class BFPalInterface {
 
   virtual bool PortIsValid(int unit, uint32 port_id) = 0;
 
-  virtual ::util::Status PortLoopbackModeSet(int uint, uint32 port_id,
+  virtual ::util::Status PortLoopbackModeSet(int unit, uint32 port_id,
                                              LoopbackState loopback_mode) = 0;
 
   virtual ::util::Status PortIdFromPortKeyGet(int unit, const PortKey& port_key,
