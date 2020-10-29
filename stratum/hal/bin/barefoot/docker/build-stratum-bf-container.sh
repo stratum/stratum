@@ -56,7 +56,7 @@ if [ -n "$1" ]; then
   done
   echo "Building BF SDE"
   set -x
-  docker run --rm -it \
+  docker run --rm \
     $DOCKER_OPTS \
     -v $STRATUM_BF_DIR:/stratum-bf \
     -w /stratum-bf \
@@ -99,7 +99,7 @@ fi
 
 # Build Stratum BF in Docker
 set -x
-docker run --rm -it \
+docker run --rm \
   $DOCKER_OPTS \
   -v $STRATUM_ROOT:/stratum \
   -v $(pwd):/output \
