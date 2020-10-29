@@ -280,38 +280,24 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   return ::util::OkStatus();
 }
 
-namespace {
-
-// PortKey uses three possible values for channel:
-//   > 0: port is channelized (first channel is 1)
-//   0: port is not channelized
-//   < 0: port channel is not important (e.g. for port groups)
-int GetZeroBasedChannel(const PortKey& port_key) {
-  if (port_key.channel > 0) {
-    // Convert base-1 channel to base-0 channel
-    return port_key.channel - 1;
-  }
-  // Non-channelized port uses channel 0, or return non-zero
-  return port_key.channel;
-}
-
-}  // namespace
-
 ::util::Status BFPalWrapper::PortIdFromPortKeyGet(int unit,
                                                   const PortKey& port_key,
                                                   uint32* sdk_port_id) {
   const int port = port_key.port;
-  if (port < 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Port ID must be non-negative. "
-        << "Attempted to get port " << port_key.port << " on dev "
-        << unit << ".";
-  }
-
-  int channel = GetZeroBasedChannel(port_key);
-  if (channel < 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Channel must be set for port "
+  CHECK_RETURN_IF_FALSE(port >= 0)
+        << "Port ID must be non-negative. Attempted to get port "
         << port << " on dev " << unit << ".";
-  }
+
+  // PortKey uses three possible values for channel:
+  //     > 0: port is channelized (first channel is 1)
+  //     0: port is not channelized
+  //     < 0: port channel is not important (e.g. for port groups)
+  int channel = port_key.channel;
+  CHECK_RETURN_IF_FALSE(channel >= 0) << "Channel must be set for port "
+        << port << " on dev " << unit << ".";
+  // BF SDK expects the first channel to be 0
+  if (channel > 0) channel--;  // Convert base-1 channel to base-0 channel
+  // Else, non-channelized port is already channel 0 (< 0 is already excluded)
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, MAX_PORT_HDL_STRING_LEN,
