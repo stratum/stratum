@@ -124,7 +124,6 @@ DOCKER_IMAGE_TAG  # The container image tag, default: $SDE_VERSION
 PLATFORM          # Use specific platform port map
 ```
 
-
 -----
 
 ## Running Stratum natively on the switch
@@ -190,6 +189,87 @@ For brevity, we will just show examples
 using `start-stratum.sh`, but replace that with `start-stratum-container.sh`
 in the examples below if using Docker.
 
+### Chassis Config
+
+By default, Stratum tries to load a default Chassis Config file on startup for
+supported platforms. This file controls which ports are configured, and by
+default, we configure all ports in their non-channelized, maximum speed
+configuration.
+
+If you wish to provide your own configuration, you can do so with the
+`chassis_config_file` flag when using `start-stratum.sh` or the
+`CHASSIS_CONFIG` environment variable when using `start-stratum-container.sh`.
+
+For example,
+```bash
+start-stratum.sh --chassis_config_file=/path/to/chassis_config.pb.txt
+```
+or
+```bash
+export CHASSIS_CONFIG=/path/to/chassis_config.pb.txt
+start-stratum-container.sh
+```
+
+Here is an example Chassis Config that brings up the first two physical ports:
+```proto
+chassis {
+  platform: PLT_BAREFOOT_TOFINO
+  name: "Edgecore Wedge100BF-32x"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 1
+  name: "1/0"
+  slot: 1
+  port: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 2
+  name: "2/0"
+  slot: 1
+  port: 2
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+```
+
+You can also provide an empty file as the Chassis Config. In this case, Stratum
+will begin to start up but then wait for configuration. You can push the
+configuration over gNMI to the root path ("/") using `Set` and providing either
+the `ChassisConfig` protobuf message or an `openconfig::Device` protobuf message.
+
+#### Port Numbers
+
+Previously, the port `id` was required to match the BF device port ID for Stratum
+to function. Stratum now reads BF device port ID from the SDK using the `node`,
+`port`, and `channel` params provided in the `singleton_port` config, which means
+the port `id` can now be set to a user-selected value.
+
+This port ID (SDN port ID) can be read using gNMI:
+`/interfaces/interface[<name>]/state/id`
+
+The BF device port ID (SDK port ID) can be read using gNMI:
+`/interfaces/interface[<name>]/state/ifindex`
+
+In both cases, the `name` used in the gNMI paths should match the name provided
+in the `singleton_port` config.
+
+*Note: You should use the BF device port ID (SDK port ID) when reading and 
+writing P4Runtime entities and packets. In the future, we may support P4Runtime
+port translation which would allow you to use the user-provide SDN port ID.*
+
 ### Running with BSP or on Tofino model
 
 ```bash
@@ -229,11 +309,15 @@ port in the chassis config file by adding `fec_mode: FEC_MODE_ON` to the
 `config_params` message field for the appropriate singleton port entry. FEC will
 then be configured automatically based on the port speed: Firecode for 10G and
 40G, Reed-Solomon for all other speeds (25G, 50G, 100G and other supported port
-speeds). For example:
-```
+speeds). For example, the following will configure device port 132 in 100G mode
+with Reed-Solomon (RS) FEC.:
+
+```proto
 singleton_ports {
   id: 132
-  port: 132
+  name: "132"
+  slot: 1
+  port: 2
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -241,11 +325,8 @@ singleton_ports {
     fec_mode: FEC_MODE_ON
   }
   node: 1
-  name: "132"
-  slot: 1
 }
 ```
-will configure device port 132 in 100G mode with Reed-Solomon (RS) FEC.
 
 FEC can also be configured when adding a port through gNMI.
 
