@@ -979,11 +979,11 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  CHECK_RETURN_IF_FALSE(unit != nullptr)
+
+  auto port_map = gtl::FindOrNull(node_id_to_port_id_to_sdk_port_id_, node_id);
+  CHECK_RETURN_IF_FALSE(port_map != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
-  auto port_map = gtl::FindOrDie(node_id_to_port_id_to_sdk_port_id_, node_id);
   const uint32* sdk_port_id = gtl::FindOrNull(port_map, port_id);
   CHECK_RETURN_IF_FALSE(sdk_port_id != nullptr)
       << "Port " << port_id << " for node " << node_id
