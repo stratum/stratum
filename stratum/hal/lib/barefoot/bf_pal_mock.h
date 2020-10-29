@@ -49,7 +49,7 @@ class BFPalMock : public BFPalInterface {
                               LoopbackState loopback_mode));
 
   MOCK_METHOD3(PortIdFromPortKeyGet,
-               ::util::Status(int unit, PortKey port_key,
+               ::util::Status(int unit, const PortKey& port_key,
                               uint32* sdk_port_id));
 };
 

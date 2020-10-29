@@ -299,7 +299,8 @@ int GetZeroBasedChannel(const PortKey* port_key) {
 
 }  // namespace
 
-::util::Status BFPalWrapper::PortIdFromPortKeyGet(int unit, PortKey port_key,
+::util::Status BFPalWrapper::PortIdFromPortKeyGet(int unit,
+                                                  const PortKey& port_key,
                                                   uint32* sdk_port_id) {
   int channel = GetZeroBasedChannel(&port_key);
   if (channel < 0) {
