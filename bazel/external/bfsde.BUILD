@@ -13,11 +13,11 @@ cc_library(
     name = "bfsde",
     srcs = glob([
         "barefoot-bin/lib/libavago.so*",
-        "barefoot-bin/lib/libbf_switchd_lib.so*",
         "barefoot-bin/lib/libbfsys.so*",
         "barefoot-bin/lib/libbfutils.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
+        "barefoot-bin/lib/libbf_switchd_lib.a",
     ]),
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
@@ -54,10 +54,10 @@ pkg_tar_with_symlinks(
     srcs = glob([
         "barefoot-bin/lib/libavago.so*",
         "barefoot-bin/lib/libbfsys.so*",
+        "barefoot-bin/lib/libbfutils.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
-        "barefoot-bin/lib/libbfutils.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
