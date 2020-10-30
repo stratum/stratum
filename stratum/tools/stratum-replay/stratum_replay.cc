@@ -17,6 +17,7 @@
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
@@ -142,7 +143,7 @@ using ClientStreamChannelReaderWriter =
                                                &fwd_pipe_cfg_resp);
     CHECK_RETURN_IF_FALSE(status.ok())
         << "Faild to push forwarding pipeline config: "
-        << P4RuntimeGrpcStatusToString(status);
+        << ::stratum::hal::P4RuntimeGrpcStatusToString(status);
   }
 
   // Parse the P4Runtime write log file and send write requests to the
@@ -163,7 +164,8 @@ using ClientStreamChannelReaderWriter =
 
     std::string write_request_text;
     std::string error_msg;
-    if (!RE2::FullMatch(line, write_req_regex, nullptr, nullptr, &write_request_text, &error_msg)) {
+    if (!RE2::FullMatch(line, write_req_regex, nullptr, nullptr,
+                        &write_request_text, &error_msg)) {
       // Can not find what we want in this line.
       LOG(ERROR) << "Unable to find write request message, skip: " << line;
       continue;
@@ -206,7 +208,7 @@ using ClientStreamChannelReaderWriter =
     } else {
       CHECK_RETURN_IF_FALSE(status.ok())
           << "Faild to send P4Runtime write request: "
-          << P4RuntimeGrpcStatusToString(status);
+          << ::stratum::hal::P4RuntimeGrpcStatusToString(status);
     }
   }
 

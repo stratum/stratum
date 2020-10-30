@@ -25,5 +25,4 @@ Stratum P4Runtime write request log.
 -ca_cert: CA certificate(optional), will use insecure credential if empty (default: "")
 -client_cert: Client certificate (optional) (default: "")
 -client_key: Client key (optional) (default: "")
--write_batch_size: Max size of P4Runtime updates in a write request (default: 1)
 ```

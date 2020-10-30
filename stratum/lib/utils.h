@@ -246,12 +246,6 @@ inline U ByteStreamToUint(const std::string& bytes) {
   return val;
 }
 
-// Helper to convert a gRPC status with error details to a string. Assumes
-// ::grpc::Status includes a binary error detail which is encoding a serialized
-// version of ::google::rpc::Status proto in which the details are captured
-// using proto any messages.
-std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status);
-
 }  // namespace stratum
 
 #endif  // STRATUM_LIB_UTILS_H_
