@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <iostream>
 #include <memory>
-#include <regex>  // NOLINT: [build/c++11]
 
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_split.h"
@@ -13,6 +12,7 @@
 #include "grpcpp/security/tls_credentials_options.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "re2/re2.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
@@ -30,7 +30,6 @@ DEFINE_string(ca_cert, "",
               "CA certificate, will use insecure credential if empty");
 DEFINE_string(client_cert, "", "Client certificate (optional)");
 DEFINE_string(client_key, "", "Client key (optional)");
-DEFINE_uint32(write_batch_size, 1, "Batch size of write request");
 
 namespace stratum {
 namespace tools {
@@ -156,24 +155,19 @@ using ClientStreamChannelReaderWriter =
     ::p4::v1::WriteRequest write_req;
     ::p4::v1::WriteResponse write_resp;
     // Log format: <timestamp>;<node_id>;<update proto>;<status>
-    // This regilar expression contains 4 sub-match groups which extracts
+    // This regular expression contains 4 sub-match groups which extracts
     // elements from the log string.
-    std::regex write_req_regex(
+    RE2 write_req_regex(
         "(\\d{4}-\\d{1,2}-\\d{1,2} "
         "\\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{6});(\\d+);(type[^;]*);(.*)");
-    std::smatch matches;
-    if (!std::regex_match(line, matches, write_req_regex)) {
+
+    std::string write_request_text;
+    std::string error_msg;
+    if (!RE2::FullMatch(line, write_req_regex, nullptr, nullptr, &write_request_text, &error_msg)) {
       // Can not find what we want in this line.
       LOG(ERROR) << "Unable to find write request message, skip: " << line;
       continue;
     }
-
-    // The protobuf text is located at the 3rd sub-match group.
-    std::string write_request_text = matches[3].str();
-
-    // The error message is located at the 4th sub-match group.
-    // The message will be mpty if there is no error.
-    std::string error_msg = matches[4].str();
 
     auto update = write_req.add_updates();
     RETURN_IF_ERROR(ParseProtoFromString(write_request_text, update));
