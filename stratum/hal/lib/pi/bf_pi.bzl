@@ -23,4 +23,5 @@ def barefoot_pi_deps():
     native.alias(
         name = "pi_bf",
         actual = select(pi_dep_map),
+        visibility = ["//visibility:public"],
     )
