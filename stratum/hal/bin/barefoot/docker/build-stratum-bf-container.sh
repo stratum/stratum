@@ -32,6 +32,7 @@ Additional environment variables:
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     WITH_ONLP: Includes ONLP support. (Default: true)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
+    RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
 "
 }
 
@@ -43,6 +44,10 @@ if [ -n "$1" ]; then
   SDE_TAR_DIR=$( cd $(dirname "$SDE_TAR") >/dev/null 2>&1 && pwd )
   SDE_TAR_NAME=$( basename $SDE_TAR )
   DOCKER_OPTS+="-v $SDE_TAR_DIR:/bf-tar "
+  if [ -t 0 ]; then
+    # Running in a TTY
+    DOCKER_OPTS+="-it "
+  fi
   CMD_OPTS+="-t /bf-tar/$SDE_TAR_NAME "
   shift
   i=1
@@ -77,6 +82,7 @@ Build variables:
   Build jobs: $JOBS
   Enable ONLP: $WITH_ONLP
   Docker image for building: $DOCKER_IMG
+  Release build enabled: ${RELEASE_BUILD:-false}
 "
 
 # Set build options for Stratum build
@@ -96,13 +102,14 @@ else
   print_help
   exit 1
 fi
-if [ "$(docker version | grep Experimental | grep true | wc -l)" -eq "2" ]; then
-  DOCKER_OPTS+="--squash "
+if [ -t 0 ]; then
+  # Running in a TTY
+  DOCKER_OPTS+="-it "
 fi
 
 # Build Stratum BF in Docker (optimized and stripped)
 EXTRA_BUILD_OPTS=""
-if [ -z "$DEBUG_BUILD" ]; then
+if [ -n "$RELEASE_BUILD" ]; then
   # Build with optimization enabled (-O2) and with assert() calls disabled (-DNDEBUG)
   EXTRA_BUILD_OPTS+="--compilation_mode=opt "
   # Strip all symbols
@@ -125,12 +132,19 @@ docker run --rm \
      cp \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
 set +x
 
+
+DOCKER_OPTS=""
+if [ "$(docker version | grep Experimental | grep true | wc -l)" -eq "2" ]; then
+  DOCKER_OPTS+="--squash "
+fi
+
 # Build Stratum BF runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
 docker build \
+  $DOCKER_OPTS \
   -t "$RUNTIME_IMAGE" \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f "$DOCKERFILE_DIR/Dockerfile" \
