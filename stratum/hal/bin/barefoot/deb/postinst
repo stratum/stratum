@@ -1,14 +1,23 @@
 #!/bin/bash
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
-# Set up the huge page
-echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
-sysctl -p /etc/sysctl.conf
-mkdir -p /mnt/huge
-mount -t hugetlbfs nodev /mnt/huge
+
+# If not running in Docker,
+if ! cat /proc/1/cgroup | grep -q "/docker"; then
+  # Set up the huge page
+  echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
+  sysctl -p /etc/sysctl.conf
+  mkdir -p /mnt/huge
+  mount -t hugetlbfs nodev /mnt/huge
+fi
 
 # Reload libraries
 ldconfig
 
-# Enables Stratum service
-systemctl enable stratum_bf.service
+# If systemd is installed,
+if command -v systemctl &> /dev/null
+then
+  # Enable Stratum service
+  systemctl enable stratum_bf.service
+fi
+

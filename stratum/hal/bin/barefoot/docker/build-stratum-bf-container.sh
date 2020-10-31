@@ -128,8 +128,8 @@ docker run --rm \
        --define sde_ver=$SDE_VERSION \
        --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
-     cp /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
-     cp \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
+     cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
+     cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
 set +x
 
 
