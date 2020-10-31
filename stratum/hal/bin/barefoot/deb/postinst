@@ -4,7 +4,7 @@
 
 # If not running in Docker,
 if ! cat /proc/1/cgroup | grep -q "/docker"; then
-  # Set up the huge page
+  # Set up huge pages
   echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
   sysctl -p /etc/sysctl.conf
   mkdir -p /mnt/huge
@@ -20,4 +20,3 @@ then
   # Enable Stratum service
   systemctl enable stratum_bf.service
 fi
-
