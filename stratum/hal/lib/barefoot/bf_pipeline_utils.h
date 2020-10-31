@@ -14,6 +14,15 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+// Parses the P4 ForwardingPipelineConfig to extract the Barefoot pipeline.
+// This method specifically extracts the pipeline from the p4_device_config
+// param and supports one format:
+//     - BfPipelineConfig proto (in binary format)
+// In any case, the provided BfPipelineConfig instance is populated.
+::util::Status ExtractBfPipelineConfig(
+    const ::p4::v1::ForwardingPipelineConfig& config,
+    BfPipelineConfig* bf_config);
+
 // Converts the BfPipelineConfig instance to the legacy binary format used
 // by the Barefoot PI implementation.
 ::util::Status BfPipelineConfigToPiConfig(const BfPipelineConfig& bf_config,

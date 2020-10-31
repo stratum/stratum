@@ -30,6 +30,19 @@ std::string Uint32ToLeByteStream(uint32 val) {
 }
 }  // namespace
 
+::util::Status ExtractBfPipelineConfig(
+    const ::p4::v1::ForwardingPipelineConfig& config,
+    BfPipelineConfig* bf_config) {
+  bf_config->Clear();
+
+  // p4_device_config is a serialized BfPipelineConfig proto message.
+  if (bf_config->ParseFromString(config.p4_device_config())) {
+    return util::OkStatus();
+  }
+
+  RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown format for p4_device_config";
+}
+
 ::util::Status BfPipelineConfigToPiConfig(const BfPipelineConfig& bf_config,
                                           std::string* pi_node_config) {
   CHECK_RETURN_IF_FALSE(pi_node_config) << "null pointer.";

@@ -112,7 +112,7 @@ namespace {
     const ::p4::v1::ForwardingPipelineConfig& forwarding_config,
     ::p4::v1::ForwardingPipelineConfig* legacy_config) {
   BfPipelineConfig bf_config;
-  if (bf_config.ParseFromString(forwarding_config.p4_device_config())) {
+  if (ExtractBfPipelineConfig(forwarding_config, &bf_config).ok()) {
     std::string pi_p4_device_config;
     RETURN_IF_ERROR(
         BfPipelineConfigToPiConfig(bf_config, &pi_p4_device_config));

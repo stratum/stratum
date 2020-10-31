@@ -12,8 +12,6 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_bool(incompatible_enable_p4_device_config_tar);
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -40,6 +38,46 @@ static constexpr char bf_config_2pipe_str[] = R"PROTO(
     context: "{json: true}"
     binary: "<raw bin>"
   })PROTO";
+
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProtoSuccess) {
+  BfPipelineConfig bf_config;
+  ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  {
+    std::string bf_config_bytes;
+    ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
+    p4_config.set_p4_device_config(bf_config_bytes);
+  }
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config))
+      << "Expected: " << bf_config.ShortDebugString()
+      << ", got: " << extracted_bf_config.ShortDebugString();
+}
+
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProto2PipesSuccess) {
+  BfPipelineConfig bf_config;
+  ASSERT_OK(ParseProtoFromString(bf_config_2pipe_str, &bf_config));
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  {
+    std::string bf_config_bytes;
+    ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
+    p4_config.set_p4_device_config(bf_config_bytes);
+  }
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config))
+      << "Expected: " << bf_config.ShortDebugString()
+      << ", got: " << extracted_bf_config.ShortDebugString();
+}
+
+TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromRandomBytesFail) {
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  p4_config.set_p4_device_config("<random vendor blob>");
+
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_FALSE(ExtractBfPipelineConfig(p4_config, &extracted_bf_config).ok());
+}
 
 TEST(BfPipelineConvertTest, BfPipelineConfigToLegacyBfPiConfigSuccess) {
   static constexpr char expected_bytes[] =
