@@ -306,9 +306,9 @@ By default FEC is turned off for every port. You can turn on FEC for a given
 port in the chassis config file by adding `fec_mode: FEC_MODE_ON` to the
 `config_params` message field for the appropriate singleton port entry. FEC will
 then be configured automatically based on the port speed: Firecode for 10G and
-40G, Reed-Solomon for all other speeds (25G, 50G, 100G and other supported port
+40G, Reed-Solomon (RS) for all other speeds (25G, 50G, 100G and other supported port
 speeds). For example, the following will configure device port 132 in 100G mode
-with Forward Error Correction(FEC) enabled:
+with Reed-Solomon Forward Error Correction (FEC) enabled:
 
 ```proto
 singleton_ports {

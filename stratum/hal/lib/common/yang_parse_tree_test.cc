@@ -993,7 +993,8 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateNameOnPollSuccess) {
   EXPECT_EQ(resp.update().update(0).val().string_val(), "interface-1");
 }
 
-// Check if the action is executed correctly.
+// Check if the 'state/ifindex' OnPoll action is executed correctly
+// in the defaul case.
 TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
   // After tree creation only two leafs are defined:
   // /interfaces/interface[name=*]/state/ifindex
@@ -1026,7 +1027,8 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
   EXPECT_EQ(resp.update().update(0).val().uint_val(), 33);
 }
 
-// Check if the action is executed correctly.
+// Check if the 'state/ifindex' OnPoll action is executed correctly
+// when the SDN port ID is overriden.
 TEST_F(YangParseTreeTest,
        InterfacesInterfaceStateIfIndexOnPollSuccessWithOverride) {
   // After tree creation only two leafs are defined:
@@ -1072,6 +1074,50 @@ TEST_F(YangParseTreeTest,
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
   EXPECT_EQ(resp.update().update(0).val().uint_val(), sdkPortId);
+}
+
+// Check if the 'state/ifindex' OnPoll action is executed correctly
+// when the SDN port ID is not overriden (unimplemented).
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceStateIfIndexOnPollSuccessWithUnimplemented) {
+  // After tree creation only two leafs are defined:
+  // /interfaces/interface[name=*]/state/ifindex
+  // /interfaces/interface[name=*]/state/name
+
+  // The test requires one interface branch to be added.
+  AddSubtreeInterface("interface-1");
+
+  // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
+  // of the 'resp' variable is then checked.
+  SubscribeReaderWriterMock stream;
+  ::gnmi::SubscribeResponse resp;
+  EXPECT_CALL(stream, Write(_, _))
+      .WillOnce(
+          DoAll(WithArgs<0>(Invoke(
+                    [&resp](const ::gnmi::SubscribeResponse& r) { resp = r; })),
+                Return(true)));
+
+  // Find the 'ifindex' leaf.
+  auto* node = GetRoot().FindNodeOrNull(
+      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
+  ASSERT_NE(node, nullptr);
+
+  // Mock implementation of RetrieveValue() that sends unimplemented.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArg<3>(Invoke([](std::vector<::util::Status>* d) {
+                        ::util::Status s = MAKE_ERROR(ERR_UNIMPLEMENTED)
+                                             << "not implemented";
+                        d->push_back(s);
+                      })),
+                      Return(::util::OkStatus())));
+
+  // Get its OnPoll() handler and call it.
+  const auto& handler = node->GetOnPollHandler();
+  EXPECT_OK(handler(PollEvent(), &stream));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), 33);
 }
 
 // Check if the 'state/mac-address' OnPoll action works correctly.
