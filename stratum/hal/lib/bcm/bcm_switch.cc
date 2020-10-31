@@ -426,11 +426,6 @@ BcmSwitch::~BcmSwitch() {}
             req.optical_transceiver_info().network_interface(),
             resp.mutable_optical_transceiver_info()));
         break;
-      case DataRequest::Request::kSdkPortId:
-        // Stratum hides the SDK port ID, so we just return the SDN port ID
-        resp.mutable_sdk_port_id()->set_sdk_port_id(
-            req.sdk_port_id().port_id());
-        break;
       default:
         status =
             MAKE_ERROR(ERR_UNIMPLEMENTED)

@@ -1171,9 +1171,14 @@ message FecStatus {
   FecMode mode = 1;
 }
 
-// Wrapper around the SDK port ID.
-message SdkPortId {
-  uint32 sdk_port_id = 1;
+// Wrapper around the SDN port ID.
+// The target is expected to perform accept requests from the controller
+// using the ID assigned by the SDN management system. If the target
+// cannot accept requests using the provided ID, it can provide
+// and alterate ID that should be used by the controller to address
+// the interface.  
+message SdnPortIdOverride {
+  uint32 port_id = 1;
 }
 
 // DataRequest is a message used internally to request data about a component
@@ -1226,7 +1231,7 @@ message DataRequest {
       OpticalNetworkInterface optical_transceiver_info = 19;
       Port loopback_status = 20;
       Node node_info = 21;
-      Port sdk_port_id = 22;
+      Port sdn_port_id_override = 22;
     }
   }
   repeated Request requests = 1;
@@ -1259,7 +1264,7 @@ message DataResponse {
     OpticalTransceiverInfo optical_transceiver_info = 19;
     LoopbackStatus loopback_status = 20;
     NodeInfo node_info = 21;
-    SdkPortId sdk_port_id = 22;
+    SdnPortIdOverride sdn_port_id_override = 22;
   }
 }
 

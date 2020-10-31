@@ -1017,6 +1017,39 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
       GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
   ASSERT_NE(node, nullptr);
 
+  // Get its OnPoll() handler and call it.
+  const auto& handler = node->GetOnPollHandler();
+  EXPECT_OK(handler(PollEvent(), &stream));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), 33);
+}
+
+// Check if the action is executed correctly.
+TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccessWithOverride) {
+  // After tree creation only two leafs are defined:
+  // /interfaces/interface[name=*]/state/ifindex
+  // /interfaces/interface[name=*]/state/name
+
+  // The test requires one interface branch to be added.
+  AddSubtreeInterface("interface-1");
+
+  // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
+  // of the 'resp' variable is then checked.
+  SubscribeReaderWriterMock stream;
+  ::gnmi::SubscribeResponse resp;
+  EXPECT_CALL(stream, Write(_, _))
+      .WillOnce(
+          DoAll(WithArgs<0>(Invoke(
+                    [&resp](const ::gnmi::SubscribeResponse& r) { resp = r; })),
+                Return(true)));
+
+  // Find the 'ifindex' leaf.
+  auto* node = GetRoot().FindNodeOrNull(
+      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
+  ASSERT_NE(node, nullptr);
+
   const int sdkPortId = 99;
   // Mock implementation of RetrieveValue() that sends a response set to
   // kSdkPortId.
@@ -1024,7 +1057,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
       .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_sdk_port_id()->set_sdk_port_id(
+                        resp.mutable_sdn_port_id_override()->set_port_id(
                             sdkPortId);
                         // Send it to the caller.
                         w->Write(resp);

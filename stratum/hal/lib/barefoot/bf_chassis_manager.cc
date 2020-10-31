@@ -47,7 +47,10 @@ BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
       bf_pal_interface_(bf_pal_interface),
       unit_to_node_id_(),
       node_id_to_unit_(),
-      node_id_to_port_id_to_port_state_() {}
+      node_id_to_port_id_to_port_state_(),
+      node_id_to_port_id_to_sdk_port_id_(),
+      node_id_to_sdk_port_id_to_port_id_(),
+      xcvr_port_key_to_xcvr_state_() {}
 
 BFChassisManager::~BFChassisManager() = default;
 
@@ -295,9 +298,7 @@ BFChassisManager::~BFChassisManager() = default;
   }
 
   // If there was an error parsing the ports, return early.
-  if (!status.ok()) {
-    return status;
-  }
+  RETURN_IF_ERROR(status);
 
   for (auto singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
@@ -564,10 +565,11 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
         resp.mutable_loopback_status()->set_state(*config->loopback_mode);
       break;
     }
-    case Request::kSdkPortId: {
+    case Request::kSdnPortIdOverride: {
       ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(
-          request.sdk_port_id().node_id(), request.sdk_port_id().port_id()));
-      resp.mutable_sdk_port_id()->set_sdk_port_id(sdk_port_id);
+          request.sdn_port_id_override().node_id(),
+          request.sdn_port_id_override().port_id()));
+      resp.mutable_sdn_port_id_override()->set_port_id(sdk_port_id);
       break;
     }
     default:
@@ -615,7 +617,6 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   return bf_pal_interface_->PortAllStatsGet(unit, sdk_port_id, counters);
-  return ::util::OkStatus();
 }
 
 ::util::StatusOr<std::map<uint64, int>> BFChassisManager::GetNodeIdToUnitMap()

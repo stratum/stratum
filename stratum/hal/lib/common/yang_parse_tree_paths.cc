@@ -929,19 +929,67 @@ void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
 void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
                                           TreeNode* node,
                                           YangParseTree* tree) {
-  // Returns system assigned number for each interface
+  // Returns the port ID for the interface to be used by P4Runtime.
   // If Stratum performs port translation (e.g. for the bcm target), we return
-  // the port_id. If Stratum does not perform port translation (e.g. for the
-  // bf target), we return the SDK port number.
-  auto poll_functor =
-      GetOnPollFunctor(node_id, port_id, tree,
-                       &DataResponse::sdk_port_id,
-                       &DataResponse::has_sdk_port_id,
-                       &DataRequest::Request::mutable_sdk_port_id,
-                       &SdkPortId::sdk_port_id);
+  // the port_id provided by the ChassisConfig.
+  // If Stratum does not perform port translation (e.g. for the bf target), we
+  // return the SDK port number.
+
+  // Build data request to see if the switch overrides the SDN port ID
+  DataRequest req;
+  auto* port_req = req.add_requests()->mutable_sdn_port_id_override();
+  port_req->set_node_id(node_id);
+  port_req->set_port_id(port_id);
+  
+  // Build the data response function to extract the overriden port ID, if
+  // the switch implementation chooses to do so
+  uint32 new_port_id = -1;
+  DataResponseWriter writer(
+      [&new_port_id](const DataResponse& resp) {
+        if (resp.has_sdn_port_id_override()) {
+            new_port_id = resp.sdn_port_id_override().port_id();
+            return true;
+        }
+        return false;
+      });
+
+  // Ask the switch interface for the overriden port ID
+  std::vector<::util::Status> details;
+  ::util::Status status = tree->GetSwitchInterface()
+      ->RetrieveValue(node_id, req, &writer, &details);
+
+  // Check to see if the override for SDN port ID is unimplemented
+  // If it is not implemented, use the ChassisConfig SingletonPort id
+  if (details.size()) {
+    for (::util::Status& s : details) {
+      if (s.error_code() == ERR_UNIMPLEMENTED) {
+        // Override is not implemented, so use the port_id provided
+        new_port_id = port_id;
+      } else {
+        APPEND_STATUS_IF_ERROR(status, s);
+      }
+    }
+  }
+
+  // If the SDN port ID cannot be determined, log an error and don't create
+  // the ifindex path
+  if (new_port_id < 0 || !status.ok()) {
+    APPEND_ERROR(status)
+        << "/interfaces/interface[name=<name>]/state/ifindex "
+        << "could not be resolved for Port " << port_id << " on Node "
+        << node_id << ".";
+    return;
+  }
+
+  // Return the port ID
+  auto on_poll_functor = [new_port_id](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+        return SendResponse(GetResponse(path, new_port_id), stream);
+      };
   auto on_change_functor = UnsupportedFunc();
-  node->SetOnTimerHandler(poll_functor)
-      ->SetOnPollHandler(poll_functor)
+  node->SetOnTimerHandler(on_poll_functor)
+      ->SetOnPollHandler(on_poll_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 

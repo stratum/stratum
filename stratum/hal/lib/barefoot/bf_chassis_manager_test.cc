@@ -495,10 +495,10 @@ TEST_F(BFChassisManagerTest, GetPortData) {
 
   // SDK port number
   GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
-                  &DataRequest::Request::mutable_sdk_port_id,
-                  &DataResponse::sdk_port_id,
-                  &DataResponse::has_sdk_port_id,
-                  &SdkPortId::sdk_port_id, sdkPortId);
+                  &DataRequest::Request::mutable_sdn_port_id_override,
+                  &DataResponse::sdn_port_id_override,
+                  &DataResponse::has_sdn_port_id_override,
+                  &SdnPortIdOverride::port_id, sdkPortId);
 
   // Unsupprorted
   DataRequest::Request req;
@@ -554,6 +554,18 @@ TEST_F(BFChassisManagerTest, ResetPortsConfig) {
   std::stringstream err_msg;
   err_msg << "Node " << kNodeId + 1 << " is not configured or not known.";
   EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, GetSdkPortId) {
+  ChassisConfigBuilder builder;
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  SingletonPort* sport = builder.GetPort(kPortId);
+  auto resp = bf_chassis_manager_->GetSdkPortId(sport->node(), kPortId);
+  EXPECT_OK(resp);
+  EXPECT_EQ(resp.ValueOrDie(), kPortId + kSdkPortOffset);
+
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
