@@ -288,7 +288,12 @@ namespace dummy_switch {
         break;
       }
       default:
-        resp = MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not supported yet";
+        resp = MAKE_ERROR(ERR_UNIMPLEMENTED).without_logging()
+            << "Not supported yet.";
+        VLOG(1) << "DataRequest field "
+            << request.descriptor()->FindFieldByNumber(
+                 request.request_case())->name()
+            << " is not supported yet: " << request.ShortDebugString() << ".";
         break;
     }
     if (resp.ok()) {

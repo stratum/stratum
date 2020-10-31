@@ -186,8 +186,11 @@ Bmv2Switch::~Bmv2Switch() {}
         resp = bmv2_chassis_manager_->GetPortData(req);
         break;
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not supported yet";
+        resp = MAKE_ERROR(ERR_UNIMPLEMENTED).without_logging()
+            << "Not supported yet.";
+        VLOG(1) << "DataRequest field "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
     if (resp.ok()) {
