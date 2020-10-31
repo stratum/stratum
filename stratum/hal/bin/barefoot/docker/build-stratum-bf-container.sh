@@ -96,8 +96,18 @@ else
   print_help
   exit 1
 fi
+if [ "$(docker version | grep Experimental | grep true | wc -l)" -eq "2" ]; then
+  DOCKER_OPTS+="--squash "
+fi
 
-# Build Stratum BF in Docker
+# Build Stratum BF in Docker (optimized and stripped)
+EXTRA_BUILD_OPTS=""
+if [ -z "$DEBUG_BUILD" ]; then
+  # Build with optimization enabled (-O2) and with assert() calls disabled (-DNDEBUG)
+  EXTRA_BUILD_OPTS+="--compilation_mode=opt "
+  # Strip all symbols
+  EXTRA_BUILD_OPTS+="--linkopt=-Wl,--strip-all "
+fi
 set -x
 docker run --rm \
   $DOCKER_OPTS \
@@ -107,6 +117,7 @@ docker run --rm \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
+       $EXTRA_BUILD_OPTS \
        --define sde_ver=$SDE_VERSION \
        --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
@@ -126,6 +137,7 @@ docker build \
   "$(pwd)"
 
 docker save $RUNTIME_IMAGE -o ${STRATUM_NAME}-${SDE_VERSION}-docker.tar
+gzip ${STRATUM_NAME}-${SDE_VERSION}-docker.tar
 
 set +x
 echo "
