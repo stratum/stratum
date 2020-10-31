@@ -254,8 +254,9 @@ the `ChassisConfig` protobuf message or an `openconfig::Device` protobuf message
 
 Previously, the port `id` was required to match the BF device port ID for Stratum
 to function. Stratum now reads BF device port ID from the SDK using the `node`,
-`port`, and `channel` params provided in the `singleton_port` config, which means
-the port `id` can now be set to a user-selected value.
+`port`, and `channel` params provided in the `singleton_ports` config, which means
+the port `id` can now be set to a user-selected value. The `id` is required, and
+it must be positive and unique across all ports in the config.
 
 This port ID (SDN port ID) can be read using gNMI:
 `/interfaces/interface[name=<name>]/state/id`
@@ -264,7 +265,7 @@ The BF device port ID (SDK port ID) can be read using gNMI:
 `/interfaces/interface[name=<name>]/state/ifindex`
 
 In both cases, the `name` used in the gNMI paths should match the name provided
-in the `singleton_port` config.
+in the `singleton_ports` config.
 
 *Note: You should use the BF device port ID (SDK port ID) when reading and 
 writing P4Runtime entities and packets. In the future, we may support P4Runtime
@@ -310,7 +311,7 @@ port in the chassis config file by adding `fec_mode: FEC_MODE_ON` to the
 then be configured automatically based on the port speed: Firecode for 10G and
 40G, Reed-Solomon for all other speeds (25G, 50G, 100G and other supported port
 speeds). For example, the following will configure device port 132 in 100G mode
-with Reed-Solomon (RS) FEC.:
+with Forward Error Correction(FEC) enabled:
 
 ```proto
 singleton_ports {

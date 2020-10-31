@@ -1027,7 +1027,8 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
 }
 
 // Check if the action is executed correctly.
-TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccessWithOverride) {
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceStateIfIndexOnPollSuccessWithOverride) {
   // After tree creation only two leafs are defined:
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
