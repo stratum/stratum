@@ -3,8 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # If systemd is installed,
-if command -v systemctl &> /dev/null
-then
+if command -v systemctl &> /dev/null; then
   # Stop and disable Stratum service
   systemctl stop stratum_bf.service
   systemctl disable stratum_bf.service
