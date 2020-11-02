@@ -106,6 +106,12 @@ else
   exit 1
 fi
 
+# Build Stratum BF in Docker (optimized and stripped)
+BAZEL_OPTS=""
+if [ -n "$RELEASE_BUILD" ]; then
+  BAZEL_OPTS+="--config release "
+fi
+
 # Build Stratum BF in Docker
 set -x
 docker run --rm \
@@ -117,7 +123,7 @@ docker run --rm \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
-       --config release \
+       $BAZEL_OPTS \
        --define sde_ver=$SDE_VERSION \
        --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
