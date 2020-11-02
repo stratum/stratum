@@ -36,6 +36,12 @@ Additional environment variables:
 "
 }
 
+DOCKER_EXTRA_RUN_OPTS=""
+if [ -t 0 ]; then
+  # Running in a TTY, so run interactively (i.e. make Ctrl-C work)
+  DOCKER_EXTRA_RUN_OPTS+="-it "
+fi
+
 # Build BF SDE for Stratum (if BF SDE tar is present)
 if [ -n "$1" ]; then
   SDE_TAR=$1
@@ -44,10 +50,6 @@ if [ -n "$1" ]; then
   SDE_TAR_DIR=$( cd $(dirname "$SDE_TAR") >/dev/null 2>&1 && pwd )
   SDE_TAR_NAME=$( basename $SDE_TAR )
   DOCKER_OPTS+="-v $SDE_TAR_DIR:/bf-tar "
-  if [ -t 0 ]; then
-    # Running in a TTY, so run interactively (i.e. make Ctrl-C work)
-    DOCKER_OPTS+="-it "
-  fi
   CMD_OPTS+="-t /bf-tar/$SDE_TAR_NAME "
   shift
   i=1
@@ -63,6 +65,7 @@ if [ -n "$1" ]; then
   set -x
   docker run --rm \
     $DOCKER_OPTS \
+    $DOCKER_EXTRA_RUN_OPTS \
     -v $STRATUM_BF_DIR:/stratum-bf \
     -w /stratum-bf \
     --entrypoint bash \
@@ -102,29 +105,19 @@ else
   print_help
   exit 1
 fi
-if [ -t 0 ]; then
-  # Running in a TTY
-  DOCKER_OPTS+="-it "
-fi
 
-# Build Stratum BF in Docker (optimized and stripped)
-EXTRA_BUILD_OPTS=""
-if [ -n "$RELEASE_BUILD" ]; then
-  # Build with optimization enabled (-O2) and with assert() calls disabled (-DNDEBUG)
-  EXTRA_BUILD_OPTS+="--compilation_mode=opt "
-  # Strip all symbols
-  EXTRA_BUILD_OPTS+="--linkopt=-Wl,--strip-all "
-fi
+# Build Stratum BF in Docker
 set -x
 docker run --rm \
   $DOCKER_OPTS \
+  $DOCKER_EXTRA_RUN_OPTS \
   -v $STRATUM_ROOT:/stratum \
   -v $(pwd):/output \
   -w /stratum \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
-       $EXTRA_BUILD_OPTS \
+       --config=release \
        --define sde_ver=$SDE_VERSION \
        --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
