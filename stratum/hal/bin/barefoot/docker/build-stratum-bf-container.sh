@@ -117,7 +117,7 @@ docker run --rm \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
-       --config=release \
+       --config release \
        --define sde_ver=$SDE_VERSION \
        --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
