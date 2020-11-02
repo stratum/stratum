@@ -45,7 +45,7 @@ if [ -n "$1" ]; then
   SDE_TAR_NAME=$( basename $SDE_TAR )
   DOCKER_OPTS+="-v $SDE_TAR_DIR:/bf-tar "
   if [ -t 0 ]; then
-    # Running in a TTY
+    # Running in a TTY, so run interactively (i.e. make Ctrl-C work)
     DOCKER_OPTS+="-it "
   fi
   CMD_OPTS+="-t /bf-tar/$SDE_TAR_NAME "
