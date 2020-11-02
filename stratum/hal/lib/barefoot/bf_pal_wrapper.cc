@@ -285,8 +285,8 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
                                                   uint32* sdk_port_id) {
   const int port = port_key.port;
   CHECK_RETURN_IF_FALSE(port >= 0)
-        << "Port ID must be non-negative. Attempted to get port "
-        << port << " on dev " << unit << ".";
+      << "Port ID must be non-negative. Attempted to get port " << port
+      << " on dev " << unit << ".";
 
   // PortKey uses three possible values for channel:
   //     > 0: port is channelized (first channel is 1)
@@ -297,16 +297,16 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   //     Otherwise, port is already 0 in the non-channelized case
   const int channel =
       (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
-  CHECK_RETURN_IF_FALSE(channel >= 0) << "Channel must be set for port "
-        << port << " on dev " << unit << ".";
+  CHECK_RETURN_IF_FALSE(channel >= 0)
+      << "Channel must be set for port " << port << " on dev " << unit << ".";
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
-  int r = snprintf(port_string, MAX_PORT_HDL_STRING_LEN,
-                   "%d/%d", port, channel);
+  int r =
+      snprintf(port_string, MAX_PORT_HDL_STRING_LEN, "%d/%d", port, channel);
   if (r < 0 || r >= MAX_PORT_HDL_STRING_LEN) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to build port string"
-        << " for port " << port << " channel " << channel
-        << " on dev " << unit << ".";
+                                    << " for port " << port << " channel "
+                                    << channel << " on dev " << unit << ".";
   }
 
   bf_dev_port_t dev_port;
@@ -314,9 +314,8 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
       static_cast<bf_dev_id_t>(unit), port_string, &dev_port);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL)
-           << "Error when translating front panel port "
-           << port_string << " to device port on dev "
-           << unit << ".";
+           << "Error when translating front panel port " << port_string
+           << " to device port on dev " << unit << ".";
   }
   *sdk_port_id = static_cast<uint32>(dev_port);
   return ::util::OkStatus();

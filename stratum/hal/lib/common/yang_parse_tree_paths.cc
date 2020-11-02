@@ -927,8 +927,7 @@ void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/ifindex
 void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
-                                          TreeNode* node,
-                                          YangParseTree* tree) {
+                                          TreeNode* node, YangParseTree* tree) {
   // Returns the port ID for the interface to be used by P4Runtime.
   // If Stratum performs port translation (e.g. for the bcm target), we return
   // the port_id provided by the ChassisConfig (also called SDN port ID).
@@ -949,20 +948,20 @@ void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
     uint32 new_port_id = 0;
     DataResponseWriter writer(
         [&is_overridden, &new_port_id](const DataResponse& resp) {
-            if (resp.has_sdn_port_id_override()) {
-                new_port_id = resp.sdn_port_id_override().port_id();
-                is_overridden = true;
-                return true;
-            }
-            return false;
+          if (resp.has_sdn_port_id_override()) {
+            new_port_id = resp.sdn_port_id_override().port_id();
+            is_overridden = true;
+            return true;
+          }
+          return false;
         });
     std::vector<::util::Status> details;
 
     // Ask the switch interface for the overridden port ID
-    ::util::Status status = tree->GetSwitchInterface()
-        ->RetrieveValue(node_id, req, &writer, &details);
+    ::util::Status status = tree->GetSwitchInterface()->RetrieveValue(
+        node_id, req, &writer, &details);
     if (!status.ok() || !is_overridden) {
-        new_port_id = port_id;
+      new_port_id = port_id;
     }
 
     // Log any errors getting the overridden SDN port ID
@@ -972,10 +971,9 @@ void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
       }
     }
     if (!status.ok()) {
-      LOG(ERROR)
-          << "Path /interfaces/interface/state/ifindex "
-          << "could not be resolved for Port " << port_id << " on Node "
-          << node_id << " (" << status << ").";
+      LOG(ERROR) << "Path /interfaces/interface/state/ifindex "
+                 << "could not be resolved for Port " << port_id << " on Node "
+                 << node_id << " (" << status << ").";
     }
 
     return SendResponse(GetResponse(path, new_port_id), stream);

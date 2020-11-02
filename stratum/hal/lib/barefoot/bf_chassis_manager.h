@@ -73,8 +73,9 @@ class BFChassisManager {
   ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id, uint32 port_id)
-      const SHARED_LOCKS_REQUIRED(chassis_lock);
+  virtual ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id,
+                                                uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
@@ -213,14 +214,14 @@ class BFChassisManager {
   // SDN port IDs are used in Stratum and by callers to P4Runtime and gNMI,
   // and SDK port IDs are used in calls to the BF SDK. This map is updated
   // as part of each config push.
-  std::map<uint64, std::map<uint32, uint32>>
-      node_id_to_port_id_to_sdk_port_id_ GUARDED_BY(chassis_lock);
+  std::map<uint64, std::map<uint32, uint32>> node_id_to_port_id_to_sdk_port_id_
+      GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from SDK port ID to (SDN) port ID.
   // This contains the inverse mapping of: node_id_to_port_id_to_sdk_port_id_
   // This map is updated as part of each config push.
-  std::map<uint64, std::map<uint32, uint32>>
-      node_id_to_sdk_port_id_to_port_id_ GUARDED_BY(chassis_lock);
+  std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id_
+      GUARDED_BY(chassis_lock);
 
   // Map from PortKey representing (slot, port) of a transceiver port to the
   // state of the transceiver module plugged into that (slot, port).

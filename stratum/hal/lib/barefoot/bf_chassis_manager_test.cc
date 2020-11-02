@@ -110,17 +110,16 @@ class BFChassisManagerTest : public ::testing::Test {
     bf_chassis_manager_ =
         BFChassisManager::CreateInstance(phal_mock_.get(), bf_pal_mock_.get());
     ON_CALL(*bf_pal_mock_, PortIsValid(_, _))
-        .WillByDefault(WithArg<1>(Invoke(
-            [](uint32 id){ return id > kSdkPortOffset; })));
+        .WillByDefault(
+            WithArg<1>(Invoke([](uint32 id) { return id > kSdkPortOffset; })));
   }
 
   void RegisterSdkPortId(uint32 port_id, int slot, int port, int channel,
                          int unit) {
     PortKey port_key(slot, port, channel);
     EXPECT_CALL(*bf_pal_mock_, PortIdFromPortKeyGet(unit, port_key, _))
-        .WillRepeatedly(DoAll(
-            SetArgPointee<2>(port_id + kSdkPortOffset),
-            Return(::util::OkStatus())));
+        .WillRepeatedly(DoAll(SetArgPointee<2>(port_id + kSdkPortOffset),
+                              Return(::util::OkStatus())));
   }
 
   void RegisterSdkPortId(const SingletonPort* singleton_port) {
@@ -171,9 +170,8 @@ class BFChassisManagerTest : public ::testing::Test {
     // PortStatusChangeRegisterEventWriter called because this is the first call
     // to PushChassisConfig
     EXPECT_CALL(*bf_pal_mock_, PortStatusChangeRegisterEventWriter(_));
-    EXPECT_CALL(*bf_pal_mock_,
-                PortAdd(kUnit, kPortId + kSdkPortOffset,
-                        kDefaultSpeedBps, kDefaultFecMode));
+    EXPECT_CALL(*bf_pal_mock_, PortAdd(kUnit, kPortId + kSdkPortOffset,
+                                       kDefaultSpeedBps, kDefaultFecMode));
     EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId + kSdkPortOffset));
 
     EXPECT_CALL(*phal_mock_,
@@ -263,11 +261,10 @@ TEST_F(BFChassisManagerTest, AddPortFec) {
   const uint32 portId = kPortId + 1;
   const int port = kPort + 1;
 
-  RegisterSdkPortId(builder.AddPort(
-      portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON));
-  EXPECT_CALL(*bf_pal_mock_,
-              PortAdd(kUnit, portId + kSdkPortOffset,
-                      kHundredGigBps, FEC_MODE_ON));
+  RegisterSdkPortId(builder.AddPort(portId, port, ADMIN_STATE_ENABLED,
+                                    kHundredGigBps, FEC_MODE_ON));
+  EXPECT_CALL(*bf_pal_mock_, PortAdd(kUnit, portId + kSdkPortOffset,
+                                     kHundredGigBps, FEC_MODE_ON));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId + kSdkPortOffset));
   ASSERT_OK(PushChassisConfig(builder));
 
@@ -281,9 +278,9 @@ TEST_F(BFChassisManagerTest, SetPortLoopback) {
   SingletonPort* sport = builder.GetPort(kPortId);
   sport->mutable_config_params()->set_loopback_mode(LOOPBACK_STATE_MAC);
 
-  EXPECT_CALL(*bf_pal_mock_,
-              PortLoopbackModeSet(kUnit, kPortId + kSdkPortOffset,
-                                  LOOPBACK_STATE_MAC));
+  EXPECT_CALL(
+      *bf_pal_mock_,
+      PortLoopbackModeSet(kUnit, kPortId + kSdkPortOffset, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId + kSdkPortOffset));
 
   ASSERT_OK(PushChassisConfig(builder));
@@ -301,11 +298,9 @@ TEST_F(BFChassisManagerTest, ReplayPorts) {
   // For now, when replaying the port configuration, we set the mtu and autoneg
   // even if the values where already the defaults. This seems like a good idea
   // to ensure configuration consistency.
-  EXPECT_CALL(*bf_pal_mock_, PortMtuSet(kUnit, sdkPortId, 0))
-      .Times(AtMost(1));
+  EXPECT_CALL(*bf_pal_mock_, PortMtuSet(kUnit, sdkPortId, 0)).Times(AtMost(1));
   EXPECT_CALL(*bf_pal_mock_,
-              PortAutonegPolicySet(kUnit, sdkPortId,
-                                   TRI_STATE_UNKNOWN))
+              PortAutonegPolicySet(kUnit, sdkPortId, TRI_STATE_UNKNOWN))
       .Times(AtMost(1));
 
   EXPECT_OK(ReplayPortsConfig(kNodeId));
@@ -387,9 +382,9 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   const uint32 sdkPortId = portId + kSdkPortOffset;
   const int port = kPort + 1;
 
-  RegisterSdkPortId(builder.AddPort(
-      portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
-      FEC_MODE_ON, TRI_STATE_TRUE, LOOPBACK_STATE_MAC));
+  RegisterSdkPortId(builder.AddPort(portId, port, ADMIN_STATE_ENABLED,
+                                    kHundredGigBps, FEC_MODE_ON, TRI_STATE_TRUE,
+                                    LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_pal_mock_,
               PortAdd(kUnit, sdkPortId, kHundredGigBps, FEC_MODE_ON));
   EXPECT_CALL(*bf_pal_mock_,
@@ -431,8 +426,8 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   ON_CALL(*bf_pal_mock_, PortAutonegPolicySet(_, _, _))
       .WillByDefault(Return(::util::OkStatus()));
   ON_CALL(*bf_pal_mock_, PortIsValid(_, _))
-      .WillByDefault(WithArg<1>(Invoke(
-          [](uint32 id){ return id > kSdkPortOffset; })));
+      .WillByDefault(
+          WithArg<1>(Invoke([](uint32 id) { return id > kSdkPortOffset; })));
   ASSERT_OK(PushChassisConfig(builder));
 
   // Operation status
