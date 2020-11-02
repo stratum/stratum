@@ -15,3 +15,7 @@ build:asan --copt -O1
 build:asan --copt -g
 build:asan --copt -fno-omit-frame-pointer
 build:asan --linkopt -fsanitize=address
+
+# Release build (build with -O2, no asserts, and strip all symbols)
+build:release --compilation_mode=opt
+build:release --linkopt=-Wl,--strip-all
