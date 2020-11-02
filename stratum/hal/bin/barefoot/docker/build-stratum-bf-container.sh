@@ -150,8 +150,7 @@ docker build \
   -f "$DOCKERFILE_DIR/Dockerfile" \
   "$(pwd)"
 
-docker save $RUNTIME_IMAGE -o ${STRATUM_NAME}-${SDE_VERSION}-docker.tar
-gzip ${STRATUM_NAME}-${SDE_VERSION}-docker.tar
+docker save $RUNTIME_IMAGE | gzip > ${STRATUM_NAME}-${SDE_VERSION}-docker.tar.gz
 
 set +x
 echo "
