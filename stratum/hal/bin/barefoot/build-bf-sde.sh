@@ -107,6 +107,12 @@ Build variables:
 # -------------------- REAL WORK STARTS HERE --------------------
 set -xe
 
+sudo=""
+# If we are not root, use "sudo"
+if [[ $EUID -ne 0 ]]; then
+   sudo="sudo"
+fi
+
 # Install an older version of pyresistent before running the P4 studio
 # since the pip will try to install newer version of it when pip install
 # the jsonschema library. And the new version of pyresistent(0.17.x) requires
