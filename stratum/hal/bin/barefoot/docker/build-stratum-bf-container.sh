@@ -133,9 +133,9 @@ docker run --rm \
 set +x
 
 
-DOCKER_OPTS=""
-if [ "$(docker version | grep Experimental | grep true | wc -l)" -eq "2" ]; then
-  DOCKER_OPTS+="--squash "
+DOCKER_BUILD_OPTS=""
+if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
+  DOCKER_BUILD_OPTS+="--squash "
 fi
 
 # Build Stratum BF runtime Docker image
@@ -144,7 +144,7 @@ RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
 docker build \
-  $DOCKER_OPTS \
+  $DOCKER_BUILD_OPTS \
   -t "$RUNTIME_IMAGE" \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f "$DOCKERFILE_DIR/Dockerfile" \
