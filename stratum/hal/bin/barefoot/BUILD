@@ -170,10 +170,8 @@ pkg_deb(
     architecture = "amd64",
     conflicts = ["stratum-bf"],
     data = ":stratum_bf_data",
-    depends = [
-        "systemd",
-        "kmod",
-    ],
+    depends = ["kmod"],
+    recommends = ["systemd"],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",

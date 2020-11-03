@@ -7369,7 +7369,7 @@ namespace {
       RETURN_IF_ERROR(RemoveIfpEntry(unit, acl_entry_id));
       RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, meter));
       RETURN_IF_ERROR(CreateIfpEntry(unit, acl_entry_id, priority, group_id, rule_id, policy_id, meter_id));
-    } else if (BCM_ACL_STAGE_EFP) {
+    } else if (stage == BCM_ACL_STAGE_EFP) {
        RETURN_IF_ERROR(DetachEfpMeter(unit, acl_entry_id));
        RETURN_IF_ERROR(RemoveEfpMeter(unit, meter_id));
        RETURN_IF_ERROR(RemoveEfpEntry(unit, acl_entry_id));
@@ -7393,7 +7393,7 @@ namespace {
       RETURN_IF_ERROR(CreateIfpEntry(unit, acl_entry_id, priority, group_id, rule_id, policy_id, meter_id));
       ConsumeSlot(ifp_meter_ids, meter_id);
       fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
-    } else if (BCM_ACL_STAGE_EFP) {
+    } else if (stage == BCM_ACL_STAGE_EFP) {
       if (!efp_meter_ids) {
          return MAKE_ERROR(ERR_INTERNAL)
              << "TODO(BRCM): Add proper error message";
