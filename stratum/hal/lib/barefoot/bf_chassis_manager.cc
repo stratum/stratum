@@ -391,7 +391,7 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
-  if (config.nodes_size()) {
+  if (config.nodes_size() != 1) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "At least one node is required for Tofino.";
   }
