@@ -852,8 +852,8 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
   if (!port_status_change_event_channel_->Close()) {
-    APPEND_ERROR(status)
-        << "Error when closing port status change event channel.";
+    error = APPEND_ERROR(status)
+            << "Error when closing port status change event channel.";
   }
   if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
