@@ -404,18 +404,17 @@ BFChassisManager::~BFChassisManager() = default;
            << "Port groups are not supported on Tofino.";
   }
 
-  // Validate singleton ports
+  // Validate singleton ports.
   std::map<uint64, std::map<uint32, PortKey>>
       node_id_to_port_id_to_singleton_port_key;
   {
     std::map<uint64, int> node_id_to_unit;
-    // Map node ids to 0-based units
+    // Map node ids to 0-based units.
     int unit(0);
     for (auto& node : config.nodes()) {
       node_id_to_unit[node.id()] = unit++;
     }
 
-    ::util::Status status = ::util::OkStatus();  // errors to keep track of.
     for (const auto& singleton_port : config.singleton_ports()) {
       uint32 port_id = singleton_port.id();
       uint64 node_id = singleton_port.node();
@@ -425,23 +424,13 @@ BFChassisManager::~BFChassisManager() = default;
       node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
           singleton_port_key;
 
-      // Make sure that the port exists by getting the SDK port ID
+      // Make sure that the port exists by getting the SDK port ID.
       const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
-      if (unit == nullptr) {
-        APPEND_ERROR(status)
-            << "Node " << node_id << " not found for port " << port_id << ".";
-      } else {
-        uint32 unused_sdk_port_id;
-        APPEND_STATUS_IF_ERROR(
-            status, bf_pal_interface_->PortIdFromPortKeyGet(
-                        *unit, singleton_port_key, &unused_sdk_port_id));
-      }
-    }
-    if (!status.ok()) {
-      ::util::Status error = MAKE_ERROR(ERR_INVALID_PARAM)
-                             << "Error in singleton ports configuration.";
-      error.Update(status);
-      return error;
+      CHECK_RETURN_IF_FALSE(unit != nullptr)
+          << "Node " << node_id << " not found for port " << port_id << ".";
+      uint32 sdk_port_id;
+      RETURN_IF_ERROR(bf_pal_interface_->PortIdFromPortKeyGet(
+          *unit, singleton_port_key, &sdk_port_id));
     }
   }
 
