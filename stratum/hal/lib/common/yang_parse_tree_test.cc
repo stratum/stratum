@@ -41,7 +41,7 @@ class YangParseTreeTest : public ::testing::Test {
   using OnSetAction = GnmiSetHandler (TreeNode::*)() const;
 
   static constexpr int kInterface1NodeId = 3;
-  static constexpr int kInterface1PortId = 33;
+  static constexpr int kInterface1PortId = 3;
   static constexpr uint32 kInterface1QueueId = 0;
   static constexpr char kInterface1QueueName[] = "BE1";
   static constexpr int kOpticalInterface1ModuleId = 5;
@@ -512,6 +512,8 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
   }
 };
 
+constexpr int YangParseTreeTest::kInterface1PortId;
+constexpr int YangParseTreeTest::kInterface1NodeId;
 constexpr char YangParseTreeTest::kInterface1QueueName[];
 constexpr char YangParseTreeTest::kAlarmDescription[];
 constexpr char YangParseTreeTest::kAlarmSeverityText[];
@@ -993,131 +995,53 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateNameOnPollSuccess) {
   EXPECT_EQ(resp.update().update(0).val().string_val(), "interface-1");
 }
 
-// Check if the 'state/ifindex' OnPoll action is executed correctly
-// in the defaul case.
+// Check if the 'state/ifindex' OnPoll action is works correctly.
 TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
-  // After tree creation only two leafs are defined:
-  // /interfaces/interface[name=*]/state/ifindex
-  // /interfaces/interface[name=*]/state/name
+  const uint32 kInterface1SdnPortId = 33;
+  auto path =
+      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")();
 
-  // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
-
-  // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
-  // of the 'resp' variable is then checked.
-  SubscribeReaderWriterMock stream;
-  ::gnmi::SubscribeResponse resp;
-  EXPECT_CALL(stream, Write(_, _))
-      .WillOnce(
-          DoAll(WithArgs<0>(Invoke(
-                    [&resp](const ::gnmi::SubscribeResponse& r) { resp = r; })),
-                Return(true)));
-
-  // Find the 'ifindex' leaf.
-  auto* node = GetRoot().FindNodeOrNull(
-      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
-  ASSERT_NE(node, nullptr);
-
-  // Get its OnPoll() handler and call it.
-  const auto& handler = node->GetOnPollHandler();
-  EXPECT_OK(handler(PollEvent(), &stream));
-
-  // Check that the result of the call is what is expected.
-  ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().uint_val(), 33);
-}
-
-// Check if the 'state/ifindex' OnPoll action is executed correctly
-// when the SDN port ID is overriden.
-TEST_F(YangParseTreeTest,
-       InterfacesInterfaceStateIfIndexOnPollSuccessWithOverride) {
-  // After tree creation only two leafs are defined:
-  // /interfaces/interface[name=*]/state/ifindex
-  // /interfaces/interface[name=*]/state/name
-
-  // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
-
-  // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
-  // of the 'resp' variable is then checked.
-  SubscribeReaderWriterMock stream;
-  ::gnmi::SubscribeResponse resp;
-  EXPECT_CALL(stream, Write(_, _))
-      .WillOnce(
-          DoAll(WithArgs<0>(Invoke(
-                    [&resp](const ::gnmi::SubscribeResponse& r) { resp = r; })),
-                Return(true)));
-
-  // Find the 'ifindex' leaf.
-  auto* node = GetRoot().FindNodeOrNull(
-      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
-  ASSERT_NE(node, nullptr);
-
-  const int sdkPortId = 99;
   // Mock implementation of RetrieveValue() that sends a response set to
-  // kSdkPortId.
+  // the overridden SDN port.
   EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
-      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+      .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
                         resp.mutable_sdn_port_id_override()->set_port_id(
-                            sdkPortId);
+                            kInterface1SdnPortId);
                         // Send it to the caller.
                         w->Write(resp);
                       })),
                       Return(::util::OkStatus())));
-
-  // Get its OnPoll() handler and call it.
-  const auto& handler = node->GetOnPollHandler();
-  EXPECT_OK(handler(PollEvent(), &stream));
+  ::gnmi::SubscribeResponse resp;
+  EXPECT_OK(ExecuteOnPoll(path, &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().uint_val(), sdkPortId);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kInterface1SdnPortId);
 }
 
 // Check if the 'state/ifindex' OnPoll action is executed correctly
 // when the SDN port ID is not overriden (unimplemented).
 TEST_F(YangParseTreeTest,
        InterfacesInterfaceStateIfIndexOnPollSuccessWithUnimplemented) {
-  // After tree creation only two leafs are defined:
-  // /interfaces/interface[name=*]/state/ifindex
-  // /interfaces/interface[name=*]/state/name
+  auto path =
+      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")();
 
-  // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
-
-  // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
-  // of the 'resp' variable is then checked.
-  SubscribeReaderWriterMock stream;
-  ::gnmi::SubscribeResponse resp;
-  EXPECT_CALL(stream, Write(_, _))
-      .WillOnce(
-          DoAll(WithArgs<0>(Invoke(
-                    [&resp](const ::gnmi::SubscribeResponse& r) { resp = r; })),
-                Return(true)));
-
-  // Find the 'ifindex' leaf.
-  auto* node = GetRoot().FindNodeOrNull(
-      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
-  ASSERT_NE(node, nullptr);
-
-  // Mock implementation of RetrieveValue() that sends unimplemented.
+  // Mock implementation of RetrieveValue() that returns unimplemented.
   EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
       .WillOnce(DoAll(WithArg<3>(Invoke([](std::vector<::util::Status>* d) {
                         ::util::Status s = MAKE_ERROR(ERR_UNIMPLEMENTED)
-                                             << "not implemented";
+                                           << "not implemented";
                         d->push_back(s);
                       })),
                       Return(::util::OkStatus())));
-
-  // Get its OnPoll() handler and call it.
-  const auto& handler = node->GetOnPollHandler();
-  EXPECT_OK(handler(PollEvent(), &stream));
+  ::gnmi::SubscribeResponse resp;
+  EXPECT_OK(ExecuteOnPoll(path, &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().uint_val(), 33);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kInterface1PortId);
 }
 
 // Check if the 'state/mac-address' OnPoll action works correctly.

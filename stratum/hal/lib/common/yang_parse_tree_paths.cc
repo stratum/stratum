@@ -936,47 +936,33 @@ void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
   auto on_poll_functor = [tree, port_id, node_id](const GnmiEvent& event,
                                                   const ::gnmi::Path& path,
                                                   GnmiSubscribeStream* stream) {
-    // Build data request to see if the switch overrides the SDN port ID
+    // Build data request to see if the switch overrides the SDN port ID.
     DataRequest req;
     auto* port_req = req.add_requests()->mutable_sdn_port_id_override();
     port_req->set_node_id(node_id);
     port_req->set_port_id(port_id);
 
     // Build the data response function to extract the overridden port ID, if
-    // the switch implementation chooses to do so
-    bool is_overridden = false;
-    uint32 new_port_id = 0;
-    DataResponseWriter writer(
-        [&is_overridden, &new_port_id](const DataResponse& resp) {
-          if (resp.has_sdn_port_id_override()) {
-            new_port_id = resp.sdn_port_id_override().port_id();
-            is_overridden = true;
-            return true;
-          }
-          return false;
-        });
+    // the switch implementation chooses to do so.
+    uint32 sdn_port = port_id;
+    DataResponseWriter writer([&sdn_port](const DataResponse& resp) {
+      if (resp.has_sdn_port_id_override()) {
+        sdn_port = resp.sdn_port_id_override().port_id();
+        return true;
+      }
+      return false;
+    });
+
+    // Query the switch for the overridden port ID.
     std::vector<::util::Status> details;
-
-    // Ask the switch interface for the overridden port ID
-    ::util::Status status = tree->GetSwitchInterface()->RetrieveValue(
-        node_id, req, &writer, &details);
-    if (!status.ok() || !is_overridden) {
-      new_port_id = port_id;
-    }
-
-    // Log any errors getting the overridden SDN port ID
-    for (::util::Status& s : details) {
-      if (s.error_code() != ERR_UNIMPLEMENTED) {
-        status.Update(s);
+    RETURN_IF_ERROR(tree->GetSwitchInterface()->RetrieveValue(
+        node_id, req, &writer, &details));
+    for (const ::util::Status& status : details) {
+      if (!status.ok() && status.error_code() != ERR_UNIMPLEMENTED) {
+        return status;
       }
     }
-    if (!status.ok()) {
-      LOG(ERROR) << "Path /interfaces/interface/state/ifindex "
-                 << "could not be resolved for Port " << port_id << " on Node "
-                 << node_id << " (" << status << ").";
-    }
-
-    return SendResponse(GetResponse(path, new_port_id), stream);
+    return SendResponse(GetResponse(path, sdn_port), stream);
   };
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(on_poll_functor)
