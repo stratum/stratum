@@ -114,6 +114,7 @@ GnmiPublisher::~GnmiPublisher() {}
   if ((status = (*handle)(PollEvent())) != ::util::OkStatus()) {
     // Something went wrong.
     LOG(ERROR) << "Handler returned non-OK status: " << status;
+    return status;
   }
   return ::util::OkStatus();
 }
