@@ -111,14 +111,13 @@ namespace {
 ::util::Status ConvertToLegacyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& forwarding_config,
     ::p4::v1::ForwardingPipelineConfig* legacy_config) {
+  *legacy_config = forwarding_config;
   BfPipelineConfig bf_config;
   if (ExtractBfPipelineConfig(forwarding_config, &bf_config).ok()) {
     std::string pi_p4_device_config;
     RETURN_IF_ERROR(
         BfPipelineConfigToPiConfig(bf_config, &pi_p4_device_config));
     legacy_config->set_p4_device_config(pi_p4_device_config);
-  } else {
-    *legacy_config = forwarding_config;
   }
 
   return ::util::OkStatus();
