@@ -5,6 +5,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <utility>
 
 #include "absl/base/thread_annotations.h"
@@ -359,6 +360,67 @@ BFChassisManager::~BFChassisManager() = default;
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Port groups are not supported on Tofino.";
   }
+  if (config.nodes_size() != 1) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Multiple nodes are not supported on Tofino.";
+  }
+
+  // Validate Node messages. Make sure there is no two nodes with the same id.
+  std::map<uint64, int> node_id_to_unit;
+  std::map<int, uint64> unit_to_node_id;
+  for (const auto& node : config.nodes()) {
+    CHECK_RETURN_IF_FALSE(node.slot() > 0)
+        << "No positive slot in " << node.ShortDebugString();
+    CHECK_RETURN_IF_FALSE(node.id() > 0)
+        << "No positive ID in " << node.ShortDebugString();
+    CHECK_RETURN_IF_FALSE(
+        gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+        << "The id for Node " << PrintNode(node) << " was already recorded "
+        << "for another Node in the config.";
+  }
+  {
+    int unit = 0;
+    for (const auto& node : config.nodes()) {
+      unit_to_node_id[unit] = node.id();
+      node_id_to_unit[node.id()] = unit;
+      ++unit;
+    }
+  }
+
+  // Go over all the singleton ports in the config:
+  // 1- Validate the basic singleton port properties.
+  // 2- Make sure there is no two ports with the same (slot, port, channel).
+  // 3- Make sure all the ports with the same (slot, port) have the same
+  //    speed.
+  // 4- Make sure for each (slot, port) pair, the channels of all the ports
+  //    are valid. This depends on the port speed.
+  // 5- Make sure no singleton port has the reserved CPU port ID. CPU port is
+  //    a special port and is not in the list of singleton ports. It is
+  //    configured separately.
+  // 6- Make sure IDs of the singleton ports are unique per node.
+  // 7- Make sure IDs match the SDE dev port numbers, as there is not way to do
+  //    port translation on Tofino at the moment.
+  // TODO(max): Remove once we have port translation on BF.
+  std::map<uint64, std::set<uint32>> node_id_to_port_ids;
+  for (const auto& singleton_port : config.singleton_ports()) {
+    CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
+        << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
+        << "SingletonPort " << PrintSingletonPort(singleton_port)
+        << " has the reserved CPU port ID (" << kCpuPortId << ").";
+    CHECK_RETURN_IF_FALSE(singleton_port.slot() > 0)
+        << "No valid slot in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
+        << "No valid port in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
+        << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.node() > 0)
+        << "No valid node ID in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(node_id_to_unit.count(singleton_port.node()))
+        << "Node ID " << singleton_port.node() << " given for SingletonPort "
+        << PrintSingletonPort(singleton_port)
+        << " has not been given to any Node in the config.";
+  }
 
   // If the class is initialized, we also need to check if the new config will
   // require a change in the port layout. If so, report reboot required.
@@ -380,6 +442,13 @@ BFChassisManager::~BFChassisManager() = default;
       return MAKE_ERROR(ERR_REBOOT_REQUIRED)
              << "The switch is already initialized, but we detected the "
              << "newly pushed config requires a change in the port layout. "
+             << "The stack needs to be rebooted to finish config push.";
+    }
+
+    if (node_id_to_unit != node_id_to_unit_) {
+      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
+             << "The switch is already initialized, but we detected the newly "
+             << "pushed config requires a change in node_id_to_unit. "
              << "The stack needs to be rebooted to finish config push.";
     }
   }
