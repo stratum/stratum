@@ -273,6 +273,17 @@ jobs:
       - *clean_bazel_cache
       - *save_bazel_cache
 
+  cpp-format-check:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - run:
+          name: Run clang-format on files modified by commit
+          command: |
+            git diff-tree --no-commit-id --name-only -r HEAD | grep -F -e ".cc" -e ".h" | xargs clang-format --style=file -i
+            git update-index --refresh
+
   cpp-style-check:
     docker:
       - image: stratumproject/build:build
@@ -306,6 +317,7 @@ workflows:
       - unit_tests
       - cdlang_tests
       - coverage
+      - cpp-format-check
       - cpp-style-check
       - license-check
       - bazel-style-check
