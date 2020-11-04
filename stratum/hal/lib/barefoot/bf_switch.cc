@@ -276,8 +276,6 @@ namespace {
         node_info->set_chip_name("Generic Tofino");
         break;
       }
-
-
       default:
         status =
             MAKE_ERROR(ERR_UNIMPLEMENTED)
