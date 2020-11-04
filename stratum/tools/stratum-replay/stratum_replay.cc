@@ -152,7 +152,7 @@ using ClientStreamChannelReaderWriter =
   RETURN_IF_ERROR(::stratum::ReadFileToString(argv[1], &p4WriteLogs));
   std::vector<std::string> lines =
       absl::StrSplit(p4WriteLogs, '\n', absl::SkipEmpty());
-  for (std::string line : lines) {
+  for (const std::string& line : lines) {
     ::p4::v1::WriteRequest write_req;
     ::p4::v1::WriteResponse write_resp;
     // Log format: <timestamp>;<node_id>;<update proto>;<status>
