@@ -282,7 +282,7 @@ jobs:
           name: Run clang-format script
           command: .circleci/check-cpp-format.sh
 
-  cpp-style-check:
+  cpp-lint-check:
     docker:
       - image: stratumproject/build:build
     steps:
@@ -316,7 +316,7 @@ workflows:
       - cdlang_tests
       - coverage
       - cpp-format-check
-      - cpp-style-check
+      - cpp-lint-check
       - license-check
       - bazel-style-check
   docker-publish:
