@@ -174,7 +174,6 @@ Bmv2Switch::~Bmv2Switch() {}
                                          std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
-    DataResponse resp_val;
     ::util::StatusOr<DataResponse> resp;
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
