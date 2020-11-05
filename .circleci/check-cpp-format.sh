@@ -15,18 +15,11 @@ CHANGED_FILES=$(git diff-tree --no-commit-id --name-status -r HEAD origin/master
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
 stratum/glue/gtl/cleanup_test.cc
-stratum/glue/gtl/cleanup_test.cc
-stratum/glue/gtl/cleanup.h
 stratum/glue/gtl/cleanup.h
 stratum/glue/gtl/map_util_test.cc
-stratum/glue/gtl/map_util_test.cc
-stratum/glue/gtl/map_util.h
 stratum/glue/gtl/map_util.h
 stratum/glue/gtl/source_location.h
-stratum/glue/gtl/source_location.h
 stratum/glue/gtl/stl_util.h
-stratum/glue/gtl/stl_util.h
-stratum/glue/init_google.h
 stratum/glue/init_google.h
 stratum/glue/status/posix_error_space.cc
 stratum/glue/status/status_test_util.cc
@@ -127,16 +120,10 @@ stratum/hal/lib/pi/pi_node.cc
 stratum/hal/lib/pi/pi_node.h
 stratum/hal/stub/embedded/main.cc
 stratum/lib/constants.h
-stratum/lib/constants.h
-stratum/lib/libcproxy/libcwrapper.cc
 stratum/lib/libcproxy/libcwrapper.cc
 stratum/lib/libcproxy/libcwrapper.h
-stratum/lib/libcproxy/libcwrapper.h
-stratum/lib/libcproxy/passthrough_proxy.cc
 stratum/lib/libcproxy/passthrough_proxy.cc
 stratum/lib/libcproxy/passthrough_proxy.h
-stratum/lib/libcproxy/passthrough_proxy.h
-stratum/lib/test_utils/p4_proto_builders.cc
 stratum/lib/test_utils/p4_proto_builders.cc
 stratum/p4c_backends/common/backend_extension_interface.h
 stratum/p4c_backends/common/backend_pass_manager.h
