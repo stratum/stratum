@@ -6,11 +6,7 @@
 set -ex
 
 # Files in this branch that are different from master.
-CHANGED_FILES=$(git diff-tree --no-commit-id --name-status -r HEAD origin/master \
-                  | grep -v "^D" \
-                  | cut -f 2 \
-                  | grep -F -e ".cc" -e ".h" || :
-              )
+CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/master -- '*.h' '*.cc')
 
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
