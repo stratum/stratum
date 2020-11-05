@@ -260,8 +260,8 @@ BFChassisManager::~BFChassisManager() = default;
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state;
 
   {
-    int unit(0);
-    for (auto& node : config.nodes()) {
+    int unit = 0;
+    for (const auto& node : config.nodes()) {
       unit_to_node_id[unit] = node.id();
       node_id_to_unit[node.id()] = unit;
       unit++;
@@ -301,7 +301,7 @@ BFChassisManager::~BFChassisManager() = default;
   // If there was an error parsing the ports, return early.
   RETURN_IF_ERROR(status);
 
-  for (auto singleton_port : config.singleton_ports()) {
+  for (const auto& singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
     // we checked that node_id was valid in the previous loop
@@ -410,8 +410,8 @@ BFChassisManager::~BFChassisManager() = default;
   {
     std::map<uint64, int> node_id_to_unit;
     // Map node ids to 0-based units.
-    int unit(0);
-    for (auto& node : config.nodes()) {
+    int unit = 0;
+    for (const auto& node : config.nodes()) {
       node_id_to_unit[node.id()] = unit++;
     }
 
