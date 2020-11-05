@@ -26,7 +26,7 @@
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
 DEFINE_string(pipeline_cfg, "pipeline_cfg.pb.txt", "The pipeline config file.");
 DEFINE_string(election_id, "0,1",
-              "Election id for abstraction update (high,low).");
+              "Election id for arbitration update (high,low).");
 DEFINE_uint64(device_id, 1, "The device ID.");
 DEFINE_string(ca_cert, "",
               "CA certificate, will use insecure credentials if empty.");
@@ -44,7 +44,7 @@ Usage: stratum-replay [options] [p4runtime write log file]
 
   Options:
     -device_id: The device ID (default: 1)
-    -election_id: Election ID for abstraction update (high,low). (default: "0,1")
+    -election_id: Election ID for arbitration update (high,low). (default: "0,1")
     -grpc_addr: Stratum gRPC address (default: "127.0.0.1:9339")
     -pipeline_cfg: The pipeline config file (default: "pipeline.pb.bin")
     -ca_cert: CA certificate(optional), will use insecure credentials if empty (default: "")
