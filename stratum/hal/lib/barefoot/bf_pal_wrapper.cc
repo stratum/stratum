@@ -302,7 +302,7 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r =
-      snprintf(port_string, MAX_PORT_HDL_STRING_LEN, "%d/%d", port, channel);
+      snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
   if (r < 0 || r >= MAX_PORT_HDL_STRING_LEN) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to build port string"
                                     << " for port " << port << " channel "
