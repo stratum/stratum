@@ -19,8 +19,10 @@ stratum_cc_binary(
     srcs = ["stratum_replay.cc"],
     arches = HOST_ARCHES,
     deps = [
+        "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/p4:forwarding_pipeline_configs_cc_proto",
         "//stratum/hal/lib/p4:utils",
         "//stratum/lib:macros",
         "//stratum/lib:utils",

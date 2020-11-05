@@ -13,24 +13,25 @@
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "re2/re2.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/p4/forwarding_pipeline_configs.pb.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address");
-DEFINE_string(p4info, "p4info.pb.txt", "The P4Info file");
-DEFINE_string(pipeline_cfg, "pipeline.pb.bin", "The pipeline config file");
+DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
+DEFINE_string(pipeline_cfg, "pipeline_cfg.pb.txt", "The pipeline config file.");
 DEFINE_string(election_id, "0,1",
-              "election id for abstraction update (high,low)");
+              "Election id for abstraction update (high,low).");
 DEFINE_uint64(device_id, 1, "The device ID.");
 DEFINE_string(ca_cert, "",
-              "CA certificate, will use insecure credential if empty");
-DEFINE_string(client_cert, "", "Client certificate (optional)");
-DEFINE_string(client_key, "", "Client key (optional)");
+              "CA certificate, will use insecure credentials if empty.");
+DEFINE_string(client_cert, "", "Client certificate (optional).");
+DEFINE_string(client_key, "", "Client key (optional).");
 
 namespace stratum {
 namespace tools {
@@ -38,16 +39,15 @@ namespace p4rt_replay {
 
 const char kUsage[] = R"USAGE(
 Usage: stratum-replay [options] [p4runtime write log file]
-  This tool replay P4Runtime write requests to a Stratum device with a given
+  This tool replays P4Runtime write requests to a Stratum device from a given
   Stratum P4Runtime write request log.
 
   Options:
     -device_id: The device ID (default: 1)
-    -election_id: Election ID (high,low) for abstraction update (default: "0,1")
+    -election_id: Election ID for abstraction update (high,low). (default: "0,1")
     -grpc_addr: Stratum gRPC address (default: "127.0.0.1:9339")
-    -p4info: The P4Info file (default: "p4info.pb.txt")
     -pipeline_cfg: The pipeline config file (default: "pipeline.pb.bin")
-    -ca_cert: CA certificate(optional), will use insecure credential if empty (default: "")
+    -ca_cert: CA certificate(optional), will use insecure credentials if empty (default: "")
     -client_cert: Client certificate (optional) (default: "")
     -client_key: Client key (optional) (default: "")
 )USAGE";
@@ -70,9 +70,7 @@ using ClientStreamChannelReaderWriter =
         pem_key_cert_pair;
     auto key_materials_config =
         std::make_shared<::grpc_impl::experimental::TlsKeyMaterialsConfig>();
-    ::util::Status status;
-    RETURN_IF_ERROR(
-        ::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
+    RETURN_IF_ERROR(ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
     key_materials_config->set_pem_root_certs(pem_root_certs);
 
     if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
@@ -85,8 +83,6 @@ using ClientStreamChannelReaderWriter =
     auto cred_opts = ::grpc_impl::experimental::TlsCredentialsOptions(
         GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
         key_materials_config, nullptr, nullptr);
-
-    RETURN_IF_ERROR(status);
     channel_credentials = grpc::experimental::TlsCredentials(cred_opts);
   }
   auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
@@ -131,11 +127,15 @@ using ClientStreamChannelReaderWriter =
       absl::Uint128Low64(election_id));
   fwd_pipe_cfg_req.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
-  RETURN_IF_ERROR(ReadProtoFromTextFile(
-      FLAGS_p4info, fwd_pipe_cfg_req.mutable_config()->mutable_p4info()));
-  RETURN_IF_ERROR(ReadFileToString(
-      FLAGS_pipeline_cfg,
-      fwd_pipe_cfg_req.mutable_config()->mutable_p4_device_config()));
+
+  ::stratum::hal::ForwardingPipelineConfigs pipeline_cfg;
+  RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_pipeline_cfg, &pipeline_cfg));
+  const ::p4::v1::ForwardingPipelineConfig* fwd_pipe_cfg =
+      ::stratum::gtl::FindOrNull(pipeline_cfg.node_id_to_config(),
+                                 FLAGS_device_id);
+  CHECK_RETURN_IF_FALSE(fwd_pipe_cfg);
+  fwd_pipe_cfg_req.mutable_config()->CopyFrom(*fwd_pipe_cfg);
+
   ::grpc::Status status;
   {
     ::grpc::ClientContext context;
@@ -186,7 +186,7 @@ using ClientStreamChannelReaderWriter =
       // For now, we only show the message if there is an error instead of
       // return with an error status.
       if (status.ok()) {
-        LOG(ERROR) << "Expect to get error but the request successed.\n"
+        LOG(WARNING) << "Expect to get error but the request successed.\n"
                    << "Expected error: " << error_msg << "\n"
                    << "Request: " << write_req.ShortDebugString();
       } else {
@@ -198,7 +198,7 @@ using ClientStreamChannelReaderWriter =
           CHECK_RETURN_IF_FALSE(details.details(0).UnpackTo(&detail))
               << "Failed to parse the P4Runtime error from detail message.";
           if (detail.message() != error_msg) {
-            LOG(ERROR) << "The expected error message is different "
+            LOG(WARNING) << "The expected error message is different "
                           "to the actual error message:\n"
                        << "Expected: " << error_msg << "\n"
                        << "Actual: " << detail.message();
@@ -208,6 +208,7 @@ using ClientStreamChannelReaderWriter =
     } else {
       CHECK_RETURN_IF_FALSE(status.ok())
           << "Faild to send P4Runtime write request: "
+          << write_req.ShortDebugString() << "\n"
           << ::stratum::hal::P4RuntimeGrpcStatusToString(status);
     }
   }
