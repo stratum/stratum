@@ -25,18 +25,18 @@ the pipeline config.
 -forwarding_pipeline_configs_file=/var/run/stratum/pipeline_cfg.pb.txt
 ```
 
-If you override any flags below, make sure to use a non-empty and a valid path.
+If you override any flags below, make sure to use a non-empty and valid path.
 
 Copy those files to your laptop/server so we can use it later.
 
-Check the step 1.1 below if you are running a containerized Stratum.
+Check step 1.1 below if you are running a containerized Stratum.
 
 Go to step 2 if you already have those files.
 
 ### Step 1.1 - Obtaining files from the Stratum container
 
-To copy files from a docker container, the first thing is to get the container
-ID so we know which container we should access.
+To copy files from a docker container,  we get the container ID so we know which
+container we should access.
 
 ```
 $ docker ps | grep stratum-bf
@@ -45,7 +45,7 @@ $ docker ps | grep stratum-bf
 
 The `4c615277261d` is the container ID we need.
 
-Next, we can use `docker cp` command to copy file we need
+Next, we can use `docker cp` command to copy files we need
 
 ```
 $ docker cp 4c615277261d:/var/log/stratum/p4_writes.pb.txt .
@@ -61,9 +61,9 @@ p4_writes.pb.txt  pipeline_cfg.pb.txt
 
 Copy those files to your laptop or the place you are going to run stratum-replay tool.
 
-## Step 2 - Replay the pipeline and P4Runtime writes
+## Step 2 - Replay the pipeline, and P4Runtime writes
 
-We provide a container image which includes prebuilt stratum-replay binary.
+We provide a container image that includes a prebuilt stratum-replay binary.
 
 To use it, you can run the following commands:
 
@@ -79,7 +79,7 @@ docker run \
 
 ## Step 3 - Check the result
 
-You will see the following message if every P4Runtime write successed
+You will see the following message if every P4Runtime write succeeded
 
 ```
 Done
@@ -88,36 +88,37 @@ Done
 However, you will get the following messages if something goes wrong:
 
 ```
-Faild to send P4Runtime write request: [Error detail]
+Failed to send P4Runtime write request: [Error detail]
 ```
 
-This means there is a P4Runtime error when the tool is trying to send a write request,
+This message means there is a P4Runtime error when the tool is trying to send a write request,
 but there is not error when writing the same request to the original switch.
 
 You may also get some warning message such as:
 
 ```
-Expect to get error but the request successed.
+Expect to get an error, but the request succeeded.
 Expected error: [Error message]
 Request: [Request budy]
 ```
 
-This means there are some error shown in the log, which means we should expected
-an error when we sends the write request, but we don't get any error.
+This means there is an error shown in the log, which means we should expect an
+error when sending the write request, but we don't get any error.
 
 The third warning message you can get is:
 
 ```
-The expected error message is different to the actual error message:
+The expected error message is different from the actual error message:
 Expected: [Error message]
 Actual: [Error message]
 ```
 
-This means there is an error in the log, and the replay too also get an error
+This message means there is an error in the log, and the replay tool also get an error
 after sending a write request, but the error message is different.
 
-Errors and warnings above can be caused by wrong software version (e.g., using different version of stratum)
-or using the wring write request for a given pipeline config file.
+Errors and warnings above can be caused by the wrong software version
+(e.g., using a different version of stratum) or using the wring write request
+for a given pipeline config file.
 
 # Usage and available options:
 

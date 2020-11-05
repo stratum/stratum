@@ -142,7 +142,7 @@ using ClientStreamChannelReaderWriter =
     status = stub->SetForwardingPipelineConfig(&context, fwd_pipe_cfg_req,
                                                &fwd_pipe_cfg_resp);
     CHECK_RETURN_IF_FALSE(status.ok())
-        << "Faild to push forwarding pipeline config: "
+        << "Failed to push forwarding pipeline config: "
         << ::stratum::hal::P4RuntimeGrpcStatusToString(status);
   }
 
@@ -186,7 +186,7 @@ using ClientStreamChannelReaderWriter =
       // For now, we only show the message if there is an error instead of
       // return with an error status.
       if (status.ok()) {
-        LOG(WARNING) << "Expect to get error but the request successed.\n"
+        LOG(WARNING) << "Expect to get an error, but the request succeeded.\n"
                    << "Expected error: " << error_msg << "\n"
                    << "Request: " << write_req.ShortDebugString();
       } else {
@@ -207,7 +207,7 @@ using ClientStreamChannelReaderWriter =
       }
     } else {
       CHECK_RETURN_IF_FALSE(status.ok())
-          << "Faild to send P4Runtime write request: "
+          << "Failed to send P4Runtime write request: "
           << write_req.ShortDebugString() << "\n"
           << ::stratum::hal::P4RuntimeGrpcStatusToString(status);
     }
