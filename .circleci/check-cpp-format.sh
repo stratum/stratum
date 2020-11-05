@@ -150,8 +150,7 @@ stratum/tools/gnmi/gnmi_cli.cc
 \0
 EOF
 
-echo "$CHANGED_FILES" | xargs -t -n1 clang-format --style=file -i
-echo "$KNOWN_FILES" | xargs -t -n1 clang-format --style=file -i
+echo -e "$KNOWN_FILES\n$CHANGED_FILES" | sort -u | xargs -t -n1 clang-format --style=file -i
 
 # Report which files need to be fixed.
 git update-index --refresh
