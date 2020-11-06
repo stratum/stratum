@@ -1001,8 +1001,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
   auto path =
       GetPath("interfaces")("interface", "interface-1")("state")("ifindex")();
 
-  // Mock implementation of RetrieveValue() that sends a response set to
-  // the overridden SDN port.
+  // Mock implementation of RetrieveValue() that sends a response SDN port ID.
   EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
@@ -1019,29 +1018,6 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
   EXPECT_EQ(resp.update().update(0).val().uint_val(), kInterface1SdnPortId);
-}
-
-// Check if the 'state/ifindex' OnPoll action is executed correctly
-// when the SDN port ID is not overriden (unimplemented).
-TEST_F(YangParseTreeTest,
-       InterfacesInterfaceStateIfIndexOnPollSuccessWithUnimplemented) {
-  auto path =
-      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")();
-
-  // Mock implementation of RetrieveValue() that returns unimplemented.
-  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
-      .WillOnce(DoAll(WithArg<3>(Invoke([](std::vector<::util::Status>* d) {
-                        ::util::Status s = MAKE_ERROR(ERR_UNIMPLEMENTED)
-                                           << "not implemented";
-                        d->push_back(s);
-                      })),
-                      Return(::util::OkStatus())));
-  ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(ExecuteOnPoll(path, &resp));
-
-  // Check that the result of the call is what is expected.
-  ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().uint_val(), kInterface1PortId);
 }
 
 // Check if the 'state/mac-address' OnPoll action works correctly.

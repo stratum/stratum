@@ -929,41 +929,12 @@ void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
 void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
                                           TreeNode* node, YangParseTree* tree) {
   // Returns the port ID for the interface to be used by P4Runtime.
-  // If Stratum performs port translation (e.g. for the bcm target), we return
-  // the port_id provided by the ChassisConfig (also called SDN port ID).
-  // If Stratum does not perform port translation (e.g. for the bf target), we
-  // return the SDK port number.
-  auto on_poll_functor = [tree, port_id, node_id](const GnmiEvent& event,
-                                                  const ::gnmi::Path& path,
-                                                  GnmiSubscribeStream* stream) {
-    // Build data request to see if the switch overrides the SDN port ID.
-    DataRequest req;
-    auto* port_req = req.add_requests()->mutable_sdn_port_id();
-    port_req->set_node_id(node_id);
-    port_req->set_port_id(port_id);
-
-    // Build the data response function to extract the overridden port ID, if
-    // the switch implementation chooses to do so.
-    uint32 sdn_port = port_id;
-    DataResponseWriter writer([&sdn_port](const DataResponse& resp) {
-      if (resp.has_sdn_port_id()) {
-        sdn_port = resp.sdn_port_id().port_id();
-        return true;
-      }
-      return false;
-    });
-
-    // Query the switch for the overridden port ID.
-    std::vector<::util::Status> details;
-    RETURN_IF_ERROR(tree->GetSwitchInterface()->RetrieveValue(
-        node_id, req, &writer, &details));
-    for (const ::util::Status& status : details) {
-      if (!status.ok() && status.error_code() != ERR_UNIMPLEMENTED) {
-        return status;
-      }
-    }
-    return SendResponse(GetResponse(path, sdn_port), stream);
-  };
+  auto on_poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree,
+                       &DataResponse::sdn_port_id,
+                       &DataResponse::has_sdn_port_id,
+                       &DataRequest::Request::mutable_sdn_port_id,
+                       &SdnPortId::port_id);
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(on_poll_functor)
       ->SetOnPollHandler(on_poll_functor)
