@@ -287,12 +287,16 @@ BFChassisManager::~BFChassisManager() = default;
         singleton_port_key;
 
     // Translate the logical SDN port to SDK port (device port ID)
-    uint32 sdk_port_id;
-    APPEND_STATUS_IF_ERROR(status,
-                           bf_pal_interface_->PortIdFromPortKeyGet(
-                               *unit, singleton_port_key, &sdk_port_id));
-    node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port_id;
-    node_id_to_sdk_port_id_to_port_id[node_id][sdk_port_id] = port_id;
+
+    ::util::StatusOr<uint32> sdk_port =
+        bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key);
+    if (sdk_port.ok()) {
+      uint32 sdk_port_id = sdk_port.ValueOrDie();
+      node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port_id;
+      node_id_to_sdk_port_id_to_port_id[node_id][sdk_port_id] = port_id;
+    } else {
+      status.Update(sdk_port.status());
+    }
 
     PortKey port_group_key(singleton_port.slot(), singleton_port.port());
     xcvr_port_key_to_xcvr_state[port_group_key] = HW_STATE_UNKNOWN;
@@ -428,9 +432,9 @@ BFChassisManager::~BFChassisManager() = default;
       const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
       CHECK_RETURN_IF_FALSE(unit != nullptr)
           << "Node " << node_id << " not found for port " << port_id << ".";
-      uint32 sdk_port_id;
-      RETURN_IF_ERROR(bf_pal_interface_->PortIdFromPortKeyGet(
-          *unit, singleton_port_key, &sdk_port_id));
+      RETURN_IF_ERROR(
+          bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
+              .status());
     }
   }
 

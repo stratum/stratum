@@ -246,9 +246,8 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   return ::util::OkStatus();
 }
 
-::util::Status BFPalWrapper::PortIdFromPortKeyGet(int unit,
-                                                  const PortKey& port_key,
-                                                  uint32* sdk_port_id) {
+::util::StatusOr<uint32> BFPalWrapper::PortIdFromPortKeyGet(
+    int unit, const PortKey& port_key) {
   const int port = port_key.port;
   CHECK_RETURN_IF_FALSE(port >= 0)
       << "Port ID must be non-negative. Attempted to get port " << port
@@ -277,8 +276,7 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   bf_dev_port_t dev_port;
   RETURN_IF_BFRT_ERROR(bf_pal_port_str_to_dev_port_map(
       static_cast<bf_dev_id_t>(unit), port_string, &dev_port));
-  *sdk_port_id = static_cast<uint32>(dev_port);
-  return ::util::OkStatus();
+  return static_cast<uint32>(dev_port);
 }
 
 BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}

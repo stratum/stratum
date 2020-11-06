@@ -54,8 +54,8 @@ class BFPalWrapper : public BFPalInterface {
   ::util::Status PortLoopbackModeSet(int unit, uint32 port_id,
                                      LoopbackState loopback_mode) override;
 
-  ::util::Status PortIdFromPortKeyGet(int unit, const PortKey& port_key,
-                                      uint32* sdk_port_id) override;
+  ::util::StatusOr<uint32> PortIdFromPortKeyGet(
+      int unit, const PortKey& port_key) override;
 
   static BFPalWrapper* GetSingleton();
 

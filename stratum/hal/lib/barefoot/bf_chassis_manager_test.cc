@@ -117,9 +117,8 @@ class BFChassisManagerTest : public ::testing::Test {
   void RegisterSdkPortId(uint32 port_id, int slot, int port, int channel,
                          int unit) {
     PortKey port_key(slot, port, channel);
-    EXPECT_CALL(*bf_pal_mock_, PortIdFromPortKeyGet(unit, port_key, _))
-        .WillRepeatedly(DoAll(SetArgPointee<2>(port_id + kSdkPortOffset),
-                              Return(::util::OkStatus())));
+    EXPECT_CALL(*bf_pal_mock_, PortIdFromPortKeyGet(unit, port_key))
+        .WillRepeatedly(Return(port_id + kSdkPortOffset));
   }
 
   void RegisterSdkPortId(const SingletonPort* singleton_port) {
