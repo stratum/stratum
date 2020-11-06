@@ -5,7 +5,7 @@
 #define STRATUM_HAL_LIB_BAREFOOT_MACROS_H_
 
 extern "C" {
-#include "bf_rt/bf_rt_common.h"
+#include "bf_types/bf_types.h"
 }
 
 #include "stratum/glue/status/status.h"

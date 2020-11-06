@@ -146,6 +146,7 @@ stratum_cc_library(
     hdrs = ["bf_pal_wrapper.h"],
     deps = [
         ":bf_pal_interface",
+        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
