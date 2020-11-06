@@ -119,6 +119,7 @@ namespace {
         BfPipelineConfigToPiConfig(bf_config, &pi_p4_device_config));
     legacy_config->set_p4_device_config(pi_p4_device_config);
   }
+
   return ::util::OkStatus();
 }
 }  // namespace

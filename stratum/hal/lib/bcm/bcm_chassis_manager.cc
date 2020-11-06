@@ -1463,7 +1463,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     linkscan_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!linkscan_event_channel_ || !linkscan_event_channel_->Close()) {
-      APPEND_ERROR(status) << "Linkscan event Channel is already closed.";
+      status = APPEND_ERROR(status)
+               << "Linkscan event Channel is already closed.";
     }
     linkscan_event_channel_.reset();
   }
@@ -1474,7 +1475,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     xcvr_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
-      APPEND_ERROR(status) << "Transceiver event Channel is already closed.";
+      status = APPEND_ERROR(status)
+               << "Transceiver event Channel is already closed.";
     }
     xcvr_event_channel_.reset();
   }
