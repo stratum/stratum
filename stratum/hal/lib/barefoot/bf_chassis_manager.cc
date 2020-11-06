@@ -286,8 +286,7 @@ BFChassisManager::~BFChassisManager() = default;
     node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
         singleton_port_key;
 
-    // Translate the logical SDN port to SDK port (device port ID)
-
+    // Translate the logical SDN port to SDK port (BF device port ID)
     ::util::StatusOr<uint32> sdk_port =
         bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key);
     if (sdk_port.ok()) {
@@ -395,18 +394,13 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
-  if (config.nodes_size() != 1) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "At least one node is required for Tofino.";
-  }
-  if (config.trunk_ports_size()) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Trunk ports are not supported on Tofino.";
-  }
-  if (config.port_groups_size()) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Port groups are not supported on Tofino.";
-  }
+
+  CHECK_RETURN_IF_FALSE(config.nodes_size())
+      << "At least one node is required for Tofino.";
+  CHECK_RETURN_IF_FALSE(config.trunk_ports_size() > 0)
+      << "Trunk ports are not supported on Tofino.";
+  CHECK_RETURN_IF_FALSE(config.port_groups_size() > 0)
+      << "Port groups are not supported on Tofino.";
 
   // Validate singleton ports.
   std::map<uint64, std::map<uint32, PortKey>>
@@ -419,6 +413,7 @@ BFChassisManager::~BFChassisManager() = default;
       node_id_to_unit[node.id()] = unit++;
     }
 
+    ::util::Status status = ::util::OkStatus();  // errors to keep track of.
     for (const auto& singleton_port : config.singleton_ports()) {
       uint32 port_id = singleton_port.id();
       uint64 node_id = singleton_port.node();
@@ -430,12 +425,16 @@ BFChassisManager::~BFChassisManager() = default;
 
       // Make sure that the port exists by getting the SDK port ID.
       const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
-      CHECK_RETURN_IF_FALSE(unit != nullptr)
-          << "Node " << node_id << " not found for port " << port_id << ".";
-      RETURN_IF_ERROR(
+      if (unit == nullptr) {
+        APPEND_ERROR_WITH_CODE(status, ERR_INVALID_PARAM)
+            << "Node " << node_id << " not found for port " << port_id << ".";
+        continue;
+      }
+      APPEND_STATUS_IF_ERROR(status,
           bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
               .status());
     }
+    if (!status.ok()) return status;
   }
 
   // If the class is initialized, we also need to check if the new config will
@@ -443,7 +442,7 @@ BFChassisManager::~BFChassisManager() = default;
   if (initialized_) {
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
-      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
+      RETURN_ERROR(ERR_REBOOT_REQUIRED)
              << "The switch is already initialized, but we detected the "
              << "newly pushed config requires a change in the port layout. "
              << "The stack needs to be rebooted to finish config push.";
