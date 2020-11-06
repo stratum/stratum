@@ -267,8 +267,7 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
       << "Channel must be set for port " << port << " on dev " << unit << ".";
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
-  int r =
-      snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
+  int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
   if (r < 0 || r >= MAX_PORT_HDL_STRING_LEN) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to build port string"
                                     << " for port " << port << " channel "
@@ -276,13 +275,8 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   }
 
   bf_dev_port_t dev_port;
-  auto bf_status = bf_pal_port_str_to_dev_port_map(
-      static_cast<bf_dev_id_t>(unit), port_string, &dev_port);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Error when translating front panel port " << port_string
-           << " to device port on dev " << unit << ".";
-  }
+  RETURN_IF_BFRT_ERROR(bf_pal_port_str_to_dev_port_map(
+      static_cast<bf_dev_id_t>(unit), port_string, &dev_port));
   *sdk_port_id = static_cast<uint32>(dev_port);
   return ::util::OkStatus();
 }
