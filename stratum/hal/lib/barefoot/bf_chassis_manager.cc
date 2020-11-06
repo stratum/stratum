@@ -558,11 +558,11 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
         resp.mutable_loopback_status()->set_state(*config->loopback_mode);
       break;
     }
-    case Request::kSdnPortIdOverride: {
+    case Request::kSdnPortId: {
       ASSIGN_OR_RETURN(auto sdk_port_id,
-                       GetSdkPortId(request.sdn_port_id_override().node_id(),
-                                    request.sdn_port_id_override().port_id()));
-      resp.mutable_sdn_port_id_override()->set_port_id(sdk_port_id);
+                       GetSdkPortId(request.sdn_port_id().node_id(),
+                                    request.sdn_port_id().port_id()));
+      resp.mutable_sdn_port_id()->set_port_id(sdk_port_id);
       break;
     }
     default:

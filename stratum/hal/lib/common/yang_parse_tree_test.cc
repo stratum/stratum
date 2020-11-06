@@ -1007,7 +1007,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_sdn_port_id_override()->set_port_id(
+                        resp.mutable_sdn_port_id()->set_port_id(
                             kInterface1SdnPortId);
                         // Send it to the caller.
                         w->Write(resp);

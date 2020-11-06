@@ -938,7 +938,7 @@ void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
                                                   GnmiSubscribeStream* stream) {
     // Build data request to see if the switch overrides the SDN port ID.
     DataRequest req;
-    auto* port_req = req.add_requests()->mutable_sdn_port_id_override();
+    auto* port_req = req.add_requests()->mutable_sdn_port_id();
     port_req->set_node_id(node_id);
     port_req->set_port_id(port_id);
 
@@ -946,8 +946,8 @@ void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
     // the switch implementation chooses to do so.
     uint32 sdn_port = port_id;
     DataResponseWriter writer([&sdn_port](const DataResponse& resp) {
-      if (resp.has_sdn_port_id_override()) {
-        sdn_port = resp.sdn_port_id_override().port_id();
+      if (resp.has_sdn_port_id()) {
+        sdn_port = resp.sdn_port_id().port_id();
         return true;
       }
       return false;

@@ -489,10 +489,9 @@ TEST_F(BFChassisManagerTest, GetPortData) {
 
   // SDK port number
   GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
-                  &DataRequest::Request::mutable_sdn_port_id_override,
-                  &DataResponse::sdn_port_id_override,
-                  &DataResponse::has_sdn_port_id_override,
-                  &SdnPortIdOverride::port_id, sdkPortId);
+                  &DataRequest::Request::mutable_sdn_port_id,
+                  &DataResponse::sdn_port_id, &DataResponse::has_sdn_port_id,
+                  &SdnPortId::port_id, sdkPortId);
 
   // Unsupprorted
   DataRequest::Request req;
