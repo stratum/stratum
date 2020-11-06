@@ -1,7 +1,7 @@
-description: "Default Chassis Config for Edgecore Wedge100BF-32x"
+description: "Default Chassis Config for Edgecore Wedge100BF-32QS"
 chassis {
   platform: PLT_BAREFOOT_TOFINO
-  name: "Edgecore Wedge100BF-32x"
+  name: "Edgecore Wedge100BF-32qs"
 }
 nodes {
   id: 1
