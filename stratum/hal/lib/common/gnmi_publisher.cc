@@ -302,9 +302,10 @@ void* GnmiPublisher::ThreadReadGnmiEvents(void* arg) {
                            switch_interface_->UnregisterEventNotifyWriter());
     APPEND_STATUS_IF_ERROR(status, parse_tree_.UnregisterEventNotifyWriter());
     // Close Channel.
-    if (!event_channel_ || !event_channel_->Close()) {
-      status = APPEND_ERROR(status)
-               << " Event Notify Channel is already closed.";
+    if (!event_channel_->Close()) {
+      ::util::Status new_status = MAKE_ERROR(ERR_INTERNAL)
+                                  << " Event Notify Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, new_status);
     }
     event_channel_ = nullptr;
     switch_interface_ = nullptr;
