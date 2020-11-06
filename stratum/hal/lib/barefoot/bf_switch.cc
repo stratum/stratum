@@ -261,7 +261,8 @@ namespace {
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
-      case DataRequest::Request::kLoopbackStatus: {
+      case DataRequest::Request::kLoopbackStatus:
+      case DataRequest::Request::kSdnPortId: {
         auto port_data = bf_chassis_manager_->GetPortData(req);
         if (!port_data.ok()) {
           status.Update(port_data.status());
@@ -277,9 +278,10 @@ namespace {
         break;
       }
       default:
-        status =
-            MAKE_ERROR(ERR_UNIMPLEMENTED)
-            << "Request type "
+        status = MAKE_ERROR(ERR_UNIMPLEMENTED).without_logging()
+                 << "Not supported yet.";
+        VLOG(1)
+            << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
             << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
