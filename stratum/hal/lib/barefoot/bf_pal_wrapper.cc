@@ -239,11 +239,44 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
     return ::util::OkStatus();
   }
   ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
+
   RETURN_IF_BFRT_ERROR(bf_pal_port_loopback_mode_set(
       static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
       lp_mode));
-
   return ::util::OkStatus();
+}
+
+::util::StatusOr<uint32> BFPalWrapper::PortIdFromPortKeyGet(
+    int unit, const PortKey& port_key) {
+  const int port = port_key.port;
+  CHECK_RETURN_IF_FALSE(port >= 0)
+      << "Port ID must be non-negative. Attempted to get port " << port
+      << " on dev " << unit << ".";
+
+  // PortKey uses three possible values for channel:
+  //     > 0: port is channelized (first channel is 1)
+  //     0: port is not channelized
+  //     < 0: port channel is not important (e.g. for port groups)
+  // BF SDK expects the first channel to be 0
+  //     Convert base-1 channel to base-0 channel if port is channelized
+  //     Otherwise, port is already 0 in the non-channelized case
+  const int channel =
+      (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
+  CHECK_RETURN_IF_FALSE(channel >= 0)
+      << "Channel must be set for port " << port << " on dev " << unit << ".";
+
+  char port_string[MAX_PORT_HDL_STRING_LEN];
+  int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
+  if (r < 0 || r >= MAX_PORT_HDL_STRING_LEN) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to build port string"
+                                    << " for port " << port << " channel "
+                                    << channel << " on dev " << unit << ".";
+  }
+
+  bf_dev_port_t dev_port;
+  RETURN_IF_BFRT_ERROR(bf_pal_port_str_to_dev_port_map(
+      static_cast<bf_dev_id_t>(unit), port_string, &dev_port));
+  return static_cast<uint32>(dev_port);
 }
 
 BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}
