@@ -493,7 +493,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       break;
     }
     case DataRequest::Request::kSdnPortId: {
-      resp.mutable_sdn_port_id()->set_port_id(req.sdn_port_id().port_id());
+      resp.mutable_sdn_port_id()->set_port_id(
+          request.sdn_port_id().port_id());
       break;
     }
     default:
