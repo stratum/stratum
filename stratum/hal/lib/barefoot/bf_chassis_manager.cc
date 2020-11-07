@@ -352,18 +352,18 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
-  if (config.trunk_ports_size()) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Trunk ports are not supported on Tofino.";
-  }
-  if (config.port_groups_size()) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Port groups are not supported on Tofino.";
-  }
-  if (config.nodes_size() != 1) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Multiple nodes are not supported on Tofino.";
-  }
+  CHECK_RETURN_IF_FALSE(config.trunk_ports_size() == 0)
+      << "Trunk ports are not supported on Tofino.";
+  CHECK_RETURN_IF_FALSE(config.port_groups_size() == 0)
+      << "Port groups are not supported on Tofino.";
+  CHECK_RETURN_IF_FALSE(config.nodes_size() > 0)
+      << "The config must contain at least one node.";
+
+  // Find the supported Tofino chip types based on the given platform.
+  CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
+      << "Config needs a Chassis message with correct platform.";
+  CHECK_RETURN_IF_FALSE(config.chassis().platform() == PLT_BAREFOOT_TOFINO)
+      << "Unsupported platform: " << Platform_Name(config.chassis().platform());
 
   // Validate Node messages. Make sure there is no two nodes with the same id.
   std::map<uint64, int> node_id_to_unit;
@@ -390,21 +390,18 @@ BFChassisManager::~BFChassisManager() = default;
   // Go over all the singleton ports in the config:
   // 1- Validate the basic singleton port properties.
   // 2- Make sure there is no two ports with the same (slot, port, channel).
-  // 3- Make sure all the ports with the same (slot, port) have the same
-  //    speed.
-  // 4- Make sure for each (slot, port) pair, the channels of all the ports
+  // 3- Make sure for each (slot, port) pair, the channels of all the ports
   //    are valid. This depends on the port speed.
-  // 5- Make sure no singleton port has the reserved CPU port ID. CPU port is
+  // 4- Make sure no singleton port has the reserved CPU port ID. CPU port is
   //    a special port and is not in the list of singleton ports. It is
   //    configured separately.
-  // 6- Make sure IDs of the singleton ports are unique per node.
-  // 7- Make sure IDs match the SDE dev port numbers, as there is not way to do
-  //    port translation on Tofino at the moment.
-  // TODO(max): Remove once we have port translation on BF.
+  // 5- Make sure IDs of the singleton ports are unique per node.
   std::map<uint64, std::set<uint32>> node_id_to_port_ids;
+  std::set<PortKey> singleton_port_keys;
   for (const auto& singleton_port : config.singleton_ports()) {
-    CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
-        << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
+    // TODO(max): enable once we decoupled port ids from sdk ports.
+    // CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
+    //     << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
         << "SingletonPort " << PrintSingletonPort(singleton_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
@@ -412,14 +409,30 @@ BFChassisManager::~BFChassisManager() = default;
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.channel() == 0)
+        << "SingletonPort " << singleton_port.ShortDebugString()
+        << " contains unsupported channel field.";
     CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
         << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
+    PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
+                               singleton_port.channel());
+    CHECK_RETURN_IF_FALSE(!singleton_port_keys.count(singleton_port_key))
+        << "The (slot, port, channel) tuple for SingletonPort "
+        << PrintSingletonPort(singleton_port)
+        << " was already recorded for another SingletonPort in the config.";
+    singleton_port_keys.insert(singleton_port_key);
     CHECK_RETURN_IF_FALSE(singleton_port.node() > 0)
         << "No valid node ID in " << singleton_port.ShortDebugString() << ".";
     CHECK_RETURN_IF_FALSE(node_id_to_unit.count(singleton_port.node()))
         << "Node ID " << singleton_port.node() << " given for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " has not been given to any Node in the config.";
+    CHECK_RETURN_IF_FALSE(
+        !node_id_to_port_ids[singleton_port.node()].count(singleton_port.id()))
+        << "The id for SingletonPort " << PrintSingletonPort(singleton_port)
+        << " was already recorded for another SingletonPort for node with ID "
+        << singleton_port.node() << ".";
+    node_id_to_port_ids[singleton_port.node()].insert(singleton_port.id());
   }
 
   // If the class is initialized, we also need to check if the new config will
@@ -439,17 +452,17 @@ BFChassisManager::~BFChassisManager() = default;
 
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
-      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
-             << "The switch is already initialized, but we detected the "
-             << "newly pushed config requires a change in the port layout. "
-             << "The stack needs to be rebooted to finish config push.";
+      RETURN_ERROR(ERR_REBOOT_REQUIRED)
+          << "The switch is already initialized, but we detected the newly "
+          << "pushed config requires a change in the port layout. The stack "
+          << "needs to be rebooted to finish config push.";
     }
 
     if (node_id_to_unit != node_id_to_unit_) {
-      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
-             << "The switch is already initialized, but we detected the newly "
-             << "pushed config requires a change in node_id_to_unit. "
-             << "The stack needs to be rebooted to finish config push.";
+      RETURN_ERROR(ERR_REBOOT_REQUIRED)
+          << "The switch is already initialized, but we detected the newly "
+          << "pushed config requires a change in node_id_to_unit. The stack "
+          << "needs to be rebooted to finish config push.";
     }
   }
   return ::util::OkStatus();
