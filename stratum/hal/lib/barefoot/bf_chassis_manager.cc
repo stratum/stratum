@@ -361,6 +361,7 @@ BFChassisManager::~BFChassisManager() = default;
       auto unit = node_id_to_unit_[node_id];
       uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
       // remove ports which are no longer present in the ChassisConfig
+      // TODO(bocon): Collect these errors and keep trying to remove old ports
       LOG(INFO) << "Deleting port " << port_id << " in node " << node_id
                 << " (SDK port " << sdk_port_id << ").";
       RETURN_IF_ERROR(bf_pal_interface_->PortDelete(unit, sdk_port_id));
