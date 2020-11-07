@@ -19,22 +19,6 @@ Files: stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf
 Copyright: 2019 Barefoot Networks, Inc.
 License: Apache-2.0
 
-Files: stratum/hal/bin/barefoot/platforms/x86-64-accton-wedge100bf-32x-r0.json
-Copyright: 2019 Barefoot Networks, Inc.
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/platforms/x86-64-inventec-*.json
-Copyright: 2019 Inventec Technology Corporation.
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/platforms/x86-64-inventec-*.json
-Copyright: 2019 Inventec Technology Corporation.
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/platforms/x86-64-stordis-*.json
-Copyright: 2019 Stordis GmbH.
-License: Apache-2.0
-
 Files: stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8
 Copyright: 2018 Google LLC
 Copyright: 2018-present Open Networking Foundation
@@ -54,14 +38,6 @@ Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
 Files: stratum/hal/config/**/* stratum/hal/config/*
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/platforms/x86-64-delta-ag9064v1-r0.json
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/platforms/x86-64-accton-wedge100bf-65x-r0.json
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
