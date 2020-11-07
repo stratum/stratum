@@ -717,6 +717,7 @@ std::string P4TableMapper::GetMapperNameKey(
   P4FieldConvertKey key = MakeP4FieldConvertKey(table_p4_info, match_field);
   auto convert_iter = field_convert_by_table_.find(key);
   if (convert_iter == field_convert_by_table_.end()) {
+    // No way to decode fields that don't go with the table.
     RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
         << "P4 TableEntry match field ID "
         << PrintP4ObjectID(match_field.field_id())
