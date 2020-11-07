@@ -88,10 +88,7 @@ GnmiPublisher::~GnmiPublisher() {}
 ::util::Status GnmiPublisher::HandleChange(const GnmiEvent& event) {
   absl::WriterMutexLock l(&access_lock_);
 
-  ::util::Status status = event.Process();
-  if (status != ::util::OkStatus()) LOG(ERROR) << status;
-
-  return ::util::OkStatus();
+  return event.Process();
 }
 
 ::util::Status GnmiPublisher::HandleEvent(
