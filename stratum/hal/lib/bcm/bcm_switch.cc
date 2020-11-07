@@ -431,9 +431,8 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_sdn_port_id()->set_port_id(req.sdn_port_id().port_id());
         break;
       default:
-        status = MAKE_ERROR(ERR_UNIMPLEMENTED).without_logging()
-                 << "Not supported yet.";
-        VLOG(1)
+        status =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
             << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
             << " is not supported yet!";

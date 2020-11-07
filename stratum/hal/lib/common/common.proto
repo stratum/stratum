@@ -1172,7 +1172,7 @@ message FecStatus {
 }
 
 // Wrapper around the SDN port ID.
-// The target is expected to perform accept requests from the controller
+// The target is expected to accept requests from the controller
 // using the ID assigned by the SDN management system. If the target
 // cannot accept requests using the provided ID, it can provide
 // an alterate ID that should be used by the controller to address

@@ -291,14 +291,13 @@ namespace dummy_switch {
             request.sdn_port_id().port_id());
         status_or_resp = resp;
       default:
-        status_or_resp = MAKE_ERROR(ERR_UNIMPLEMENTED).without_logging()
-                         << "Not supported yet.";
-        VLOG(1) << "DataRequest field "
-                << request.descriptor()
-                       ->FindFieldByNumber(request.request_case())
-                       ->name()
-                << " is not supported yet: " << request.ShortDebugString()
-                << ".";
+        status_or_resp =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "DataRequest field "
+            << request.descriptor()
+                   ->FindFieldByNumber(request.request_case())
+                   ->name()
+            << " is not supported yet: " << request.ShortDebugString() << ".";
         break;
     }
     if (status_or_resp.ok()) writer->Write(status_or_resp.ValueOrDie());
