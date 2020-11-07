@@ -362,8 +362,15 @@ BFChassisManager::~BFChassisManager() = default;
   // Find the supported Tofino chip types based on the given platform.
   CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
       << "Config needs a Chassis message with correct platform.";
-  CHECK_RETURN_IF_FALSE(config.chassis().platform() == PLT_BAREFOOT_TOFINO)
-      << "Unsupported platform: " << Platform_Name(config.chassis().platform());
+  switch (config.chassis().platform()) {
+    case PLT_BAREFOOT_TOFINO:
+    case PLT_BAREFOOT_TOFINO2:
+      break;
+    default:
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Unsupported platform: "
+             << Platform_Name(config.chassis().platform());
+  }
 
   // Validate Node messages. Make sure there is no two nodes with the same id.
   std::map<uint64, int> node_id_to_unit;
