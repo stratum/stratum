@@ -190,9 +190,8 @@ NP4Switch::~NP4Switch() {}
         resp = np4_chassis_manager_->GetPortData(req);
         break;
       default:
-        resp = MAKE_ERROR(ERR_UNIMPLEMENTED).without_logging()
-               << "Not supported yet.";
-        VLOG(1)
+        resp =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
             << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
             << " is not supported yet: " << req.ShortDebugString() << ".";
