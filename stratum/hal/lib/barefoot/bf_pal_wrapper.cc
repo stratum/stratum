@@ -239,10 +239,10 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
     return ::util::OkStatus();
   }
   ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
-
   RETURN_IF_BFRT_ERROR(bf_pal_port_loopback_mode_set(
       static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
       lp_mode));
+
   return ::util::OkStatus();
 }
 
