@@ -71,12 +71,14 @@ OnlpWrapper* OnlpWrapper::CreateSingleton() {
 OnlpWrapper::OnlpWrapper() {}
 
 OnlpWrapper::~OnlpWrapper() {
-  LOG(INFO) << "Deinitializing ONLP.";
-  if (ONLP_FAILURE(onlp_functions_.onlp_sw_denit())) {
-    LOG(ERROR) << "Failed to deinitialize ONLP.";
+  if (onlp_lib_handle_) {
+    LOG(INFO) << "Deinitializing ONLP.";
+    if (ONLP_FAILURE(onlp_functions_.onlp_sw_denit())) {
+      LOG(ERROR) << "Failed to deinitialize ONLP.";
+    }
+    // TODO(max): log error
+    dlclose(onlp_lib_handle_);
   }
-  // TODO(max): log error
-  dlclose(onlp_lib_handle_);
 }
 
 namespace {
