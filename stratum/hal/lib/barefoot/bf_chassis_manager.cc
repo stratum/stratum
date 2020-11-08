@@ -288,8 +288,8 @@ BFChassisManager::~BFChassisManager() = default;
     // Translate the logical SDN port to SDK port (BF device port ID)
     ASSIGN_OR_RETURN(uint32 sdk_port, bf_pal_interface_->PortIdFromPortKeyGet(
                                           *unit, singleton_port_key));
-    node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port_id;
-    node_id_to_sdk_port_id_to_port_id[node_id][sdk_port_id] = port_id;
+    node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port;
+    node_id_to_sdk_port_id_to_port_id[node_id][sdk_port] = port_id;
 
     PortKey port_group_key(singleton_port.slot(), singleton_port.port());
     xcvr_port_key_to_xcvr_state[port_group_key] = HW_STATE_UNKNOWN;
