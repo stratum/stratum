@@ -226,7 +226,34 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override;
 
  private:
+  struct OnlpFunctions {
+    int (*onlp_sw_init)(const char*);
+    int (*onlp_sw_denit)(void);
+    int (*onlp_oid_hdr_get_all)(onlp_oid_t root, onlp_oid_type_flags_t types,
+                                uint32_t flags, biglist_t** list);
+    int (*onlp_oid_get_all_free)(biglist_t* list);
+    int (*onlp_oid_hdr_get)(onlp_oid_t oid, onlp_oid_hdr_t* hdr);
+    int (*onlp_sfp_info_get)(onlp_oid_t port, onlp_sfp_info_t* info);
+    int (*onlp_sfp_is_present)(onlp_oid_t port);
+    void (*onlp_sfp_bitmap_t_init)(onlp_sfp_bitmap_t* bmap);
+    int (*onlp_sfp_bitmap_get)(onlp_sfp_bitmap_t* bmap);
+    int (*onlp_sfp_presence_bitmap_get)(onlp_sfp_bitmap_t* dst);
+    int (*onlp_fan_info_get)(onlp_oid_t oid, onlp_fan_info_t* rv);
+    int (*onlp_fan_percentage_set)(onlp_oid_t oid, int p);
+    int (*onlp_fan_rpm_set)(onlp_oid_t oid, int rpm);
+    int (*onlp_fan_dir_set)(onlp_oid_t oid, onlp_fan_dir_t dir);
+    int (*onlp_thermal_info_get)(onlp_oid_t oid, onlp_thermal_info_t* rv);
+    int (*onlp_led_info_get)(onlp_oid_t oid, onlp_led_info_t* rv);
+    int (*onlp_led_mode_set)(onlp_oid_t oid, onlp_led_mode_t mode);
+    int (*onlp_led_char_set)(onlp_oid_t oid, char c);
+    int (*onlp_psu_info_get) (onlp_oid_t oid, onlp_psu_info_t *rv);
+    // TODO(max): contructor
+  };
+  void* onlp_lib_handle_;
+  OnlpFunctions onlp_functions_;
   OnlpWrapper();
+  ::util::Status Init();
+
   static OnlpWrapper* singleton_ GUARDED_BY(init_lock_);
   static absl::Mutex init_lock_;
 };

@@ -81,10 +81,7 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@local_onlp_bin//:onlp",
         "@local_onlp_bin//:onlp_headers",
-        "@local_onlp_bin//:onlp_platform",
-        "@local_onlp_bin//:onlp_platform_defaults",
     ],
 )
 

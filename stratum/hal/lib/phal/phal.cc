@@ -69,10 +69,14 @@ Phal* Phal::CreateSingleton() {
     {
       auto* onlp_wrapper = onlp::OnlpWrapper::CreateSingleton();
       auto* onlp_phal = onlp::OnlpPhal::CreateSingleton(onlp_wrapper);
-      phal_interfaces_.push_back(onlp_phal);
-      ASSIGN_OR_RETURN(auto configurator, onlp::OnlpSwitchConfigurator::Make(
-                                              onlp_phal, onlp_wrapper));
-      configurators.push_back(std::move(configurator));
+      if (onlp_phal) {
+        phal_interfaces_.push_back(onlp_phal);
+        ASSIGN_OR_RETURN(auto configurator, onlp::OnlpSwitchConfigurator::Make(
+                                                onlp_phal, onlp_wrapper));
+        configurators.push_back(std::move(configurator));
+      } else {
+        LOG(INFO) << "ONLP disabled.";
+      }
     }
 #endif  // defined(WITH_ONLP)
 
