@@ -286,8 +286,8 @@ BFChassisManager::~BFChassisManager() = default;
         singleton_port_key;
 
     // Translate the logical SDN port to SDK port (BF device port ID)
-    ASSIGN_OR_RETURN(uint32 sdk_port,
-        bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key));
+    ASSIGN_OR_RETURN(uint32 sdk_port, bf_pal_interface_->PortIdFromPortKeyGet(
+                                          *unit, singleton_port_key));
     node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port_id;
     node_id_to_sdk_port_id_to_port_id[node_id][sdk_port_id] = port_id;
 
@@ -317,8 +317,8 @@ BFChassisManager::~BFChassisManager() = default;
     if (config_old == nullptr) {  // new port
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      RETURN_IF_ERROR(AddPortHelper(node_id, unit, sdk_port_id,
-                                                   singleton_port, &config));
+      RETURN_IF_ERROR(
+          AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
     } else {  // port already exists, config may have changed
       if (config_old->admin_state == ADMIN_STATE_UNKNOWN) {
         // something is wrong with the port, we make sure the port is deleted
@@ -327,8 +327,8 @@ BFChassisManager::~BFChassisManager() = default;
         if (bf_pal_interface_->PortIsValid(unit, sdk_port_id)) {
           bf_pal_interface_->PortDelete(unit, sdk_port_id);
         }
-        RETURN_IF_ERROR(AddPortHelper(node_id, unit, sdk_port_id,
-                                                     singleton_port, &config));
+        RETURN_IF_ERROR(
+            AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
         continue;
       }
 
@@ -344,8 +344,8 @@ BFChassisManager::~BFChassisManager() = default;
 
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      RETURN_IF_ERROR(UpdatePortHelper(node_id, unit, sdk_port_id, singleton_port,
-                                   *config_old, &config));
+      RETURN_IF_ERROR(UpdatePortHelper(node_id, unit, sdk_port_id,
+                                       singleton_port, *config_old, &config));
     }
   }
 
@@ -384,7 +384,6 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
-
   CHECK_RETURN_IF_FALSE(config.nodes_size())
       << "At least one node is required for Tofino.";
   CHECK_RETURN_IF_FALSE(config.trunk_ports_size() > 0)
@@ -417,7 +416,8 @@ BFChassisManager::~BFChassisManager() = default;
       CHECK_RETURN_IF_FALSE(unit != nullptr)
           << "Node " << node_id << " not found for port " << port_id << ".";
       RETURN_IF_ERROR(
-          bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key).status());
+          bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
+              .status());
     }
   }
 
@@ -427,9 +427,9 @@ BFChassisManager::~BFChassisManager() = default;
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
       RETURN_ERROR(ERR_REBOOT_REQUIRED)
-             << "The switch is already initialized, but we detected the "
-             << "newly pushed config requires a change in the port layout. "
-             << "The stack needs to be rebooted to finish config push.";
+          << "The switch is already initialized, but we detected the "
+          << "newly pushed config requires a change in the port layout. "
+          << "The stack needs to be rebooted to finish config push.";
     }
   }
   return ::util::OkStatus();
@@ -674,8 +674,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   for (auto& p : node_id_to_port_id_to_port_config_[node_id]) {
     uint32 port_id = p.first;
     PortConfig config_new;
-    APPEND_STATUS_IF_ERROR(
-        status, replay_one_port(port_id, p.second, &config_new));
+    APPEND_STATUS_IF_ERROR(status,
+                           replay_one_port(port_id, p.second, &config_new));
     p.second = config_new;
   }
 
