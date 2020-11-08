@@ -12,16 +12,13 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/switch_configurator_interface.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-
-#if defined(WITH_ONLP)
-#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
-#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#endif  // defined(WITH_ONLP)
 
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
@@ -65,7 +62,6 @@ Phal* Phal::CreateSingleton() {
     std::vector<std::unique_ptr<SwitchConfiguratorInterface>> configurators;
 
     // Set up ONLP
-#if defined(WITH_ONLP)
     {
       auto* onlp_wrapper = onlp::OnlpWrapper::CreateSingleton();
       auto* onlp_phal = onlp::OnlpPhal::CreateSingleton(onlp_wrapper);
@@ -78,7 +74,6 @@ Phal* Phal::CreateSingleton() {
         LOG(INFO) << "ONLP disabled.";
       }
     }
-#endif  // defined(WITH_ONLP)
 
 #if defined(WITH_TAI)
     {
