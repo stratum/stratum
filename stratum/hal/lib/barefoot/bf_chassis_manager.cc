@@ -367,7 +367,7 @@ BFChassisManager::~BFChassisManager() = default;
     case PLT_BAREFOOT_TOFINO2:
       break;
     default:
-      return MAKE_ERROR(ERR_INTERNAL)
+      return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Unsupported platform: "
              << Platform_Name(config.chassis().platform());
   }
