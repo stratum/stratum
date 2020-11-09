@@ -52,7 +52,7 @@ class ChassisConfigBuilder {
   explicit ChassisConfigBuilder(uint64 node_id = kNodeId) : node_id(node_id) {
     config_.set_description("Test config for BFChassisManager");
     auto* chassis = config_.mutable_chassis();
-    chassis->set_platform(PLT_BAREFOOT_TOFINO);
+    chassis->set_platform(PLT_GENERIC_BAREFOOT_TOFINO);
     chassis->set_name("Tofino");
 
     auto* node = config_.add_nodes();
