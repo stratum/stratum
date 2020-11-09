@@ -485,8 +485,10 @@ void Bmv2ChassisManager::ReadPortStatusChangeEvents() {
 ::util::Status Bmv2ChassisManager::UnregisterEventWriters() {
   ::util::Status status = ::util::OkStatus();
   if (!port_status_change_event_channel_->Close()) {
-    status = APPEND_ERROR(status)
-             << "Error when closing port status change event channel.";
+    ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                           << "Error when closing port status change"
+                           << " event channel.";
+    APPEND_STATUS_IF_ERROR(status, error);
   }
   port_status_change_event_thread_.join();
   // Once the thread is joined, it is safe to reset these pointers.

@@ -856,8 +856,10 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
   if (!port_status_change_event_channel_->Close()) {
-    status = APPEND_ERROR(status)
-             << "Error when closing port status change event channel.";
+    ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                           << "Error when closing port status change"
+                           << " event channel.";
+    APPEND_STATUS_IF_ERROR(status, error);
   }
   if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
@@ -865,8 +867,9 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
                                xcvr_event_writer_id_));
     xcvr_event_writer_id_ = kInvalidWriterId;
     if (!xcvr_event_channel_->Close()) {
-      status = APPEND_ERROR(status)
-               << "Error when closing transceiver event channel.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Error when closing transceiver event channel.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
   } else {
     return MAKE_ERROR(ERR_INTERNAL)
