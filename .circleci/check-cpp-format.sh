@@ -154,4 +154,3 @@ echo -e "$KNOWN_FILES\n$CHANGED_FILES" | sort -u | xargs -t -n1 clang-format --s
 
 # Report which files need to be fixed.
 git update-index --refresh
-git diff
