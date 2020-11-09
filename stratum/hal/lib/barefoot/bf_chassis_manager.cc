@@ -472,6 +472,7 @@ BFChassisManager::~BFChassisManager() = default;
           << "needs to be rebooted to finish config push.";
     }
   }
+
   return ::util::OkStatus();
 }
 
