@@ -372,6 +372,14 @@ BFChassisManager::~BFChassisManager() = default;
              << Platform_Name(config.chassis().platform());
   }
 
+  // TODO(bocon): remove after 2020-12 release
+  if (config.chassis().platform() == PLT_BAREFOOT_TOFINO ||
+      config.chassis().platform() == PLT_BAREFOOT_TOFINO2) {
+    LOG(INFO) << "Chassis type " << Platform_Name(config.chassis().platform()) <<
+              << " is deprecated. Use " << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO)
+              << " or " << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO2) << " instead.";
+  }
+
   // Validate Node messages. Make sure there is no two nodes with the same id.
   std::map<uint64, int> node_id_to_unit;
   std::map<int, uint64> unit_to_node_id;
