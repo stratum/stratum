@@ -28,6 +28,7 @@
 #include "stratum/public/lib/error.h"
 
 DECLARE_string(chassis_config_file);
+DECLARE_string(gnmi_capabilities_file);
 DECLARE_string(test_tmpdir);
 
 using ::testing::_;
@@ -52,6 +53,7 @@ class ConfigMonitoringServiceTest
  protected:
   void SetUp() override {
     FLAGS_chassis_config_file = FLAGS_test_tmpdir + "/config.pb.txt";
+    FLAGS_gnmi_capabilities_file = "stratum/hal/lib/common/gnmi_caps.pb.txt";
     mode_ = GetParam();
     switch_mock_ = absl::make_unique<SwitchMock>();
     auth_policy_checker_mock_ = absl::make_unique<AuthPolicyCheckerMock>();
@@ -1172,8 +1174,8 @@ TEST_P(ConfigMonitoringServiceTest,
 
 TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
   ::gnmi::CapabilityResponse expected_resp;
-  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt",
-                        &expected_resp);
+  ASSERT_OK(
+      ReadProtoFromTextFile(FLAGS_gnmi_capabilities_file, &expected_resp));
 
   ::grpc::ServerContext context;
   ::gnmi::CapabilityRequest req;
