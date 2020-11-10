@@ -492,6 +492,11 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
         resp.mutable_loopback_status()->set_state(*config->loopback_mode);
       break;
     }
+    case DataRequest::Request::kSdnPortId: {
+      resp.mutable_sdn_port_id()->set_port_id(
+          request.sdn_port_id().port_id());
+      break;
+    }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
