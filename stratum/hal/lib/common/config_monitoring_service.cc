@@ -175,7 +175,7 @@ bool ContainsUniqueNames(const T& values) {
     ::grpc::ServerContext* context, const ::gnmi::CapabilityRequest* req,
     ::gnmi::CapabilityResponse* resp) {
   // TODO(Yi): Use auto generated file or code.
-  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", resp);
+  ReadProtoFromTextFile("/etc/stratum/gnmi_caps.pb.txt", resp);
   return ::grpc::Status::OK;
 }
 
