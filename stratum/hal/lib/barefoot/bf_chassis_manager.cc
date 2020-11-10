@@ -363,8 +363,10 @@ BFChassisManager::~BFChassisManager() = default;
   CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
       << "Config needs a Chassis message with correct platform.";
   switch (config.chassis().platform()) {
-    case PLT_BAREFOOT_TOFINO:
-    case PLT_BAREFOOT_TOFINO2:
+    case PLT_BAREFOOT_TOFINO:   // TODO(bocon): remove after 2020-12 release
+    case PLT_BAREFOOT_TOFINO2:  // TODO(bocon): remove after 2020-12 release
+    case PLT_GENERIC_BAREFOOT_TOFINO:
+    case PLT_GENERIC_BAREFOOT_TOFINO2:
       break;
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
