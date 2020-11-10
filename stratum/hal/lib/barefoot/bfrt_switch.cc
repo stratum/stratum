@@ -205,7 +205,7 @@ BfrtSwitch::~BfrtSwitch() {}
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
       case DataRequest::Request::kLoopbackStatus:
-      case DataRequest::Request::kSdkPortId: {
+      case DataRequest::Request::kSdnPortId: {
         auto port_data = bf_chassis_manager_->GetPortData(req);
         if (!port_data.ok()) {
           status.Update(port_data.status());
