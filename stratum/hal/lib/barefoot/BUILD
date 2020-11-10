@@ -124,6 +124,7 @@ stratum_cc_library(
     hdrs = ["bf_pal_wrapper.h"],
     deps = [
         ":bf_pal_interface",
+        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -227,4 +228,13 @@ proto_library(
 cc_proto_library(
     name = "bf_cc_proto",
     deps = [":bf_proto"],
+)
+
+stratum_cc_library(
+    name = "macros",
+    hdrs = ["macros.h"],
+    deps = [
+        "//stratum/lib:macros",
+        "@local_barefoot_bin//:bfsde",
+    ],
 )
