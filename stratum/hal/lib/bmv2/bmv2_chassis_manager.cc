@@ -270,6 +270,9 @@ namespace {
           singleton->config_params().autoneg());
       break;
     }
+    case DataRequest::Request::kSdnPortId: {
+      resp.mutable_sdn_port_id()->set_port_id(request.sdn_port_id().port_id());
+    }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
@@ -482,8 +485,8 @@ void Bmv2ChassisManager::ReadPortStatusChangeEvents() {
 ::util::Status Bmv2ChassisManager::UnregisterEventWriters() {
   ::util::Status status = ::util::OkStatus();
   if (!port_status_change_event_channel_->Close()) {
-    APPEND_ERROR(status)
-        << "Error when closing port status change event channel.";
+    status = APPEND_ERROR(status)
+             << "Error when closing port status change event channel.";
   }
   port_status_change_event_thread_.join();
   // Once the thread is joined, it is safe to reset these pointers.

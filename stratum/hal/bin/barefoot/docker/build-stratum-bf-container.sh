@@ -32,8 +32,15 @@ Additional environment variables:
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     WITH_ONLP: Includes ONLP support. (Default: true)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
+    RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
 "
 }
+
+DOCKER_EXTRA_RUN_OPTS=""
+if [ -t 0 ]; then
+  # Running in a TTY, so run interactively (i.e. make Ctrl-C work)
+  DOCKER_EXTRA_RUN_OPTS+="-it "
+fi
 
 # Build BF SDE for Stratum (if BF SDE tar is present)
 if [ -n "$1" ]; then
@@ -56,8 +63,9 @@ if [ -n "$1" ]; then
   done
   echo "Building BF SDE"
   set -x
-  docker run --rm -it \
+  docker run --rm \
     $DOCKER_OPTS \
+    $DOCKER_EXTRA_RUN_OPTS \
     -v $STRATUM_BF_DIR:/stratum-bf \
     -w /stratum-bf \
     --entrypoint bash \
@@ -77,6 +85,7 @@ Build variables:
   Build jobs: $JOBS
   Enable ONLP: $WITH_ONLP
   Docker image for building: $DOCKER_IMG
+  Release build enabled: ${RELEASE_BUILD:-false}
 "
 
 # Set build options for Stratum build
@@ -97,35 +106,50 @@ else
   exit 1
 fi
 
+# Build Stratum BF in Docker (optimized and stripped)
+BAZEL_OPTS=""
+if [ -n "$RELEASE_BUILD" ]; then
+  BAZEL_OPTS+="--config release "
+fi
+
 # Build Stratum BF in Docker
 set -x
-docker run --rm -it \
+docker run --rm \
   $DOCKER_OPTS \
+  $DOCKER_EXTRA_RUN_OPTS \
   -v $STRATUM_ROOT:/stratum \
   -v $(pwd):/output \
   -w /stratum \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
+       $BAZEL_OPTS \
        --define sde_ver=$SDE_VERSION \
        --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
-     cp /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
-     cp \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
+     cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
+     cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
 set +x
+
+
+DOCKER_BUILD_OPTS=""
+if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
+  DOCKER_BUILD_OPTS+="--squash "
+fi
 
 # Build Stratum BF runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
-docker build --squash \
+docker build \
+  $DOCKER_BUILD_OPTS \
   -t "$RUNTIME_IMAGE" \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f "$DOCKERFILE_DIR/Dockerfile" \
   "$(pwd)"
 
-docker save $RUNTIME_IMAGE -o ${STRATUM_NAME}-${SDE_VERSION}-docker.tar
+docker save $RUNTIME_IMAGE | gzip > ${STRATUM_NAME}-${SDE_VERSION}-docker.tar.gz
 
 set +x
 echo "

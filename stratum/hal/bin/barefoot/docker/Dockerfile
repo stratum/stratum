@@ -10,15 +10,6 @@ ADD ./${STRATUM_TARGET}_deb.deb /
 RUN install_packages ./${STRATUM_TARGET}_deb.deb
 RUN rm ./${STRATUM_TARGET}_deb.deb
 
-RUN install_packages \
-    kmod \
-    libssl1.1 \
-    libedit2 \
-    libjudydebian1 \
-    libboost-thread1.62.0 && \
-    ldconfig && \
-    mkdir -p /var/run/stratum
-
 EXPOSE 28000/tcp
 EXPOSE 9339/tcp
 EXPOSE 9559/tcp
