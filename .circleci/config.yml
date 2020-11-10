@@ -338,7 +338,6 @@ workflows:
       - cpp-style-check
       - license-check
       - bazel-style-check
-      - publish-docker-stratum-replay
   docker-publish:
     jobs:
       - publish-docker-build:
