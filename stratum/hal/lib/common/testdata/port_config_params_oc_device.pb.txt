@@ -71,8 +71,5 @@ interface {
     id {
       value: 1
     }
-    ifindex {
-      value: 1
-    }
   }
 }
