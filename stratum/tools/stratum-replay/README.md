@@ -12,7 +12,7 @@ Stratum P4Runtime write request log.
 
 # Getting started
 
-## Step 1 - Prerequest for Stratum
+## Step 1 - Prerequisites for Stratum
 
 Before using this tool, make sure you enabled logging for P4Runtime write requests
 and sets the pipeline config path flag.
@@ -72,7 +72,7 @@ docker run \
   -v $PWD:$PWD \
   -w $PWD \
   stratumproject/stratum-replay \
-  -grpc-addr [switch grpc address] \
+  -grpc-addr="ip-of-switch-to-replay-on:9339" \
   -pipeline-cfg pipeline_cfg.pb.txt \
   p4_writes.pb.txt
 ```
@@ -99,7 +99,7 @@ You may also get some warning message such as:
 ```
 Expect to get an error, but the request succeeded.
 Expected error: [Error message]
-Request: [Request budy]
+Request: [Request body]
 ```
 
 This means there is an error shown in the log, which means we should expect an
