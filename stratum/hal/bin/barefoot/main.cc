@@ -9,18 +9,17 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 
 }
 
-#include "gflags/gflags.h"
 #include "PI/frontends/proto/device_mgr.h"
 #include "PI/frontends/proto/logging.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
+#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_sde_wrapper.h"
+#include "stratum/hal/lib/barefoot/bf_switch.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
-#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
-#include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
-#include "stratum/hal/lib/barefoot/bf_switch.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
@@ -144,11 +143,11 @@ void registerDeviceMgrLogger() {
   std::map<int, pi::PINode*> unit_to_pi_node = {
     {unit, pi_node.get()},
   };
-  auto bf_chassis_manager = BFChassisManager::CreateInstance(
-      phal_impl, BFPalWrapper::GetSingleton());
-  auto bf_switch = BFSwitch::CreateInstance(
-      phal_impl, bf_chassis_manager.get(), BFPdWrapper::GetSingleton(),
-      unit_to_pi_node);
+  auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
+  auto bf_chassis_manager =
+      BFChassisManager::CreateInstance(phal_impl, bf_sde_wrapper);
+  auto bf_switch = BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
+                                            bf_sde_wrapper, unit_to_pi_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
