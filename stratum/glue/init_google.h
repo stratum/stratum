@@ -19,7 +19,7 @@
 // Google's side
 using gflags::ParseCommandLineFlags;
 
-inline void InitGoogle(const char *usage, int *argc, char ***argv,
+inline void InitGoogle(const char* usage, int* argc, char*** argv,
                        bool remove_flags) {
   // Here we can set Stratum-wide defaults or overrides for library flags.
   CHECK(!::gflags::SetCommandLineOptionWithMode("logtostderr", "true",

@@ -1,8 +1,9 @@
 ---
 BasedOnStyle:  Google
 ---
-Language:        Cpp
-PointerAlignment: Left
+Language:               Cpp
+DerivePointerAlignment: false
+PointerAlignment:       Left
 ---
 Language:      TextProto
 BasedOnStyle:  Google
