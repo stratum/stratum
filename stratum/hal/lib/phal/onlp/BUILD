@@ -74,6 +74,7 @@ stratum_cc_library(
     hdrs = [
         "onlp_wrapper.h",
     ],
+    linkopts = ["-ldl"],
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
