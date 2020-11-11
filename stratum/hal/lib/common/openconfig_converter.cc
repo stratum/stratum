@@ -246,9 +246,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   interface_key.set_name(in.name());
   auto interface = interface_key.mutable_interface();
 
-  // SingletonPort.id -> /interfaces/interface/state/id(ifindex)
+  // SingletonPort.id -> /interfaces/interface/config/id
   interface->mutable_id()->set_value(in.id());
-  interface->mutable_ifindex()->set_value(in.id());
 
   // SingletonPort.speed_bps -> /interfaces/interface/ethernet/config/port-speed
   switch (in.speed_bps()) {
@@ -343,9 +342,8 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
   interface_key.set_name(in.name());
   auto trunk = interface_key.mutable_interface();
 
-  // SingletonPort.id -> /interfaces/interface/state/id(ifindex)
+  // SingletonPort.id -> /interfaces/interface/config/id
   trunk->mutable_id()->set_value(in.id());
-  trunk->mutable_ifindex()->set_value(in.id());
 
   // SingletonPort.config_params.admin_state
   // -> /interfaces/interface/config/enabled

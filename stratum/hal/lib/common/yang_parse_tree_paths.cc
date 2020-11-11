@@ -926,18 +926,18 @@ void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/ifindex
-void SetUpInterfacesInterfaceStateIfindex(uint32 port_id, TreeNode* node) {
+void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
+                                          TreeNode* node, YangParseTree* tree) {
+  // Returns the port ID for the interface to be used by P4Runtime.
+  auto on_poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree,
+                       &DataResponse::sdn_port_id,
+                       &DataResponse::has_sdn_port_id,
+                       &DataRequest::Request::mutable_sdn_port_id,
+                       &SdnPortId::port_id);
   auto on_change_functor = UnsupportedFunc();
-  node->SetOnTimerHandler([port_id](const GnmiEvent& event,
-                                    const ::gnmi::Path& path,
-                                    GnmiSubscribeStream* stream) {
-        return SendResponse(GetResponse(path, port_id), stream);
-      })
-      ->SetOnPollHandler([port_id](const GnmiEvent& event,
-                                   const ::gnmi::Path& path,
-                                   GnmiSubscribeStream* stream) {
-        return SendResponse(GetResponse(path, port_id), stream);
-      })
+  node->SetOnTimerHandler(on_poll_functor)
+      ->SetOnPollHandler(on_poll_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -3249,7 +3249,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("ifindex")());
-  SetUpInterfacesInterfaceStateIfindex(port_id, node);
+  SetUpInterfacesInterfaceStateIfindex(node_id, port_id, node, tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("name")());
