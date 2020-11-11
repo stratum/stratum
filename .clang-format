@@ -3,4 +3,8 @@ BasedOnStyle:  Google
 ---
 Language:        Cpp
 PointerAlignment: Left
+---
+Language:      TextProto
+BasedOnStyle:  Google
+DisableFormat: true
 ...
