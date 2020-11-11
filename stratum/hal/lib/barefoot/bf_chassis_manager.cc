@@ -864,7 +864,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
-  if (!port_status_change_event_channel_ || 
+  if (!port_status_change_event_channel_ ||
       !port_status_change_event_channel_->Close()) {
     ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                            << "Error when closing port status change"
