@@ -2,6 +2,8 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/common/config_monitoring_service.h"
+
 #include <memory>
 #include <string>
 
@@ -15,7 +17,6 @@
 #include "gtest/gtest.h"
 #include "openconfig/openconfig.pb.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -224,8 +225,8 @@ TEST_P(ConfigMonitoringServiceTest,
   FillTestChassisConfigAndSave(&config);
 
   EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   ::util::Status status = config_monitoring_service_->Setup(false);
@@ -248,8 +249,8 @@ TEST_P(ConfigMonitoringServiceTest, ColdbootSetupFailureWhenPushFails) {
   EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*switch_mock_, PushChassisConfig(EqualsProto(config)))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   ::util::Status status = config_monitoring_service_->Setup(false);
@@ -936,10 +937,10 @@ TEST_P(ConfigMonitoringServiceTest,
   auto grpc_status = DoGet(&context, &req, &resp);
   EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
 
-  EXPECT_TRUE(
-      resp.notification(0).update(0).path() ==
-      GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/2")(
-          "state")("admin-status")());
+  EXPECT_TRUE(resp.notification(0).update(0).path() ==
+              GetPath("interfaces")(
+                  "interface",
+                  "device1.domain.net.com:ce-1/2")("state")("admin-status")());
 }
 
 // Successful DoSet() execution for simple leaf gNMI SET REPLACE message.
@@ -1190,10 +1191,10 @@ TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
 // TODO(unknown): Finish the unit testing.
 
 INSTANTIATE_TEST_SUITE_P(ConfigMonitoringServiceTestWithMode,
-                        ConfigMonitoringServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ConfigMonitoringServiceTest,
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum
