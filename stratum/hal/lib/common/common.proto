@@ -38,9 +38,11 @@ enum Platform {
   PLT_GENERIC_TOMAHAWK_PLUS = 4;
   PLT_MLNX_SN2700 = 9;
   PLT_P4_SOFT_SWITCH = 10;
-  PLT_BAREFOOT_TOFINO = 11;
-  PLT_BAREFOOT_TOFINO2 = 12;
+  PLT_BAREFOOT_TOFINO = 11 [deprecated = true];
+  PLT_BAREFOOT_TOFINO2 = 12 [deprecated = true];
   PLT_NP4_INTEL_N3000 = 13;
+  PLT_GENERIC_BAREFOOT_TOFINO = 14;
+  PLT_GENERIC_BAREFOOT_TOFINO2 = 15;
   // TODO(unknown): Add all the BCM and MLNX based platforms.
 }
 

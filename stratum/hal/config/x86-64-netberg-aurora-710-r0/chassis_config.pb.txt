@@ -1,6 +1,6 @@
 description: "Default Chassis Config for Netberg Aurora 710"
 chassis {
-  platform: PLT_BAREFOOT_TOFINO
+  platform: PLT_GENERIC_BAREFOOT_TOFINO
   name: "Netberg Aurora 710"
 }
 nodes {
