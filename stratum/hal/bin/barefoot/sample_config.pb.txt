@@ -1,6 +1,6 @@
 description: "Sample config"
 chassis {
-  platform: PLT_BAREFOOT_TOFINO
+  platform: PLT_GENERIC_BAREFOOT_TOFINO
   name: "tofino"
 }
 nodes {

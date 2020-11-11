@@ -411,10 +411,10 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
       to.set_platform(PLT_P4_SOFT_SWITCH);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO:
-      to.set_platform(PLT_BAREFOOT_TOFINO);
+      to.set_platform(PLT_GENERIC_BAREFOOT_TOFINO);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO2:
-      to.set_platform(PLT_BAREFOOT_TOFINO2);
+      to.set_platform(PLT_GENERIC_BAREFOOT_TOFINO2);
       break;
     default:
       to.set_platform(PLT_UNKNOWN);
