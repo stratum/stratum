@@ -30,6 +30,8 @@ DEFINE_string(chassis_config_file, "",
               "includes the overall running config at any point of time. "
               "Default is empty and it is expected to be explicitly given by "
               "flags.");
+DEFINE_string(gnmi_capabilities_file, "/etc/stratum/gnmi_caps.pb.txt",
+              "Path to the file containing the gNMI capabilities proto.");
 
 namespace stratum {
 namespace hal {
@@ -175,7 +177,12 @@ bool ContainsUniqueNames(const T& values) {
     ::grpc::ServerContext* context, const ::gnmi::CapabilityRequest* req,
     ::gnmi::CapabilityResponse* resp) {
   // TODO(Yi): Use auto generated file or code.
-  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", resp);
+  ::util::Status status;
+  if (!(status = ReadProtoFromTextFile(FLAGS_gnmi_capabilities_file, resp))
+           .ok()) {
+    return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                          status.error_message());
+  }
   return ::grpc::Status::OK;
 }
 
