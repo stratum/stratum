@@ -25,8 +25,8 @@ You can pull a nightly version of this container image from
 $ docker pull stratumproject/stratum-bf:[SDE version]
 ```
 
-For example, the container with BF SDE 9.2.0: <br/>
-`stratumproject/stratum-bf:9.2.0`
+For example, the container with BF SDE 9.3.0: <br/>
+`stratumproject/stratum-bf:9.3.0`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bf:9.2.0
-docker save stratumproject/stratum-bf:9.2.0 -o stratum-bf-9.2.0-docker.tar
+docker pull stratumproject/stratum-bf:9.3.0
+docker save stratumproject/stratum-bf:9.3.0 -o stratum-bf-9.3.0-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bf-9.2.0-docker.tar
+docker load -i stratum-bf-9.3.0-docker.tar
 ```
 
 ### Set up huge pages
