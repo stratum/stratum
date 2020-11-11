@@ -1,6 +1,6 @@
 description: "Default Chassis Config for Delta AG9064v1"
 chassis {
-  platform: PLT_BAREFOOT_TOFINO
+  platform: PLT_GENERIC_BAREFOOT_TOFINO
   name: "Delta AG9064v1"
 }
 nodes {
