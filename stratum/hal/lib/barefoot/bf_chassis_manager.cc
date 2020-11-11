@@ -377,9 +377,10 @@ BFChassisManager::~BFChassisManager() = default;
   // TODO(bocon): remove after 2020-12 release
   if (config.chassis().platform() == PLT_BAREFOOT_TOFINO ||
       config.chassis().platform() == PLT_BAREFOOT_TOFINO2) {
-    LOG(INFO) << "Chassis type " << Platform_Name(config.chassis().platform()) <<
-              << " is deprecated. Use " << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO)
-              << " or " << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO2) << " instead.";
+    LOG(INFO) << "Chassis type " << Platform_Name(config.chassis().platform())
+              << " is deprecated. Use "
+              << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO) << " or "
+              << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO2) << " instead.";
   }
 
   // Validate Node messages. Make sure there is no two nodes with the same id.
@@ -593,8 +594,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       break;
     }
     case DataRequest::Request::kSdnPortId: {
-      resp.mutable_sdn_port_id()->set_port_id(
-          request.sdn_port_id().port_id());
+      resp.mutable_sdn_port_id()->set_port_id(request.sdn_port_id().port_id());
       break;
     }
     default:
