@@ -12,7 +12,7 @@
 
 DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
