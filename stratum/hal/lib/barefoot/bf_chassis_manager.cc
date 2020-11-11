@@ -877,7 +877,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
                            phal_interface_->UnregisterTransceiverEventWriter(
                                xcvr_event_writer_id_));
     xcvr_event_writer_id_ = kInvalidWriterId;
-    if (!xcvr_event_channel_ | !xcvr_event_channel_->Close()) {
+    if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
       ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                              << "Error when closing transceiver event channel.";
       APPEND_STATUS_IF_ERROR(status, error);
