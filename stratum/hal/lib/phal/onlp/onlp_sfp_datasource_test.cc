@@ -98,7 +98,7 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
           sizeof(mock_sfp_info.sff.serial));
 
   // Mock sfp_dom info response.
-  SffDomInfo *mock_sfp_dom_info = &mock_sfp_info.dom;
+  SffDomInfo* mock_sfp_dom_info = &mock_sfp_info.dom;
   mock_sfp_dom_info->temp = 123;
   mock_sfp_dom_info->nchannels = 2;
   mock_sfp_dom_info->voltage = 234;
