@@ -93,9 +93,11 @@ BcmChassisManager::BcmChassisManager(OperationMode mode,
       node_id_to_port_id_to_loopback_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
+      gnmi_event_writer_(nullptr),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
-      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)) {}
+      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)),
+      unit_to_bcm_node_() {}
 
 // Default constructor is called by the mock class only.
 BcmChassisManager::BcmChassisManager()

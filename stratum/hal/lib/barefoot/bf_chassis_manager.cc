@@ -42,12 +42,21 @@ BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
                                    BFPalInterface* bf_pal_interface)
     : initialized_(false),
       port_status_change_event_channel_(nullptr),
+      port_status_change_event_reader_(nullptr),
+      port_status_change_event_thread_(nullptr),
       xcvr_event_writer_id_(kInvalidWriterId),
-      phal_interface_(phal_interface),
-      bf_pal_interface_(bf_pal_interface),
+      xcvr_event_channel_(nullptr),
+      xcvr_event_reader_(nullptr),
+      xcvr_event_thread_(nullptr),
+      gnmi_event_writer_(nullptr),
+      phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      bf_pal_interface_(ABSL_DIE_IF_NULL(bf_pal_interface)),
       unit_to_node_id_(),
       node_id_to_unit_(),
-      node_id_to_port_id_to_port_state_() {}
+      node_id_to_port_id_to_port_state_(),
+      node_id_to_port_id_to_port_config_(),
+      node_id_to_port_id_to_singleton_port_key_()
+      xcvr_port_key_to_xcvr_state_() {}
 
 BFChassisManager::~BFChassisManager() = default;
 
@@ -855,25 +864,25 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
-  if (!port_status_change_event_channel_->Close()) {
+  if (!port_status_change_event_channel_ || 
+      !port_status_change_event_channel_->Close()) {
     ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                            << "Error when closing port status change"
                            << " event channel.";
     APPEND_STATUS_IF_ERROR(status, error);
   }
+  port_status_change_event_channel_.reset()
   if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
                            phal_interface_->UnregisterTransceiverEventWriter(
                                xcvr_event_writer_id_));
     xcvr_event_writer_id_ = kInvalidWriterId;
-    if (!xcvr_event_channel_->Close()) {
+    if (!xcvr_event_channel_ | !xcvr_event_channel_->Close()) {
       ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                              << "Error when closing transceiver event channel.";
       APPEND_STATUS_IF_ERROR(status, error);
     }
-  } else {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Transceiver event handler not registered.";
+    xcvr_event_channel_.reset();
   }
 
   port_status_change_event_thread_.join();
