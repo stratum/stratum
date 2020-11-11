@@ -15,6 +15,8 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
 
+DEFINE_string(onlp_library_file, "libonlp.so", "Path to the ONLP library.");
+
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -34,8 +36,6 @@ OidInfo::OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
                                  : ONLP_OID_STATUS_FLAG_UNPLUGGED);
 }
 
-bool OidInfo::Present() const { return ONLP_OID_PRESENT(&oid_info_); }
-
 HwState OidInfo::GetHardwareState() const {
   if (Present()) {
     if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, UNPLUGGED)) {
@@ -53,11 +53,25 @@ HwState OidInfo::GetHardwareState() const {
   return HW_STATE_NOT_PRESENT;
 }
 
+OnlpWrapper::OnlpWrapper() {}
+
+OnlpWrapper::~OnlpWrapper() {
+  if (onlp_lib_handle_) {
+    LOG(INFO) << "Deinitializing ONLP.";
+    if (ONLP_FAILURE(onlp_functions_.onlp_sw_denit())) {
+      LOG(ERROR) << "Failed to deinitialize ONLP.";
+    }
+    if (dlclose(onlp_lib_handle_)) {
+      LOG(ERROR) << "Failed to close ONLP library: " << dlerror();
+    }
+  }
+}
+
 OnlpWrapper* OnlpWrapper::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {
     singleton_ = new OnlpWrapper();
-    ::util::Status status = singleton_->Init();
+    ::util::Status status = singleton_->Initialize();
     if (!status.ok()) {
       LOG(ERROR) << "OnlpWrapper::Init() failed: " << status;
       delete singleton_;
@@ -68,22 +82,9 @@ OnlpWrapper* OnlpWrapper::CreateSingleton() {
   return singleton_;
 }
 
-OnlpWrapper::OnlpWrapper() {}
-
-OnlpWrapper::~OnlpWrapper() {
-  if (onlp_lib_handle_) {
-    LOG(INFO) << "Deinitializing ONLP.";
-    if (ONLP_FAILURE(onlp_functions_.onlp_sw_denit())) {
-      LOG(ERROR) << "Failed to deinitialize ONLP.";
-    }
-    // TODO(max): log error
-    dlclose(onlp_lib_handle_);
-  }
-}
-
 namespace {
 template <typename T>
-::util::StatusOr<T> load_symbol(void* handle, const char* name) {
+::util::StatusOr<T> LoadSymbol(void* handle, const char* name) {
   dlerror();  // Clear last error.
   auto* symbol = reinterpret_cast<T>(dlsym(handle, name));
   char* dl_err = dlerror();
@@ -94,79 +95,42 @@ template <typename T>
 }
 }  // namespace
 
-::util::Status OnlpWrapper::Init() {
+::util::Status OnlpWrapper::Initialize() {
   LOG(INFO) << "Initializing ONLP.";
 
-  onlp_lib_handle_ = dlopen("libonlp.so", RTLD_NOW);
+  onlp_lib_handle_ = dlopen(FLAGS_onlp_library_file.c_str(), RTLD_NOW);
   CHECK_RETURN_IF_FALSE(onlp_lib_handle_ != nullptr)
-      << "Failed to open libonlp.so: " << dlerror();
+      << "Failed to open shared library: " << dlerror();
 
-  // TODO(max): simplify with macro or something.
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_sw_init,
-                   load_symbol<decltype(onlp_functions_.onlp_sw_init)>(
-                       onlp_lib_handle_, "onlp_sw_init"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_sw_denit,
-                   load_symbol<decltype(onlp_functions_.onlp_sw_denit)>(
-                       onlp_lib_handle_, "onlp_sw_denit"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_oid_hdr_get_all,
-                   load_symbol<decltype(onlp_functions_.onlp_oid_hdr_get_all)>(
-                       onlp_lib_handle_, "onlp_oid_hdr_get_all"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_oid_get_all_free,
-                   load_symbol<decltype(onlp_functions_.onlp_oid_get_all_free)>(
-                       onlp_lib_handle_, "onlp_oid_get_all_free"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_oid_hdr_get,
-                   load_symbol<decltype(onlp_functions_.onlp_oid_hdr_get)>(
-                       onlp_lib_handle_, "onlp_oid_hdr_get"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_sfp_info_get,
-                   load_symbol<decltype(onlp_functions_.onlp_sfp_info_get)>(
-                       onlp_lib_handle_, "onlp_sfp_info_get"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_sfp_is_present,
-                   load_symbol<decltype(onlp_functions_.onlp_sfp_is_present)>(
-                       onlp_lib_handle_, "onlp_sfp_is_present"));
-  ASSIGN_OR_RETURN(
-      onlp_functions_.onlp_sfp_bitmap_t_init,
-      load_symbol<decltype(onlp_functions_.onlp_sfp_bitmap_t_init)>(
-          onlp_lib_handle_, "onlp_sfp_bitmap_t_init"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_sfp_bitmap_get,
-                   load_symbol<decltype(onlp_functions_.onlp_sfp_bitmap_get)>(
-                       onlp_lib_handle_, "onlp_sfp_bitmap_get"));
-  ASSIGN_OR_RETURN(
-      onlp_functions_.onlp_sfp_presence_bitmap_get,
-      load_symbol<decltype(onlp_functions_.onlp_sfp_presence_bitmap_get)>(
-          onlp_lib_handle_, "onlp_sfp_presence_bitmap_get"));
+// Local macro to load a symbol and store it into its function pointer.
+#define LOAD_SYMBOL(symbol)   \
+  ASSIGN_OR_RETURN(           \
+      onlp_functions_.symbol, \
+      LoadSymbol<decltype(onlp_functions_.symbol)>(onlp_lib_handle_, #symbol))
 
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_fan_info_get,
-                   load_symbol<decltype(onlp_functions_.onlp_fan_info_get)>(
-                       onlp_lib_handle_, "onlp_fan_info_get"));
-  ASSIGN_OR_RETURN(
-      onlp_functions_.onlp_fan_percentage_set,
-      load_symbol<decltype(onlp_functions_.onlp_fan_percentage_set)>(
-          onlp_lib_handle_, "onlp_fan_percentage_set"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_fan_rpm_set,
-                   load_symbol<decltype(onlp_functions_.onlp_fan_rpm_set)>(
-                       onlp_lib_handle_, "onlp_fan_rpm_set"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_fan_dir_set,
-                   load_symbol<decltype(onlp_functions_.onlp_fan_dir_set)>(
-                       onlp_lib_handle_, "onlp_fan_dir_set"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_thermal_info_get,
-                   load_symbol<decltype(onlp_functions_.onlp_thermal_info_get)>(
-                       onlp_lib_handle_, "onlp_thermal_info_get"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_led_info_get,
-                   load_symbol<decltype(onlp_functions_.onlp_led_info_get)>(
-                       onlp_lib_handle_, "onlp_led_info_get"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_led_mode_set,
-                   load_symbol<decltype(onlp_functions_.onlp_led_mode_set)>(
-                       onlp_lib_handle_, "onlp_led_mode_set"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_led_char_set,
-                   load_symbol<decltype(onlp_functions_.onlp_led_char_set)>(
-                       onlp_lib_handle_, "onlp_led_char_set"));
-  ASSIGN_OR_RETURN(onlp_functions_.onlp_psu_info_get,
-                   load_symbol<decltype(onlp_functions_.onlp_psu_info_get)>(
-                       onlp_lib_handle_, "onlp_psu_info_get"));
+  LOAD_SYMBOL(onlp_sw_init);
+  LOAD_SYMBOL(onlp_sw_denit);
+  LOAD_SYMBOL(onlp_oid_hdr_get_all);
+  LOAD_SYMBOL(onlp_oid_get_all_free);
+  LOAD_SYMBOL(onlp_oid_hdr_get);
+  LOAD_SYMBOL(onlp_sfp_info_get);
+  LOAD_SYMBOL(onlp_sfp_is_present);
+  LOAD_SYMBOL(onlp_sfp_bitmap_t_init);
+  LOAD_SYMBOL(onlp_sfp_bitmap_get);
+  LOAD_SYMBOL(onlp_sfp_presence_bitmap_get);
+  LOAD_SYMBOL(onlp_fan_info_get);
+  LOAD_SYMBOL(onlp_fan_percentage_set);
+  LOAD_SYMBOL(onlp_fan_rpm_set);
+  LOAD_SYMBOL(onlp_fan_dir_set);
+  LOAD_SYMBOL(onlp_thermal_info_get);
+  LOAD_SYMBOL(onlp_led_info_get);
+  LOAD_SYMBOL(onlp_led_mode_set);
+  LOAD_SYMBOL(onlp_led_char_set);
+  LOAD_SYMBOL(onlp_psu_info_get);
+#undef LOAD_SYMBOL
 
-  if (ONLP_FAILURE(onlp_functions_.onlp_sw_init(nullptr))) {
-    LOG(FATAL) << "Failed to initialize ONLP.";
-  }
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
+      << "Failed to initialize ONLP.";
 
   return ::util::OkStatus();
 }
