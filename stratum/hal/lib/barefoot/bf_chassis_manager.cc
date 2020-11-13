@@ -494,29 +494,25 @@ BFChassisManager::~BFChassisManager() = default;
     node_id_to_port_ids[singleton_port.node()].insert(singleton_port.id());
   }
 
-  // If the class is initialized, we also need to check if the new config will
-  // require a change in the port layout. If so, report reboot required.
-  if (initialized_) {
-    std::map<uint64, std::map<uint32, PortKey>>
-        node_id_to_port_id_to_singleton_port_key;
+  std::map<uint64, std::map<uint32, PortKey>>
+      node_id_to_port_id_to_singleton_port_key;
 
-    for (const auto& singleton_port : config.singleton_ports()) {
-      uint32 port_id = singleton_port.id();
-      uint64 node_id = singleton_port.node();
+  for (const auto& singleton_port : config.singleton_ports()) {
+    uint32 port_id = singleton_port.id();
+    uint64 node_id = singleton_port.node();
 
-      PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
-                                 singleton_port.channel());
-      node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
-          singleton_port_key;
+    PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
+                                singleton_port.channel());
+    node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
+        singleton_port_key;
 
-      // Make sure that the port exists by getting the SDK port ID.
-      const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
-      CHECK_RETURN_IF_FALSE(unit != nullptr)
-          << "Node " << node_id << " not found for port " << port_id << ".";
-      RETURN_IF_ERROR(
-          bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
-              .status());
-    }
+    // Make sure that the port exists by getting the SDK port ID.
+    const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
+    CHECK_RETURN_IF_FALSE(unit != nullptr)
+        << "Node " << node_id << " not found for port " << port_id << ".";
+    RETURN_IF_ERROR(
+        bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
+            .status());
   }
 
   // If the class is initialized, we also need to check if the new config will
