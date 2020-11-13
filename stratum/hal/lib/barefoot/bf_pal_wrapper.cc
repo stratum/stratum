@@ -247,7 +247,6 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   return ::util::OkStatus();
 }
 
-<<<<<<< HEAD
 ::util::StatusOr<bool> BFPalWrapper::IsSoftwareModel(int unit) {
   bool is_sw_model;
   auto bf_status = bf_pal_pltfm_type_get(unit, &is_sw_model);
@@ -255,7 +254,8 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
       << "Error getting software model status.";
 
   return is_sw_model;
-=======
+}
+
 ::util::StatusOr<uint32> BFPalWrapper::PortIdFromPortKeyGet(
     int unit, const PortKey& port_key) {
   const int port = port_key.port;
@@ -285,7 +285,6 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   RETURN_IF_BFRT_ERROR(bf_pal_port_str_to_dev_port_map(
       static_cast<bf_dev_id_t>(unit), port_string, &dev_port));
   return static_cast<uint32>(dev_port);
->>>>>>> origin/master
 }
 
 BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}
