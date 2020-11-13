@@ -972,6 +972,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
                            << " event channel.";
     APPEND_STATUS_IF_ERROR(status, error);
   }
+  // TODO(bocon): need nullptr check
   port_status_change_event_channel_.reset();
   if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
