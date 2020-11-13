@@ -7,6 +7,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/utils.h"
 #include "stratum/lib/channel/channel.h"
 
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BF_PAL_INTERFACE_H_
@@ -53,10 +54,13 @@ class BFPalInterface {
 
   virtual bool PortIsValid(int unit, uint32 port_id) = 0;
 
-  virtual ::util::Status PortLoopbackModeSet(int uint, uint32 port_id,
+  virtual ::util::Status PortLoopbackModeSet(int unit, uint32 port_id,
                                              LoopbackState loopback_mode) = 0;
 
   virtual ::util::StatusOr<bool> IsSoftwareModel(int unit) = 0;
+
+  virtual ::util::StatusOr<uint32> PortIdFromPortKeyGet(
+      int unit, const PortKey& port_key) = 0;
 };
 
 }  // namespace barefoot

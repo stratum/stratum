@@ -6,8 +6,8 @@
 # otherwise the Stratum rules for barefoot platforms cannot be built.
 
 def _impl(repository_ctx):
-    if ( "SDE_INSTALL" not in repository_ctx.os.environ and
-         "SDE_INSTALL_TAR" not in repository_ctx.os.environ ):
+    if ("SDE_INSTALL" not in repository_ctx.os.environ and
+        "SDE_INSTALL_TAR" not in repository_ctx.os.environ):
         print("SDE_INSTALL_TAR is not defined")
         repository_ctx.file("BUILD", "")
         return

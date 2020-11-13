@@ -296,6 +296,8 @@ stratum_cc_test(
     ],
 )
 
+exports_files(["gnmi_caps.pb.txt"])
+
 cc_library(
     name = "subscribe_reader_writer_mock",
     testonly = 1,

@@ -125,6 +125,9 @@ pkg_tar(
 
 pkg_tar(
     name = "stratum_bcm_etc",
+    srcs = [
+        "//stratum/hal/lib/common:gnmi_caps.pb.txt",
+    ],
     package_dir = "/etc/stratum",
     deps = [
         "//stratum/hal/config:platform_configs_tar",
