@@ -358,7 +358,7 @@ BFChassisManager::~BFChassisManager() = default;
     }
   }
 
-  // Clean up from old config
+  // Clean up from old config.
   for (const auto& node_ports_old : node_id_to_port_id_to_port_config_) {
     auto node_id = node_ports_old.first;
     for (const auto& port_old : node_ports_old.second) {
