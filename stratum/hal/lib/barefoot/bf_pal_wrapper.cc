@@ -268,8 +268,9 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
   CHECK_RETURN_IF_FALSE(r > 0 && r < sizeof(port_string))
-      << "Failed to build port string" << " for port " << port << " channel "
-      << channel << " on dev " << unit << ".";
+      << "Failed to build port string"
+      << " for port " << port << " channel " << channel << " on dev " << unit
+      << ".";
 
   bf_dev_port_t dev_port;
   RETURN_IF_BFRT_ERROR(bf_pal_port_str_to_dev_port_map(

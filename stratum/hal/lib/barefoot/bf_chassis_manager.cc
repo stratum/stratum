@@ -502,7 +502,7 @@ BFChassisManager::~BFChassisManager() = default;
     uint64 node_id = singleton_port.node();
 
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
-                                singleton_port.channel());
+                               singleton_port.channel());
     node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
         singleton_port_key;
 
