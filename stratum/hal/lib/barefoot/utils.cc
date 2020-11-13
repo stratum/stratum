@@ -351,26 +351,48 @@ std::string TofinoDevTypeToString(int dev_type) {
       return "TOFINO_17D";
     case BF_DEV_BFNT20128Q:
       return "TOFINO2_128Q";
+#ifdef BF_DEV_BFNT20128QM
+    case BF_DEV_BFNT20128QM:
+      return "TOFINO2_128QM";  // added in 9.3.0
+#endif  // BF_DEV_BFNT20128QM
+#ifdef BF_DEV_BFNT20128QH
+    case BF_DEV_BFNT20128QH:
+      return "TOFINO2_128QH";  // added in 9.3.0
+#endif  // BF_DEV_BFNT20128QH
     case BF_DEV_BFNT20096T:
       return "TOFINO2_96T";
     case BF_DEV_BFNT20080T:
       return "TOFINO2_80T";
+#ifdef BF_DEV_BFNT20080TM
+    case BF_DEV_BFNT20080TM:  // added in 9.3.0
+      return "TOFINO2_80TM";
+#endif  // BF_DEV_BFNT20080TM
     case BF_DEV_BFNT20064Q:
       return "TOFINO2_64Q";
     case BF_DEV_BFNT20064D:
       return "TOFINO2_64D";
-    case BF_DEV_BFNT20032D:
+#ifdef BF_DEV_BFNT20032D
+    case BF_DEV_BFNT20032D:  // removed in 9.3.0
       return "TOFINO2_32D";
-    case BF_DEV_BFNT20032S:
+#endif  // BF_DEV_BFNT20032D
+#ifdef BF_DEV_BFNT20032S
+    case BF_DEV_BFNT20032S:  // removed in 9.3.0
       return "TOFINO2_32S";
+#endif  // BF_DEV_BFNT20032S
     case BF_DEV_BFNT20048D:
       return "TOFINO2_48D";
-    case BF_DEV_BFNT20036D:
+#ifdef BF_DEV_BFNT20036D
+    case BF_DEV_BFNT20036D:  // removed in 9.3.0
       return "TOFINO2_36D";
-    case BF_DEV_BFNT20032E:
+#endif  // BF_DEV_BFNT20036D
+#ifdef BF_DEV_BFNT20032E
+    case BF_DEV_BFNT20032E:  // removed in 9.3.0
       return "TOFINO2_32E";
-    case BF_DEV_BFNT20064E:
+#endif  //BF_DEV_BFNT20032E
+#ifdef BF_DEV_BFNT20064E  // removed in 9.3.0
+    case BF_DEV_BFNT20064E: //gone
       return "TOFINO2_64E";
+#endif  // BF_DEV_BFNT20064E
     default:
       return "UNKNOWN";
   }
