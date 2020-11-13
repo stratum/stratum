@@ -87,7 +87,7 @@ BfRuntimeImpl::~BfRuntimeImpl() {};
     table_data->set_action_id(7);
     auto data_field = table_data->add_fields();
     data_field->set_field_id(8);
-    TODO(bocon) other fields...
+    // TODO(bocon) other fields...
     // ::absl::Time t2 = ::absl::Now();
 
     // uint8_t data[10000000];
