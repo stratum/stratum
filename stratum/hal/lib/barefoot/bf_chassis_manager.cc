@@ -5,6 +5,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <utility>
 
 #include "absl/base/thread_annotations.h"
@@ -42,12 +43,20 @@ BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
                                    BFPalInterface* bf_pal_interface)
     : initialized_(false),
       port_status_change_event_channel_(nullptr),
+      port_status_change_event_reader_(nullptr),
+      port_status_change_event_thread_(),
       xcvr_event_writer_id_(kInvalidWriterId),
-      phal_interface_(phal_interface),
-      bf_pal_interface_(bf_pal_interface),
+      xcvr_event_channel_(nullptr),
+      xcvr_event_reader_(nullptr),
+      xcvr_event_thread_(),
+      gnmi_event_writer_(nullptr),
+      phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      bf_pal_interface_(ABSL_DIE_IF_NULL(bf_pal_interface)),
       unit_to_node_id_(),
       node_id_to_unit_(),
       node_id_to_port_id_to_port_state_(),
+      node_id_to_port_id_to_port_config_(),
+      node_id_to_port_id_to_singleton_port_key_(),
       node_id_to_port_id_to_sdk_port_id_(),
       node_id_to_sdk_port_id_to_port_id_(),
       xcvr_port_key_to_xcvr_state_() {}
@@ -384,23 +393,112 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
-  CHECK_RETURN_IF_FALSE(config.nodes_size())
-      << "At least one node is required for Tofino.";
-  CHECK_RETURN_IF_FALSE(config.trunk_ports_size() > 0)
+  CHECK_RETURN_IF_FALSE(config.trunk_ports_size() == 0)
       << "Trunk ports are not supported on Tofino.";
-  CHECK_RETURN_IF_FALSE(config.port_groups_size() > 0)
+  CHECK_RETURN_IF_FALSE(config.port_groups_size() == 0)
       << "Port groups are not supported on Tofino.";
+  CHECK_RETURN_IF_FALSE(config.nodes_size() > 0)
+      << "The config must contain at least one node.";
 
-  // Validate singleton ports.
-  std::map<uint64, std::map<uint32, PortKey>>
-      node_id_to_port_id_to_singleton_port_key;
+  // Find the supported Tofino chip types based on the given platform.
+  CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
+      << "Config needs a Chassis message with correct platform.";
+  switch (config.chassis().platform()) {
+    case PLT_BAREFOOT_TOFINO:   // TODO(bocon): remove after 2020-12 release
+    case PLT_BAREFOOT_TOFINO2:  // TODO(bocon): remove after 2020-12 release
+    case PLT_GENERIC_BAREFOOT_TOFINO:
+    case PLT_GENERIC_BAREFOOT_TOFINO2:
+      break;
+    default:
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Unsupported platform: "
+             << Platform_Name(config.chassis().platform());
+  }
+
+  // TODO(bocon): remove after 2020-12 release
+  if (config.chassis().platform() == PLT_BAREFOOT_TOFINO ||
+      config.chassis().platform() == PLT_BAREFOOT_TOFINO2) {
+    LOG(INFO) << "Chassis type " << Platform_Name(config.chassis().platform())
+              << " is deprecated. Use "
+              << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO) << " or "
+              << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO2) << " instead.";
+  }
+
+  // Validate Node messages. Make sure there is no two nodes with the same id.
+  std::map<uint64, int> node_id_to_unit;
+  std::map<int, uint64> unit_to_node_id;
+  for (const auto& node : config.nodes()) {
+    CHECK_RETURN_IF_FALSE(node.slot() > 0)
+        << "No positive slot in " << node.ShortDebugString();
+    CHECK_RETURN_IF_FALSE(node.id() > 0)
+        << "No positive ID in " << node.ShortDebugString();
+    CHECK_RETURN_IF_FALSE(
+        gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+        << "The id for Node " << PrintNode(node) << " was already recorded "
+        << "for another Node in the config.";
+  }
   {
-    std::map<uint64, int> node_id_to_unit;
-    // Map node ids to 0-based units.
     int unit = 0;
     for (const auto& node : config.nodes()) {
-      node_id_to_unit[node.id()] = unit++;
+      unit_to_node_id[unit] = node.id();
+      node_id_to_unit[node.id()] = unit;
+      ++unit;
     }
+  }
+
+  // Go over all the singleton ports in the config:
+  // 1- Validate the basic singleton port properties.
+  // 2- Make sure there is no two ports with the same (slot, port, channel).
+  // 3- Make sure for each (slot, port) pair, the channels of all the ports
+  //    are valid. This depends on the port speed.
+  // 4- Make sure no singleton port has the reserved CPU port ID. CPU port is
+  //    a special port and is not in the list of singleton ports. It is
+  //    configured separately.
+  // 5- Make sure IDs of the singleton ports are unique per node.
+  std::map<uint64, std::set<uint32>> node_id_to_port_ids;
+  std::set<PortKey> singleton_port_keys;
+  for (const auto& singleton_port : config.singleton_ports()) {
+    // TODO(max): enable once we decoupled port ids from sdk ports.
+    // CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
+    //     << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
+        << "SingletonPort " << PrintSingletonPort(singleton_port)
+        << " has the reserved CPU port ID (" << kCpuPortId << ").";
+    CHECK_RETURN_IF_FALSE(singleton_port.slot() > 0)
+        << "No valid slot in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
+        << "No valid port in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.channel() == 0)
+        << "SingletonPort " << singleton_port.ShortDebugString()
+        << " contains unsupported channel field.";
+    CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
+        << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
+    PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
+                               singleton_port.channel());
+    CHECK_RETURN_IF_FALSE(!singleton_port_keys.count(singleton_port_key))
+        << "The (slot, port, channel) tuple for SingletonPort "
+        << PrintSingletonPort(singleton_port)
+        << " was already recorded for another SingletonPort in the config.";
+    singleton_port_keys.insert(singleton_port_key);
+    CHECK_RETURN_IF_FALSE(singleton_port.node() > 0)
+        << "No valid node ID in " << singleton_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(node_id_to_unit.count(singleton_port.node()))
+        << "Node ID " << singleton_port.node() << " given for SingletonPort "
+        << PrintSingletonPort(singleton_port)
+        << " has not been given to any Node in the config.";
+    CHECK_RETURN_IF_FALSE(
+        !node_id_to_port_ids[singleton_port.node()].count(singleton_port.id()))
+        << "The id for SingletonPort " << PrintSingletonPort(singleton_port)
+        << " was already recorded for another SingletonPort for node with ID "
+        << singleton_port.node() << ".";
+    node_id_to_port_ids[singleton_port.node()].insert(singleton_port.id());
+  }
+
+  // If the class is initialized, we also need to check if the new config will
+  // require a change in the port layout. If so, report reboot required.
+  if (initialized_) {
+    std::map<uint64, std::map<uint32, PortKey>>
+        node_id_to_port_id_to_singleton_port_key;
 
     for (const auto& singleton_port : config.singleton_ports()) {
       uint32 port_id = singleton_port.id();
@@ -427,11 +525,19 @@ BFChassisManager::~BFChassisManager() = default;
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
       RETURN_ERROR(ERR_REBOOT_REQUIRED)
-          << "The switch is already initialized, but we detected the "
-          << "newly pushed config requires a change in the port layout. "
-          << "The stack needs to be rebooted to finish config push.";
+          << "The switch is already initialized, but we detected the newly "
+          << "pushed config requires a change in the port layout. The stack "
+          << "needs to be rebooted to finish config push.";
+    }
+
+    if (node_id_to_unit != node_id_to_unit_) {
+      RETURN_ERROR(ERR_REBOOT_REQUIRED)
+          << "The switch is already initialized, but we detected the newly "
+          << "pushed config requires a change in node_id_to_unit. The stack "
+          << "needs to be rebooted to finish config push.";
     }
   }
+
   return ::util::OkStatus();
 }
 
@@ -917,22 +1023,26 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
-  if (!port_status_change_event_channel_->Close()) {
-    status = APPEND_ERROR(status)
-             << "Error when closing port status change event channel.";
+  if (!port_status_change_event_channel_ ||
+      !port_status_change_event_channel_->Close()) {
+    ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                           << "Error when closing port status change"
+                           << " event channel.";
+    APPEND_STATUS_IF_ERROR(status, error);
   }
+  // TODO(bocon): need nullptr check
+  port_status_change_event_channel_.reset();
   if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
                            phal_interface_->UnregisterTransceiverEventWriter(
                                xcvr_event_writer_id_));
     xcvr_event_writer_id_ = kInvalidWriterId;
-    if (!xcvr_event_channel_->Close()) {
-      status = APPEND_ERROR(status)
-               << "Error when closing transceiver event channel.";
+    if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Error when closing transceiver event channel.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
-  } else {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Transceiver event handler not registered.";
+    xcvr_event_channel_.reset();
   }
 
   port_status_change_event_thread_.join();
