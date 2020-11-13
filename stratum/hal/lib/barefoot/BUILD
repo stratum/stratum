@@ -9,6 +9,7 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
+    "stratum_cc_binary",
 )
 
 licenses(["notice"])  # Apache v2
@@ -270,3 +271,46 @@ stratum_cc_test(
     ],
 )
 
+stratum_cc_library(
+    name = "bfruntime",
+    hdrs = ["bfruntime.h"],
+    srcs = ["bfruntime.cc"],
+    deps = [
+        "@local_barefoot_bin//:bfruntime_cc_grpc",
+        "@local_barefoot_bin//:bfruntime_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/time",
+    ],
+    copts = [
+        "-iquote bazel-out/k8-opt/bin/external/local_barefoot_bin/barefoot-bin/src/bf_rt/proto",
+        "-iquote bazel-out/k8-fastbuild/bin/external/local_barefoot_bin/barefoot-bin/src/bf_rt/proto",
+    ],
+)
+
+stratum_cc_binary(
+    name = "server",
+    srcs = ["server.cc"],
+    deps = [
+        ":bfruntime",
+        "@com_github_grpc_grpc//:grpc++",
+    ],
+    copts = [
+        "-iquote bazel-out/k8-opt/bin/external/local_barefoot_bin/barefoot-bin/src/bf_rt/proto",
+        "-iquote bazel-out/k8-fastbuild/bin/external/local_barefoot_bin/barefoot-bin/src/bf_rt/proto",
+    ],
+)
+
+stratum_cc_binary(
+    name = "client",
+    srcs = ["client.cc"],
+    deps = [
+        "@local_barefoot_bin//:bfruntime_cc_grpc",
+        "@local_barefoot_bin//:bfruntime_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/time",
+    ],
+    copts = [
+        "-iquote bazel-out/k8-opt/bin/external/local_barefoot_bin/barefoot-bin/src/bf_rt/proto",
+        "-iquote bazel-out/k8-fastbuild/bin/external/local_barefoot_bin/barefoot-bin/src/bf_rt/proto",
+    ],
+)
