@@ -78,16 +78,16 @@ BfRuntimeImpl::~BfRuntimeImpl() {};
   while (!context->IsCancelled()) {
     // inside
     // ::absl::Time t1 = ::absl::Now();
-    // auto table_entry = notification->mutable_table_entry();
-    // table_entry->set_table_id(5);
-    // auto table_key = table_entry->mutable_key();
-    // auto key_field = table_key->add_fields();
-    // key_field->mutable_exact()->set_value("6"); 
-    // auto table_data = table_entry->mutable_data();
-    // table_data->set_action_id(7);
-    // auto data_field = table_data->add_fields();
-    // data_field->set_field_id(8);
-    // TODO(bocon) other fields...
+    auto table_entry = notification->mutable_table_entry();
+    table_entry->set_table_id(5);
+    auto table_key = table_entry->mutable_key();
+    auto key_field = table_key->add_fields();
+    key_field->mutable_exact()->set_value("6");
+    auto table_data = table_entry->mutable_data();
+    table_data->set_action_id(7);
+    auto data_field = table_data->add_fields();
+    data_field->set_field_id(8);
+    TODO(bocon) other fields...
     // ::absl::Time t2 = ::absl::Now();
 
     // uint8_t data[10000000];
