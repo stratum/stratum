@@ -180,17 +180,11 @@ class BFChassisManager {
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_
       GUARDED_BY(gnmi_event_lock_);
 
-  // Pointer to a PhalInterface implementation.
-  PhalInterface* phal_interface_;  // not owned by this class.
-
-  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
-  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
-
   // Map from unit number to the node ID as specified by the config.
-  std::map<int, uint64> unit_to_node_id_;
+  std::map<int, uint64> unit_to_node_id_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to unit number.
-  std::map<uint64, int> node_id_to_unit_;
+  std::map<uint64, int> node_id_to_unit_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from port ID to PortState representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
@@ -227,6 +221,12 @@ class BFChassisManager {
   // state of the transceiver module plugged into that (slot, port).
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state_
       GUARDED_BY(chassis_lock);
+
+  // Pointer to a PhalInterface implementation.
+  PhalInterface* phal_interface_;  // not owned by this class.
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
 
   friend class BFChassisManagerTest;
 };
