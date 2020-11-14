@@ -3,7 +3,7 @@
 #include <string>
 #include <signal.h>
 
-#include "stratum/hal/lib/barefoot/bfruntime.h"
+#include "bfruntime.h"
 
 namespace stratum {
 namespace hal {

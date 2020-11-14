@@ -4,8 +4,8 @@
 
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "bfruntime.grpc.pb.h"
-#include "grpcpp/grpcpp.h"
+#include "stratum/hal/lib/barefoot/perf/bfruntime.grpc.pb.h"
+#include <grpcpp/grpcpp.h>
 
 
 namespace stratum {
@@ -50,14 +50,17 @@ void RunClient() {
   absl::Time start = absl::Now();
 
   ::bfrt_proto::StreamMessageResponse resp;
+  if(!stream->Read(&resp)) return;
+  absl::Time first = absl::Now();
   uint64_t count = 0;
   while(stream->Read(&resp)) {
     count++;
   }
   absl::Time end = absl::Now();
 
-  auto delta = end - start;
+  auto delta = end - first;
   std::cout << "Read " << count << " in " << delta << std::endl;
+  std::cout << "Time to first read: " << first - start << std::endl;
   std::cout << "100k in " << 100000.0/count * delta << std::endl;
 
 
