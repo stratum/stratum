@@ -870,8 +870,8 @@ void BFChassisManager::ReadPortStatusEvents() {
         // instead.
         // LOG(ERROR) << "Unknown port " << event.port << " in node "
         //            << *node_id << ".";
-        VLOG(1) << "Unknown port " << *port_id << " in node " << *node_id
-                << " (SDK port " << event.port << ").";
+        VLOG(1) << "Unknown SDK port " << event.port << " in node " << *node_id
+                << ".";
         continue;
       }
       auto* state = gtl::FindOrNull(node_id_to_port_id_to_port_state_[*node_id],
@@ -879,7 +879,7 @@ void BFChassisManager::ReadPortStatusEvents() {
       LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
                 << " (SDK port " << event.port
                 << "): " << PrintPortState(event.state) << ".";
-      if (state == nullptr) {
+      if (state != nullptr) {
         *state = event.state;
       }
       SendPortOperStateGnmiEvent(*node_id, event.port, event.state);
