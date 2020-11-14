@@ -1,0 +1,6 @@
+
+bazel run -c opt  stratum/hal/lib/barefoot/perf:client
+bazel run -c opt  stratum/hal/lib/barefoot/perf:server
+
+# Build with Python proto optimized C++ parsing
+bazel run -c opt  stratum/hal/lib/barefoot/perf:client_py --define use_fast_cpp_protos=true
