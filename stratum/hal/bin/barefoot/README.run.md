@@ -182,7 +182,7 @@ of the configs, you can do so by passing additional arguments to the start scrip
 Try `--help` for a list of all available options.
 
 
-These options can be used when starting Stratum in Docker 
+These options can be used when starting Stratum in Docker
 (using `start-stratum-container.sh`) or natively
 (usimg `start-stratum.sh`).
 
@@ -193,7 +193,7 @@ in the examples below if using Docker.
 ### Running with BSP or on Tofino model
 
 ```bash
-start-stratum.sh --bf_sim
+start-stratum.sh --bf_sim -enable_onlp=false
 ```
 
 The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
@@ -203,7 +203,7 @@ using a vendor-provided BSP or running Stratum with the Tofino software model.
 ### Running the binary in BSP-less mode
 
 ```bash
-start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf -enable_onlp=true
 ```
 
 If ONLP support is available for your platform, you do not need to use a
