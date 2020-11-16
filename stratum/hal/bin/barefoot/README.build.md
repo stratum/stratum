@@ -19,10 +19,11 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.0.0 (Deprecated)
- - 9.1.0 (LTS release)
- - 9.2.0 (Deprecated)
- - 9.3.0 (Latest release)
+ - 8.9.2 (Deprecated; to be removed after 2020-12 release)
+ - 9.0.0 (Deprecated; to be removed after 2020-12 release)
+ - 9.1.0 (Previous LTS release; to be removed after 9.4+ is released)
+ - 9.2.0 (Deprecated; to be removed after 2020-12 release)
+ - 9.3.0 (Latest & LTS release)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -30,6 +31,15 @@ environment variable that points to it:
 ```bash
 export SDE_TAR=<path to tar>/bf-sde-<SDE_VERSION>.tgz
 ```
+
+*__SDE Deprecation Policy:__ We support the latest SDE released by the Intel
+Barefoot team as well as the previous LTS release (also called LLR, or Long
+Lived Release). Support for deprecated SDE versions will be removed after
+the next Stratum release. For example as of November 2020, 9.3.0 is the
+latest SDE release (and also an LTS release), so it is supported. 9.1.0 is the
+previous LTS release, so it is also supported. 9.2.0, which was the previous
+latest release, is now deprecated and support may be removed after the next
+Stratum release -- 2020-12.*
 
 ### Linux Kernel Headers
 
