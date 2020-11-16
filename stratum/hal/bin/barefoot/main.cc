@@ -5,8 +5,7 @@ extern "C" {
 
 #include "bf_switchd/bf_switchd.h"
 
-int switch_pci_sysfs_str_get(char *name, size_t name_size);
-
+int switch_pci_sysfs_str_get(char* name, size_t name_size);
 }
 
 #include "PI/frontends/proto/device_mgr.h"
@@ -40,10 +39,10 @@ namespace barefoot {
 namespace {
 
 void registerDeviceMgrLogger() {
-  using ::pi::fe::proto::LogWriterIface;
   using ::pi::fe::proto::LoggerConfig;
+  using ::pi::fe::proto::LogWriterIface;
   class P4RuntimeLogger : public LogWriterIface {
-    void write(Severity severity, const char *msg) override {
+    void write(Severity severity, const char* msg) override {
       ::google::LogSeverity new_severity = INFO;
       switch (severity) {
         case Severity::TRACE:
@@ -87,9 +86,9 @@ void registerDeviceMgrLogger() {
   InitStratumLogging();
 
   char bf_sysfs_fname[128];
-  FILE *fd;
+  FILE* fd;
 
-  bf_switchd_context_t *switchd_main_ctx = new bf_switchd_context_t;
+  bf_switchd_context_t* switchd_main_ctx = new bf_switchd_context_t;
   memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
 
   /* Parse bf_switchd arguments */
@@ -141,7 +140,7 @@ void registerDeviceMgrLogger() {
     phal_impl = phal::Phal::CreateSingleton();
   }
   std::map<int, pi::PINode*> unit_to_pi_node = {
-    {unit, pi_node.get()},
+      {unit, pi_node.get()},
   };
   auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
   auto bf_chassis_manager =
@@ -154,8 +153,7 @@ void registerDeviceMgrLogger() {
   ASSIGN_OR_RETURN(auto credentials_manager,
                    CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
-                                   bf_switch.get(),
-                                   auth_policy_checker.get(),
+                                   bf_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
   CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
 
