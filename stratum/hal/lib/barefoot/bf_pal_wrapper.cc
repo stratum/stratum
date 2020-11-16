@@ -16,6 +16,7 @@ extern "C" {
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/constants.h"
@@ -30,25 +31,18 @@ constexpr int32 BFPalWrapper::kDefaultMtu;
 ::util::StatusOr<PortState> BFPalWrapper::PortOperStateGet(int unit,
                                                            uint32 port_id) {
   int state;
-  auto bf_status =
+  RETURN_IF_BFRT_ERROR(
       bf_pal_port_oper_state_get(static_cast<bf_dev_id_t>(unit),
-                                 static_cast<bf_dev_port_t>(port_id), &state);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Error when querying port oper status";
-  }
+                                 static_cast<bf_dev_port_t>(port_id), &state));
   return state ? PORT_STATE_UP : PORT_STATE_DOWN;
 }
 
 ::util::Status BFPalWrapper::PortAllStatsGet(int unit, uint32 port_id,
                                              PortCounters* counters) {
   uint64_t stats[BF_NUM_RMON_COUNTERS];
-  auto bf_status =
+  RETURN_IF_BFRT_ERROR(
       bf_pal_port_all_stats_get(static_cast<bf_dev_id_t>(unit),
-                                static_cast<bf_dev_port_t>(port_id), stats);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Error when querying counters for port "
-                                    << port_id << " in unit " << unit;
-  }
+                                static_cast<bf_dev_port_t>(port_id), stats));
   counters->set_in_octets(stats[bf_mac_stat_OctetsReceived]);
   counters->set_out_octets(stats[bf_mac_stat_OctetsTransmittedTotal]);
   counters->set_in_unicast_pkts(
@@ -100,12 +94,8 @@ bf_status_t PortStatusChangeCbInternal(bf_dev_id_t dev_id,
     std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer) {
   absl::WriterMutexLock l(&port_status_change_event_writer_lock_);
   port_status_change_event_writer_ = std::move(writer);
-  auto bf_status =
-      bf_pal_port_status_notif_reg(PortStatusChangeCbInternal, this);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Error when registering port status notification callback";
-  }
+  RETURN_IF_BFRT_ERROR(
+      bf_pal_port_status_notif_reg(PortStatusChangeCbInternal, this));
   return ::util::OkStatus();
 }
 
@@ -194,52 +184,36 @@ namespace {
                                      FecMode fec_mode) {
   ASSIGN_OR_RETURN(auto bf_speed, PortSpeedHalToBf(speed_bps));
   ASSIGN_OR_RETURN(auto bf_fec_mode, FecModeHalToBf(fec_mode, speed_bps));
-  auto bf_status = bf_pal_port_add(static_cast<bf_dev_id_t>(unit),
-                                   static_cast<bf_dev_port_t>(port_id),
-                                   bf_speed, bf_fec_mode);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Error when adding port with BF_PAL.";
-  }
+  RETURN_IF_BFRT_ERROR(bf_pal_port_add(static_cast<bf_dev_id_t>(unit),
+                                       static_cast<bf_dev_port_t>(port_id),
+                                       bf_speed, bf_fec_mode));
   return ::util::OkStatus();
 }
 
 ::util::Status BFPalWrapper::PortDelete(int unit, uint32 port_id) {
-  auto bf_status = bf_pal_port_del(static_cast<bf_dev_id_t>(unit),
-                                   static_cast<bf_dev_port_t>(port_id));
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Error when deleting port with BF_PAL.";
-  }
+  RETURN_IF_BFRT_ERROR(bf_pal_port_del(static_cast<bf_dev_id_t>(unit),
+                                       static_cast<bf_dev_port_t>(port_id)));
   return ::util::OkStatus();
 }
 
 ::util::Status BFPalWrapper::PortEnable(int unit, uint32 port_id) {
-  auto bf_status = bf_pal_port_enable(static_cast<bf_dev_id_t>(unit),
-                                      static_cast<bf_dev_port_t>(port_id));
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Error when enabling port with BF_PAL.";
-  }
+  RETURN_IF_BFRT_ERROR(bf_pal_port_enable(static_cast<bf_dev_id_t>(unit),
+                                          static_cast<bf_dev_port_t>(port_id)));
   return ::util::OkStatus();
 }
 
 ::util::Status BFPalWrapper::PortDisable(int unit, uint32 port_id) {
-  auto bf_status = bf_pal_port_disable(static_cast<bf_dev_id_t>(unit),
-                                       static_cast<bf_dev_port_t>(port_id));
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Error when disabling port with BF_PAL.";
-  }
+  RETURN_IF_BFRT_ERROR(bf_pal_port_disable(
+      static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id)));
   return ::util::OkStatus();
 }
 
 ::util::Status BFPalWrapper::PortAutonegPolicySet(int unit, uint32 port_id,
                                                   TriState autoneg) {
   ASSIGN_OR_RETURN(auto autoneg_v, AutonegHalToBf(autoneg));
-  auto bf_status = bf_pal_port_autoneg_policy_set(
+  RETURN_IF_BFRT_ERROR(bf_pal_port_autoneg_policy_set(
       static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
-      autoneg_v);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Error when setting autoneg policy with BF_PAL.";
-  }
+      autoneg_v));
   return ::util::OkStatus();
 }
 
@@ -248,13 +222,9 @@ namespace {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid MTU value.";
   }
   if (mtu == 0) mtu = kDefaultMtu;
-  auto bf_status = bf_pal_port_mtu_set(
+  RETURN_IF_BFRT_ERROR(bf_pal_port_mtu_set(
       static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
-      static_cast<uint32>(mtu), static_cast<uint32>(mtu));
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Error when setting port MTU with BF_PAL.";
-  }
+      static_cast<uint32>(mtu), static_cast<uint32>(mtu)));
   return ::util::OkStatus();
 }
 
@@ -269,15 +239,42 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
     return ::util::OkStatus();
   }
   ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
-  auto bf_status = bf_pal_port_loopback_mode_set(
+  RETURN_IF_BFRT_ERROR(bf_pal_port_loopback_mode_set(
       static_cast<bf_dev_id_t>(unit), static_cast<bf_dev_port_t>(port_id),
-      lp_mode);
-  if (bf_status != BF_SUCCESS) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Error when setting loopback mode on dev " << unit << " port "
-           << port_id << ".";
-  }
+      lp_mode));
+
   return ::util::OkStatus();
+}
+
+::util::StatusOr<uint32> BFPalWrapper::PortIdFromPortKeyGet(
+    int unit, const PortKey& port_key) {
+  const int port = port_key.port;
+  CHECK_RETURN_IF_FALSE(port >= 0)
+      << "Port ID must be non-negative. Attempted to get port " << port
+      << " on dev " << unit << ".";
+
+  // PortKey uses three possible values for channel:
+  //     > 0: port is channelized (first channel is 1)
+  //     0: port is not channelized
+  //     < 0: port channel is not important (e.g. for port groups)
+  // BF SDK expects the first channel to be 0
+  //     Convert base-1 channel to base-0 channel if port is channelized
+  //     Otherwise, port is already 0 in the non-channelized case
+  const int channel =
+      (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
+  CHECK_RETURN_IF_FALSE(channel >= 0)
+      << "Channel must be set for port " << port << " on dev " << unit << ".";
+
+  char port_string[MAX_PORT_HDL_STRING_LEN];
+  int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
+  CHECK_RETURN_IF_FALSE(r > 0 && r < sizeof(port_string))
+      << "Failed to build port string for port " << port << " channel "
+      << channel << " on dev " << unit << ".";
+
+  bf_dev_port_t dev_port;
+  RETURN_IF_BFRT_ERROR(bf_pal_port_str_to_dev_port_map(
+      static_cast<bf_dev_id_t>(unit), port_string, &dev_port));
+  return static_cast<uint32>(dev_port);
 }
 
 BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}

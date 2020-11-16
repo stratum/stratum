@@ -366,7 +366,7 @@ std::string FileSystemHelper::GetHashSum(
   // Return failure if reboot was not successful
   if (reboot_return_val != 0) {
     LOG(ERROR) << "Failed to reboot the system: " << strerror(errno);
-    MAKE_ERROR(ERR_INTERNAL)
+    RETURN_ERROR(ERR_INTERNAL)
         << "Failed to reboot the system: " << strerror(errno);
   }
   return ::util::OkStatus();

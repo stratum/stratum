@@ -24,9 +24,9 @@ DECLARE_bool(blaze_test);
 // For simulator, we don't need the diag shell, so we overwrite the openpty with
 // empty function. Without the overwriting, compiler will generate undefined
 // referenece error.
-extern "C" int openpty(int *amaster, int *aslave, char *name,
-                       const struct termios *termp,
-                       const struct winsize *winp) {
+extern "C" int openpty(int* amaster, int* aslave, char* name,
+                       const struct termios* termp,
+                       const struct winsize* winp) {
   return 0;
 }
 
@@ -135,7 +135,7 @@ void BcmSimTestFixture::SetUp() {
       bcm_acl_manager_.get(), bcm_l2_manager_.get(), bcm_l3_manager_.get(),
       bcm_packetio_manager_.get(), bcm_table_manager_.get(),
       bcm_tunnel_manager_.get(), p4_table_mapper_.get(), kUnit);
-  std::map<int, BcmNode *> unit_to_bcm_node;
+  std::map<int, BcmNode*> unit_to_bcm_node;
   unit_to_bcm_node[kUnit] = bcm_node_.get();
   bcm_switch_ = BcmSwitch::CreateInstance(
       phal_sim_.get(), bcm_chassis_manager_.get(), unit_to_bcm_node);

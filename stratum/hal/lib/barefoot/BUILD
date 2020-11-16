@@ -103,6 +103,7 @@ stratum_cc_library(
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:utils",
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
     ],
@@ -124,6 +125,7 @@ stratum_cc_library(
     hdrs = ["bf_pal_wrapper.h"],
     deps = [
         ":bf_pal_interface",
+        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -184,7 +186,6 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
         "@com_github_gflags_gflags//:gflags",
-        "@com_github_libarchive_libarchive//:libarchive",
         "@com_github_nlohmann_json//:json",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
         "@com_google_absl//absl/strings",
@@ -228,4 +229,13 @@ proto_library(
 cc_proto_library(
     name = "bf_cc_proto",
     deps = [":bf_proto"],
+)
+
+stratum_cc_library(
+    name = "macros",
+    hdrs = ["macros.h"],
+    deps = [
+        "//stratum/lib:macros",
+        "@local_barefoot_bin//:bfsde",
+    ],
 )

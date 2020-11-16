@@ -119,6 +119,7 @@ namespace {
         BfPipelineConfigToPiConfig(bf_config, &pi_p4_device_config));
     legacy_config->set_p4_device_config(pi_p4_device_config);
   }
+
   return ::util::OkStatus();
 }
 }  // namespace
@@ -260,7 +261,8 @@ namespace {
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
-      case DataRequest::Request::kLoopbackStatus: {
+      case DataRequest::Request::kLoopbackStatus:
+      case DataRequest::Request::kSdnPortId: {
         auto port_data = bf_chassis_manager_->GetPortData(req);
         if (!port_data.ok()) {
           status.Update(port_data.status());
@@ -278,7 +280,7 @@ namespace {
       default:
         status =
             MAKE_ERROR(ERR_UNIMPLEMENTED)
-            << "Request type "
+            << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
             << " is not supported yet: " << req.ShortDebugString() << ".";
         break;

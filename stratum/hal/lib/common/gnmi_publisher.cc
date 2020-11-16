@@ -2,18 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 
 #include <list>
 #include <string>
 #include <utility>
 
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -89,10 +88,7 @@ GnmiPublisher::~GnmiPublisher() {}
 ::util::Status GnmiPublisher::HandleChange(const GnmiEvent& event) {
   absl::WriterMutexLock l(&access_lock_);
 
-  ::util::Status status = event.Process();
-  if (status != ::util::OkStatus()) LOG(ERROR) << status;
-
-  return ::util::OkStatus();
+  return event.Process();
 }
 
 ::util::Status GnmiPublisher::HandleEvent(
@@ -110,12 +106,7 @@ GnmiPublisher::~GnmiPublisher() {}
 ::util::Status GnmiPublisher::HandlePoll(const SubscriptionHandle& handle) {
   absl::WriterMutexLock l(&access_lock_);
 
-  ::util::Status status;
-  if ((status = (*handle)(PollEvent())) != ::util::OkStatus()) {
-    // Something went wrong.
-    LOG(ERROR) << "Handler returned non-OK status: " << status;
-  }
-  return ::util::OkStatus();
+  return (*handle)(PollEvent());
 }
 
 ::util::Status GnmiPublisher::SubscribePeriodic(const Frequency& freq,
@@ -311,8 +302,10 @@ void* GnmiPublisher::ThreadReadGnmiEvents(void* arg) {
                            switch_interface_->UnregisterEventNotifyWriter());
     APPEND_STATUS_IF_ERROR(status, parse_tree_.UnregisterEventNotifyWriter());
     // Close Channel.
-    if (!event_channel_ || !event_channel_->Close()) {
-      APPEND_ERROR(status) << " Event Notify Channel is already closed.";
+    if (!event_channel_->Close()) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << " Event Notify Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     event_channel_ = nullptr;
     switch_interface_ = nullptr;
