@@ -123,7 +123,6 @@ pkg_deb(
         "kmod",
         "libedit2",
     ],
-    recommends = ["systemd"],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
