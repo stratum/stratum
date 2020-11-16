@@ -466,9 +466,9 @@ BFChassisManager::~BFChassisManager() = default;
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
     CHECK_RETURN_IF_FALSE(singleton_port.slot() > 0)
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
+    CHECK_RETURN_IF_FALSE(singleton_port.port() >= 0)
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.channel() == 0)
+    CHECK_RETURN_IF_FALSE(singleton_port.channel() >= 0)
         << "SingletonPort " << singleton_port.ShortDebugString()
         << " contains unsupported channel field.";
     CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
@@ -881,7 +881,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
       LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
                 << " (SDK port " << event.port_id
                 << " ): " << PrintPortState(event.state) << ".";
-      if (state == nullptr) {
+      if (state != nullptr) {
         *state = event.state;
       }
       SendPortOperStateGnmiEvent(*node_id, *port_id, event.state);
