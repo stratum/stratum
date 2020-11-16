@@ -46,7 +46,7 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status SetPortLoopbackMode(int uint, int port,
                                      LoopbackState loopback_mode) override;
   ::util::StatusOr<uint32> GetPortIdFromPortKey(
-      int unit, const PortKey& port_key) override;
+      int device, const PortKey& port_key) override;
   ::util::StatusOr<int> GetPcieCpuPort(int device) override;
   ::util::Status SetTmCpuPort(int device, int port) override;
 

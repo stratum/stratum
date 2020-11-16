@@ -34,7 +34,7 @@ class BfSdeMock : public BfSdeInterface {
   MOCK_METHOD3(SetPortLoopbackMode,
                ::util::Status(int uint, int port, LoopbackState loopback_mode));
   MOCK_METHOD2(GetPortIdFromPortKey,
-               ::util::StatusOr<uint32>(int unit, const PortKey& port_key));
+               ::util::StatusOr<uint32>(int device, const PortKey& port_key));
   MOCK_METHOD1(GetPcieCpuPort, ::util::StatusOr<int>(int device));
   MOCK_METHOD2(SetTmCpuPort, ::util::Status(int device, int port));
 };
