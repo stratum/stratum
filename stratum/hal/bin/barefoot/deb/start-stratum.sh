@@ -33,9 +33,10 @@ fi
 PORT_MAP="/etc/stratum/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
     echo "Cannot find port map file $PORT_MAP"
-    exit 255
+    #exit 255
+else
+    ln -f -s "$PORT_MAP" /usr/share/port_map.json
 fi
-ln -f -s "$PORT_MAP" /usr/share/port_map.json
 
 if [ -f "$KDRV_PATH" ]; then
     lsmod | grep 'kdrv' &> /dev/null
@@ -51,7 +52,7 @@ if [ -f "$KDRV_PATH" ]; then
         exit 255
     fi
 else
-    echo "Cannot find $KDRV_PATH, skip installing the Kernel module."
+    echo "Skipping kernel module installation."
 fi
 
 mkdir -p /var/run/stratum /var/log/stratum

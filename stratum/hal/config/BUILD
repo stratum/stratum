@@ -25,6 +25,7 @@ platform_config_test("x86-64-inventec-d7054q28b-r0", bcm_target=True)
 platform_config_test("x86-64-inventec-d6254qs-r0", bcm_target=True)
 platform_config_test("x86-64-quanta-ix1-rangeley-r0", bcm_target=True)
 
+platform_config_test("barefoot-tofino-model")
 platform_config_test("x86-64-accton-wedge100bf-32x-r0")
 platform_config_test("x86-64-accton-wedge100bf-32qs-r0")
 platform_config_test("x86-64-accton-wedge100bf-65x-r0")

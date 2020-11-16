@@ -1,0 +1,37 @@
+# Copyright 2012-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+FROM ubuntu:18.04
+LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
+LABEL description="This Docker image includes the Barefoot Tofino model"
+
+ENV BUILD_DEPS \
+    iproute2 \
+    ethtool \
+    procps \
+    libcli1.9
+RUN apt-get update && \
+    apt-get install -y $BUILD_DEPS && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG SDE_TAR_NAME
+ARG SDE_VER
+
+RUN ls
+ADD ./${SDE_TAR_NAME} /
+ADD ./tofino_skip_p4.conf /usr/share/stratum/
+ADD ./start-tofino-model.sh /usr/local/bin/
+
+RUN tar -xzvf bf-sde-$SDE_VER/packages/tofino-model-$SDE_VER.tgz \
+    && tar -xzvf bf-sde-$SDE_VER/packages/ptf-modules-$SDE_VER.tgz \
+    && rm -rf bf-sde-$SDE_VER \
+    && cp tofino-model-$SDE_VER/tofino-model.x86_64.bin /usr/local/bin/tofino-model \
+    && cp ptf-modules-$SDE_VER/ptf-utils/veth_setup.sh /usr/local/bin/ \
+    && cp ptf-modules-$SDE_VER/ptf-utils/dma_setup.sh /usr/local/bin/ \
+    && rm -rf tofino-model-$SDE_VER \
+    && rm -rf ptf-modules-$SDE_VER
+
+EXPOSE 8000-8004/tcp
+
+WORKDIR /var/run/tofino-model
+ENTRYPOINT ["start-tofino-model.sh"]
