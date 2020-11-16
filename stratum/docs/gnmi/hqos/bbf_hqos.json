@@ -1,0 +1,226 @@
+tm: {
+    "tm-profiles": {
+        "bac-entry": {
+            "bac1": {
+                "max-queue-size": 30, 
+                "wred": {
+                    "color": {
+                        "green": {
+                            "max-threshold": 0, 
+                            "max-probability": 0, 
+                            "min-threshold": 0
+                        }, 
+                        "red": {
+                            "max-threshold": 0, 
+                            "max-probability": 0, 
+                            "min-threshold": 0
+                        }, 
+                        "yellow": {
+                            "max-threshold": 0, 
+                            "max-probability": 0, 
+                            "min-threshold": 0
+                        }
+                    }
+                }, 
+                "name": "bac1", 
+                "wtaildrop": {
+                    "color": {
+                        "green": {
+                            "max-threshold": 0
+                        }, 
+                        "red": {
+                            "max-threshold": 0
+                        }, 
+                        "yellow": {
+                            "max-threshold": 0
+                        }
+                    }
+                }, 
+                "taildrop": {
+                    "max-threshold": 20
+                }, 
+                "red": {
+                    "max-threshold": 0, 
+                    "max-probability": 0, 
+                    "min-threshold": 0
+                }
+            }
+        }, 
+        "shaper-profile": {
+            "sp1": {
+                "single-token-bucket": {
+                    "pir": 20, 
+                    "pbs": 0
+                }, 
+                "name": "sp1"
+            }, 
+            "sp2": {
+                "single-token-bucket": {
+                    "pir": 0, 
+                    "pbs": 0
+                }, 
+                "name": "sp2"
+            }, 
+            "sp3": {
+                "single-token-bucket": {
+                    "pir": 0, 
+                    "pbs": 0
+                }, 
+                "name": "sp3"
+            }
+        }, 
+        "tc-id-2-queue-id-mapping-profile": {
+            "tmprof1": {
+                "mapping-entry": {
+                    "1": {
+                        "local-queue-id": 1, 
+                        "traffic-class-id": 1
+                    }
+                }, 
+                "name": "tmprof1"
+            }
+        }
+    }
+}
+intfs: {
+    "interfaces-state": {
+        "interface": {}
+    }, 
+    "interfaces": {
+        "interface": {
+            "eth-0-1": {
+                "egress-tm-objects": {
+                    "scheduler-node-name": "", 
+                    "root-if-name": ""
+                }, 
+                "oper-status": "", 
+                "phys-address": "", 
+                "higher-layer-if": [], 
+                "name": "eth-0-1", 
+                "type": "", 
+                "link-up-down-trap-enable": "", 
+                "enabled": True, 
+                "tm-root": {
+                    "queue": {
+                        "1": {
+                            "shaper-name": "", 
+                            "pre-emption": True, 
+                            "weight": 10, 
+                            "priority": 1, 
+                            "bac-name": "bac1", 
+                            "local-queue-id": 1
+                        }
+                    }, 
+                    "tc-id-2-queue-id-mapping-profile-name": "", 
+                    "scheduler-node": {}, 
+                    "shaper-name": "", 
+                    "child-scheduler-nodes": {}
+                }, 
+                "speed": 0, 
+                "lower-layer-if": [], 
+                "statistics": {
+                    "out-octets": 0, 
+                    "discontinuity-time": "", 
+                    "in-multicast-pkts": 0, 
+                    "out-unicast-pkts": 0, 
+                    "in-errors": 0, 
+                    "out-errors": 0, 
+                    "out-multicast-pkts": 0, 
+                    "in-discards": 0, 
+                    "in-unicast-pkts": 0, 
+                    "out-broadcast-pkts": 0, 
+                    "out-discards": 0, 
+                    "in-broadcast-pkts": 0, 
+                    "in-unknown-protos": 0, 
+                    "in-octets": 0
+                }, 
+                "last-change": "", 
+                "admin-status": "", 
+                "if-index": 0, 
+                "description": ""
+            }, 
+            "eth-0-2": {
+                "egress-tm-objects": {
+                    "scheduler-node-name": "", 
+                    "root-if-name": ""
+                }, 
+                "oper-status": "", 
+                "phys-address": "", 
+                "higher-layer-if": [], 
+                "name": "eth-0-2", 
+                "type": "", 
+                "link-up-down-trap-enable": "", 
+                "enabled": True, 
+                "tm-root": {
+                    "queue": {}, 
+                    "tc-id-2-queue-id-mapping-profile-name": "", 
+                    "scheduler-node": {
+                        "sched1": {
+                            "shaper-name": "sp1", 
+                            "name": "sched1", 
+                            "description": "scheduler 1", 
+                            "contains-queues": True, 
+                            "queue": {}, 
+                            "scheduling-level": 1, 
+                            "child-scheduler-nodes": {
+                                "sched2": {
+                                    "priority": 0, 
+                                    "name": "sched2", 
+                                    "weight": 10
+                                }
+                            }
+                        }, 
+                        "sched2": {
+                            "shaper-name": "sp2", 
+                            "name": "sched2", 
+                            "description": "scheduler 2", 
+                            "contains-queues": True, 
+                            "queue": {}, 
+                            "scheduling-level": 2, 
+                            "child-scheduler-nodes": {
+                                "sched3": {
+                                    "priority": 0, 
+                                    "name": "sched3", 
+                                    "weight": 10
+                                }
+                            }
+                        }, 
+                        "sched3": {
+                            "shaper-name": "sp3", 
+                            "name": "sched3", 
+                            "description": "scheduler 3", 
+                            "contains-queues": True, 
+                            "queue": {}, 
+                            "scheduling-level": 3, 
+                            "child-scheduler-nodes": {}
+                        }
+                    }, 
+                    "shaper-name": "", 
+                    "child-scheduler-nodes": {}
+                }, 
+                "speed": 0, 
+                "lower-layer-if": [], 
+                "statistics": {
+                    "out-octets": 0, 
+                    "discontinuity-time": "", 
+                    "in-multicast-pkts": 0, 
+                    "out-unicast-pkts": 0, 
+                    "in-errors": 0, 
+                    "out-errors": 0, 
+                    "out-multicast-pkts": 0, 
+                    "in-discards": 0, 
+                    "in-unicast-pkts": 0, 
+                    "out-broadcast-pkts": 0, 
+                    "out-discards": 0, 
+                    "in-broadcast-pkts": 0, 
+                    "in-unknown-protos": 0, 
+                    "in-octets": 0
+                }, 
+                "last-change": "", 
+                "admin-status": "", 
+                "if-index": 0, 
+                "description": ""
+            }
+        }
+    }
+}

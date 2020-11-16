@@ -31,6 +31,192 @@ module openconfig-qos-stratum {
       reference "0.1.0";
   }
 
+  // QoS Class IDs
+  identity QOS_CLASS_ID_TYPE {
+    description
+      "Base  identity for class IDs";
+  }
+
+  identity IPP0 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 0";
+  }
+
+  identity IPP1 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 1";
+  }
+
+  identity IPP2 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 2";
+  }
+
+  identity IPP3 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 3";
+  }
+
+  identity IPP4 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 4";
+  }
+
+  identity IPP5 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 5";
+  }
+
+  identity IPP6 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 6";
+  }
+
+  identity IPP7 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 7";
+  }
+
+  identity CS0 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 0";
+  }
+
+  identity CS1 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 1";
+  }
+
+  identity CS2 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 2";
+  }
+
+  identity CS3 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 3";
+  }
+
+  identity CS4 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 4";
+  }
+
+  identity CS5 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 5";
+  }
+
+  identity CS6 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 6";
+  }
+
+  identity CS7 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 7";
+  }
+
+  identity AF11 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 11";
+  }
+
+  identity AF12 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 12";
+  }
+
+  identity AF13 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 13";
+  }
+
+  identity AF21 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 21";
+  }
+
+  identity AF22 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 22";
+  }
+
+  identity AF23 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 23";
+  }
+
+  identity AF31 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 31";
+  }
+
+  identity AF32 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 32";
+  }
+
+  identity AF33 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 33";
+  }
+
+  identity AF41 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 41";
+  }
+
+  identity AF42 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 42";
+  }
+
+  identity AF43 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 43";
+  }
+
+  identity EF {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Expedited Forwarding";
+  }
+
+  identity BE {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Best Effort";
+  }
+
   grouping qos-drop-profile-config {
     description
       "Configuration parameters relating to the drop profile";
@@ -138,13 +324,13 @@ module openconfig-qos-stratum {
             }
 
             leaf "id" {
-              type string;
+              type identityref {
+                base oc-qos-stm:QOS_CLASS_ID_TYPE;
+              }
               description
                 "This is the WRED class id and will correlate to a 
                  IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
-                 etc).
-                 
-                 Note: this string will be target implementation specific.";
+                 etc).";
             }
 
             uses qos-drop-profile-red-config;
@@ -321,13 +507,13 @@ module openconfig-qos-stratum {
           }
 
           leaf "id" {
-            type string;
+            type identityref {
+              base oc-qos-stm:QOS_CLASS_ID_TYPE;
+            }
             description
               "This is the WRED class id and will correlate to a 
                IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
-               etc).
-                 
-               Note: this string will be target implementation specific.";
+               etc).";
           }
 
           uses oc-qos:qos-queue-red-config;
