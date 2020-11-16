@@ -92,6 +92,7 @@ pkg_tar(
     srcs = [
         "deb/stratum.flags",
         "deb/stratum_bf.env",
+        "//stratum/hal/lib/common:gnmi_caps.pb.txt",
     ],
     mode = "0644",
     package_dir = "/etc/stratum",
@@ -129,5 +130,6 @@ pkg_deb(
     package = "stratum-bf",
     postinst = "deb/postinst",
     prerm = "deb/prerm",
+    recommends = ["systemd"],
     version = "0.0.1",
 )
