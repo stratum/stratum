@@ -20,6 +20,8 @@ namespace barefoot {
 // TODO(max): docs
 class BfSdeInterface {
  public:
+  // PortStatusEvent encapsulates the information received on a port status
+  // event. Port refers to the SDE internal device port ID.
   struct PortStatusEvent {
     int device;
     int port;
@@ -57,7 +59,7 @@ class BfSdeInterface {
   virtual ::util::Status SetPortLoopbackMode(int device, int port,
                                              LoopbackState loopback_mode) = 0;
 
-  virtual ::util::StatusOr<uint32> PortIdFromPortKeyGet(
+  virtual ::util::StatusOr<uint32> GetPortIdFromPortKey(
       int device, const PortKey& port_key) = 0;
 
   // Get the CPU port of a device.

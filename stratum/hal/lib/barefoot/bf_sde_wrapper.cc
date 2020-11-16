@@ -41,7 +41,7 @@ bf_status_t sde_port_status_callback(bf_dev_id_t dev_id, bf_dev_port_t dev_port,
     return BF_INTERNAL_ERROR;
   }
   // Forward the event.
-  auto status = bf_sde_wrapper->OnPortStatusEvent(dev_id, dev_port, up, cookie);
+  auto status = bf_sde_wrapper->OnPortStatusEvent(dev_id, dev_port, up);
 
   return status.ok() ? BF_SUCCESS : BF_INTERNAL_ERROR;
 }
@@ -161,8 +161,7 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
   return ::util::OkStatus();
 }
 
-::util::Status BfSdeWrapper::OnPortStatusEvent(int device, int port, bool up,
-                                               void* cookie) {
+::util::Status BfSdeWrapper::OnPortStatusEvent(int device, int port, bool up) {
   // Create PortStatusEvent message.
   PortState state = up ? PORT_STATE_UP : PORT_STATE_DOWN;
   PortStatusEvent event = {device, port, state};
@@ -257,7 +256,7 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<uint32> BfSdeWrapper::PortIdFromPortKeyGet(
+::util::StatusOr<uint32> BfSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;
   CHECK_RETURN_IF_FALSE(port >= 0)

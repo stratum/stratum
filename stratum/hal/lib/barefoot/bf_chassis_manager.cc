@@ -294,7 +294,7 @@ BFChassisManager::~BFChassisManager() = default;
         singleton_port_key;
 
     // Translate the logical SDN port to SDK port (BF device port ID)
-    ASSIGN_OR_RETURN(uint32 sdk_port, bf_sde_interface_->PortIdFromPortKeyGet(
+    ASSIGN_OR_RETURN(uint32 sdk_port, bf_sde_interface_->GetPortIdFromPortKey(
                                           *unit, singleton_port_key));
     node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port;
     node_id_to_sdk_port_id_to_port_id[node_id][sdk_port] = port_id;
@@ -510,7 +510,7 @@ BFChassisManager::~BFChassisManager() = default;
     CHECK_RETURN_IF_FALSE(unit != nullptr)
         << "Node " << node_id << " not found for port " << port_id << ".";
     RETURN_IF_ERROR(
-        bf_sde_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
+        bf_sde_interface_->GetPortIdFromPortKey(*unit, singleton_port_key)
             .status());
   }
 

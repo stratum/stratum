@@ -117,7 +117,7 @@ class BFChassisManagerTest : public ::testing::Test {
   void RegisterSdkPortId(uint32 port_id, int slot, int port, int channel,
                          int device) {
     PortKey port_key(slot, port, channel);
-    EXPECT_CALL(*bf_sde_mock_, PortIdFromPortKeyGet(device, port_key))
+    EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(device, port_key))
         .WillRepeatedly(Return(port_id + kSdkPortOffset));
   }
 

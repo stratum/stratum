@@ -45,7 +45,7 @@ class BfSdeWrapper : public BfSdeInterface {
   bool IsValidPort(int device, int port) override;
   ::util::Status SetPortLoopbackMode(int uint, int port,
                                      LoopbackState loopback_mode) override;
-  ::util::StatusOr<uint32> PortIdFromPortKeyGet(
+  ::util::StatusOr<uint32> GetPortIdFromPortKey(
       int unit, const PortKey& port_key) override;
   ::util::StatusOr<int> GetPcieCpuPort(int device) override;
   ::util::Status SetTmCpuPort(int device, int port) override;
@@ -63,8 +63,7 @@ class BfSdeWrapper : public BfSdeInterface {
   // Called whenever a linkscan event is received from SDK. It forwards the
   // linkscan event to the module who registered a callback by calling
   // RegisterPortStatusEventWriter().
-  ::util::Status OnPortStatusEvent(int dev_id, int dev_port, bool up,
-                                   void* cookie)
+  ::util::Status OnPortStatusEvent(int dev_id, int dev_port, bool up)
       LOCKS_EXCLUDED(port_status_event_writer_lock_);
 
   // BfSdeWrapper is neither copyable nor movable.
