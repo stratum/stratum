@@ -6,20 +6,20 @@
 
 #include <map>
 #include <memory>
-#include <utility>
 #include <string>
 #include <thread>  // NOLINT
+#include <utility>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "bm/bm_sim/dev_mgr.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/glue/integral_types.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
 namespace bm {
 namespace sswitch {
@@ -54,22 +54,21 @@ class Bmv2ChassisManager {
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   virtual ::util::StatusOr<DataResponse> GetPortData(
-      const DataRequest::Request& request)
+      const DataRequest::Request& request) SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
+                                                   uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<PortState> GetPortState(
-      uint64 node_id, uint32 port_id)
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
-  virtual ::util::Status GetPortCounters(
-      uint64 node_id, uint32 port_id, PortCounters* counters)
+  virtual ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
+                                         PortCounters* counters)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<Bmv2ChassisManager> CreateInstance(
       PhalInterface* phal_interface,
       std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
-        node_id_to_bmv2_runner);
+          node_id_to_bmv2_runner);
 
   // Bmv2ChassisManager is neither copyable nor movable.
   Bmv2ChassisManager(const Bmv2ChassisManager&) = delete;
@@ -80,15 +79,13 @@ class Bmv2ChassisManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  Bmv2ChassisManager(
-      PhalInterface* phal_interface,
-      std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
-        node_id_to_bmv2_runner);
+  Bmv2ChassisManager(PhalInterface* phal_interface,
+                     std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
+                         node_id_to_bmv2_runner);
 
-  ::util::Status RegisterEventWriters()
-        EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
   ::util::Status UnregisterEventWriters()
-        EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Cleans up the internal state. Resets all the internal port maps and
   // deletes the pointers.
@@ -103,8 +100,8 @@ class Bmv2ChassisManager {
   // Thread function for reading and processing port state events.
   void ReadPortStatusChangeEvents() LOCKS_EXCLUDED(chassis_lock);
 
-  ::util::StatusOr<const SingletonPort*> GetSingletonPort(
-      uint64 node_id, uint32 port_id) const
+  ::util::StatusOr<const SingletonPort*> GetSingletonPort(uint64 node_id,
+                                                          uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   bool initialized_ GUARDED_BY(chassis_lock);
@@ -130,15 +127,15 @@ class Bmv2ChassisManager {
   // bmv2. This is the safe way to process these events, as bmv2 may generate a
   // callback synchronously during a port add operation, and the risk of
   // deadlock is high...
-  std::shared_ptr<Channel<PortStatusChangeEvent> >
+  std::shared_ptr<Channel<PortStatusChangeEvent>>
       port_status_change_event_channel_ GUARDED_BY(chassis_lock);
 
-  std::unique_ptr<ChannelReader<PortStatusChangeEvent> >
+  std::unique_ptr<ChannelReader<PortStatusChangeEvent>>
       port_status_change_event_reader_;
 
-  std::unique_ptr<ChannelWriter<PortStatusChangeEvent> >
+  std::unique_ptr<ChannelWriter<PortStatusChangeEvent>>
       port_status_change_event_writer_
-      GUARDED_BY(port_status_change_event_writer_lock_);
+          GUARDED_BY(port_status_change_event_writer_lock_);
 
   std::thread port_status_change_event_thread_;
 
