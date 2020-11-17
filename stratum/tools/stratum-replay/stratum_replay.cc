@@ -131,8 +131,7 @@ using ClientStreamChannelReaderWriter =
   ::stratum::hal::ForwardingPipelineConfigs pipeline_cfg;
   RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_pipeline_cfg, &pipeline_cfg));
   const ::p4::v1::ForwardingPipelineConfig* fwd_pipe_cfg =
-      gtl::FindOrNull(pipeline_cfg.node_id_to_config(),
-                                 FLAGS_device_id);
+      gtl::FindOrNull(pipeline_cfg.node_id_to_config(), FLAGS_device_id);
   CHECK_RETURN_IF_FALSE(fwd_pipe_cfg);
   fwd_pipe_cfg_req.mutable_config()->CopyFrom(*fwd_pipe_cfg);
 
@@ -187,8 +186,8 @@ using ClientStreamChannelReaderWriter =
       // return with an error status.
       if (status.ok()) {
         LOG(WARNING) << "Expect to get an error, but the request succeeded.\n"
-                   << "Expected error: " << error_msg << "\n"
-                   << "Request: " << write_req.ShortDebugString();
+                     << "Expected error: " << error_msg << "\n"
+                     << "Request: " << write_req.ShortDebugString();
       } else {
         ::google::rpc::Status details;
         CHECK_RETURN_IF_FALSE(details.ParseFromString(status.error_details()))
@@ -199,9 +198,9 @@ using ClientStreamChannelReaderWriter =
               << "Failed to parse the P4Runtime error from detail message.";
           if (detail.message() != error_msg) {
             LOG(WARNING) << "The expected error message is different "
-                          "to the actual error message:\n"
-                       << "Expected: " << error_msg << "\n"
-                       << "Actual: " << detail.message();
+                            "to the actual error message:\n"
+                         << "Expected: " << error_msg << "\n"
+                         << "Actual: " << detail.message();
           }
         }
       }
