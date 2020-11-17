@@ -24,14 +24,13 @@ The `stratum_dummy` binary is a standalone executable which includes following i
 To build the `stratum_dummy`:
 
 ```
-bazel build //stratum/hal/bin/dummy:stratum_dummy --define phal_with_onlp=false
+bazel build //stratum/hal/bin/dummy:stratum_dummy
 ```
 
 ## Running the `stratum_dummy` binary
 
 ```
 bazel run //stratum/hal/bin/dummy:stratum_dummy \
-  --define phal_with_onlp=false \
   -- \
   --persistent_config_dir=/tmp/ \
   --chassis_config_file=$(pwd)/stratum/hal/bin/dummy/chassis_config \
