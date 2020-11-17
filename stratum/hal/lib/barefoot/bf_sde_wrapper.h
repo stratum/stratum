@@ -60,8 +60,8 @@ class BfSdeWrapper : public BfSdeInterface {
   // Return the singleton instance to be used in the SDE callbacks.
   static BfSdeWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
 
-  // Called whenever a linkscan event is received from SDK. It forwards the
-  // linkscan event to the module who registered a callback by calling
+  // Called whenever a port status event is received from SDK. It forwards the
+  // port status event to the module who registered a callback by calling
   // RegisterPortStatusEventWriter().
   ::util::Status OnPortStatusEvent(int dev_id, int dev_port, bool up)
       LOCKS_EXCLUDED(port_status_event_writer_lock_);
