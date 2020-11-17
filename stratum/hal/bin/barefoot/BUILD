@@ -118,7 +118,10 @@ pkg_deb(
     name = "stratum_bf_deb",
     architecture = "amd64",
     data = ":stratum_bf_data",
-    depends = ["kmod"],
+    depends = [
+        "kmod",
+        "libedit2",
+    ],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
