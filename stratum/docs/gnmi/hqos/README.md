@@ -165,8 +165,6 @@ sudo pip install pyang
 ```
 git clone this stratum repo
 cd stratum/stratum/docs/gnmi/hqos
-git clone https://github.com/BroadbandForum/yang.git BroadbandForum/yang
-git clone https://github.com/YangModels/yang.git ietf/yang
 git clone https://github.com/openconfig/public.git OpenConfig/yang
 ```
 
@@ -183,6 +181,4 @@ This will output a json representation of the QoS data model based on the OpenCo
 ```
 python oc_hqos.py >oc_hqos.json
 ```
-
-**Note:** You can also run the BroadbandForum HQoS example by running `python bbf_hqos.py >bbf_hqos.json`
 
