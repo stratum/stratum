@@ -133,6 +133,21 @@ if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
   DOCKER_BUILD_OPTS+="--squash "
 fi
 
+DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
+DOCKER_BUILD_OPTS+="--label bf-sde-version=$SDE_VERSION "
+
+# Add VCS labels
+pushd $STRATUM_ROOT
+if [ -d .git ]; then
+  GIT_URL=${GIT_URL:-$(git config --get remote.origin.url)}
+  GIT_REF=$(git describe --tags --no-match --always --abbrev=40 --dirty | sed -E 's/^.*-g([0-9a-f]{40}-?.*)$/\1/')
+  GIT_SHA=$(git describe --tags --match XXXXXXX --always --abbrev=40 --dirty)
+  DOCKER_BUILD_OPTS+="--label org.opencontainers.image.source=$GIT_URL "
+  DOCKER_BUILD_OPTS+="--label org.opencontainers.image.version=$GIT_REF "
+  DOCKER_BUILD_OPTS+="--label org.opencontainers.image.revision=$GIT_SHA "
+fi
+popd
+
 # Build Stratum BF runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
