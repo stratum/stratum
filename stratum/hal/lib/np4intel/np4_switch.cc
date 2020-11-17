@@ -186,11 +186,15 @@ NP4Switch::~NP4Switch() {}
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
+      case DataRequest::Request::kSdnPortId:
         resp = np4_chassis_manager_->GetPortData(req);
         break;
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
+        resp =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "DataRequest field "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
     if (resp.ok()) {

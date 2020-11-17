@@ -37,7 +37,7 @@ optional arguments:
 ### Examples
 
 ```
-# To get port index
+# To get port index (which is used when referring to a port in P4Runtime)
 bazel run //stratum/tools/gnmi:gnmi-cli -- get /interfaces/interface[name=1/1/1]/state/ifindex
 
 # To set port health indicator

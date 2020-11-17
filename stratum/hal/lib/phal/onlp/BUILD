@@ -74,6 +74,7 @@ stratum_cc_library(
     hdrs = [
         "onlp_wrapper.h",
     ],
+    linkopts = ["-ldl"],
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -81,10 +82,7 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@local_onlp_bin//:onlp",
         "@local_onlp_bin//:onlp_headers",
-        "@local_onlp_bin//:onlp_platform",
-        "@local_onlp_bin//:onlp_platform_defaults",
     ],
 )
 
@@ -507,6 +505,9 @@ stratum_cc_binary(
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
+        "@local_onlp_bin//:onlp",
+        "@local_onlp_bin//:onlp_platform",
+        "@local_onlp_bin//:onlp_platform_defaults",
         "//stratum/glue:init_google",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",

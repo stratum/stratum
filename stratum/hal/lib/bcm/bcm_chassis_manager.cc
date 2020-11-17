@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <pthread.h>
@@ -11,12 +10,14 @@
 #include <set>
 #include <sstream>  // IWYU pragma: keep
 
-#include "gflags/gflags.h"
-#include "google/protobuf/message.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "google/protobuf/message.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -26,8 +27,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");
@@ -93,9 +92,11 @@ BcmChassisManager::BcmChassisManager(OperationMode mode,
       node_id_to_port_id_to_loopback_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
+      gnmi_event_writer_(nullptr),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
-      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)) {}
+      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)),
+      unit_to_bcm_node_() {}
 
 // Default constructor is called by the mock class only.
 BcmChassisManager::BcmChassisManager()
@@ -275,7 +276,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
     const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED).without_logging()
-        << "Not initialized!";
+           << "Not initialized!";
   }
 
   return node_id_to_unit_;
@@ -407,9 +408,9 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   // We can't use CHECK_RETURN_IF_FALSE here, because we want without_logging()
   if (membership_info == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM).without_logging()
-      << "Port " << port_id
-      << " is not known or does not belong to any trunk on node " << node_id
-      << ".";
+           << "Port " << port_id
+           << " is not known or does not belong to any trunk on node "
+           << node_id << ".";
   }
 
   return membership_info->parent_trunk_id;
@@ -581,7 +582,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       supported_chip_types.insert(BcmChip::TOMAHAWK);
       break;
     case PLT_GENERIC_TOMAHAWK_PLUS:
-        supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
       break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
@@ -1036,11 +1037,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         << "not match.";
   }
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
-    CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
-                          base_bcm_chassis_map.bcm_chips().end(),
-                          [&bcm_chip](const ::google::protobuf::Message& x) {
-                                        return ProtoEqual(x, bcm_chip);
-                                      }))
+    CHECK_RETURN_IF_FALSE(
+        std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
+                    base_bcm_chassis_map.bcm_chips().end(),
+                    [&bcm_chip](const ::google::protobuf::Message& x) {
+                      return ProtoEqual(x, bcm_chip);
+                    }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
@@ -1053,11 +1055,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       // The base comes with no logical_port assigned.
       p.clear_logical_port();
     }
-    CHECK_RETURN_IF_FALSE(std::any_of(
-        base_bcm_chassis_map.bcm_ports().begin(),
-        base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) {
-          return ProtoEqual(x, p); }))
+    CHECK_RETURN_IF_FALSE(
+        std::any_of(base_bcm_chassis_map.bcm_ports().begin(),
+                    base_bcm_chassis_map.bcm_ports().end(),
+                    [&p](const ::google::protobuf::Message& x) {
+                      return ProtoEqual(x, p);
+                    }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
     ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),
@@ -1345,8 +1348,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
               new_loopback_state;
         }
-        APPEND_STATUS_IF_ERROR(
-            error, LoopbackPort(sdk_port, new_loopback_state));
+        APPEND_STATUS_IF_ERROR(error,
+                               LoopbackPort(sdk_port, new_loopback_state));
       }
     }
   }
@@ -1375,7 +1378,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
   // TODO(unknown): Update the LED of all the ports.
 
-  return ::util::OkStatus();
+  return error;
 }
 
 ::util::Status BcmChassisManager::RegisterEventWriters() {
@@ -1463,8 +1466,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     linkscan_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!linkscan_event_channel_ || !linkscan_event_channel_->Close()) {
-      status = APPEND_ERROR(status)
-               << "Linkscan event Channel is already closed.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Linkscan event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     linkscan_event_channel_.reset();
   }
@@ -1475,8 +1479,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     xcvr_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
-      status = APPEND_ERROR(status)
-               << "Transceiver event Channel is already closed.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Transceiver event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     xcvr_event_channel_.reset();
   }
@@ -2191,7 +2196,7 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
   BcmPortOptions options;
   options.set_enabled(enable ? TRI_STATE_TRUE : TRI_STATE_FALSE);
   RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
-        sdk_port.unit, sdk_port.logical_port, options));
+      sdk_port.unit, sdk_port.logical_port, options));
 
   return ::util::OkStatus();
 }

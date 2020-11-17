@@ -302,7 +302,16 @@ jobs:
       - *clean_bazel_cache
       - *save_bazel_cache
 
-  cpp-style-check:
+  cpp-format-check:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - run:
+          name: Run clang-format script
+          command: .circleci/check-cpp-format.sh
+
+  cpp-lint-check:
     docker:
       - image: stratumproject/build:build
     steps:
@@ -335,7 +344,8 @@ workflows:
       - unit_tests
       - cdlang_tests
       - coverage
-      - cpp-style-check
+      - cpp-format-check
+      - cpp-lint-check
       - license-check
       - bazel-style-check
   docker-publish:

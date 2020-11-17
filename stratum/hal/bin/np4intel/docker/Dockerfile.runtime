@@ -29,13 +29,11 @@ WORKDIR /stratum
 
 # Debug Stratum binary build
 RUN bazel build //stratum/hal/bin/np4intel:stratum_np4intel \
-    --define phal_with_onlp=false \
     --compilation_mode=dbg && \
     cp bazel-bin/stratum/hal/bin/np4intel/stratum_np4intel /tmp/stratum_np4intel.debug
 
 # Normal Stratum binary build
-RUN bazel build //stratum/hal/bin/np4intel:stratum_np4intel \
-    --define phal_with_onlp=false
+RUN bazel build //stratum/hal/bin/np4intel:stratum_np4intel
 
 # Build the OPAE package
 # Note: Will likely need to update these patches when updating the OPAE

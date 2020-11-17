@@ -8,7 +8,6 @@ STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 
 STRATUM_BF_DIR=$( cd "$DOCKERFILE_DIR/.." >/dev/null 2>&1 && pwd )
 STRATUM_TARGET=${STRATUM_TARGET:-stratum_bf}
 JOBS=${JOBS:-4}
-WITH_ONLP=${WITH_ONLP:-true}
 DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
 print_help() {
@@ -30,7 +29,6 @@ Additional environment variables:
     STRATUM_TARGET: stratum_bf or stratum_bfrt (Default: stratum_bf)
     STRATUM_ROOT: The root directory of Stratum.
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
-    WITH_ONLP: Includes ONLP support. (Default: true)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
     RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
 "
@@ -83,7 +81,6 @@ Build variables:
   Stratum directory: $STRATUM_ROOT
   Stratum target: $STRATUM_TARGET
   Build jobs: $JOBS
-  Enable ONLP: $WITH_ONLP
   Docker image for building: $DOCKER_IMG
   Release build enabled: ${RELEASE_BUILD:-false}
 "
@@ -125,7 +122,6 @@ docker run --rm \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
        $BAZEL_OPTS \
        --define sde_ver=$SDE_VERSION \
-       --define phal_with_onlp=$WITH_ONLP \
        --jobs $JOBS && \
      cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
      cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
@@ -136,6 +132,21 @@ DOCKER_BUILD_OPTS=""
 if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
   DOCKER_BUILD_OPTS+="--squash "
 fi
+
+DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
+DOCKER_BUILD_OPTS+="--label bf-sde-version=$SDE_VERSION "
+
+# Add VCS labels
+pushd $STRATUM_ROOT
+if [ -d .git ]; then
+  GIT_URL=${GIT_URL:-$(git config --get remote.origin.url)}
+  GIT_REF=$(git describe --tags --no-match --always --abbrev=40 --dirty | sed -E 's/^.*-g([0-9a-f]{40}-?.*)$/\1/')
+  GIT_SHA=$(git describe --tags --match XXXXXXX --always --abbrev=40 --dirty)
+  DOCKER_BUILD_OPTS+="--label org.opencontainers.image.source=$GIT_URL "
+  DOCKER_BUILD_OPTS+="--label org.opencontainers.image.version=$GIT_REF "
+  DOCKER_BUILD_OPTS+="--label org.opencontainers.image.revision=$GIT_SHA "
+fi
+popd
 
 # Build Stratum BF runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
