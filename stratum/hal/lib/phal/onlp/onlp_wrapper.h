@@ -52,10 +52,9 @@ class OidInfo {
   explicit OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
                    HwState state);
 
-  bool Present() const;
-
   HwState GetHardwareState() const;
   const OnlpOidHeader* GetHeader() const { return &oid_info_; }
+  bool Present() const { return ONLP_OID_PRESENT(&oid_info_); }
   uint32_t GetId() const { return ONLP_OID_ID_GET(oid_info_.id); }
   uint8_t GetType() const { return ONLP_OID_TYPE_GET(oid_info_.id); }
 
@@ -208,6 +207,7 @@ class OnlpWrapper : public OnlpInterface {
   OnlpWrapper& operator=(const OnlpWrapper& other) = delete;
   ~OnlpWrapper() override;
 
+  // OnlpInterface public methods.
   ::util::StatusOr<OidInfo> GetOidInfo(OnlpOid oid) const override;
   ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const override;
   ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
@@ -226,9 +226,68 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override;
 
  private:
+  // Container to store the pointers to ONLP function into. Each member name
+  // must match the ONLP symbol name.
+  struct OnlpFunctions {
+    int (*onlp_sw_init)(const char*);
+    int (*onlp_sw_denit)(void);
+    int (*onlp_oid_hdr_get_all)(onlp_oid_t root, onlp_oid_type_flags_t types,
+                                uint32_t flags, biglist_t** list);
+    int (*onlp_oid_get_all_free)(biglist_t* list);
+    int (*onlp_oid_hdr_get)(onlp_oid_t oid, onlp_oid_hdr_t* hdr);
+    int (*onlp_sfp_info_get)(onlp_oid_t port, onlp_sfp_info_t* info);
+    int (*onlp_sfp_is_present)(onlp_oid_t port);
+    void (*onlp_sfp_bitmap_t_init)(onlp_sfp_bitmap_t* bmap);
+    int (*onlp_sfp_bitmap_get)(onlp_sfp_bitmap_t* bmap);
+    int (*onlp_sfp_presence_bitmap_get)(onlp_sfp_bitmap_t* dst);
+    int (*onlp_fan_info_get)(onlp_oid_t oid, onlp_fan_info_t* rv);
+    int (*onlp_fan_percentage_set)(onlp_oid_t oid, int p);
+    int (*onlp_fan_rpm_set)(onlp_oid_t oid, int rpm);
+    int (*onlp_fan_dir_set)(onlp_oid_t oid, onlp_fan_dir_t dir);
+    int (*onlp_thermal_info_get)(onlp_oid_t oid, onlp_thermal_info_t* rv);
+    int (*onlp_led_info_get)(onlp_oid_t oid, onlp_led_info_t* rv);
+    int (*onlp_led_mode_set)(onlp_oid_t oid, onlp_led_mode_t mode);
+    int (*onlp_led_char_set)(onlp_oid_t oid, char c);
+    int (*onlp_psu_info_get)(onlp_oid_t oid, onlp_psu_info_t* rv);
+    OnlpFunctions()
+        : onlp_sw_init(nullptr),
+          onlp_sw_denit(nullptr),
+          onlp_oid_hdr_get_all(nullptr),
+          onlp_oid_get_all_free(nullptr),
+          onlp_oid_hdr_get(nullptr),
+          onlp_sfp_info_get(nullptr),
+          onlp_sfp_is_present(nullptr),
+          onlp_sfp_bitmap_t_init(nullptr),
+          onlp_sfp_bitmap_get(nullptr),
+          onlp_sfp_presence_bitmap_get(nullptr),
+          onlp_fan_info_get(nullptr),
+          onlp_fan_percentage_set(nullptr),
+          onlp_fan_rpm_set(nullptr),
+          onlp_fan_dir_set(nullptr),
+          onlp_thermal_info_get(nullptr),
+          onlp_led_info_get(nullptr),
+          onlp_led_mode_set(nullptr),
+          onlp_led_char_set(nullptr),
+          onlp_psu_info_get(nullptr) {}
+  };
+  // Private constructor. Use CreateInstance instead.
   OnlpWrapper();
-  static OnlpWrapper* singleton_ GUARDED_BY(init_lock_);
+
+  // Initializes the internals of the OnlpWrapper. Called by CreateSingleton.
+  ::util::Status Initialize();
+
+  // The lock used for initialization of the singleton.
   static absl::Mutex init_lock_;
+
+  // Handle to the ONLP library.
+  void* onlp_lib_handle_;
+
+  // Container to store the resolved symbols to ONLP functions. Initialized by
+  // Initialize().
+  OnlpFunctions onlp_functions_;
+
+  // The singleton instance.
+  static OnlpWrapper* singleton_ GUARDED_BY(init_lock_);
 };
 
 }  // namespace onlp
