@@ -149,9 +149,9 @@ using ClientStreamChannelReaderWriter =
   // Parse the P4Runtime write log file and send write requests to the
   // target device.
   std::string p4_write_logs;
-  RETURN_IF_ERROR(::stratum::ReadFileToString(argv[1], &p4WriteLogs));
+  RETURN_IF_ERROR(::stratum::ReadFileToString(argv[1], &p4_write_logs));
   std::vector<std::string> lines =
-      absl::StrSplit(p4WriteLogs, '\n', absl::SkipEmpty());
+      absl::StrSplit(p4_write_logs, '\n', absl::SkipEmpty());
   for (const std::string& line : lines) {
     ::p4::v1::WriteRequest write_req;
     ::p4::v1::WriteResponse write_resp;
