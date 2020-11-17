@@ -140,12 +140,12 @@ then you can use Bazel to build the Stratum.
 
 #### To build `stratum_bf`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define phal_with_onlp=false] [--define sde_ver=9.3.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=9.3.0]
 ```
 
 #### To build `stratum_bfrt`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb [--define phal_with_onlp=false] [--define sde_ver=9.3.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb [--define sde_ver=9.3.0]
 ```
 
 These Bazel targets build the Stratum binary and package all
@@ -260,19 +260,6 @@ using the `--define sde_ver=<SDE version>` flag if you need to build Stratum
 against an older version (e.g. 9.1.0).
 
 This is automatically set to match the BF SDE in Method 1 and Method 2.
-
-### Disabling ONLPv2 support
-
-If you're using a vendor-provided BSP or running Stratum with the Tofino
-software model, ONLP needs to be disabled. The `--define phal_with_onlp=false`
-flag tells Bazel not to build with the ONLP Phal implementation.
-
-You can set the following environment variable is you are using Method 1 or
-Method 2:
-
-```bash
-export WITH_ONLP=false
-```
 
 -----
 

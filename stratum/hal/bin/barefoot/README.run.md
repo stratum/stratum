@@ -181,7 +181,7 @@ of the configs, you can do so by passing additional arguments to the start scrip
 Try `--help` for a list of all available options.
 
 
-These options can be used when starting Stratum in Docker 
+These options can be used when starting Stratum in Docker
 (using `start-stratum-container.sh`) or natively
 (usimg `start-stratum.sh`).
 
@@ -271,17 +271,18 @@ port translation which would allow you to use the user-provide SDN port ID.*
 ### Running with BSP or on Tofino model
 
 ```bash
-start-stratum.sh --bf_sim
+start-stratum.sh --bf_sim -enable_onlp=false
 ```
 
 The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
 `PhalSim`, a "fake" Phal implementation, instead. Use this flag when you are
 using a vendor-provided BSP or running Stratum with the Tofino software model.
+Additionally, the ONLP plugin has to be disabled with `-enable_onlp=false`.
 
 ### Running the binary in BSP-less mode
 
 ```bash
-start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf -enable_onlp=true
 ```
 
 If ONLP support is available for your platform, you do not need to use a
@@ -292,7 +293,8 @@ available to the SDE as needed.
 
 To start Stratum in BSP-less mode, copy the JSON port mapping file for your
 platform to `/etc/stratum/<platform>/port_map.json` and run `start-stratum.sh` with
-`--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`.
+`--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`. Make
+sure to include the `-enable_onlp=true` flag to activate the ONLP plugin.
 
 Platforms with repeaters (such as the Wedge 100bf-65x) are not currently
 supported in BSP-less mode.
