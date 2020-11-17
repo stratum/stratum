@@ -117,7 +117,7 @@ using ClientStreamChannelReaderWriter =
         << "' to switch.";
   }
 
-  // Push the given pipeline config
+  // Push the given pipeline config.
   ::p4::v1::SetForwardingPipelineConfigRequest fwd_pipe_cfg_req;
   ::p4::v1::SetForwardingPipelineConfigResponse fwd_pipe_cfg_resp;
   fwd_pipe_cfg_req.set_device_id(FLAGS_device_id);
@@ -131,7 +131,7 @@ using ClientStreamChannelReaderWriter =
   ::stratum::hal::ForwardingPipelineConfigs pipeline_cfg;
   RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_pipeline_cfg, &pipeline_cfg));
   const ::p4::v1::ForwardingPipelineConfig* fwd_pipe_cfg =
-      ::stratum::gtl::FindOrNull(pipeline_cfg.node_id_to_config(),
+      gtl::FindOrNull(pipeline_cfg.node_id_to_config(),
                                  FLAGS_device_id);
   CHECK_RETURN_IF_FALSE(fwd_pipe_cfg);
   fwd_pipe_cfg_req.mutable_config()->CopyFrom(*fwd_pipe_cfg);
@@ -148,7 +148,7 @@ using ClientStreamChannelReaderWriter =
 
   // Parse the P4Runtime write log file and send write requests to the
   // target device.
-  std::string p4WriteLogs;
+  std::string p4_write_logs;
   RETURN_IF_ERROR(::stratum::ReadFileToString(argv[1], &p4WriteLogs));
   std::vector<std::string> lines =
       absl::StrSplit(p4WriteLogs, '\n', absl::SkipEmpty());
@@ -157,7 +157,7 @@ using ClientStreamChannelReaderWriter =
     ::p4::v1::WriteResponse write_resp;
     // Log format: <timestamp>;<node_id>;<update proto>;<status>
     // This regular expression contains 4 sub-match groups which extracts
-    // elements from the log string.
+    // elements from the log string. See LogWriteRequest() in P4Service.
     RE2 write_req_regex(
         "(\\d{4}-\\d{1,2}-\\d{1,2} "
         "\\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{6});(\\d+);(type[^;]*);(.*)");
