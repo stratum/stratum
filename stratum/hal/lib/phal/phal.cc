@@ -12,16 +12,13 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/switch_configurator_interface.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-
-#if defined(WITH_ONLP)
-#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
-#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#endif  // defined(WITH_ONLP)
 
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
@@ -30,6 +27,7 @@
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_file);
+DEFINE_bool(enable_onlp, true, "Enable the ONLP PHAL plugin.");
 
 namespace stratum {
 namespace hal {
@@ -59,22 +57,24 @@ Phal* Phal::CreateSingleton() {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
-    // Do init stuff here
+    // Create attribute DB.
     std::unique_ptr<AttributeGroup> root_group =
         AttributeGroup::From(PhalDB::descriptor());
     std::vector<std::unique_ptr<SwitchConfiguratorInterface>> configurators;
 
-    // Set up ONLP
-#if defined(WITH_ONLP)
-    {
+    // Set up ONLP plugin.
+    if (FLAGS_enable_onlp) {
       auto* onlp_wrapper = onlp::OnlpWrapper::CreateSingleton();
+      CHECK_RETURN_IF_FALSE(onlp_wrapper != nullptr)
+          << "Failed to create ONLP wrapper.";
       auto* onlp_phal = onlp::OnlpPhal::CreateSingleton(onlp_wrapper);
+      CHECK_RETURN_IF_FALSE(onlp_phal != nullptr)
+          << "Failed to create ONLP plugin.";
       phal_interfaces_.push_back(onlp_phal);
       ASSIGN_OR_RETURN(auto configurator, onlp::OnlpSwitchConfigurator::Make(
                                               onlp_phal, onlp_wrapper));
       configurators.push_back(std::move(configurator));
     }
-#endif  // defined(WITH_ONLP)
 
 #if defined(WITH_TAI)
     {
