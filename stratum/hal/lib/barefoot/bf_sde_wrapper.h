@@ -82,7 +82,7 @@ class BfSdeWrapper : public BfSdeInterface {
   static BfSdeWrapper* singleton_ GUARDED_BY(init_lock_);
 
  private:
-  // Timeout for Write() operations on linkscan events.
+  // Timeout for Write() operations on port status events.
   static constexpr absl::Duration kWriteTimeout = absl::InfiniteDuration();
 
   // Private constructor, use CreateSingleton and GetSingleton().
