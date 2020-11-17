@@ -882,7 +882,7 @@ void BFChassisManager::ReadPortStatusEvents() {
       if (state != nullptr) {
         *state = event.state;
       }
-      SendPortOperStateGnmiEvent(*node_id, event.port, event.state);
+      SendPortOperStateGnmiEvent(*node_id, *port_id, event.state);
     }
   }
 }
