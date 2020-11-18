@@ -203,7 +203,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_google_absl",
             remote = "https://github.com/abseil/abseil-cpp",
-            branch = "lts_2020_02_25",
+            branch = "lts_2020_09_23",
         )
 
     if "com_googlesource_code_cctz" not in native.existing_rules():
