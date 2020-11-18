@@ -715,9 +715,10 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   LOG(INFO) << "Replaying ports for node " << node_id << ".";
 
-  auto replay_one_port = [node_id, unit, this](
-                             uint32 port_id, const PortConfig& config,
-                             PortConfig* config_new) -> ::util::Status {
+  auto replay_one_port =
+      [node_id, unit, this](uint32 port_id, const PortConfig& config,
+                            PortConfig* config_new)
+          SHARED_LOCKS_REQUIRED(chassis_lock) -> ::util::Status {
     VLOG(1) << "Replaying port " << port_id << " in node " << node_id << ".";
 
     if (config.admin_state == ADMIN_STATE_UNKNOWN) {
