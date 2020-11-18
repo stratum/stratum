@@ -2,28 +2,30 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/hal.h"
+
+#include <pthread.h>
 
 #include <chrono>  // NOLINT
 #include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/procmon/procmon.grpc.pb.h"
-#include "stratum/lib/utils.h"
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/procmon/procmon.grpc.pb.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
-DEFINE_string(external_stratum_urls, stratum::kExternalStratumUrls,
-            "Comma-separated list of URLs for server to listen to for external"
-            " calls from SDN controller, etc.");
+DEFINE_string(
+    external_stratum_urls, stratum::kExternalStratumUrls,
+    "Comma-separated list of URLs for server to listen to for external"
+    " calls from SDN controller, etc.");
 DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,
               "URL for listening to local calls from stratum stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
@@ -102,19 +104,15 @@ Hal::~Hal() {
   CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
 
-  auto it = std::find_if(external_stratum_urls.begin(),
-                         external_stratum_urls.end(),
-                         [](const std::string& url) {
-                           return (url == FLAGS_local_stratum_url ||
-                                   // FIXME(boc) google only url ==
-                                   // FLAGS_cmal_service_url ||
-                                   url == FLAGS_procmon_service_addr);
-                         });
+  auto it =
+      std::find_if(external_stratum_urls.begin(), external_stratum_urls.end(),
+                   [](const std::string& url) {
+                     return (url == FLAGS_local_stratum_url ||
+                             url == FLAGS_procmon_service_addr);
+                   });
   CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_stratum_url << ", "
-      /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
-      << FLAGS_procmon_service_addr << ".";
+      << FLAGS_local_stratum_url << ", " << FLAGS_procmon_service_addr << ".";
 
   CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
       << "persistent_config_dir flag needs to be explicitly given.";
@@ -187,7 +185,7 @@ Hal::~Hal() {
   // stratum_stub binary running on the switch, since local connections cannot
   // support auth.
   const std::vector<std::string> external_stratum_urls =
-          absl::StrSplit(FLAGS_external_stratum_urls, ',');
+      absl::StrSplit(FLAGS_external_stratum_urls, ',');
   {
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
@@ -199,14 +197,14 @@ Hal::~Hal() {
       builder.AddListeningPort(url, server_credentials);
     }
     if (FLAGS_grpc_max_recv_msg_size > 0) {
-      builder.SetMaxReceiveMessageSize(
-          FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
-      builder.AddChannelArgument<int>(GRPC_ARG_MAX_METADATA_SIZE,
+      builder.SetMaxReceiveMessageSize(FLAGS_grpc_max_recv_msg_size * 1024 *
+                                       1024);
+      builder.AddChannelArgument<int>(
+          GRPC_ARG_MAX_METADATA_SIZE,
           FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
     }
     if (FLAGS_grpc_max_send_msg_size) {
-      builder.SetMaxSendMessageSize(
-          FLAGS_grpc_max_send_msg_size * 1024 * 1024);
+      builder.SetMaxSendMessageSize(FLAGS_grpc_max_send_msg_size * 1024 * 1024);
     }
     builder.RegisterService(config_monitoring_service_.get());
     builder.RegisterService(p4_service_.get());
@@ -247,7 +245,26 @@ void Hal::HandleSignal(int value) {
   // with no deadline will block forever, as it waits for all the active RPCs
   // to finish. To fix this, we give a deadline set to "now" so the call returns
   // immediately.
-  external_server_->Shutdown(std::chrono::system_clock::now());
+  // Per the grpc::Server docs, some other thread must call Shutdown() for
+  // Wait() to ever return. So, we try to call shutdown it a separate thread.
+  pthread_t shutdown_tid;
+  int ret = pthread_create(
+      &shutdown_tid, nullptr,
+      [](void* server) -> void* {
+        static_cast<::grpc::Server*>(server)->Shutdown(
+            std::chrono::system_clock::now());
+        return nullptr;
+      },
+      external_server_.get());
+  if (ret != 0) {
+    LOG(ERROR) << "Failed to spawn safe gRPC server shutdown thread.";
+    // Try to shutdown anyway.
+    external_server_->Shutdown(std::chrono::system_clock::now());
+  } else {
+    if (pthread_join(shutdown_tid, nullptr) != 0) {
+      LOG(ERROR) << "Failed to join safe gRPC server shutdown thread.";
+    }
+  }
 }
 
 Hal* Hal::CreateSingleton(OperationMode mode, SwitchInterface* switch_interface,
