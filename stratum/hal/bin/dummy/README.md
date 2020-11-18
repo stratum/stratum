@@ -33,8 +33,9 @@ bazel build //stratum/hal/bin/dummy:stratum_dummy
 bazel run //stratum/hal/bin/dummy:stratum_dummy \
   -- \
   --persistent_config_dir=/tmp/ \
-  --chassis_config_file=$(pwd)/stratum/hal/bin/dummy/chassis_config \
-  --forwarding_pipeline_configs_file=/tmp/dummy_pipeline_cfg
+  --chassis_config_file=$(bazel info workspace)/stratum/hal/bin/dummy/chassis_config \
+  --forwarding_pipeline_configs_file=/tmp/dummy_pipeline_cfg \
+  --enable_onlp=false
 ```
 
 You can ignore the following error, we are working on fixing it:
