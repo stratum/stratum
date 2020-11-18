@@ -25,7 +25,7 @@ the pipeline config.
 -forwarding_pipeline_configs_file=/var/run/stratum/pipeline_cfg.pb.txt
 ```
 
-If you override any flags below, make sure to use a non-empty and valid path.
+If you override any flags above, make sure to use a non-empty and valid path.
 
 Copy those files to your laptop/server so we can use it later.
 
