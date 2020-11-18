@@ -257,13 +257,11 @@ void Hal::HandleSignal(int value) {
       },
       external_server_.get());
   if (ret != 0) {
-    LOG(ERROR) << "Failed to spawn safe gRPC server shutdown thread.";
-    // Try to shutdown anyway.
-    external_server_->Shutdown(std::chrono::system_clock::now());
+    LOG(FATAL) << "Failed to spawn safe gRPC server shutdown thread.";
+  } else if (pthread_join(shutdown_tid, nullptr) != 0) {
+    LOG(FATAL) << "Failed to join safe gRPC server shutdown thread.";
   } else {
-    if (pthread_join(shutdown_tid, nullptr) != 0) {
-      LOG(ERROR) << "Failed to join safe gRPC server shutdown thread.";
-    }
+    LOG(INFO) << "External gRPC server shutdown completed successfully.";
   }
 }
 
