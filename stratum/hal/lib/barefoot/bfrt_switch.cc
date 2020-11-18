@@ -25,11 +25,11 @@ namespace barefoot {
 
 BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
                        BFChassisManager* bf_chassis_manager,
-                       BFPdInterface* bf_pd_interface,
+                       BfSdeInterface* bf_sde_interface,
                        const std::map<int, BfrtNode*>& device_id_to_bfrt_node)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
       bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
-      bf_pd_interface_(ABSL_DIE_IF_NULL(bf_pd_interface)),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       device_id_to_bfrt_node_(device_id_to_bfrt_node),
       node_id_to_bfrt_node_() {
   for (const auto& entry : device_id_to_bfrt_node_) {
@@ -83,8 +83,8 @@ BfrtSwitch::~BfrtSwitch() {}
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_device_id, node_id))
       << "Unable to find device_id number for node " << node_id;
   int device_id = gtl::FindOrDie(node_id_to_device_id, node_id);
-  ASSIGN_OR_RETURN(auto cpu_port, bf_pd_interface_->GetPcieCpuPort(device_id));
-  RETURN_IF_ERROR(bf_pd_interface_->SetTmCpuPort(device_id, cpu_port));
+  ASSIGN_OR_RETURN(auto cpu_port, bf_sde_interface_->GetPcieCpuPort(device_id));
+  RETURN_IF_ERROR(bf_sde_interface_->SetTmCpuPort(device_id, cpu_port));
   return ::util::OkStatus();
 }
 
@@ -127,7 +127,7 @@ BfrtSwitch::~BfrtSwitch() {}
   }
   APPEND_STATUS_IF_ERROR(status, bf_chassis_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, phal_interface_->Shutdown());
-  // APPEND_STATUS_IF_ERROR(status, bf_pd_interface_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bf_sde_interface_->Shutdown());
 
   return status;
 }
@@ -258,10 +258,10 @@ BfrtSwitch::~BfrtSwitch() {}
 
 std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
-    BFPdInterface* bf_pd_interface,
+    BfSdeInterface* bf_sde_interface,
     const std::map<int, BfrtNode*>& device_id_to_bfrt_node) {
   return absl::WrapUnique(new BfrtSwitch(phal_interface, bf_chassis_manager,
-                                         bf_pd_interface,
+                                         bf_sde_interface,
                                          device_id_to_bfrt_node));
 }
 

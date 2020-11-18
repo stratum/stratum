@@ -51,8 +51,7 @@ stratum_cc_binary(
     ],
     deps = [
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
-        "//stratum/hal/lib/barefoot:bf_pal_wrapper",
-        "//stratum/hal/lib/barefoot:bf_pd_wrapper",
+        "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
         "//stratum/hal/lib/pi:pi_node_bf",
         "@local_barefoot_bin//:bfsde",
@@ -71,8 +70,7 @@ stratum_cc_binary(
     ],
     deps = [
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
-        "//stratum/hal/lib/barefoot:bf_pal_wrapper",
-        "//stratum/hal/lib/barefoot:bf_pd_wrapper",
+        "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bfrt_switch",
         "//stratum/hal/lib/barefoot:bfrt_node",
         "//stratum/hal/lib/barefoot:bfrt_action_profile_manager",
@@ -171,7 +169,10 @@ pkg_deb(
     architecture = "amd64",
     conflicts = ["stratum-bf"],
     data = ":stratum_bf_data",
-    depends = ["kmod"],
+    depends = [
+        "kmod",
+        "libedit2",
+    ],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",

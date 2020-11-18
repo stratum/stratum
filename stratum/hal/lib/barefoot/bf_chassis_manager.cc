@@ -14,7 +14,6 @@
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"
-#include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
@@ -29,31 +28,29 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-using PortStatusChangeEvent = BFPalInterface::PortStatusChangeEvent;
+using PortStatusEvent = BfSdeInterface::PortStatusEvent;
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
 ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
 
 /* static */
-constexpr int BFChassisManager::kMaxPortStatusChangeEventDepth;
+constexpr int BFChassisManager::kMaxPortStatusEventDepth;
 /* static */
 constexpr int BFChassisManager::kMaxXcvrEventDepth;
 
 BFChassisManager::BFChassisManager(OperationMode mode,
                                    PhalInterface* phal_interface,
-                                   BFPalInterface* bf_pal_interface)
+                                   BfSdeInterface* bf_sde_interface)
     : mode_(mode),
       initialized_(false),
-      port_status_change_event_channel_(nullptr),
-      port_status_change_event_reader_(nullptr),
-      port_status_change_event_thread_(),
+      port_status_event_channel_(nullptr),
+      port_status_event_reader_(nullptr),
+      port_status_event_thread_(),
       xcvr_event_writer_id_(kInvalidWriterId),
       xcvr_event_channel_(nullptr),
       xcvr_event_reader_(nullptr),
       xcvr_event_thread_(),
       gnmi_event_writer_(nullptr),
-      phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
-      bf_pal_interface_(ABSL_DIE_IF_NULL(bf_pal_interface)),
       unit_to_node_id_(),
       node_id_to_unit_(),
       node_id_to_port_id_to_port_state_(),
@@ -61,7 +58,9 @@ BFChassisManager::BFChassisManager(OperationMode mode,
       node_id_to_port_id_to_singleton_port_key_(),
       node_id_to_port_id_to_sdk_port_id_(),
       node_id_to_sdk_port_id_to_port_id_(),
-      xcvr_port_key_to_xcvr_state_() {}
+      xcvr_port_key_to_xcvr_state_(),
+      phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)) {}
 
 BFChassisManager::~BFChassisManager() = default;
 
@@ -87,7 +86,7 @@ BFChassisManager::~BFChassisManager() = default;
 
   LOG(INFO) << "Adding port " << port_id << " in node " << node_id
             << " (SDK Port " << sdk_port_id << ").";
-  RETURN_IF_ERROR(bf_pal_interface_->PortAdd(
+  RETURN_IF_ERROR(bf_sde_interface_->AddPort(
       unit, sdk_port_id, singleton_port.speed_bps(), config_params.fec_mode()));
   config->speed_bps = singleton_port.speed_bps();
   config->admin_state = ADMIN_STATE_DISABLED;
@@ -95,11 +94,11 @@ BFChassisManager::~BFChassisManager() = default;
 
   if (config_params.mtu() != 0) {
     RETURN_IF_ERROR(
-        bf_pal_interface_->PortMtuSet(unit, sdk_port_id, config_params.mtu()));
+        bf_sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
   }
   config->mtu = config_params.mtu();
   if (config_params.autoneg() != TRI_STATE_UNKNOWN) {
-    RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(
+    RETURN_IF_ERROR(bf_sde_interface_->SetPortAutonegPolicy(
         unit, sdk_port_id, config_params.autoneg()));
   }
   config->autoneg = config_params.autoneg();
@@ -108,7 +107,7 @@ BFChassisManager::~BFChassisManager() = default;
     LOG(INFO) << "Setting port " << port_id << " to loopback mode "
               << config_params.loopback_mode() << " (SDK Port " << sdk_port_id
               << ").";
-    RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+    RETURN_IF_ERROR(bf_sde_interface_->SetPortLoopbackMode(
         unit, sdk_port_id, config_params.loopback_mode()));
   }
   config->loopback_mode = config_params.loopback_mode();
@@ -116,7 +115,7 @@ BFChassisManager::~BFChassisManager() = default;
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    RETURN_IF_ERROR(bf_pal_interface_->PortEnable(unit, sdk_port_id));
+    RETURN_IF_ERROR(bf_sde_interface_->EnablePort(unit, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -132,7 +131,7 @@ BFChassisManager::~BFChassisManager() = default;
   // SingletonPort ID is the SDN/Stratum port ID
   uint32 port_id = singleton_port.id();
 
-  if (!bf_pal_interface_->PortIsValid(unit, sdk_port_id)) {
+  if (!bf_sde_interface_->IsValidPort(unit, sdk_port_id)) {
     config->admin_state = ADMIN_STATE_UNKNOWN;
     config->speed_bps.reset();
     config->fec_mode.reset();
@@ -143,8 +142,8 @@ BFChassisManager::~BFChassisManager() = default;
 
   const auto& config_params = singleton_port.config_params();
   if (singleton_port.speed_bps() != config_old.speed_bps) {
-    RETURN_IF_ERROR(bf_pal_interface_->PortDisable(unit, sdk_port_id));
-    RETURN_IF_ERROR(bf_pal_interface_->PortDelete(unit, sdk_port_id));
+    RETURN_IF_ERROR(bf_sde_interface_->DisablePort(unit, sdk_port_id));
+    RETURN_IF_ERROR(bf_sde_interface_->DeletePort(unit, sdk_port_id));
 
     ::util::Status status =
         AddPortHelper(node_id, unit, sdk_port_id, singleton_port, config);
@@ -198,7 +197,7 @@ BFChassisManager::~BFChassisManager() = default;
             << " (SDK Port " << sdk_port_id << ").";
     config->mtu.reset();
     RETURN_IF_ERROR(
-        bf_pal_interface_->PortMtuSet(unit, sdk_port_id, config_params.mtu()));
+        bf_sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
     config->mtu = config_params.mtu();
     config_changed = true;
   }
@@ -207,14 +206,14 @@ BFChassisManager::~BFChassisManager() = default;
             << " changed"
             << " (SDK Port " << sdk_port_id << ").";
     config->autoneg.reset();
-    RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(
+    RETURN_IF_ERROR(bf_sde_interface_->SetPortAutonegPolicy(
         unit, sdk_port_id, config_params.autoneg()));
     config->autoneg = config_params.autoneg();
     config_changed = true;
   }
   if (config_params.loopback_mode() != config_old.loopback_mode) {
     config->loopback_mode.reset();
-    RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+    RETURN_IF_ERROR(bf_sde_interface_->SetPortLoopbackMode(
         unit, sdk_port_id, config_params.loopback_mode()));
     config->loopback_mode = config_params.loopback_mode();
     config_changed = true;
@@ -240,13 +239,13 @@ BFChassisManager::~BFChassisManager() = default;
   if (need_disable) {
     LOG(INFO) << "Disabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    RETURN_IF_ERROR(bf_pal_interface_->PortDisable(unit, sdk_port_id));
+    RETURN_IF_ERROR(bf_sde_interface_->DisablePort(unit, sdk_port_id));
     config->admin_state = ADMIN_STATE_DISABLED;
   }
   if (need_enable) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    RETURN_IF_ERROR(bf_pal_interface_->PortEnable(unit, sdk_port_id));
+    RETURN_IF_ERROR(bf_sde_interface_->EnablePort(unit, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -297,7 +296,7 @@ BFChassisManager::~BFChassisManager() = default;
         singleton_port_key;
 
     // Translate the logical SDN port to SDK port (BF device port ID)
-    ASSIGN_OR_RETURN(uint32 sdk_port, bf_pal_interface_->PortIdFromPortKeyGet(
+    ASSIGN_OR_RETURN(uint32 sdk_port, bf_sde_interface_->GetPortIdFromPortKey(
                                           *unit, singleton_port_key));
     node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port;
     node_id_to_sdk_port_id_to_port_id[node_id][sdk_port] = port_id;
@@ -335,8 +334,8 @@ BFChassisManager::~BFChassisManager() = default;
         // something is wrong with the port, we make sure the port is deleted
         // first (and ignore the error status if there is one), then add the
         // port again.
-        if (bf_pal_interface_->PortIsValid(unit, sdk_port_id)) {
-          bf_pal_interface_->PortDelete(unit, sdk_port_id);
+        if (bf_sde_interface_->IsValidPort(unit, sdk_port_id)) {
+          bf_sde_interface_->DeletePort(unit, sdk_port_id);
         }
         RETURN_IF_ERROR(
             AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
@@ -375,7 +374,7 @@ BFChassisManager::~BFChassisManager() = default;
       // TODO(bocon): Collect these errors and keep trying to remove old ports
       LOG(INFO) << "Deleting port " << port_id << " in node " << node_id
                 << " (SDK port " << sdk_port_id << ").";
-      RETURN_IF_ERROR(bf_pal_interface_->PortDelete(unit, sdk_port_id));
+      RETURN_IF_ERROR(bf_sde_interface_->DeletePort(unit, sdk_port_id));
     }
   }
 
@@ -513,7 +512,7 @@ BFChassisManager::~BFChassisManager() = default;
     CHECK_RETURN_IF_FALSE(unit != nullptr)
         << "Node " << node_id << " not found for port " << port_id << ".";
     RETURN_IF_ERROR(
-        bf_pal_interface_->PortIdFromPortKeyGet(*unit, singleton_port_key)
+        bf_sde_interface_->GetPortIdFromPortKey(*unit, singleton_port_key)
             .status());
   }
 
@@ -682,7 +681,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
             << ".";
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   ASSIGN_OR_RETURN(auto port_state,
-                   bf_pal_interface_->PortOperStateGet(unit, sdk_port_id));
+                   bf_sde_interface_->GetPortState(unit, sdk_port_id));
   LOG(INFO) << "State of port " << port_id << " in node " << node_id
             << " (SDK port " << sdk_port_id
             << "): " << PrintPortState(port_state);
@@ -696,7 +695,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   }
   ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-  return bf_pal_interface_->PortAllStatsGet(unit, sdk_port_id, counters);
+  return bf_sde_interface_->GetPortCounters(unit, sdk_port_id, counters);
 }
 
 ::util::StatusOr<std::map<uint64, int>> BFChassisManager::GetNodeIdToUnitMap()
@@ -741,7 +740,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
 
     ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-    RETURN_IF_ERROR(bf_pal_interface_->PortAdd(
+    RETURN_IF_ERROR(bf_sde_interface_->AddPort(
         unit, sdk_port_id, *config.speed_bps, *config.fec_mode));
     config_new->speed_bps = *config.speed_bps;
     config_new->admin_state = ADMIN_STATE_DISABLED;
@@ -749,16 +748,16 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
     if (config.mtu) {
       RETURN_IF_ERROR(
-          bf_pal_interface_->PortMtuSet(unit, sdk_port_id, *config.mtu));
+          bf_sde_interface_->SetPortMtu(unit, sdk_port_id, *config.mtu));
       config_new->mtu = *config.mtu;
     }
     if (config.autoneg) {
-      RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(unit, sdk_port_id,
+      RETURN_IF_ERROR(bf_sde_interface_->SetPortAutonegPolicy(unit, sdk_port_id,
                                                               *config.autoneg));
       config_new->autoneg = *config.autoneg;
     }
     if (config.loopback_mode) {
-      RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+      RETURN_IF_ERROR(bf_sde_interface_->SetPortLoopbackMode(
           unit, sdk_port_id, *config.loopback_mode));
       config_new->loopback_mode = *config.loopback_mode;
     }
@@ -766,7 +765,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     if (config.admin_state == ADMIN_STATE_ENABLED) {
       VLOG(1) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK port " << sdk_port_id << ").";
-      RETURN_IF_ERROR(bf_pal_interface_->PortEnable(unit, sdk_port_id));
+      RETURN_IF_ERROR(bf_sde_interface_->EnablePort(unit, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;
     }
 
@@ -819,9 +818,9 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
 std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(
     OperationMode mode, PhalInterface* phal_interface,
-    BFPalInterface* bf_pal_interface) {
+    BfSdeInterface* bf_sde_interface) {
   return absl::WrapUnique(
-      new BFChassisManager(mode, phal_interface, bf_pal_interface));
+      new BFChassisManager(mode, phal_interface, bf_sde_interface));
 }
 
 void BFChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
@@ -841,17 +840,16 @@ void BFChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   }
 }
 
-void BFChassisManager::ReadPortStatusChangeEvents() {
-  PortStatusChangeEvent event;
+void BFChassisManager::ReadPortStatusEvents() {
+  PortStatusEvent event;
   while (true) {
-    // port_status_change_event_reader_ does not need to be protected by a mutex
+    // port_status_event_reader_ does not need to be protected by a mutex
     // because this thread is the only one accessing it. It is assigned in
     // RegisterEventWriters and then left untouched until UnregisterEventWriters
     // is called. UnregisterEventWriters joins this thread before resetting the
     // reader.
-    int code =
-        port_status_change_event_reader_->Read(&event, absl::InfiniteDuration())
-            .error_code();
+    int code = port_status_event_reader_->Read(&event, absl::InfiniteDuration())
+                   .error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -862,29 +860,29 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
     // Handle received message.
     {
       absl::WriterMutexLock l(&chassis_lock);
-      const uint64* node_id = gtl::FindOrNull(unit_to_node_id_, event.unit);
+      const uint64* node_id = gtl::FindOrNull(unit_to_node_id_, event.device);
       if (node_id == nullptr) {
-        LOG(ERROR) << "Unknown unit / device id " << event.unit << ".";
+        LOG(ERROR) << "Unknown unit / device id " << event.device << ".";
         continue;
       }
       const uint32* port_id = gtl::FindOrNull(
-          node_id_to_sdk_port_id_to_port_id_[*node_id], event.port_id);
+          node_id_to_sdk_port_id_to_port_id_[*node_id], event.port);
       if (port_id == nullptr) {
         // We get a notification for all ports, even ports that were not added,
         // when doing a Fast Refresh, which can be confusing, so we use VLOG
         // instead.
-        // LOG(ERROR) << "Unknown port " << event.port_id << " in node "
+        // LOG(ERROR) << "Unknown port " << event.port << " in node "
         //            << *node_id << ".";
-        VLOG(1) << "Unknown port " << *port_id << " in node " << *node_id
-                << " (SDK port " << event.port_id << ").";
+        VLOG(1) << "Unknown SDK port " << event.port << " in node " << *node_id
+                << ".";
         continue;
       }
       auto* state = gtl::FindOrNull(node_id_to_port_id_to_port_state_[*node_id],
                                     *port_id);
       LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
-                << " (SDK port " << event.port_id
-                << " ): " << PrintPortState(event.state) << ".";
-      if (state == nullptr) {
+                << " (SDK port " << event.port
+                << "): " << PrintPortState(event.state) << ".";
+      if (state != nullptr) {
         *state = event.state;
       }
       SendPortOperStateGnmiEvent(*node_id, *port_id, event.state);
@@ -981,20 +979,19 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   }
 
   {
-    port_status_change_event_channel_ =
-        Channel<PortStatusChangeEvent>::Create(kMaxPortStatusChangeEventDepth);
-    // Create and hand-off Writer to the BFPalInterface.
-    auto writer = ChannelWriter<PortStatusChangeEvent>::Create(
-        port_status_change_event_channel_);
-    RETURN_IF_ERROR(bf_pal_interface_->PortStatusChangeRegisterEventWriter(
-        std::move(writer)));
+    port_status_event_channel_ =
+        Channel<PortStatusEvent>::Create(kMaxPortStatusEventDepth);
+    // Create and hand-off Writer to the BfSdeInterface.
+    auto writer =
+        ChannelWriter<PortStatusEvent>::Create(port_status_event_channel_);
+    RETURN_IF_ERROR(
+        bf_sde_interface_->RegisterPortStatusEventWriter(std::move(writer)));
     LOG(INFO) << "Port status notification callback registered successfully";
 
-    port_status_change_event_reader_ =
-        ChannelReader<PortStatusChangeEvent>::Create(
-            port_status_change_event_channel_);
-    port_status_change_event_thread_ =
-        std::thread([this]() { this->ReadPortStatusChangeEvents(); });
+    port_status_event_reader_ =
+        ChannelReader<PortStatusEvent>::Create(port_status_event_channel_);
+    port_status_event_thread_ =
+        std::thread([this]() { this->ReadPortStatusEvents(); });
   }
 
   if (xcvr_event_writer_id_ == kInvalidWriterId) {
@@ -1020,16 +1017,15 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
 ::util::Status BFChassisManager::UnregisterEventWriters() {
   absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
-  APPEND_STATUS_IF_ERROR(
-      status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
-  if (!port_status_change_event_channel_ ||
-      !port_status_change_event_channel_->Close()) {
+  APPEND_STATUS_IF_ERROR(status,
+                         bf_sde_interface_->UnregisterPortStatusEventWriter());
+  if (!port_status_event_channel_ || !port_status_event_channel_->Close()) {
     ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                            << "Error when closing port status change"
                            << " event channel.";
     APPEND_STATUS_IF_ERROR(status, error);
   }
-  port_status_change_event_channel_.reset();
+  port_status_event_channel_.reset();
   if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
                            phal_interface_->UnregisterTransceiverEventWriter(
@@ -1043,10 +1039,10 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
     xcvr_event_channel_.reset();
   }
 
-  port_status_change_event_thread_.join();
+  port_status_event_thread_.join();
   // Once the thread is joined, it is safe to reset these pointers.
-  port_status_change_event_reader_ = nullptr;
-  port_status_change_event_channel_ = nullptr;
+  port_status_event_reader_ = nullptr;
+  port_status_event_channel_ = nullptr;
 
   xcvr_event_thread_.join();
   xcvr_event_reader_ = nullptr;

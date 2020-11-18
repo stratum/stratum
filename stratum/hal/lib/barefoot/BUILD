@@ -24,8 +24,8 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_chassis_manager",
-        ":bf_pd_interface",
         ":bf_pipeline_utils",
+        ":bf_sde_interface",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -47,7 +47,7 @@ stratum_cc_library(
     hdrs = ["bfrt_switch.h"],
     deps = [
         ":bf_chassis_manager",
-        ":bf_pd_interface",
+        ":bf_sde_interface",
         ":bfrt_node",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -68,7 +68,7 @@ stratum_cc_library(
     srcs = ["bf_chassis_manager.cc"],
     hdrs = ["bf_chassis_manager.h"],
     deps = [
-        ":bf_pal_interface",
+        ":bf_sde_interface",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -98,7 +98,7 @@ stratum_cc_test(
     srcs = ["bf_chassis_manager_test.cc"],
     deps = [
         ":bf_chassis_manager",
-        ":bf_pal_mock",
+        ":bf_sde_mock",
         ":test_main",
         "//stratum/glue:integral_types",
         "//stratum/glue/gtl:map_util",
@@ -118,8 +118,8 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
-    name = "bf_pal_interface",
-    hdrs = ["bf_pal_interface.h"],
+    name = "bf_sde_interface",
+    hdrs = ["bf_sde_interface.h"],
     deps = [
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
@@ -132,21 +132,21 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "bf_pal_mock",
+    name = "bf_sde_mock",
     testonly = 1,
-    hdrs = ["bf_pal_mock.h"],
+    hdrs = ["bf_sde_mock.h"],
     deps = [
-        ":bf_pal_interface",
+        ":bf_sde_interface",
         "@com_google_googletest//:gtest",
     ],
 )
 
 stratum_cc_library(
-    name = "bf_pal_wrapper",
-    srcs = ["bf_pal_wrapper.cc"],
-    hdrs = ["bf_pal_wrapper.h"],
+    name = "bf_sde_wrapper",
+    srcs = ["bf_sde_wrapper.cc"],
+    hdrs = ["bf_sde_wrapper.h"],
     deps = [
-        ":bf_pal_interface",
+        ":bf_sde_interface",
         ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -156,39 +156,6 @@ stratum_cc_library(
         "//stratum/lib:constants",
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
-        "@local_barefoot_bin//:bfsde",
-    ],
-)
-
-stratum_cc_library(
-    name = "bf_pd_interface",
-    hdrs = ["bf_pd_interface.h"],
-    deps = [
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-    ],
-)
-
-stratum_cc_library(
-    name = "bf_pd_mock",
-    testonly = 1,
-    hdrs = ["bf_pd_mock.h"],
-    deps = [
-        ":bf_pd_interface",
-        "@com_google_googletest//:gtest",
-    ],
-)
-
-stratum_cc_library(
-    name = "bf_pd_wrapper",
-    srcs = ["bf_pd_wrapper.cc"],
-    hdrs = ["bf_pd_wrapper.h"],
-    deps = [
-        ":bf_pd_interface",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "@com_google_absl//absl/synchronization",
         "@local_barefoot_bin//:bfsde",
     ],
 )
@@ -258,9 +225,9 @@ stratum_cc_library(
     srcs = ["bfrt_node.cc"],
     hdrs = ["bfrt_node.h"],
     deps = [
-        ":bfrt_action_profile_manager",
         ":bf_cc_proto",
         ":bf_pipeline_utils",
+        ":bfrt_action_profile_manager",
         ":bfrt_counter_manager",
         ":bfrt_id_mapper",
         ":bfrt_packetio_manager",

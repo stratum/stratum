@@ -13,8 +13,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
-#include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
+#include "stratum/hal/lib/barefoot/bf_sde_wrapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
@@ -83,9 +82,9 @@ namespace barefoot {
   // components with "device_id" instead of "node_id".
   int device_id(0);
 
-  auto bf_pal_wrapper = BFPalWrapper::GetSingleton();
+  auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
   ASSIGN_OR_RETURN(bool is_sw_model,
-                   bf_pal_wrapper->IsSoftwareModel(device_id));
+                   bf_sde_wrapper->IsSoftwareModel(device_id));
   const OperationMode mode =
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
@@ -116,11 +115,10 @@ namespace barefoot {
       {device_id, bfrt_node.get()},
   };
   auto bf_chassis_manager =
-      BFChassisManager::CreateInstance(mode, phal_impl, bf_pal_wrapper);
-  auto bfpd_wrapper = BFPdWrapper::GetSingleton();
+      BFChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
   auto bf_switch =
       BfrtSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
-                                 bfpd_wrapper, device_id_to_bfrt_node);
+                                 bf_sde_wrapper, device_id_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();

@@ -11,7 +11,7 @@
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/barefoot/bf_pd_interface.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
@@ -77,7 +77,7 @@ class BfrtSwitch : public SwitchInterface {
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtSwitch> CreateInstance(
       PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
-      BFPdInterface* bf_pd_interface,
+      BfSdeInterface* bf_sde_interface,
       const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
   // BfrtSwitch is neither copyable nor movable.
@@ -91,7 +91,7 @@ class BfrtSwitch : public SwitchInterface {
   // class.
   BfrtSwitch(PhalInterface* phal_interface,
              BFChassisManager* bf_chassis_manager,
-             BFPdInterface* bf_pd_interface,
+             BfSdeInterface* bf_sde_interface,
              const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
   // Helper to get BfrtNode pointer from device_id number or return error
@@ -111,8 +111,8 @@ class BfrtSwitch : public SwitchInterface {
   // per chassis.
   BFChassisManager* bf_chassis_manager_;  // not owned by the class.
 
-  // Pointer to a BFPdInterface implementation that wraps PD API calls.
-  BFPdInterface* bf_pd_interface_;  // not owned by this class.
+  // Pointer to a BfSdeInterface implementation that wraps PD API calls.
+  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
 
   // Map from zero-based device_id number corresponding to a node/ASIC to a
   // pointer to BfrtNode which contain all the per-node managers for that
