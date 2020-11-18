@@ -26,6 +26,9 @@ HOST_ARCHES = ["x86"]
 STRATUM_INTERNAL = ["//stratum:__subpackages__"]
 
 # Compiler warnings for different toolchains.
+STRATUM_COMPILER_WARNINGS_COMMON = [
+    "-Wall",
+]
 STRATUM_DISABLED_COMPILER_WARNINGS_COMMON = [
     "-Wno-sign-compare",
     "-Wno-unused-function",
@@ -48,6 +51,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 # Compiler warnings that are threated as errors.
 STRATUM_COMPILER_ERRORS_COMMON = [
     "-Werror=implicit-fallthrough",
+    "-Werror=ignored-attributes",
 ]
 STRATUM_COMPILER_ERRORS_GCC = []
 STRATUM_COMPILER_ERRORS_LLVM = [
@@ -60,9 +64,12 @@ STRATUM_COMPILER_ERRORS = STRATUM_COMPILER_ERRORS_COMMON + select({
 
 # Exported default compiler options for use.
 STRATUM_DEFAULT_COPTS = select({
-    "//stratum:llvm_compiler": ABSL_LLVM_FLAGS,
-    "//conditions:default": ABSL_GCC_FLAGS,
-}) + STRATUM_DISABLED_COMPILER_WARNINGS + STRATUM_COMPILER_ERRORS
+                            "//stratum:llvm_compiler": ABSL_LLVM_FLAGS,
+                            "//conditions:default": ABSL_GCC_FLAGS,
+                        }) + \
+                        STRATUM_COMPILER_WARNINGS_COMMON + \
+                        STRATUM_DISABLED_COMPILER_WARNINGS + \
+                        STRATUM_COMPILER_ERRORS
 
 STRATUM_TEST_COPTS = STRATUM_DEFAULT_COPTS + select({
     "//stratum:llvm_compiler": ABSL_LLVM_TEST_FLAGS,
