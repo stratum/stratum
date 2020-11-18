@@ -31,8 +31,7 @@ fi
 SDE_TAR=$1
 SDE_TAR_DIR=$( cd $(dirname "$SDE_TAR") >/dev/null 2>&1 && pwd )
 SDE_TAR_NAME=$( basename $SDE_TAR )
-SDE_VERSION=$( tar xf $SDE_TAR -O "bf-sde-*/packages/bf-drivers-*.tgz" | \
-               tar xf - -O "bf-drivers-*/VERSION" )
+SDE_VERSION=$(tar tf $SDE_TAR | head -1 | cut -d/ -f1 | cut -d- -f3)
 
 if [ "$SDE_TAR_DIR" != "$STRATUM_BF_DIR" ]; then
   echo "Copying SDE to Stratum tree... (will be removed later)"
