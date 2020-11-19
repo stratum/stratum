@@ -31,7 +31,7 @@ DECLARE_string(persistent_config_dir);
 namespace stratum {
 namespace hal {
 
-constexpr absl::Duration kShutdownThreadSleep = absl::Seconds(2);
+constexpr absl::Duration kShutdownThreadSleep = absl::Seconds(3);
 
 using ::testing::_;
 using ::testing::HasSubstr;
@@ -561,6 +561,7 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinSucceeds) {
       .WillOnce(Return(::grpc::InsecureServerCredentials()));
   procmon_service_->SetPid(getpid());
 
+  const absl::Time start = absl::Now();
   pthread_t tid;
   ASSERT_EQ(0, pthread_create(&tid, nullptr, &TestShutdownThread, hal_));
 
@@ -568,6 +569,9 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinSucceeds) {
   FLAGS_warmboot = false;
   ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called
                            // in TestShutdownThread()
+  const absl::Time end = absl::Now();
+  // Ensure that Run() does not return early due to early Shutdown() call
+  EXPECT_LE(kShutdownThreadSleep, end - start);
   ASSERT_EQ(0, pthread_join(tid, nullptr));
 }
 
@@ -588,29 +592,6 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinFails) {
   FLAGS_warmboot = false;
   ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called
                            // in TestShutdownThread()
-  ASSERT_EQ(0, pthread_join(tid, nullptr));
-}
-
-TEST_F(HalTest, EnsureHalExternalServerShutdownThreadWaits) {
-  EXPECT_CALL(*switch_mock_, Shutdown()).WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*credentials_manager_mock_,
-              GenerateExternalFacingServerCredentials())
-      .WillOnce(Return(::grpc::InsecureServerCredentials()));
-  procmon_service_->SetPid(getpid() + 1);
-
-  const absl::Time start = absl::Now();
-  pthread_t tid;
-  ASSERT_EQ(0, pthread_create(&tid, nullptr, &TestShutdownThread, hal_));
-
-  // Call and validate results. Even if Checkin is false, we still do not return
-  // any error. We just log an error.
-  FLAGS_warmboot = false;
-  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called
-                           // in TestShutdownThread()
-  const absl::Time end = absl::Now();
-  EXPECT_LE(kShutdownThreadSleep, end - start);
   ASSERT_EQ(0, pthread_join(tid, nullptr));
 }
 
