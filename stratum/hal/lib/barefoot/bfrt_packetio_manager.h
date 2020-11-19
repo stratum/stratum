@@ -15,9 +15,9 @@
 #include "absl/synchronization/mutex.h"
 #include "bf_rt/bf_rt_common.h"
 #include "p4/v1/p4runtime.pb.h"
-#include "pkt_mgr/pkt_mgr_intf.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/utils.h"
@@ -67,7 +67,8 @@ class BfrtPacketioManager {
       LOCKS_EXCLUDED(data_lock_);
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BfrtPacketioManager> CreateInstance(int device_id);
+  static std::unique_ptr<BfrtPacketioManager> CreateInstance(
+      int device, BfSdeInterface* bf_sde_interface);
 
   // BfrtPacketioManager is neither copyable nor movable.
   BfrtPacketioManager(const BfrtPacketioManager&) = delete;
@@ -80,32 +81,12 @@ class BfrtPacketioManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  explicit BfrtPacketioManager(int device_id);
+  explicit BfrtPacketioManager(int device,
+                               BfSdeInterface* bf_sde_interface);
 
   // Builds the packet header structure for controller packets.
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info)
       EXCLUSIVE_LOCKS_REQUIRED(data_lock_);
-
-  // Registers the necessary Rx/Tx callbacks with the SDE.
-  ::util::Status StartIo();
-
-  // Deregisters the necessary Rx/Tx callbacks with the SDE.
-  ::util::Status StopIo();
-
-  // bf_pkt tx done callback function.
-  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
-                                           bf_pkt_tx_ring_t tx_ring,
-                                           uint64 tx_cookie, uint32 status);
-
-  // bf_pkt rx callback function.
-  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
-                                           void* cookie,
-                                           bf_pkt_rx_ring_t rx_ring);
-
-  // Deparses a received packet and hands it over the registered receive writer.
-  ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
-                                bf_pkt_rx_ring_t rx_ring)
-      LOCKS_EXCLUDED(rx_writer_lock_) LOCKS_EXCLUDED(data_lock_);
 
   // Deparses a PacketOut into the buffer by serializing the metadata fields in
   // front of the payload.
@@ -118,11 +99,21 @@ class BfrtPacketioManager {
                                ::p4::v1::PacketIn* packet)
       LOCKS_EXCLUDED(data_lock_);
 
+  // Handles a received packets and hands it over the registered receive writer.
+  ::util::Status HandleSdePacketRx()
+      LOCKS_EXCLUDED(data_lock_, rx_writer_lock_);
+
+  // SDE cpu interface RX thread function.
+  static void* SdeRxThreadFunc(void* arg);
+
   // Mutex lock for protecting rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
 
   // Mutex lock to protect the metadata mappings.
   mutable absl::Mutex data_lock_;
+
+  // Initialized to false, set once only on first PushForwardingPipelineConfig.
+  bool initialized_ GUARDED_BY(data_lock_);
 
   // Stores the registered writer for PacketIns.
   std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
@@ -135,12 +126,19 @@ class BfrtPacketioManager {
   size_t packetin_header_size_ GUARDED_BY(data_lock_);
   size_t packetout_header_size_ GUARDED_BY(data_lock_);
 
-  // Initialized to false, set once only on first PushForwardingPipelineConfig.
-  bool initialized_ GUARDED_BY(data_lock_);
+  //
+  std::shared_ptr<Channel<std::string>> packet_receive_channel_
+      GUARDED_BY(data_lock_);
+
+  //
+  pthread_t sde_rx_thread_id_ GUARDED_BY(data_lock_);
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.
-  const int device_id_;
+  const int device_;
 
   friend class BfrtPacketioManagerTest;
 };
