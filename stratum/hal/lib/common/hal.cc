@@ -51,8 +51,8 @@ namespace hal {
 namespace {
 
 // Semaphore that is unlocked in the shutdown signal handler, which signals
-// a separate thread to shutdown the gRPC service. A semaphore is used here
-// because sem_post is a async-signal-safe function and gRPC server
+// a separate thread to shutdown the external server. A semaphore is used here
+// because sem_post is a async-signal-safe function and external server
 // Shutdown cannot be called in a signal handler because it is not reentrant.
 sem_t external_server_shutdown_sem;
 
@@ -71,7 +71,7 @@ void* ExternalServerShutdownThread(void*) {
   // Wait...
   while (sem_wait(&external_server_shutdown_sem) == -1) {
     if (errno != EINTR) {
-      LOG(ERROR) << "Failed to wait gRPC server shutdown semaphore. "
+      LOG(ERROR) << "Failed to wait external server shutdown semaphore. "
                  << "Error: " << strerror(errno);
     }           // Else, thread was interrupted by a signal handler.
     errno = 0;  // Clear the error and keep waiting.
@@ -388,7 +388,7 @@ Hal* Hal::GetSingleton() {
 #undef CHECK_IS_NULL  // should not be used in any other method.
 
 ::util::Status Hal::RegisterSignalHandlers() {
-  // Initialize the gRPC server shutdown semaphore
+  // Initialize the external server shutdown semaphore
   CHECK_ERR(sem_init(&external_server_shutdown_sem, 0, 0));
 
   // Register the signal handlers and save the old handlers as well.
@@ -416,7 +416,7 @@ Hal* Hal::GetSingleton() {
   old_signal_handlers_.clear();
   LOG(INFO) << "Unregistered Hal signal handlers.";
 
-  // Destroy the gRPC server shutdown semaphore as it is no longer needed
+  // Destroy the external server shutdown semaphore as it is no longer needed
   CHECK_ERR(sem_destroy(&external_server_shutdown_sem));
 
   return ::util::OkStatus();
