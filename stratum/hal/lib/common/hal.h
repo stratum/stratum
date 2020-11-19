@@ -7,6 +7,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_HAL_H_
 #define STRATUM_HAL_LIB_COMMON_HAL_H_
 
+#include <pthread.h>
 #include <signal.h>
 
 #include <memory>
@@ -19,7 +20,6 @@
 #include "grpcpp/grpcpp.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
-// #include "stratum/hal/lib/common/cmal_service.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "stratum/hal/lib/common/diag_service.h"
@@ -145,6 +145,9 @@ class Hal final {
   // Unique pointer to the gRPC server serving the external RPC connections
   // serviced by ConfigMonitoringService and P4Service. Owned by the class.
   std::unique_ptr<::grpc::Server> external_server_;
+
+  // Thread that waits to shutdown the external server. Owned by the class.
+  pthread_t external_server_shutdown_thread_;
 
   // Map from signals for which we registered handlers to their old handlers.
   // This map is used to restore the signal handlers to their previous state

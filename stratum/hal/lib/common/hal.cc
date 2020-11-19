@@ -4,7 +4,6 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include <pthread.h>
 #include <semaphore.h>
 #include <string.h>
 
@@ -55,22 +54,22 @@ namespace {
 // a separate thread to shutdown the gRPC service. A semaphore is used here
 // because sem_post is a async-signal-safe function and gRPC server
 // Shutdown cannot be called in a signal handler because it is not reentrant.
-sem_t grpc_shutdown_sem;
+sem_t external_server_shutdown_sem;
 
 // Signal received callback which is registered as the handler for SIGINT and
 // SIGTERM signals using signal() system call.
 void SignalRcvCallback(int value) {
   LOG(INFO) << "Received signal: " << strsignal(value);
-  CHECK_ERR(sem_post(&grpc_shutdown_sem));
+  CHECK_ERR(sem_post(&external_server_shutdown_sem));
 }
 
 // Wait on the shutdown semaphore, then shutdown the gRPC server.
 void* GrpcServerShutdownThread(void*) {
   // Verify that shutdown semaphore is working by locking it.
-  CHECK_ERR(sem_trywait(&grpc_shutdown_sem));
+  CHECK_ERR(sem_trywait(&external_server_shutdown_sem));
 
   // Wait...
-  while (sem_wait(&grpc_shutdown_sem) == -1) {
+  while (sem_wait(&external_server_shutdown_sem) == -1) {
     if (errno != EINTR) {
       LOG(ERROR) << "Failed to wait gRPC server shutdown semaphore. "
                  << "Error: " << strerror(errno);
@@ -117,6 +116,7 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       diag_service_(nullptr),
       file_service_(nullptr),
       external_server_(nullptr),
+      external_server_shutdown_thread_(0),
       old_signal_handlers_() {}
 
 Hal::~Hal() {
@@ -187,7 +187,20 @@ Hal::~Hal() {
   // of warmboot shutdown, the stack is first freezed by calling an RPC in
   // AdminService, which itself calls Freeze() method in SwitchInterface class.
   LOG(INFO) << "Shutting down HAL...";
+
   ::util::Status status = ::util::OkStatus();
+
+  if (external_server_shutdown_thread_) {
+    int ret = pthread_join(external_server_shutdown_thread_, nullptr);
+    if (ret != 0) {
+      ::util::Status error =
+          MAKE_ERROR(ERR_INTERNAL)
+          << "External server shutdown thread could not be joined. "
+          << "Error: " << strerror(errno);
+      APPEND_STATUS_IF_ERROR(status, error);
+    }
+  }
+
   APPEND_STATUS_IF_ERROR(status, config_monitoring_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, p4_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, certificate_management_service_->Teardown());
@@ -318,8 +331,6 @@ Hal* Hal::GetSingleton() {
   CHECK_IS_NULL(diag_service_);
   CHECK_IS_NULL(file_service_);
   CHECK_IS_NULL(external_server_);
-  // FIXME(boc) google only
-  // CHECK_IS_NULL(internal_server_);
 
   // Reset error_buffer_.
   error_buffer_->ClearErrors();
@@ -347,18 +358,11 @@ Hal* Hal::GetSingleton() {
 
 ::util::Status Hal::RegisterSignalHandlers() {
   // Initialize the gRPC server shutdown semaphore (unlocked)
-  CHECK_ERR(sem_init(&grpc_shutdown_sem, 0, 1));
+  CHECK_ERR(sem_init(&external_server_shutdown_sem, 0, 1));
 
   // Start the gRPC server shutdown thread
-  {
-    pthread_t t;
-    pthread_attr_t attr;
-    CHECK_ERR(pthread_attr_init(&attr));
-    CHECK_ERR(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
-    CHECK_ERR(pthread_create(&t, &attr, &GrpcServerShutdownThread, nullptr));
-    CHECK_ERR(pthread_attr_destroy(&attr));
-    // TODO(bocon): Should we keep the thread reference around?
-  }
+  CHECK_ERR(pthread_create(&external_server_shutdown_thread_, nullptr,
+                           &GrpcServerShutdownThread, nullptr));
 
   // Register the signal handlers and save the old handlers as well.
   std::vector<int> sig = {SIGINT, SIGTERM, SIGUSR2};
@@ -385,7 +389,7 @@ Hal* Hal::GetSingleton() {
   old_signal_handlers_.clear();
 
   // Destroy the gRPC server shutdown semaphore as it is no longer needed
-  CHECK_ERR(sem_destroy(&grpc_shutdown_sem));
+  CHECK_ERR(sem_destroy(&external_server_shutdown_sem));
 
   return ::util::OkStatus();
 }
