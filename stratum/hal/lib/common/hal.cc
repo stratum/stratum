@@ -66,8 +66,8 @@ void SignalRcvCallback(int value) {
 
 // Wait on the shutdown semaphore, then shutdown the gRPC server.
 void* GrpcServerShutdownThread(void*) {
-  // Verify that shutdown semaphore is working and locked
-  PCHECK(sem_trywait(&grpc_shutdown_sem) == -1 && errno == EAGAIN);
+  // Verify that shutdown semaphore is working by locking it.
+  CHECK_ERR(sem_trywait(&grpc_shutdown_sem));
 
   // Wait...
   while (sem_wait(&grpc_shutdown_sem) == -1) {
@@ -346,8 +346,8 @@ Hal* Hal::GetSingleton() {
 #undef CHECK_IS_NULL  // should not be used in any other method.
 
 ::util::Status Hal::RegisterSignalHandlers() {
-  // Initialize the gRPC server shutdown semaphore
-  CHECK_ERR(sem_init(&grpc_shutdown_sem, 0, 0));
+  // Initialize the gRPC server shutdown semaphore (unlocked)
+  CHECK_ERR(sem_init(&grpc_shutdown_sem, 0, 1));
 
   // Start the gRPC server shutdown thread
   {
