@@ -285,7 +285,7 @@ Hal::~Hal() {
     }
   }
 
-  // Clear any pervious interrupts by locking semaphore
+  // Clear any previous interrupts by locking semaphore
   while (sem_trywait(&external_server_shutdown_sem) == 0)
     ;
   PCHECK(errno == EAGAIN);  // semaphore is locked
