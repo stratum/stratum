@@ -314,7 +314,7 @@ void Hal::ShutdownExternalServer() {
     external_server_->Shutdown(std::chrono::system_clock::now());
     LOG(INFO) << "External server shutdown complete.";
   } else {
-    LOG(ERROR) << "Failed to shutdown external server (nullptr).";
+    LOG(ERROR) << "Failed to shutdown nonexistent external server.";
   }
 }
 
