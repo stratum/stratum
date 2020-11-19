@@ -74,7 +74,7 @@ void* GrpcServerShutdownThread(void*) {
     if (errno != EINTR) {
       LOG(ERROR) << "Failed to wait gRPC server shutdown semaphore. "
                  << "Error: " << strerror(errno);
-    }  // Else, thread was interrupted by a signal handler.
+    }           // Else, thread was interrupted by a signal handler.
     errno = 0;  // Clear the error and keep waiting.
   }
 
@@ -357,7 +357,7 @@ Hal* Hal::GetSingleton() {
     CHECK_ERR(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
     CHECK_ERR(pthread_create(&t, &attr, &GrpcServerShutdownThread, nullptr));
     CHECK_ERR(pthread_attr_destroy(&attr));
-    //pthread_cancel(t);
+    // TODO(bocon): Should we keep the thread reference around?
   }
 
   // Register the signal handlers and save the old handlers as well.
@@ -366,7 +366,7 @@ Hal* Hal::GetSingleton() {
     sighandler_t h = signal(s, SignalRcvCallback);
     if (h == SIG_ERR) {
       RETURN_ERROR(ERR_INTERNAL)
-             << "Failed to register signal " << strsignal(s);
+          << "Failed to register signal " << strsignal(s);
     }
     old_signal_handlers_[s] = h;
   }
