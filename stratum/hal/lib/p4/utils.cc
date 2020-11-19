@@ -10,9 +10,12 @@
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/substitute.h"
+#include "google/rpc/code.pb.h"
+#include "google/rpc/status.pb.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -92,6 +95,39 @@ std::string Uint32ToByteStream(uint32 val) {
     bytes = bytes.substr(1);
   }
   return bytes;
+}
+
+std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
+  std::stringstream ss;
+  if (!status.error_details().empty()) {
+    ss << "(overall error code: "
+       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
+       << ", overall error message: "
+       << (status.error_message().empty() ? "None" : status.error_message())
+       << "). Error details: ";
+    ::google::rpc::Status details;
+    if (!details.ParseFromString(status.error_details())) {
+      ss << "Failed to parse ::google::rpc::Status from GRPC status details.";
+    } else {
+      for (int i = 0; i < details.details_size(); ++i) {
+        ::p4::v1::Error detail;
+        if (details.details(i).UnpackTo(&detail)) {
+          ss << "\n(error #" << i + 1 << ": error code: "
+             << ::google::rpc::Code_Name(ToGoogleRpcCode(detail.code()))
+             << ", error message: "
+             << (detail.message().empty() ? "None" : detail.message()) << ") ";
+        }
+      }
+    }
+  } else {
+    ss << "(error code: "
+       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
+       << ", error message: "
+       << (status.error_message().empty() ? "None" : status.error_message())
+       << ").";
+  }
+
+  return ss.str();
 }
 
 }  // namespace hal
