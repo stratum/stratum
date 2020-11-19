@@ -8,6 +8,8 @@
 
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
+#include "stratum/glue/gtl/cleanup.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
@@ -16,6 +18,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/constants.h"
+#include "stratum/lib/utils.h"
 
 extern "C" {
 #include "tofino/bf_pal/bf_pal_port_intf.h"
@@ -177,7 +180,7 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
 }
 
 ::util::Status BfSdeWrapper::RegisterPortStatusEventWriter(
-    std::unique_ptr<ChannelWriter<PortStatusEvent> > writer) {
+    std::unique_ptr<ChannelWriter<PortStatusEvent>> writer) {
   absl::WriterMutexLock l(&port_status_event_writer_lock_);
   port_status_event_writer_ = std::move(writer);
   RETURN_IF_BFRT_ERROR(
@@ -257,9 +260,9 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<bool> BfSdeWrapper::IsSoftwareModel(int unit) {
+::util::StatusOr<bool> BfSdeWrapper::IsSoftwareModel(int device) {
   bool is_sw_model;
-  auto bf_status = bf_pal_pltfm_type_get(unit, &is_sw_model);
+  auto bf_status = bf_pal_pltfm_type_get(device, &is_sw_model);
   CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS)
       << "Error getting software model status.";
 
@@ -307,6 +310,116 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   CHECK_RETURN_IF_FALSE(p4_pd_tm_set_cpuport(device, port) == 0)
       << "Unable to set CPU port " << port << " on device " << device;
   return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::TxPacket(int device, const std::string& buffer) {
+  bf_pkt* pkt = nullptr;
+  RETURN_IF_BFRT_ERROR(
+      bf_pkt_alloc(device, &pkt, buffer.size(), BF_DMA_CPU_PKT_TRANSMIT_0));
+  auto pkt_cleaner =
+      gtl::MakeCleanup([pkt, device]() { bf_pkt_free(device, pkt); });
+  RETURN_IF_BFRT_ERROR(bf_pkt_data_copy(
+      pkt, reinterpret_cast<const uint8*>(buffer.data()), buffer.size()));
+  RETURN_IF_BFRT_ERROR(bf_pkt_tx(device, pkt, BF_PKT_TX_RING_0, pkt));
+  pkt_cleaner.release();
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::StartPacketIo(int device) {
+  // Maybe move to InitSde function?
+  if (!bf_pkt_is_inited(device)) {
+    RETURN_IF_BFRT_ERROR(bf_pkt_init());
+  }
+
+  // type of i should be bf_pkt_tx_ring_t?
+  for (int tx_ring = BF_PKT_TX_RING_0; tx_ring < BF_PKT_TX_RING_MAX;
+       ++tx_ring) {
+    RETURN_IF_BFRT_ERROR(bf_pkt_tx_done_notif_register(
+        device, BfSdeWrapper::BfPktTxNotifyCallback,
+        static_cast<bf_pkt_tx_ring_t>(tx_ring)));
+  }
+
+  for (int rx_ring = BF_PKT_RX_RING_0; rx_ring < BF_PKT_RX_RING_MAX;
+       ++rx_ring) {
+    RETURN_IF_BFRT_ERROR(
+        bf_pkt_rx_register(device, BfSdeWrapper::BfPktRxNotifyCallback,
+                           static_cast<bf_pkt_rx_ring_t>(rx_ring), nullptr));
+  }
+  VLOG(1) << "Registered packetio callbacks on device " << device << ".";
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::StopPacketIo(int device) {
+  for (int tx_ring = BF_PKT_TX_RING_0; tx_ring < BF_PKT_TX_RING_MAX;
+       ++tx_ring) {
+    RETURN_IF_BFRT_ERROR(bf_pkt_tx_done_notif_deregister(
+        device, static_cast<bf_pkt_tx_ring_t>(tx_ring)));
+  }
+
+  for (int rx_ring = BF_PKT_RX_RING_0; rx_ring < BF_PKT_RX_RING_MAX;
+       ++rx_ring) {
+    RETURN_IF_BFRT_ERROR(bf_pkt_rx_deregister(
+        device, static_cast<bf_pkt_rx_ring_t>(rx_ring)));
+  }
+  VLOG(1) << "Unregistered packetio callbacks on device " << device << ".";
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::RegisterPacketReceiveWriter(
+    int device, std::unique_ptr<ChannelWriter<std::string>> writer) {
+  absl::WriterMutexLock l(&packet_rx_callback_lock_);
+  device_to_packet_rx_writer_[device] = std::move(writer);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::UnregisterPacketReceiveWriter(int device) {
+  absl::WriterMutexLock l(&packet_rx_callback_lock_);
+  device_to_packet_rx_writer_.erase(device);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::HandlePacketRx(bf_dev_id_t device, bf_pkt* pkt,
+                                            bf_pkt_rx_ring_t rx_ring) {
+  absl::ReaderMutexLock l(&packet_rx_callback_lock_);
+  auto rx_writer = gtl::FindOrNull(device_to_packet_rx_writer_, device);
+  CHECK_RETURN_IF_FALSE(rx_writer)
+      << "No Rx callback registered for device id " << device << ".";
+
+  std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
+                     bf_pkt_get_pkt_size(pkt));
+  if (!(*rx_writer)->TryWrite(buffer).ok()) {
+    LOG_EVERY_N(INFO, 500) << "Dropped packet received from CPU.";
+  }
+
+  VLOG(1) << "Received packet from CPU " << buffer.size() << " bytes "
+          << StringToHex(buffer);
+
+  return ::util::OkStatus();
+}
+
+bf_status_t BfSdeWrapper::BfPktTxNotifyCallback(bf_dev_id_t dev_id,
+                                                bf_pkt_tx_ring_t tx_ring,
+                                                uint64 tx_cookie,
+                                                uint32 status) {
+  VLOG(1) << "Tx done notification for device: " << dev_id
+          << " tx ring: " << tx_ring << " tx cookie: " << tx_cookie
+          << " status: " << status;
+
+  bf_pkt* pkt = reinterpret_cast<bf_pkt*>(tx_cookie);
+  return bf_pkt_free(dev_id, pkt);
+}
+
+bf_status_t BfSdeWrapper::BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
+                                                void* cookie,
+                                                bf_pkt_rx_ring_t rx_ring) {
+  BfSdeWrapper* bf_sde_wrapper = BfSdeWrapper::GetSingleton();
+  // TODO: Handle error
+  bf_sde_wrapper->HandlePacketRx(dev_id, pkt, rx_ring);
+  // static_cast<BfSdeWrapper*>(cookie)->HandlePacketRx(dev_id, pkt, rx_ring);
+  return bf_pkt_free(dev_id, pkt);
 }
 
 BfSdeWrapper* BfSdeWrapper::CreateSingleton() {

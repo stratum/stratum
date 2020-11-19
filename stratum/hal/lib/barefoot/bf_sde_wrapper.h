@@ -6,7 +6,9 @@
 
 #include <memory>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "pkt_mgr/pkt_mgr_intf.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -50,6 +52,18 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::StatusOr<int> GetPcieCpuPort(int device) override;
   ::util::Status SetTmCpuPort(int device, int port) override;
   ::util::StatusOr<bool> IsSoftwareModel(int device) override;
+  ::util::Status TxPacket(int device, const std::string& packet) override;
+  ::util::Status StartPacketIo(int device) override;
+  ::util::Status StopPacketIo(int device) override;
+  ::util::Status RegisterPacketReceiveWriter(
+      int device,
+      std::unique_ptr<ChannelWriter<std::string>> writer) override;
+  ::util::Status UnregisterPacketReceiveWriter(int device) override;
+
+  //
+  ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
+                                bf_pkt_rx_ring_t rx_ring)
+      LOCKS_EXCLUDED(packet_rx_callback_lock_);
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -92,10 +106,27 @@ class BfSdeWrapper : public BfSdeInterface {
   // RM Mutex to protect the port status writer.
   mutable absl::Mutex port_status_event_writer_lock_;
 
+  // Mutex protecting the packet rx writer map.
+  mutable absl::Mutex packet_rx_callback_lock_;
+
   // Writer to forward the port status change message to. It is registered by
   // chassis manager to receive SDE port status change events.
   std::unique_ptr<ChannelWriter<PortStatusEvent>> port_status_event_writer_
       GUARDED_BY(port_status_event_writer_lock_);
+
+  // Map from device ID to packet receive writer.
+  absl::flat_hash_map<int, std::unique_ptr<ChannelWriter<std::string>>>
+      device_to_packet_rx_writer_ GUARDED_BY(packet_rx_callback_lock_);
+
+  // Callback registed with the SDE for Tx notifications.
+  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
+                                           bf_pkt_tx_ring_t tx_ring,
+                                           uint64 tx_cookie, uint32 status);
+
+  // Callback registed with the SDE for Rx notifications.
+  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
+                                           void* cookie,
+                                           bf_pkt_rx_ring_t rx_ring);
 };
 
 }  // namespace barefoot
