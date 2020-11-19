@@ -36,7 +36,7 @@ class BfSdeInterface {
                                          PortCounters* counters) = 0;
 
   virtual ::util::Status RegisterPortStatusEventWriter(
-      std::unique_ptr<ChannelWriter<PortStatusEvent> > writer) = 0;
+      std::unique_ptr<ChannelWriter<PortStatusEvent>> writer) = 0;
 
   virtual ::util::Status UnregisterPortStatusEventWriter() = 0;
 
@@ -70,6 +70,17 @@ class BfSdeInterface {
 
   // Check whether we are running on the software model.
   virtual ::util::StatusOr<bool> IsSoftwareModel(int device) = 0;
+
+  virtual ::util::Status TxPacket(int device, const std::string& packet) = 0;
+
+  virtual ::util::Status StartPacketIo(int device) = 0;
+
+  virtual ::util::Status StopPacketIo(int device) = 0;
+
+  virtual ::util::Status RegisterPacketReceiveWriter(
+      int device, std::unique_ptr<ChannelWriter<std::string>> writer) = 0;
+
+  virtual ::util::Status UnregisterPacketReceiveWriter(int device) = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance only.
