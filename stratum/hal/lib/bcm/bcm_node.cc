@@ -2,14 +2,15 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <utility>
-#include <set>
-
-#include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/bcm/bcm_node.h"
+
+#include <set>
+#include <utility>
+
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
 
 // TODO(unknown): This flag is currently false to skip static entry writes
 // until all related hardware tables and related mapping are implemented.
@@ -306,12 +307,12 @@ BcmNode::~BcmNode() {}
         action_profile_ids, writer));
   }
   if (clone_sessions_requested) {
-    RETURN_IF_ERROR(bcm_table_manager_->ReadMulticastGroups(
-        clone_session_ids, writer));
+    RETURN_IF_ERROR(
+        bcm_table_manager_->ReadMulticastGroups(clone_session_ids, writer));
   }
   if (multicast_groups_requested) {
-    RETURN_IF_ERROR(bcm_table_manager_->ReadCloneSessions(
-        multicast_group_ids, writer));
+    RETURN_IF_ERROR(
+        bcm_table_manager_->ReadCloneSessions(multicast_group_ids, writer));
   }
 
   return ::util::OkStatus();
@@ -524,8 +525,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           consumed = true;
           break;
         case BcmFlowEntry::BCM_TABLE_L2_UNICAST:
-          RETURN_IF_ERROR(
-              bcm_l2_manager_->InsertL2Entry(bcm_flow_entry));
+          RETURN_IF_ERROR(bcm_l2_manager_->InsertL2Entry(bcm_flow_entry));
           // Update the internal records in BcmTableManager.
           RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
           consumed = true;
@@ -600,8 +600,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           consumed = true;
           break;
         case BcmFlowEntry::BCM_TABLE_L2_UNICAST:
-          RETURN_IF_ERROR(
-              bcm_l2_manager_->DeleteL2Entry(bcm_flow_entry));
+          RETURN_IF_ERROR(bcm_l2_manager_->DeleteL2Entry(bcm_flow_entry));
           // Update the internal records in BcmTableManager.
           RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
           consumed = true;
@@ -669,7 +668,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // method will return error. We keep a one-to-one map between members
       // and non-multipath egress intfs.
       RETURN_IF_ERROR(bcm_table_manager_->AddActionProfileMember(
-                          member, nexthop.type(), egress_intf_id, bcm_port_id));
+          member, nexthop.type(), egress_intf_id, bcm_port_id));
       consumed = true;
       break;
     }
@@ -697,7 +696,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
               : nexthop.trunk_port();
       // Update the internal records in BcmTableManager.
       RETURN_IF_ERROR(bcm_table_manager_->UpdateActionProfileMember(
-                          member, nexthop.type(), bcm_port_id));
+          member, nexthop.type(), bcm_port_id));
       consumed = true;
       break;
     }
