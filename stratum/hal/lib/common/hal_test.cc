@@ -566,8 +566,8 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinSucceeds) {
 
   // Call and validate results. Run() will not return any error.
   FLAGS_warmboot = false;
-  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called in
-                           // TestShutdownThread()
+  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called
+                           // in TestShutdownThread()
   ASSERT_EQ(0, pthread_join(tid, nullptr));
 }
 
@@ -586,8 +586,8 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinFails) {
   // Call and validate results. Even if Checkin is false, we still do not return
   // any error. We just log an error.
   FLAGS_warmboot = false;
-  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called in
-                           // TestShutdownThread()
+  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called
+                           // in TestShutdownThread()
   ASSERT_EQ(0, pthread_join(tid, nullptr));
 }
 
@@ -607,8 +607,8 @@ TEST_F(HalTest, EnsureHalExternalServerShutdownThreadWaits) {
   // Call and validate results. Even if Checkin is false, we still do not return
   // any error. We just log an error.
   FLAGS_warmboot = false;
-  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called in
-                           // TestShutdownThread()
+  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called
+                           // in TestShutdownThread()
   const absl::Time end = absl::Now();
   EXPECT_LE(kShutdownThreadSleep, end - start);
   ASSERT_EQ(0, pthread_join(tid, nullptr));

@@ -201,7 +201,8 @@ Hal::~Hal() {
       APPEND_STATUS_IF_ERROR(status, error);
     }
     if (value == PTHREAD_CANCELED) {
-      LOG(ERROR) << "External server shutdown thread was canceled. This is okay in a test, but should otherwise be avoided.";
+      LOG(ERROR) << "External server shutdown thread was canceled. This is "
+                    "okay in a test, but should otherwise be avoided.";
     } else if (value != nullptr) {
       ::util::Status error =
           MAKE_ERROR(ERR_INTERNAL)
@@ -266,8 +267,8 @@ Hal::~Hal() {
     external_server_ = builder.BuildAndStart();
     if (external_server_ == nullptr) {
       RETURN_ERROR(ERR_INTERNAL)
-             << "Failed to start Stratum external facing services. This is an "
-             << "internal error.";
+          << "Failed to start Stratum external facing services. This is an "
+          << "internal error.";
     }
     LOG(ERROR) << "Stratum external facing services are listening to "
                << absl::StrJoin(external_stratum_urls, ", ") << ", "
@@ -285,13 +286,15 @@ Hal::~Hal() {
   }
 
   // Clear any pervious interrupts by locking semaphore
-  while (sem_trywait(&external_server_shutdown_sem) == 0);
+  while (sem_trywait(&external_server_shutdown_sem) == 0)
+    ;
   PCHECK(errno == EAGAIN);  // semaphore is locked
   // Unlock the shutdown semaphore for the shutdown thread
   CHECK_ERR(sem_post(&external_server_shutdown_sem));
   // Start the external server shutdown thread
   if (external_server_shutdown_thread_) {
-    RETURN_ERROR(ERR_INTERNAL) << "External server shutdown thread is already running.";
+    RETURN_ERROR(ERR_INTERNAL)
+        << "External server shutdown thread is already running.";
   }
   CHECK_ERR(pthread_create(&external_server_shutdown_thread_, nullptr,
                            &ExternalServerShutdownThread, nullptr));
