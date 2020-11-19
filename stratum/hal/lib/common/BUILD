@@ -539,7 +539,7 @@ stratum_cc_test(
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
         "@com_google_absl//absl/strings",
-	"@com_google_absl//absl/time",
+        "@com_google_absl//absl/time",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
