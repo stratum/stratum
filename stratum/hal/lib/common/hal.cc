@@ -20,10 +20,9 @@
 #include "stratum/procmon/procmon.grpc.pb.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
-DEFINE_string(
-    external_stratum_urls, stratum::kExternalStratumUrls,
-    "Comma-separated list of URLs for server to listen to for external"
-    " calls from SDN controller, etc.");
+DEFINE_string(external_stratum_urls, stratum::kExternalStratumUrls,
+              "Comma-separated list of URLs for server to listen to for "
+              "external calls from SDN controller, etc.");
 DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,
               "URL for listening to local calls from stratum stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
@@ -199,15 +198,14 @@ Hal::~Hal() {
     for (const auto& url : external_stratum_urls) {
       builder.AddListeningPort(url, server_credentials);
     }
+    constexpr int MB = 1024 * 1024;
     if (FLAGS_grpc_max_recv_msg_size > 0) {
-      builder.SetMaxReceiveMessageSize(FLAGS_grpc_max_recv_msg_size * 1024 *
-                                       1024);
-      builder.AddChannelArgument<int>(
-          GRPC_ARG_MAX_METADATA_SIZE,
-          FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
+      builder.SetMaxReceiveMessageSize(FLAGS_grpc_max_recv_msg_size * MB);
+      builder.AddChannelArgument<int>(GRPC_ARG_MAX_METADATA_SIZE,
+                                      FLAGS_grpc_max_recv_msg_size * MB);
     }
     if (FLAGS_grpc_max_send_msg_size) {
-      builder.SetMaxSendMessageSize(FLAGS_grpc_max_send_msg_size * 1024 * 1024);
+      builder.SetMaxSendMessageSize(FLAGS_grpc_max_send_msg_size * MB);
     }
     builder.RegisterService(config_monitoring_service_.get());
     builder.RegisterService(p4_service_.get());
