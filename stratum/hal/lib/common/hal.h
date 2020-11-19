@@ -62,8 +62,8 @@ class Hal final {
   // Run() is to be called after Setup().
   ::util::Status Run();
 
-  // Shutdown the gRPC server. This must not be called in a signal handler.
-  void ShutdownGrpcServer();
+  // Shutdown the external server. This must not be called in a signal handler.
+  void ShutdownExternalServer();
 
   // Returns the list of errors HAL and all it's services have encountered.
   inline std::vector<::util::Status> GetErrors() const {
@@ -159,6 +159,8 @@ class Hal final {
 
   // The singleton instance.
   static Hal* singleton_ GUARDED_BY(init_lock_);
+
+  friend class HalTest;
 };
 
 }  // namespace hal

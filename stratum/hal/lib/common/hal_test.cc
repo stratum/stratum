@@ -6,6 +6,7 @@
 
 #include "absl/strings/str_join.h"
 #include "absl/strings/substitute.h"
+#include "absl/time/clock.h"
 #include "gflags/gflags.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -29,6 +30,8 @@ DECLARE_string(persistent_config_dir);
 
 namespace stratum {
 namespace hal {
+
+constexpr absl::Duration kShutdownThreadSleep = absl::Seconds(2);
 
 using ::testing::_;
 using ::testing::HasSubstr;
@@ -64,6 +67,12 @@ class FakeProcmonService final : public procmon::ProcmonService::Service {
 };
 
 class HalTest : public ::testing::Test {
+ public:
+  void ShutdownExternalServerAndThread() {
+    CHECK_ERR(pthread_cancel(hal_->external_server_shutdown_thread_));
+    hal_->ShutdownExternalServer();
+  }
+
  protected:
   static const std::string RandomURL() {
     // Every call to PickUnusedPortOrDie() will return a new port number.
@@ -536,8 +545,8 @@ TEST_F(HalTest, WarmbootTeardownFailure) {
 namespace {
 
 void* TestShutdownThread(void* arg) {
-  sleep(3);  // some sleep to emulate a task.
-  static_cast<Hal*>(arg)->ShutdownGrpcServer();
+  ::absl::SleepFor(kShutdownThreadSleep);  // some sleep to emulate a task.
+  static_cast<HalTest*>(arg)->ShutdownExternalServerAndThread();
   return nullptr;
 }
 
@@ -557,7 +566,7 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinSucceeds) {
 
   // Call and validate results. Run() will not return any error.
   FLAGS_warmboot = false;
-  ASSERT_OK(hal_->Run());  // blocking until ShutdownGrpcServer() is called in
+  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called in
                            // TestShutdownThread()
   ASSERT_EQ(0, pthread_join(tid, nullptr));
 }
@@ -577,8 +586,31 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinFails) {
   // Call and validate results. Even if Checkin is false, we still do not return
   // any error. We just log an error.
   FLAGS_warmboot = false;
-  ASSERT_OK(hal_->Run());  // blocking until ShutdownGrpcServer() is called in
+  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called in
                            // TestShutdownThread()
+  ASSERT_EQ(0, pthread_join(tid, nullptr));
+}
+
+TEST_F(HalTest, EnsureHalExternalServerShutdownThreadWaits) {
+  EXPECT_CALL(*switch_mock_, Shutdown()).WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*credentials_manager_mock_,
+              GenerateExternalFacingServerCredentials())
+      .WillOnce(Return(::grpc::InsecureServerCredentials()));
+  procmon_service_->SetPid(getpid() + 1);
+
+  const absl::Time start = absl::Now();
+  pthread_t tid;
+  ASSERT_EQ(0, pthread_create(&tid, nullptr, &TestShutdownThread, hal_));
+
+  // Call and validate results. Even if Checkin is false, we still do not return
+  // any error. We just log an error.
+  FLAGS_warmboot = false;
+  ASSERT_OK(hal_->Run());  // blocking until ShutdownExternalServer() is called in
+                           // TestShutdownThread()
+  const absl::Time end = absl::Now();
+  EXPECT_LE(kShutdownThreadSleep, end - start);
   ASSERT_EQ(0, pthread_join(tid, nullptr));
 }
 
