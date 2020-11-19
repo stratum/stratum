@@ -198,7 +198,7 @@ Hal::~Hal() {
     for (const auto& url : external_stratum_urls) {
       builder.AddListeningPort(url, server_credentials);
     }
-    constexpr int MB = 1024 * 1024;
+    constexpr uint32 MB = 1024 * 1024;
     if (FLAGS_grpc_max_recv_msg_size > 0) {
       builder.SetMaxReceiveMessageSize(FLAGS_grpc_max_recv_msg_size * MB);
       builder.AddChannelArgument<int>(GRPC_ARG_MAX_METADATA_SIZE,
