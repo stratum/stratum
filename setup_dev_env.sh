@@ -110,7 +110,7 @@ fi
 if [ ! -z "$GIT_EDITOR" ]; then
     DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR=\"$GIT_EDITOR\""
 fi
-eval docker build $DOCKER_BUILD_OPTIONS -f $DOCKER_FILE $THIS_DIR
+eval docker build $DOCKER_BUILD_OPTIONS - < $DOCKER_FILE
 ERR=$?
 if [ $ERR -ne 0 ]; then
     >&2 echo "ERROR: Error while building dockering development image"
