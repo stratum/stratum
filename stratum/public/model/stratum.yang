@@ -63,13 +63,13 @@ module stratum {
       "P4 behavioral model (bmv2): https://github.com/p4lang/behavioral-model";
   }
 
-  identity BAREFOOT_TOFINO {
+  identity GENERIC_BAREFOOT_TOFINO {
     base herc-platform:PLATFORM_TYPE;
     description
       "Platforms based on the Barefoot Tofino ASIC";
   }
 
-  identity BAREFOOT_TOFINO2 {
+  identity GENERIC_BAREFOOT_TOFINO2 {
     base herc-platform:PLATFORM_TYPE;
     description
       "Platforms based on the Barefoot Tofino2 ASIC";
