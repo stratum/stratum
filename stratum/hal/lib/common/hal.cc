@@ -5,6 +5,8 @@
 #include "stratum/hal/lib/common/hal.h"
 
 #include <pthread.h>
+#include <semaphore.h>
+#include <string.h>
 
 #include <chrono>  // NOLINT
 #include <utility>
@@ -49,12 +51,36 @@ namespace hal {
 
 namespace {
 
+// Semaphore that is unlocked in the shutdown signal handler, which signals
+// a separate thread to shutdown the gRPC service. A semaphore is used here
+// because sem_post is a async-signal-safe function and gRPC server
+// Shutdown cannot be called in a signal handler because it is not reentrant.
+sem_t grpc_shutdown_sem;
+
 // Signal received callback which is registered as the handler for SIGINT and
 // SIGTERM signals using signal() system call.
 void SignalRcvCallback(int value) {
+  LOG(INFO) << "Received signal: " << strsignal(value);
+  CHECK_ERR(sem_post(&grpc_shutdown_sem));
+}
+
+// Wait on the shutdown semaphore, then shutdown the gRPC server.
+void* GrpcServerShutdownThread(void*) {
+  // Verify that shutdown semaphore is working and locked
+  PCHECK(sem_trywait(&grpc_shutdown_sem) == -1 && errno == EAGAIN);
+
+  // Wait...
+  while (sem_wait(&grpc_shutdown_sem) == -1) {
+    if (errno != EINTR) {
+      LOG(ERROR) << "Failed to wait gRPC server shutdown semaphore. "
+                 << "Error: " << strerror(errno);
+    }  // Else, thread was interrupted by a signal handler.
+    errno = 0;  // Clear the error and keep waiting.
+  }
+
   Hal* hal = Hal::GetSingleton();
-  if (hal == nullptr) return;
-  hal->HandleSignal(value);
+  if (hal != nullptr) hal->ShutdownGrpcServer();
+  return nullptr;
 }
 
 // Set the channel arguments to match the defualt keep-alive parameters set by
@@ -238,31 +264,14 @@ Hal::~Hal() {
   return Teardown();
 }
 
-void Hal::HandleSignal(int value) {
-  LOG(INFO) << "Received signal: " << strsignal(value);
+void Hal::ShutdownGrpcServer() {
   // Calling Shutdown() so the blocking call to Wait() returns.
   // NOTE: Seems like if there is an active stream Read(), calling Shutdown()
   // with no deadline will block forever, as it waits for all the active RPCs
   // to finish. To fix this, we give a deadline set to "now" so the call returns
   // immediately.
-  // Per the grpc::Server docs, some other thread must call Shutdown() for
-  // Wait() to ever return. So, we try to call shutdown it a separate thread.
-  pthread_t shutdown_tid;
-  int ret = pthread_create(
-      &shutdown_tid, nullptr,
-      [](void* server) -> void* {
-        static_cast<::grpc::Server*>(server)->Shutdown(
-            std::chrono::system_clock::now());
-        return nullptr;
-      },
-      external_server_.get());
-  if (ret != 0) {
-    LOG(FATAL) << "Failed to spawn safe gRPC server shutdown thread.";
-  } else if (pthread_join(shutdown_tid, nullptr) != 0) {
-    LOG(FATAL) << "Failed to join safe gRPC server shutdown thread.";
-  } else {
-    LOG(INFO) << "External gRPC server shutdown completed successfully.";
-  }
+  external_server_->Shutdown(std::chrono::system_clock::now());
+  LOG(INFO) << "External gRPC server shutdown complete.";
 }
 
 Hal* Hal::CreateSingleton(OperationMode mode, SwitchInterface* switch_interface,
@@ -337,12 +346,26 @@ Hal* Hal::GetSingleton() {
 #undef CHECK_IS_NULL  // should not be used in any other method.
 
 ::util::Status Hal::RegisterSignalHandlers() {
+  // Initialize the gRPC server shutdown semaphore
+  CHECK_ERR(sem_init(&grpc_shutdown_sem, 0, 0));
+
+  // Start the gRPC server shutdown thread
+  {
+    pthread_t t;
+    pthread_attr_t attr;
+    CHECK_ERR(pthread_attr_init(&attr));
+    CHECK_ERR(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
+    CHECK_ERR(pthread_create(&t, &attr, &GrpcServerShutdownThread, nullptr));
+    CHECK_ERR(pthread_attr_destroy(&attr));
+    //pthread_cancel(t);
+  }
+
   // Register the signal handlers and save the old handlers as well.
   std::vector<int> sig = {SIGINT, SIGTERM, SIGUSR2};
   for (const int s : sig) {
     sighandler_t h = signal(s, SignalRcvCallback);
     if (h == SIG_ERR) {
-      return MAKE_ERROR(ERR_INTERNAL)
+      RETURN_ERROR(ERR_INTERNAL)
              << "Failed to register signal " << strsignal(s);
     }
     old_signal_handlers_[s] = h;
@@ -354,9 +377,15 @@ Hal* Hal::GetSingleton() {
 ::util::Status Hal::UnregisterSignalHandlers() {
   // Register the old handlers for all the signals.
   for (const auto& e : old_signal_handlers_) {
-    signal(e.first, e.second);
+    sighandler_t h = signal(e.first, e.second);
+    if (h == SIG_ERR) {
+      LOG(ERROR) << "Failed to register old signal " << strsignal(e.first);
+    }
   }
   old_signal_handlers_.clear();
+
+  // Destroy the gRPC server shutdown semaphore as it is no longer needed
+  CHECK_ERR(sem_destroy(&grpc_shutdown_sem));
 
   return ::util::OkStatus();
 }

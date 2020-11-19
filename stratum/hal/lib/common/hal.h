@@ -62,8 +62,8 @@ class Hal final {
   // Run() is to be called after Setup().
   ::util::Status Run();
 
-  // Called when receiving a SIGINT or SIGTERM by the signal received callback.
-  void HandleSignal(int value);
+  // Shutdown the gRPC server. This must not be called in a signal handler.
+  void ShutdownGrpcServer();
 
   // Returns the list of errors HAL and all it's services have encountered.
   inline std::vector<::util::Status> GetErrors() const {
