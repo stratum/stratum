@@ -44,12 +44,11 @@ module stratum {
     base herc-platform:PLATFORM_TYPE;
   }
 
-
-
-
-
-
   identity GENERIC_TOMAHAWK {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
+  identity GENERIC_TOMAHAWK_PLUS {
     base herc-platform:PLATFORM_TYPE;
   }
 
@@ -61,6 +60,10 @@ module stratum {
     base herc-platform:PLATFORM_TYPE;
     description
       "P4 behavioral model (bmv2): https://github.com/p4lang/behavioral-model";
+  }
+
+  identity NP4_INTEL_N3000 {
+    base herc-platform:PLATFORM_TYPE;
   }
 
   identity GENERIC_BAREFOOT_TOFINO {
