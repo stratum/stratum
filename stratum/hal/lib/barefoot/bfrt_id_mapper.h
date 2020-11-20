@@ -15,6 +15,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/lib/macros.h"
 
 namespace stratum {
@@ -52,12 +53,13 @@ class BfrtIdMapper {
       bf_rt_id_t action_selector_id) const LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance for a specific device.
-  static std::unique_ptr<BfrtIdMapper> CreateInstance(int device_id);
+  static std::unique_ptr<BfrtIdMapper> CreateInstance(
+      BfSdeInterface* bf_sde_interface, int device_id);
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtIdMapper(int device_id);
+  explicit BfrtIdMapper(BfSdeInterface* bf_sde_interface, int device_id);
 
   ::util::Status BuildMapping(uint32 p4info_id, std::string p4info_name,
                               const bfrt::BfRtInfo* bfrt_info)
@@ -84,6 +86,9 @@ class BfrtIdMapper {
   // Map for getting an ActionProfile BfRt ID from an ActionSelector BfRt ID.
   absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_selector_to_profile_mapping_
       GUARDED_BY(lock_);
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // The device ID for this mapper.
   const int device_id_;

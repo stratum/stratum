@@ -260,6 +260,7 @@ stratum_cc_library(
     hdrs = ["bfrt_table_manager.h"],
     deps = [
         ":bf_cc_proto",
+        ":bf_sde_interface",
         ":bfrt_id_mapper",
         ":macros",
         ":utils",
@@ -293,6 +294,7 @@ stratum_cc_library(
     hdrs = ["bfrt_id_mapper.h"],
     deps = [
         ":bf_cc_proto",
+        ":bf_sde_interface",
         ":bfrt_constants",
         ":macros",
         "//stratum/glue:integral_types",
@@ -338,6 +340,7 @@ stratum_cc_library(
     hdrs = ["bfrt_action_profile_manager.h"],
     deps = [
         ":bf_cc_proto",
+        ":bf_sde_interface",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",
@@ -409,6 +412,7 @@ stratum_cc_library(
     hdrs = ["bfrt_pre_manager.h"],
     deps = [
         ":bf_cc_proto",
+        ":bf_sde_interface",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",
@@ -439,6 +443,7 @@ stratum_cc_library(
     srcs = ["bfrt_counter_manager.cc"],
     hdrs = ["bfrt_counter_manager.h"],
     deps = [
+        ":bf_sde_interface",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",

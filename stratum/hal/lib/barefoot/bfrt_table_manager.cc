@@ -32,11 +32,13 @@ namespace hal {
 namespace barefoot {
 
 BfrtTableManager::BfrtTableManager(OperationMode mode,
-                                   const BfrtIdMapper* bfrt_id_mapper)
+                                   const BfrtIdMapper* bfrt_id_mapper,
+                                   BfSdeInterface* bf_sde_interface)
     : mode_(mode),
       register_timer_descriptors_(),
       bfrt_info_(nullptr),
       p4_info_manager_(nullptr),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
 namespace {
@@ -1216,8 +1218,10 @@ namespace {
 }
 
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
-    OperationMode mode, const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtTableManager(mode, bfrt_id_mapper));
+    OperationMode mode, const BfrtIdMapper* bfrt_id_mapper,
+    BfSdeInterface* bf_sde_interface) {
+  return absl::WrapUnique(
+      new BfrtTableManager(mode, bfrt_id_mapper, bf_sde_interface));
 }
 
 }  // namespace barefoot
