@@ -163,12 +163,15 @@ BfrtCounterManager::ReadIndirectCounterEntry(
 
 // Creates a table manager instance.
 std::unique_ptr<BfrtCounterManager> BfrtCounterManager::CreateInstance(
-    const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtCounterManager(bfrt_id_mapper));
+    const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface) {
+  return absl::WrapUnique(
+      new BfrtCounterManager(bfrt_id_mapper, bf_sde_interface));
 }
 
-BfrtCounterManager::BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
+BfrtCounterManager::BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
+                                       BfSdeInterface* bf_sde_interface)
+    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)) {}
 
 }  // namespace barefoot
 }  // namespace hal

@@ -497,13 +497,16 @@ BfrtActionProfileManager::BuildP4ActionProfileGroup(
 
 // Creates an action profile manager instance.
 std::unique_ptr<BfrtActionProfileManager>
-BfrtActionProfileManager::CreateInstance(const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtActionProfileManager(bfrt_id_mapper));
+BfrtActionProfileManager::CreateInstance(const BfrtIdMapper* bfrt_id_mapper,
+                                         BfSdeInterface* bf_sde_interface) {
+  return absl::WrapUnique(
+      new BfrtActionProfileManager(bfrt_id_mapper, bf_sde_interface));
 }
 
 BfrtActionProfileManager::BfrtActionProfileManager(
-    const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
+    const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface)
+    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
 }  // namespace barefoot
 }  // namespace hal

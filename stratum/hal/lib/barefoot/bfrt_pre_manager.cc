@@ -19,8 +19,11 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPreManager::BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_info_(nullptr), bfrt_id_mapper_(bfrt_id_mapper) {}
+BfrtPreManager::BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper,
+                               BfSdeInterface* bf_sde_interface)
+    : bfrt_info_(nullptr),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
 ::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
@@ -70,8 +73,8 @@ BfrtPreManager::BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper)
 }
 
 std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
-    const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtPreManager(bfrt_id_mapper));
+    const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface) {
+  return absl::WrapUnique(new BfrtPreManager(bfrt_id_mapper, bf_sde_interface));
 }
 
 namespace {
