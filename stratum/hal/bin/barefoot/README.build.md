@@ -19,7 +19,6 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.0.0 (Deprecated; to be removed after 2020-12 release)
  - 9.1.0 (Previous LTS release; to be removed after 9.4+ is released)
  - 9.2.0 (Deprecated; to be removed after 2020-12 release)
  - 9.3.0 (Latest & LTS release)

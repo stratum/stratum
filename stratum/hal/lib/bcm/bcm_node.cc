@@ -799,6 +799,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         default:
           break;
       }
+      break;
     }
     default:
       break;
