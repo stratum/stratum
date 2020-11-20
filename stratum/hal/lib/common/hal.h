@@ -120,6 +120,10 @@ class Hal final {
   // afterwards.
   OperationMode mode_;
 
+  // Thread that waits to shutdown the external server. This is required
+  // because the gRPC server Shutdown() cannot be called from a signal handler.
+  pthread_t external_server_shutdown_thread_;
+
   // Pointer to SwitchInterface implementation, which encapsulates all the
   // switch capabilities. Not owned by this class.
   SwitchInterface* switch_interface_;
@@ -145,9 +149,6 @@ class Hal final {
   // Unique pointer to the gRPC server serving the external RPC connections
   // serviced by ConfigMonitoringService and P4Service. Owned by the class.
   std::unique_ptr<::grpc::Server> external_server_;
-
-  // Thread that waits to shutdown the external server. Owned by the class.
-  pthread_t external_server_shutdown_thread_;
 
   // Map from signals for which we registered handlers to their old handlers.
   // This map is used to restore the signal handlers to their previous state
