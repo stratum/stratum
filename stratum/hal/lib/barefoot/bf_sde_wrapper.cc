@@ -22,10 +22,13 @@
 
 extern "C" {
 #include "tofino/bf_pal/bf_pal_port_intf.h"
+#include "tofino/bf_pal/dev_intf.h"
 #include "tofino/bf_pal/pltfm_intf.h"
 #include "tofino/pdfixed/pd_devport_mgr.h"
 #include "tofino/pdfixed/pd_tm.h"
 }
+
+DECLARE_string(bfrt_sde_config_dir);
 
 namespace stratum {
 namespace hal {
@@ -33,6 +36,8 @@ namespace barefoot {
 
 constexpr absl::Duration BfSdeWrapper::kWriteTimeout;
 constexpr int32 BfSdeWrapper::kBfDefaultMtu;
+// TODO(max): move into SdeWrapper?
+constexpr int _PI_UPDATE_MAX_NAME_SIZE = 100;
 
 namespace {
 
@@ -312,6 +317,95 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   return ::util::OkStatus();
 }
 
+// BFRT
+
+::util::Status BfSdeWrapper::AddDevice(int device,
+                                       const BfrtDeviceConfig& device_config) {
+  absl::WriterMutexLock l(&data_lock_);
+
+  // CHECK_RETURN_IF_FALSE(initialized_) << "Not initialized";
+  CHECK_RETURN_IF_FALSE(device_config.programs_size() > 0);
+
+  // if (pipeline_initialized_) {
+  // RETURN_IF_BFRT_ERROR(bf_device_remove(device));
+  // }
+
+  bfrt_device_manager_ = &bfrt::BfRtDevMgr::getInstance();
+
+  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_begin(
+      device, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
+      /* upgrade_agents */ true));
+  bf_device_profile_t device_profile = {};
+
+  // Commit new files to disk and build device profile for SDE to load.
+  RETURN_IF_ERROR(RecursivelyCreateDir(FLAGS_bfrt_sde_config_dir));
+  // Need to extend the lifetime of the path strings until the SDE read them.
+  std::vector<std::unique_ptr<std::string>> path_strings;
+  device_profile.num_p4_programs = device_config.programs_size();
+  for (int i = 0; i < device_config.programs_size(); ++i) {
+    const auto& program = device_config.programs(i);
+    const std::string program_path =
+        absl::StrCat(FLAGS_bfrt_sde_config_dir, "/", program.name());
+    auto bfrt_path = absl::make_unique<std::string>(
+        absl::StrCat(program_path, "/bfrt.json"));
+    RETURN_IF_ERROR(RecursivelyCreateDir(program_path));
+    RETURN_IF_ERROR(WriteStringToFile(program.bfrt(), *bfrt_path));
+
+    bf_p4_program_t* p4_program = &device_profile.p4_programs[i];
+    ::snprintf(p4_program->prog_name, _PI_UPDATE_MAX_NAME_SIZE, "%s",
+               program.name().c_str());
+    p4_program->bfrt_json_file = &(*bfrt_path)[0];
+    p4_program->num_p4_pipelines = program.pipelines_size();
+    path_strings.emplace_back(std::move(bfrt_path));
+    CHECK_RETURN_IF_FALSE(program.pipelines_size() > 0);
+    for (int j = 0; j < program.pipelines_size(); ++j) {
+      const auto& pipeline = program.pipelines(j);
+      const std::string pipeline_path =
+          absl::StrCat(program_path, "/", pipeline.name());
+      auto context_path = absl::make_unique<std::string>(
+          absl::StrCat(pipeline_path, "/context.json"));
+      auto config_path = absl::make_unique<std::string>(
+          absl::StrCat(pipeline_path, "/tofino.bin"));
+      RETURN_IF_ERROR(RecursivelyCreateDir(pipeline_path));
+      RETURN_IF_ERROR(WriteStringToFile(pipeline.context(), *context_path));
+      RETURN_IF_ERROR(WriteStringToFile(pipeline.config(), *config_path));
+
+      bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[j];
+      ::snprintf(pipeline_profile->p4_pipeline_name, _PI_UPDATE_MAX_NAME_SIZE,
+                 "%s", pipeline.name().c_str());
+      pipeline_profile->cfg_file = &(*config_path)[0];
+      pipeline_profile->runtime_context_file = &(*context_path)[0];
+      path_strings.emplace_back(std::move(config_path));
+      path_strings.emplace_back(std::move(context_path));
+
+      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= MAX_P4_PIPELINES);
+      pipeline_profile->num_pipes_in_scope = pipeline.scope_size();
+      for (int p = 0; p < pipeline.scope_size(); ++p) {
+        const auto& scope = pipeline.scope(p);
+        pipeline_profile->pipe_scope[p] = scope;
+      }
+    }
+  }
+
+  // bf_device_add?
+  // This call re-initializes most SDE components.
+  RETURN_IF_BFRT_ERROR(bf_pal_device_add(device, &device_profile));
+  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(device));
+
+  // Set SDE log levels for modules of interest.
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+
+  RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
+      device, device_config.programs(0).name(), &bfrt_info_));
+
+  return ::util::OkStatus();
+}
+
+//  Packetio
+
 ::util::Status BfSdeWrapper::TxPacket(int device, const std::string& buffer) {
   bf_pkt* pkt = nullptr;
   RETURN_IF_BFRT_ERROR(
@@ -360,8 +454,8 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
 
   for (int rx_ring = BF_PKT_RX_RING_0; rx_ring < BF_PKT_RX_RING_MAX;
        ++rx_ring) {
-    RETURN_IF_BFRT_ERROR(bf_pkt_rx_deregister(
-        device, static_cast<bf_pkt_rx_ring_t>(rx_ring)));
+    RETURN_IF_BFRT_ERROR(
+        bf_pkt_rx_deregister(device, static_cast<bf_pkt_rx_ring_t>(rx_ring)));
   }
   VLOG(1) << "Unregistered packetio callbacks on device " << device << ".";
 
