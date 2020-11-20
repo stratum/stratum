@@ -437,6 +437,7 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
             << "action of type SET_VFP_DST_CLASS_ID: "
             << bcm_flow_entry.ShortDebugString() << ".";
         class_id = action.params(0).value().u32();
+        break;
       }
       default:
         return MAKE_ERROR(ERR_INVALID_PARAM)

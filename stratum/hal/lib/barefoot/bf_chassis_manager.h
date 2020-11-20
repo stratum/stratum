@@ -13,7 +13,7 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"
-#include "stratum/hal/lib/barefoot/bf_pal_interface.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/utils.h"
@@ -79,7 +79,7 @@ class BFChassisManager {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
-      PhalInterface* phal_interface, BFPalInterface* bf_pal_interface);
+      PhalInterface* phal_interface, BfSdeInterface* bf_sde_interface);
 
   // BFChassisManager is neither copyable nor movable.
   BFChassisManager(const BFChassisManager&) = delete;
@@ -91,10 +91,10 @@ class BFChassisManager {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   BFChassisManager(PhalInterface* phal_interface,
-                   BFPalInterface* bf_pal_interface);
+                   BfSdeInterface* bf_sde_interface);
 
   // Maximum depth of port status change event channel.
-  static constexpr int kMaxPortStatusChangeEventDepth = 1024;
+  static constexpr int kMaxPortStatusEventDepth = 1024;
   static constexpr int kMaxXcvrEventDepth = 1024;
 
   struct PortConfig {
@@ -129,7 +129,7 @@ class BFChassisManager {
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   // Thread function for reading and processing port state events.
-  void ReadPortStatusChangeEvents() LOCKS_EXCLUDED(chassis_lock);
+  void ReadPortStatusEvents() LOCKS_EXCLUDED(chassis_lock);
 
   // Thread function for reading and processing transceiver events.
   void ReadTransceiverEvents() LOCKS_EXCLUDED(chassis_lock);
@@ -141,12 +141,12 @@ class BFChassisManager {
   void TransceiverEventHandler(int slot, int port, HwState new_state)
       LOCKS_EXCLUDED(chassis_lock);
 
-  // helper to add / configure / enable a port with BFPalInterface
+  // helper to add / configure / enable a port with BfSdeInterface
   ::util::Status AddPortHelper(uint64 node_id, int unit, uint32 port_id,
                                const SingletonPort& singleton_port,
                                PortConfig* config);
 
-  // helper to update port configuration with BFPalInterface
+  // helper to update port configuration with BfSdeInterface
   ::util::Status UpdatePortHelper(uint64 node_id, int unit, uint32 port_id,
                                   const SingletonPort& singleton_port,
                                   const PortConfig& config_old,
@@ -154,13 +154,13 @@ class BFChassisManager {
 
   bool initialized_ GUARDED_BY(chassis_lock);
 
-  std::shared_ptr<Channel<BFPalInterface::PortStatusChangeEvent>>
-      port_status_change_event_channel_ GUARDED_BY(chassis_lock);
+  std::shared_ptr<Channel<BfSdeInterface::PortStatusEvent>>
+      port_status_event_channel_ GUARDED_BY(chassis_lock);
 
-  std::unique_ptr<ChannelReader<BFPalInterface::PortStatusChangeEvent>>
-      port_status_change_event_reader_;
+  std::unique_ptr<ChannelReader<BfSdeInterface::PortStatusEvent>>
+      port_status_event_reader_;
 
-  std::thread port_status_change_event_thread_;
+  std::thread port_status_event_thread_;
 
   // The id of the transceiver module insert/removal event ChannelWriter, as
   // returned by PhalInterface::RegisterTransceiverEventChannelWriter(). Used to
@@ -180,17 +180,11 @@ class BFChassisManager {
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_
       GUARDED_BY(gnmi_event_lock_);
 
-  // Pointer to a PhalInterface implementation.
-  PhalInterface* phal_interface_;  // not owned by this class.
-
-  // Pointer to a BFPalInterface implementation that wraps all the SDE calls.
-  BFPalInterface* bf_pal_interface_;  // not owned by this class.
-
   // Map from unit number to the node ID as specified by the config.
-  std::map<int, uint64> unit_to_node_id_;
+  std::map<int, uint64> unit_to_node_id_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to unit number.
-  std::map<uint64, int> node_id_to_unit_;
+  std::map<uint64, int> node_id_to_unit_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from port ID to PortState representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
@@ -198,8 +192,8 @@ class BFChassisManager {
       node_id_to_port_id_to_port_state_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from port ID to port configuration.
-  // We may change this once missing "get" methods get added to BFPalInterface,
-  // as we would be able to rely on BFPalInterface to query config parameters,
+  // We may change this once missing "get" methods get added to BfSdeInterface,
+  // as we would be able to rely on BfSdeInterface to query config parameters,
   // instead of maintaining a "consistent" view in this map.
   std::map<uint64, std::map<uint32, PortConfig>>
       node_id_to_port_id_to_port_config_ GUARDED_BY(chassis_lock);
@@ -227,6 +221,12 @@ class BFChassisManager {
   // state of the transceiver module plugged into that (slot, port).
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state_
       GUARDED_BY(chassis_lock);
+
+  // Pointer to a PhalInterface implementation.
+  PhalInterface* phal_interface_;  // not owned by this class.
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
 
   friend class BFChassisManagerTest;
 };

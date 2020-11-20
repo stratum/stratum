@@ -32,6 +32,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/common:openconfig_converter",
         "//stratum/hal/lib/p4:p4_pipeline_config_cc_proto",
         "//stratum/hal/lib/p4:p4_table_mapper",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",

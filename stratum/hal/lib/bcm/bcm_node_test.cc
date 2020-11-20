@@ -2,9 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_node.h"
+
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_node.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager_mock.h"
@@ -16,10 +21,6 @@
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -595,8 +596,8 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenMultiManagerVerifyFails) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
@@ -1568,8 +1569,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteCloneSessionEntry) {
   clone->add_replicas()->set_egress_port(kCpuPortId);
   std::vector<::util::Status> results = {};
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              DeleteCloneSession(EqualsProto(*clone)))
+  EXPECT_CALL(*bcm_table_manager_mock_, DeleteCloneSession(EqualsProto(*clone)))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1589,8 +1589,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertMulticastGroupEntry) {
   mcast->set_multicast_group_id(kL2McastGroupId);
   std::vector<::util::Status> results = {};
 
-  EXPECT_CALL(*bcm_packetio_manager_mock_,
-              InsertPacketReplicationEntry(_))
+  EXPECT_CALL(*bcm_packetio_manager_mock_, InsertPacketReplicationEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1613,8 +1612,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteMulticastGroupEntry) {
   EXPECT_CALL(*bcm_table_manager_mock_,
               DeleteMulticastGroup(EqualsProto(*mcast)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_packetio_manager_mock_,
-              DeletePacketReplicationEntry(_))
+  EXPECT_CALL(*bcm_packetio_manager_mock_, DeletePacketReplicationEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));

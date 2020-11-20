@@ -273,6 +273,35 @@ jobs:
       - *clean_bazel_cache
       - *save_bazel_cache
 
+  publish-docker-stratum-replay:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/tools/stratum-replay
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-replay
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum-replay
+          command: |
+            bazel build //stratum/tools/stratum-replay:stratum-replay
+            cp bazel-bin/stratum/tools/stratum-replay/stratum-replay $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - run:
+          name: Test stratum-replay Docker image
+          command: |
+            docker run $DOCKER_IMG -version
+      - *docker_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
   cpp-format-check:
     docker:
       - image: stratumproject/build:build
@@ -338,5 +367,8 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-bf-pipeline-builder:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-replay:
           requires:
             - publish-docker-build
