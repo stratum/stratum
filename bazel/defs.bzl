@@ -50,11 +50,15 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 
 # Compiler warnings that are threated as errors.
 STRATUM_COMPILER_ERRORS_COMMON = [
-    "-Werror=implicit-fallthrough",
     "-Werror=ignored-attributes",
 ]
-STRATUM_COMPILER_ERRORS_GCC = []
+STRATUM_COMPILER_ERRORS_GCC = [
+    "-fdiagnostics-color=always",
+    "-Werror=reorder",
+]
 STRATUM_COMPILER_ERRORS_LLVM = [
+    "-Werror=implicit-fallthrough",  # TODO(max): move to common after gcc 7
+    "-Werror=reorder-ctor",
     "-Werror=thread-safety-analysis",
 ]
 STRATUM_COMPILER_ERRORS = STRATUM_COMPILER_ERRORS_COMMON + select({
