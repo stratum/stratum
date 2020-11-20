@@ -17,6 +17,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
@@ -46,12 +47,13 @@ class BfrtPreManager {
       LOCKS_EXCLUDED(lock_);
 
   static std::unique_ptr<BfrtPreManager> CreateInstance(
-      const BfrtIdMapper* bfrt_id_mapper);
+      const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface);
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper,
+                          BfSdeInterface* bf_sde_interface);
 
   // Insert/Modify/Delete a multicast group entry.
   // This function creates one or more multicast nodes based on replicas in
@@ -124,6 +126,9 @@ class BfrtPreManager {
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.

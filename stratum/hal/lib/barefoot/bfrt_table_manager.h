@@ -79,13 +79,15 @@ class BfrtTableManager {
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
-      OperationMode mode, const BfrtIdMapper* bfrt_id_mapper);
+      OperationMode mode, const BfrtIdMapper* bfrt_id_mapper,
+      BfSdeInterface* bf_sde_interface);
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   explicit BfrtTableManager(OperationMode mode,
-                            const BfrtIdMapper* bfrt_id_mapper);
+                            const BfrtIdMapper* bfrt_id_mapper,
+                            BfSdeInterface* bf_sde_interface);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                bfrt::BfRtTableKey* table_key,
@@ -170,6 +172,9 @@ class BfrtTableManager {
   // TODO(max): Maybe this manager should be created in the node and passed down
   // to all feature managers.
   std::unique_ptr<P4InfoManager> p4_info_manager_ GUARDED_BY(lock_);
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class

@@ -17,6 +17,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
@@ -72,12 +73,13 @@ class BfrtActionProfileManager {
 
   // Creates an action profile manager instance.
   static std::unique_ptr<BfrtActionProfileManager> CreateInstance(
-      const BfrtIdMapper* bfrt_id_mapper);
+      const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface);
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper,
+                                    BfSdeInterface* bf_sde_interface);
 
   // Internal version of WriteActionProfileMember which takes no locks.
   ::util::Status DoWriteActionProfileMember(
@@ -154,6 +156,9 @@ class BfrtActionProfileManager {
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
