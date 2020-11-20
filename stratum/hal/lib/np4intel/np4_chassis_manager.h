@@ -74,9 +74,10 @@ class NP4ChassisManager {
   // class.
   explicit NP4ChassisManager(PhalInterface* phal_interface);
 
-  ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
-  ::util::Status UnregisterEventWriters()
-      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+      LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
+  ::util::Status UnregisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+      LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
 
   // Cleans up the internal state. Resets all the internal port maps and
   // deletes the pointers.

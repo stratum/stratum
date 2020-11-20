@@ -83,9 +83,10 @@ class Bmv2ChassisManager {
                      std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
                          node_id_to_bmv2_runner);
 
-  ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
-  ::util::Status UnregisterEventWriters()
-      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+      LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
+  ::util::Status UnregisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+      LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
 
   // Cleans up the internal state. Resets all the internal port maps and
   // deletes the pointers.

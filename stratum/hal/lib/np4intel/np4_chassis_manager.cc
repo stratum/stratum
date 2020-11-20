@@ -401,14 +401,8 @@ void NP4ChassisManager::CleanupInternalState() {
 ::util::Status NP4ChassisManager::Shutdown() {
   ::util::Status status = ::util::OkStatus();
   {
-    absl::ReaderMutexLock l(&chassis_lock);
-    if (!initialized_) return status;
-  }
-  // It is fine to release the chassis lock here (it is actually needed to call
-  // UnregisterEventWriters or there would be a deadlock). Because initialized_
-  // is set to true, RegisterEventWriters cannot be called.
-  {
     absl::WriterMutexLock l(&chassis_lock);
+    if (!initialized_) return status;
     APPEND_STATUS_IF_ERROR(status, UnregisterEventWriters());
     initialized_ = false;
     CleanupInternalState();
