@@ -121,6 +121,7 @@ stratum_cc_library(
     name = "bf_sde_interface",
     hdrs = ["bf_sde_interface.h"],
     deps = [
+        ":bf_cc_proto",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",

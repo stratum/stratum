@@ -8,6 +8,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "bf_rt/bf_rt_init.hpp"
 #include "pkt_mgr/pkt_mgr_intf.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
@@ -28,6 +29,8 @@ class BfSdeWrapper : public BfSdeInterface {
   static constexpr int32 kBfDefaultMtu = 10 * 1024;  // 10K
 
   // BfSdeInterface public methods.
+  ::util::Status AddDevice(int device,
+                           const BfrtDeviceConfig& device_config) override;
   ::util::StatusOr<PortState> GetPortState(int device, int port) override;
   ::util::Status GetPortCounters(int device, int port,
                                  PortCounters* counters) override;
@@ -56,8 +59,7 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status StartPacketIo(int device) override;
   ::util::Status StopPacketIo(int device) override;
   ::util::Status RegisterPacketReceiveWriter(
-      int device,
-      std::unique_ptr<ChannelWriter<std::string>> writer) override;
+      int device, std::unique_ptr<ChannelWriter<std::string>> writer) override;
   ::util::Status UnregisterPacketReceiveWriter(int device) override;
 
   //
@@ -109,6 +111,9 @@ class BfSdeWrapper : public BfSdeInterface {
   // Mutex protecting the packet rx writer map.
   mutable absl::Mutex packet_rx_callback_lock_;
 
+  // RW mutex lock for protecting the pipeline state.
+  mutable absl::Mutex data_lock_;
+
   // Writer to forward the port status change message to. It is registered by
   // chassis manager to receive SDE port status change events.
   std::unique_ptr<ChannelWriter<PortStatusEvent>> port_status_event_writer_
@@ -117,6 +122,12 @@ class BfSdeWrapper : public BfSdeInterface {
   // Map from device ID to packet receive writer.
   absl::flat_hash_map<int, std::unique_ptr<ChannelWriter<std::string>>>
       device_to_packet_rx_writer_ GUARDED_BY(packet_rx_callback_lock_);
+
+  // Pointer to the current BfR info object. Not owned by this class.
+  const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(data_lock_);
+
+  // Pointer to the bfrt device manager. Not owned by this class.
+  bfrt::BfRtDevMgr* bfrt_device_manager_ GUARDED_BY(data_lock_);
 
   // Callback registed with the SDE for Tx notifications.
   static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
