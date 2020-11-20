@@ -21,8 +21,6 @@
 // Not all SDE headers include "extern C".
 extern "C" {
 #include "tofino/bf_pal/dev_intf.h"
-// Flag to enable detailed logging in the SDE pipe manager.
-extern bool stat_mgr_enable_detail_trace;
 }
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
@@ -98,77 +96,7 @@ BfrtNode::~BfrtNode() = default;
     // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
   }
 
-  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_begin(
-      device_id_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
-      /* upgrade_agents */ true));
-  bf_device_profile_t device_profile = {};
-
-  // Commit new files to disk and build device profile for SDE to load.
-  RETURN_IF_ERROR(RecursivelyCreateDir(FLAGS_bfrt_sde_config_dir));
-  // Need to extend the lifetime of the path strings until the SDE read them.
-  std::vector<std::unique_ptr<std::string>> path_strings;
-  device_profile.num_p4_programs = bfrt_config_.programs_size();
-  for (int i = 0; i < bfrt_config_.programs_size(); ++i) {
-    const auto& program = bfrt_config_.programs(i);
-    const std::string program_path =
-        absl::StrCat(FLAGS_bfrt_sde_config_dir, "/", program.name());
-    auto bfrt_path = absl::make_unique<std::string>(
-        absl::StrCat(program_path, "/bfrt.json"));
-    RETURN_IF_ERROR(RecursivelyCreateDir(program_path));
-    RETURN_IF_ERROR(WriteStringToFile(program.bfrt(), *bfrt_path));
-
-    bf_p4_program_t* p4_program = &device_profile.p4_programs[i];
-    ::snprintf(p4_program->prog_name, _PI_UPDATE_MAX_NAME_SIZE, "%s",
-               program.name().c_str());
-    p4_program->bfrt_json_file = &(*bfrt_path)[0];
-    p4_program->num_p4_pipelines = program.pipelines_size();
-    path_strings.emplace_back(std::move(bfrt_path));
-    CHECK_RETURN_IF_FALSE(program.pipelines_size() > 0);
-    for (int j = 0; j < program.pipelines_size(); ++j) {
-      const auto& pipeline = program.pipelines(j);
-      const std::string pipeline_path =
-          absl::StrCat(program_path, "/", pipeline.name());
-      auto context_path = absl::make_unique<std::string>(
-          absl::StrCat(pipeline_path, "/context.json"));
-      auto config_path = absl::make_unique<std::string>(
-          absl::StrCat(pipeline_path, "/tofino.bin"));
-      RETURN_IF_ERROR(RecursivelyCreateDir(pipeline_path));
-      RETURN_IF_ERROR(WriteStringToFile(pipeline.context(), *context_path));
-      RETURN_IF_ERROR(WriteStringToFile(pipeline.config(), *config_path));
-
-      bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[j];
-      ::snprintf(pipeline_profile->p4_pipeline_name, _PI_UPDATE_MAX_NAME_SIZE,
-                 "%s", pipeline.name().c_str());
-      pipeline_profile->cfg_file = &(*config_path)[0];
-      pipeline_profile->runtime_context_file = &(*context_path)[0];
-      path_strings.emplace_back(std::move(config_path));
-      path_strings.emplace_back(std::move(context_path));
-
-      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= MAX_P4_PIPELINES);
-      pipeline_profile->num_pipes_in_scope = pipeline.scope_size();
-      for (int p = 0; p < pipeline.scope_size(); ++p) {
-        const auto& scope = pipeline.scope(p);
-        pipeline_profile->pipe_scope[p] = scope;
-      }
-    }
-  }
-
-  // bf_device_add?
-  // This call re-initializes most SDE components.
-  RETURN_IF_BFRT_ERROR(bf_pal_device_add(device_id_, &device_profile));
-  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(device_id_));
-
-  // Set SDE log levels for modules of interest.
-  CHECK_RETURN_IF_FALSE(
-      bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  CHECK_RETURN_IF_FALSE(
-      bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  if (VLOG_IS_ON(2)) {
-    CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
-                                               BF_LOG_INFO) == 0);
-    stat_mgr_enable_detail_trace = true;
-  }
-
+  RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
@@ -455,11 +383,11 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
     ::bfrt::BfRtDevMgr* bfrt_device_manager, BfrtIdMapper* bfrt_id_mapper,
-    int device_id) {
+    BfSdeInterface* bf_sde_interface, int device_id) {
   return absl::WrapUnique(new BfrtNode(
       bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
       bfrt_pre_manager, bfrt_counter_manager, bfrt_device_manager,
-      bfrt_id_mapper, device_id));
+      bfrt_id_mapper, bf_sde_interface, device_id));
 }
 
 BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
@@ -468,7 +396,8 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
-                   BfrtIdMapper* bfrt_id_mapper, int device_id)
+                   BfrtIdMapper* bfrt_id_mapper,
+                   BfSdeInterface* bf_sde_interface, int device_id)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
@@ -479,6 +408,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       node_id_(0),
       device_id_(device_id) {}
 

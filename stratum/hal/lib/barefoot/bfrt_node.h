@@ -73,7 +73,7 @@ class BfrtNode final {
       BfrtPreManager* bfrt_pre_manager,
       BfrtCounterManager* bfrt_counter_manager,
       ::bfrt::BfRtDevMgr* bfrt_device_manager, BfrtIdMapper* bfrt_id_mapper,
-      int device_id);
+      BfSdeInterface* bf_sde_interface, int device_id);
 
   // BfrtNode is neither copyable nor movable.
   BfrtNode(const BfrtNode&) = delete;
@@ -90,7 +90,8 @@ class BfrtNode final {
            BfrtPreManager* bfrt_pre_manager,
            BfrtCounterManager* bfrt_counter_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
-           BfrtIdMapper* bfrt_id_mapper, int device_id);
+           BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface,
+           int device_id);
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
@@ -130,6 +131,9 @@ class BfrtNode final {
   // Stores pipeline information for this node.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
   BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the

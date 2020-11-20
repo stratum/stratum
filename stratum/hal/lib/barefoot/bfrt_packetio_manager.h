@@ -81,6 +81,7 @@ class BfrtPacketioManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
+  // TODO(max): place device last
   explicit BfrtPacketioManager(int device,
                                BfSdeInterface* bf_sde_interface);
 

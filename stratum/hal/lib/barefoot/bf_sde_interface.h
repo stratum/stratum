@@ -12,6 +12,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/lib/channel/channel.h"
+#include "stratum/hal/lib/barefoot/bf.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -29,6 +30,9 @@ class BfSdeInterface {
   };
 
   virtual ~BfSdeInterface() {}
+
+  virtual ::util::Status AddDevice(int device,
+                                   const BfrtDeviceConfig& device_config) = 0;
 
   virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
 
