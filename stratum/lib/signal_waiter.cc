@@ -39,7 +39,6 @@ SignalWaiter::~SignalWaiter() {
   for (const auto& e : old_signal_handlers_) {
     signal(e.first, e.second);
   }
-  old_signal_handlers_.clear();
 
   CHECK_ERR(sem_destroy(&sem_));
 }
