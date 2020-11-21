@@ -46,6 +46,36 @@ stratum_cc_test(
     ],
 )
 
+stratum_cc_library(
+    name = "signal_waiter",
+    srcs = ["signal_waiter.cc"],
+    hdrs = ["signal_waiter.h"],
+    deps = [
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "//stratum/glue:logging",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/public/lib:error",
+    ],
+)
+
+stratum_cc_test(
+    name = "signal_waiter_test",
+    srcs = ["signal_waiter_test.cc"],
+    deps = [
+        ":test_main",
+        ":signal_waiter",
+        "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+    ],
+)
+
 cc_library(
     name = "test_main",
     testonly = 1,
