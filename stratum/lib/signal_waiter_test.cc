@@ -235,7 +235,7 @@ TEST_F(SignalWaiterTest, Constructor) {
 TEST_F(SignalWaiterTest, ConstructorError) {
   ::std::string error_msg("Failed to register signal: ");
   error_msg += strsignal(SIGKILL);
-  ASSERT_DEATH(ConstructWaiter({SIGKILL}), error_msg);
+  EXPECT_DEATH(ConstructWaiter({SIGKILL}), error_msg);
 
   // Send a registered signal because the test framework expects one.
   EXPECT_OK(SignalWaiter::HandleSignal(SIGINT));
