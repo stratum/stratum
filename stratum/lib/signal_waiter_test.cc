@@ -29,10 +29,10 @@ class SignalWaiterTest : public ::testing::Test {
     int sem_value = GetSemaphoreValue();
     EXPECT_LE(1, sem_value);
     LOG(INFO) << "Ended test with semaphore value: " << sem_value;
-    Reset();
+    ResetSem();
   }
 
-  void Reset() {
+  void ResetSem() {
     CHECK_ERR(sem_destroy(&SignalWaiter::instance_.sem_));
     CHECK_ERR(sem_init(&SignalWaiter::instance_.sem_, 0, 0));
   }
