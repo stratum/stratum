@@ -14,9 +14,9 @@ set -x
 # Copy required SDE sources for Stratum and make any required changes
 mkdir -p $SDE_INSTALL/src/bf_rt/proto
 cp -a $SDE/pkgsrc/bf-drivers/src/bf_rt/proto/* $SDE_INSTALL/src/bf_rt/proto
-sed -i'' 's#<google/rpc/status.grpc.pb.h>#"google/rpc/status.pb.h"#' \
+sed -i '' 's#<google/rpc/status.grpc.pb.h>#"google/rpc/status.pb.h"#' \
   $SDE_INSTALL/src/bf_rt/proto/bf_rt_server_impl.hpp
-sed -i'' 's#<google/rpc/code.grpc.pb.h>#"google/rpc/code.pb.h"#' \
+sed -i '' 's#<google/rpc/code.grpc.pb.h>#"google/rpc/code.pb.h"#' \
   $SDE_INSTALL/src/bf_rt/proto/bf_rt_server_impl.hpp
 
 mkdir -p $SDE_INSTALL/src/bf_rt/bf_rt_common

@@ -127,7 +127,7 @@ def stratum_deps():
             build_file = "@//bazel:external/gnoi.BUILD",
             sha256 = GNOI_SHA,
             patch_cmds = [
-                "find . -name *.proto | xargs sed -i 's#github.com/openconfig/##g'",
+                "find . -name *.proto | xargs sed -i '' 's#github.com/openconfig/##g'",
                 "mkdir -p gnoi",
                 "mv bgp cert common diag file interface layer2 mpls otdr system test types wavelength_router gnoi/",
             ],
