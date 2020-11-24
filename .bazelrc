@@ -16,6 +16,27 @@ build:asan --copt -g
 build:asan --copt -fno-omit-frame-pointer
 build:asan --linkopt -fsanitize=address
 
+# UB sanitizer
+# We use the minimal runtime version, because it has relaxed requirements:
+# https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html#minimal-runtime
+build:ubsan --copt -fsanitize=undefined --copt -fsanitize-minimal-runtime
+build:ubsan --linkopt -fsanitize=undefined --linkopt -fsanitize-minimal-runtime
+build:ubsan --copt -g
+build:ubsan --copt -fno-omit-frame-pointer
+build:ubsan --strip=never
+
+# Memory sanitizer
+build:msan --copt -fsanitize=memory --linkopt -fsanitize=memory
+build:msan --copt -g
+build:msan --copt -fno-omit-frame-pointer
+build:msan --strip=never
+
+# Thread sanitizer
+build:tsan --copt -fsanitize=thread --linkopt -fsanitize=thread
+build:tsan --copt -g
+build:tsan --copt -fno-omit-frame-pointer
+build:tsan --strip=never
+
 # Release build (build with -O2, no asserts, and strip all symbols)
 build:release --compilation_mode=opt
 build:release --linkopt=-Wl,--strip-all
