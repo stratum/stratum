@@ -184,7 +184,7 @@ Device|Type |#pipe|#stg|#prsr|#macblk
 ------|-----|-----|----|-----|-------
 0     |T32D |2    |12  |18   |-1
 ```
-In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_0_0`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_0_0`, `org.opencord.fabric-spgw.tofino.montara_sde_9_0_0`, or `org.opencord.fabric-int.tofino.montara_sde_9_0_0` as the pipeconf for your device.
+In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_3_0`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_3_0`, `org.opencord.fabric-spgw.tofino.montara_sde_9_3_0`, or `org.opencord.fabric-int.tofino.montara_sde_9_3_0` as the pipeconf for your device.
 
 ### Apply netcfg to ONOS
 Register the switch in ONOS by executing:
