@@ -146,9 +146,12 @@ stratum_cc_library(
     name = "bf_sde_wrapper",
     srcs = ["bf_sde_wrapper.cc"],
     hdrs = ["bf_sde_wrapper.h"],
+    copts = ["-Werror=thread-safety-analysis"],
     deps = [
         ":bf_sde_interface",
+        ":bfrt_constants",
         ":macros",
+        ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:cleanup",
@@ -414,9 +417,6 @@ stratum_cc_library(
         ":bf_cc_proto",
         ":bf_sde_interface",
         ":bfrt_constants",
-        ":bfrt_id_mapper",
-        ":macros",
-        ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -434,7 +434,25 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
+    ],
+)
+
+stratum_cc_test(
+    name = "bfrt_pre_manager_test",
+    srcs = ["bfrt_pre_manager_test.cc"],
+    deps = [
+        ":bf_sde_mock",
+        ":bfrt_pre_manager",
+        ":test_main",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest",
     ],
 )
 
