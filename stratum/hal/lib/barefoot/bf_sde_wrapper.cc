@@ -14,7 +14,9 @@
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/macros.h"
+#include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/constants.h"
@@ -404,6 +406,15 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   return ::util::OkStatus();
 }
 
+// Create and start an new session.
+::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
+BfSdeWrapper::CreateSession() {
+  auto bfrt_session = bfrt::BfRtSession::sessionCreate();
+  CHECK_RETURN_IF_FALSE(bfrt_session) << "Failed to create new session.";
+
+  return Session::CreateSession();
+}
+
 //  Packetio
 
 ::util::Status BfSdeWrapper::TxPacket(int device, const std::string& buffer) {
@@ -514,6 +525,577 @@ bf_status_t BfSdeWrapper::BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
   bf_sde_wrapper->HandlePacketRx(dev_id, pkt, rx_ring);
   // static_cast<BfSdeWrapper*>(cookie)->HandlePacketRx(dev_id, pkt, rx_ring);
   return bf_pkt_free(dev_id, pkt);
+}
+
+bf_rt_target_t BfSdeWrapper::GetDeviceTarget(int device) const {
+  bf_rt_target_t dev_tgt = {};
+  dev_tgt.dev_id = device;
+  dev_tgt.pipe_id = BF_DEV_PIPE_ALL;
+  return dev_tgt;
+}
+
+// PRE
+namespace {
+::util::Status PrintMcGroupEntry(const bfrt::BfRtTable* table,
+                                 const bfrt::BfRtTableKey* table_key,
+                                 const bfrt::BfRtTableData* table_data) {
+  std::vector<uint32> mc_node_list;
+  std::vector<bool> l1_xid_valid_list;
+  std::vector<uint32> l1_xid_list;
+  uint64 multicast_group_id;
+
+  // Key: $MGID
+  RETURN_IF_ERROR(GetField(*table_key, kMgid, &multicast_group_id));
+  // Data: $MULTICAST_NODE_ID
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeId, &mc_node_list));
+  // Data: $MULTICAST_NODE_L1_XID_VALID
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeL1XidValid, &l1_xid_valid_list));
+  // Data: $MULTICAST_NODE_L1_XID
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeL1Xid, &l1_xid_list));
+
+  LOG(INFO) << "Multicast group id " << multicast_group_id << " has "
+            << mc_node_list.size() << " nodes.";
+  for (const auto& node : mc_node_list) {
+    LOG(INFO) << "\tnode id " << node;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status PrintMcNodeEntry(const bfrt::BfRtTable* table,
+                                const bfrt::BfRtTableKey* table_key,
+                                const bfrt::BfRtTableData* table_data) {
+  // Key: $MULTICAST_NODE_ID (24 bit)
+  uint64 node_id;
+  RETURN_IF_ERROR(GetField(*table_key, kMcNodeId, &node_id));
+  // Data: $MULTICAST_RID (16 bit)
+  uint64 rid;
+  RETURN_IF_ERROR(GetField(*table_data, kMcReplicationId, &rid));
+  // Data: $DEV_PORT
+  std::vector<uint32> ports;
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeDevPort, &ports));
+
+  std::string ports_str = " ports [ ";
+  for (const auto& port : ports) {
+    ports_str += std::to_string(port) + " ";
+  }
+  ports_str += "]";
+  LOG(INFO) << "Node id " << node_id << ": rid " << rid << ports_str;
+
+  return ::util::OkStatus();
+}
+}  // namespace
+
+::util::Status BfSdeWrapper::DumpPreState(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session) {
+  if (VLOG_IS_ON(2)) {
+    auto real_session = std::dynamic_pointer_cast<Session>(session);
+    CHECK_RETURN_IF_FALSE(real_session);
+
+    auto bf_dev_tgt = GetDeviceTarget(device);
+    const bfrt::BfRtTable* table;
+
+    // Dump group table
+    LOG(INFO) << "#### $pre.mgid ####";
+    RETURN_IF_BFRT_ERROR(
+        bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+    std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+    std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+    RETURN_IF_BFRT_ERROR(
+        bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+    for (size_t i = 0; i < keys.size(); ++i) {
+      const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+      const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+      PrintMcGroupEntry(table, table_key.get(), table_data.get());
+    }
+    LOG(INFO) << "###################";
+
+    // Dump node table
+    LOG(INFO) << "#### $pre.node ####";
+    RETURN_IF_BFRT_ERROR(
+        bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+    for (size_t i = 0; i < keys.size(); ++i) {
+      const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+      const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+      PrintMcNodeEntry(table, table_key.get(), table_data.get());
+    }
+    LOG(INFO) << "###################";
+  }
+  return ::util::OkStatus();
+}
+
+::util::StatusOr<uint32> BfSdeWrapper::GetFreeMulticastNodeId(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+  size_t table_size;
+  RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+  uint32 usage;
+  RETURN_IF_BFRT_ERROR(table->tableUsageGet(
+      *real_session->bfrt_session_, bf_dev_tgt,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, &usage));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  uint32 id = usage;
+  for (size_t _ = 0; _ < table_size; ++_) {
+    // Key: $MULTICAST_NODE_ID
+    RETURN_IF_ERROR(SetField(table_key.get(), kMcNodeId, id));
+    bf_status_t status = table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key,
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get());
+    if (status == BF_OBJECT_NOT_FOUND) {
+      return id;
+    } else if (status == BF_SUCCESS) {
+      id++;
+      continue;
+    } else {
+      RETURN_IF_BFRT_ERROR(status);
+    }
+  }
+
+  RETURN_ERROR(ERR_TABLE_FULL) << "Could not find free multicast node id.";
+}
+
+::util::StatusOr<uint32> BfSdeWrapper::CreateMulticastNode(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
+    const std::vector<uint32> ports) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;  // PRE node table.
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+
+  ASSIGN_OR_RETURN(uint64 mc_node_id, GetFreeMulticastNodeId(device, session));
+
+  // Key: $MULTICAST_NODE_ID
+  RETURN_IF_ERROR(SetField(table_key.get(), kMcNodeId, mc_node_id));
+  // Data: $MULTICAST_RID (16 bit)
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), kMcReplicationId, mc_replication_id));
+  // Data: $MULTICAST_LAG_ID
+  RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeLagId, mc_lag_ids));
+  // Data: $DEV_PORT
+  RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeDevPort, ports));
+
+  RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
+      *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+
+  return mc_node_id;
+}
+
+::util::StatusOr<std::vector<uint32>> BfSdeWrapper::GetNodesInMulticastGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 group_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  // Key: $MGID
+  RETURN_IF_ERROR(SetField(table_key.get(), kMgid, group_id));
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *real_session->bfrt_session_, bf_dev_tgt, *table_key,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+  // Data: $MULTICAST_NODE_ID
+  std::vector<uint32> mc_node_list;
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeId, &mc_node_list));
+
+  return mc_node_list;
+}
+
+::util::Status BfSdeWrapper::DeleteMulticastNodes(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const std::vector<uint32>& mc_node_ids) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+
+  // TODO(max): handle partial delete failures
+  for (const auto& mc_node_id : mc_node_ids) {
+    std::unique_ptr<bfrt::BfRtTableKey> table_key;
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+    RETURN_IF_ERROR(SetField(table_key.get(), kMcNodeId, mc_node_id));
+    RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
+                                              bf_dev_tgt, *table_key));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetMulticastNode(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 mc_node_id, int* replication_id, std::vector<uint32>* lag_ids,
+    std::vector<uint32>* ports) {
+  CHECK_RETURN_IF_FALSE(replication_id);
+  CHECK_RETURN_IF_FALSE(lag_ids);
+  CHECK_RETURN_IF_FALSE(ports);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;  // PRE node table.
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  // Key: $MULTICAST_NODE_ID
+  RETURN_IF_ERROR(SetField(table_key.get(), kMcNodeId, mc_node_id));
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *real_session->bfrt_session_, bf_dev_tgt, *table_key,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+  // Data: $DEV_PORT
+  std::vector<uint32> dev_ports;
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeDevPort, &dev_ports));
+  *ports = dev_ports;
+  // Data: $RID (16 bit)
+  uint64 rid;
+  RETURN_IF_ERROR(GetField(*table_data, kMcReplicationId, &rid));
+  *replication_id = rid;
+  // Data: $MULTICAST_LAG_ID
+  std::vector<uint32> lags;
+  RETURN_IF_ERROR(GetField(*table_data, kMcNodeLagId, &lags));
+  *lag_ids = lags;
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteMulticastGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 group_id, const std::vector<uint32>& mc_node_ids, bool insert) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;  // PRE MGID table.
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  std::vector<uint32> mc_node_list;
+  std::vector<bool> l1_xid_valid_list;
+  std::vector<uint32> l1_xid_list;
+  for (const auto& mc_node_id : mc_node_ids) {
+    mc_node_list.push_back(mc_node_id);
+    // TODO(Yi): P4Runtime doesn't support XID, set invalid for now.
+    l1_xid_valid_list.push_back(false);
+    l1_xid_list.push_back(0);
+  }
+  // Key: $MGID
+  RETURN_IF_ERROR(SetField(table_key.get(), kMgid, group_id));
+  // Data: $MULTICAST_NODE_ID
+  RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeId, mc_node_list));
+  // Data: $MULTICAST_NODE_L1_XID_VALID
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), kMcNodeL1XidValid, l1_xid_valid_list));
+  // Data: $MULTICAST_NODE_L1_XID
+  RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeL1Xid, l1_xid_list));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (insert) {
+    RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+
+  } else {
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::InsertMulticastGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 group_id, const std::vector<uint32>& mc_node_ids) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteMulticastGroup(device, session, group_id, mc_node_ids, true);
+}
+::util::Status BfSdeWrapper::ModifyMulticastGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 group_id, const std::vector<uint32>& mc_node_ids) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteMulticastGroup(device, session, group_id, mc_node_ids, false);
+}
+
+::util::Status BfSdeWrapper::DeleteMulticastGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 group_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;  // PRE MGID table.
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  // Key: $MGID
+  RETURN_IF_ERROR(SetField(table_key.get(), kMgid, group_id));
+  RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
+                                            bf_dev_tgt, *table_key));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetMulticastGroups(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 group_id, std::vector<uint32>* group_ids,
+    std::vector<std::vector<uint32>>* mc_node_ids) {
+  CHECK_RETURN_IF_FALSE(group_ids);
+  CHECK_RETURN_IF_FALSE(mc_node_ids);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;  // PRE MGID table.
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+  // Is this a wildcard read?
+  if (group_id != 0) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
+    // Key: $MGID
+    RETURN_IF_ERROR(SetField(keys[0].get(), kMgid, group_id));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  group_ids->resize(0);
+  mc_node_ids->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    ::p4::v1::MulticastGroupEntry result;
+    // Key: $MGID
+    uint64 group_id;
+    RETURN_IF_ERROR(GetField(*table_key, kMgid, &group_id));
+    group_ids->push_back(group_id);
+    // Data: $MULTICAST_NODE_ID
+    std::vector<uint32> mc_node_list;
+    RETURN_IF_ERROR(GetField(*table_data, kMcNodeId, &mc_node_list));
+    mc_node_ids->push_back(mc_node_list);
+  }
+
+  CHECK_EQ(group_ids->size(), keys.size());
+  CHECK_EQ(mc_node_ids->size(), keys.size());
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteCloneSession(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet("$mirror.cfg", &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  bf_rt_id_t action_id;
+  RETURN_IF_BFRT_ERROR(table->actionIdGet("$normal", &action_id));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(action_id, &table_data));
+
+  // Key: $sid
+  RETURN_IF_ERROR(SetField(table_key.get(), "$sid", session_id));
+  // Data: $direction
+  RETURN_IF_ERROR(SetField(table_data.get(), "$direction", "BOTH"));
+  // Data: $session_enable
+  RETURN_IF_ERROR(SetFieldBool(table_data.get(), "$session_enable", true));
+  // Data: $ucast_egress_port
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), "$ucast_egress_port", egress_port));
+  // Data: $ucast_egress_port_valid
+  RETURN_IF_ERROR(
+      SetFieldBool(table_data.get(), "$ucast_egress_port_valid", true));
+  // Data: $ingress_cos
+  RETURN_IF_ERROR(SetField(table_data.get(), "$ingress_cos", cos));
+  // Data: $max_pkt_len
+  RETURN_IF_ERROR(SetField(table_data.get(), "$max_pkt_len", max_pkt_len));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (insert) {
+    RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::InsertCloneSession(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 session_id, int egress_port, int cos, int max_pkt_len) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteCloneSession(device, session, session_id, egress_port, cos,
+                           max_pkt_len, true);
+}
+
+::util::Status BfSdeWrapper::ModifyCloneSession(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 session_id, int egress_port, int cos, int max_pkt_len) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteCloneSession(device, session, session_id, egress_port, cos,
+                           max_pkt_len, false);
+}
+
+::util::Status BfSdeWrapper::DeleteCloneSession(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 session_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet("$mirror.cfg", &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  bf_rt_id_t action_id;
+  RETURN_IF_BFRT_ERROR(table->actionIdGet("$normal", &action_id));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(action_id, &table_data));
+  // Key: $sid
+  RETURN_IF_ERROR(SetField(table_key.get(), "$sid", session_id));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
+                                            bf_dev_tgt, *table_key));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetCloneSessions(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 session_id, std::vector<uint32>* session_ids,
+    std::vector<int>* egress_ports, std::vector<int>* coss,
+    std::vector<int>* max_pkt_lens) {
+  CHECK_RETURN_IF_FALSE(session_ids);
+  CHECK_RETURN_IF_FALSE(egress_ports);
+  CHECK_RETURN_IF_FALSE(coss);
+  CHECK_RETURN_IF_FALSE(max_pkt_lens);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet("$mirror.cfg", &table));
+  bf_rt_id_t action_id;
+  RETURN_IF_BFRT_ERROR(table->actionIdGet("$normal", &action_id));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+  // Is this a wildcard read?
+  if (session_id != 0) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(action_id, &datums[0]));
+    // Key: $sid
+    RETURN_IF_ERROR(SetField(keys[0].get(), "$sid", session_id));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  session_ids->resize(0);
+  egress_ports->resize(0);
+  coss->resize(0);
+  max_pkt_lens->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $sid
+    uint64 session_id;
+    RETURN_IF_ERROR(GetField(*table_key, "$sid", &session_id));
+    session_ids->push_back(session_id);
+    // Data: $ingress_cos
+    uint64 ingress_cos;
+    RETURN_IF_ERROR(GetField(*table_data, "$ingress_cos", &ingress_cos));
+    coss->push_back(ingress_cos);
+    // Data: $max_pkt_len
+    uint64 pkt_len;
+    RETURN_IF_ERROR(GetField(*table_data, "$max_pkt_len", &pkt_len));
+    max_pkt_lens->push_back(pkt_len);
+    // Data: $ucast_egress_port
+    uint64 port;
+    RETURN_IF_ERROR(GetField(*table_data, "$ucast_egress_port", &port));
+    egress_ports->push_back(port);
+    // Data: $session_enable
+    bool session_enable;
+    RETURN_IF_ERROR(GetField(*table_data, "$session_enable", &session_enable));
+    CHECK_RETURN_IF_FALSE(session_enable)
+        << "Found a session that is not enabled.";
+    // Data: $ucast_egress_port_valid
+    bool ucast_egress_port_valid;
+    RETURN_IF_ERROR(GetField(*table_data, "$ucast_egress_port_valid",
+                             &ucast_egress_port_valid));
+    CHECK_RETURN_IF_FALSE(ucast_egress_port_valid)
+        << "Found a unicase egress port that is not set valid.";
+  }
+
+  CHECK_EQ(session_ids->size(), keys.size());
+  CHECK_EQ(egress_ports->size(), keys.size());
+  CHECK_EQ(coss->size(), keys.size());
+  CHECK_EQ(max_pkt_lens->size(), keys.size());
+
+  return ::util::OkStatus();
 }
 
 BfSdeWrapper* BfSdeWrapper::CreateSingleton() {
