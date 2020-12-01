@@ -30,12 +30,81 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   }
 
   static constexpr int kDevice1 = 0;
+  static constexpr char kP4Info[] = R"PROTO(
+    controller_packet_metadata {
+      preamble {
+        id: 67146229
+        name: "packet_in"
+        alias: "packet_in"
+        annotations: "@controller_header(\"packet_in\")"
+      }
+      metadata {
+        id: 1
+        name: "ingress_port"
+        bitwidth: 9
+      }
+      metadata {
+        id: 2
+        name: "_pad0"
+        bitwidth: 7
+      }
+    }
+    controller_packet_metadata {
+      preamble {
+        id: 67121543
+        name: "packet_out"
+        alias: "packet_out"
+        annotations: "@controller_header(\"packet_out\")"
+      }
+      metadata {
+        id: 1
+        name: "egress_port"
+        bitwidth: 9
+      }
+      metadata {
+        id: 2
+        name: "cpu_loopback_mode"
+        bitwidth: 2
+      }
+      metadata {
+        id: 3
+        name: "pad0"
+        annotations: "@padding"
+        bitwidth: 85
+      }
+      metadata {
+        id: 4
+        name: "ether_type"
+        bitwidth: 16
+      }
+    }
+  )PROTO";
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
   std::unique_ptr<BfrtPacketioManager> bfrt_packetio_manager_;
+  std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> packet_rx_writer;
+
 };
 
-constexpr int BfrtPacketioManagerTest::kDevice1;
+// Basic set up and shutdown test
+
+// TODO(Yi Tseng): These two methods will always return OK status
+// We can add tests for these methods if we modify them.
+// TEST_F(BfrtPacketioManagerTest, PushChassisConfig) {}
+// TEST_F(BfrtPacketioManagerTest, VerifyChassisConfig) {}
+
+
+
+TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfig) {
+  BfrtDeviceConfig config;
+  auto* program = config.add_program();
+  ASSERT_OK(ParseProtoFromString(kP4Info, program.mutable_p4info()));
+  ASSERT_OK(bfrt_packetio_manager_->PushForwardingPipelineConfig(config));
+}
+
+TEST_F(BfrtPacketioManagerTest, PushInvalidForwardingPipelineConfig) {
+
+}
 
 TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   // TODO
