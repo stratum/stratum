@@ -112,8 +112,8 @@ BfrtNode::~BfrtNode() = default;
       bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(bfrt_action_profile_manager_->PushForwardingPipelineConfig(
       bfrt_config_, bfrt_info_));
-  RETURN_IF_ERROR(bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_,
-                                                                  bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(bfrt_counter_manager_->PushForwardingPipelineConfig(
       bfrt_config_, bfrt_info_));
 
@@ -154,8 +154,10 @@ BfrtNode::~BfrtNode() = default;
 
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
+  ASSIGN_OR_RETURN(auto s2, bf_sde_interface_->CreateSession());
   CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
   RETURN_IF_BFRT_ERROR(session->beginBatch());
+  RETURN_IF_ERROR(s2->BeginBatch());
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
@@ -177,7 +179,7 @@ BfrtNode::~BfrtNode() = default;
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
         status = bfrt_pre_manager_->WritePreEntry(
-            session, update.type(),
+            s2, update.type(),
             update.entity().packet_replication_engine_entry());
         break;
       case ::p4::v1::Entity::kDirectCounterEntry:
@@ -205,6 +207,7 @@ BfrtNode::~BfrtNode() = default;
     success &= status.ok();
     results->push_back(status);
   }
+  RETURN_IF_ERROR(s2->EndBatch());
   RETURN_IF_BFRT_ERROR(session->endBatch(true));
 
   if (!success) {
@@ -228,6 +231,7 @@ BfrtNode::~BfrtNode() = default;
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
   CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
+  ASSIGN_OR_RETURN(auto s2, bf_sde_interface_->CreateSession());
   for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
@@ -259,7 +263,7 @@ BfrtNode::~BfrtNode() = default;
       }
       case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
         auto status = bfrt_pre_manager_->ReadPreEntry(
-            session, entity.packet_replication_engine_entry(), writer);
+            s2, entity.packet_replication_engine_entry(), writer);
         success &= status.ok();
         details->push_back(status);
         break;

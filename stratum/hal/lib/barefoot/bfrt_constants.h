@@ -17,14 +17,15 @@ constexpr uint32 kTnaExternActionSelectorId = 130;
 constexpr uint32 kTnaExternDirectCounter = 132;
 
 // Built-in tables and fields
-constexpr char kPreNodeTable[] = "$pre.node";
-constexpr char kMcNodeId[] = "$MULTICAST_NODE_ID";
-constexpr char kMcReplicationId[] = "$MULTICAST_RID";
 constexpr char kMcNodeDevPort[] = "$DEV_PORT";
-constexpr char kPreMgidTable[] = "$pre.mgid";
-constexpr char kMgid[] = "$MGID";
-constexpr char kMcNodeL1XidValid[] = "$MULTICAST_NODE_L1_XID_VALID";
+constexpr char kMcNodeId[] = "$MULTICAST_NODE_ID";
 constexpr char kMcNodeL1Xid[] = "$MULTICAST_NODE_L1_XID";
+constexpr char kMcNodeL1XidValid[] = "$MULTICAST_NODE_L1_XID_VALID";
+constexpr char kMcNodeLagId[] = "$MULTICAST_LAG_ID";
+constexpr char kMcReplicationId[] = "$MULTICAST_RID";
+constexpr char kMgid[] = "$MGID";
+constexpr char kPreMgidTable[] = "$pre.mgid";
+constexpr char kPreNodeTable[] = "$pre.node";
 constexpr char kRegisterIndex[] = "$REGISTER_INDEX";
 
 // TNA specific limits

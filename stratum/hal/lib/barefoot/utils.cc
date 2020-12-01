@@ -22,7 +22,8 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(field_name, &field_id));
   RETURN_IF_BFRT_ERROR(table->keyFieldDataTypeGet(field_id, &data_type));
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
-      << "Requested uint64 but field has type " << static_cast<int>(data_type);
+      << "Requested uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_key.getValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -37,7 +38,8 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(field_name, &field_id));
   RETURN_IF_BFRT_ERROR(table->keyFieldDataTypeGet(field_id, &data_type));
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
-      << "Setting uint64 but field has type " << static_cast<int>(data_type);
+      << "Setting uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, value));
 
   return ::util::OkStatus();
@@ -61,7 +63,8 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
-      << "Requested uint64 but field has type " << static_cast<int>(data_type);
+      << "Requested uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data.getValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -85,7 +88,8 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::STRING)
-      << "Requested string but field has type " << static_cast<int>(data_type);
+      << "Requested string but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data.getValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -109,7 +113,8 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::BOOL)
-      << "Requested bool but field has type " << static_cast<int>(data_type);
+      << "Requested bool but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data.getValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -133,7 +138,8 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
-      << "Setting uint64 but field has type " << static_cast<int>(data_type);
+      << "Setting uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, value));
 
   return ::util::OkStatus();
@@ -157,7 +163,8 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::STRING)
-      << "Setting string but field has type " << static_cast<int>(data_type);
+      << "Setting string but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -181,7 +188,8 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::BOOL)
-      << "Setting bool but field has type " << static_cast<int>(data_type);
+      << "Setting bool but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -354,11 +362,11 @@ std::string TofinoDevTypeToString(int dev_type) {
 #ifdef BF_DEV_BFNT20128QM
     case BF_DEV_BFNT20128QM:
       return "TOFINO2_128QM";  // added in 9.3.0
-#endif  // BF_DEV_BFNT20128QM
+#endif                         // BF_DEV_BFNT20128QM
 #ifdef BF_DEV_BFNT20128QH
     case BF_DEV_BFNT20128QH:
       return "TOFINO2_128QH";  // added in 9.3.0
-#endif  // BF_DEV_BFNT20128QH
+#endif                         // BF_DEV_BFNT20128QH
     case BF_DEV_BFNT20096T:
       return "TOFINO2_96T";
     case BF_DEV_BFNT20080T:
@@ -388,9 +396,9 @@ std::string TofinoDevTypeToString(int dev_type) {
 #ifdef BF_DEV_BFNT20032E
     case BF_DEV_BFNT20032E:  // removed in 9.3.0
       return "TOFINO2_32E";
-#endif  //BF_DEV_BFNT20032E
+#endif  // BF_DEV_BFNT20032E
 #ifdef BF_DEV_BFNT20064E  // removed in 9.3.0
-    case BF_DEV_BFNT20064E: //gone
+    case BF_DEV_BFNT20064E:  // gone
       return "TOFINO2_64E";
 #endif  // BF_DEV_BFNT20064E
     default:

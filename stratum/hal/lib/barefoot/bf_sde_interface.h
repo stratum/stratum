@@ -9,10 +9,10 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/hal/lib/barefoot/bf.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -29,10 +29,26 @@ class BfSdeInterface {
     PortState state;
   };
 
+  // SessionInterface allows starting sessions to batch requests.
+  // todo: check if an incomplete type could work
+  class SessionInterface {
+   public:
+    virtual ~SessionInterface() {}
+
+    // Start a new batch.
+    virtual ::util::Status BeginBatch() = 0;
+
+    // End the current batch.
+    virtual ::util::Status EndBatch() = 0;
+  };
+
   virtual ~BfSdeInterface() {}
 
   virtual ::util::Status AddDevice(int device,
                                    const BfrtDeviceConfig& device_config) = 0;
+
+  virtual ::util::StatusOr<std::shared_ptr<SessionInterface>>
+  CreateSession() = 0;
 
   virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
 
@@ -85,6 +101,75 @@ class BfSdeInterface {
       int device, std::unique_ptr<ChannelWriter<std::string>> writer) = 0;
 
   virtual ::util::Status UnregisterPacketReceiveWriter(int device) = 0;
+
+  // Create a new multicast node with the given parameters. Returns the newly
+  // allocated node id.
+  virtual ::util::StatusOr<uint32> CreateMulticastNode(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
+      const std::vector<uint32> ports) = 0;
+
+  // Returns the node IDs linked to the given multicast group ID.
+  // TODO(max): rename to GetMulticastNodeIdsInMulticastGroup
+  virtual ::util::StatusOr<std::vector<uint32>> GetNodesInMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id) = 0;
+
+  // Delete the given multicast nodes.
+  virtual ::util::Status DeleteMulticastNodes(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const std::vector<uint32>& mc_node_ids) = 0;
+
+  // Returns the multicast node with the given ID ($pre.node table).
+  virtual ::util::Status GetMulticastNode(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 mc_node_id, int* replication_id,
+      std::vector<uint32>* lag_ids, std::vector<uint32>* ports) = 0;
+
+  // Inserts a multicast group ($pre.mgid table).
+  virtual ::util::Status InsertMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, const std::vector<uint32>& mc_node_ids) = 0;
+
+  // Modifies a multicast group ($pre.mgid table).
+  virtual ::util::Status ModifyMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, const std::vector<uint32>& mc_node_ids) = 0;
+
+  // Deletes a multicast group ($pre.mgid table).
+  virtual ::util::Status DeleteMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id) = 0;
+
+  // Returns the multicast group with the given ID ($pre.mgid table), or all
+  // groups if ID is 0.
+  virtual ::util::Status GetMulticastGroups(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, std::vector<uint32>* group_ids,
+      std::vector<std::vector<uint32>>* mc_node_ids) = 0;
+
+  // Inserts a clone session ($mirror.cfg table).
+  virtual ::util::Status InsertCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, int egress_port, int cos, int max_pkt_len) = 0;
+
+  // Modifies a clone session ($mirror.cfg table).
+  virtual ::util::Status ModifyCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, int egress_port, int cos, int max_pkt_len) = 0;
+
+  // Deletes a clone session ($mirror.cfg table).
+  virtual ::util::Status DeleteCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id) = 0;
+
+  // Returns the clone session with the given ID ($mirror.cfg table), or all
+  // sessions if ID is 0.
+  virtual ::util::Status GetCloneSessions(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, std::vector<uint32>* session_ids,
+      std::vector<int>* egress_ports, std::vector<int>* coss,
+      std::vector<int>* max_pkt_lens) = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance only.

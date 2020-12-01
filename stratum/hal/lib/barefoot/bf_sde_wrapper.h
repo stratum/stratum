@@ -14,6 +14,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
+#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 
@@ -28,9 +29,41 @@ class BfSdeWrapper : public BfSdeInterface {
   // Default MTU for ports on Tofino.
   static constexpr int32 kBfDefaultMtu = 10 * 1024;  // 10K
 
+  // Wrapper around the bfrt session object.
+  class Session : public BfSdeInterface::SessionInterface {
+   public:
+    // SessionInterface public methods.
+    ::util::Status BeginBatch() override {
+      RETURN_IF_BFRT_ERROR(bfrt_session_->beginBatch());
+      return ::util::OkStatus();
+    }
+    ::util::Status EndBatch() override {
+      RETURN_IF_BFRT_ERROR(bfrt_session_->endBatch(/*hardware sync*/ true));
+      return ::util::OkStatus();
+    }
+
+    static ::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
+    CreateSession() {
+      auto bfrt_session = bfrt::BfRtSession::sessionCreate();
+      CHECK_RETURN_IF_FALSE(bfrt_session) << "Failed to create new session.";
+      return std::shared_ptr<BfSdeInterface::SessionInterface>(
+          new Session(bfrt_session));
+    }
+
+    // Stores the underlying SDE session.
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session_;
+
+   private:
+    // Private constructor. Use CreateSession() instead.
+    Session(std::shared_ptr<bfrt::BfRtSession> bfrt_session)
+        : bfrt_session_(bfrt_session) {}
+  };
+
   // BfSdeInterface public methods.
   ::util::Status AddDevice(int device,
                            const BfrtDeviceConfig& device_config) override;
+  ::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
+  CreateSession() override;
   ::util::StatusOr<PortState> GetPortState(int device, int port) override;
   ::util::Status GetPortCounters(int device, int port,
                                  PortCounters* counters) override;
@@ -61,6 +94,58 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status RegisterPacketReceiveWriter(
       int device, std::unique_ptr<ChannelWriter<std::string>> writer) override;
   ::util::Status UnregisterPacketReceiveWriter(int device) override;
+  ::util::StatusOr<uint32> CreateMulticastNode(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
+      const std::vector<uint32> ports) override LOCKS_EXCLUDED(data_lock_);
+  ::util::StatusOr<std::vector<uint32>> GetNodesInMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status DeleteMulticastNodes(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const std::vector<uint32>& mc_node_ids) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status GetMulticastNode(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 mc_node_id, int* replication_id, std::vector<uint32>* lag_ids,
+      std::vector<uint32>* ports) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status InsertMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, const std::vector<uint32>& mc_node_ids) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ModifyMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, const std::vector<uint32>& mc_node_ids) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status DeleteMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status GetMulticastGroups(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, std::vector<uint32>* group_ids,
+      std::vector<std::vector<uint32>>* mc_node_ids) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status InsertCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, int egress_port, int cos, int max_pkt_len) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ModifyCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, int egress_port, int cos, int max_pkt_len) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status DeleteCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status GetCloneSessions(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, std::vector<uint32>* session_ids,
+      std::vector<int>* egress_ports, std::vector<int>* coss,
+      std::vector<int>* max_pkt_lens) override LOCKS_EXCLUDED(data_lock_);
+
+  // Gets the device target(device id + pipe id) for a specific BfRt
+  // primitive(e.g. table)
+  // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
+  bf_rt_target_t GetDeviceTarget(int device) const;
 
   //
   ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
@@ -114,8 +199,41 @@ class BfSdeWrapper : public BfSdeInterface {
   // RW mutex lock for protecting the pipeline state.
   mutable absl::Mutex data_lock_;
 
-  // Writer to forward the port status change message to. It is registered by
-  // chassis manager to receive SDE port status change events.
+  // Callback registed with the SDE for Tx notifications.
+  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
+                                           bf_pkt_tx_ring_t tx_ring,
+                                           uint64 tx_cookie, uint32 status);
+
+  // Callback registed with the SDE for Rx notifications.
+  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
+                                           void* cookie,
+                                           bf_pkt_rx_ring_t rx_ring);
+
+  // Common code for multicast group handling.
+  ::util::Status WriteMulticastGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 group_id, const std::vector<uint32>& mc_node_ids, bool insert)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Common code for clone session handling.
+  ::util::Status WriteCloneSession(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Helper function to find, but not allocate, at free multicast node id. This
+  // function is not optimized for speed yet.
+  ::util::StatusOr<uint32> GetFreeMulticastNodeId(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Helper to dump the entire PRE table state for debugging. Only runs at v=2.
+  ::util::Status DumpPreState(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Writer to forward the port status change message to. It is registered
+  // by chassis manager to receive SDE port status change events.
   std::unique_ptr<ChannelWriter<PortStatusEvent>> port_status_event_writer_
       GUARDED_BY(port_status_event_writer_lock_);
 
@@ -128,16 +246,6 @@ class BfSdeWrapper : public BfSdeInterface {
 
   // Pointer to the bfrt device manager. Not owned by this class.
   bfrt::BfRtDevMgr* bfrt_device_manager_ GUARDED_BY(data_lock_);
-
-  // Callback registed with the SDE for Tx notifications.
-  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
-                                           bf_pkt_tx_ring_t tx_ring,
-                                           uint64 tx_cookie, uint32 status);
-
-  // Callback registed with the SDE for Rx notifications.
-  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
-                                           void* cookie,
-                                           bf_pkt_rx_ring_t rx_ring);
 };
 
 }  // namespace barefoot
