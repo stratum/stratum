@@ -371,7 +371,6 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_sde_interface",
-        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:cleanup",
@@ -392,6 +391,7 @@ stratum_cc_test(
     name = "bfrt_packetio_manager_test",
     srcs = ["bfrt_packetio_manager_test.cc"],
     deps = [
+        ":bf_sde_mock",
         ":bfrt_packetio_manager",
         ":test_main",
         "//stratum/glue/status:status_test_util",

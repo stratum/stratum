@@ -14,7 +14,6 @@
 
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
-#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/utils.h"
 
