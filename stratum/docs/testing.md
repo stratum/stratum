@@ -53,7 +53,7 @@ Do not write tests that fail in surprising ways:
     order. Avoid changing global state.
 
 - Non-hermeticity: Tests that fail if the same tests is run at the same time
-    twice. Do not depend on external resources (notwork, storage)
+    twice. Do not depend on external resources (network, storage).
 
 - Deep dependence: Mock tests that fail if the implementation of class under
     test is refactored. Do not over-fit the mock expectations.
