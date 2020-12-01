@@ -92,8 +92,11 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     packetin_header_size_ = 0;
     packetout_header_size_ = 0;
     packet_receive_channel_->Close();
-    pthread_join(sde_rx_thread_id_, nullptr);
     initialized_ = false;
+  }
+  {
+    absl::ReaderMutexLock l(&data_lock_);
+    pthread_join(sde_rx_thread_id_, nullptr);
   }
 
   return ::util::OkStatus();
