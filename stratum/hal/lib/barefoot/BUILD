@@ -394,9 +394,9 @@ stratum_cc_test(
     name = "bfrt_packetio_manager_test",
     srcs = ["bfrt_packetio_manager_test.cc"],
     deps = [
+        ":test_main",
         ":bf_sde_mock",
         ":bfrt_packetio_manager",
-        ":test_main",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:writer_mock",
         "//stratum/lib:utils",

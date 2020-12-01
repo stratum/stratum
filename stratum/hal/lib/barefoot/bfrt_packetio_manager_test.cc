@@ -83,7 +83,6 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
   std::unique_ptr<BfrtPacketioManager> bfrt_packetio_manager_;
   std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> packet_rx_writer;
-
 };
 
 // Basic set up and shutdown test
@@ -93,17 +92,27 @@ class BfrtPacketioManagerTest : public ::testing::Test {
 // TEST_F(BfrtPacketioManagerTest, PushChassisConfig) {}
 // TEST_F(BfrtPacketioManagerTest, VerifyChassisConfig) {}
 
+constexpr int BfrtPacketioManagerTest::kDevice1;
+constexpr char BfrtPacketioManagerTest::kP4Info[];
 
-
-TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfig) {
+TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfigAndShutdown) {
   BfrtDeviceConfig config;
-  auto* program = config.add_program();
-  ASSERT_OK(ParseProtoFromString(kP4Info, program.mutable_p4info()));
+  auto* program = config.add_programs();
+  ASSERT_OK(ParseProtoFromString(kP4Info, program->mutable_p4info()));
+
+  // What we expected when calling PushForwardingPipelineConfig with valid config:
+  // - Metadata mepping will be built
+  // - StartPacketIo of SDE interface will be invoked
+  EXPECT_CALL(*bf_sde_wrapper_mock_, StartPacketIo(kDevice1));
+  // - Packet Rx channel will br created and new thread will be create to handle Rx
+  // - RegisterPacketReceiveWriter of SDE interface will be invoked
+  EXPECT_CALL(*bf_sde_wrapper_mock_, RegisterPacketReceiveWriter(kDevice1, _));
   ASSERT_OK(bfrt_packetio_manager_->PushForwardingPipelineConfig(config));
-}
 
-TEST_F(BfrtPacketioManagerTest, PushInvalidForwardingPipelineConfig) {
-
+  // Make sure everything like Rx threads will be cleaned up.
+  EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, UnregisterPacketReceiveWriter(kDevice1));
+  ASSERT_OK(bfrt_packetio_manager_->Shutdown());
 }
 
 TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
