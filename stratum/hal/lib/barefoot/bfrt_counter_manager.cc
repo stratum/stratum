@@ -31,9 +31,8 @@ BfrtCounterManager::BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
       device_(device) {}
 
 ::util::Status BfrtCounterManager::PushForwardingPipelineConfig(
-    const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
+    const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
-  bfrt_info_ = bfrt_info;
   return ::util::OkStatus();
 }
 

@@ -114,8 +114,8 @@ BfrtNode::~BfrtNode() = default;
       bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
-  RETURN_IF_ERROR(bfrt_counter_manager_->PushForwardingPipelineConfig(
-      bfrt_config_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
