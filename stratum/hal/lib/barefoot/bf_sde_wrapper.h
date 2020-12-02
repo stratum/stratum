@@ -14,6 +14,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
+#include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
@@ -150,6 +151,14 @@ class BfSdeWrapper : public BfSdeInterface {
       uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
       absl::optional<uint64>* packet_count, absl::Duration timeout) override
       LOCKS_EXCLUDED(data_lock_);
+  ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::StatusOr<uint32> GetP4InfoId(uint32 bfrt_id) const override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::StatusOr<uint32> GetActionSelectorBfRtId(
+      uint32 action_profile_id) const override LOCKS_EXCLUDED(data_lock_);
+  ::util::StatusOr<uint32> GetActionProfileBfRtId(
+      uint32 action_selector_id) const override LOCKS_EXCLUDED(data_lock_);
 
   // Gets the device target(device id + pipe id) for a specific BfRt
   // primitive(e.g. table)
@@ -256,6 +265,10 @@ class BfSdeWrapper : public BfSdeInterface {
   // Map from device ID to packet receive writer.
   absl::flat_hash_map<int, std::unique_ptr<ChannelWriter<std::string>>>
       device_to_packet_rx_writer_ GUARDED_BY(packet_rx_callback_lock_);
+
+  // TODO(max): make the following maps to handle multiple devices.
+  // Pointer to the ID mapper. Not owned by this class.
+  std::unique_ptr<BfrtIdMapper> bfrt_id_mapper_ GUARDED_BY(data_lock_);
 
   // Pointer to the current BfR info object. Not owned by this class.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(data_lock_);

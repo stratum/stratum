@@ -389,7 +389,7 @@ struct RegisterClearThreadData {
       << "Invalid update type " << type;
 
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -468,7 +468,7 @@ struct RegisterClearThreadData {
   bf_rt_id_t bfrt_table_id;
   RETURN_IF_BFRT_ERROR(table->tableIdGet(&bfrt_table_id));
   ASSIGN_OR_RETURN(auto p4rt_table_id,
-                   bfrt_id_mapper_->GetP4InfoId(bfrt_table_id));
+                   bf_sde_interface_->GetP4InfoId(bfrt_table_id));
   result.set_table_id(p4rt_table_id);
 
   // Match key and priority
@@ -621,7 +621,7 @@ struct RegisterClearThreadData {
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -661,7 +661,7 @@ struct RegisterClearThreadData {
       << table_entry.ShortDebugString() << ".";
 
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -711,7 +711,7 @@ struct RegisterClearThreadData {
       << "Default action filters on wildcard reads are not supported.";
   auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -744,7 +744,7 @@ struct RegisterClearThreadData {
     const ::p4::v1::TableEntry& table_entry) {
   auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -848,7 +848,7 @@ struct RegisterClearThreadData {
       case bfrt::BfRtTable::TableType::MATCH_INDIRECT:
       case bfrt::BfRtTable::TableType::MATCH_INDIRECT_SELECTOR: {
         ASSIGN_OR_RETURN(auto p4rt_table_id,
-                         bfrt_id_mapper_->GetP4InfoId(bfrt_table_id));
+                         bf_sde_interface_->GetP4InfoId(bfrt_table_id));
         ids.push_back(p4rt_table_id);
         break;
       }
@@ -922,7 +922,7 @@ struct RegisterClearThreadData {
       << "Found action on DirectCounterEntry "
       << direct_counter_entry.ShortDebugString();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -971,7 +971,7 @@ BfrtTableManager::ReadDirectCounterEntry(
       << "Found action on DirectCounterEntry "
       << direct_counter_entry.ShortDebugString();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -1060,7 +1060,7 @@ namespace {
     const ::p4::v1::RegisterEntry& register_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(register_entry.register_id()));
+                   bf_sde_interface_->GetBfRtId(register_entry.register_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);
@@ -1164,7 +1164,7 @@ namespace {
       << "Only bitstring registers data types are supported.";
 
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(register_entry.register_id()));
+                   bf_sde_interface_->GetBfRtId(register_entry.register_id()));
   const bfrt::BfRtTable* table;
   {
     absl::ReaderMutexLock l(&lock_);

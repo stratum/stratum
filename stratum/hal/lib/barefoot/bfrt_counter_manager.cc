@@ -6,7 +6,6 @@
 #include <set>
 
 #include "absl/synchronization/notification.h"
-#include "bf_rt/bf_rt_table_operations.hpp"
 #include "gflags/gflags.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 
@@ -17,18 +16,13 @@ namespace hal {
 namespace barefoot {
 
 std::unique_ptr<BfrtCounterManager> BfrtCounterManager::CreateInstance(
-    const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface,
-    int device) {
-  return absl::WrapUnique(
-      new BfrtCounterManager(bfrt_id_mapper, bf_sde_interface, device));
+    BfSdeInterface* bf_sde_interface, int device) {
+  return absl::WrapUnique(new BfrtCounterManager(bf_sde_interface, device));
 }
 
-BfrtCounterManager::BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
-                                       BfSdeInterface* bf_sde_interface,
+BfrtCounterManager::BfrtCounterManager(BfSdeInterface* bf_sde_interface,
                                        int device)
-    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
-      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
-      device_(device) {}
+    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
 
 ::util::Status BfrtCounterManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
@@ -52,8 +46,8 @@ BfrtCounterManager::BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
 
   // Find counter table.
   // TODO(max): revisit id translation location
-  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(counter_entry.counter_id()));
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(counter_entry.counter_id()));
 
   absl::optional<uint64> byte_count;
   absl::optional<uint64> packet_count;
@@ -82,8 +76,8 @@ BfrtCounterManager::ReadIndirectCounterEntry(
 
   // Find counter table
   // TODO(max): revisit id translation location
-  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
-                   bfrt_id_mapper_->GetBfRtId(counter_entry.counter_id()));
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(counter_entry.counter_id()));
 
   absl::optional<uint64> byte_count;
   absl::optional<uint64> packet_count;

@@ -188,6 +188,20 @@ class BfSdeInterface {
       uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
       absl::optional<uint64>* packet_count, absl::Duration timeout) = 0;
 
+  // Returns the equivalent BfRt ID for the given P4RT ID.
+  virtual ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const = 0;
+
+  // Returns the equivalent P4RT ID for the given BfRt ID.
+  virtual ::util::StatusOr<uint32> GetP4InfoId(uint32 bfrt_id) const = 0;
+
+  // Gets the action selector ID of an action profile.
+  virtual ::util::StatusOr<uint32> GetActionSelectorBfRtId(
+      uint32 action_profile_id) const = 0;
+
+  // Gets the action profile ID of an action selector.
+  virtual ::util::StatusOr<uint32> GetActionProfileBfRtId(
+      uint32 action_selector_id) const = 0;
+
  protected:
   // Default constructor. To be called by the Mock class instance only.
   BfSdeInterface() {}

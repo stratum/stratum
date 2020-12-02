@@ -15,9 +15,11 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtIdMapper::BfrtIdMapper(BfSdeInterface* bf_sde_interface, int device_id)
-    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
-      device_id_(device_id) {}
+BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
+
+std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int device_id) {
+  return absl::WrapUnique(new BfrtIdMapper(device_id));
+}
 
 ::util::Status BfrtIdMapper::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
@@ -272,11 +274,6 @@ bf_rt_target_t BfrtIdMapper::GetDeviceTarget() const {
       << "Unable to find action profile of an action selector: "
       << action_selector_id;
   return gtl::FindOrDie(act_selector_to_profile_mapping_, action_selector_id);
-}
-
-std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(
-    BfSdeInterface* bf_sde_interface, int device_id) {
-  return absl::WrapUnique(new BfrtIdMapper(bf_sde_interface, device_id));
 }
 
 }  // namespace barefoot
