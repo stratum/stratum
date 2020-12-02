@@ -25,8 +25,7 @@ namespace barefoot {
 class BfrtCounterManager {
  public:
   // Pushes the forwarding pipeline config
-  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
-                                              const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config)
       LOCKS_EXCLUDED(lock_);
 
   // Writes an indrect counter entry.
@@ -51,19 +50,15 @@ class BfrtCounterManager {
   explicit BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
                               BfSdeInterface* bf_sde_interface_, int device);
 
-  // The BfRt info, requires by some function to get runtime
-  // instances like tables.
-  const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
-
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
-
-  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
-  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfrtIdMapper* bfrt_id_mapper_;
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.
