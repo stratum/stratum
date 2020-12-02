@@ -8,9 +8,6 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
-#include "bf_rt/bf_rt_init.hpp"
-#include "bf_rt/bf_rt_session.hpp"
-#include "bf_rt/bf_rt_table_key.hpp"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
@@ -34,24 +31,25 @@ class BfrtCounterManager {
 
   // Writes an indrect counter entry.
   ::util::Status WriteIndirectCounterEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::CounterEntry& counter_entry) LOCKS_EXCLUDED(lock_);
 
   // Reads an indirect counter entry.
   ::util::StatusOr<::p4::v1::CounterEntry> ReadIndirectCounterEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::CounterEntry& counter_entry) LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtCounterManager> CreateInstance(
-      const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface_);
+      const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface_,
+      int device);
 
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
   explicit BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
-                              BfSdeInterface* bf_sde_interface_);
+                              BfSdeInterface* bf_sde_interface_, int device);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
@@ -66,6 +64,10 @@ class BfrtCounterManager {
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfrtIdMapper* bfrt_id_mapper_;
+
+  // Fixed zero-based Tofino device number corresponding to the node/ASIC
+  // managed by this class instance. Assigned in the class constructor.
+  const int device_;
 };
 
 }  // namespace barefoot

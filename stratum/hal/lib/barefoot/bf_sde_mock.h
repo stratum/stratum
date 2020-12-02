@@ -124,6 +124,22 @@ class BfSdeMock : public BfSdeInterface {
                      uint32 session_id, std::vector<uint32>* session_ids,
                      std::vector<int>* egress_ports, std::vector<int>* coss,
                      std::vector<int>* max_pkt_lens));
+  MOCK_METHOD6(
+      WriteIndirectCounter,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 counter_id, int counter_index,
+                     absl::optional<uint64> byte_count,
+                     absl::optional<uint64> packet_count));
+
+  MOCK_METHOD7(
+      ReadIndirectCounter,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 counter_id, int counter_index,
+                     absl::optional<uint64>* byte_count,
+                     absl::optional<uint64>* packet_count,
+                     absl::Duration timeout));
 };
 
 }  // namespace barefoot

@@ -98,8 +98,8 @@ namespace barefoot {
       BfrtPacketioManager::CreateInstance(device_id, bf_sde_wrapper);
   auto bfrt_pre_manager =
       BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_counter_manager =
-      BfrtCounterManager::CreateInstance(bfrt_id_mapper.get(), bf_sde_wrapper);
+  auto bfrt_counter_manager = BfrtCounterManager::CreateInstance(
+      bfrt_id_mapper.get(), bf_sde_wrapper, device_id);
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
