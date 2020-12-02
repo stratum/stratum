@@ -4,13 +4,17 @@
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 
 #include "absl/memory/memory.h"
+#include "absl/synchronization/notification.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
+using ::stratum::test_utils::EqualsProto;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -41,8 +45,13 @@ class BfrtPacketioManagerTest : public ::testing::Test {
         .WillOnce(Return(util::OkStatus()));
     // - RegisterPacketReceiveWriter of SDE interface will be invoked
     EXPECT_CALL(*bf_sde_wrapper_mock_, RegisterPacketReceiveWriter(kDevice1, _))
-        .WillOnce(Return(util::OkStatus()));
-    return bfrt_packetio_manager_->PushForwardingPipelineConfig(config);
+        .WillOnce(Invoke(
+            this, &BfrtPacketioManagerTest::RegisterPacketReceiveWriter));
+    auto status = bfrt_packetio_manager_->PushForwardingPipelineConfig(config);
+    // FIXME(Yi Tseng): Wait few milliseconds to ensure the rx thread is ready.
+    //                  Should check the internal state.
+    absl::SleepFor(absl::Milliseconds(100));
+    return status;
   }
 
   ::util::Status Shutdown() {
@@ -51,7 +60,17 @@ class BfrtPacketioManagerTest : public ::testing::Test {
         .WillOnce(Return(util::OkStatus()));
     EXPECT_CALL(*bf_sde_wrapper_mock_, UnregisterPacketReceiveWriter(kDevice1))
         .WillOnce(Return(util::OkStatus()));
+    packet_rx_writer.release();
     return bfrt_packetio_manager_->Shutdown();
+  }
+
+  // The mock method which help us to initialize a mock packet receive writer
+  // so we can use it later.
+  ::util::Status RegisterPacketReceiveWriter(
+      int device, std::unique_ptr<ChannelWriter<std::string>> writer) {
+    EXPECT_EQ(device, kDevice1);
+    packet_rx_writer = std::move(writer);
+    return ::util::OkStatus();
   }
 
   static constexpr int kDevice1 = 0;
@@ -107,7 +126,7 @@ class BfrtPacketioManagerTest : public ::testing::Test {
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
   std::unique_ptr<BfrtPacketioManager> bfrt_packetio_manager_;
-  std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> packet_rx_writer;
+  std::unique_ptr<ChannelWriter<std::string>> packet_rx_writer;
 };
 
 // Basic set up and shutdown test
@@ -182,6 +201,50 @@ TEST_F(BfrtPacketioManagerTest, TransmitBadPacketAfterPipelineConfigPush) {
   EXPECT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(),
               HasSubstr("Missing metadata with Id 4 in PacketOut"));
+  EXPECT_OK(Shutdown());
+}
+
+TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
+  EXPECT_OK(PushPipelineConfig());
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
+  EXPECT_OK(bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer));
+  const char expected_packet_in_str[] = R"PROTO(
+    payload: "abcde"
+    metadata {
+      metadata_id: 1
+      value: "\000\001"
+    }
+    metadata {
+      metadata_id: 2
+      value: "\000"
+    }
+  )PROTO";
+  ::p4::v1::PacketIn expected_packet_in;
+  EXPECT_OK(ParseProtoFromString(expected_packet_in_str, &expected_packet_in));
+  const std::string packet_from_asic(
+      "\0\x80"
+      "abcde",
+      7);
+  auto write_notifier = std::make_shared<absl::Notification>();
+  std::weak_ptr<absl::Notification> weak_ref(write_notifier);
+  EXPECT_CALL(*writer, Write(_))
+      .WillOnce(
+          Invoke([expected_packet_in, weak_ref](::p4::v1::PacketIn actual) {
+            EXPECT_THAT(actual, EqualsProto(expected_packet_in));
+            if (auto notifier = weak_ref.lock()) {
+              notifier->Notify();
+              return true;
+            } else {
+              LOG(ERROR) << "Write notifier expired.";
+              return false;
+            }
+          }));
+  EXPECT_OK(packet_rx_writer->Write(packet_from_asic, absl::Milliseconds(100)));
+
+  // Here we need to wait until we receive and verify the packet from the mock
+  // packet-in writer.
+  EXPECT_TRUE(
+      write_notifier->WaitForNotificationWithTimeout(absl::Milliseconds(100)));
   EXPECT_OK(Shutdown());
 }
 

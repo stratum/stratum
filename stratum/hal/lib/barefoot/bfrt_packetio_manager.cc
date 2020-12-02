@@ -98,7 +98,6 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     absl::ReaderMutexLock l(&data_lock_);
     pthread_join(sde_rx_thread_id_, nullptr);
   }
-
   return ::util::OkStatus();
 }
 
