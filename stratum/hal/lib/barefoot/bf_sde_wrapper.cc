@@ -7,7 +7,9 @@
 #include <utility>
 
 #include "absl/synchronization/mutex.h"
+#include "absl/synchronization/notification.h"
 #include "absl/time/time.h"
+#include "bf_rt/bf_rt_table_operations.hpp"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/integral_types.h"
@@ -1101,6 +1103,143 @@ namespace {
   CHECK_EQ(egress_ports->size(), keys.size());
   CHECK_EQ(coss->size(), keys.size());
   CHECK_EQ(max_pkt_lens->size(), keys.size());
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteIndirectCounter(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 counter_id, int counter_index, absl::optional<uint64> byte_count,
+    absl::optional<uint64> packet_count) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(counter_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  // Counter key: $COUNTER_INDEX
+  RETURN_IF_ERROR(SetField(table_key.get(), "$COUNTER_INDEX", counter_index));
+
+  // Counter data: $COUNTER_SPEC_BYTES
+  if (byte_count.has_value()) {
+    bf_rt_id_t field_id;
+    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    if (bf_status == BF_SUCCESS) {
+      RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, byte_count.value()));
+    }
+  }
+  // Counter data: $COUNTER_SPEC_PKTS
+  if (packet_count.has_value()) {
+    bf_rt_id_t field_id;
+    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+    if (bf_status == BF_SUCCESS) {
+      RETURN_IF_BFRT_ERROR(
+          table_data->setValue(field_id, packet_count.value()));
+    }
+  }
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+      *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ReadIndirectCounter(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
+    absl::optional<uint64>* packet_count, absl::Duration timeout) {
+  CHECK_RETURN_IF_FALSE(byte_count);
+  CHECK_RETURN_IF_FALSE(packet_count);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(counter_id, &table));
+
+  RETURN_IF_ERROR(SynchronizeCounters(device, session, counter_id, timeout));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  // Counter key: $COUNTER_INDEX
+  RETURN_IF_ERROR(SetField(table_key.get(), "$COUNTER_INDEX", counter_index));
+
+  // Read the counter data.
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *real_session->bfrt_session_, bf_dev_tgt, *table_key,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+
+  byte_count->reset();
+  packet_count->reset();
+  // Counter data: $COUNTER_SPEC_BYTES
+  bf_rt_id_t field_id;
+  auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+  if (bf_status == BF_SUCCESS) {
+    uint64 counter_data;
+    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
+    *byte_count = counter_data;
+  }
+
+  // Counter data: $COUNTER_SPEC_PKTS
+  bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+  if (bf_status == BF_SUCCESS) {
+    uint64 counter_data;
+    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
+    *packet_count = counter_data;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::SynchronizeCounters(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::Duration timeout) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  // Sync table counter
+  std::set<bfrt::TableOperationsType> supported_ops;
+  RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
+  if (supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
+    auto sync_notifier = std::make_shared<absl::Notification>();
+    std::weak_ptr<absl::Notification> weak_ref(sync_notifier);
+    std::unique_ptr<bfrt::BfRtTableOperations> table_op;
+    RETURN_IF_BFRT_ERROR(table->operationsAllocate(
+        bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
+    RETURN_IF_BFRT_ERROR(table_op->counterSyncSet(
+        *real_session->bfrt_session_, bf_dev_tgt,
+        [table_id, weak_ref](const bf_rt_target_t& dev_tgt, void* cookie) {
+          if (auto notifier = weak_ref.lock()) {
+            VLOG(1) << "Table counter for table " << table_id << " synced.";
+            notifier->Notify();
+          } else {
+            VLOG(1) << "Notifier expired before table " << table_id
+                    << " could be synced.";
+          }
+        },
+        nullptr));
+    RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
+    // Wait until sync done or timeout.
+    if (!sync_notifier->WaitForNotificationWithTimeout(timeout)) {
+      return MAKE_ERROR(ERR_OPER_TIMEOUT)
+             << "Timeout while syncing (indirect) table counters of table "
+             << table_id << ".";
+    }
+  }
 
   return ::util::OkStatus();
 }

@@ -141,6 +141,15 @@ class BfSdeWrapper : public BfSdeInterface {
       uint32 session_id, std::vector<uint32>* session_ids,
       std::vector<int>* egress_ports, std::vector<int>* coss,
       std::vector<int>* max_pkt_lens) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status WriteIndirectCounter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 counter_id, int counter_index, absl::optional<uint64> byte_count,
+      absl::optional<uint64> packet_count) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ReadIndirectCounter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
+      absl::optional<uint64>* packet_count, absl::Duration timeout) override
+      LOCKS_EXCLUDED(data_lock_);
 
   // Gets the device target(device id + pipe id) for a specific BfRt
   // primitive(e.g. table)
@@ -230,6 +239,13 @@ class BfSdeWrapper : public BfSdeInterface {
   // Helper to dump the entire PRE table state for debugging. Only runs at v=2.
   ::util::Status DumpPreState(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Synchronizes the driver cached values with the current hardware state for a
+  // given BfRt table.
+  ::util::Status SynchronizeCounters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::Duration timeout)
       SHARED_LOCKS_REQUIRED(data_lock_);
 
   // Writer to forward the port status change message to. It is registered

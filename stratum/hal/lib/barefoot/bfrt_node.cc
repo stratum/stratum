@@ -188,7 +188,7 @@ BfrtNode::~BfrtNode() = default;
         break;
       case ::p4::v1::Entity::kCounterEntry:
         status = bfrt_counter_manager_->WriteIndirectCounterEntry(
-            session, update.type(), update.entity().counter_entry());
+            s2, update.type(), update.entity().counter_entry());
         break;
       case ::p4::v1::Entity::kRegisterEntry: {
         status = bfrt_table_manager_->WriteRegisterEntry(
@@ -282,7 +282,7 @@ BfrtNode::~BfrtNode() = default;
       }
       case ::p4::v1::Entity::kCounterEntry: {
         auto status = bfrt_counter_manager_->ReadIndirectCounterEntry(
-            session, entity.counter_entry());
+            s2, entity.counter_entry());
         if (!status.ok()) {
           success = false;
           details->push_back(status.status());

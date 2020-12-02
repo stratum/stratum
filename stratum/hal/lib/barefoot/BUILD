@@ -464,7 +464,6 @@ stratum_cc_library(
         ":bf_sde_interface",
         ":bfrt_constants",
         ":bfrt_id_mapper",
-        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -483,7 +482,26 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
+    ],
+)
+
+stratum_cc_test(
+    name = "bfrt_counter_manager_test",
+    srcs = ["bfrt_counter_manager_test.cc"],
+    deps = [
+        ":test_main",
+        ":bf_sde_mock",
+        ":bfrt_counter_manager",
+        ":bfrt_table_manager",  # FIXME: for bfrt_table_sync_timeout_ms storage
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest",
     ],
 )
 

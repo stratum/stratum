@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -123,8 +124,8 @@ class BfSdeInterface {
   // Returns the multicast node with the given ID ($pre.node table).
   virtual ::util::Status GetMulticastNode(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 mc_node_id, int* replication_id,
-      std::vector<uint32>* lag_ids, std::vector<uint32>* ports) = 0;
+      uint32 mc_node_id, int* replication_id, std::vector<uint32>* lag_ids,
+      std::vector<uint32>* ports) = 0;
 
   // Inserts a multicast group ($pre.mgid table).
   virtual ::util::Status InsertMulticastGroup(
@@ -170,6 +171,22 @@ class BfSdeInterface {
       uint32 session_id, std::vector<uint32>* session_ids,
       std::vector<int>* egress_ports, std::vector<int>* coss,
       std::vector<int>* max_pkt_lens) = 0;
+
+  // Updates an indirect counter at the given index. The counter ID must be a
+  // BfRt table ID, not P4Runtime.
+  // TODO(max): figure out optional counter data API, see TotW#163
+  virtual ::util::Status WriteIndirectCounter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 counter_id, int counter_index, absl::optional<uint64> byte_count,
+      absl::optional<uint64> packet_count) = 0;
+
+  // Reads the data from an indirect counter. The counter ID must be a
+  // BfRt table ID, not P4Runtime.
+  // TODO(max): figure out optional counter data API, see TotW#163
+  virtual ::util::Status ReadIndirectCounter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
+      absl::optional<uint64>* packet_count, absl::Duration timeout) = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance only.
