@@ -463,7 +463,6 @@ stratum_cc_library(
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
-        ":bfrt_id_mapper",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",

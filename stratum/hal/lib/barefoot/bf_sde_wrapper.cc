@@ -337,6 +337,7 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   // }
 
   bfrt_device_manager_ = &bfrt::BfRtDevMgr::getInstance();
+  bfrt_id_mapper_.reset();
 
   RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_begin(
       device, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
@@ -411,6 +412,11 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
 
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       device, device_config.programs(0).name(), &bfrt_info_));
+
+  // FIXME: if all we ever do is create and push, this could be one call.
+  bfrt_id_mapper_ = BfrtIdMapper::CreateInstance(device);
+  RETURN_IF_ERROR(
+      bfrt_id_mapper_->PushForwardingPipelineConfig(device_config, bfrt_info_));
 
   return ::util::OkStatus();
 }
@@ -1199,6 +1205,28 @@ namespace {
   }
 
   return ::util::OkStatus();
+}
+
+::util::StatusOr<uint32> BfSdeWrapper::GetBfRtId(uint32 p4info_id) const {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return bfrt_id_mapper_->GetBfRtId(p4info_id);
+}
+
+::util::StatusOr<uint32> BfSdeWrapper::GetP4InfoId(uint32 bfrt_id) const {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return bfrt_id_mapper_->GetP4InfoId(bfrt_id);
+}
+
+::util::StatusOr<uint32> BfSdeWrapper::GetActionSelectorBfRtId(
+    uint32 action_profile_id) const {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return bfrt_id_mapper_->GetActionSelectorBfRtId(action_profile_id);
+}
+
+::util::StatusOr<uint32> BfSdeWrapper::GetActionProfileBfRtId(
+    uint32 action_selector_id) const {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return bfrt_id_mapper_->GetActionProfileBfRtId(action_selector_id);
 }
 
 ::util::Status BfSdeWrapper::SynchronizeCounters(

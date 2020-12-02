@@ -25,7 +25,7 @@ namespace barefoot {
     const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry) {
   absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(bf_rt_id_t bfrt_table_id,
-                   bfrt_id_mapper_->GetBfRtId(entry.extern_id()));
+                   bf_sde_interface_->GetBfRtId(entry.extern_id()));
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId: {
       ::p4::v1::ActionProfileMember act_prof_member;
@@ -58,7 +58,7 @@ namespace barefoot {
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(bf_rt_id_t bfrt_table_id,
-                   bfrt_id_mapper_->GetBfRtId(entry.extern_id()));
+                   bf_sde_interface_->GetBfRtId(entry.extern_id()));
   ::p4::v1::ExternEntry result = entry;
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId: {
@@ -94,7 +94,7 @@ namespace barefoot {
   absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_table_id,
-      bfrt_id_mapper_->GetBfRtId(action_profile_member.action_profile_id()));
+      bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
   return DoWriteActionProfileMember(bfrt_session, bfrt_table_id, type,
                                     action_profile_member);
 }
@@ -106,7 +106,7 @@ namespace barefoot {
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_table_id,
-      bfrt_id_mapper_->GetBfRtId(action_profile_member.action_profile_id()));
+      bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
   return DoReadActionProfileMember(bfrt_session, bfrt_table_id,
                                    action_profile_member, writer);
 }
@@ -118,10 +118,10 @@ namespace barefoot {
   absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_prof_table_id,
-      bfrt_id_mapper_->GetBfRtId(action_profile_group.action_profile_id()));
+      bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_sel_table_id,
-      bfrt_id_mapper_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
   return DoWriteActionProfileGroup(bfrt_session, bfrt_act_sel_table_id, type,
                                    action_profile_group);
 }
@@ -133,10 +133,10 @@ namespace barefoot {
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_prof_table_id,
-      bfrt_id_mapper_->GetBfRtId(action_profile_group.action_profile_id()));
+      bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_sel_table_id,
-      bfrt_id_mapper_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
   return DoReadActionProfileGroup(bfrt_session, bfrt_act_sel_table_id,
                                   action_profile_group, writer);
 }
@@ -189,7 +189,7 @@ BfrtActionProfileManager::BuildP4ActionProfileMember(
   bf_rt_id_t table_id;
   RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
   ASSIGN_OR_RETURN(auto action_profile_id,
-                   bfrt_id_mapper_->GetP4InfoId(table_id));
+                   bf_sde_interface_->GetP4InfoId(table_id));
   result.set_action_profile_id(action_profile_id);
 
   // Member id
@@ -235,9 +235,9 @@ BfrtActionProfileManager::BuildP4ActionProfileGroup(
   bf_rt_id_t table_id;
   RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
   ASSIGN_OR_RETURN(auto action_profile_id,
-                   bfrt_id_mapper_->GetActionProfileBfRtId(table_id));
+                   bf_sde_interface_->GetActionProfileBfRtId(table_id));
   ASSIGN_OR_RETURN(auto p4_action_profile_id,
-                   bfrt_id_mapper_->GetP4InfoId(action_profile_id));
+                   bf_sde_interface_->GetP4InfoId(action_profile_id));
   result.set_action_profile_id(p4_action_profile_id);
 
   // Group id

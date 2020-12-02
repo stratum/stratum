@@ -14,9 +14,8 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
-#include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/common/writer_interface.h"
+// #include "stratum/hal/lib/common/writer_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -41,21 +40,15 @@ class BfrtCounterManager {
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtCounterManager> CreateInstance(
-      const BfrtIdMapper* bfrt_id_mapper, BfSdeInterface* bf_sde_interface_,
-      int device);
+      BfSdeInterface* bf_sde_interface_, int device);
 
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper,
-                              BfSdeInterface* bf_sde_interface_, int device);
+  explicit BfrtCounterManager(BfSdeInterface* bf_sde_interface_, int device);
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
-
-  // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
-  // Not owned by this class
-  const BfrtIdMapper* bfrt_id_mapper_;
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.

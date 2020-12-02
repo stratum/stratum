@@ -89,7 +89,7 @@ namespace barefoot {
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
 
-  auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(bf_sde_wrapper, device_id);
+  auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(device_id);
   auto bfrt_table_manager = BfrtTableManager::CreateInstance(
       mode, bfrt_id_mapper.get(), bf_sde_wrapper);
   auto bfrt_action_profile_manager = BfrtActionProfileManager::CreateInstance(
@@ -98,8 +98,8 @@ namespace barefoot {
       BfrtPacketioManager::CreateInstance(device_id, bf_sde_wrapper);
   auto bfrt_pre_manager =
       BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_counter_manager = BfrtCounterManager::CreateInstance(
-      bfrt_id_mapper.get(), bf_sde_wrapper, device_id);
+  auto bfrt_counter_manager =
+      BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
