@@ -122,6 +122,8 @@ struct RegisterClearThreadData {
         auto session = bfrt::BfRtSession::sessionCreate();
         CHECK_RETURN_IF_FALSE(session != nullptr)
             << "Unable to create session.";
+        VLOG(1) << "Started new BfRt session with ID "
+                << session->sessHandleGet();
         RETURN_IF_BFRT_ERROR(session->beginBatch());
         ::util::Status status = ::util::OkStatus();
         for (const auto& reg : p4_info.registers()) {

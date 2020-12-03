@@ -95,12 +95,12 @@ class BfrtNode final {
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry);
 
   // Read extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status ReadExternEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::ExternEntry& entry,
       WriterInterface<::p4::v1::ReadResponse>* writer);
 

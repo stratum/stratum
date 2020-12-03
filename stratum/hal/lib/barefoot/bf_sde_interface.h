@@ -188,6 +188,65 @@ class BfSdeInterface {
       uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
       absl::optional<uint64>* packet_count, absl::Duration timeout) = 0;
 
+  // Inserts an action profile member. The table ID must be a BfRt table, not
+  // P4Runtime.
+  virtual ::util::Status InsertActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, int action_id,
+      const BfActionData& action_data) = 0;
+
+  // Modifies an existing action profile member. The table ID must be a BfRt
+  // table, not P4Runtime.
+  virtual ::util::Status ModifyActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, int action_id,
+      const BfActionData& action_data) = 0;
+
+  // Deletes an action profile member. The table ID must be a BfRt
+  // table, not P4Runtime. Returns an error if the member does not exist.
+  virtual ::util::Status DeleteActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id) = 0;
+
+  // Returns the action profile member from the given table, or all
+  // members if member ID is 0.
+  virtual ::util::Status GetActionProfileMembers(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, std::vector<int>* member_ids,
+      std::vector<int>* action_ids,
+      std::vector<BfActionData>* action_datas) = 0;
+
+  // Inserts an action profile group. The table ID must be a BfRt table, not
+  // P4Runtime.
+  virtual ::util::Status InsertActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, int max_group_size,
+      const std::vector<uint32>& member_ids,
+      const std::vector<bool>& member_status) = 0;
+
+  // Modifies an action profile group. The table ID must be a BfRt table, not
+  // P4Runtime.
+  virtual ::util::Status ModifyActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, int max_group_size,
+      const std::vector<uint32>& member_ids,
+      const std::vector<bool>& member_status) = 0;
+
+  // Deletes an action profile group. The table ID must be a BfRt table, not
+  // P4Runtime.
+  virtual ::util::Status DeleteActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id) = 0;
+
+  // Returns the action profile group from the given table, or all
+  // groups if member ID is 0.
+  virtual ::util::Status GetActionProfileGroups(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, std::vector<int>* group_ids,
+      std::vector<int>* max_group_sizes,
+      std::vector<std::vector<uint32>>* member_ids,
+      std::vector<std::vector<bool>>* member_status) = 0;
+
   // Returns the equivalent BfRt ID for the given P4RT ID.
   virtual ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const = 0;
 

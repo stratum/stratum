@@ -424,9 +424,6 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
 // Create and start an new session.
 ::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
 BfSdeWrapper::CreateSession() {
-  auto bfrt_session = bfrt::BfRtSession::sessionCreate();
-  CHECK_RETURN_IF_FALSE(bfrt_session) << "Failed to create new session.";
-
   return Session::CreateSession();
 }
 
@@ -1203,6 +1200,316 @@ namespace {
     RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
     *packet_count = counter_data;
   }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteActionProfileMember(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int member_id, int action_id,
+    const BfActionData& action_data, bool insert) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  // Key: $ACTION_MEMBER_ID
+  RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
+
+  // Action data
+  RETURN_IF_BFRT_ERROR(table->dataReset(action_id, table_data.get()));
+  for (const auto& param : action_data.params()) {
+    const size_t size = param.value().size();
+    const uint8* val = reinterpret_cast<const uint8*>(param.value().data());
+    RETURN_IF_BFRT_ERROR(table_data->setValue(param.id(), val, size));
+  }
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (insert) {
+    RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::InsertActionProfileMember(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int member_id, int action_id,
+    const BfActionData& action_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteActionProfileMember(device, session, table_id, member_id,
+                                  action_id, action_data, true);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ModifyActionProfileMember(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int member_id, int action_id,
+    const BfActionData& action_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteActionProfileMember(device, session, table_id, member_id,
+                                  action_id, action_data, false);
+}
+
+::util::Status BfSdeWrapper::DeleteActionProfileMember(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int member_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+
+  // Key: $ACTION_MEMBER_ID
+  RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
+                                            bf_dev_tgt, *table_key));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetActionProfileMembers(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int member_id, std::vector<int>* member_ids,
+    std::vector<int>* action_ids, std::vector<BfActionData>* action_datas) {
+  CHECK_RETURN_IF_FALSE(member_ids);
+  CHECK_RETURN_IF_FALSE(action_ids);
+  CHECK_RETURN_IF_FALSE(action_datas);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+  // Is this a wildcard read?
+  if (member_id != 0) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
+    // Key: $ACTION_MEMBER_ID
+    RETURN_IF_ERROR(SetField(keys[0].get(), "$ACTION_MEMBER_ID", member_id));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  member_ids->resize(0);
+  action_ids->resize(0);
+  action_datas->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $sid
+    uint64 member_id;
+    RETURN_IF_ERROR(GetField(*table_key, "$ACTION_MEMBER_ID", &member_id));
+    member_ids->push_back(member_id);
+
+    // Data: action id
+    bf_rt_id_t action_id;
+    RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
+    action_ids->push_back(action_id);
+
+    // Data: action params
+    BfActionData action_data;
+    std::vector<bf_rt_id_t> field_id_list;
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &field_id_list));
+    for (const auto& field_id : field_id_list) {
+      size_t field_size;
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldSizeGet(field_id, action_id, &field_size));
+      // "field_size" describes how many "bits" is this field, need to convert
+      // to bytes with padding.
+      field_size = (field_size + 7) / 8;
+      uint8 field_data[field_size];
+      RETURN_IF_BFRT_ERROR(
+          table_data->getValue(field_id, field_size, field_data));
+      const void* param_val = reinterpret_cast<const void*>(field_data);
+      auto* param = action_data.add_params();
+      param->set_id(field_id);
+      param->set_value(param_val, field_size);
+    }
+    action_datas->push_back(action_data);
+  }
+
+  CHECK_EQ(member_ids->size(), keys.size());
+  CHECK_EQ(action_ids->size(), keys.size());
+  CHECK_EQ(action_datas->size(), keys.size());
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteActionProfileGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int group_id, int max_group_size,
+    const std::vector<uint32>& member_ids,
+    const std::vector<bool>& member_status, bool insert) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  // Key: $SELECTOR_GROUP_ID
+  RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
+  // Data: $ACTION_MEMBER_ID
+  RETURN_IF_ERROR(SetField(table_data.get(), "$ACTION_MEMBER_ID", member_ids));
+  // Data: $ACTION_MEMBER_STATUS
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), "$ACTION_MEMBER_STATUS", member_status));
+  // Data: $MAX_GROUP_SIZE
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), "$MAX_GROUP_SIZE", max_group_size));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (insert) {
+    RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::InsertActionProfileGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int group_id, int max_group_size,
+    const std::vector<uint32>& member_ids,
+    const std::vector<bool>& member_status) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteActionProfileGroup(device, session, table_id, group_id,
+                                 max_group_size, member_ids, member_status,
+                                 true);
+}
+
+::util::Status BfSdeWrapper::ModifyActionProfileGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int group_id, int max_group_size,
+    const std::vector<uint32>& member_ids,
+    const std::vector<bool>& member_status) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return WriteActionProfileGroup(device, session, table_id, group_id,
+                                 max_group_size, member_ids, member_status,
+                                 false);
+}
+
+::util::Status BfSdeWrapper::DeleteActionProfileGroup(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int group_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  // Key: $SELECTOR_GROUP_ID
+  RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
+                                            bf_dev_tgt, *table_key));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetActionProfileGroups(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int group_id, std::vector<int>* group_ids,
+    std::vector<int>* max_group_sizes,
+    std::vector<std::vector<uint32>>* member_ids,
+    std::vector<std::vector<bool>>* member_status) {
+  CHECK_RETURN_IF_FALSE(group_ids);
+  CHECK_RETURN_IF_FALSE(max_group_sizes);
+  CHECK_RETURN_IF_FALSE(member_ids);
+  CHECK_RETURN_IF_FALSE(member_status);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+  // Is this a wildcard read?
+  if (group_id != 0) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
+    // Key: $SELECTOR_GROUP_ID
+    RETURN_IF_ERROR(SetField(keys[0].get(), "$SELECTOR_GROUP_ID", group_id));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  group_ids->resize(0);
+  max_group_sizes->resize(0);
+  member_ids->resize(0);
+  member_status->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $SELECTOR_GROUP_ID
+    uint64 group_id;
+    RETURN_IF_ERROR(GetField(*table_key, "$SELECTOR_GROUP_ID", &group_id));
+    group_ids->push_back(group_id);
+
+    // Data: $MAX_GROUP_SIZE
+    uint64 max_group_size;
+    RETURN_IF_ERROR(GetField(*table_data, "$MAX_GROUP_SIZE", &max_group_size));
+    max_group_sizes->push_back(max_group_size);
+
+    // Data: $ACTION_MEMBER_ID
+    std::vector<uint32> members;
+    RETURN_IF_ERROR(GetField(*table_data, "$ACTION_MEMBER_ID", &members));
+    member_ids->push_back(members);
+
+    // Data: $ACTION_MEMBER_STATUS
+    std::vector<bool> member_enabled;
+    RETURN_IF_ERROR(
+        GetField(*table_data, "$ACTION_MEMBER_STATUS", &member_enabled));
+    member_status->push_back(member_enabled);
+  }
+
+  CHECK_EQ(group_ids->size(), keys.size());
+  CHECK_EQ(max_group_sizes->size(), keys.size());
+  CHECK_EQ(member_ids->size(), keys.size());
+  CHECK_EQ(member_status->size(), keys.size());
 
   return ::util::OkStatus();
 }

@@ -47,6 +47,9 @@ class BfSdeWrapper : public BfSdeInterface {
     CreateSession() {
       auto bfrt_session = bfrt::BfRtSession::sessionCreate();
       CHECK_RETURN_IF_FALSE(bfrt_session) << "Failed to create new session.";
+      VLOG(1) << "Started new BfRt session with ID "
+              << bfrt_session->sessHandleGet();
+
       return std::shared_ptr<BfSdeInterface::SessionInterface>(
           new Session(bfrt_session));
     }
@@ -151,6 +154,45 @@ class BfSdeWrapper : public BfSdeInterface {
       uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
       absl::optional<uint64>* packet_count, absl::Duration timeout) override
       LOCKS_EXCLUDED(data_lock_);
+  ::util::Status InsertActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, int action_id,
+      const BfActionData& action_data) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ModifyActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, int action_id,
+      const BfActionData& action_data) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status DeleteActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status GetActionProfileMembers(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, std::vector<int>* member_ids,
+      std::vector<int>* action_ids,
+      std::vector<BfActionData>* action_datas) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status InsertActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, int max_group_size,
+      const std::vector<uint32>& member_ids,
+      const std::vector<bool>& member_status) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ModifyActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, int max_group_size,
+      const std::vector<uint32>& member_ids,
+      const std::vector<bool>& member_status) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status DeleteActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status GetActionProfileGroups(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, std::vector<int>* group_ids,
+      std::vector<int>* max_group_sizes,
+      std::vector<std::vector<uint32>>* member_ids,
+      std::vector<std::vector<bool>>* member_status) override
+      LOCKS_EXCLUDED(data_lock_);
   ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const override
       LOCKS_EXCLUDED(data_lock_);
   ::util::StatusOr<uint32> GetP4InfoId(uint32 bfrt_id) const override
@@ -239,8 +281,23 @@ class BfSdeWrapper : public BfSdeInterface {
       uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert)
       SHARED_LOCKS_REQUIRED(data_lock_);
 
-  // Helper function to find, but not allocate, at free multicast node id. This
-  // function is not optimized for speed yet.
+  // Common code for action profile member handling.
+  ::util::Status WriteActionProfileMember(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int member_id, int action_id,
+      const BfActionData& action_data, bool insert)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Common code for action profile group handling.
+  ::util::Status WriteActionProfileGroup(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, int group_id, int max_group_size,
+      const std::vector<uint32>& member_ids,
+      const std::vector<bool>& member_status, bool insert)
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
+  // Helper function to find, but not allocate, at free multicast node id.
+  // This function is not optimized for speed yet.
   ::util::StatusOr<uint32> GetFreeMulticastNodeId(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session)
       SHARED_LOCKS_REQUIRED(data_lock_);
