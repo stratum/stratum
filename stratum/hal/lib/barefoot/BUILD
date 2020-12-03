@@ -345,9 +345,6 @@ stratum_cc_library(
         ":bf_cc_proto",
         ":bf_sde_interface",
         ":bfrt_constants",
-        ":bfrt_id_mapper",
-        ":macros",
-        ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -363,7 +360,6 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
     ],
 )
 

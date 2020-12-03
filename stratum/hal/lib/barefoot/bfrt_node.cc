@@ -110,8 +110,8 @@ BfrtNode::~BfrtNode() = default;
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(bfrt_table_manager_->PushForwardingPipelineConfig(
       bfrt_config_, bfrt_info_));
-  RETURN_IF_ERROR(bfrt_action_profile_manager_->PushForwardingPipelineConfig(
-      bfrt_config_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_action_profile_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
@@ -156,6 +156,7 @@ BfrtNode::~BfrtNode() = default;
   auto session = bfrt::BfRtSession::sessionCreate();
   ASSIGN_OR_RETURN(auto s2, bf_sde_interface_->CreateSession());
   CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
+  VLOG(1) << "Started new BfRt session with ID " << session->sessHandleGet();
   RETURN_IF_BFRT_ERROR(session->beginBatch());
   RETURN_IF_ERROR(s2->BeginBatch());
   for (const auto& update : req.updates()) {
@@ -166,16 +167,16 @@ BfrtNode::~BfrtNode() = default;
             session, update.type(), update.entity().table_entry());
         break;
       case ::p4::v1::Entity::kExternEntry:
-        status = WriteExternEntry(session, update.type(),
-                                  update.entity().extern_entry());
+        status =
+            WriteExternEntry(s2, update.type(), update.entity().extern_entry());
         break;
       case ::p4::v1::Entity::kActionProfileMember:
         status = bfrt_action_profile_manager_->WriteActionProfileMember(
-            session, update.type(), update.entity().action_profile_member());
+            s2, update.type(), update.entity().action_profile_member());
         break;
       case ::p4::v1::Entity::kActionProfileGroup:
         status = bfrt_action_profile_manager_->WriteActionProfileGroup(
-            session, update.type(), update.entity().action_profile_group());
+            s2, update.type(), update.entity().action_profile_group());
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
         status = bfrt_pre_manager_->WritePreEntry(
@@ -231,6 +232,7 @@ BfrtNode::~BfrtNode() = default;
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
   CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
+  VLOG(1) << "Started new BfRt session with ID " << session->sessHandleGet();
   ASSIGN_OR_RETURN(auto s2, bf_sde_interface_->CreateSession());
   for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
@@ -242,21 +244,21 @@ BfrtNode::~BfrtNode() = default;
         break;
       }
       case ::p4::v1::Entity::kExternEntry: {
-        auto status = ReadExternEntry(session, entity.extern_entry(), writer);
+        auto status = ReadExternEntry(s2, entity.extern_entry(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
         auto status = bfrt_action_profile_manager_->ReadActionProfileMember(
-            session, entity.action_profile_member(), writer);
+            s2, entity.action_profile_member(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileGroup: {
         auto status = bfrt_action_profile_manager_->ReadActionProfileGroup(
-            session, entity.action_profile_group(), writer);
+            s2, entity.action_profile_group(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
@@ -350,12 +352,12 @@ BfrtNode::~BfrtNode() = default;
 }
 
 ::util::Status BfrtNode::WriteExternEntry(
-    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry) {
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId:
     case kTnaExternActionSelectorId:
-      return bfrt_action_profile_manager_->WriteActionProfileEntry(bfrt_session,
+      return bfrt_action_profile_manager_->WriteActionProfileEntry(session,
                                                                    type, entry);
       break;
     default:
@@ -365,14 +367,14 @@ BfrtNode::~BfrtNode() = default;
 }
 
 ::util::Status BfrtNode::ReadExternEntry(
-    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::ExternEntry& entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId:
     case kTnaExternActionSelectorId:
       return bfrt_action_profile_manager_->ReadActionProfileEntry(
-          bfrt_session, entry, writer);
+          session, entry, writer);
       break;
     default:
       RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)

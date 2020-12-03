@@ -43,3 +43,12 @@ message BfrtDeviceConfig {
 
   repeated P4Program programs = 1;
 }
+
+// Internal message for action data passed from and to the SdeWrapper.
+message BfActionData {
+  message Param {
+    int32 id = 1;
+    bytes value = 2;
+  }
+  repeated Param params = 1;
+}
