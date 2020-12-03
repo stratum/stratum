@@ -140,12 +140,72 @@ class BfSdeMock : public BfSdeInterface {
                      absl::optional<uint64>* byte_count,
                      absl::optional<uint64>* packet_count,
                      absl::Duration timeout));
+
+  MOCK_METHOD6(
+      InsertActionProfileMember,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int member_id, int action_id,
+                     const BfActionData& action_data));
+
+  MOCK_METHOD6(
+      ModifyActionProfileMember,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int member_id, int action_id,
+                     const BfActionData& action_data));
+
+  MOCK_METHOD4(
+      DeleteActionProfileMember,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int member_id));
+
+  MOCK_METHOD7(
+      GetActionProfileMembers,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int member_id,
+                     std::vector<int>* member_ids, std::vector<int>* action_ids,
+                     std::vector<BfActionData>* action_datas));
+
+  MOCK_METHOD7(
+      InsertActionProfileGroup,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int group_id, int max_group_size,
+                     const std::vector<uint32>& member_ids,
+                     const std::vector<bool>& member_status));
+
+  MOCK_METHOD7(
+      ModifyActionProfileGroup,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int group_id, int max_group_size,
+                     const std::vector<uint32>& member_ids,
+                     const std::vector<bool>& member_status));
+
+  MOCK_METHOD4(
+      DeleteActionProfileGroup,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int group_id));
+
+  MOCK_METHOD8(
+      GetActionProfileGroups,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, int group_id, std::vector<int>* group_ids,
+                     std::vector<int>* max_group_sizes,
+                     std::vector<std::vector<uint32>>* member_ids,
+                     std::vector<std::vector<bool>>* member_status));
+
   MOCK_CONST_METHOD1(GetBfRtId, ::util::StatusOr<uint32>(uint32 p4info_id));
   MOCK_CONST_METHOD1(GetP4InfoId, ::util::StatusOr<uint32>(uint32 bfrt_id));
   MOCK_CONST_METHOD1(GetActionSelectorBfRtId,
-               ::util::StatusOr<uint32>(uint32 action_profile_id));
+                     ::util::StatusOr<uint32>(uint32 action_profile_id));
   MOCK_CONST_METHOD1(GetActionProfileBfRtId,
-               ::util::StatusOr<uint32>(uint32 action_selector_id));
+                     ::util::StatusOr<uint32>(uint32 action_selector_id));
 };
 
 }  // namespace barefoot
