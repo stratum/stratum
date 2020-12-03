@@ -133,6 +133,9 @@ class BfrtPacketioManager {
   //
   pthread_t sde_rx_thread_id_ GUARDED_BY(data_lock_);
 
+  // Determine if the rx thread is initialized or not.
+  bool rx_thread_initialized_ GUARDED_BY(data_lock_);
+
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 

@@ -15,6 +15,7 @@
 #include "stratum/lib/utils.h"
 
 using ::stratum::test_utils::EqualsProto;
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -34,19 +35,25 @@ class BfrtPacketioManagerTest : public ::testing::Test {
         kDevice1, bf_sde_wrapper_mock_.get());
   }
 
-  ::util::Status PushPipelineConfig() {
+  ::util::Status PushPipelineConfig(const std::string& p4info_str = kP4Info,
+                                    const bool& valid_p4info = true) {
     BfrtDeviceConfig config;
     auto* program = config.add_programs();
-    EXPECT_OK(ParseProtoFromString(kP4Info, program->mutable_p4info()));
-    // What we expected when calling PushForwardingPipelineConfig with valid
-    // config:
-    // - StartPacketIo of SDE interface will be invoked
-    EXPECT_CALL(*bf_sde_wrapper_mock_, StartPacketIo(kDevice1))
-        .WillOnce(Return(util::OkStatus()));
-    // - RegisterPacketReceiveWriter of SDE interface will be invoked
-    EXPECT_CALL(*bf_sde_wrapper_mock_, RegisterPacketReceiveWriter(kDevice1, _))
-        .WillOnce(Invoke(
-            this, &BfrtPacketioManagerTest::RegisterPacketReceiveWriter));
+    EXPECT_OK(ParseProtoFromString(p4info_str, program->mutable_p4info()));
+
+    if (valid_p4info) {
+      // What we expect when calling PushForwardingPipelineConfig with valid
+      // config:
+      // - StartPacketIo of SDE interface will be invoked
+      EXPECT_CALL(*bf_sde_wrapper_mock_, StartPacketIo(kDevice1))
+          .WillOnce(Return(util::OkStatus()));
+      // - RegisterPacketReceiveWriter of SDE interface will be invoked
+      EXPECT_CALL(*bf_sde_wrapper_mock_,
+                  RegisterPacketReceiveWriter(kDevice1, _))
+          .WillOnce(Invoke(
+              this, &BfrtPacketioManagerTest::RegisterPacketReceiveWriter));
+    }
+
     auto status = bfrt_packetio_manager_->PushForwardingPipelineConfig(config);
     // FIXME(Yi Tseng): Wait few milliseconds to ensure the rx thread is ready.
     //                  Should check the internal state.
@@ -144,6 +151,86 @@ TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfigAndShutdown) {
   EXPECT_OK(Shutdown());
 }
 
+TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
+  // The total length of packet-in metadata is not byte aligned
+  const char invalid_packet_in[] = R"PROTO(
+    controller_packet_metadata {
+      preamble {
+        id: 67146229
+        name: "packet_in"
+        alias: "packet_in"
+        annotations: "@controller_header(\"packet_in\")"
+      }
+      metadata {
+        id: 1
+        name: "ingress_port"
+        bitwidth: 9
+      }
+    }
+  )PROTO";
+  auto status = PushPipelineConfig(invalid_packet_in, false);
+  EXPECT_THAT(
+      status,
+      StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
+               HasSubstr("PacketIn header size must be multiple of 8 bits.")));
+  EXPECT_OK(Shutdown());
+}
+
+TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
+  // The total length of packet-out metadata is not byte aligned
+  const char invalid_packet_out[] = R"PROTO(
+    controller_packet_metadata {
+      preamble {
+        id: 67121543
+        name: "packet_out"
+        alias: "packet_out"
+        annotations: "@controller_header(\"packet_out\")"
+      }
+      metadata {
+        id: 1
+        name: "egress_port"
+        bitwidth: 9
+      }
+    }
+  )PROTO";
+  auto status = PushPipelineConfig(invalid_packet_out, false);
+  EXPECT_THAT(
+      status,
+      StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
+               HasSubstr("PacketOut header size must be multiple of 8 bits.")));
+
+  EXPECT_OK(Shutdown());
+}
+
+TEST_F(BfrtPacketioManagerTest, PushUnknownControllerPacketMetadataConfigAndShutdown) {
+  // The unknown
+  const char p4info_with_known[] = R"PROTO(
+    controller_packet_metadata {
+      preamble {
+        id: 1234567
+        name: "unknown"
+        alias: "unknown"
+        annotations: "@controller_header(\"unknown\")"
+      }
+    }
+    controller_packet_metadata {
+      preamble {
+        id: 67121543
+        name: "packet_out"
+        alias: "packet_out"
+        annotations: "@controller_header(\"packet_out\")"
+      }
+      metadata {
+        id: 1
+        name: "egress_port"
+        bitwidth: 8
+      }
+    }
+  )PROTO";
+  EXPECT_OK(PushPipelineConfig(p4info_with_known));
+  EXPECT_OK(Shutdown());
+}
+
 TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
   EXPECT_OK(PushPipelineConfig());
   p4::v1::PacketOut packet_out;
@@ -177,7 +264,7 @@ TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
   EXPECT_OK(Shutdown());
 }
 
-TEST_F(BfrtPacketioManagerTest, TransmitBadPacketAfterPipelineConfigPush) {
+TEST_F(BfrtPacketioManagerTest, TransmitInvalidPacketAfterPipelineConfigPush) {
   EXPECT_OK(PushPipelineConfig());
   p4::v1::PacketOut packet_out;
   // Missing the third metadata.
@@ -245,6 +332,7 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
   // packet-in writer.
   EXPECT_TRUE(
       write_notifier->WaitForNotificationWithTimeout(absl::Milliseconds(100)));
+  EXPECT_OK(bfrt_packetio_manager_->UnregisterPacketReceiveWriter());
   EXPECT_OK(Shutdown());
 }
 
