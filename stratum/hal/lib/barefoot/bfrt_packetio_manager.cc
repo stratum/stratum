@@ -28,7 +28,7 @@ BfrtPacketioManager::BfrtPacketioManager(int device,
       packetout_header_(),
       packetin_header_size_(),
       packetout_header_size_(),
-      rx_thread_initialized_(false),
+      sde_rx_thread_id_(0),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       device_(device) {}
 
@@ -56,15 +56,13 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
     if (!initialized_) {
       packet_receive_channel_ = Channel<std::string>::Create(128);
-      if (!rx_thread_initialized_) {
+      if (sde_rx_thread_id_ == 0) {
         int ret = pthread_create(&sde_rx_thread_id_, nullptr,
                                  &BfrtPacketioManager::SdeRxThreadFunc, this);
         if (ret != 0) {
           RETURN_ERROR(ERR_INTERNAL)
               << "Failed to spawn RX thread for SDE wrapper for device with ID "
               << device_ << ". Err: " << ret << ".";
-        } else {
-          rx_thread_initialized_ = true;
         }
       }
       RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
@@ -83,6 +81,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 }
 
 ::util::Status BfrtPacketioManager::Shutdown() {
+  ::util::Status status;
   RETURN_IF_ERROR(bf_sde_interface_->StopPacketIo(device_));
   RETURN_IF_ERROR(bf_sde_interface_->UnregisterPacketReceiveWriter(device_));
   {
@@ -95,16 +94,23 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     packetout_header_.clear();
     packetin_header_size_ = 0;
     packetout_header_size_ = 0;
-    if (packet_receive_channel_) {
-      packet_receive_channel_->Close();
+    if (!packet_receive_channel_ || !packet_receive_channel_->Close()) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Transceiver event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
+    packet_receive_channel_.reset();
     initialized_ = false;
   }
   {
     absl::ReaderMutexLock l(&data_lock_);
-    if (rx_thread_initialized_) {
-      pthread_join(sde_rx_thread_id_, nullptr);
+    if (sde_rx_thread_id_ != 0 &&
+        pthread_join(sde_rx_thread_id_, nullptr) != 0) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Failed to join thread " << sde_rx_thread_id_;
+      APPEND_STATUS_IF_ERROR(status, error);
     }
+    sde_rx_thread_id_ = 0;
   }
   return ::util::OkStatus();
 }
