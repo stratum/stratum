@@ -5,8 +5,11 @@ SPDX-License-Identifier: Apache-2.0
 -->
 # Testing Rules
 
-This document describes the rules in regards to testing the Stratum projects 
-follows. All contributors must adhere to these rules.
+This document describes the rules in regards to testing the Stratum projects
+follows. It serves both as a guide for code authors and as a reference for code
+reviewers. Each rule is accompanied by counter examples on what to avoid.
+
+All contributors must adhere to these rules.
 
 ## 0. Write tests
 
@@ -19,13 +22,73 @@ get deleted in the future:
 
 Do not test known bugs.
 Test real scenarios with the class under test, not mocks.
-A test must be correct by inspection.
+A test must be correct by inspection, as there are no tests for itself.
+
+```c++
+// Don't test known bugs.
+
+int square(int x) {
+  // TODO(goofus): Implement
+  return 0;
+}
+
+TEST(SquareTest, MathTests) {
+  EXPECT_EQ(0, square(2));
+  EXPECT_EQ(0, square(3));
+  EXPECT_EQ(0, square(7));
+}
+```
+
+```c++
+// Don't write tests not executing real scenarios.
+
+class MockWorld : public World {
+  // For simplicity, we assume the world is flat
+  bool IsFlat() override { return true; }
+};
+
+TEST(Flat, WorldTests) {
+  MockWorld world;
+  EXPECT_TRUE(world.Populate());
+  EXPECT_TRUE(world.IsFlat());
+}
+```
 
 ## 2. Readability
 
 Test should be obvious to the future reader. Avoid boilerplate and distractions,
 but provide enough context. A test should be like a novel: setup (test data),
 action (function call), conclusion (result).
+
+```c++
+// Avoid too much boilerplate or distractions in tests.
+
+TEST(BigSystemTest, CallIsUnimplemented) {
+  // Meaningless setup.
+  TestStorageSystem storage;
+  auto test_data = GetTestFileMap();
+  storage.MapFilesystem(test_data);
+  BigSystem system;
+  ASSERT_OK(system.Initialize(5));
+  ThreadPool pool(10);
+  pool.StartThreads();
+  storage.SetThreads(pool);
+  system.SetStorage(storage);
+  ASSERT_TRUE(system.IsRunning());
+
+  // Actual test.
+  EXPECT_TRUE(IsUnimplemented(system.Status()));
+}
+```
+
+```c++
+// Keep enough context for the reader.
+
+TEST(BigSystemTest, ReadMagicBytes) {
+  BigSystem system = InitializeTestSystemAndTestData();
+  EXPECT_EQ(42, system.PrivateKey());
+}
+```
 
 ## 3. Completeness
 
