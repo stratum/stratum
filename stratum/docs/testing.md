@@ -61,6 +61,8 @@ Do not write tests that fail in surprising ways:
 
 ### References and further reading
 
-[CppCon 2015: T. Winters & H. Wright “All Your Tests are Terrible..."](https://youtu.be/u5senBJUkPc)
+[CppCon 2015: T. Winters & H. Wright “All Your Tests are Terrible..."](https://youtu.be/u5senBJUkPc),
+[[Slides](https://github.com/CppCon/CppCon2015/tree/master/Presentations/All%20Your%20Tests%20Are%20Terrible)]
 
-[CppCon 2015: Titus Winters "Lessons in Sustainability...”](https://youtu.be/zW-i9eVGU_k)
+[CppCon 2015: Titus Winters "Lessons in Sustainability...”](https://youtu.be/zW-i9eVGU_k),
+[[Slides](https://github.com/CppCon/CppCon2015/blob/master/Presentations/Lessons%20in%20Sustainability/Lessons%20in%20Sustainability%20-%20Titus%20Winters%20-%20CppCon%202015.pdf)]
