@@ -13,10 +13,10 @@ namespace stratum {
 namespace state_machine {
 namespace {
 
+using test_utils::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::Sequence;
-using ::stratum::test_utils::StatusIs;
 
 class StateMachineTest : public ::testing::Test {
  protected:
