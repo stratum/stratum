@@ -65,6 +65,8 @@ message BcmChip {
     TRIDENT2 = 2;      // BCM56850
     TOMAHAWK = 3;      // BCM56960
     TOMAHAWK_PLUS = 4; // BCM56965
+    TOMAHAWK2 = 5;     // BCM56970
+    TOMAHAWK3 = 6;     // BCM56980
   }
   // The BCM chip type.
   BcmChipType type = 1;
