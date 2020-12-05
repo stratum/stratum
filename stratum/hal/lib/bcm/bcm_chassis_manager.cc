@@ -56,6 +56,8 @@ constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsInXPipeline;
 constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkPlusMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk2MaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk3MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
@@ -916,12 +918,14 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   }
 
   // Check for max num of ports per chip.
-  // TODO(max): find max port number fot TH2/TH3
   std::map<BcmChip::BcmChipType, size_t> chip_type_to_max_num_ports = {
       {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
       {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
       {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip},
-      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip}};
+      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK2, kTomahawk2MaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK3, kTomahawk3MaxBcmPortsPerChip},
+  };
   for (const auto& e : unit_to_chip_type) {
     CHECK_RETURN_IF_FALSE(unit_to_bcm_port_keys[e.first].size() <=
                           chip_type_to_max_num_ports[e.second])
