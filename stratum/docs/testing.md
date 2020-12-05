@@ -95,11 +95,46 @@ TEST(BigSystemTest, ReadMagicBytes) {
 Tests should cover common inputs, corner cases and outlandish cases.
 Only test the behavior of the API under test, not unrelated code.
 
+```c++
+// Do not write tests for APIs that are not yours.
+
+TEST(FilterTest, WithVector) {
+  vector<int> v;  // Make sure that vector is working.
+  v.push_back(1);
+  EXPECT_EQ(1, v.size());
+  v.clear();
+  EXPECT_EQ(0, v.size());
+  EXPECT_TRUE(v.empty());
+
+  // Now test our filter.
+  v = Filter({1, 2, 3, 4, 5}, [](int x) { return x % 2 == 0; });
+  EXPECT_THAT(v, ElementsAre(2, 4));
+}
+```
+
 ## 4. Demonstrability
 
 Tests should serve as a demonstration of how the API works and should be
 consumed by users. Do not rely on private + friend or test-only methods. Bad
 usage in unit tests suggest a bad API.
+
+```c++
+// Do not write tests that depend on private APIs.
+
+class Foo {
+  friend FooTest;
+
+ public:
+  bool Setup();
+
+ private:
+  bool ShortcutSetupForTesting();
+};
+
+TEST(FooTest, Setup) {
+  EXPECT_TRUE(ShortcutSetupForTesting());
+}
+```
 
 ## 5. Resilience
 
@@ -108,21 +143,85 @@ Do not write tests that fail in surprising ways:
 - Flaky: Tests that can be re-run with the same build in the same state and flip
     from passing to failing (or timing out).
 
+```c++
+TEST(UpdaterTest, RunsFast) {
+  Updater updater;
+  updater.UpdateAsync();
+  SleepFor(Seconds(.5));  // Half a second should be *plenty*.
+  EXPECT_TRUE(updater.Updated());
+}
+ ```
+
 - Brittle: Tests that can fail for changes unrelated to the code under test. Do
     not run the code twice to generate a golden output to compare against in a
     test.
 
+```c++
+TEST(Tags, ContentsAreCorrect) {
+  TagSet tags = {5, 8, 10};
+
+  // TODO(goofus): Figure out why these are ordered funny.
+  EXPECT_THAT(tags, ElementsAre(8, 5, 10));
+}
+```
+
+```c++
+TEST(MyTest, LogWasCalled) {
+  StartLogCapture();
+  EXPECT_TRUE(Frobber::Start());
+  EXPECT_THAT(Logs(), Contains("file.cc:421: Opened file frobber.config"));
+}
+```
+
 - Ordering: Tests that fail if they are not run all together or in a particular
     order. Avoid changing global state.
+
+```c++
+static int i = 0;
+TEST(Foo, First) {
+  ASSERT_EQ(0, i);
+  ++i;
+}
+TEST(Foo, Second) {
+  ASSERT_EQ(1, i);
+  ++i;
+}
+```
 
 - Non-hermeticity: Tests that fail if the same tests is run at the same time
     twice. Do not depend on external resources (network, storage).
 
+```c++
+TEST(Foo, StorageTest) {
+  StorageServer* server = GetStorageServerHandle();
+  auto my_val = rand();
+  server->Store("testkey", my_val);
+  EXPECT_EQ(my_val, server->Load("testkey"));
+}
+```
+
 - Deep dependence: Mock tests that fail if the implementation of class under
     test is refactored. Do not over-fit the mock expectations.
 
+```c++
+class File {
+ public:
+  ...
+  virtual bool Stat(Stat* stat);
+  virtual bool StatWithOptions(Stat* stat, StatOptions options) {
+    return Stat(stat);  // Ignore options by default
+  }
+};
+TEST(MyTest, FSUsage) {
+  ... EXPECT_CALL(file, Stat(_)).Times(1);
+  Frobber::Start();
+}
+```
 
-### References and further reading
+## References and further reading
+
+This document heavily based on talks from Titus Winters and Hyrum Wright. Check
+these out for more information:
 
 [CppCon 2015: T. Winters & H. Wright “All Your Tests are Terrible..."](https://youtu.be/u5senBJUkPc),
 [[Slides](https://github.com/CppCon/CppCon2015/tree/master/Presentations/All%20Your%20Tests%20Are%20Terrible)]
