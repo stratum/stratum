@@ -21,10 +21,10 @@ namespace hal {
 namespace phal {
 namespace {
 
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::HasSubstr;
-using stratum::test_utils::StatusIs;
 
 // Note that the filesystem is faked in all of these tests, so this file is
 // never actually created.

@@ -26,7 +26,7 @@ namespace {
 
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
-using stratum::test_utils::StatusIs;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Invoke;

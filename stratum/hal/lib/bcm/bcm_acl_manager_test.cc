@@ -40,7 +40,9 @@ namespace bcm {
 namespace {
 
 using test_utils::EqualsProto;
+using test_utils::IsOkAndHolds;
 using test_utils::PartiallyUnorderedEqualsProto;
+using test_utils::StatusIs;
 using test_utils::p4_proto_builders::ApplyTable;
 using test_utils::p4_proto_builders::IsValidBuilder;
 using test_utils::p4_proto_builders::P4ControlTableRefBuilder;
@@ -56,8 +58,6 @@ using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAreArray;
-using stratum::test_utils::IsOkAndHolds;
-using stratum::test_utils::StatusIs;
 
 using StageToTablesMap =
     std::map<P4Annotation::PipelineStage,
