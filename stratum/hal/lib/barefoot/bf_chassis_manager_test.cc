@@ -17,7 +17,11 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
 
-using ::stratum::test_utils::EqualsProto;
+namespace stratum {
+namespace hal {
+namespace barefoot {
+
+using test_utils::EqualsProto;
 using ::testing::_;
 using ::testing::AtMost;
 using ::testing::DoAll;
@@ -28,10 +32,6 @@ using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::WithArg;
-
-namespace stratum {
-namespace hal {
-namespace barefoot {
 
 namespace {
 

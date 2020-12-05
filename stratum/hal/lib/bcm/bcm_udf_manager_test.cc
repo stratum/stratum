@@ -30,6 +30,7 @@ namespace bcm {
 namespace {
 
 using test_utils::PartiallyUnorderedEqualsProto;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -39,7 +40,6 @@ using ::testing::SaveArg;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
-using ::stratum::test_utils::StatusIs;
 using UdfSpec = BcmHardwareSpecs::ChipModelSpec::UdfSpec;
 
 // This matcher verifies that all chunks in a BcmUdfSet come from the same set
