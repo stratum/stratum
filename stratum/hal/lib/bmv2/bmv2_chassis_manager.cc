@@ -275,7 +275,6 @@ namespace {
     }
     case DataRequest::Request::kSdnPortId: {
       resp.mutable_sdn_port_id()->set_port_id(request.sdn_port_id().port_id());
-      break;
     }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
@@ -433,12 +432,10 @@ void Bmv2ChassisManager::ReadPortStatusChangeEvents() {
 
   port_status_change_event_channel_ =
       Channel<PortStatusChangeEvent>::Create(kMaxPortStatusChangeEventDepth);
-  {
-    absl::WriterMutexLock l(&port_status_change_event_writer_lock_);
-    port_status_change_event_writer_ =
-        ChannelWriter<PortStatusChangeEvent>::Create(
-            port_status_change_event_channel_);
-  }
+
+  port_status_change_event_writer_ =
+      ChannelWriter<PortStatusChangeEvent>::Create(
+          port_status_change_event_channel_);
   port_status_change_event_reader_ =
       ChannelReader<PortStatusChangeEvent>::Create(
           port_status_change_event_channel_);
@@ -523,9 +520,9 @@ void Bmv2ChassisManager::CleanupInternalState() {
   // It is fine to release the chassis lock here (it is actually needed to call
   // UnregisterEventWriters or there would be a deadlock). Because initialized_
   // is set to true, RegisterEventWriters cannot be called.
+  APPEND_STATUS_IF_ERROR(status, UnregisterEventWriters());
   {
     absl::WriterMutexLock l(&chassis_lock);
-    APPEND_STATUS_IF_ERROR(status, UnregisterEventWriters());
     initialized_ = false;
     CleanupInternalState();
   }
