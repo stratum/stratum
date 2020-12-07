@@ -394,7 +394,7 @@ will crash the switch:
     @           0x65db56 stratum::hal::P4Service::SetForwardingPipelineConfig()
 ```
 
-Use the Stratum-bfrt with the BfRt backend, if you need advanced functionality.
+Use Stratum-bfrt with the BfRt backend, if you need advanced functionality.
 
 ### Error pushing pipeline to Stratum-bf
 
@@ -407,8 +407,8 @@ E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed 
 
 This error occurs when the binary pipeline is not in the correct format.
 Make sure the pipeline config binary has been packed correctly for PI node, like
-so: https://github.com/stratum/stratum/blob/fd40c7bf1bf39a49452e52f5f512468ea0a0ab81/stratum/hal/bin/barefoot/update_config.py#L39-L52. You cannot push the compiler
-ouput (e.g. `tofino.bin`) directly.
+so: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/update_config.py#L39-L52.
+You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
 Also consider moving to the newer [protobuf](README.pipeline.md) based pipeline
 format.
