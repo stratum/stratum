@@ -364,3 +364,34 @@ this particular switch model. As a workaround, [BSP mode](#Running-with-BSP-or-o
 which bypasses ONLP, is available.
 
 [start-stratum-container-sh]: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
+
+### TNA P4 programs on Stratum-bf / PI Node
+
+When using Stratum with the legacy PI node backend, only limited support for P4
+programs targeting TNA architecture is provided. Such programs must be compiled
+with the `--p4runtime-force-std-externs` bf-p4c flag, or pushing the pipeline
+will crash the switch:
+
+```
+2020-12-07 20:09:43.810989 BF_PI ERROR - handles_map_add: error when inserting into handles map
+*** SIGSEGV (@0x0) received by PID 16282 (TID 0x7f5f599dc700) from PID 0; stack trace: ***
+    @     0x7f5f725c60e0 (unknown)
+    @           0xa7456f p4info_get_at
+    @           0xa74319 pi_p4info_table_get_implementation
+    @     0x7f5f744b9add (unknown)
+    @     0x7f5f744b9ee3 pi_state_assign_device
+    @     0x7f5f744b2f47 (unknown)
+    @     0x7f5f73e29b10 bf_drv_notify_clients_dev_add
+    @     0x7f5f73e26b45 bf_device_add
+    @           0x9f0689 bf_switchd_device_add.part.4
+    @           0x9f10b7 bf_switchd_device_add_with_p4.part.5
+    @     0x7f5f744b33a5 _pi_update_device_start
+    @           0xa6eef5 pi_update_device_start
+    @           0x9f8403 pi::fe::proto::DeviceMgrImp::pipeline_config_set()
+    @           0x9f7e31 pi::fe::proto::DeviceMgr::pipeline_config_set()
+    @           0x7220d6 stratum::hal::pi::PINode::PushForwardingPipelineConfig()
+    @           0x41fb99 stratum::hal::barefoot::BFSwitch::PushForwardingPipelineConfig()
+    @           0x65db56 stratum::hal::P4Service::SetForwardingPipelineConfig()
+```
+
+Use the Stratum-bfrt with the BfRt backend, if you need advanced functionality.
