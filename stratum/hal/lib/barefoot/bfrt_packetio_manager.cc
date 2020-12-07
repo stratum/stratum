@@ -110,6 +110,9 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
                              << "Failed to join thread " << sde_rx_thread_id_;
       APPEND_STATUS_IF_ERROR(status, error);
     }
+  }
+  {
+    absl::WriterMutexLock l(&data_lock_);
     sde_rx_thread_id_ = 0;
   }
   return ::util::OkStatus();
