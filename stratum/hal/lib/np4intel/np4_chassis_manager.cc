@@ -375,6 +375,7 @@ void NP4ChassisManager::ReadPortStatusChangeEvents() {
 }
 
 ::util::Status NP4ChassisManager::UnregisterEventWriters() {
+  absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
   if (!port_status_change_event_channel_->Close()) {
     ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
@@ -407,9 +408,9 @@ void NP4ChassisManager::CleanupInternalState() {
   // It is fine to release the chassis lock here (it is actually needed to call
   // UnregisterEventWriters or there would be a deadlock). Because initialized_
   // is set to true, RegisterEventWriters cannot be called.
+  APPEND_STATUS_IF_ERROR(status, UnregisterEventWriters());
   {
     absl::WriterMutexLock l(&chassis_lock);
-    APPEND_STATUS_IF_ERROR(status, UnregisterEventWriters());
     initialized_ = false;
     CleanupInternalState();
   }
