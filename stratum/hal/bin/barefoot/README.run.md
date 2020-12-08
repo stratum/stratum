@@ -410,5 +410,5 @@ Make sure the pipeline config binary has been packed correctly for PI node, like
 so: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/update_config.py#L39-L52.
 You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
-Also consider moving to the newer [protobuf](README.pipeline.md) based pipeline
+Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline
 format.
