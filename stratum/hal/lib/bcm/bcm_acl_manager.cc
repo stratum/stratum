@@ -51,6 +51,10 @@ BcmChip::BcmChipType PlatformChip(Platform platform) {
       return BcmChip::TOMAHAWK;
     case PLT_GENERIC_TOMAHAWK_PLUS:
       return BcmChip::TOMAHAWK_PLUS;
+    case PLT_GENERIC_TOMAHAWK2:
+      return BcmChip::TOMAHAWK2;
+    case PLT_GENERIC_TOMAHAWK3:
+      return BcmChip::TOMAHAWK3;
     case PLT_UNKNOWN:
     default:
       return BcmChip::UNKNOWN;

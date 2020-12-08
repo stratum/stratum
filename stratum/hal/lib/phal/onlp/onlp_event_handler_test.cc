@@ -24,7 +24,7 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-using ::stratum::test_utils::StatusIs;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::HasSubstr;

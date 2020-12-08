@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 Stratum supports a few different device configuration formats for pushing the P4
 pipeline over P4Runtime for Barefoot Tofino devices, including
 the older binary packing used by [PI](https://github.com/p4lang/PI)
-and a newer more flexible protobuf based format ([bf.proto](stratum/hal/lib/barefoot/bf.proto)).
+and a newer more flexible protobuf based format ([bf.proto](/stratum/hal/lib/barefoot/bf.proto)).
 
 *Note: The older PI format does not work with `stratum_bfrt`.*
 

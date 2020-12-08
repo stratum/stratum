@@ -24,6 +24,7 @@
 namespace stratum {
 namespace hal {
 
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::DoAll;
@@ -33,7 +34,6 @@ using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::WithArg;
 using ::testing::WithArgs;
-using ::stratum::test_utils::StatusIs;
 
 class YangParseTreeTest : public ::testing::Test {
  protected:

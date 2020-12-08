@@ -32,8 +32,14 @@
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 
-using ::stratum::test_utils::EqualsProto;
-using ::stratum::test_utils::UnorderedEqualsProto;
+namespace stratum {
+namespace hal {
+namespace bcm {
+
+using test_utils::EqualsProto;
+using test_utils::IsOkAndHolds;
+using test_utils::StatusIs;
+using test_utils::UnorderedEqualsProto;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -41,12 +47,6 @@ using ::testing::Pair;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAre;
-using stratum::test_utils::IsOkAndHolds;
-using stratum::test_utils::StatusIs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 class BcmTableManagerTest : public ::testing::Test {
  protected:
