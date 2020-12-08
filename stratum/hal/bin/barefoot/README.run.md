@@ -365,6 +365,26 @@ which bypasses ONLP, is available.
 
 [start-stratum-container-sh]: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 
+### RESOURCE_EXHAUSTED when pushing pipeline
+
+Stratum rejects a SetForwardingPipelineConfig request with a RESOURCE_EXHAUSTED
+gRPC error, like this:
+
+```
+INFO:PTF runner:Sending P4 config
+ERROR:PTF runner:Error during SetForwardingPipelineConfig
+ERROR:PTF runner:<_InactiveRpcError of RPC that terminated with:
+        status = StatusCode.RESOURCE_EXHAUSTED
+        details = "to-be-sent initial metadata size exceeds peer limit"
+        debug_error_string = "{"created":"@1607159813.061940445","description":"Error received from peer ipv4:127.0.0.1:28000","file":"src/core/lib/surface/call.cc","file_line":1056,"grpc_message":"to-be-sent initial metadata size exceeds peer limit","grpc_status":8}"
+>
+```
+
+This error originates from the gRPC layer and can occur when the pipeline is
+particularly large and does not fit in the [maximum receive message size](https://grpc.github.io/grpc/cpp/classgrpc_1_1_server_builder.html#ab5c8a420f2acfc6fcea2f2210e9d426e).
+Although we set a reasonable default, the value can be adjusted with Stratum's
+`-grpc_max_recv_msg_size` flag.
+
 ### TNA P4 programs on Stratum-bf / PI Node
 
 When using Stratum with the legacy PI node backend, only limited support for P4
