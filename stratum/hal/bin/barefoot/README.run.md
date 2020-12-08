@@ -394,7 +394,7 @@ will crash the switch:
     @           0x65db56 stratum::hal::P4Service::SetForwardingPipelineConfig()
 ```
 
-Use Stratum-bfrt with the BfRt backend, if you need advanced functionality.
+Use Stratum-bfrt with the BfRt backend if you need advanced functionality.
 
 ### Error pushing pipeline to Stratum-bf
 
