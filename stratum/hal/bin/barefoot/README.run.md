@@ -382,7 +382,8 @@ ERROR:PTF runner:<_InactiveRpcError of RPC that terminated with:
 
 This error originates from the gRPC layer and can occur when the pipeline is
 particularly large and does not fit in the [maximum receive message size](https://grpc.github.io/grpc/cpp/classgrpc_1_1_server_builder.html#ab5c8a420f2acfc6fcea2f2210e9d426e).
-Although we set a reasonable default, the value can be adjusted with the `-grpc_max_recv_msg_size` flag.
+Although we set a reasonable default, the value can be adjusted with Stratum's
+`-grpc_max_recv_msg_size` flag.
 
 ### TNA P4 programs on Stratum-bf / PI Node
 
