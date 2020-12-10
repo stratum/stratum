@@ -16,6 +16,7 @@
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -150,6 +151,11 @@ class BFChassisManagerTest : public ::testing::Test {
   }
 
   bool Initialized() { return bf_chassis_manager_->initialized_; }
+
+  ::util::Status VerifyChassisConfig(const ChassisConfig& config) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bf_chassis_manager_->VerifyChassisConfig(config);
+  }
 
   ::util::Status PushChassisConfig(const ChassisConfig& config) {
     absl::WriterMutexLock l(&chassis_lock);
@@ -560,6 +566,52 @@ TEST_F(BFChassisManagerTest, GetSdkPortId) {
   EXPECT_EQ(resp.ValueOrDie(), kPortId + kSdkPortOffset);
 
   ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, VerifyChassisConfigSuccess) {
+  const std::string kConfigText1 = R"(
+      description: "Sample Generic Tofino config 2x25G ports."
+      chassis {
+        platform: PLT_GENERIC_BAREFOOT_TOFINO
+        name: "standalone"
+      }
+      nodes {
+        id: 7654321
+        slot: 1
+      }
+      singleton_ports {
+        id: 1
+        slot: 1
+        port: 1
+        channel: 1
+        speed_bps: 25000000000
+        node: 7654321
+        config_params {
+          admin_state: ADMIN_STATE_ENABLED
+        }
+      }
+      singleton_ports {
+        id: 2
+        slot: 1
+        port: 1
+        channel: 2
+        speed_bps: 25000000000
+        node: 7654321
+        config_params {
+          admin_state: ADMIN_STATE_ENABLED
+        }
+      }
+  )";
+
+  ChassisConfig config1;
+  ASSERT_OK(ParseProtoFromString(kConfigText1, &config1));
+
+  EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kUnit, PortKey(1, 1, 1)))
+      .WillRepeatedly(Return(1 + kSdkPortOffset));
+  EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kUnit, PortKey(1, 1, 2)))
+      .WillRepeatedly(Return(2 + kSdkPortOffset));
+
+  ASSERT_OK(VerifyChassisConfig(config1));
 }
 
 }  // namespace barefoot
