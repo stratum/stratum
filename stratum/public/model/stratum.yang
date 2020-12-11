@@ -52,6 +52,14 @@ module stratum {
     base herc-platform:PLATFORM_TYPE;
   }
 
+  identity GENERIC_TOMAHAWK2 {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
+  identity GENERIC_TOMAHAWK3 {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
   identity MLNX_SN2700 {
     base herc-platform:PLATFORM_TYPE;
   }

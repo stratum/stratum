@@ -56,6 +56,8 @@ constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsInXPipeline;
 constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkPlusMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk2MaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk3MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
@@ -584,6 +586,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     case PLT_GENERIC_TOMAHAWK_PLUS:
       supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
       break;
+    case PLT_GENERIC_TOMAHAWK2:
+      supported_chip_types.insert(BcmChip::TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      supported_chip_types.insert(BcmChip::TOMAHAWK3);
+      break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
              << "Unsupported platform: "
@@ -914,7 +922,10 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
       {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
       {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip},
-      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip}};
+      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK2, kTomahawk2MaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK3, kTomahawk3MaxBcmPortsPerChip},
+  };
   for (const auto& e : unit_to_chip_type) {
     CHECK_RETURN_IF_FALSE(unit_to_bcm_port_keys[e.first].size() <=
                           chip_type_to_max_num_ports[e.second])

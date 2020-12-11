@@ -19,9 +19,9 @@ DECLARE_string(test_tmpdir);
 
 namespace stratum {
 
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
-using stratum::test_utils::StatusIs;
 
 TEST(CommonUtilsTest, PrintArrayForEmptyArray) {
   int iarray[] = {};

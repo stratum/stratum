@@ -78,6 +78,14 @@ using namespace openconfig::enums;  // NOLINT
       chassis->set_platform(
           OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK_PLUS);
       break;
+    case PLT_GENERIC_TOMAHAWK2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK3);
+      break;
     case PLT_MLNX_SN2700:
       chassis->set_platform(OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700);
       break;
@@ -441,6 +449,12 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK_PLUS:
       to.set_platform(PLT_GENERIC_TOMAHAWK_PLUS);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK2:
+      to.set_platform(PLT_GENERIC_TOMAHAWK2);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK3:
+      to.set_platform(PLT_GENERIC_TOMAHAWK3);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700:
       to.set_platform(PLT_MLNX_SN2700);
