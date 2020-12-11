@@ -28,6 +28,7 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 
 - [Code of Conduct](/CODE_OF_CONDUCT.md)
 - [Contribution Guidelines](/CONTRIBUTING.md)
+- [IDE Setup](https://github.com/stratum/stratum/wiki/IDE-setup-for-development)
 - [PHAL Development Tutorial](/stratum/docs/phal_development_tutorial.md)
 - [Stratum Configurators Design Document](/stratum/docs/configurators.md)
 - [Stratum PHAL Overview (Physical Hardware Access Layer)](/stratum/docs/phal.md)
@@ -55,7 +56,11 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 
 - [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
 - [Trellis+Stratum example](/tools/mininet/examples/trellis/README.md)
+- [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)
+- [Talks](https://github.com/stratum/stratum/wiki/Talks)
 - [testvectors](stratum/public/proto/tv.proto)
+- [Stratum example pipelines](/stratum/pipelines/README.md)
+  - [Main FPM pipeline](/stratum/pipelines/main/README.md)
 - [Supported gNMI paths](/stratum/docs/gnmi/supported-paths.md)
 - [Config Monitoring Service](/stratum/docs/gnmi/README.md)
 - [Transponder Abstraction Interface (TAI)](/stratum/docs/tai/README.md)
@@ -64,8 +69,6 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 - [gNMI/OpenConfig Contract Definition Language tools](/stratum/testing/cdlang/README.md)
 - [gNMI test scenarios](/stratum/testing/scenarios/README.md)
 - [SSL/TLS support and security](/stratum/lib/security/README.md)
-- [Stratum example pipelines](/stratum/pipelines/README.md)
-  - [Main FPM pipeline](/stratum/pipelines/main/README.md)
 
 # Component Overview
 
