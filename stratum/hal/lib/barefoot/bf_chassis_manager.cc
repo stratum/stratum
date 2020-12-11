@@ -467,9 +467,6 @@ BFChassisManager::~BFChassisManager() = default;
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.channel() == 0)
-        << "SingletonPort " << singleton_port.ShortDebugString()
-        << " contains unsupported channel field.";
     CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
         << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
