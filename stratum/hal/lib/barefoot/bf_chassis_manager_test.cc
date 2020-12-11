@@ -3,6 +3,8 @@
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
+#include <string>
+
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
