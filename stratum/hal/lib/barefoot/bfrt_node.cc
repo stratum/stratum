@@ -21,6 +21,8 @@
 // Not all SDE headers include "extern C".
 extern "C" {
 #include "tofino/bf_pal/dev_intf.h"
+// Flag to enable detailed logging in the SDE pipe manager.
+extern bool stat_mgr_enable_detail_trace;
 }
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
@@ -161,6 +163,11 @@ BfrtNode::~BfrtNode() = default;
       bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   CHECK_RETURN_IF_FALSE(
       bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  if (VLOG_IS_ON(2)) {
+    CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
+                                               BF_LOG_INFO) == 0);
+    stat_mgr_enable_detail_trace = true;
+  }
 
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
