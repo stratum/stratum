@@ -214,7 +214,7 @@ stratum/hal/bin/barefoot/docker/start-stratum-container.sh \
 
 ### Cleaning up `tofino-model` interfaces
 
-To remove the interfaces created by when `tofino-model` starts, you can run
+To remove the interfaces created when `tofino-model` starts, you can run
 the following (with `sudo` if not running as root):
 
 ```bash
