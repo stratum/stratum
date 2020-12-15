@@ -22,12 +22,6 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-DOCKER_EXTRA_RUN_OPTS=""
-if [ -t 0 ]; then
-  # Running in a TTY, so run interactively (i.e. make Ctrl-C work)
-  DOCKER_EXTRA_RUN_OPTS+="-it "
-fi
-
 SDE_TAR=$1
 SDE_TAR_DIR=$( cd $(dirname "$SDE_TAR") >/dev/null 2>&1 && pwd )
 SDE_TAR_NAME=$( basename $SDE_TAR )

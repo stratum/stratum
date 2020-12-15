@@ -300,6 +300,8 @@ docker run -it --rm --privileged \
     -bf_switchd_background=false
 ```
 
+ip link show | egrep -o '(veth[[:digit:]]+)' | sort -u | xargs -n1 -I{} sudo ip link del {} 2> /dev/null
+
 ### Running the binary in BSP-less mode
 
 ```bash
