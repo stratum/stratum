@@ -18,9 +18,7 @@ namespace hal {
 namespace barefoot {
 
 BfrtPreManager::BfrtPreManager(BfSdeInterface* bf_sde_interface, int device)
-    :
-      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
-      device_(device) {}
+    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
 
 ::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {

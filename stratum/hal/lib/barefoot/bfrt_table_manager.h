@@ -84,16 +84,15 @@ class BfrtTableManager {
                             BfSdeInterface* bf_sde_interface, int device);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
-                                BfSdeInterface::TableKeyInterface* table_key)
+                               BfSdeInterface::TableKeyInterface* table_key)
       SHARED_LOCKS_REQUIRED(lock_);
 
   ::util::Status BuildTableActionData(
       const ::p4::v1::Action& action,
       BfSdeInterface::TableDataInterface* table_data);
 
-  ::util::Status BuildTableData(
-      const ::p4::v1::TableEntry& table_entry,
-      BfSdeInterface::TableDataInterface* table_data);
+  ::util::Status BuildTableData(const ::p4::v1::TableEntry& table_entry,
+                                BfSdeInterface::TableDataInterface* table_data);
 
   ::util::Status ReadSingleTableEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
