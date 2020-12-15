@@ -81,8 +81,7 @@ class BfrtPacketioManager {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   // TODO(max): place device last
-  explicit BfrtPacketioManager(int device,
-                               BfSdeInterface* bf_sde_interface);
+  explicit BfrtPacketioManager(int device, BfSdeInterface* bf_sde_interface);
 
   // Builds the packet header structure for controller packets.
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info)

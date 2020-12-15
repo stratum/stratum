@@ -102,8 +102,7 @@ namespace barefoot {
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
       bfrt_packetio_manger.get(), bfrt_pre_manager.get(),
-      bfrt_counter_manager.get(), bf_sde_wrapper,
-      device_id);
+      bfrt_counter_manager.get(), bf_sde_wrapper, device_id);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
