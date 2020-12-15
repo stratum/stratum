@@ -228,9 +228,9 @@ You can run both Stratum and `tofino-model` natively on the host. They
 communicate over localhost TCP ports.
 
 If you wish to run multiple instances of Stratum and `tofino-model` on the
-same machine, you can use Docker's container network to link the containers
-together. For example, you can pass `--network container:stratum` when starting
-the `tofino-model` container.
+same machine, you can use Docker's container network to link the containers'
+networking stacks together. For example, you can pass `--network container:stratum`
+when starting the `tofino-model` container.
 
 -----
 ## Stratum Runtime Options
