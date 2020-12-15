@@ -5,6 +5,8 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BF_SDE_INTERFACE_H_
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"

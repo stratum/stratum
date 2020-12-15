@@ -5,6 +5,8 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BF_SDE_MOCK_H_
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"

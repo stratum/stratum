@@ -3,6 +3,8 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 
+#include <string>
+
 #include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

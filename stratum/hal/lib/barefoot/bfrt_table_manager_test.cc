@@ -3,6 +3,9 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 
+#include <string>
+#include <utility>
+
 #include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

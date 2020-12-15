@@ -3,6 +3,9 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 
+#include <string>
+#include <vector>
+
 #include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
