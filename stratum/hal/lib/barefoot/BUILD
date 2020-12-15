@@ -150,6 +150,7 @@ stratum_cc_library(
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
+        ":bfrt_id_mapper",
         ":macros",
         ":utils",
         "//stratum/glue:integral_types",
@@ -263,7 +264,6 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_sde_interface",
-        ":macros",
         ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -485,7 +485,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:constants",
-        "//stratum/lib:macros",
         "//stratum/public/proto:error_cc_proto",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
@@ -522,9 +521,8 @@ stratum_cc_library(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
+        ":bf_cc_proto",
         ":bfrt_constants",
-        ":bfrt_id_mapper",
-        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -544,7 +542,6 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -562,6 +559,5 @@ stratum_cc_test(
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
-        "@local_barefoot_bin//:bfsde",
     ],
 )

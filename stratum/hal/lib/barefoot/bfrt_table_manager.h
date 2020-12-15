@@ -150,6 +150,8 @@ class BfrtTableManager {
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.
   const int device_;
+
+  friend class BfrtTableManagerTest;
 };
 
 }  // namespace barefoot

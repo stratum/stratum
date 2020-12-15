@@ -14,7 +14,6 @@
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
-#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
@@ -181,24 +180,40 @@ struct RegisterClearThreadData {
       auto mk = *it;
       switch (mk.field_match_type_case()) {
         case ::p4::v1::FieldMatch::kExact: {
+          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+                                ::p4::config::v1::MatchField::EXACT)
+              << "Found match field of type EXACT does not fit match field "
+              << expected_match_field.ShortDebugString() << ".";
           CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
           RETURN_IF_ERROR(
               table_key->SetExact(mk.field_id(), mk.exact().value()));
           break;
         }
         case ::p4::v1::FieldMatch::kTernary: {
+          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+                                ::p4::config::v1::MatchField::TERNARY)
+              << "Found match field of type TERNARY does not fit match field "
+              << expected_match_field.ShortDebugString() << ".";
           CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
           RETURN_IF_ERROR(table_key->SetTernary(
               mk.field_id(), mk.ternary().value(), mk.ternary().mask()));
           break;
         }
         case ::p4::v1::FieldMatch::kLpm: {
+          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+                                ::p4::config::v1::MatchField::LPM)
+              << "Found match field of type LPM does not fit match field "
+              << expected_match_field.ShortDebugString() << ".";
           CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
           RETURN_IF_ERROR(table_key->SetLpm(mk.field_id(), mk.lpm().value(),
                                             mk.lpm().prefix_len()));
           break;
         }
         case ::p4::v1::FieldMatch::kRange: {
+          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+                                ::p4::config::v1::MatchField::RANGE)
+              << "Found match field of type Range does not fit match field "
+              << expected_match_field.ShortDebugString() << ".";
           // TODO(max): Do we need to check this for range matches?
           // CHECK_RETURN_IF_FALSE(!IsDontCareMatch(match.range(), ));
           RETURN_IF_ERROR(table_key->SetRange(mk.field_id(), mk.range().low(),
@@ -541,7 +556,7 @@ struct RegisterClearThreadData {
   CHECK_RETURN_IF_FALSE(table_entry.is_default_action() == false)
       << "Default action filters on wildcard reads are not supported.";
 
-  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
+  ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   std::vector<std::unique_ptr<BfSdeInterface::TableKeyInterface>> keys;
   std::vector<std::unique_ptr<BfSdeInterface::TableDataInterface>> datas;
@@ -771,7 +786,7 @@ BfrtTableManager::ReadDirectCounterEntry(
                         ::p4::v1::P4Data::kBitstring)
       << "Only bitstring registers data types are supported.";
 
-  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
+  ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(register_entry.register_id()));
 
   absl::optional<uint32> register_index;
