@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/strings/match.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/synchronization/notification.h"
 #include "absl/time/time.h"
@@ -44,6 +45,343 @@ constexpr absl::Duration BfSdeWrapper::kWriteTimeout;
 constexpr int32 BfSdeWrapper::kBfDefaultMtu;
 // TODO(max): move into SdeWrapper?
 constexpr int _PI_UPDATE_MAX_NAME_SIZE = 100;
+
+::util::Status TableKey::SetExact(int id, const std::string& value) {
+  RETURN_IF_BFRT_ERROR(table_key_->setValue(
+      id, reinterpret_cast<const uint8*>(value.data()), value.size()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::SetTernary(int id, const std::string& value,
+                                    const std::string& mask) {
+  DCHECK_EQ(value.size(), mask.size());
+  RETURN_IF_BFRT_ERROR(table_key_->setValueandMask(
+      id, reinterpret_cast<const uint8*>(value.data()),
+      reinterpret_cast<const uint8*>(mask.data()), value.size()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::SetLpm(int id, const std::string& prefix,
+                                uint16 prefix_length) {
+  RETURN_IF_BFRT_ERROR(
+      table_key_->setValueLpm(id, reinterpret_cast<const uint8*>(prefix.data()),
+                              prefix_length, prefix.size()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::SetRange(int id, const std::string& low,
+                                  const std::string& high) {
+  DCHECK_EQ(low.size(), high.size());
+  RETURN_IF_BFRT_ERROR(table_key_->setValueRange(
+      id, reinterpret_cast<const uint8*>(low.data()),
+      reinterpret_cast<const uint8*>(high.data()), low.size()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::SetPriority(uint32 priority) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  bf_rt_id_t priority_field_id;
+  RETURN_IF_BFRT_ERROR(
+      table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id));
+  RETURN_IF_BFRT_ERROR(table_key_->setValue(priority_field_id, priority));
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::GetExact(int id, std::string* value) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  int field_size = (field_size_bits + 7) / 8;
+  uint8 field_value[field_size];
+  RETURN_IF_BFRT_ERROR(table_key_->getValue(id, field_size, field_value));
+  value->assign(reinterpret_cast<const char*>(field_value), field_size);
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::GetTernary(int id, std::string* value,
+                                    std::string* mask) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  int field_size = (field_size_bits + 7) / 8;
+  uint8 field_value[field_size];
+  uint8 field_mask[field_size];
+  RETURN_IF_BFRT_ERROR(
+      table_key_->getValueandMask(id, field_size, field_value, field_mask));
+  value->assign(reinterpret_cast<const char*>(field_value), field_size);
+  mask->assign(reinterpret_cast<const char*>(field_mask), field_size);
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::GetLpm(int id, std::string* prefix,
+                                uint16* prefix_length) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  int field_size = (field_size_bits + 7) / 8;
+  uint8 field_value[field_size];
+  RETURN_IF_BFRT_ERROR(
+      table_key_->getValueLpm(id, field_size, field_value, prefix_length));
+  prefix->assign(reinterpret_cast<const char*>(field_value), field_size);
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::GetRange(int id, std::string* low,
+                                  std::string* high) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  int field_size = (field_size_bits + 7) / 8;
+  uint8 field_low[field_size];
+  uint8 field_high[field_size];
+  RETURN_IF_BFRT_ERROR(
+      table_key_->getValueRange(id, field_size, field_low, field_high));
+  low->assign(reinterpret_cast<const char*>(field_low), field_size);
+  high->assign(reinterpret_cast<const char*>(field_high), field_size);
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableKey::GetPriority(uint32* priority) const {
+  // const bfrt::BfRtTable* table;
+  // RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  uint64 bf_priority;
+  RETURN_IF_ERROR(GetField(*table_key_, "$MATCH_PRIORITY", &bf_priority));
+  *priority = bf_priority;
+
+  return ::util::OkStatus();
+}
+
+::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>
+TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  auto key = std::unique_ptr<BfSdeInterface::TableKeyInterface>(
+      new TableKey(std::move(table_key)));
+  return key;
+}
+
+::util::Status TableData::SetParam(int id, const std::string& value) {
+  RETURN_IF_BFRT_ERROR(table_data_->setValue(
+      id, reinterpret_cast<const uint8*>(value.data()), value.size()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::GetParam(int id, std::string* value) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  size_t field_size;
+  if (action_id) {
+    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, action_id, &field_size));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, &field_size));
+  }
+  field_size = (field_size + 7) / 8;
+  uint8 field_data[field_size];
+  table_data_->getValue(id, field_size, field_data);
+  value->assign(reinterpret_cast<const char*>(field_data), field_size);
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::SetActionMemberId(uint64 action_member_id) {
+  return SetField(table_data_.get(), "$ACTION_MEMBER_ID", action_member_id);
+}
+
+::util::Status TableData::GetActionMemberId(uint64* action_member_id) const {
+  return GetField(*table_data_, "$ACTION_MEMBER_ID", action_member_id);
+}
+
+::util::Status TableData::SetSelectorGroupId(uint64 selector_group_id) {
+  return SetField(table_data_.get(), "$SELECTOR_GROUP_ID", selector_group_id);
+}
+
+::util::Status TableData::GetSelectorGroupId(uint64* selector_group_id) const {
+  return GetField(*table_data_, "$SELECTOR_GROUP_ID", selector_group_id);
+}
+
+::util::Status TableData::SetOnlyCounterData(uint64 bytes, uint64 packets) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  if (!action_id) {
+    bf_rt_id_t table_id;
+    table->tableIdGet(&table_id);
+    std::string table_name;
+    table->tableNameGet(&table_name);
+    LOG(WARNING) << "Trying to set counter data on a table entry without "
+                 << "action ID. This might not behave as expected, please "
+                 << "report this to the Stratum authors: table_id " << table_id
+                 << " table_name " << table_name << ".";
+  }
+  std::vector<bf_rt_id_t> ids;
+  bf_rt_id_t field_id_bytes;
+  bf_status_t has_bytes =
+      table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id_bytes);
+  if (has_bytes == BF_SUCCESS) {
+    ids.push_back(field_id_bytes);
+  }
+  bf_rt_id_t field_id_packets;
+  bf_status_t has_packets =
+      table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id_packets);
+  if (has_packets == BF_SUCCESS) {
+    ids.push_back(field_id_packets);
+  }
+  if (action_id) {
+    RETURN_IF_BFRT_ERROR(table->dataReset(ids, action_id, table_data_.get()));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataReset(ids, table_data_.get()));
+  }
+  if (has_bytes == BF_SUCCESS) {
+    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_bytes, bytes));
+  }
+  if (has_packets == BF_SUCCESS) {
+    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_packets, packets));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::SetCounterData(uint64 bytes, uint64 packets) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  if (!action_id) {
+    bf_rt_id_t table_id;
+    table->tableIdGet(&table_id);
+    std::string table_name;
+    table->tableNameGet(&table_name);
+    LOG(WARNING) << "Trying to set counter data on a table entry without "
+                 << "action ID. This might not behave as expected, please "
+                 << "report this to the Stratum authors: table_id " << table_id
+                 << " table_name " << table_name << ".";
+  }
+  bf_rt_id_t field_id_bytes;
+  bf_status_t has_bytes =
+      table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id_bytes);
+  bf_rt_id_t field_id_packets;
+  bf_status_t has_packets =
+      table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id_packets);
+  if (has_bytes == BF_SUCCESS) {
+    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_bytes, bytes));
+  }
+  if (has_packets == BF_SUCCESS) {
+    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_packets, packets));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::GetCounterData(uint64* bytes, uint64* packets) const {
+  CHECK_RETURN_IF_FALSE(bytes);
+  CHECK_RETURN_IF_FALSE(packets);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+
+  bf_rt_id_t field_id;
+  // Try to read byte counter.
+  bf_status_t bf_status;
+  if (action_id) {
+    bf_status =
+        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id);
+  } else {
+    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+  }
+  if (bf_status == BF_SUCCESS) {
+    uint64 counter_val;
+    RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
+    *bytes = counter_val;
+  }
+
+  // Try to read packet counter.
+  if (action_id) {
+    bf_status =
+        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id);
+  } else {
+    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+  }
+  if (bf_status == BF_SUCCESS) {
+    uint64 counter_val;
+    RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
+    *packets = counter_val;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::GetActionId(int* action_id) const {
+  CHECK_RETURN_IF_FALSE(action_id);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  bf_rt_id_t bf_action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&bf_action_id));
+  }
+  *action_id = bf_action_id;
+
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::Reset(int action_id) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  if (action_id) {
+    RETURN_IF_BFRT_ERROR(table->dataReset(action_id, table_data_.get()));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataReset(table_data_.get()));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>
+TableData::CreateTableData(const bfrt::BfRtInfo* bfrt_info_, int table_id,
+                           int action_id) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  if (action_id) {
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(action_id, &table_data));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  }
+  auto data = std::unique_ptr<BfSdeInterface::TableDataInterface>(
+      new TableData(std::move(table_data)));
+  return data;
+}
 
 namespace {
 
@@ -427,6 +765,18 @@ BfSdeWrapper::CreateSession() {
   return Session::CreateSession();
 }
 
+::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>
+BfSdeWrapper::CreateTableKey(int table_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return TableKey::CreateTableKey(bfrt_info_, table_id);
+}
+
+::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>
+BfSdeWrapper::CreateTableData(int table_id, int action_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return TableData::CreateTableData(bfrt_info_, table_id, action_id);
+}
+
 //  Packetio
 
 ::util::Status BfSdeWrapper::TxPacket(int device, const std::string& buffer) {
@@ -681,7 +1031,7 @@ namespace {
 ::util::StatusOr<uint32> BfSdeWrapper::CreateMulticastNode(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
-    const std::vector<uint32> ports) {
+    const std::vector<uint32>& ports) {
   ::absl::ReaderMutexLock l(&data_lock_);
 
   auto real_session = std::dynamic_pointer_cast<Session>(session);
@@ -1166,7 +1516,7 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(counter_id, &table));
 
-  RETURN_IF_ERROR(SynchronizeCounters(device, session, counter_id, timeout));
+  RETURN_IF_ERROR(DoSynchronizeCounters(device, session, counter_id, timeout));
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
@@ -1204,10 +1554,36 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BfSdeWrapper::WriteActionProfileMember(
+namespace {
+// Helper function to get the field ID of the "f1" register data field.
+// TODO(max): Maybe use table name and strip off "pipe." at the beginning?
+// std::string table_name;
+// RETURN_IF_BFRT_ERROR(table->tableNameGet(&table_name));
+// RETURN_IF_BFRT_ERROR(
+//     table->dataFieldIdGet(absl::StrCat(table_name, ".", "f1"), &field_id));
+::util::StatusOr<bf_rt_id_t> GetRegisterDataFieldId(
+    const bfrt::BfRtTable* table) {
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    bfrt::DataType data_type;
+    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
+    if (absl::EndsWith(field_name, ".f1")) {
+      return field_id;
+    }
+  }
+
+  RETURN_ERROR(ERR_INTERNAL) << "Could not find register data field id.";
+}
+}  // namespace
+
+::util::Status BfSdeWrapper::WriteRegister(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id, int member_id, int action_id,
-    const BfActionData& action_data, bool insert) {
+    uint32 table_id, absl::optional<uint32> register_index,
+    const std::string& register_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
 
@@ -1219,24 +1595,144 @@ namespace {
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
+  // Register data: <register_name>.f1
+  // The current bf-p4c compiler emits the fully-qualified field name, including
+  // parent table and pipeline. We cannot use just "f1" as the field name.
+  bf_rt_id_t field_id;
+  ASSIGN_OR_RETURN(field_id, GetRegisterDataFieldId(table));
+  size_t data_field_size;
+  RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &data_field_size));
+  // The SDE expects any array with the full width.
+  std::string value((data_field_size + 7) / 8, '\x00');
+  value.replace(value.size() - register_data.size(), register_data.size(),
+                register_data);
+  RETURN_IF_BFRT_ERROR(table_data->setValue(
+      field_id, reinterpret_cast<const uint8*>(value.data()), value.size()));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (register_index) {
+    // Single index target.
+    // Register key: $REGISTER_INDEX
+    RETURN_IF_ERROR(
+        SetField(table_key.get(), kRegisterIndex, register_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  } else {
+    // Wildcard write to all indices.
+    size_t table_size;
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+    for (size_t i = 0; i < table_size; ++i) {
+      // Register key: $REGISTER_INDEX
+      RETURN_IF_ERROR(SetField(table_key.get(), kRegisterIndex, i));
+      RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+          *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+    }
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ReadRegisters(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::optional<uint32> register_index,
+    std::vector<uint32>* register_indices, std::vector<uint64>* register_datas,
+    absl::Duration timeout) {
+  CHECK_RETURN_IF_FALSE(register_indices);
+  CHECK_RETURN_IF_FALSE(register_datas);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  RETURN_IF_ERROR(SynchronizeRegisters(device, session, table_id, timeout));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+
+  // Is this a wildcard read?
+  if (register_index) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
+
+    // Key: $REGISTER_INDEX
+    RETURN_IF_ERROR(
+        SetField(keys[0].get(), "$REGISTER_INDEX", register_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  register_indices->resize(0);
+  register_datas->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $REGISTER_INDEX
+    uint64 bf_register_index;
+    RETURN_IF_ERROR(
+        GetField(*table_key, "$REGISTER_INDEX", &bf_register_index));
+    register_indices->push_back(bf_register_index);
+    // Data: <register_name>.f1
+    ASSIGN_OR_RETURN(auto f1_field_id, GetRegisterDataFieldId(table));
+
+    bfrt::DataType data_type;
+    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(f1_field_id, &data_type));
+    switch (data_type) {
+      case bfrt::DataType::BYTE_STREAM: {
+        // Even though the data type says byte stream, the SDE can only allows
+        // fetching the data in an uint64 vector with one entry per pipe.
+        std::vector<uint64> register_data;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(f1_field_id, &register_data));
+        CHECK_RETURN_IF_FALSE(register_data.size() > 0);
+        register_datas->push_back(register_data[0]);
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Unsupported register data type " << static_cast<int>(data_type)
+            << " for register in table " << table_id;
+    }
+  }
+
+  CHECK_EQ(register_indices->size(), keys.size());
+  CHECK_EQ(register_datas->size(), keys.size());
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteActionProfileMember(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, int member_id, const TableDataInterface* table_data,
+    bool insert) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_data = dynamic_cast<const TableData*>(table_data);
+  CHECK_RETURN_IF_FALSE(real_table_data);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   // Key: $ACTION_MEMBER_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
 
-  // Action data
-  RETURN_IF_BFRT_ERROR(table->dataReset(action_id, table_data.get()));
-  for (const auto& param : action_data.params()) {
-    const size_t size = param.value().size();
-    const uint8* val = reinterpret_cast<const uint8*>(param.value().data());
-    RETURN_IF_BFRT_ERROR(table_data->setValue(param.id(), val, size));
-  }
-
   auto bf_dev_tgt = GetDeviceTarget(device);
   if (insert) {
-    RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
-        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+    RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*real_session->bfrt_session_,
+                                              bf_dev_tgt, *table_key,
+                                              *real_table_data->table_data_));
   } else {
-    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
-        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(*real_session->bfrt_session_,
+                                              bf_dev_tgt, *table_key,
+                                              *real_table_data->table_data_));
   }
 
   return ::util::OkStatus();
@@ -1244,21 +1740,19 @@ namespace {
 
 ::util::Status BfSdeWrapper::InsertActionProfileMember(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id, int member_id, int action_id,
-    const BfActionData& action_data) {
+    uint32 table_id, int member_id, const TableDataInterface* table_data) {
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteActionProfileMember(device, session, table_id, member_id,
-                                  action_id, action_data, true);
+                                  table_data, true);
   return ::util::OkStatus();
 }
 
 ::util::Status BfSdeWrapper::ModifyActionProfileMember(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id, int member_id, int action_id,
-    const BfActionData& action_data) {
+    uint32 table_id, int member_id, const TableDataInterface* table_data) {
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteActionProfileMember(device, session, table_id, member_id,
-                                  action_id, action_data, false);
+                                  table_data, false);
 }
 
 ::util::Status BfSdeWrapper::DeleteActionProfileMember(
@@ -1287,10 +1781,9 @@ namespace {
 ::util::Status BfSdeWrapper::GetActionProfileMembers(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     uint32 table_id, int member_id, std::vector<int>* member_ids,
-    std::vector<int>* action_ids, std::vector<BfActionData>* action_datas) {
+    std::vector<std::unique_ptr<TableDataInterface>>* table_datas) {
   CHECK_RETURN_IF_FALSE(member_ids);
-  CHECK_RETURN_IF_FALSE(action_ids);
-  CHECK_RETURN_IF_FALSE(action_datas);
+  CHECK_RETURN_IF_FALSE(table_datas);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
@@ -1317,46 +1810,20 @@ namespace {
   }
 
   member_ids->resize(0);
-  action_ids->resize(0);
-  action_datas->resize(0);
+  table_datas->resize(0);
   for (size_t i = 0; i < keys.size(); ++i) {
-    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
-    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $sid
     uint64 member_id;
-    RETURN_IF_ERROR(GetField(*table_key, "$ACTION_MEMBER_ID", &member_id));
+    RETURN_IF_ERROR(GetField(*keys[i], "$ACTION_MEMBER_ID", &member_id));
     member_ids->push_back(member_id);
 
-    // Data: action id
-    bf_rt_id_t action_id;
-    RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
-    action_ids->push_back(action_id);
-
     // Data: action params
-    BfActionData action_data;
-    std::vector<bf_rt_id_t> field_id_list;
-    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &field_id_list));
-    for (const auto& field_id : field_id_list) {
-      size_t field_size;
-      RETURN_IF_BFRT_ERROR(
-          table->dataFieldSizeGet(field_id, action_id, &field_size));
-      // "field_size" describes how many "bits" is this field, need to convert
-      // to bytes with padding.
-      field_size = (field_size + 7) / 8;
-      uint8 field_data[field_size];
-      RETURN_IF_BFRT_ERROR(
-          table_data->getValue(field_id, field_size, field_data));
-      const void* param_val = reinterpret_cast<const void*>(field_data);
-      auto* param = action_data.add_params();
-      param->set_id(field_id);
-      param->set_value(param_val, field_size);
-    }
-    action_datas->push_back(action_data);
+    auto td = absl::make_unique<TableData>(std::move(datums[i]));
+    table_datas->push_back(std::move(td));
   }
 
   CHECK_EQ(member_ids->size(), keys.size());
-  CHECK_EQ(action_ids->size(), keys.size());
-  CHECK_EQ(action_datas->size(), keys.size());
+  CHECK_EQ(table_datas->size(), keys.size());
 
   return ::util::OkStatus();
 }
@@ -1514,6 +1981,175 @@ namespace {
   return ::util::OkStatus();
 }
 
+::util::Status BfSdeWrapper::InsertTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, const TableKeyInterface* table_key,
+    const TableDataInterface* table_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_key = dynamic_cast<const TableKey*>(table_key);
+  CHECK_RETURN_IF_FALSE(real_table_key);
+  auto real_table_data = dynamic_cast<const TableData*>(table_data);
+  CHECK_RETURN_IF_FALSE(real_table_data);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_,
+      *real_table_data->table_data_));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ModifyTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, const TableKeyInterface* table_key,
+    const TableDataInterface* table_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_key = dynamic_cast<const TableKey*>(table_key);
+  CHECK_RETURN_IF_FALSE(real_table_key);
+  auto real_table_data = dynamic_cast<const TableData*>(table_data);
+  CHECK_RETURN_IF_FALSE(real_table_data);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_,
+      *real_table_data->table_data_));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::DeleteTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, const TableKeyInterface* table_key) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_key = dynamic_cast<const TableKey*>(table_key);
+  CHECK_RETURN_IF_FALSE(real_table_key);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryDel(
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, const TableKeyInterface* table_key,
+    TableDataInterface* table_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_key = dynamic_cast<const TableKey*>(table_key);
+  CHECK_RETURN_IF_FALSE(real_table_key);
+  auto real_table_data = dynamic_cast<const TableData*>(table_data);
+  CHECK_RETURN_IF_FALSE(real_table_data);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
+      real_table_data->table_data_.get()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetAllTableEntries(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id,
+    std::vector<std::unique_ptr<TableKeyInterface>>* table_keys,
+    std::vector<std::unique_ptr<TableDataInterface>>* table_datas) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  auto bf_dev_tgt = GetDeviceTarget(device);
+
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+  RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt, table,
+                                &keys, &datums));
+
+  table_keys->resize(0);
+  table_datas->resize(0);
+
+  for (size_t i = 0; i < keys.size(); ++i) {
+    auto tk = absl::make_unique<TableKey>(std::move(keys[i]));
+    auto td = absl::make_unique<TableData>(std::move(datums[i]));
+    table_keys->push_back(std::move(tk));
+    table_datas->push_back(std::move(td));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::SetDefaultTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, const TableDataInterface* table_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_data = dynamic_cast<const TableData*>(table_data);
+  CHECK_RETURN_IF_FALSE(real_table_data);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableDefaultEntrySet(
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_data->table_data_));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ResetDefaultTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(
+      table->tableDefaultEntryReset(*real_session->bfrt_session_, bf_dev_tgt));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::GetDefaultTableEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, TableDataInterface* table_data) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+  auto real_table_data = dynamic_cast<const TableData*>(table_data);
+  CHECK_RETURN_IF_FALSE(real_table_data);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  RETURN_IF_BFRT_ERROR(table->tableDefaultEntryGet(
+      *real_session->bfrt_session_, bf_dev_tgt,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
+      real_table_data->table_data_.get()));
+
+  return ::util::OkStatus();
+}
+
 ::util::StatusOr<uint32> BfSdeWrapper::GetBfRtId(uint32 p4info_id) const {
   ::absl::ReaderMutexLock l(&data_lock_);
   return bfrt_id_mapper_->GetBfRtId(p4info_id);
@@ -1537,6 +2173,13 @@ namespace {
 }
 
 ::util::Status BfSdeWrapper::SynchronizeCounters(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::Duration timeout) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  return DoSynchronizeCounters(device, session, table_id, timeout);
+}
+
+::util::Status BfSdeWrapper::DoSynchronizeCounters(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     uint32 table_id, absl::Duration timeout) {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
@@ -1572,6 +2215,49 @@ namespace {
     if (!sync_notifier->WaitForNotificationWithTimeout(timeout)) {
       return MAKE_ERROR(ERR_OPER_TIMEOUT)
              << "Timeout while syncing (indirect) table counters of table "
+             << table_id << ".";
+    }
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::SynchronizeRegisters(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::Duration timeout) {
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  // Sync table registers.
+  std::set<bfrt::TableOperationsType> supported_ops;
+  RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
+  if (supported_ops.count(bfrt::TableOperationsType::REGISTER_SYNC)) {
+    auto sync_notifier = std::make_shared<absl::Notification>();
+    std::weak_ptr<absl::Notification> weak_ref(sync_notifier);
+    std::unique_ptr<bfrt::BfRtTableOperations> table_op;
+    RETURN_IF_BFRT_ERROR(table->operationsAllocate(
+        bfrt::TableOperationsType::REGISTER_SYNC, &table_op));
+    RETURN_IF_BFRT_ERROR(table_op->registerSyncSet(
+        *real_session->bfrt_session_, bf_dev_tgt,
+        [table_id, weak_ref](const bf_rt_target_t& dev_tgt, void* cookie) {
+          if (auto notifier = weak_ref.lock()) {
+            VLOG(1) << "Table registers for table " << table_id << " synced.";
+            notifier->Notify();
+          } else {
+            VLOG(1) << "Notifier expired before table " << table_id
+                    << " could be synced.";
+          }
+        },
+        nullptr));
+    RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
+    // Wait until sync done or timeout.
+    if (!sync_notifier->WaitForNotificationWithTimeout(timeout)) {
+      return MAKE_ERROR(ERR_OPER_TIMEOUT)
+             << "Timeout while syncing (indirect) table registers of table "
              << table_id << ".";
     }
   }

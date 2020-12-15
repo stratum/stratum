@@ -17,6 +17,7 @@
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -109,6 +110,11 @@ class BfrtActionProfileManager {
   // Reader-writer lock used to protect access to pipeline state.
   // TODO(max): Check if removeable
   mutable absl::Mutex lock_;
+
+  // Helper class to validate the P4Info and requests against it.
+  // TODO(max): Maybe this manager should be created in the node and passed down
+  // to all feature managers.
+  std::unique_ptr<P4InfoManager> p4_info_manager_ GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.

@@ -13,15 +13,11 @@
 #include "bf_rt/bf_rt_init.hpp"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
-
-// Not all SDE headers include "extern C".
-extern "C" {
-#include "tofino/bf_pal/dev_intf.h"
-}
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
@@ -97,19 +93,12 @@ BfrtNode::~BfrtNode() = default;
   }
 
   RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
-  RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
-      device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
   // Push pipeline config to the managers.
-  // TODO(max): Do not pass bfrt_info_ (or other bfrt resources) directly to
-  // other managers. On (a second) pipeline push these will get freed while
-  // still in use.
-  RETURN_IF_ERROR(
-      bfrt_id_mapper_->PushForwardingPipelineConfig(bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
-  RETURN_IF_ERROR(bfrt_table_manager_->PushForwardingPipelineConfig(
-      bfrt_config_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_action_profile_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
@@ -153,12 +142,8 @@ BfrtNode::~BfrtNode() = default;
       << " is not supported.";
 
   bool success = true;
-  auto session = bfrt::BfRtSession::sessionCreate();
-  ASSIGN_OR_RETURN(auto s2, bf_sde_interface_->CreateSession());
-  CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
-  VLOG(1) << "Started new BfRt session with ID " << session->sessHandleGet();
-  RETURN_IF_BFRT_ERROR(session->beginBatch());
-  RETURN_IF_ERROR(s2->BeginBatch());
+  ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
+  RETURN_IF_ERROR(session->BeginBatch());
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
@@ -167,20 +152,20 @@ BfrtNode::~BfrtNode() = default;
             session, update.type(), update.entity().table_entry());
         break;
       case ::p4::v1::Entity::kExternEntry:
-        status =
-            WriteExternEntry(s2, update.type(), update.entity().extern_entry());
+        status = WriteExternEntry(session, update.type(),
+                                  update.entity().extern_entry());
         break;
       case ::p4::v1::Entity::kActionProfileMember:
         status = bfrt_action_profile_manager_->WriteActionProfileMember(
-            s2, update.type(), update.entity().action_profile_member());
+            session, update.type(), update.entity().action_profile_member());
         break;
       case ::p4::v1::Entity::kActionProfileGroup:
         status = bfrt_action_profile_manager_->WriteActionProfileGroup(
-            s2, update.type(), update.entity().action_profile_group());
+            session, update.type(), update.entity().action_profile_group());
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
         status = bfrt_pre_manager_->WritePreEntry(
-            s2, update.type(),
+            session, update.type(),
             update.entity().packet_replication_engine_entry());
         break;
       case ::p4::v1::Entity::kDirectCounterEntry:
@@ -189,7 +174,7 @@ BfrtNode::~BfrtNode() = default;
         break;
       case ::p4::v1::Entity::kCounterEntry:
         status = bfrt_counter_manager_->WriteIndirectCounterEntry(
-            s2, update.type(), update.entity().counter_entry());
+            session, update.type(), update.entity().counter_entry());
         break;
       case ::p4::v1::Entity::kRegisterEntry: {
         status = bfrt_table_manager_->WriteRegisterEntry(
@@ -208,8 +193,7 @@ BfrtNode::~BfrtNode() = default;
     success &= status.ok();
     results->push_back(status);
   }
-  RETURN_IF_ERROR(s2->EndBatch());
-  RETURN_IF_BFRT_ERROR(session->endBatch(true));
+  RETURN_IF_ERROR(session->EndBatch());
 
   if (!success) {
     return MAKE_ERROR(ERR_AT_LEAST_ONE_OPER_FAILED)
@@ -230,10 +214,7 @@ BfrtNode::~BfrtNode() = default;
       << "Request device id must be same as id of this BfrtNode.";
   ::p4::v1::ReadResponse resp;
   bool success = true;
-  auto session = bfrt::BfRtSession::sessionCreate();
-  CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
-  VLOG(1) << "Started new BfRt session with ID " << session->sessHandleGet();
-  ASSIGN_OR_RETURN(auto s2, bf_sde_interface_->CreateSession());
+  ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
   for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
@@ -244,28 +225,28 @@ BfrtNode::~BfrtNode() = default;
         break;
       }
       case ::p4::v1::Entity::kExternEntry: {
-        auto status = ReadExternEntry(s2, entity.extern_entry(), writer);
+        auto status = ReadExternEntry(session, entity.extern_entry(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
         auto status = bfrt_action_profile_manager_->ReadActionProfileMember(
-            s2, entity.action_profile_member(), writer);
+            session, entity.action_profile_member(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileGroup: {
         auto status = bfrt_action_profile_manager_->ReadActionProfileGroup(
-            s2, entity.action_profile_group(), writer);
+            session, entity.action_profile_group(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
         auto status = bfrt_pre_manager_->ReadPreEntry(
-            s2, entity.packet_replication_engine_entry(), writer);
+            session, entity.packet_replication_engine_entry(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
@@ -284,7 +265,7 @@ BfrtNode::~BfrtNode() = default;
       }
       case ::p4::v1::Entity::kCounterEntry: {
         auto status = bfrt_counter_manager_->ReadIndirectCounterEntry(
-            s2, entity.counter_entry());
+            session, entity.counter_entry());
         if (!status.ok()) {
           success = false;
           details->push_back(status.status());
@@ -388,12 +369,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtActionProfileManager* bfrt_action_profile_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
-    ::bfrt::BfRtDevMgr* bfrt_device_manager, BfrtIdMapper* bfrt_id_mapper,
     BfSdeInterface* bf_sde_interface, int device_id) {
   return absl::WrapUnique(new BfrtNode(
       bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_pre_manager, bfrt_counter_manager, bfrt_device_manager,
-      bfrt_id_mapper, bf_sde_interface, device_id));
+      bfrt_pre_manager, bfrt_counter_manager, bf_sde_interface, device_id));
 }
 
 BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
@@ -401,8 +380,6 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
-                   ::bfrt::BfRtDevMgr* bfrt_device_manager,
-                   BfrtIdMapper* bfrt_id_mapper,
                    BfSdeInterface* bf_sde_interface, int device_id)
     : pipeline_initialized_(false),
       initialized_(false),
@@ -412,8 +389,6 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
-      bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
-      bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       node_id_(0),
       device_id_(device_id) {}

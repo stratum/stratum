@@ -237,7 +237,6 @@ stratum_cc_library(
         ":bf_pipeline_utils",
         ":bfrt_action_profile_manager",
         ":bfrt_counter_manager",
-        ":bfrt_id_mapper",
         ":bfrt_packetio_manager",
         ":bfrt_pre_manager",
         ":bfrt_table_manager",
@@ -264,7 +263,6 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_sde_interface",
-        ":bfrt_id_mapper",
         ":macros",
         ":utils",
         "//stratum/glue:integral_types",
@@ -287,7 +285,25 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
+    ],
+)
+
+stratum_cc_test(
+    name = "bfrt_table_manager_test",
+    srcs = ["bfrt_table_manager_test.cc"],
+    deps = [
+        ":bf_sde_mock",
+        ":bfrt_table_manager",
+        ":test_main",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -352,6 +368,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:writer_interface",
+        "//stratum/hal/lib/p4:p4_info_manager",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/public/proto:error_cc_proto",
@@ -484,10 +501,10 @@ stratum_cc_test(
     name = "bfrt_counter_manager_test",
     srcs = ["bfrt_counter_manager_test.cc"],
     deps = [
-        ":test_main",
         ":bf_sde_mock",
         ":bfrt_counter_manager",
         ":bfrt_table_manager",  # FIXME: for bfrt_table_sync_timeout_ms storage
+        ":test_main",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:writer_mock",
         "//stratum/lib:utils",
