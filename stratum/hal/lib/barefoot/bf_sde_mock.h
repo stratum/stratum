@@ -19,6 +19,45 @@ class SessionMock : public BfSdeInterface::SessionInterface {
   MOCK_METHOD0(EndBatch, ::util::Status());
 };
 
+class TableKeyMock : public BfSdeInterface::TableKeyInterface {
+ public:
+  MOCK_METHOD2(SetExact, ::util::Status(int id, const std::string& value));
+  MOCK_CONST_METHOD2(GetExact, ::util::Status(int id, std::string* value));
+  MOCK_METHOD3(SetTernary, ::util::Status(int id, const std::string& value,
+                                          const std::string& mask));
+  MOCK_CONST_METHOD3(GetTernary, ::util::Status(int id, std::string* value,
+                                                std::string* mask));
+  MOCK_METHOD3(SetLpm, ::util::Status(int id, const std::string& prefix,
+                                      uint16 prefix_length));
+  MOCK_CONST_METHOD3(GetLpm, ::util::Status(int id, std::string* prefix,
+                                            uint16* prefix_length));
+  MOCK_METHOD3(SetRange, ::util::Status(int id, const std::string& low,
+                                        const std::string& high));
+  MOCK_CONST_METHOD3(GetRange, ::util::Status(int id, std::string* low,
+                                              std::string* high));
+  MOCK_METHOD1(SetPriority, ::util::Status(uint32 priority));
+  MOCK_CONST_METHOD1(GetPriority, ::util::Status(uint32* priority));
+};
+
+class TableDataMock : public BfSdeInterface::TableDataInterface {
+ public:
+  MOCK_METHOD2(SetParam, ::util::Status(int id, const std::string& value));
+  MOCK_CONST_METHOD2(GetParam, ::util::Status(int id, std::string* value));
+  MOCK_METHOD1(SetActionMemberId, ::util::Status(uint64 action_member_id));
+  MOCK_CONST_METHOD1(GetActionMemberId,
+                     ::util::Status(uint64* action_member_id));
+  MOCK_METHOD1(SetSelectorGroupId, ::util::Status(uint64 selector_group_id));
+  MOCK_CONST_METHOD1(GetSelectorGroupId,
+                     ::util::Status(uint64* selector_group_id));
+  MOCK_METHOD2(SetCounterData, ::util::Status(uint64 bytes, uint64 packets));
+  MOCK_METHOD2(SetOnlyCounterData,
+               ::util::Status(uint64 bytes, uint64 packets));
+  MOCK_CONST_METHOD2(GetCounterData,
+                     ::util::Status(uint64* bytes, uint64* packets));
+  MOCK_CONST_METHOD1(GetActionId, ::util::Status(int* action_id));
+  MOCK_METHOD1(Reset, ::util::Status(int action_id));
+};
+
 class BfSdeMock : public BfSdeInterface {
  public:
   MOCK_METHOD2(AddDevice,
@@ -63,7 +102,7 @@ class BfSdeMock : public BfSdeInterface {
                    int device,
                    std::shared_ptr<BfSdeInterface::SessionInterface> session,
                    int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
-                   const std::vector<uint32> ports));
+                   const std::vector<uint32>& ports));
   MOCK_METHOD3(
       DeleteMulticastNodes,
       ::util::Status(int device,
@@ -131,7 +170,6 @@ class BfSdeMock : public BfSdeInterface {
                      uint32 counter_id, int counter_index,
                      absl::optional<uint64> byte_count,
                      absl::optional<uint64> packet_count));
-
   MOCK_METHOD7(
       ReadIndirectCounter,
       ::util::Status(int device,
@@ -140,35 +178,43 @@ class BfSdeMock : public BfSdeInterface {
                      absl::optional<uint64>* byte_count,
                      absl::optional<uint64>* packet_count,
                      absl::Duration timeout));
-
-  MOCK_METHOD6(
+  MOCK_METHOD5(
+      WriteRegister,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::optional<uint32> register_index,
+                     const std::string& register_data));
+  MOCK_METHOD7(
+      ReadRegisters,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::optional<uint32> register_index,
+                     std::vector<uint32>* register_indices,
+                     std::vector<uint64>* register_datas,
+                     absl::Duration timeout));
+  MOCK_METHOD5(
       InsertActionProfileMember,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
-                     uint32 table_id, int member_id, int action_id,
-                     const BfActionData& action_data));
-
-  MOCK_METHOD6(
+                     uint32 table_id, int member_id,
+                     const TableDataInterface* table_data));
+  MOCK_METHOD5(
       ModifyActionProfileMember,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
-                     uint32 table_id, int member_id, int action_id,
-                     const BfActionData& action_data));
-
+                     uint32 table_id, int member_id,
+                     const TableDataInterface* table_data));
   MOCK_METHOD4(
       DeleteActionProfileMember,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id, int member_id));
-
-  MOCK_METHOD7(
+  MOCK_METHOD6(
       GetActionProfileMembers,
-      ::util::Status(int device,
-                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
-                     uint32 table_id, int member_id,
-                     std::vector<int>* member_ids, std::vector<int>* action_ids,
-                     std::vector<BfActionData>* action_datas));
-
+      ::util::Status(
+          int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+          uint32 table_id, int member_id, std::vector<int>* member_ids,
+          std::vector<std::unique_ptr<TableDataInterface>>* table_datas));
   MOCK_METHOD7(
       InsertActionProfileGroup,
       ::util::Status(int device,
@@ -176,7 +222,6 @@ class BfSdeMock : public BfSdeInterface {
                      uint32 table_id, int group_id, int max_group_size,
                      const std::vector<uint32>& member_ids,
                      const std::vector<bool>& member_status));
-
   MOCK_METHOD7(
       ModifyActionProfileGroup,
       ::util::Status(int device,
@@ -184,13 +229,11 @@ class BfSdeMock : public BfSdeInterface {
                      uint32 table_id, int group_id, int max_group_size,
                      const std::vector<uint32>& member_ids,
                      const std::vector<bool>& member_status));
-
   MOCK_METHOD4(
       DeleteActionProfileGroup,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id, int group_id));
-
   MOCK_METHOD8(
       GetActionProfileGroups,
       ::util::Status(int device,
@@ -199,7 +242,62 @@ class BfSdeMock : public BfSdeInterface {
                      std::vector<int>* max_group_sizes,
                      std::vector<std::vector<uint32>>* member_ids,
                      std::vector<std::vector<bool>>* member_status));
-
+  MOCK_METHOD1(
+      CreateTableKey,
+      ::util::StatusOr<std::unique_ptr<TableKeyInterface>>(int table_id));
+  MOCK_METHOD2(CreateTableData,
+               ::util::StatusOr<std::unique_ptr<TableDataInterface>>(
+                   int table_id, int action_id));
+  MOCK_METHOD5(
+      InsertTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, const TableKeyInterface* table_key,
+                     const TableDataInterface* table_data));
+  MOCK_METHOD5(
+      ModifyTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, const TableKeyInterface* table_key,
+                     const TableDataInterface* table_data));
+  MOCK_METHOD4(
+      DeleteTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, const TableKeyInterface* table_key));
+  MOCK_METHOD5(
+      GetTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, const TableKeyInterface* table_key,
+                     TableDataInterface* table_data));
+  MOCK_METHOD5(
+      GetAllTableEntries,
+      ::util::Status(
+          int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+          uint32 table_id,
+          std::vector<std::unique_ptr<TableKeyInterface>>* table_keys,
+          std::vector<std::unique_ptr<TableDataInterface>>* table_datas));
+  MOCK_METHOD4(
+      SetDefaultTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, const TableDataInterface* table_data));
+  MOCK_METHOD3(
+      ResetDefaultTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id));
+  MOCK_METHOD4(
+      GetDefaultTableEntry,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, TableDataInterface* table_data));
+  MOCK_METHOD4(
+      SynchronizeCounters,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::Duration timeout));
   MOCK_CONST_METHOD1(GetBfRtId, ::util::StatusOr<uint32>(uint32 p4info_id));
   MOCK_CONST_METHOD1(GetP4InfoId, ::util::StatusOr<uint32>(uint32 bfrt_id));
   MOCK_CONST_METHOD1(GetActionSelectorBfRtId,

@@ -13,7 +13,9 @@ namespace barefoot {
 
 BfrtActionProfileManager::BfrtActionProfileManager(
     BfSdeInterface* bf_sde_interface, int device)
-    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
+    : p4_info_manager_(nullptr),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      device_(device) {}
 
 std::unique_ptr<BfrtActionProfileManager>
 BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
@@ -25,6 +27,11 @@ BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
 ::util::Status BfrtActionProfileManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
+  std::unique_ptr<P4InfoManager> p4_info_manager =
+      absl::make_unique<P4InfoManager>(config.programs(0).p4info());
+  RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
+  p4_info_manager_ = std::move(p4_info_manager);
+
   return ::util::OkStatus();
 }
 
@@ -157,24 +164,26 @@ BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
-  BfActionData action_data;
+  // Action data
+  ASSIGN_OR_RETURN(
+      auto table_data,
+      bf_sde_interface_->CreateTableData(
+          bfrt_table_id, action_profile_member.action().action_id()));
   for (const auto& param : action_profile_member.action().params()) {
-    auto* bf_param = action_data.add_params();
-    bf_param->set_id(param.param_id());
-    bf_param->set_value(param.value());
+    RETURN_IF_ERROR(table_data->SetParam(param.param_id(), param.value()));
   }
 
   switch (type) {
     case ::p4::v1::Update::INSERT: {
       RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileMember(
           device_, session, bfrt_table_id, action_profile_member.member_id(),
-          action_profile_member.action().action_id(), action_data));
+          table_data.get()));
       break;
     }
     case ::p4::v1::Update::MODIFY: {
       RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileMember(
           device_, session, bfrt_table_id, action_profile_member.member_id(),
-          action_profile_member.action().action_id(), action_data));
+          table_data.get()));
       break;
     }
     case ::p4::v1::Update::DELETE: {
@@ -198,28 +207,37 @@ BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
       << "Reading all action profiles is not supported yet.";
 
   std::vector<int> member_ids;
-  std::vector<int> action_ids;
-  std::vector<BfActionData> action_datas;
+  std::vector<std::unique_ptr<BfSdeInterface::TableDataInterface>> table_datas;
   RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileMembers(
       device_, session, bfrt_table_id, action_profile_member.member_id(),
-      &member_ids, &action_ids, &action_datas));
+      &member_ids, &table_datas));
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < member_ids.size(); ++i) {
     const int member_id = member_ids[i];
-    const int action_id = action_ids[i];
-    const BfActionData& action_data = action_datas[i];
+    const std::unique_ptr<BfSdeInterface::TableDataInterface>& table_data =
+        table_datas[i];
 
     ::p4::v1::ActionProfileMember result;
     ASSIGN_OR_RETURN(auto action_profile_id,
                      bf_sde_interface_->GetP4InfoId(bfrt_table_id));
     result.set_action_profile_id(action_profile_id);
     result.set_member_id(member_id);
+
+    // Action id
+    int action_id;
+    RETURN_IF_ERROR(table_data->GetActionId(&action_id));
     result.mutable_action()->set_action_id(action_id);
-    for (const auto& bf_param : action_data.params()) {
+
+    // Action data
+    // TODO(max): perform check if action id is valid for this table.
+    ASSIGN_OR_RETURN(auto action, p4_info_manager_->FindActionByID(action_id));
+    for (const auto& expected_param : action.params()) {
+      std::string value;
+      RETURN_IF_ERROR(table_data->GetParam(expected_param.id(), &value));
       auto* param = result.mutable_action()->add_params();
-      param->set_param_id(bf_param.id());
-      param->set_value(bf_param.value());
+      param->set_param_id(expected_param.id());
+      param->set_value(value);
     }
 
     *resp.add_entities()->mutable_action_profile_member() = result;

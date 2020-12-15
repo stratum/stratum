@@ -31,7 +31,8 @@ class BfSdeInterface {
   };
 
   // SessionInterface allows starting sessions to batch requests.
-  // todo: check if an incomplete type could work
+  // todo: check if an incomplete type could work. answer: no, can't call
+  // member functions on incomplete types.
   class SessionInterface {
    public:
     virtual ~SessionInterface() {}
@@ -43,13 +44,89 @@ class BfSdeInterface {
     virtual ::util::Status EndBatch() = 0;
   };
 
+  // TableKeyInterface hides the BfRt table key.
+  // TODO(max): docs
+  class TableKeyInterface {
+   public:
+    virtual ~TableKeyInterface() {}
+    virtual ::util::Status SetExact(int id, const std::string& value) = 0;
+    virtual ::util::Status GetExact(int id, std::string* value) const = 0;
+    virtual ::util::Status SetTernary(int id, const std::string& value,
+                                      const std::string& mask) = 0;
+    virtual ::util::Status GetTernary(int id, std::string* value,
+                                      std::string* mask) const = 0;
+    virtual ::util::Status SetLpm(int id, const std::string& prefix,
+                                  uint16 prefix_length) = 0;
+    virtual ::util::Status GetLpm(int id, std::string* prefix,
+                                  uint16* prefix_length) const = 0;
+    virtual ::util::Status SetRange(int id, const std::string& low,
+                                    const std::string& high) = 0;
+    virtual ::util::Status GetRange(int id, std::string* low,
+                                    std::string* high) const = 0;
+    virtual ::util::Status SetPriority(uint32 priority) = 0;
+    virtual ::util::Status GetPriority(uint32* priority) const = 0;
+  };
+
+  class TableDataInterface {
+   public:
+    virtual ~TableDataInterface() {}
+    // Sets a table data action parameter.
+    virtual ::util::Status SetParam(int id, const std::string& value) = 0;
+
+    // Get a table data action parameter.
+    virtual ::util::Status GetParam(int id, std::string* value) const = 0;
+
+    // Sets the $ACTION_MEMBER_ID field.
+    virtual ::util::Status SetActionMemberId(uint64 action_member_id) = 0;
+
+    // Gets the $ACTION_MEMBER_ID field.
+    virtual ::util::Status GetActionMemberId(
+        uint64* action_member_id) const = 0;
+
+    // Sets the $SELECTOR_GROUP_ID field.
+    virtual ::util::Status SetSelectorGroupId(uint64 selector_group_id) = 0;
+
+    // Gets the $SELECTOR_GROUP_ID field.
+    virtual ::util::Status GetSelectorGroupId(
+        uint64* selector_group_id) const = 0;
+
+    // Convenience function to update the counter values in the table data.
+    // This hides the IDs for the $COUNTER_SPEC_BYTES fields.
+    virtual ::util::Status SetCounterData(uint64 bytes, uint64 packets) = 0;
+
+    // Like SetCounterData, but deactivates all other fields. Useful when
+    // modifying counter values without touching the action.
+    virtual ::util::Status SetOnlyCounterData(uint64 bytes, uint64 packets) = 0;
+
+    // Get the counter values.
+    virtual ::util::Status GetCounterData(uint64* bytes,
+                                          uint64* packets) const = 0;
+
+    // Get the action ID.
+    virtual ::util::Status GetActionId(int* action_id) const = 0;
+
+    // Resets all data fields.
+    virtual ::util::Status Reset(int action_id) = 0;
+  };
+
+
   virtual ~BfSdeInterface() {}
 
   virtual ::util::Status AddDevice(int device,
                                    const BfrtDeviceConfig& device_config) = 0;
 
+  // Creates a new SDE session.
   virtual ::util::StatusOr<std::shared_ptr<SessionInterface>>
   CreateSession() = 0;
+
+  // Allocates a new table key object.
+  virtual ::util::StatusOr<std::unique_ptr<TableKeyInterface>> CreateTableKey(
+      int table_id) = 0;
+
+  // Allocates a new table data object. Action id can be zero when not known or
+  // not applicable.
+  virtual ::util::StatusOr<std::unique_ptr<TableDataInterface>> CreateTableData(
+      int table_id, int action_id) = 0;
 
   virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
 
@@ -108,7 +185,7 @@ class BfSdeInterface {
   virtual ::util::StatusOr<uint32> CreateMulticastNode(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
-      const std::vector<uint32> ports) = 0;
+      const std::vector<uint32>& ports) = 0;
 
   // Returns the node IDs linked to the given multicast group ID.
   // TODO(max): rename to GetMulticastNodeIdsInMulticastGroup
@@ -181,26 +258,45 @@ class BfSdeInterface {
       absl::optional<uint64> packet_count) = 0;
 
   // Reads the data from an indirect counter. The counter ID must be a
-  // BfRt table ID, not P4Runtime.
+  // BfRt table ID, not P4Runtime. Timeout specifies the maximum time to wait
+  // for the counters to sync.
   // TODO(max): figure out optional counter data API, see TotW#163
   virtual ::util::Status ReadIndirectCounter(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
       absl::optional<uint64>* packet_count, absl::Duration timeout) = 0;
 
+  // Updates a register at the given index in a table. The table ID must be a
+  // BfRt table ID, not P4Runtime. Timeout specifies the maximum time to wait
+  // for the registers to sync.
+  // TODO(max): figure out optional register index API, see TotW#163
+  virtual ::util::Status WriteRegister(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> register_index,
+      const std::string& register_data) = 0;
+
+  // Reads the data from a register in a table, or all registers if index is 0.
+  // The table ID must be a BfRt table ID, not P4Runtime.
+  // TODO(max): figure out optional register index API, see TotW#163
+  virtual ::util::Status ReadRegisters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> register_index,
+      std::vector<uint32>* register_indices,
+      std::vector<uint64>* register_datas, absl::Duration timeout) = 0;
+
   // Inserts an action profile member. The table ID must be a BfRt table, not
   // P4Runtime.
   virtual ::util::Status InsertActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, int member_id, int action_id,
-      const BfActionData& action_data) = 0;
+      uint32 table_id, int member_id,
+      const TableDataInterface* table_data) = 0;
 
   // Modifies an existing action profile member. The table ID must be a BfRt
   // table, not P4Runtime.
   virtual ::util::Status ModifyActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, int member_id, int action_id,
-      const BfActionData& action_data) = 0;
+      uint32 table_id, int member_id,
+      const TableDataInterface* table_data) = 0;
 
   // Deletes an action profile member. The table ID must be a BfRt
   // table, not P4Runtime. Returns an error if the member does not exist.
@@ -213,8 +309,7 @@ class BfSdeInterface {
   virtual ::util::Status GetActionProfileMembers(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, int member_id, std::vector<int>* member_ids,
-      std::vector<int>* action_ids,
-      std::vector<BfActionData>* action_datas) = 0;
+      std::vector<std::unique_ptr<TableDataInterface>>* table_datas) = 0;
 
   // Inserts an action profile group. The table ID must be a BfRt table, not
   // P4Runtime.
@@ -246,6 +341,61 @@ class BfSdeInterface {
       std::vector<int>* max_group_sizes,
       std::vector<std::vector<uint32>>* member_ids,
       std::vector<std::vector<bool>>* member_status) = 0;
+
+  // Inserts a new table entry with the given key and data. Fails if the table
+  // entry already exists.
+  virtual ::util::Status InsertTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, const TableKeyInterface* table_key,
+      const TableDataInterface* table_data) = 0;
+
+  // Modifies an existing table entry with the given key and data. Fails if the
+  // table entry does not exists.
+  virtual ::util::Status ModifyTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, const TableKeyInterface* table_key,
+      const TableDataInterface* table_data) = 0;
+
+  // Delets an existing table entry with the given key and data. Fails if the
+  // table entry does not exists.
+  virtual ::util::Status DeleteTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, const TableKeyInterface* table_key) = 0;
+
+  // Fetches an existing table entry for the given key. Fails if the table entry
+  // does not exists.
+  virtual ::util::Status GetTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, const TableKeyInterface* table_key,
+      TableDataInterface* table_data) = 0;
+
+  // Fetches all table entries in the given table.
+  virtual ::util::Status GetAllTableEntries(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id,
+      std::vector<std::unique_ptr<TableKeyInterface>>* table_keys,
+      std::vector<std::unique_ptr<TableDataInterface>>* table_datas) = 0;
+
+  // Sets the default table entry (action) for a table.
+  virtual ::util::Status SetDefaultTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, const TableDataInterface* table_data) = 0;
+
+  // Resets the default table entry (action) of a table.
+  virtual ::util::Status ResetDefaultTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id) = 0;
+
+  // Gets the default table entry (action) of a table.
+  virtual ::util::Status GetDefaultTableEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, TableDataInterface* table_data) = 0;
+
+  // Synchronizes the driver cached counter values with the current hardware
+  // state for a given BfRt table.
+  virtual ::util::Status SynchronizeCounters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::Duration timeout) = 0;
 
   // Returns the equivalent BfRt ID for the given P4RT ID.
   virtual ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const = 0;
