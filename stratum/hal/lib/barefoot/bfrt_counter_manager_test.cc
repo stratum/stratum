@@ -40,41 +40,27 @@ class BfrtCounterManagerTest : public ::testing::Test {
 
 constexpr int BfrtCounterManagerTest::kDevice1;
 
-// FIXME: dummy test
 TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
-  constexpr int kGroupId = 55;
-  const std::vector<uint32> nodes = {1, 2, 3};
+  constexpr int kCounterId = 55;
+  constexpr int kBfRtCounterId = 66;
+  constexpr int kIndex = 100;
   auto session_mock = std::make_shared<SessionMock>();
 
-  EXPECT_CALL(*bf_sde_wrapper_mock_,
-              GetNodesInMulticastGroup(kDevice1, _, kGroupId))
-      .WillOnce(Return(nodes));
-  EXPECT_CALL(*bf_sde_wrapper_mock_,
-              DeleteMulticastGroup(kDevice1, _, kGroupId))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, DeleteMulticastNodes(kDevice1, _, nodes))
-      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kCounterId))
+      .WillOnce(Return(kBfRtCounterId));
 
-  // TODO(max): remove replicas, ignored on delete.
-  const std::string kMulticastGroupEntryText = R"PROTO(
-    multicast_group_entry {
-      multicast_group_id: 55
-      replicas {
-        egress_port: 1
-        instance: 0
-      }
-      replicas {
-        egress_port: 2
-        instance: 0
-      }
-      replicas {
-        egress_port: 3
-        instance: 0
-      }
+  const std::string kIndirectCounterEntryText = R"PROTO(
+    counter_id: 55
+    index {
+      index: 100
+    }
+    data {
+      byte_count: 100
+      packet_count: 200
     }
   )PROTO";
   ::p4::v1::CounterEntry entry;
-  ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
+  ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
 
   EXPECT_OK(bfrt_counter_manager_->WriteIndirectCounterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
