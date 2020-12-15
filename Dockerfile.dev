@@ -11,8 +11,7 @@ ARG GIT_GLOBAL_EDITOR=vim
 
 RUN useradd -ms /bin/bash -l -u $USER_ID $USER_NAME && \
     adduser $USER_NAME sudo && \
-    echo "%sudo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers && \
-    echo "source /usr/local/lib/bazel/bin/bazel-complete.bash" >> /home/$USER_NAME/.bashrc
+    echo "%sudo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers
 
 USER $USER_NAME
 

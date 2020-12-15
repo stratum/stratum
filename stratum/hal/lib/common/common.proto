@@ -36,11 +36,15 @@ enum Platform {
   PLT_GENERIC_TRIDENT2 = 2;
   PLT_GENERIC_TOMAHAWK = 3;
   PLT_GENERIC_TOMAHAWK_PLUS = 4;
+  PLT_GENERIC_TOMAHAWK2 = 5;
+  PLT_GENERIC_TOMAHAWK3 = 6;
   PLT_MLNX_SN2700 = 9;
   PLT_P4_SOFT_SWITCH = 10;
-  PLT_BAREFOOT_TOFINO = 11;
-  PLT_BAREFOOT_TOFINO2 = 12;
+  PLT_BAREFOOT_TOFINO = 11 [deprecated = true];
+  PLT_BAREFOOT_TOFINO2 = 12 [deprecated = true];
   PLT_NP4_INTEL_N3000 = 13;
+  PLT_GENERIC_BAREFOOT_TOFINO = 14;
+  PLT_GENERIC_BAREFOOT_TOFINO2 = 15;
   // TODO(unknown): Add all the BCM and MLNX based platforms.
 }
 
@@ -1133,6 +1137,12 @@ message Alarm {
   bool status = 4;          // required.
 }
 
+// Wrapper around the optional node info.
+message NodeInfo {
+  string vendor_name = 1;
+  string chip_name = 2;
+}
+
 // Wrapper around an optional debug info for a node/chip.
 message NodeDebugInfo {
   string debug_string = 1;
@@ -1163,6 +1173,16 @@ message HardwarePort {
 // Wrapper around the FEC mode.
 message FecStatus {
   FecMode mode = 1;
+}
+
+// Wrapper around the SDN port ID.
+// The target is expected to accept requests from the controller
+// using the ID assigned by the SDN management system. If the target
+// cannot accept requests using the provided ID, it can provide
+// an alterate ID that should be used by the controller to address
+// the interface.
+message SdnPortId {
+  uint32 port_id = 1;
 }
 
 // DataRequest is a message used internally to request data about a component
@@ -1214,6 +1234,8 @@ message DataRequest {
       Port fec_status = 18;
       OpticalNetworkInterface optical_transceiver_info = 19;
       Port loopback_status = 20;
+      Node node_info = 21;
+      Port sdn_port_id = 22;
     }
   }
   repeated Request requests = 1;
@@ -1245,6 +1267,8 @@ message DataResponse {
     FecStatus fec_status = 18;
     OpticalTransceiverInfo optical_transceiver_info = 19;
     LoopbackStatus loopback_status = 20;
+    NodeInfo node_info = 21;
+    SdnPortId sdn_port_id = 22;
   }
 }
 

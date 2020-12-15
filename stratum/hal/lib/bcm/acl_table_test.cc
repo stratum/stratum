@@ -20,12 +20,12 @@ namespace bcm {
 namespace {
 
 using test_utils::EqualsProto;
+using test_utils::IsOkAndHolds;
+using test_utils::StatusIs;
 using testing::_;
 using testing::HasSubstr;
 using testing::UnorderedElementsAre;
 using testing::UnorderedElementsAreArray;
-using stratum::test_utils::IsOkAndHolds;
-using stratum::test_utils::StatusIs;
 
 constexpr char kDefaultP4Table[] = R"PROTO(
   preamble { id: 1 name: "table_1" }

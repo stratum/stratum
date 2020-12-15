@@ -29,10 +29,9 @@ if [ -n "$CHASSIS_CONFIG" ]; then
 fi
 
 LOG_DIR=${LOG_DIR:-/var/log}
-SDE_VERSION=${SDE_VERSION:-9.0.0}
-KERNEL_VERSION=$(uname -r)
+SDE_VERSION=${SDE_VERSION:-9.3.0}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bf}
-DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION-$KERNEL_VERSION}
+DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION}
 
 docker run -it --rm --privileged \
     -v /dev:/dev -v /sys:/sys  \
@@ -41,6 +40,7 @@ docker run -it --rm --privileged \
     $ONLP_MOUNT \
     -p 28000:28000 \
     -p 9339:9339 \
+    -p 9559:9559 \
     $FLAG_FILE_MOUNT \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \

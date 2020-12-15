@@ -12,6 +12,23 @@ package(
 )
 
 stratum_cc_binary(
+    name = "bf_pipeline_builder",
+    srcs = [
+        "bf_pipeline_builder.cc",
+    ],
+    arches = HOST_ARCHES,
+    deps = [
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/barefoot:bf_cc_proto",
+        "//stratum/lib:utils",
+        "@com_github_nlohmann_json//:json",
+    ],
+)
+
+stratum_cc_binary(
     name = "stratum_bf",
     srcs = [
         "main.cc",
@@ -25,8 +42,7 @@ stratum_cc_binary(
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
-        "//stratum/hal/lib/barefoot:bf_pal_wrapper",
-        "//stratum/hal/lib/barefoot:bf_pd_wrapper",
+        "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/phal",
@@ -44,6 +60,7 @@ pkg_tar(
     name = "stratum_binaries",
     srcs = [
         "deb/start-stratum.sh",
+        ":bf_pipeline_builder",
         ":stratum_bf",
     ],
     mode = "0755",
@@ -74,6 +91,7 @@ pkg_tar(
     srcs = [
         "deb/stratum.flags",
         "deb/stratum_bf.env",
+        "//stratum/hal/lib/common:gnmi_caps.pb.txt",
     ],
     mode = "0644",
     package_dir = "/etc/stratum",
@@ -101,12 +119,8 @@ pkg_deb(
     architecture = "amd64",
     data = ":stratum_bf_data",
     depends = [
-        "systemd",
         "kmod",
-        "libssl1.1",
         "libedit2",
-        "libjudydebian1",
-        "libboost-thread1.62.0",
     ],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
@@ -114,5 +128,6 @@ pkg_deb(
     package = "stratum-bf",
     postinst = "deb/postinst",
     prerm = "deb/prerm",
+    recommends = ["systemd"],
     version = "0.0.1",
 )

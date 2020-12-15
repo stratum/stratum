@@ -14,6 +14,7 @@ bcm_chassis_maps {
     sdk_properties: "mmu_lossless=1"
     sdk_properties: "dport_map_direct=0"
     sdk_properties: "dport_map_enable=1"
+    sdk_properties: "oversubscribe_mode=1"
   }
   bcm_chips {
     type: TOMAHAWK

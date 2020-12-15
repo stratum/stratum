@@ -62,14 +62,14 @@ RUN ./bazel-out/host/bin/external/com_google_protobuf/protoc \
 RUN touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py \
+    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py
 
 # Install a version of the protobuf and grpc python bindings that is
 # compatible to that used to generate the P4Runtime ones.
-ARG PROTOBUF_VER=3.7.1
-ARG GRPC_VER=1.28.1
+ARG PROTOBUF_VER=3.13.0
+ARG GRPC_VER=1.30.0
 RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
 RUN pip install --root /output "grpcio<=${GRPC_VER}"
 

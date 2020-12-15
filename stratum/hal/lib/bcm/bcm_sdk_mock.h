@@ -23,6 +23,11 @@ class BcmSdkMock : public BcmSdkInterface {
                ::util::Status(const std::string& config_file_path,
                               const std::string& config_flush_file_path,
                               const std::string& bcm_shell_log_file_path));
+  MOCK_METHOD3(
+      GenerateBcmConfigFile,
+      ::util::StatusOr<std::string>(const BcmChassisMap& base_bcm_chassis_map,
+                                    const BcmChassisMap& target_bcm_chassis_map,
+                                    OperationMode mode));
   MOCK_METHOD4(FindUnit, ::util::Status(int unit, int pci_bus, int pci_slot,
                                         BcmChip::BcmChipType chip_type));
   MOCK_METHOD2(InitializeUnit, ::util::Status(int unit, bool warm_boot));

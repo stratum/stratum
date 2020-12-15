@@ -32,6 +32,12 @@ Supported gNMI paths
  - Get type: ALL, STATE
  - Set mode: Not valid
 
+`/interfaces/interface[name=*]/state/counters`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
+ - Get type: ALL, STATE
+ - Set mode: Not valid
+
 ### Alarms for chassis:
 
 

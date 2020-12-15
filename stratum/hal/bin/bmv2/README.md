@@ -7,66 +7,20 @@ SPDX-License-Identifier: Apache-2.0
 
 # Running Stratum with the P4.org bmv2 software switch
 
-## Dependencies
-
-> You can skip installing system dependencies, bmv2, and PI if you are
-> using the Docker environment (setup_dev_env.sh)
-
-### Install system dependencies
-```
-sudo apt-get install libjudy-dev libgmp-dev libpcap-dev libboost1.58-all-dev
-```
-
-### Create a local directory where you will install bmv2
-```
-mkdir bmv2_install
-export BMV2_INSTALL=`pwd`/bmv2_install
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BMV2_INSTALL/lib
-```
-*If you plan on adding interfaces to bmv2 (which can be done by providing the
-appropriate Chassis Config file when starting bmv2), you will need to run the
-binary as root and therefore you may want to install bmv2 in a standard system
-directory instead. For example you can set `BMV2_INSTALL` to /usr/local. In this
-case you do not need to modify `LD_LIBRARY_PATH` but you will need to run `sudo
-ldconfig` after the installation.*
-
-### Install PI
-```
-git clone https://github.com/p4lang/PI.git
-cd PI
-./autogen.sh
-./configure --without-bmv2 --without-proto --without-fe-cpp --without-cli --without-internal-rpc --prefix=$BMV2_INSTALL
-make [-j4]
-[sudo] make install
-[sudo ldconfig]
-```
-The *master* branch should work for this repo. Otherwise, you can use the
-commit we use for testing, which is specified in the `Dockerfile.build` file in
-the root of this repo (look for `ARG PI_COMMIT=...` at the top of the file).
-
-### Install bmv2
-```
-git clone https://github.com/p4lang/behavioral-model.git bmv2
-cd bmv2
-./autogen.sh
-./configure CPPFLAGS="-isystem$BMV2_INSTALL/include" --without-nanomsg --without-thrift --with-pi --prefix=$BMV2_INSTALL
-make [-j4]
-[sudo] make install
-[sudo ldconfig]
-```
-The *master* branch should work for this repo. Otherwise, you can use the
-commit we use for testing, which is specified in the `Dockerfile.build` file in
-the root of this repo (look for `ARG BMV2_COMMIT=...` at the top of the file).
-
-## Building the `stratum_bmv2` binary
+**Note:** Stratum bmv2 is also distributed with the Stratum-enabled
+Mininet Docker image. Refer to the [Mininet](/tools/mininet/README.md) README
+for further details.
 
 The `stratum_bmv2` binary is a standalone executable which includes:
 1. a Stratum implementation for bmv2
 2. the `v1model` datapath
 
-To build `stratum_bmv2`, make sure that the `BMV2_INSTALL` environment variable
-is set and points to your local bmv2 installation. Then build the Bazel target:
-```
+## Building the `stratum_bmv2` binary
+
+To build the binary, start the development docker container and run bazel:
+
+```bash
+setup_dev_env.sh  # You're inside the Docker container now
 bazel build //stratum/hal/bin/bmv2:stratum_bmv2
 ```
 
@@ -112,7 +66,7 @@ p4c -b bmv2 -a v1model -o /tmp/ --p4runtime-format text --p4runtime-file /tmp/<p
 # run P4Runtime client
 cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
 [sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
-    --grpc-addr <YOUR_HOST_IP_ADDRESS>:28000 --json <prog>.json --p4info <prog>.proto.txt
+    --grpc-addr <YOUR_HOST_IP_ADDRESS>:9559 --json <prog>.json --p4info <prog>.proto.txt
 ```
 
 You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2` if you do not have your own

@@ -11,14 +11,14 @@ package(
 
 cc_library(
     name = "bfsde",
-    srcs = [
-        "barefoot-bin/lib/libavago.a",
+    srcs = glob([
+        "barefoot-bin/lib/libavago.so*",
+        "barefoot-bin/lib/libbfsys.so*",
+        "barefoot-bin/lib/libbfutils.so*",
+        "barefoot-bin/lib/libdriver.so*",
+        "barefoot-bin/lib/libpython3.4m.so*",
         "barefoot-bin/lib/libbf_switchd_lib.a",
-        "barefoot-bin/lib/libbfsys.so",
-        "barefoot-bin/lib/libbfutils.a",
-        "barefoot-bin/lib/libdriver.so",
-        "barefoot-bin/lib/libpython3.4m.so",
-    ],
+    ]),
     hdrs = glob([
         "barefoot-bin/include/bf_switchd/*.h",
         "barefoot-bin/include/bfsys/**/*.h",
@@ -31,22 +31,30 @@ cc_library(
         "barefoot-bin/include/tofino/bf_pal/*.h",
         "barefoot-bin/include/tofino/pdfixed/*.h",
     ]),
-    includes = ["barefoot-bin/include"],
+    deps = [
+        # TODO(bocon): PI needed when linking libdriver.so if/when pi is
+        # enabled when building bf-drivers. This shouldn't hurt, but can
+        # be excluded if/when PI is removed from the SDE build options.
+        "@//stratum/hal/lib/pi:pi_bf",
+    ],
     linkopts = [
         "-lpthread",
         "-lm",
         "-ldl",
     ],
+    strip_include_prefix = "barefoot-bin/include",
 )
 
-pkg_tar(
+pkg_tar_with_symlinks(
     name = "bf_library_files",
-    srcs = [
-        "barefoot-bin/lib/libavago.so",
-        "barefoot-bin/lib/libbfsys.so",
-        "barefoot-bin/lib/libdriver.so",
-        "barefoot-bin/lib/libpython3.4m.so",
-    ],
+    srcs = glob([
+        "barefoot-bin/lib/libavago.so*",
+        "barefoot-bin/lib/libbfsys.so*",
+        "barefoot-bin/lib/libbfutils.so*",
+        "barefoot-bin/lib/libdriver.so*",
+        "barefoot-bin/lib/libdru_sim.so*",
+        "barefoot-bin/lib/libpython3.4m.so*",
+    ]),
     mode = "0644",
     package_dir = "/usr",
     strip_prefix = "barefoot-bin",
@@ -54,9 +62,9 @@ pkg_tar(
 
 pkg_tar_with_symlinks(
     name = "bf_shareable_files",
-    srcs = glob(["barefoot-bin/share/microp_fw/**"]) + glob([
+    srcs = glob([
+        "barefoot-bin/share/microp_fw/**",
         "barefoot-bin/share/bfsys/**",
-    ]) + glob([
         "barefoot-bin/share/tofino_sds_fw/**",
     ]),
     mode = "0644",
@@ -66,7 +74,7 @@ pkg_tar_with_symlinks(
 
 pkg_tar(
     name = "kernel_module",
-    srcs = glob(["barefoot-bin/lib/modules/*.ko"]),
+    srcs = glob(["barefoot-bin/lib/modules/**/*.ko"]),
     mode = "0644",
     package_dir = "/usr",
     strip_prefix = "barefoot-bin",

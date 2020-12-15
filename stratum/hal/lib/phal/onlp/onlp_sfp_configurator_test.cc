@@ -26,8 +26,8 @@ namespace phal {
 namespace onlp {
 namespace {
 
-using ::stratum::test_utils::StatusIs;
 using test_utils::EqualsProto;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::A;
 using ::testing::HasSubstr;

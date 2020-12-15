@@ -55,11 +55,16 @@ struct SdkTrunk {
   }
 };
 
-// Prints a BcmPort message in a consistent and readable format.
+// Prints a BcmPort message in a consistent and readable format. There are two
+// versions for this function, one taking port_id as well (if available).
 std::string PrintBcmPort(const BcmPort& p);
+std::string PrintBcmPort(uint64 port_id, const BcmPort& p);
 
 // Prints BcmPortOptions message in a consistent and readable format.
 std::string PrintBcmPortOptions(const BcmPortOptions& options);
+
+// Returns the BCM chip number for a given chip. E.g. BCM56960 for Tomahawk.
+std::string PrintBcmChipNumber(const BcmChip::BcmChipType& chip_type);
 
 }  // namespace bcm
 }  // namespace hal

@@ -3,15 +3,15 @@
 
 """Load dependencies needed for Stratum."""
 
-load("//bazel:workspace_rule.bzl", "remote_workspace")
+load(
+    "@bazel_tools//tools/build_defs/repo:git.bzl",
+    "git_repository",
+)
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl",
-     "git_repository",
-     "new_git_repository")
-load("@bazel_gazelle//:deps.bzl", "go_repository")
+load("//bazel:workspace_rule.bzl", "remote_workspace")
 
-P4RUNTIME_VER = "fb437abd13dc2a3177256149582cc85c0c39f956" # 1.2.0-dev
-P4RUNTIME_SHA = "2c01f5dff0c84efc3ef6bf33a9d18b3ddc07de4a86da55636b709abed79c36fc"
+P4RUNTIME_VER = "1.2.0"
+P4RUNTIME_SHA = "0fce7e06c63e60a8cddfe56f3db3d341953560c054d4c09ffda0e84476124f5a"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
@@ -20,29 +20,26 @@ TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
 TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
 BF_SDE_PI_VER = {
-    "8_9_2": "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
-    "9_0_0": "ca0291420b5b47fa2596a00877d1713aab61dc7a",
     "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
     "9_2_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_3_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
 }
 GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
 
 def stratum_deps():
-# -----------------------------------------------------------------------------
-#        Protobuf + gRPC compiler and external models
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #        Protobuf + gRPC compiler and external models
+    # -----------------------------------------------------------------------------
 
     if "com_github_grpc_grpc" not in native.existing_rules():
         http_archive(
             name = "com_github_grpc_grpc",
             urls = [
-                # TODO(bocon) switch back to grpc when grpc/grpc#22626 is merged
-                # gRPC version: 1.28.1 + grpc/grpc#22626 cherry-pick
-                "https://github.com/bocon13/grpc/archive/0e11d8fe7388e7147de57bfab1044ec72786ffca.tar.gz",
+                "https://github.com/grpc/grpc/archive/v1.30.0.tar.gz",
             ],
-            strip_prefix = "grpc-0e11d8fe7388e7147de57bfab1044ec72786ffca",
-            sha256 = "fb8af4ad2b7f291fbca7d458c0addd743c8769538248c0f32816250cd3e2d58d",
+            strip_prefix = "grpc-1.30.0",
+            sha256 = "419dba362eaf8f1d36849ceee17c3e2ff8ff12ac666b42d3ff02a164ebe090e9",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
@@ -68,16 +65,15 @@ def stratum_deps():
             build_file = "@com_github_p4lang_PI//bazel/external:judy.BUILD",
             url = "http://archive.ubuntu.com/ubuntu/pool/universe/j/judy/judy_1.0.5.orig.tar.gz",
             strip_prefix = "judy-1.0.5",
-            sha256 = "d2704089f85fdb6f2cd7e77be21170ced4b4375c03ef1ad4cf1075bd414a63eb"
+            sha256 = "d2704089f85fdb6f2cd7e77be21170ced4b4375c03ef1ad4cf1075bd414a63eb",
         )
 
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
         http_archive(
             name = "com_github_p4lang_p4runtime",
-            urls = ["https://github.com/p4lang/p4runtime/archive/%s.zip" % P4RUNTIME_VER],
-            sha256 = P4RUNTIME_SHA,
+            urls = ["https://github.com/p4lang/p4runtime/archive/v%s.zip" % P4RUNTIME_VER],
             strip_prefix = "p4runtime-%s/proto" % P4RUNTIME_VER,
-            build_file = "@//bazel:external/p4runtime.BUILD",
+            sha256 = P4RUNTIME_SHA,
         )
 
     if "build_stack_rules_proto" not in native.existing_rules():
@@ -99,12 +95,12 @@ def stratum_deps():
         dep_name = "com_github_p4lang_PI_bf_" + sde_ver
         pi_commit = BF_SDE_PI_VER[sde_ver]
         if dep_name not in native.existing_rules():
-                # ----- PI for Barefoot targets -----
-                remote_workspace(
-                    name = dep_name,
-                    remote = "https://github.com/p4lang/PI.git",
-                    commit = pi_commit,
-                )
+            # ----- PI for Barefoot targets -----
+            remote_workspace(
+                name = dep_name,
+                remote = "https://github.com/p4lang/PI.git",
+                commit = pi_commit,
+            )
 
     if "com_github_p4lang_PI_np4" not in native.existing_rules():
         # ----- PI for Netcope targets -----
@@ -131,7 +127,7 @@ def stratum_deps():
             build_file = "@//bazel:external/gnoi.BUILD",
             sha256 = GNOI_SHA,
             patch_cmds = [
-                "find . -name *.proto | xargs sed -i 's#github.com/openconfig/##g'",
+                "find . -name *.proto | xargs sed -i'' -e 's#github.com/openconfig/##g'",
                 "mkdir -p gnoi",
                 "mv bgp cert common diag file interface layer2 mpls otdr system test types wavelength_router gnoi/",
             ],
@@ -178,6 +174,14 @@ def stratum_deps():
             build_file = "@//bazel:external/yang.BUILD",
         )
 
+    if "com_github_nlohmann_json" not in native.existing_rules():
+        http_archive(
+            name = "com_github_nlohmann_json",
+            url = "https://github.com/nlohmann/json/releases/download/v3.7.3/include.zip",
+            sha256 = "87b5884741427220d3a33df1363ae0e8b898099fbc59f1c451113f6732891014",
+            build_file = "@//bazel:external/json.BUILD",
+        )
+
     # -----------------------------------------------------------------------------
     #        TAI library
     # -----------------------------------------------------------------------------
@@ -190,14 +194,14 @@ def stratum_deps():
             build_file = "@//bazel:external/taish_proto.BUILD",
         )
 
-# -----------------------------------------------------------------------------
-#        Third party C++ libraries for common
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #        Third party C++ libraries for common
+    # -----------------------------------------------------------------------------
     if "com_google_absl" not in native.existing_rules():
         remote_workspace(
             name = "com_google_absl",
             remote = "https://github.com/abseil/abseil-cpp",
-            branch = "lts_2020_02_25",
+            branch = "lts_2020_09_23",
         )
 
     if "com_googlesource_code_cctz" not in native.existing_rules():
@@ -212,7 +216,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_google_glog",
             remote = "https://github.com/google/glog",
-            commit = "ba8a9f6952d04d1403b97df24e6836227751454e",
+            commit = "5b4fb63d277795eea3400e3e6af542f3b765f2d2",
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
@@ -259,9 +263,9 @@ def stratum_deps():
             commit = "de8253fcb075c049c4ad1c466c504bf3cf022f45",
         )
 
-# -----------------------------------------------------------------------------
-#      Golang specific libraries.
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #      Golang specific libraries.
+    # -----------------------------------------------------------------------------
     if "bazel_latex" not in native.existing_rules():
         http_archive(
             name = "bazel_latex",
@@ -269,9 +273,10 @@ def stratum_deps():
             strip_prefix = "bazel-latex-0.17",
             url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
         )
-# -----------------------------------------------------------------------------
-#        Chipset and Platform specific C/C++ libraries
-# -----------------------------------------------------------------------------
+
+    # -----------------------------------------------------------------------------
+    #        Chipset and Platform specific C/C++ libraries
+    # -----------------------------------------------------------------------------
     if "com_github_opennetworkinglab_sdklt" not in native.existing_rules():
         http_archive(
             name = "com_github_opennetworkinglab_sdklt",
@@ -280,9 +285,24 @@ def stratum_deps():
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
-# -----------------------------------------------------------------------------
-#        P4 testing modules
-# -----------------------------------------------------------------------------
+    if "com_github_broadcom_opennsa" not in native.existing_rules():
+        http_archive(
+            name = "com_github_broadcom_opennsa",
+            sha256 = "261a440454015122fbf9ac4cccf018b1c358a641d80690be1f1e972b6265d45c",
+            urls = ["https://docs.broadcom.com/docs-and-downloads/csg/opennsa-6.5.19.1.tgz"],
+            strip_prefix = "opennsa-6.5.19.1",
+            build_file = "@//bazel:external/openNSA.BUILD",
+            # TODO(max): This is kind of hacky and should be improved.
+            # Each string is a new bash shell, use && to run dependant commands.
+            patch_cmds = [
+                "wget -qO- https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.0.1/linux-4.14.49-OpenNetworkLinux.tar.xz | tar xz",
+                "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=$(realpath ./linux-4.14.49-OpenNetworkLinux) && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
+            ],
+        )
+
+    # -----------------------------------------------------------------------------
+    #        P4 testing modules
+    # -----------------------------------------------------------------------------
 
     if "com_github_opennetworkinglab_fabric_p4test" not in native.existing_rules():
         remote_workspace(
@@ -291,9 +311,9 @@ def stratum_deps():
             commit = "ac2b0bf26c4fb91d883492cb85394304cde392c6",
         )
 
-# -----------------------------------------------------------------------------
-#        Packaging tools
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #        Packaging tools
+    # -----------------------------------------------------------------------------
     if "rules_pkg" not in native.existing_rules():
         http_archive(
             name = "rules_pkg",

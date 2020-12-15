@@ -2,8 +2,19 @@
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-KDRV_PATH=${KDRV_PATH:-/usr/lib/modules/bf_kdrv.ko}
 FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
+
+# Find kernel module if KDRV_PATH is not set
+if [ -z "$KDRV_PATH" ]; then
+    # First, look for kernel-specific module
+    KERNEL_VERSION=$(uname -r)
+    if [ -f "/usr/lib/modules/${KERNEL_VERSION}/bf_kdrv.ko" ]; then
+        KDRV_PATH="/usr/lib/modules/${KERNEL_VERSION}/bf_kdrv.ko"
+    # Next, look for general module
+    elif [ -f "/usr/lib/modules/bf_kdrv.ko" ]; then
+        KDRV_PATH="/usr/lib/modules/bf_kdrv.ko"
+    fi
+fi
 
 # Try to load the platform string if not already set.
 if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
@@ -68,7 +79,10 @@ else
     echo "Cannot find $KDRV_PATH, skip installing the Kernel module."
 fi
 
+mkdir -p /var/run/stratum /var/log/stratum
+
 exec /usr/bin/stratum_bf \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
+    -log_dir=/var/log/stratum \
     -flagfile=$FLAG_FILE \
     $@

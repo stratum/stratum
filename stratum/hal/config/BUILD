@@ -11,7 +11,7 @@ load(
 load(":platform_config_test.bzl", "platform_config_test")
 load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = STRATUM_INTERNAL)
 
 licenses(["notice"])  # Apache v2
 
@@ -26,9 +26,14 @@ platform_config_test("x86-64-inventec-d6254qs-r0", bcm_target=True)
 platform_config_test("x86-64-quanta-ix1-rangeley-r0", bcm_target=True)
 
 platform_config_test("x86-64-accton-wedge100bf-32x-r0")
+platform_config_test("x86-64-accton-wedge100bf-32qs-r0")
 platform_config_test("x86-64-accton-wedge100bf-65x-r0")
 platform_config_test("x86-64-delta-ag9064v1-r0")
 platform_config_test("x86-64-inventec-d5254-r0")
+platform_config_test("x86-64-inventec-d5264q28b-r0")
+platform_config_test("x86-64-netberg-aurora-610-r0")
+platform_config_test("x86-64-netberg-aurora-710-r0")
+platform_config_test("x86-64-netberg-aurora-750-r0")
 platform_config_test("x86-64-stordis-bf2556x-1t-r0")
 platform_config_test("x86-64-stordis-bf6064x-t-r0")
 

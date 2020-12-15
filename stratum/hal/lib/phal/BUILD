@@ -28,20 +28,6 @@ package(
 # different parts of the attribute database.
 
 config_setting(
-    name = "with_onlp",
-    define_values = {
-        "phal_with_onlp": "true",
-    },
-)
-
-config_setting(
-    name = "without_onlp",
-    define_values = {
-        "phal_with_onlp": "false",
-    },
-)
-
-config_setting(
     name = "with_tai",
     define_values = {
         "phal_with_tai": "true",
@@ -54,10 +40,6 @@ config_setting(
         "phal_with_tai": "false",
     },
 )
-
-onlp_defines = [
-    "WITH_ONLP",
-]
 
 onlp_deps = [
     "//stratum/hal/lib/phal/onlp:onlp_phal",
@@ -74,20 +56,14 @@ tai_deps = [
 # Default Phal selection (the absence of both with_* and without_*) is done by
 # filling the //conditions:default" or leaving it empty.
 phal_defines = select({
-    ":with_onlp": onlp_defines,
-    ":without_onlp": [],
-    "//conditions:default": onlp_defines,
-}) + select({
     ":with_tai": tai_defines,
     ":without_tai": [],
     "//conditions:default": [],
 })
 
-phal_deps = select({
-    ":with_onlp": onlp_deps,
-    ":without_onlp": [],
-    "//conditions:default": onlp_deps,
-}) + select({
+phal_deps = [
+    "//stratum/hal/lib/phal/onlp:onlp_phal",
+] + select({
     ":with_tai": tai_deps,
     ":without_tai": [],
     "//conditions:default": [],

@@ -4,6 +4,8 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
+#include <dlfcn.h>
+
 #include <string>
 
 #include "absl/memory/memory.h"
@@ -12,6 +14,8 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
+
+DEFINE_string(onlp_library_file, "libonlp.so", "Path to the ONLP library.");
 
 namespace stratum {
 namespace hal {
@@ -27,12 +31,9 @@ constexpr int kOnlpBitmapWordCount = 8;
 OidInfo::OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
                  HwState state) {
   oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
-  oid_info_.status = (state == HW_STATE_PRESENT ?
-      ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
-}
-
-bool OidInfo::Present() const {
-  return ONLP_OID_PRESENT(&oid_info_);
+  oid_info_.status =
+      (state == HW_STATE_PRESENT ? ONLP_OID_STATUS_FLAG_PRESENT
+                                 : ONLP_OID_STATUS_FLAG_UNPLUGGED);
 }
 
 HwState OidInfo::GetHardwareState() const {
@@ -52,32 +53,92 @@ HwState OidInfo::GetHardwareState() const {
   return HW_STATE_NOT_PRESENT;
 }
 
+OnlpWrapper::OnlpWrapper() {}
+
+OnlpWrapper::~OnlpWrapper() {
+  if (onlp_lib_handle_) {
+    LOG(INFO) << "Deinitializing ONLP.";
+    if (ONLP_FAILURE(onlp_functions_.onlp_sw_denit())) {
+      LOG(ERROR) << "Failed to deinitialize ONLP.";
+    }
+    if (dlclose(onlp_lib_handle_)) {
+      LOG(ERROR) << "Failed to close ONLP library: " << dlerror();
+    }
+  }
+}
+
 OnlpWrapper* OnlpWrapper::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {
     singleton_ = new OnlpWrapper();
+    ::util::Status status = singleton_->Initialize();
+    if (!status.ok()) {
+      LOG(ERROR) << "OnlpWrapper::Init() failed: " << status;
+      delete singleton_;
+      singleton_ = nullptr;
+    }
   }
 
   return singleton_;
 }
 
-OnlpWrapper::OnlpWrapper() {
-  LOG(INFO) << "Initializing ONLP.";
-  if (ONLP_FAILURE(onlp_sw_init(nullptr))) {
-    LOG(FATAL) << "Failed to initialize ONLP.";
-  }
-}
+namespace {
+template <typename T>
+::util::StatusOr<T> LoadSymbol(void* handle, const char* name) {
+  dlerror();  // Clear last error.
+  auto* symbol = reinterpret_cast<T>(dlsym(handle, name));
+  char* dl_err = dlerror();
+  CHECK_RETURN_IF_FALSE(dl_err == nullptr)
+      << "Failed to load symbol " << name << ": " << dl_err;
 
-OnlpWrapper::~OnlpWrapper() {
-  LOG(INFO) << "Deinitializing ONLP.";
-  if (ONLP_FAILURE(onlp_sw_denit())) {
-    LOG(ERROR) << "Failed to deinitialize ONLP.";
-  }
+  return symbol;
+}
+}  // namespace
+
+::util::Status OnlpWrapper::Initialize() {
+  LOG(INFO) << "Initializing ONLP.";
+
+  onlp_lib_handle_ = dlopen(FLAGS_onlp_library_file.c_str(), RTLD_NOW);
+  CHECK_RETURN_IF_FALSE(onlp_lib_handle_ != nullptr)
+      << "Failed to open shared library: " << dlerror();
+
+// Local macro to load a symbol and store it into its function pointer.
+#define LOAD_SYMBOL(symbol)   \
+  ASSIGN_OR_RETURN(           \
+      onlp_functions_.symbol, \
+      LoadSymbol<decltype(onlp_functions_.symbol)>(onlp_lib_handle_, #symbol))
+
+  LOAD_SYMBOL(onlp_sw_init);
+  LOAD_SYMBOL(onlp_sw_denit);
+  LOAD_SYMBOL(onlp_oid_hdr_get_all);
+  LOAD_SYMBOL(onlp_oid_get_all_free);
+  LOAD_SYMBOL(onlp_oid_hdr_get);
+  LOAD_SYMBOL(onlp_sfp_info_get);
+  LOAD_SYMBOL(onlp_sfp_is_present);
+  LOAD_SYMBOL(onlp_sfp_bitmap_t_init);
+  LOAD_SYMBOL(onlp_sfp_bitmap_get);
+  LOAD_SYMBOL(onlp_sfp_presence_bitmap_get);
+  LOAD_SYMBOL(onlp_fan_info_get);
+  LOAD_SYMBOL(onlp_fan_percentage_set);
+  LOAD_SYMBOL(onlp_fan_rpm_set);
+  LOAD_SYMBOL(onlp_fan_dir_set);
+  LOAD_SYMBOL(onlp_thermal_info_get);
+  LOAD_SYMBOL(onlp_led_info_get);
+  LOAD_SYMBOL(onlp_led_mode_set);
+  LOAD_SYMBOL(onlp_led_char_set);
+  LOAD_SYMBOL(onlp_psu_info_get);
+#undef LOAD_SYMBOL
+
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
+      << "Failed to initialize ONLP.";
+
+  return ::util::OkStatus();
 }
 
 ::util::StatusOr<OidInfo> OnlpWrapper::GetOidInfo(OnlpOid oid) const {
   onlp_oid_hdr_t oid_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_oid_hdr_get(oid, &oid_info)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_oid_hdr_get(oid, &oid_info)))
       << "Failed to get info for OID " << oid << ".";
   return OidInfo(oid_info);
 }
@@ -87,9 +148,10 @@ OnlpWrapper::~OnlpWrapper() {
       << "Cannot get SFP info: OID " << oid << " is not an SFP.";
   // Default value of the SFP info
   onlp_sfp_info_t sfp_info = {{oid}};
-  if (onlp_sfp_is_present(oid)) {
-    CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
-          << "Failed to get SFP info for OID " << oid << ".";
+  if (onlp_functions_.onlp_sfp_is_present(oid)) {
+    CHECK_RETURN_IF_FALSE(
+        ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
+        << "Failed to get SFP info for OID " << oid << ".";
   }
   return SfpInfo(sfp_info);
 }
@@ -98,7 +160,8 @@ OnlpWrapper::~OnlpWrapper() {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
   onlp_fan_info_t fan_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_info_get(oid, &fan_info)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_fan_info_get(oid, &fan_info)))
       << "Failed to get FAN info for OID " << oid << ".";
   return FanInfo(fan_info);
 }
@@ -107,40 +170,40 @@ OnlpWrapper::~OnlpWrapper() {
   return &fan_info_;
 }
 
-::util::Status OnlpWrapper::
-  SetFanPercent(OnlpOid oid, int value) const {
+::util::Status OnlpWrapper::SetFanPercent(OnlpOid oid, int value) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_percentage_set(oid, value)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_fan_percentage_set(oid, value)))
       << "Failed to set FAN percentage for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
-::util::Status OnlpWrapper::
-  SetFanRpm(OnlpOid oid, int val) const {
+::util::Status OnlpWrapper::SetFanRpm(OnlpOid oid, int val) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_rpm_set(oid, val)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_fan_rpm_set(oid, val)))
       << "Failed to set FAN rpm for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
-::util::Status OnlpWrapper::
-  SetFanDir(OnlpOid oid, FanDir dir) const {
+::util::Status OnlpWrapper::SetFanDir(OnlpOid oid, FanDir dir) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot set FAN info: OID " << oid << " is not an FAN.";
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_fan_dir_set(oid, static_cast<onlp_fan_dir_t>(dir))))
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(
+      onlp_functions_.onlp_fan_dir_set(oid, static_cast<onlp_fan_dir_t>(dir))))
       << "Failed to set FAN direction for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<ThermalInfo> OnlpWrapper::GetThermalInfo(OnlpOid oid) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_THERMAL(oid))
-        << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
+      << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
   onlp_thermal_info_t thermal_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_thermal_info_get(oid, &thermal_info)))
-        << "Failed to get THERMAL info for OID " << oid << ".";
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_thermal_info_get(oid, &thermal_info)))
+      << "Failed to get THERMAL info for OID " << oid << ".";
   return ThermalInfo(thermal_info);
 }
 
@@ -148,40 +211,41 @@ OnlpWrapper::~OnlpWrapper() {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
       << "Cannot get LED info: OID " << oid << " is not an LED.";
   onlp_led_info_t led_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_led_info_get(oid, &led_info)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_led_info_get(oid, &led_info)))
       << "Failed to get LED info for OID " << oid << ".";
   return LedInfo(led_info);
 }
 
-::util::Status OnlpWrapper::
-  SetLedMode(OnlpOid oid, LedMode mode) const {
+::util::Status OnlpWrapper::SetLedMode(OnlpOid oid, LedMode mode) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
       << "Cannot set LED info: OID " << oid << " is not an LED.";
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_led_mode_set(oid, static_cast<onlp_led_mode_t>(mode))))
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_led_mode_set(
+      oid, static_cast<onlp_led_mode_t>(mode))))
       << "Failed to set LED mode for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
-::util::Status OnlpWrapper::
-  SetLedCharacter(OnlpOid oid, char val) const {
+::util::Status OnlpWrapper::SetLedCharacter(OnlpOid oid, char val) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
       << "Cannot get LED info: OID " << oid << " is not an LED.";
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_led_char_set(oid, val)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_led_char_set(oid, val)))
       << "Failed to set LED character for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<bool> OnlpWrapper::GetSfpPresent(OnlpOid port) const {
-  return onlp_sfp_is_present(port);
+  return onlp_functions_.onlp_sfp_is_present(port);
 }
 
 ::util::StatusOr<OnlpPresentBitmap> OnlpWrapper::GetSfpPresenceBitmap() const {
   OnlpPresentBitmap bitset;
   SfpBitmap presence;
-  onlp_sfp_bitmap_t_init(&presence);
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
-           << "Failed to get presence bitmap ONLP.";
+  onlp_functions_.onlp_sfp_bitmap_t_init(&presence);
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_sfp_presence_bitmap_get(&presence)))
+      << "Failed to get presence bitmap ONLP.";
   int k = 0;
   for (int i = 0; i < kOnlpBitmapWordCount; i++) {
     for (int j = 0; j < kOnlpBitmapBitsPerWord; j++) {
@@ -200,7 +264,8 @@ OnlpWrapper::~OnlpWrapper() {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_PSU(oid))
       << "Cannot get PSU info: OID " << oid << " is not an PSU.";
   onlp_psu_info_t psu_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_psu_info_get(oid, &psu_info)))
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_psu_info_get(oid, &psu_info)))
       << "Failed to get PSU info for OID " << oid << ".";
   return PsuInfo(psu_info);
 }
@@ -215,8 +280,8 @@ OnlpWrapper::~OnlpWrapper() {
   biglist_t* oid_hdr_list = nullptr;
 
   OnlpOid root_oid = ONLP_CHASSIS_ID_CREATE(1);
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list)));
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(
+      onlp_functions_.onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list)));
 
   // Iterate though the returned list and add the OIDs to oid_list
   biglist_t* curr_node = oid_hdr_list;
@@ -226,15 +291,16 @@ OnlpWrapper::~OnlpWrapper() {
     oid_list.emplace_back(oid_hdr->id);
     curr_node = curr_node->next;
   }
-  onlp_oid_get_all_free(oid_hdr_list);
+  onlp_functions_.onlp_oid_get_all_free(oid_hdr_list);
 
   return oid_list;
 }
 
 ::util::StatusOr<OnlpPortNumber> OnlpWrapper::GetSfpMaxPortNumber() const {
   SfpBitmap bitmap;
-  onlp_sfp_bitmap_t_init(&bitmap);
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_bitmap_get(&bitmap)))
+  onlp_functions_.onlp_sfp_bitmap_t_init(&bitmap);
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_functions_.onlp_sfp_bitmap_get(&bitmap)))
       << "Failed to get valid SFP port bitmap from ONLP.";
 
   OnlpPortNumber port_num = ONLP_MAX_FRONT_PORT_NUM;
@@ -279,31 +345,31 @@ MediaType SfpInfo::GetMediaType() const {
 
 SfpType SfpInfo::GetSfpType() const {
   switch (sfp_info_.sff.sfp_type) {
-  case SFF_SFP_TYPE_SFP28:
-    return SFP_TYPE_SFP28;
-  case SFF_SFP_TYPE_SFP:
-    return SFP_TYPE_SFP;
-  case SFF_SFP_TYPE_QSFP:
-    return SFP_TYPE_QSFP;
-  case SFF_SFP_TYPE_QSFP_PLUS:
-    return SFP_TYPE_QSFP_PLUS;
-  case SFF_SFP_TYPE_QSFP28:
-    return SFP_TYPE_QSFP28;
-  default:
-    return SFP_TYPE_UNKNOWN;
+    case SFF_SFP_TYPE_SFP28:
+      return SFP_TYPE_SFP28;
+    case SFF_SFP_TYPE_SFP:
+      return SFP_TYPE_SFP;
+    case SFF_SFP_TYPE_QSFP:
+      return SFP_TYPE_QSFP;
+    case SFF_SFP_TYPE_QSFP_PLUS:
+      return SFP_TYPE_QSFP_PLUS;
+    case SFF_SFP_TYPE_QSFP28:
+      return SFP_TYPE_QSFP28;
+    default:
+      return SFP_TYPE_UNKNOWN;
   }
 }
 
-SfpModuleType SfpInfo::GetSfpModuleType()const {
+SfpModuleType SfpInfo::GetSfpModuleType() const {
   switch (sfp_info_.sff.module_type) {
-  case SFF_MODULE_TYPE_100G_BASE_CR4:
-    return SFP_MODULE_TYPE_100G_BASE_CR4;
-  case SFF_MODULE_TYPE_10G_BASE_CR:
-    return SFP_MODULE_TYPE_10G_BASE_CR;
-  case SFF_MODULE_TYPE_1G_BASE_SX:
-    return SFP_MODULE_TYPE_1G_BASE_SX;
-  default:
-    return SFP_MODULE_TYPE_UNKNOWN;
+    case SFF_MODULE_TYPE_100G_BASE_CR4:
+      return SFP_MODULE_TYPE_100G_BASE_CR4;
+    case SFF_MODULE_TYPE_10G_BASE_CR:
+      return SFP_MODULE_TYPE_10G_BASE_CR;
+    case SFF_MODULE_TYPE_1G_BASE_SX:
+      return SFP_MODULE_TYPE_1G_BASE_SX;
+    default:
+      return SFP_MODULE_TYPE_UNKNOWN;
   }
 }
 
@@ -344,12 +410,12 @@ void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {
 
 FanDir FanInfo::GetFanDir() const {
   switch (fan_info_.dir) {
-  case ONLP_FAN_DIR_B2F:
-    return FAN_DIR_B2F;
-  case ONLP_FAN_DIR_F2B:
-    return FAN_DIR_F2B;
-  default:
-    return FAN_DIR_UNKNOWN;
+    case ONLP_FAN_DIR_B2F:
+      return FAN_DIR_B2F;
+    case ONLP_FAN_DIR_F2B:
+      return FAN_DIR_F2B;
+    default:
+      return FAN_DIR_UNKNOWN;
   }
 }
 
@@ -365,14 +431,14 @@ void FanInfo::GetCaps(FanCaps* caps) const {
 
 PsuType PsuInfo::GetPsuType() const {
   switch (psu_info_.type) {
-  case ONLP_PSU_TYPE_AC:
-    return PSU_TYPE_AC;
-  case ONLP_PSU_TYPE_DC12:
-    return PSU_TYPE_DC12;
-  case ONLP_PSU_TYPE_DC48:
-    return PSU_TYPE_DC48;
-  default:
-    return PSU_TYPE_UNKNOWN;
+    case ONLP_PSU_TYPE_AC:
+      return PSU_TYPE_AC;
+    case ONLP_PSU_TYPE_DC12:
+      return PSU_TYPE_DC12;
+    case ONLP_PSU_TYPE_DC48:
+      return PSU_TYPE_DC48;
+    default:
+      return PSU_TYPE_UNKNOWN;
   }
 }
 
@@ -387,9 +453,7 @@ void PsuInfo::GetCaps(PsuCaps* caps) const {
   caps->set_get_pout(psu_info_.caps & ONLP_PSU_CAPS_GET_POUT);
 }
 
-int ThermalInfo::GetThermalCurTemp() const {
-  return thermal_info_.mcelsius;
-}
+int ThermalInfo::GetThermalCurTemp() const { return thermal_info_.mcelsius; }
 
 int ThermalInfo::GetThermalWarnTemp() const {
   return thermal_info_.thresholds.warning;
@@ -405,56 +469,54 @@ int ThermalInfo::GetThermalShutDownTemp() const {
 
 void ThermalInfo::GetCaps(ThermalCaps* caps) const {
   // set all relevant capabilities flags
-  caps->set_get_temperature(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_TEMPERATURE);
-  caps->set_get_warning_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
-  caps->set_get_error_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_ERROR_THRESHOLD);
-  caps->set_get_shutdown_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD);
+  caps->set_get_temperature(thermal_info_.caps &
+                            ONLP_THERMAL_CAPS_GET_TEMPERATURE);
+  caps->set_get_warning_threshold(thermal_info_.caps &
+                                  ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
+  caps->set_get_error_threshold(thermal_info_.caps &
+                                ONLP_THERMAL_CAPS_GET_ERROR_THRESHOLD);
+  caps->set_get_shutdown_threshold(thermal_info_.caps &
+                                   ONLP_THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD);
 }
 
-char LedInfo::GetLedChar() const {
-  return led_info_.character;
-}
+char LedInfo::GetLedChar() const { return led_info_.character; }
 
 LedMode LedInfo::GetLedMode() const {
   switch (led_info_.mode) {
-  case ONLP_LED_MODE_OFF:
-    return LED_MODE_OFF;
-  case ONLP_LED_MODE_AUTO:
-    return LED_MODE_AUTO;
-  case ONLP_LED_MODE_AUTO_BLINKING:
-    return LED_MODE_AUTO_BLINKING;
-  case ONLP_LED_MODE_CHAR:
-    return LED_MODE_CHAR;
-  case ONLP_LED_MODE_RED:
-    return LED_MODE_RED;
-  case ONLP_LED_MODE_RED_BLINKING:
-    return LED_MODE_RED_BLINKING;
-  case ONLP_LED_MODE_ORANGE:
-    return LED_MODE_ORANGE;
-  case ONLP_LED_MODE_ORANGE_BLINKING:
-    return LED_MODE_ORANGE_BLINKING;
-  case ONLP_LED_MODE_YELLOW:
-    return LED_MODE_YELLOW;
-  case ONLP_LED_MODE_YELLOW_BLINKING:
-    return LED_MODE_YELLOW_BLINKING;
-  case ONLP_LED_MODE_GREEN:
-    return LED_MODE_GREEN;
-  case ONLP_LED_MODE_GREEN_BLINKING:
-    return LED_MODE_GREEN_BLINKING;
-  case ONLP_LED_MODE_BLUE:
-    return LED_MODE_BLUE;
-  case ONLP_LED_MODE_BLUE_BLINKING:
-    return LED_MODE_BLUE_BLINKING;
-  case ONLP_LED_MODE_PURPLE:
-    return LED_MODE_PURPLE;
-  case ONLP_LED_MODE_PURPLE_BLINKING:
-    return LED_MODE_PURPLE_BLINKING;
-  default:
-    return LED_MODE_UNKNOWN;
+    case ONLP_LED_MODE_OFF:
+      return LED_MODE_OFF;
+    case ONLP_LED_MODE_AUTO:
+      return LED_MODE_AUTO;
+    case ONLP_LED_MODE_AUTO_BLINKING:
+      return LED_MODE_AUTO_BLINKING;
+    case ONLP_LED_MODE_CHAR:
+      return LED_MODE_CHAR;
+    case ONLP_LED_MODE_RED:
+      return LED_MODE_RED;
+    case ONLP_LED_MODE_RED_BLINKING:
+      return LED_MODE_RED_BLINKING;
+    case ONLP_LED_MODE_ORANGE:
+      return LED_MODE_ORANGE;
+    case ONLP_LED_MODE_ORANGE_BLINKING:
+      return LED_MODE_ORANGE_BLINKING;
+    case ONLP_LED_MODE_YELLOW:
+      return LED_MODE_YELLOW;
+    case ONLP_LED_MODE_YELLOW_BLINKING:
+      return LED_MODE_YELLOW_BLINKING;
+    case ONLP_LED_MODE_GREEN:
+      return LED_MODE_GREEN;
+    case ONLP_LED_MODE_GREEN_BLINKING:
+      return LED_MODE_GREEN_BLINKING;
+    case ONLP_LED_MODE_BLUE:
+      return LED_MODE_BLUE;
+    case ONLP_LED_MODE_BLUE_BLINKING:
+      return LED_MODE_BLUE_BLINKING;
+    case ONLP_LED_MODE_PURPLE:
+      return LED_MODE_PURPLE;
+    case ONLP_LED_MODE_PURPLE_BLINKING:
+      return LED_MODE_PURPLE_BLINKING;
+    default:
+      return LED_MODE_UNKNOWN;
   }
 }
 

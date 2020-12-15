@@ -19,6 +19,7 @@ limitations under the License.
 #define STRATUM_GLUE_GTL_STL_UTIL_H_
 
 #include <stddef.h>
+
 #include <algorithm>
 #include <iterator>
 #include <memory>

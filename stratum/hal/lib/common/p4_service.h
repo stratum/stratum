@@ -134,8 +134,8 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
       ::p4::v1::GetForwardingPipelineConfigResponse* resp) override
       LOCKS_EXCLUDED(config_lock_);
 
-  // Bidirectional channel between controller and the switch for packet I/O and
-  // master arbitration.
+  // Bidirectional channel between controller and the switch for packet I/O,
+  // master arbitration and stream errors.
   ::grpc::Status StreamChannel(
       ::grpc::ServerContext* context,
       ServerStreamChannelReaderWriter* stream) override;

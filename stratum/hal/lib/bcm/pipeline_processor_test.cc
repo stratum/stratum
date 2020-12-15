@@ -21,13 +21,13 @@ namespace bcm {
 namespace {
 
 using test_utils::EqualsProto;
+using test_utils::StatusIs;
 using test_utils::p4_proto_builders::ApplyTable;
 using test_utils::p4_proto_builders::HitBuilder;
 using test_utils::p4_proto_builders::IsValidBuilder;
 using test_utils::p4_proto_builders::Table;
 using ::testing::HasSubstr;
 using ::testing::UnorderedElementsAre;
-using ::stratum::test_utils::StatusIs;
 
 // This case tests that an empty control pipeline produces an empty pipeline.
 TEST(PipelineProcessorTest, EmptyPipeline) {

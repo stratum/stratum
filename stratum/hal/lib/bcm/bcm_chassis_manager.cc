@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <pthread.h>
@@ -11,12 +10,14 @@
 #include <set>
 #include <sstream>  // IWYU pragma: keep
 
-#include "gflags/gflags.h"
-#include "google/protobuf/message.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "google/protobuf/message.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -26,9 +27,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
-#include "yaml-cpp/yaml.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");
@@ -58,6 +56,8 @@ constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsInXPipeline;
 constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkPlusMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk2MaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk3MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
@@ -94,9 +94,11 @@ BcmChassisManager::BcmChassisManager(OperationMode mode,
       node_id_to_port_id_to_loopback_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
+      gnmi_event_writer_(nullptr),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
-      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)) {}
+      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)),
+      unit_to_bcm_node_() {}
 
 // Default constructor is called by the mock class only.
 BcmChassisManager::BcmChassisManager()
@@ -276,7 +278,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
     const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED).without_logging()
-        << "Not initialized!";
+           << "Not initialized!";
   }
 
   return node_id_to_unit_;
@@ -408,9 +410,9 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   // We can't use CHECK_RETURN_IF_FALSE here, because we want without_logging()
   if (membership_info == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM).without_logging()
-      << "Port " << port_id
-      << " is not known or does not belong to any trunk on node " << node_id
-      << ".";
+           << "Port " << port_id
+           << " is not known or does not belong to any trunk on node "
+           << node_id << ".";
   }
 
   return membership_info->parent_trunk_id;
@@ -582,7 +584,13 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       supported_chip_types.insert(BcmChip::TOMAHAWK);
       break;
     case PLT_GENERIC_TOMAHAWK_PLUS:
-        supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      break;
+    case PLT_GENERIC_TOMAHAWK2:
+      supported_chip_types.insert(BcmChip::TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      supported_chip_types.insert(BcmChip::TOMAHAWK3);
       break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
@@ -914,7 +922,10 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
       {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
       {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip},
-      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip}};
+      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK2, kTomahawk2MaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK3, kTomahawk3MaxBcmPortsPerChip},
+  };
   for (const auto& e : unit_to_chip_type) {
     CHECK_RETURN_IF_FALSE(unit_to_bcm_port_keys[e.first].size() <=
                           chip_type_to_max_num_ports[e.second])
@@ -1037,11 +1048,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         << "not match.";
   }
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
-    CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
-                          base_bcm_chassis_map.bcm_chips().end(),
-                          [&bcm_chip](const ::google::protobuf::Message& x) {
-                                        return ProtoEqual(x, bcm_chip);
-                                      }))
+    CHECK_RETURN_IF_FALSE(
+        std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
+                    base_bcm_chassis_map.bcm_chips().end(),
+                    [&bcm_chip](const ::google::protobuf::Message& x) {
+                      return ProtoEqual(x, bcm_chip);
+                    }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
@@ -1054,11 +1066,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       // The base comes with no logical_port assigned.
       p.clear_logical_port();
     }
-    CHECK_RETURN_IF_FALSE(std::any_of(
-        base_bcm_chassis_map.bcm_ports().begin(),
-        base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) {
-          return ProtoEqual(x, p); }))
+    CHECK_RETURN_IF_FALSE(
+        std::any_of(base_bcm_chassis_map.bcm_ports().begin(),
+                    base_bcm_chassis_map.bcm_ports().end(),
+                    [&p](const ::google::protobuf::Message& x) {
+                      return ProtoEqual(x, p);
+                    }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
     ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),
@@ -1346,8 +1359,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
               new_loopback_state;
         }
-        APPEND_STATUS_IF_ERROR(
-            error, LoopbackPort(sdk_port, new_loopback_state));
+        APPEND_STATUS_IF_ERROR(error,
+                               LoopbackPort(sdk_port, new_loopback_state));
       }
     }
   }
@@ -1376,7 +1389,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
   // TODO(unknown): Update the LED of all the ports.
 
-  return ::util::OkStatus();
+  return error;
 }
 
 ::util::Status BcmChassisManager::RegisterEventWriters() {
@@ -1464,7 +1477,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     linkscan_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!linkscan_event_channel_ || !linkscan_event_channel_->Close()) {
-      APPEND_ERROR(status) << "Linkscan event Channel is already closed.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Linkscan event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     linkscan_event_channel_.reset();
   }
@@ -1475,7 +1490,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     xcvr_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
-      APPEND_ERROR(status) << "Transceiver event Channel is already closed.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Transceiver event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     xcvr_event_channel_.reset();
   }
@@ -1516,7 +1533,15 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   // Then continue with port options.
   for (auto& e : xcvr_port_key_to_xcvr_state_) {
     if (e.second != HW_STATE_READY) {
+      // Set the speed for non-flex ports.
+      // TODO(max): This check is not perfect since it always excludes flex
+      // ports, ideally we would set the speed of non-flex ports above.
       BcmPortOptions options;
+      const auto bcm_ports =
+          gtl::FindOrNull(port_group_key_to_non_flex_bcm_ports_, e.first);
+      if (bcm_ports != nullptr && !bcm_ports->empty()) {
+        options.set_speed_bps(bcm_ports->at(0)->speed_bps());
+      }
       options.set_enabled(e.second == HW_STATE_PRESENT ? TRI_STATE_TRUE
                                                        : TRI_STATE_FALSE);
       options.set_blocked(e.second != HW_STATE_PRESENT ? TRI_STATE_TRUE
@@ -1719,184 +1744,10 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
-  std::stringstream buffer;
-  const size_t max_num_units = base_bcm_chassis_map.bcm_chips_size();
-
-  // PC_PM Table
-  YAML::Emitter pc_pm;
-  pc_pm << YAML::BeginDoc;
-  pc_pm << YAML::BeginMap;
-  pc_pm << YAML::Key << "device";
-  pc_pm << YAML::Value << YAML::BeginMap;
-  for (size_t unit = 0; unit < max_num_units; ++unit) {
-    pc_pm << YAML::Key << unit;
-    pc_pm << YAML::Value << YAML::BeginMap;
-    pc_pm << YAML::Key << "PC_PM";
-    pc_pm << YAML::Value << YAML::BeginMap;
-    for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-      if (bcm_port.unit() != unit) {
-        continue;
-      }
-      // Key is a map (PC_PM_ID: serdes_core)
-      pc_pm << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
-            << YAML::Value << bcm_port.serdes_core() << YAML::EndMap;
-
-      pc_pm << YAML::Value << YAML::BeginMap;
-
-      pc_pm << YAML::Key << "PM_OPMODE" << YAML::Value << YAML::Flow
-            << YAML::BeginSeq << "PC_PM_OPMODE_DEFAULT" << YAML::EndSeq;
-
-      // TODO(max): SPEED_MAX has to be set to the highest supported value, else
-      // speed changes are not possible at runtime. We set it to 100G for now.
-      pc_pm << YAML::Key << "SPEED_MAX" << YAML::Value << YAML::Flow
-            << YAML::BeginSeq << 100000 << 0 << 0 << 0 << YAML::EndSeq;
-
-      pc_pm << YAML::Key << "LANE_MAP" << YAML::Value << YAML::Flow
-            << YAML::BeginSeq << YAML::Hex << 0xf << 0 << 0 << 0 << YAML::Dec
-            << YAML::EndSeq;
-
-      pc_pm << YAML::EndMap;  // PC_PM_ID
-    }
-    pc_pm << YAML::EndMap;  // PC_PM
-    pc_pm << YAML::EndMap;  // <unit>
-  }
-  pc_pm << YAML::EndMap;  // device
-  pc_pm << YAML::EndDoc;
-  buffer << pc_pm.c_str() << "\n";
-
-  // PC_PM_CORE
-  YAML::Emitter pc_pm_core;
-  pc_pm_core << YAML::BeginDoc;
-  pc_pm_core << YAML::BeginMap;
-  pc_pm_core << YAML::Key << "device";
-  pc_pm_core << YAML::Value << YAML::BeginMap;
-  for (size_t unit = 0; unit < max_num_units; ++unit) {
-    pc_pm_core << YAML::Key << unit;
-    pc_pm_core << YAML::Value << YAML::BeginMap;
-    pc_pm_core << YAML::Key << "PC_PM_CORE";
-    pc_pm_core << YAML::Value << YAML::BeginMap;
-    for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-      if (bcm_port.unit() != unit) {
-        continue;
-      }
-      if (bcm_port.tx_lane_map() || bcm_port.rx_lane_map() ||
-          bcm_port.tx_polarity_flip() || bcm_port.rx_polarity_flip()) {
-        // Key is a map (PC_PM_ID: serdes_core, CORE_INDEX: unit)
-        pc_pm_core << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
-                   << YAML::Value << bcm_port.serdes_core() << YAML::Key
-                   << "CORE_INDEX" << YAML::Value << bcm_port.unit()
-                   << YAML::EndMap;
-
-        pc_pm_core << YAML::Value << YAML::BeginMap;
-
-        if (bcm_port.tx_lane_map()) {
-          pc_pm_core << YAML::Key << "TX_LANE_MAP" << YAML::Value
-                     << bcm_port.tx_lane_map();
-        }
-
-        if (bcm_port.rx_lane_map()) {
-          pc_pm_core << YAML::Key << "RX_LANE_MAP" << YAML::Value
-                     << bcm_port.rx_lane_map();
-        }
-
-        if (bcm_port.tx_polarity_flip()) {
-          pc_pm_core << YAML::Key << "TX_POLARITY_FLIP" << YAML::Value
-                     << bcm_port.tx_polarity_flip();
-        }
-
-        if (bcm_port.tx_polarity_flip()) {
-          pc_pm_core << YAML::Key << "RX_POLARITY_FLIP" << YAML::Value
-                     << bcm_port.rx_polarity_flip();
-        }
-
-        pc_pm_core << YAML::EndMap;
-      }
-    }
-    pc_pm_core << YAML::EndMap;  // PC_PM_CORE
-    pc_pm_core << YAML::EndMap;  // <unit>
-  }
-  pc_pm_core << YAML::EndMap;  // device
-  pc_pm_core << YAML::EndDoc;
-  buffer << pc_pm_core.c_str() << "\n";
-
-  // TODO(Yi): PC_PM_TX_LANE_PROFILE from serdes db.
-  //  Note: PC_PM_LANE depends on PC_PM_TX_LANE_PROFILE
-  //  YAML::Emitter pc_pm_lane;
-  //  pc_pm_lane << YAML::BeginDoc;
-  //  pc_pm_lane << YAML::BeginMap;
-  //  pc_pm_lane << YAML::Key << "device";
-  //  pc_pm_lane << YAML::Value << YAML::BeginMap;
-  //  pc_pm_lane << YAML::Key << "0";
-  //  pc_pm_lane << YAML::Value << YAML::BeginMap;
-  //  pc_pm_lane << YAML::Key << "PC_PM_LANE";
-  //  pc_pm_lane << YAML::Value << YAML::BeginMap;
-  //
-  //  for (auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-  //    int pc_pm_id = bcm_port.serdes_core();
-  //
-  //    for (int lane_id = 0; lane_id < bcm_port.num_serdes_lanes(); lane_id++)
-  //    {
-  //
-  //      // Key is a map (PC_PM_ID: xx, CORE_INDEX: unit, CORE_LANE: xx)
-  //      pc_pm_lane << YAML::Key << YAML::BeginMap
-  //                 << YAML::Key << "PC_PM_ID" << YAML::Value << pc_pm_id
-  //                 << YAML::Key << "CORE_INDEX"
-  //                 << YAML::Value << bcm_port.unit()
-  //                 << YAML::Key << "CORE_LANE" << YAML::Value << lane_id
-  //                 << YAML::EndMap;
-  //
-  //      // TODO(Yi): Support multiple op mode and profile
-  //      pc_pm_lane << YAML::Value << YAML::BeginMap;
-  //      pc_pm_lane << YAML::Key << "PORT_OPMODE";
-  //      pc_pm_lane << YAML::Value << YAML::Flow
-  //                 << YAML::BeginSeq << "PC_PORT_OPMODE_ANY" << YAML::EndSeq;
-  //      pc_pm_lane << YAML::Key << "PC_PM_TX_LANE_PROFILE_ID";
-  //      pc_pm_lane << YAML::Value << YAML::Flow
-  //                 << YAML::BeginSeq << tx_lane_profile_id << YAML::EndSeq;
-  //      pc_pm_lane << YAML::EndMap;  // PORT_OPMODE
-  //    }
-  //  }
-  //  pc_pm_lane << YAML::EndMap;  // PC_PM_LANE
-  //  pc_pm_lane << YAML::EndMap;  // 0
-  //  pc_pm_lane << YAML::EndMap;  // device
-  //  pc_pm_lane << YAML::EndDoc;
-  //  buffer << pc_pm_lane.c_str() << "\n";
-
-  // PC_PORT
-  YAML::Emitter pc_port;
-  pc_port << YAML::BeginDoc;
-  pc_port << YAML::BeginMap;
-  pc_port << YAML::Key << "device";
-  pc_port << YAML::Value << YAML::BeginMap;
-  for (size_t unit = 0; unit < max_num_units; ++unit) {
-    pc_port << YAML::Key << unit;
-    pc_port << YAML::Value << YAML::BeginMap;
-    pc_port << YAML::Key << "PC_PORT";
-    pc_port << YAML::Value << YAML::BeginMap;
-
-    for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-      if (bcm_port.unit() != unit) {
-        continue;
-      }
-      // Key is a map (PORT_ID: logical_port)
-      pc_port << YAML::Key << YAML::BeginMap << YAML::Key << "PORT_ID"
-              << YAML::Value << bcm_port.logical_port() << YAML::EndMap;
-      pc_port << YAML::Value << YAML::BeginMap << YAML::Key << "PC_PHYS_PORT_ID"
-              << YAML::Value << bcm_port.physical_port() << YAML::Key
-              << "ENABLE" << YAML::Value << 1 << YAML::Key << "OPMODE"
-              << YAML::Value
-              << absl::StrCat("PC_PORT_OPMODE_",
-                              bcm_port.speed_bps() / kBitsPerGigabit, "G")
-              << YAML::EndMap;  // PORT_ID
-    }
-    pc_port << YAML::EndMap;  // PC_PORT
-    pc_port << YAML::EndMap;  // <unit>
-  }
-  pc_port << YAML::EndMap;  // device
-  pc_port << YAML::EndDoc;
-  buffer << pc_port.c_str() << "\n";
-
-  return WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file);
+  ASSIGN_OR_RETURN(auto config,
+                   bcm_sdk_interface_->GenerateBcmConfigFile(
+                       base_bcm_chassis_map, target_bcm_chassis_map, mode_));
+  return WriteStringToFile(config, FLAGS_bcm_sdk_config_file);
 }
 
 void* BcmChassisManager::LinkscanEventHandlerThreadFunc(void* arg) {
@@ -2356,7 +2207,7 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
   BcmPortOptions options;
   options.set_enabled(enable ? TRI_STATE_TRUE : TRI_STATE_FALSE);
   RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
-        sdk_port.unit, sdk_port.logical_port, options));
+      sdk_port.unit, sdk_port.logical_port, options));
 
   return ::util::OkStatus();
 }
