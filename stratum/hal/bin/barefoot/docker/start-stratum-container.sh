@@ -7,7 +7,6 @@ LOG_DIR=${LOG_DIR:-/var/log}
 SDE_VERSION=${SDE_VERSION:-9.3.0}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bf}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION}
-STRATUM_ARGS=
 
 # Try to load the platform string if not already set.
 if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
@@ -39,8 +38,6 @@ if [ -d "/etc/onl" ]; then
     ONLP_MOUNT="$ONLP_MOUNT \
               -v /lib/platform-config:/lib/platform-config \
               -v /etc/onl:/etc/onl"
-else
-    STRATUM_ARGS="-enable_onlp=false"
 fi
 
 # Mount user configuration.
@@ -63,5 +60,4 @@ docker run -it --rm --privileged \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
-    $STRATUM_ARGS \
     $@
