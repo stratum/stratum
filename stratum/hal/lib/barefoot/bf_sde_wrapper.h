@@ -168,6 +168,7 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::StatusOr<int> GetPcieCpuPort(int device) override;
   ::util::Status SetTmCpuPort(int device, int port) override;
   ::util::StatusOr<bool> IsSoftwareModel(int device) override;
+  std::string GetBfChipType(int dev_id) const override;
   ::util::Status TxPacket(int device, const std::string& packet) override;
   ::util::Status StartPacketIo(int device) override;
   ::util::Status StopPacketIo(int device) override;

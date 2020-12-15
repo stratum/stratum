@@ -37,6 +37,67 @@ class BfrtTableManagerTest : public ::testing::Test {
         OPERATION_MODE_STANDALONE, bf_sde_wrapper_mock_.get(), kDevice1);
   }
 
+  ::util::Status PushTestConfig() {
+    const std::string kSamplePipelineText = R"PROTO(
+      programs {
+        name: "test pipeline config",
+        p4info {
+          pkg_info {
+            arch: "tna"
+          }
+          tables {
+            preamble {
+              id: 33583783
+              name: "Ingress.control.table1"
+            }
+            match_fields {
+              id: 1
+              name: "field1"
+              bitwidth: 9
+              match_type: EXACT
+            }
+            match_fields {
+              id: 2
+              name: "field2"
+              bitwidth: 12
+              match_type: TERNARY
+            }
+            action_refs {
+              id: 16794911
+            }
+            const_default_action_id: 16836487
+            direct_resource_ids: 318814845
+            size: 1024
+          }
+          actions {
+            preamble {
+              id: 16794911
+              name: "Ingress.control.action1"
+            }
+            params {
+              id: 1
+              name: "vlan_id"
+              bitwidth: 12
+            }
+          }
+          direct_counters {
+            preamble {
+              id: 318814845
+              name: "Ingress.control.counter1"
+            }
+            spec {
+              unit: BOTH
+            }
+            direct_table_id: 33583783
+          }
+        }
+      }
+    )PROTO";
+    BfrtDeviceConfig config;
+    RETURN_IF_ERROR(ParseProtoFromString(kSamplePipelineText, &config));
+    return bfrt_table_manager_->PushForwardingPipelineConfig(config);
+  }
+
   static constexpr int kDevice1 = 0;
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
@@ -46,7 +107,8 @@ class BfrtTableManagerTest : public ::testing::Test {
 constexpr int BfrtTableManagerTest::kDevice1;
 
 TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
-  constexpr int kP4TableId = 10;
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
   constexpr int kBfRtTableId = 20;
   constexpr int kBfrtPriority = 16777205;  // Inverted
   auto table_key_mock = absl::make_unique<TableKeyMock>();
@@ -75,14 +137,14 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
 
   const std::string kDirectCounterEntryText = R"PROTO(
     table_entry {
-      table_id: 10
+      table_id: 33583783
       match {
         field_id: 1
         exact { value: "\000\001" }
       }
       match {
         field_id: 2
-        exact { value: "\000" }
+        ternary { value: "\x000" mask: "\xfff" }
       }
       priority: 10
     }
@@ -91,6 +153,7 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
       packet_count: 100
     }
   )PROTO";
+
   ::p4::v1::DirectCounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kDirectCounterEntryText, &entry));
 

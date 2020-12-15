@@ -222,7 +222,8 @@ BfrtSwitch::~BfrtSwitch() {}
         } else {
           auto* node_info = resp.mutable_node_info();
           node_info->set_vendor_name("Barefoot");
-          node_info->set_chip_name(GetBfChipType(device_id.ValueOrDie()));
+          node_info->set_chip_name(
+              bf_sde_interface_->GetBfChipType(device_id.ValueOrDie()));
         }
         break;
       }

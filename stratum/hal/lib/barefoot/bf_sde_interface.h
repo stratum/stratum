@@ -171,6 +171,9 @@ class BfSdeInterface {
   // Check whether we are running on the software model.
   virtual ::util::StatusOr<bool> IsSoftwareModel(int device) = 0;
 
+  // Return the chip type as a string.
+  virtual std::string GetBfChipType(int dev_id) const = 0;
+
   virtual ::util::Status TxPacket(int device, const std::string& packet) = 0;
 
   virtual ::util::Status StartPacketIo(int device) = 0;
