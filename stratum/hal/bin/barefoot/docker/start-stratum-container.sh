@@ -11,6 +11,17 @@ elif [[ -z "$PLATFORM" ]]; then
     exit 255
 fi
 
+if [[ "$PLATFORM" == 'barefoot-tofino-model' ]]; then
+    CONTAINER_NETWORK_MOUNT="--network host"
+#    container_ids=$(docker ps | grep stratumproject/tofino-model | cut -d" " -f1)
+#    if [[ ${#container_ids[@]} -eq 1 ]]; then
+#      CONTAINER_NETWORK_MOUNT="--network container:${container_ids[0]}"
+#    else
+#      echo "Failed to find the tofino-model container. Ensure that only one copy is running."
+#      exit 255
+#    fi
+fi
+
 # Mount ONL related directories, if they exist.
 if [ -d "/etc/onl" ]; then
     # Use ONLP to find platform and its library
@@ -37,6 +48,7 @@ docker run -it --rm --privileged \
     -v /dev:/dev -v /sys:/sys  \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     --env PLATFORM=$PLATFORM \
+    $CONTAINER_NETWORK_MOUNT \
     $ONLP_MOUNT \
     -p 28000:28000 \
     -p 9339:9339 \
