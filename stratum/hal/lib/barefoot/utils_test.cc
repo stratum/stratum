@@ -108,19 +108,31 @@ TEST(IsDontCareMatchTest, ClassifyRangeMatch) {
   }
   {
     ::p4::v1::FieldMatch::Range m;
-    m.set_low("\x00", 1);
-    m.set_high("\xff\xff", 2);
-    EXPECT_TRUE(IsDontCareMatch(m, 16)) << m.DebugString();
+    m.set_low("", 0);
+    m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
+    EXPECT_FALSE(IsDontCareMatch(m, 80)) << m.DebugString();
   }
   {
     ::p4::v1::FieldMatch::Range m;
     m.set_low("\x00", 1);
-    m.set_high("\x0f\xff", 2);
-    EXPECT_FALSE(IsDontCareMatch(m, 16)) << m.DebugString();
+    m.set_high("", 0);
+    EXPECT_FALSE(IsDontCareMatch(m, 80)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("", 0);
+    m.set_high("", 0);
+    EXPECT_FALSE(IsDontCareMatch(m, 80)) << m.DebugString();
   }
   {
     ::p4::v1::FieldMatch::Range m;
     m.set_low("\x00", 1);
+    m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
+    EXPECT_TRUE(IsDontCareMatch(m, 80)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 10);
     m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
     EXPECT_TRUE(IsDontCareMatch(m, 80)) << m.DebugString();
   }

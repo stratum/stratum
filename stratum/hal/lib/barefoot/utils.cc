@@ -5,6 +5,7 @@
 
 #include <utility>
 
+#include "absl/strings/strip.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
@@ -28,7 +29,14 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
 // [minimum, maximum] value range.
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
                      int field_width) {
-  return range.low() == RangeDefaultLow(field_width) &&
+  // Ignore leading zero bytes.
+  absl::string_view normalized_low(range.low());
+  while (normalized_low.size() > 1 &&
+         absl::StartsWith(normalized_low, "\x00")) {
+    normalized_low.remove_prefix(1);
+  }
+
+  return normalized_low == RangeDefaultLow(field_width) &&
          range.high() == RangeDefaultHigh(field_width);
 }
 
@@ -37,7 +45,7 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional) {
 }
 
 std::string RangeDefaultLow(size_t bitwidth) {
-  return std::string((bitwidth + 7) / 8, '\x00');
+  return std::string("\x00", 1);
 }
 
 std::string RangeDefaultHigh(size_t bitwidth) {
