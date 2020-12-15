@@ -5,6 +5,9 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BF_SDE_WRAPPER_H_
 
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -28,7 +31,7 @@ namespace barefoot {
 
 class TableKey : public BfSdeInterface::TableKeyInterface {
  public:
-  TableKey(std::unique_ptr<bfrt::BfRtTableKey> table_key)
+  explicit TableKey(std::unique_ptr<bfrt::BfRtTableKey> table_key)
       : table_key_(std::move(table_key)) {}
 
   // TableKeyInterface public methods.
@@ -62,7 +65,7 @@ class TableKey : public BfSdeInterface::TableKeyInterface {
 
 class TableData : public BfSdeInterface::TableDataInterface {
  public:
-  TableData(std::unique_ptr<bfrt::BfRtTableData> table_data)
+  explicit TableData(std::unique_ptr<bfrt::BfRtTableData> table_data)
       : table_data_(std::move(table_data)) {}
 
   // TableDataInterface public methods.
@@ -128,7 +131,7 @@ class BfSdeWrapper : public BfSdeInterface {
    private:
     // Private constructor. Use CreateSession() instead.
     Session() {}
-    Session(std::shared_ptr<bfrt::BfRtSession> bfrt_session)
+    explicit Session(std::shared_ptr<bfrt::BfRtSession> bfrt_session)
         : bfrt_session_(bfrt_session) {}
   };
 

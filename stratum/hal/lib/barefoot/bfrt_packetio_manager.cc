@@ -273,7 +273,7 @@ class BitBuffer {
   return ::util::OkStatus();
 }
 
-// TODO: drop Sde in name?
+// TODO(max): drop Sde in name?
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {

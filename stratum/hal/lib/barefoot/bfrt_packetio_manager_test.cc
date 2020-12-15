@@ -202,7 +202,8 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
   EXPECT_OK(Shutdown());
 }
 
-TEST_F(BfrtPacketioManagerTest, PushUnknownControllerPacketMetadataConfigAndShutdown) {
+TEST_F(BfrtPacketioManagerTest,
+       PushUnknownControllerPacketMetadataConfigAndShutdown) {
   // The unknown
   const char p4info_with_known[] = R"PROTO(
     controller_packet_metadata {
