@@ -44,9 +44,7 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional) {
   return false;
 }
 
-std::string RangeDefaultLow(size_t bitwidth) {
-  return std::string("\x00", 1);
-}
+std::string RangeDefaultLow(size_t bitwidth) { return std::string("\x00", 1); }
 
 std::string RangeDefaultHigh(size_t bitwidth) {
   const size_t nbytes = (bitwidth + 7) / 8;
