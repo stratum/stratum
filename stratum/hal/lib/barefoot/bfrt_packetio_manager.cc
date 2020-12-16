@@ -96,7 +96,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     packetout_header_size_ = 0;
     if (!packet_receive_channel_ || !packet_receive_channel_->Close()) {
       ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
-                             << "Transceiver event Channel is already closed.";
+                             << "Packet Rx channel is already closed.";
       APPEND_STATUS_IF_ERROR(status, error);
     }
     packet_receive_channel_.reset();
@@ -294,7 +294,6 @@ class BitBuffer {
     ::p4::v1::PacketIn packet_in;
     RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
     {
-      LOG(WARNING) << "Getting rx_writer_lock_ " << &rx_writer_lock_;
       absl::WriterMutexLock l(&rx_writer_lock_);
       rx_writer_->Write(packet_in);
     }
