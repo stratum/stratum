@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
-#include "bf_rt/bf_rt_init.hpp"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"

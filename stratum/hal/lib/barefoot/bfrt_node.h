@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "absl/synchronization/mutex.h"
-#include "bf_rt/bf_rt_init.hpp"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
@@ -19,12 +18,8 @@
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
-#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-
-#define _PI_UPDATE_MAX_NAME_SIZE 100
-#define _PI_UPDATE_MAX_TMP_FILENAME_SIZE (_PI_UPDATE_MAX_NAME_SIZE + 32)
 
 namespace stratum {
 namespace hal {
