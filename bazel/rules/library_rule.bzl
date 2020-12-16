@@ -5,6 +5,7 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 load(
     "//bazel:defs.bzl",
     "STRATUM_DEFAULT_COPTS",
+    "STRATUM_DEFAULT_LINKOPTS",
 )
 
 def stratum_cc_library(
@@ -48,5 +49,5 @@ def stratum_cc_library(
         testonly = testonly,
         textual_hdrs = textual_hdrs,
         visibility = visibility,
-        linkopts = linkopts,
+        linkopts = STRATUM_DEFAULT_LINKOPTS + linkopts,
     )

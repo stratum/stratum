@@ -5,6 +5,7 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 load(
     "//bazel:defs.bzl",
     "STRATUM_DEFAULT_COPTS",
+    "STRATUM_DEFAULT_LINKOPTS",
 )
 
 def stratum_cc_binary(
@@ -32,7 +33,7 @@ def stratum_cc_binary(
         copts = STRATUM_DEFAULT_COPTS + copts,
         defines = defines,
         includes = includes,
-        linkopts = linkopts,
+        linkopts = STRATUM_DEFAULT_LINKOPTS + linkopts,
         testonly = testonly,
         visibility = visibility,
     )
