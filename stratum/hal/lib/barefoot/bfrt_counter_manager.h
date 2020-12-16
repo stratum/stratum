@@ -15,7 +15,7 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
-// #include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 
 namespace stratum {
 namespace hal {
