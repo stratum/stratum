@@ -3,9 +3,9 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 
-#include <vector>
-#include <utility>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 
