@@ -59,7 +59,6 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
     ],
 )
 
