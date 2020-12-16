@@ -37,7 +37,8 @@ extern "C" {
 extern bool stat_mgr_enable_detail_trace;
 }
 
-DECLARE_string(bfrt_sde_config_dir);
+DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
+              "The dir used by the SDE to load the device configuration.");
 
 namespace stratum {
 namespace hal {
@@ -45,7 +46,6 @@ namespace barefoot {
 
 constexpr absl::Duration BfSdeWrapper::kWriteTimeout;
 constexpr int32 BfSdeWrapper::kBfDefaultMtu;
-// TODO(max): move into SdeWrapper?
 constexpr int _PI_UPDATE_MAX_NAME_SIZE = 100;
 
 // Helper functions for dealing with the SDE API.

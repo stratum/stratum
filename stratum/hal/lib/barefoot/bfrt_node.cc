@@ -19,9 +19,6 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
-DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
-              "The dir used by the SDE to load the device configuration.");
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
