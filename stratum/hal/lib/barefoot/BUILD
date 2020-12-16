@@ -241,7 +241,6 @@ stratum_cc_library(
         ":bfrt_packetio_manager",
         ":bfrt_pre_manager",
         ":bfrt_table_manager",
-        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
@@ -253,7 +252,6 @@ stratum_cc_library(
         "//stratum/public/proto:error_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bfsde",
     ],
 )
 
