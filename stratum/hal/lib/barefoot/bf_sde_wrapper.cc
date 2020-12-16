@@ -1167,7 +1167,7 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
       device, device_config.programs(0).name(), &bfrt_info_));
 
   // FIXME: if all we ever do is create and push, this could be one call.
-  bfrt_id_mapper_ = BfrtIdMapper::CreateInstance(device);
+  bfrt_id_mapper_ = BfrtIdMapper::CreateInstance();
   RETURN_IF_ERROR(
       bfrt_id_mapper_->PushForwardingPipelineConfig(device_config, bfrt_info_));
 

@@ -31,11 +31,6 @@ class BfrtIdMapper {
                                               const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
-  // Gets the device target(device id + pipe id) for a specific BfRt
-  // primitive(e.g. table)
-  // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
-  bf_rt_target_t GetDeviceTarget() const;
-
   // Maps a P4Info ID to a BfRt ID
   ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const
       LOCKS_EXCLUDED(lock_);
@@ -53,12 +48,12 @@ class BfrtIdMapper {
       bf_rt_id_t action_selector_id) const LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance for a specific device.
-  static std::unique_ptr<BfrtIdMapper> CreateInstance(int device_id);
+  static std::unique_ptr<BfrtIdMapper> CreateInstance();
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtIdMapper(int device_id);
+  explicit BfrtIdMapper();
 
   ::util::Status BuildMapping(uint32 p4info_id, std::string p4info_name,
                               const bfrt::BfRtInfo* bfrt_info)
@@ -85,9 +80,6 @@ class BfrtIdMapper {
   // Map for getting an ActionProfile BfRt ID from an ActionSelector BfRt ID.
   absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_selector_to_profile_mapping_
       GUARDED_BY(lock_);
-
-  // The device ID for this mapper.
-  const int device_id_;
 };
 
 }  // namespace barefoot
