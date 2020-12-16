@@ -53,7 +53,7 @@ class BfrtIdMapper {
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtIdMapper();
+  BfrtIdMapper();
 
   ::util::Status BuildMapping(uint32 p4info_id, std::string p4info_name,
                               const bfrt::BfRtInfo* bfrt_info)
