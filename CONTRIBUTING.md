@@ -24,7 +24,7 @@ again.
 
 ### General Information
 
-Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/) and [C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Use these documents as a guide when submitting code.
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/), [C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and [unit test rules](stratum/docs/testing.md). Use these documents as a guide when submitting code.
 
 Some additional points:
 
