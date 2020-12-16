@@ -88,8 +88,7 @@ void registerDeviceMgrLogger() {
   char bf_sysfs_fname[128];
   FILE* fd;
 
-  bf_switchd_context_t* switchd_main_ctx = new bf_switchd_context_t;
-  memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
+  auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
 
   /* Parse bf_switchd arguments */
   CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
@@ -116,7 +115,7 @@ void registerDeviceMgrLogger() {
   }
 
   {
-    int status = bf_switchd_lib_init(switchd_main_ctx);
+    int status = bf_switchd_lib_init(switchd_main_ctx.get());
     CHECK_RETURN_IF_FALSE(status == 0)
         << "Error when starting switchd, status: " << status;
     LOG(INFO) << "switchd started successfully";
@@ -126,27 +125,34 @@ void registerDeviceMgrLogger() {
   DeviceMgr::init(256 /* max devices */);
   registerDeviceMgrLogger();
 
-  int unit(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
-  // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
-  // does not do any device id checks.
-  std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(unit));
+  // components with "device_id" instead of "node_id". This works because
+  // DeviceMgr does not do any device id checks.
+  int device_id = 0;
 
-  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
+  std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(device_id));
+
+  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), device_id);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
   } else {
     phal_impl = phal::Phal::CreateSingleton();
   }
-  std::map<int, pi::PINode*> unit_to_pi_node = {
-      {unit, pi_node.get()},
+  std::map<int, pi::PINode*> device_id_to_pi_node = {
+      {device_id, pi_node.get()},
   };
   auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
+  ASSIGN_OR_RETURN(bool is_sw_model,
+                   bf_sde_wrapper->IsSoftwareModel(device_id));
+  const OperationMode mode =
+      is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
+  VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   auto bf_chassis_manager =
-      BFChassisManager::CreateInstance(phal_impl, bf_sde_wrapper);
-  auto bf_switch = BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
-                                            bf_sde_wrapper, unit_to_pi_node);
+      BFChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
+  auto bf_switch =
+      BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
+                               bf_sde_wrapper, device_id_to_pi_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
