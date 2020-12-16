@@ -101,6 +101,7 @@ pkg_tar(
     ],
     mode = "0755",
     package_dir = "/usr/bin",
+    symlinks = {"./usr/bin/stratum_bf": "/usr/bin/stratum_bfrt"},
 )
 
 pkg_tar(
