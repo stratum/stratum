@@ -735,7 +735,7 @@ TableData::CreateTableData(const bfrt::BfRtInfo* bfrt_info_, int table_id,
 namespace {
 
 // A callback function executed in SDE port state change thread context.
-bf_status_t sde_port_status_callback(bf_dev_id_t dev_id, bf_dev_port_t dev_port,
+bf_status_t sde_port_status_callback(bf_dev_id_t device, bf_dev_port_t dev_port,
                                      bool up, void* cookie) {
   BfSdeWrapper* bf_sde_wrapper = BfSdeWrapper::GetSingleton();
   if (!bf_sde_wrapper) {
@@ -743,7 +743,7 @@ bf_status_t sde_port_status_callback(bf_dev_id_t dev_id, bf_dev_port_t dev_port,
     return BF_INTERNAL_ERROR;
   }
   // Forward the event.
-  auto status = bf_sde_wrapper->OnPortStatusEvent(dev_id, dev_port, up);
+  auto status = bf_sde_wrapper->OnPortStatusEvent(device, dev_port, up);
 
   return status.ok() ? BF_SUCCESS : BF_INTERNAL_ERROR;
 }
@@ -1282,26 +1282,25 @@ BfSdeWrapper::CreateTableData(int table_id, int action_id) {
   return ::util::OkStatus();
 }
 
-bf_status_t BfSdeWrapper::BfPktTxNotifyCallback(bf_dev_id_t dev_id,
+bf_status_t BfSdeWrapper::BfPktTxNotifyCallback(bf_dev_id_t device,
                                                 bf_pkt_tx_ring_t tx_ring,
                                                 uint64 tx_cookie,
                                                 uint32 status) {
-  VLOG(1) << "Tx done notification for device: " << dev_id
+  VLOG(1) << "Tx done notification for device: " << device
           << " tx ring: " << tx_ring << " tx cookie: " << tx_cookie
           << " status: " << status;
 
   bf_pkt* pkt = reinterpret_cast<bf_pkt*>(tx_cookie);
-  return bf_pkt_free(dev_id, pkt);
+  return bf_pkt_free(device, pkt);
 }
 
-bf_status_t BfSdeWrapper::BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
+bf_status_t BfSdeWrapper::BfPktRxNotifyCallback(bf_dev_id_t device, bf_pkt* pkt,
                                                 void* cookie,
                                                 bf_pkt_rx_ring_t rx_ring) {
   BfSdeWrapper* bf_sde_wrapper = BfSdeWrapper::GetSingleton();
   // TODO(max): Handle error
-  bf_sde_wrapper->HandlePacketRx(dev_id, pkt, rx_ring);
-  // static_cast<BfSdeWrapper*>(cookie)->HandlePacketRx(dev_id, pkt, rx_ring);
-  return bf_pkt_free(dev_id, pkt);
+  bf_sde_wrapper->HandlePacketRx(device, pkt, rx_ring);
+  return bf_pkt_free(device, pkt);
 }
 
 bf_rt_target_t BfSdeWrapper::GetDeviceTarget(int device) const {

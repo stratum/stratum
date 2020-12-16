@@ -331,11 +331,6 @@ class BfSdeWrapper : public BfSdeInterface {
   // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
   bf_rt_target_t GetDeviceTarget(int device) const;
 
-  //
-  ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
-                                bf_pkt_rx_ring_t rx_ring)
-      LOCKS_EXCLUDED(packet_rx_callback_lock_);
-
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
   static BfSdeWrapper* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
@@ -346,10 +341,16 @@ class BfSdeWrapper : public BfSdeInterface {
   // Return the singleton instance to be used in the SDE callbacks.
   static BfSdeWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
 
+  // Writes a received packet to the registered Rx writer. Called from the SDE
+  // callback function.
+  ::util::Status HandlePacketRx(bf_dev_id_t device, bf_pkt* pkt,
+                                bf_pkt_rx_ring_t rx_ring)
+      LOCKS_EXCLUDED(packet_rx_callback_lock_);
+
   // Called whenever a port status event is received from SDK. It forwards the
   // port status event to the module who registered a callback by calling
   // RegisterPortStatusEventWriter().
-  ::util::Status OnPortStatusEvent(int dev_id, int dev_port, bool up)
+  ::util::Status OnPortStatusEvent(int device, int dev_port, bool up)
       LOCKS_EXCLUDED(port_status_event_writer_lock_);
 
   // BfSdeWrapper is neither copyable nor movable.
@@ -384,12 +385,12 @@ class BfSdeWrapper : public BfSdeInterface {
   mutable absl::Mutex data_lock_;
 
   // Callback registed with the SDE for Tx notifications.
-  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
+  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t device,
                                            bf_pkt_tx_ring_t tx_ring,
                                            uint64 tx_cookie, uint32 status);
 
   // Callback registed with the SDE for Rx notifications.
-  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
+  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t device, bf_pkt* pkt,
                                            void* cookie,
                                            bf_pkt_rx_ring_t rx_ring);
 
