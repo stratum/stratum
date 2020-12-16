@@ -18,7 +18,6 @@ class ServerWriterWrapper : public WriterInterface<T> {
   explicit ServerWriterWrapper(::grpc::ServerWriter<T>* writer)
       : writer_(writer) {}
   bool Write(const T& msg) override {
-    VLOG(1) << "ServerWriterWrapper write: " << msg.ShortDebugString();
     if (writer_) return writer_->Write(msg);
     return false;
   }
