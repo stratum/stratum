@@ -987,13 +987,13 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
     case BF_DEV_BFNT20128Q:
       return "TOFINO2_128Q";
 #ifdef BF_DEV_BFNT20128QM
-    case BF_DEV_BFNT20128QM:
-      return "TOFINO2_128QM";  // added in 9.3.0
-#endif                         // BF_DEV_BFNT20128QM
+    case BF_DEV_BFNT20128QM:  // added in 9.3.0
+      return "TOFINO2_128QM";
+#endif  // BF_DEV_BFNT20128QM
 #ifdef BF_DEV_BFNT20128QH
-    case BF_DEV_BFNT20128QH:
-      return "TOFINO2_128QH";  // added in 9.3.0
-#endif                         // BF_DEV_BFNT20128QH
+    case BF_DEV_BFNT20128QH:  // added in 9.3.0
+      return "TOFINO2_128QH";
+#endif  // BF_DEV_BFNT20128QH
     case BF_DEV_BFNT20096T:
       return "TOFINO2_96T";
     case BF_DEV_BFNT20080T:
@@ -1023,9 +1023,9 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
 #ifdef BF_DEV_BFNT20032E
     case BF_DEV_BFNT20032E:  // removed in 9.3.0
       return "TOFINO2_32E";
-#endif                       // BF_DEV_BFNT20032E
-#ifdef BF_DEV_BFNT20064E     // removed in 9.3.0
-    case BF_DEV_BFNT20064E:  // gone
+#endif  // BF_DEV_BFNT20032E
+#ifdef BF_DEV_BFNT20064E
+    case BF_DEV_BFNT20064E:  // removed in 9.3.0
       return "TOFINO2_64E";
 #endif  // BF_DEV_BFNT20064E
     default:
