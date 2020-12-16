@@ -101,6 +101,7 @@ pkg_tar(
     ],
     mode = "0755",
     package_dir = "/usr/bin",
+    symlinks = {"./usr/bin/stratum_bf": "/usr/bin/stratum_bfrt"},
 )
 
 pkg_tar(
@@ -167,7 +168,7 @@ pkg_tar(
 pkg_deb(
     name = "stratum_bf_deb",
     architecture = "amd64",
-    conflicts = ["stratum-bf"],
+    conflicts = ["stratum-bfrt"],
     data = ":stratum_bf_data",
     depends = [
         "kmod",

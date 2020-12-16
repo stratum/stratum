@@ -1,4 +1,4 @@
-// Copyright 2018-present Barefoot Networks, Inc.
+// Copyright 2018-2019 Barefoot Networks, Inc.
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
@@ -80,7 +80,7 @@ namespace barefoot {
 
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // components with "device_id" instead of "node_id".
-  int device_id(0);
+  int device_id = 0;
 
   auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
   ASSIGN_OR_RETURN(bool is_sw_model,
