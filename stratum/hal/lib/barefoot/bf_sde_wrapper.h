@@ -326,8 +326,8 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::StatusOr<uint32> GetActionProfileBfRtId(
       uint32 action_selector_id) const override LOCKS_EXCLUDED(data_lock_);
 
-  // Gets the device target(device id + pipe id) for a specific BfRt
-  // primitive(e.g. table)
+  // Gets the device target (device id + pipe id) for a specific BfRt
+  // primitive (e.g. table).
   // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
   bf_rt_target_t GetDeviceTarget(int device) const;
 

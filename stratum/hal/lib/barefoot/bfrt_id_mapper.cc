@@ -15,10 +15,10 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
+BfrtIdMapper::BfrtIdMapper() {}
 
-std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int device_id) {
-  return absl::WrapUnique(new BfrtIdMapper(device_id));
+std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
+  return absl::WrapUnique(new BfrtIdMapper());
 }
 
 ::util::Status BfrtIdMapper::PushForwardingPipelineConfig(
@@ -233,13 +233,6 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int device_id) {
     act_selector_to_profile_mapping_[sel_id] = prof_id;
   }
   return ::util::OkStatus();
-}
-
-bf_rt_target_t BfrtIdMapper::GetDeviceTarget() const {
-  bf_rt_target_t dev_tgt = {};
-  dev_tgt.dev_id = device_id_;
-  dev_tgt.pipe_id = BF_DEV_PIPE_ALL;
-  return dev_tgt;
 }
 
 ::util::StatusOr<uint32> BfrtIdMapper::GetBfRtId(uint32 p4info_id) const {
