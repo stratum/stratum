@@ -21,7 +21,11 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-// TODO(max): docs
+// The "BfSdeInterface" class in HAL implements a shim layer around the Barefoot
+// SDE. It is defined as an abstract class to allow multiple implementations:
+// 1- BfSdeWrapper: The real implementation which includes all the SDE API
+//    calls.
+// 2- BfSdeMock: Mock class used for unit testing.
 class BfSdeInterface {
  public:
   // PortStatusEvent encapsulates the information received on a port status
@@ -32,9 +36,8 @@ class BfSdeInterface {
     PortState state;
   };
 
-  // SessionInterface allows starting sessions to batch requests.
-  // todo: check if an incomplete type could work. answer: no, can't call
-  // member functions on incomplete types.
+  // SessionInterface is a proxy class for BfRt sessions. Most API calls require
+  // an active session. It also allows batching requests for performance.
   class SessionInterface {
    public:
     virtual ~SessionInterface() {}
@@ -46,32 +49,53 @@ class BfSdeInterface {
     virtual ::util::Status EndBatch() = 0;
   };
 
-  // TableKeyInterface hides the BfRt table key.
-  // TODO(max): docs
+  // TableKeyInterface is a proxy class for BfRt table keys.
   class TableKeyInterface {
    public:
     virtual ~TableKeyInterface() {}
+
+    // Sets an exact match key field.
     virtual ::util::Status SetExact(int id, const std::string& value) = 0;
+
+    // Gets an exact match key field.
     virtual ::util::Status GetExact(int id, std::string* value) const = 0;
+
+    // Sets a ternary match key field.
     virtual ::util::Status SetTernary(int id, const std::string& value,
                                       const std::string& mask) = 0;
+
+    // Gets a ternary match key field.
     virtual ::util::Status GetTernary(int id, std::string* value,
                                       std::string* mask) const = 0;
+
+    // Sets a LPM match key field.
     virtual ::util::Status SetLpm(int id, const std::string& prefix,
                                   uint16 prefix_length) = 0;
+
+    // Gets a LPM match key field.
     virtual ::util::Status GetLpm(int id, std::string* prefix,
                                   uint16* prefix_length) const = 0;
+
+    // Sets a range match key field.
     virtual ::util::Status SetRange(int id, const std::string& low,
                                     const std::string& high) = 0;
+
+    // Gets a LPM match key field.
     virtual ::util::Status GetRange(int id, std::string* low,
                                     std::string* high) const = 0;
+
+    // Sets the priority of this table key. 0 is the highest priority.
     virtual ::util::Status SetPriority(uint32 priority) = 0;
+
+    // Gets the priority of this table key. 0 is the highest priority.
     virtual ::util::Status GetPriority(uint32* priority) const = 0;
   };
 
+  // TableKeyInterface is a proxy class for BfRt table data.
   class TableDataInterface {
    public:
     virtual ~TableDataInterface() {}
+
     // Sets a table data action parameter.
     virtual ::util::Status SetParam(int id, const std::string& value) = 0;
 
@@ -111,13 +135,14 @@ class BfSdeInterface {
     virtual ::util::Status Reset(int action_id) = 0;
   };
 
-
   virtual ~BfSdeInterface() {}
 
+  // Add and initialize a device. The device config (pipeline) will be loaded
+  // into the ASIC. Can be used to re-initialize an existing device.
   virtual ::util::Status AddDevice(int device,
                                    const BfrtDeviceConfig& device_config) = 0;
 
-  // Creates a new SDE session.
+  // Creates a new BfRt session.
   virtual ::util::StatusOr<std::shared_ptr<SessionInterface>>
   CreateSession() = 0;
 
@@ -130,35 +155,50 @@ class BfSdeInterface {
   virtual ::util::StatusOr<std::unique_ptr<TableDataInterface>> CreateTableData(
       int table_id, int action_id) = 0;
 
-  virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
-
-  virtual ::util::Status GetPortCounters(int device, int port,
-                                         PortCounters* counters) = 0;
-
+  // Registers a writer through which to send any port status events. The
+  // message contains a tuple (device, port, state), where port refers to the
+  // Barefoot SDE device port. There can only be one writer.
   virtual ::util::Status RegisterPortStatusEventWriter(
       std::unique_ptr<ChannelWriter<PortStatusEvent>> writer) = 0;
 
+  // Unregisters the port status writer.
   virtual ::util::Status UnregisterPortStatusEventWriter() = 0;
 
+  // Add a new port with the given parameters.
   virtual ::util::Status AddPort(int device, int port, uint64 speed_bps,
                                  FecMode fec_mode = FEC_MODE_UNKNOWN) = 0;
 
+  // Delete a port.
   virtual ::util::Status DeletePort(int device, int port) = 0;
 
+  // Enable a port.
   virtual ::util::Status EnablePort(int device, int port) = 0;
 
+  // Disable a port.
   virtual ::util::Status DisablePort(int device, int port) = 0;
 
+  // Get the operational state of a port.
+  virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
+
+  // Get the port counters of a port.
+  virtual ::util::Status GetPortCounters(int device, int port,
+                                         PortCounters* counters) = 0;
+
+  // Set the auto negotiation policy on a port.
   virtual ::util::Status SetPortAutonegPolicy(int device, int port,
                                               TriState autoneg) = 0;
 
+  // Set the MTU on a port.
   virtual ::util::Status SetPortMtu(int device, int port, int32 mtu) = 0;
 
+  // Checks if a port is valid.
   virtual bool IsValidPort(int device, int port) = 0;
 
+  // Set the given port into the specified loopback mode.
   virtual ::util::Status SetPortLoopbackMode(int device, int port,
                                              LoopbackState loopback_mode) = 0;
 
+  // Returns the SDE device port ID for the given PortKey.
   virtual ::util::StatusOr<uint32> GetPortIdFromPortKey(
       int device, const PortKey& port_key) = 0;
 
@@ -172,17 +212,24 @@ class BfSdeInterface {
   virtual ::util::StatusOr<bool> IsSoftwareModel(int device) = 0;
 
   // Return the chip type as a string.
-  virtual std::string GetBfChipType(int dev_id) const = 0;
+  virtual std::string GetBfChipType(int device) const = 0;
 
+  // Send a packet to the PCIe CPU port.
   virtual ::util::Status TxPacket(int device, const std::string& packet) = 0;
 
+  // Setup PacketIO to transmit and receive packets from the CPU port.
   virtual ::util::Status StartPacketIo(int device) = 0;
 
+  // Undo the PacketIO setup. No further packets can be sent or received.
   virtual ::util::Status StopPacketIo(int device) = 0;
 
+  // Registers a writer to be invoked when we receive a packet on the PCIe CPU
+  // port. There can only be one writer per device.
   virtual ::util::Status RegisterPacketReceiveWriter(
       int device, std::unique_ptr<ChannelWriter<std::string>> writer) = 0;
 
+  // Unregisters the writer registered to this device by
+  // RegisterPacketReceiveWriter().
   virtual ::util::Status UnregisterPacketReceiveWriter(int device) = 0;
 
   // Create a new multicast node with the given parameters. Returns the newly
@@ -293,15 +340,13 @@ class BfSdeInterface {
   // P4Runtime.
   virtual ::util::Status InsertActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, int member_id,
-      const TableDataInterface* table_data) = 0;
+      uint32 table_id, int member_id, const TableDataInterface* table_data) = 0;
 
   // Modifies an existing action profile member. The table ID must be a BfRt
   // table, not P4Runtime.
   virtual ::util::Status ModifyActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, int member_id,
-      const TableDataInterface* table_data) = 0;
+      uint32 table_id, int member_id, const TableDataInterface* table_data) = 0;
 
   // Deletes an action profile member. The table ID must be a BfRt
   // table, not P4Runtime. Returns an error if the member does not exist.

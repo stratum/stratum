@@ -941,7 +941,7 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
 }
 
 bool BfSdeWrapper::IsValidPort(int device, int port) {
-  return (bf_pal_port_is_valid(device, port) == BF_SUCCESS);
+  return bf_pal_port_is_valid(device, port) == BF_SUCCESS;
 }
 
 ::util::Status BfSdeWrapper::SetPortLoopbackMode(int device, int port,
@@ -967,8 +967,8 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   return is_sw_model;
 }
 
-std::string BfSdeWrapper::GetBfChipType(int dev_id) const {
-  bf_dev_type_t dev_type = lld_sku_get_dev_type(dev_id);
+std::string BfSdeWrapper::GetBfChipType(int device) const {
+  bf_dev_type_t dev_type = lld_sku_get_dev_type(device);
   switch (dev_type) {
     case BF_DEV_BFNT10064Q:
       return "TOFINO_64Q";
