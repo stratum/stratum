@@ -79,6 +79,8 @@ if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
 fi
 
 DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
+DOCKER_BUILD_OPTS+="--label build-timestamp=$(date +%FT%T%z) "
+DOCKER_BUILD_OPTS+="--label build-machine=$(hostname) "
 
 # Add VCS labels
 pushd $STRATUM_ROOT

@@ -89,6 +89,7 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 ## Tofino
 
 - Delta AG9064v1
+- Edgecore Wedge100BF-32QS
 - Edgecore Wedge100BF-32X
 - Edgecore Wedge100BF-65X
 - Inventec D5254
