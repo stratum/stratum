@@ -37,7 +37,7 @@ class BooleanBfStatus {
       case BF_EAGAIN:
         return ERR_NO_RESOURCE;
       case BF_ENTRY_REFERENCES_EXIST:
-        return ERR_PERMISSION_DENIED;
+        return ERR_FAILED_PRECONDITION;
       case BF_TXN_NOT_SUPPORTED:
       case BF_NOT_SUPPORTED:
         return ERR_OPER_NOT_SUPPORTED;
