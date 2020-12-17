@@ -13,9 +13,7 @@ DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 print_help() {
 echo "
 The script builds containerized version of Stratum for Barefoot Tofino based device.
-It builds SDE using Dockerfile.builder and saves artifacts to an intermediate builder image.
 It also builds the kernel module if kernel header tarball is given.
-Then it runs Bazel build for Stratum code base and copies libraries from builder to runtime image using Dockerfile.runtime.
 Usage: $0 [SDE_TAR [KERNEL_HEADERS_TAR]...]
 
 Example:

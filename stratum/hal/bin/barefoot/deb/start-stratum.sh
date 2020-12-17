@@ -60,10 +60,13 @@ fi
 # Set up port map for device
 PORT_MAP="/etc/stratum/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
-    echo "Cannot find port map file $PORT_MAP"
-    exit 255
+    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]]; then 
+        echo "Cannot find port map file $PORT_MAP for $PLATFORM"
+        exit 255
+    fi
+else
+    ln -f -s "$PORT_MAP" /usr/share/port_map.json
 fi
-ln -f -s "$PORT_MAP" /usr/share/port_map.json
 
 if [ -f "$KDRV_PATH" ]; then
     lsmod | grep 'kdrv' &> /dev/null
@@ -73,13 +76,12 @@ if [ -f "$KDRV_PATH" ]; then
         rmmod bf_kdrv
     fi
     echo "loading bf_kdrv_mod..."
-    insmod $KDRV_PATH intr_mode="msi" || true
-    if [[ $? != 0 ]];then
+    if ! insmod $KDRV_PATH intr_mode="msi"; then
         echo "Cannot load kernel module, wrong kernel version?"
         exit 255
     fi
 else
-    echo "Cannot find $KDRV_PATH, skip installing the Kernel module."
+    echo "Skipping kernel module installation."
 fi
 
 mkdir -p /var/run/stratum /var/log/stratum

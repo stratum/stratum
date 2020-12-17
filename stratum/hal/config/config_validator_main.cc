@@ -12,8 +12,8 @@
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -27,12 +27,14 @@ TEST(ConfigValidator, TestChassisConfig) {
   EXPECT_OK(ReadProtoFromTextFile(filename, &chassis_config));
 }
 
+#ifndef SIM_TARGET
 TEST(ConfigValidator, TestPhalConfig) {
   std::string filename = absl::StrFormat(
       "stratum/hal/config/%s/phal_config.pb.txt", STRINGIFY(PLATFORM));
   PhalInitConfig phal_config;
   EXPECT_OK(ReadProtoFromTextFile(filename, &phal_config));
 }
+#endif
 
 #ifdef BCM_TARGET
 TEST(ConfigValidator, TestBcmConfig) {

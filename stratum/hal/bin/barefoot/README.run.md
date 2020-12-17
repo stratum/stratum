@@ -174,6 +174,65 @@ journalctl -u stratum_bf.service
 
 -----
 
+## Running Stratum on `tofino-model`
+
+Stratum can be run on a Tofino simulator. In these instructions, Stratum and
+`tofino-model` are both running in their own containers sharing the host's
+network stack. Other configurations are possible.
+
+### Building the `tofino-model` container
+
+Before running `tofino-model`, we can build a container that contains the
+required binaries. *This only needs to be done once for each BF SDE version.*
+
+```bash
+export SDE_TAR=<path to tar>/bf-sde-<SDE_VERSION>.tgz
+./stratum/hal/bin/barefoot/docker/build-tofino-model-container.sh $SDE_TAR
+```
+
+### Running Stratum and `tofino-model`
+
+#### Start `tofino-model`
+
+In one terminal window, run `tofino-model` in one container:
+
+```bash
+docker run --rm -it --privileged \
+  --network=host \
+  stratumproject/tofino-model:9.3.0  # <SDE_VERSION>
+```
+
+In another terminal window, run Stratum in its own container:
+
+```bash
+PLATFORM=barefoot-tofino-model \
+stratum/hal/bin/barefoot/docker/start-stratum-container.sh \
+  -bf_sim \
+  -bf_switchd_background=false \
+  -enable_onlp=false
+```
+
+### Cleaning up `tofino-model` interfaces
+
+To remove the interfaces created when the `tofino-model` container starts,
+you can run the following (with `sudo` if not running as root):
+
+```bash
+ip link show | egrep -o '(veth[[:digit:]]+)' | sort -u | \
+   xargs -n1 -I{} [sudo] ip link del {} 2> /dev/null
+```
+
+### Other deployment options
+
+You can run both Stratum and `tofino-model` natively on the host (i.e. not
+in Docker containers). They communicate over localhost TCP ports.
+
+If you wish to run multiple instances of Stratum and `tofino-model` on the
+same machine, you can use Docker's container network to link the containers'
+networking stacks together. For example, you can pass
+`--network container:stratum` when starting the `tofino-model` container.
+
+-----
 ## Stratum Runtime Options
 
 Stratum picks sane defaults for most platforms, but should you need to change some
@@ -271,10 +330,10 @@ port translation which would allow you to use the user-provide SDN port ID.*
 ### Running with BSP or on Tofino model
 
 ```bash
-start-stratum.sh --bf_sim -enable_onlp=false
+start-stratum.sh -bf_sim -enable_onlp=false
 ```
 
-The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
+The `-bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
 `PhalSim`, a "fake" Phal implementation, instead. Use this flag when you are
 using a vendor-provided BSP or running Stratum with the Tofino software model.
 Additionally, the ONLP plugin has to be disabled with `-enable_onlp=false`.
@@ -329,6 +388,15 @@ singleton_ports {
 ```
 
 FEC can also be configured when adding a port through gNMI.
+
+### Running with BF CLI
+
+You can enable the BF CLI by passing `-bf_switchd_background=false` as an
+argument when starting Stratum. The CLI is disabled by default.
+
+The CLI will start after Stratum and the SDE finish initialization. You may
+need to press "Enter" a few times to see the prompt. Please refer to BF SDE
+documentation for details on how to use the CLI.
 
 -----
 
