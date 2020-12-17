@@ -145,7 +145,6 @@ stratum_cc_library(
     name = "bf_sde_wrapper",
     srcs = ["bf_sde_wrapper.cc"],
     hdrs = ["bf_sde_wrapper.h"],
-    copts = ["-Werror=thread-safety-analysis"],
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
