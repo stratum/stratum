@@ -32,6 +32,7 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range, int field_width);
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional);
 
 // Returns the "don't care" match values for a range type match field.
+// Values are padded to the full bit width, as expected by the SDE.
 std::string RangeDefaultLow(size_t bitwidth);
 std::string RangeDefaultHigh(size_t bitwidth);
 

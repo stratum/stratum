@@ -25,6 +25,17 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
                      [](const char c) { return c == '\x00'; });
 }
 
+namespace {
+// Strip leading zeros from a string, but keep at least one byte.
+absl::string_view StripLeadingZeroBytes(const std::string& str) {
+  absl::string_view normalized(str);
+  while (normalized.size() > 1 && absl::StartsWith(normalized, "\x00")) {
+    normalized.remove_prefix(1);
+  }
+  return normalized;
+}
+}  // namespace
+
 // For BFRT we explicitly insert the "don't care" range match as the
 // [minimum, maximum] value range.
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
@@ -36,7 +47,8 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
     normalized_low.remove_prefix(1);
   }
 
-  return normalized_low == RangeDefaultLow(field_width) &&
+  return normalized_low ==
+             StripLeadingZeroBytes(RangeDefaultLow(field_width)) &&
          range.high() == RangeDefaultHigh(field_width);
 }
 
@@ -44,7 +56,9 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional) {
   return false;
 }
 
-std::string RangeDefaultLow(size_t bitwidth) { return std::string("\x00", 1); }
+std::string RangeDefaultLow(size_t bitwidth) {
+  return std::string((bitwidth + 7) / 8, '\x00');
+}
 
 std::string RangeDefaultHigh(size_t bitwidth) {
   const size_t nbytes = (bitwidth + 7) / 8;

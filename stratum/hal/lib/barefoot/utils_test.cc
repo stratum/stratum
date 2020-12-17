@@ -21,6 +21,24 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+TEST(DefaultRangeLowValueTest, HasFullBitwidth) {
+  EXPECT_EQ(RangeDefaultLow(0).size(), 0);
+  EXPECT_EQ(RangeDefaultLow(1).size(), 1);
+  EXPECT_EQ(RangeDefaultLow(7).size(), 1);
+  EXPECT_EQ(RangeDefaultLow(8).size(), 1);
+  EXPECT_EQ(RangeDefaultLow(9).size(), 2);
+  EXPECT_EQ(RangeDefaultLow(16).size(), 2);
+}
+
+TEST(RangeDefaultHighValueTest, HasFullBitwidth) {
+  EXPECT_EQ(RangeDefaultHigh(0).size(), 0);
+  EXPECT_EQ(RangeDefaultHigh(1).size(), 1);
+  EXPECT_EQ(RangeDefaultHigh(7).size(), 1);
+  EXPECT_EQ(RangeDefaultHigh(8).size(), 1);
+  EXPECT_EQ(RangeDefaultHigh(9).size(), 2);
+  EXPECT_EQ(RangeDefaultHigh(16).size(), 2);
+}
+
 TEST(IsDontCareMatchTest, RejectAllExactMatch) {
   {
     ::p4::v1::FieldMatch::Exact m;
