@@ -59,14 +59,11 @@ docker_build: &docker_build
     command: |
       docker pull $DOCKER_IMG || true
       cd $DOCKER_SCOPE
-      GIT_URL=${GIT_URL:-$(git config --get remote.origin.url)}
-      GIT_REF=$(git describe --tags --no-match --always --abbrev=40 --dirty | sed -E 's/^.*-g([0-9a-f]{40}-?.*)$/\1/')
-      GIT_SHA=$(git describe --tags --match XXXXXXX --always --abbrev=40 --dirty)
       docker build -f $DOCKER_FILE -t $DOCKER_IMG \
         --cache-from $DOCKER_IMG \
-        --label org.opencontainers.image.source=$GIT_URL  \
-        --label org.opencontainers.image.version=$GIT_REF \
-        --label org.opencontainers.image.revision=$GIT_SHA \
+        --label org.opencontainers.image.source=$CIRCLE_REPOSITORY_URL  \
+        --label org.opencontainers.image.version=$CIRCLE_SHA1 \
+        --label org.opencontainers.image.revision=$CIRCLE_SHA1 \
         --label build-timestamp=$(date +%FT%T%z) \
         --label build-machine=circle-ci \
         .
