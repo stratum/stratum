@@ -275,6 +275,7 @@ namespace {
     }
     case DataRequest::Request::kSdnPortId: {
       resp.mutable_sdn_port_id()->set_port_id(request.sdn_port_id().port_id());
+      break;
     }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";

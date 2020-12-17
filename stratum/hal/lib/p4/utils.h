@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file declares some utility functions for P4 objects.
 
 #ifndef STRATUM_HAL_LIB_P4_UTILS_H_
@@ -10,9 +9,10 @@
 
 #include <string>
 
+#include "grpcpp/grpcpp.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -35,6 +35,12 @@ std::string PrintP4ObjectID(int object_id);
     const std::string& table_map_key,
     P4TableMapValue::DescriptorCase descriptor_case,
     const std::string& log_p4_object);
+
+// Helper to convert a gRPC status with error details to a string. Assumes
+// ::grpc::Status includes a binary error detail which is encoding a serialized
+// version of ::google::rpc::Status proto in which the details are captured
+// using proto any messages.
+std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status);
 
 }  // namespace hal
 }  // namespace stratum

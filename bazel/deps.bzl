@@ -20,10 +20,9 @@ TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
 TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
 BF_SDE_PI_VER = {
-    "8_9_2": "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
-    "9_0_0": "ca0291420b5b47fa2596a00877d1713aab61dc7a",
     "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
     "9_2_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_3_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
 }
 GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
@@ -128,7 +127,7 @@ def stratum_deps():
             build_file = "@//bazel:external/gnoi.BUILD",
             sha256 = GNOI_SHA,
             patch_cmds = [
-                "find . -name *.proto | xargs sed -i 's#github.com/openconfig/##g'",
+                "find . -name *.proto | xargs sed -i'' -e 's#github.com/openconfig/##g'",
                 "mkdir -p gnoi",
                 "mv bgp cert common diag file interface layer2 mpls otdr system test types wavelength_router gnoi/",
             ],
@@ -202,7 +201,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_google_absl",
             remote = "https://github.com/abseil/abseil-cpp",
-            branch = "lts_2020_02_25",
+            branch = "lts_2020_09_23",
         )
 
     if "com_googlesource_code_cctz" not in native.existing_rules():
@@ -289,9 +288,9 @@ def stratum_deps():
     if "com_github_broadcom_opennsa" not in native.existing_rules():
         http_archive(
             name = "com_github_broadcom_opennsa",
-            sha256 = "80c3a26f688dd7fc08880fdbbad9ac3424b435697b0ccb889487f55f2bc425c4",
-            urls = ["https://docs.broadcom.com/docs-and-downloads/csg/opennsa-6.5.19.tgz"],
-            strip_prefix = "opennsa-6.5.19",
+            sha256 = "261a440454015122fbf9ac4cccf018b1c358a641d80690be1f1e972b6265d45c",
+            urls = ["https://docs.broadcom.com/docs-and-downloads/csg/opennsa-6.5.19.1.tgz"],
+            strip_prefix = "opennsa-6.5.19.1",
             build_file = "@//bazel:external/openNSA.BUILD",
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.

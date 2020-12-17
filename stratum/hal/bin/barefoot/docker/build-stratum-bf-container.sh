@@ -19,9 +19,9 @@ Then it runs Bazel build for Stratum code base and copies libraries from builder
 Usage: $0 [SDE_TAR [KERNEL_HEADERS_TAR]...]
 
 Example:
-    $0 ~/bf-sde-9.2.0.tgz
-    $0 ~/bf-sde-9.2.0.tgz ~/linux-4.14.49-ONL.tar.xz
-    SDE_INSTALL_TAR=~/bf-sde-9.2.0-install.tgz $0
+    $0 ~/bf-sde-9.3.0.tgz
+    $0 ~/bf-sde-9.3.0.tgz ~/linux-4.14.49-ONL.tar.xz
+    SDE_INSTALL_TAR=~/bf-sde-9.3.0-install.tgz $0
 
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
@@ -135,6 +135,8 @@ fi
 
 DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
 DOCKER_BUILD_OPTS+="--label bf-sde-version=$SDE_VERSION "
+DOCKER_BUILD_OPTS+="--label build-timestamp=$(date +%FT%T%z) "
+DOCKER_BUILD_OPTS+="--label build-machine=$(hostname) "
 
 # Add VCS labels
 pushd $STRATUM_ROOT

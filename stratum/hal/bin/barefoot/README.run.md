@@ -25,8 +25,8 @@ You can pull a nightly version of this container image from
 $ docker pull stratumproject/stratum-bf:[SDE version]
 ```
 
-For example, the container with BF SDE 9.2.0: <br/>
-`stratumproject/stratum-bf:9.2.0`
+For example, the container with BF SDE 9.3.0: <br/>
+`stratumproject/stratum-bf:9.3.0`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bf:9.2.0
-docker save stratumproject/stratum-bf:9.2.0 -o stratum-bf-9.2.0-docker.tar
+docker pull stratumproject/stratum-bf:9.3.0
+docker save stratumproject/stratum-bf:9.3.0 -o stratum-bf-9.3.0-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bf-9.2.0-docker.tar
+docker load -i stratum-bf-9.3.0-docker.tar
 ```
 
 ### Set up huge pages
@@ -364,3 +364,71 @@ this particular switch model. As a workaround, [BSP mode](#Running-with-BSP-or-o
 which bypasses ONLP, is available.
 
 [start-stratum-container-sh]: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
+
+### RESOURCE_EXHAUSTED when pushing pipeline
+
+Stratum rejects a SetForwardingPipelineConfig request with a RESOURCE_EXHAUSTED
+gRPC error, like this:
+
+```
+INFO:PTF runner:Sending P4 config
+ERROR:PTF runner:Error during SetForwardingPipelineConfig
+ERROR:PTF runner:<_InactiveRpcError of RPC that terminated with:
+        status = StatusCode.RESOURCE_EXHAUSTED
+        details = "to-be-sent initial metadata size exceeds peer limit"
+        debug_error_string = "{"created":"@1607159813.061940445","description":"Error received from peer ipv4:127.0.0.1:28000","file":"src/core/lib/surface/call.cc","file_line":1056,"grpc_message":"to-be-sent initial metadata size exceeds peer limit","grpc_status":8}"
+>
+```
+
+This error originates from the gRPC layer and can occur when the pipeline is
+particularly large and does not fit in the [maximum receive message size](https://grpc.github.io/grpc/cpp/classgrpc_1_1_server_builder.html#ab5c8a420f2acfc6fcea2f2210e9d426e).
+Although we set a reasonable default, the value can be adjusted with Stratum's
+`-grpc_max_recv_msg_size` flag.
+
+### TNA P4 programs on Stratum-bf / PI Node
+
+When using Stratum with the legacy PI node backend, only limited support for P4
+programs targeting TNA architecture is provided. Such programs must be compiled
+with the `--p4runtime-force-std-externs` bf-p4c flag, or pushing the pipeline
+will crash the switch:
+
+```
+2020-12-07 20:09:43.810989 BF_PI ERROR - handles_map_add: error when inserting into handles map
+*** SIGSEGV (@0x0) received by PID 16282 (TID 0x7f5f599dc700) from PID 0; stack trace: ***
+    @     0x7f5f725c60e0 (unknown)
+    @           0xa7456f p4info_get_at
+    @           0xa74319 pi_p4info_table_get_implementation
+    @     0x7f5f744b9add (unknown)
+    @     0x7f5f744b9ee3 pi_state_assign_device
+    @     0x7f5f744b2f47 (unknown)
+    @     0x7f5f73e29b10 bf_drv_notify_clients_dev_add
+    @     0x7f5f73e26b45 bf_device_add
+    @           0x9f0689 bf_switchd_device_add.part.4
+    @           0x9f10b7 bf_switchd_device_add_with_p4.part.5
+    @     0x7f5f744b33a5 _pi_update_device_start
+    @           0xa6eef5 pi_update_device_start
+    @           0x9f8403 pi::fe::proto::DeviceMgrImp::pipeline_config_set()
+    @           0x9f7e31 pi::fe::proto::DeviceMgr::pipeline_config_set()
+    @           0x7220d6 stratum::hal::pi::PINode::PushForwardingPipelineConfig()
+    @           0x41fb99 stratum::hal::barefoot::BFSwitch::PushForwardingPipelineConfig()
+    @           0x65db56 stratum::hal::P4Service::SetForwardingPipelineConfig()
+```
+
+Use Stratum-bfrt with the BfRt backend if you need advanced functionality.
+
+### Error pushing pipeline to Stratum-bf
+
+```
+E20201207 20:44:53.611562 18416 PI-device_mgr.cpp:0] Error in first phase of device update
+E20201207 20:44:53.611724 18416 bf_switch.cc:135] Return Error: pi_node->PushForwardingPipelineConfig(config) failed with generic::unknown:
+E20201207 20:44:53.612004 18416 p4_service.cc:381] generic::unknown: Error without message at stratum/hal/lib/common/p4_service.cc:381
+E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed to set forwarding pipeline config for node 1: Error without message at stratum/hal/lib/common/p4_service.cc:381
+```
+
+This error occurs when the binary pipeline is not in the correct format.
+Make sure the pipeline config binary has been packed correctly for PI node, like
+so: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/update_config.py#L39-L52.
+You cannot push the compiler output (e.g. `tofino.bin`) directly.
+
+Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline
+format.

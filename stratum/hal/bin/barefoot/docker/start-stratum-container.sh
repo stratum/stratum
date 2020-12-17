@@ -20,16 +20,16 @@ if [ -d "/etc/onl" ]; then
               -v /etc/onl:/etc/onl"
 fi
 
+# Mount user configuration.
 if [ -n "$FLAG_FILE" ]; then
     FLAG_FILE_MOUNT="-v $FLAG_FILE:/etc/stratum/stratum.flags"
 fi
-
 if [ -n "$CHASSIS_CONFIG" ]; then
     CHASSIS_CONFIG_MOUNT="-v $CHASSIS_CONFIG:/etc/stratum/$PLATFORM/chassis_config.pb.txt"
 fi
 
 LOG_DIR=${LOG_DIR:-/var/log}
-SDE_VERSION=${SDE_VERSION:-9.2.0}
+SDE_VERSION=${SDE_VERSION:-9.3.0}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bf}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION}
 

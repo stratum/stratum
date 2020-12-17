@@ -62,6 +62,49 @@ using namespace openconfig::enums;  // NOLINT
   // TODO(Yi Tseng): platform from yang model does not fit to platform from
   // the common.proto
   switch (in.platform()) {
+    case PLT_GENERIC_TRIDENT_PLUS:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT_PLUS);
+      break;
+    case PLT_GENERIC_TRIDENT2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT2);
+      break;
+    case PLT_GENERIC_TOMAHAWK:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK);
+      break;
+    case PLT_GENERIC_TOMAHAWK_PLUS:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK_PLUS);
+      break;
+    case PLT_GENERIC_TOMAHAWK2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK3);
+      break;
+    case PLT_MLNX_SN2700:
+      chassis->set_platform(OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700);
+      break;
+    case PLT_P4_SOFT_SWITCH:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_P4_SOFT_SWITCH);
+      break;
+    case PLT_NP4_INTEL_N3000:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_NP4_INTEL_N3000);
+      break;
+    case PLT_GENERIC_BAREFOOT_TOFINO:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO);
+      break;
+    case PLT_GENERIC_BAREFOOT_TOFINO2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO2);
+      break;
     default:
       chassis->set_platform(OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC);
       break;
@@ -396,13 +439,22 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
 
   switch (component.chassis().platform()) {
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT_PLUS:
-      to.set_platform(PLT_GENERIC_TRIDENT2);
+      to.set_platform(PLT_GENERIC_TRIDENT_PLUS);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT2:
-      to.set_platform(PLT_GENERIC_TOMAHAWK);
+      to.set_platform(PLT_GENERIC_TRIDENT2);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK:
-      to.set_platform(PLT_GENERIC_TRIDENT_PLUS);
+      to.set_platform(PLT_GENERIC_TOMAHAWK);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK_PLUS:
+      to.set_platform(PLT_GENERIC_TOMAHAWK_PLUS);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK2:
+      to.set_platform(PLT_GENERIC_TOMAHAWK2);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK3:
+      to.set_platform(PLT_GENERIC_TOMAHAWK3);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700:
       to.set_platform(PLT_MLNX_SN2700);
@@ -410,10 +462,13 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_P4_SOFT_SWITCH:
       to.set_platform(PLT_P4_SOFT_SWITCH);
       break;
-    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO:
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_NP4_INTEL_N3000:
+      to.set_platform(PLT_NP4_INTEL_N3000);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO:
       to.set_platform(PLT_GENERIC_BAREFOOT_TOFINO);
       break;
-    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO2:
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO2:
       to.set_platform(PLT_GENERIC_BAREFOOT_TOFINO2);
       break;
     default:
