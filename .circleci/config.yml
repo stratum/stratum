@@ -357,10 +357,10 @@ workflows:
       - bazel-style-check
   docker-publish:
     jobs:
-      - publish-docker-build #:
-          #filters:
-          #  branches:
-          #    only: master
+      - publish-docker-build:
+          filters:
+            branches:
+              only: master
       - publish-docker-mininet:
           requires:
             - publish-docker-build
