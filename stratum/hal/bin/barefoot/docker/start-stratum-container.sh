@@ -16,6 +16,7 @@ elif [[ -z "$PLATFORM" ]]; then
     exit 255
 fi
 
+# Set Docker network options.
 if [[ "$PLATFORM" == 'barefoot-tofino-model' ]]; then
     DOCKER_NET_OPTS="--network host"
 else
@@ -41,7 +42,7 @@ if [ -n "$CHASSIS_CONFIG" ]; then
     CHASSIS_CONFIG_MOUNT="-v $CHASSIS_CONFIG:/etc/stratum/$PLATFORM/chassis_config.pb.txt"
 fi
 
-
+# Start Stratum.
 set -x
 docker run -it --rm --privileged \
     -v /dev:/dev -v /sys:/sys  \
