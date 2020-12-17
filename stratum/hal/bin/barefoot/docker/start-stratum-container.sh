@@ -18,13 +18,6 @@ fi
 
 if [[ "$PLATFORM" == 'barefoot-tofino-model' ]]; then
     DOCKER_NET_OPTS="--network host"
-#    container_ids=$(docker ps | grep stratumproject/tofino-model | cut -d" " -f1)
-#    if [[ ${#container_ids[@]} -eq 1 ]]; then
-#      CONTAINER_NETWORK_MOUNT="--network container:${container_ids[0]}"
-#    else
-#      echo "Failed to find the tofino-model container. Ensure that only one copy is running."
-#      exit 255
-#    fi
 else
     DOCKER_NET_OPTS="-p 28000:28000 "
     DOCKER_NET_OPTS+="-p 9339:9339 "
