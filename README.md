@@ -23,37 +23,52 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 
 If you're completly new to the world of P4 and are looking for step-by-step instructions with batteries included, the [NG-SDN](https://github.com/opennetworkinglab/ngsdn-tutorial) tutorial is a good starting point. For material more focused on P4 as a language, have a look at the [p4lang](https://github.com/p4lang/tutorials) tutorials. Finally, there is the "Software-Defined Networks: A Systems Approach" book ([HTML](https://sdn.systemsapproach.org/)) for comprehensive coverage of SDN. Also see the chapter about [Stratum](https://sdn.systemsapproach.org/stratum.html#thin-switch-os) in it.
 
-## Running Stratum
+## Table of Contents
+### Development
 
-[Broadcom](stratum/hal/bin/bcm/standalone/README.md)
+- [Code of Conduct](/CODE_OF_CONDUCT.md)
+- [Contribution Guidelines](/CONTRIBUTING.md)
+- [IDE Setup](https://github.com/stratum/stratum/wiki/IDE-setup-for-development)
+- [PHAL Development Tutorial](/stratum/docs/phal_development_tutorial.md)
+- [Stratum Configurators Design Document](/stratum/docs/configurators.md)
+- [Stratum PHAL Overview (Physical Hardware Access Layer)](/stratum/docs/phal.md)
 
-[Tofino](stratum/hal/bin/barefoot/README.md)
+### Platforms
 
-[bmv2](stratum/hal/bin/bmv2/README.md)
+- [Tofino](/stratum/hal/bin/barefoot/README.md)
+  - [Running Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.run.md)
+  - [Testing Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.test.md)
+  - [P4Runtime p4_device_config formats](/stratum/hal/bin/barefoot/README.pipeline.md)
+  - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
+- [Broadcom](/stratum/hal/bin/bcm/standalone/README.md)
+  - [How to Add a Dataplane Feature to Stratum (BCM)](/stratum/docs/extenting_stratum_bcm.md)
+- [Intel NP4](/stratum/hal/bin/np4intel/docker/README.md)
+- [bmv2](/stratum/hal/bin/bmv2/README.md)
+- [Dummy Switch](/stratum/hal/bin/dummy/README.md)
 
-[dummy](stratum/hal/bin/dummy/README.md)
+### Tools
 
-[NP4 Intel](stratum/hal/bin/np4intel/docker/README.md)
+- [gNMI CLI Tool](/stratum/tools/gnmi/README.md)
+- [Stratum-Enabled Mininet](/tools/mininet/README.md)
+- [P4Runtime write request replay tool](/stratum/tools/stratum-replay/README.md)
 
-## Other Topics
+### Other Documentation
 
-[p4c-fpm](stratum/p4c_backends/README.md)
-
-[PHAL](stratum/docs/phal.md)
-
-[PHAL Development Tutorial](stratum/docs/phal_development_tutorial.md)
-
-[PHAL DB Configurators](stratum/docs/configurators.md)
-
-[gNMI](stratum/docs/gnmi/README.md)
-
-[cdlang](stratum/testing/cdlang/README.md)
-
-[testvectors](stratum/public/proto/tv.proto)
-
-[SSL/TLS support](stratum/lib/security/README.md)
-
-[TAI](stratum/docs/tai/README.md)
+- [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
+- [Trellis + Stratum example](/tools/mininet/examples/trellis/README.md)
+- [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)
+- [Talks](https://github.com/stratum/stratum/wiki/Talks)
+- [Test Vectors](https://github.com/stratum/testvectors/blob/master/docs/testvectors_overview.md)
+- [Stratum example pipelines](/stratum/pipelines/README.md)
+  - [Main FPM pipeline](/stratum/pipelines/main/README.md)
+- [Supported gNMI paths](/stratum/docs/gnmi/supported-paths.md)
+- [Config Monitoring Service](/stratum/docs/gnmi/README.md)
+- [Transponder Abstraction Interface (TAI)](/stratum/docs/tai/README.md)
+- [P4C backend](/stratum/p4c_backends/README.md)
+- [CDLang gNMI Compliance Definition Language](/stratum/testing/cdlang/g3doc/cdlang.md)
+- [gNMI/OpenConfig Contract Definition Language tools](/stratum/testing/cdlang/README.md)
+- [gNMI Test Scenarios](/stratum/testing/scenarios/README.md)
+- [SSL/TLS Support and Security](/stratum/lib/security/README.md)
 
 # Component Overview
 
@@ -74,6 +89,7 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 ## Tofino
 
 - Delta AG9064v1
+- Edgecore Wedge100BF-32QS
 - Edgecore Wedge100BF-32X
 - Edgecore Wedge100BF-65X
 - Inventec D5254
@@ -102,7 +118,7 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 - Trident2
     - Edgecore AS6712
     - Inventec D6254
-    
+
 ## Smart NIC
 
 - Intel PAC N3000

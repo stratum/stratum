@@ -37,8 +37,15 @@ free_hugepages=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/free_hugepages)
 if [[ $nr_hugepages -lt 128 ]] || [[ $free_hugepages -lt 128 ]]; then
     if [[ $nr_hugepages -eq 0 ]]; then
         echo "Setting up hugepages..."
+<<<<<<< HEAD
         sysctl -w vm.nr_hugepages=128 || \
         (echo "Failed to set up hugepages."; exit 255)
+=======
+        if ! echo 128 > /proc/sys/vm/nr_hugepages; then
+            echo "Failed to set up hugepages."
+            exit 255
+        fi
+>>>>>>> origin/master
     else
         echo "ERROR: There are $free_hugepages free hugepages, and 128 are required."
         echo "       The system has $nr_hugepages hugepages allocated in total."
@@ -49,9 +56,16 @@ fi
 # Mount hugepages fs if necessary
 if ! grep hugetlbfs /etc/mtab | grep -q /mnt/huge; then
     echo "Mounting hugepages..."
+<<<<<<< HEAD
     mkdir -p /mnt/huge && \
     mount -t hugetlbfs nodev /mnt/huge || \
     (echo "Failed to mount hugepages."; exit 255)
+=======
+    if ! ( mkdir -p /mnt/huge && mount -t hugetlbfs nodev /mnt/huge ); then
+        echo "Failed to mount hugepages."
+        exit 255
+    fi
+>>>>>>> origin/master
 fi
 
 # Set up port map for device
