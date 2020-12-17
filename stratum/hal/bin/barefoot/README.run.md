@@ -177,7 +177,7 @@ journalctl -u stratum_bf.service
 ## Running Stratum on `tofino-model`
 
 Stratum can be run on a Tofino simulator. In these instructions, Stratum and
-tofino-model are both running in their own containers sharing the host's
+`tofino-model` are both running in their own containers sharing the host's
 network stack. Other configurations are possible.
 
 ### Building the `tofino-model` container
@@ -199,7 +199,7 @@ In one terminal window, run `tofino-model` in one container:
 ```bash
 docker run --rm -it --privileged \
   --network=host \
-  stratumproject/tofino-model:9.3.0
+  stratumproject/tofino-model:9.3.0  # <SDE_VERSION>
 ```
 
 In another terminal window, run Stratum in its own container:
@@ -214,8 +214,8 @@ stratum/hal/bin/barefoot/docker/start-stratum-container.sh \
 
 ### Cleaning up `tofino-model` interfaces
 
-To remove the interfaces created when `tofino-model` starts, you can run
-the following (with `sudo` if not running as root):
+To remove the interfaces created when the `tofino-model` container starts,
+you can run the following (with `sudo` if not running as root):
 
 ```bash
 ip link show | egrep -o '(veth[[:digit:]]+)' | sort -u | \
@@ -224,13 +224,13 @@ ip link show | egrep -o '(veth[[:digit:]]+)' | sort -u | \
 
 ### Other deployment options
 
-You can run both Stratum and `tofino-model` natively on the host. They
-communicate over localhost TCP ports.
+You can run both Stratum and `tofino-model` natively on the host (i.e. not
+in Docker containers). They communicate over localhost TCP ports.
 
 If you wish to run multiple instances of Stratum and `tofino-model` on the
 same machine, you can use Docker's container network to link the containers'
-networking stacks together. For example, you can pass `--network container:stratum`
-when starting the `tofino-model` container.
+networking stacks together. For example, you can pass
+`--network container:stratum` when starting the `tofino-model` container.
 
 -----
 ## Stratum Runtime Options
