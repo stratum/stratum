@@ -48,17 +48,17 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 
 ### Tools
 
-- [gNMI tool](/stratum/tools/gnmi/README.md)
-- [Stratum-enabled Mininet](/tools/mininet/README.md)
+- [gNMI CLI Tool](/stratum/tools/gnmi/README.md)
+- [Stratum-Enabled Mininet](/tools/mininet/README.md)
 - [P4Runtime write request replay tool](/stratum/tools/stratum-replay/README.md)
 
 ### Other Documentation
 
 - [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
-- [Trellis+Stratum example](/tools/mininet/examples/trellis/README.md)
+- [Trellis + Stratum example](/tools/mininet/examples/trellis/README.md)
 - [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)
 - [Talks](https://github.com/stratum/stratum/wiki/Talks)
-- [testvectors](stratum/public/proto/tv.proto)
+- [Test Vectors](https://github.com/stratum/testvectors/blob/master/docs/testvectors_overview.md)
 - [Stratum example pipelines](/stratum/pipelines/README.md)
   - [Main FPM pipeline](/stratum/pipelines/main/README.md)
 - [Supported gNMI paths](/stratum/docs/gnmi/supported-paths.md)
@@ -67,8 +67,8 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 - [P4C backend](/stratum/p4c_backends/README.md)
 - [CDLang gNMI Compliance Definition Language](/stratum/testing/cdlang/g3doc/cdlang.md)
 - [gNMI/OpenConfig Contract Definition Language tools](/stratum/testing/cdlang/README.md)
-- [gNMI test scenarios](/stratum/testing/scenarios/README.md)
-- [SSL/TLS support and security](/stratum/lib/security/README.md)
+- [gNMI Test Scenarios](/stratum/testing/scenarios/README.md)
+- [SSL/TLS Support and Security](/stratum/lib/security/README.md)
 
 # Component Overview
 
