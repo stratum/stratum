@@ -45,6 +45,9 @@ docker build \
   -t "$MODEL_IMAGE" \
   --build-arg SDE_TAR_NAME="$SDE_TAR_NAME" \
   --build-arg SDE_VER="$SDE_VERSION" \
+  --label bf-sde-version="$SDE_VERSION" \
+  --label build-timestamp=$(date +%FT%T%z) \
+  --label build-machine=$(hostname) \
   -f "$DOCKERFILE_DIR/Dockerfile.model" \
   "$STRATUM_BF_DIR"
 
