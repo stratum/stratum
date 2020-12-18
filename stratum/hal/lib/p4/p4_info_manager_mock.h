@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This is a mock implementation of P4InfoManager.
 
 #ifndef STRATUM_HAL_LIB_P4_P4_INFO_MANAGER_MOCK_H_
@@ -10,8 +9,8 @@
 
 #include <string>
 
-#include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -55,6 +54,12 @@ class P4InfoManagerMock : public P4InfoManager {
   MOCK_CONST_METHOD1(FindValueSetByName,
                      ::util::StatusOr<const ::p4::config::v1::ValueSet>(
                          const std::string& value_set_name));
+  MOCK_CONST_METHOD1(
+      FindRegisterByID,
+      ::util::StatusOr<const ::p4::config::v1::Register>(uint32 register_id));
+  MOCK_CONST_METHOD1(FindRegisterByName,
+                     ::util::StatusOr<const ::p4::config::v1::Register>(
+                         const std::string& register_name));
   MOCK_CONST_METHOD1(
       GetSwitchStackAnnotations,
       ::util::StatusOr<P4Annotation>(const std::string& p4_object_name));

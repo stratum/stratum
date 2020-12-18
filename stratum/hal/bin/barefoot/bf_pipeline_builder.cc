@@ -17,8 +17,6 @@
 
 DEFINE_string(p4c_conf_file, "",
               "Path to the JSON output .conf file of the bf-p4c compiler");
-DEFINE_string(bf_pipeline_config_text_file, "bf_pipeline_config.pb.txt",
-              "Path to text file for BfPipelineConfig output");
 DEFINE_string(bf_pipeline_config_binary_file, "bf_pipeline_config.pb.bin",
               "Path to file for serialized BfPipelineConfig output");
 DEFINE_string(unpack_dir, "",
@@ -134,8 +132,6 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
     return MAKE_ERROR(ERR_INTERNAL) << e.what();
   }
 
-  RETURN_IF_ERROR(
-      WriteProtoToTextFile(bf_config, FLAGS_bf_pipeline_config_text_file));
   RETURN_IF_ERROR(
       WriteProtoToBinFile(bf_config, FLAGS_bf_pipeline_config_binary_file));
 

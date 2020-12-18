@@ -11,6 +11,10 @@ if ! cat /proc/1/cgroup | grep -q "/docker"; then
   mount -t hugetlbfs nodev /mnt/huge
 fi
 
+# Create directories needed by Stratum
+mkdir -p /var/log/stratum
+mkdir -p /var/run/stratum
+
 # Reload libraries
 ldconfig
 

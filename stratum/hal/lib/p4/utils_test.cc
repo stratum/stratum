@@ -2,18 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Unit tests for p4_utils.
 
 #include "stratum/hal/lib/p4/utils.h"
 
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
-#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 using ::testing::HasSubstr;
 
@@ -57,7 +56,7 @@ TEST(PrintP4ObjectIDTest, TestInvalidID) {
   const int kBaseID = 0x54321;
   const int kObjectId =
       ((::p4::config::v1::P4Ids_Prefix_OTHER_EXTERNS_START - 1) << 24) +
-       kBaseID;
+      kBaseID;
   const std::string print_id = PrintP4ObjectID(kObjectId);
   EXPECT_THAT(print_id, HasSubstr("0x54321"));
   EXPECT_THAT(print_id, HasSubstr("INVALID"));
@@ -71,20 +70,20 @@ class TableMapValueTest : public testing::Test {
   void SetUp() override {
     P4TableMapValue table_map_value;
     table_map_value.mutable_table_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "table", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "table",
+                     table_map_value);
     table_map_value.mutable_field_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "field", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "field",
+                     table_map_value);
     table_map_value.mutable_action_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "action", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "action",
+                     table_map_value);
     table_map_value.mutable_header_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "header", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "header",
+                     table_map_value);
     table_map_value.mutable_internal_action();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "internal", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "internal",
+                     table_map_value);
   }
 
   P4PipelineConfig test_pipeline_config_;

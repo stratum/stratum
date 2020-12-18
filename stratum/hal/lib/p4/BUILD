@@ -424,6 +424,7 @@ stratum_cc_library(
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue:integral_types",
         "//stratum/glue/status:statusor",
     ],
 )

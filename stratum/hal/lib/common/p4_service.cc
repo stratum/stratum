@@ -2,17 +2,23 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/p4_service.h"
 
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
 #include <utility>
 
+#include "absl/memory/memory.h"
+#include "absl/numeric/int128.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
+#include "stratum/glue/gtl/cleanup.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"
@@ -20,13 +26,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/numeric/int128.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
-#include "stratum/glue/gtl/cleanup.h"
-#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(forwarding_pipeline_configs_file,
               "/var/run/stratum/pipeline_cfg.pb.txt",
@@ -38,6 +37,10 @@ DEFINE_string(write_req_log_file, "/var/log/stratum/p4_writes.pb.txt",
               "The log file for all the individual write request updates and "
               "the corresponding result. The format for each line is: "
               "<timestamp>;<node_id>;<update proto>;<status>.");
+DEFINE_string(read_req_log_file, "/var/log/stratum/p4_reads.pb.txt",
+              "The log file for all the individual read request and "
+              "the corresponding result. The format for each line is: "
+              "<timestamp>;<node_id>;<request proto>;<status>.");
 DEFINE_int32(max_num_controllers_per_node, 5,
              "Max number of controllers that can manage a node.");
 DEFINE_int32(max_num_controller_connections, 20,
@@ -233,6 +236,29 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   }
 }
 
+// Helper to facilitate logging the read requests to the desired log file.
+void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
+                    const std::vector<::util::Status>& results,
+                    const absl::Time timestamp) {
+  if (FLAGS_read_req_log_file.empty()) {
+    return;
+  }
+  std::string msg = "";
+  std::string ts =
+      absl::FormatTime("%Y-%m-%d %H:%M:%E6S", timestamp, absl::LocalTimeZone());
+  for (size_t i = 0; i < results.size(); ++i) {
+    absl::StrAppend(&msg, ts, ";", node_id, ";",
+                    req.entities(i).ShortDebugString(), ";",
+                    results[i].error_message(), "\n");
+  }
+  ::util::Status status =
+      WriteStringToFile(msg, FLAGS_read_req_log_file, /*append=*/true);
+  if (!status.ok()) {
+    LOG_EVERY_N(ERROR, 50) << "Failed to log the read request: "
+                           << status.error_message();
+  }
+}
+
 // Helper function to generate a StreamMessageResponse from a failed Status.
 ::p4::v1::StreamMessageResponse ToStreamMessageResponse(
     const ::util::Status& status) {
@@ -305,12 +331,16 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
 
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
   std::vector<::util::Status> details = {};
+  absl::Time timestamp = absl::Now();
   ::util::Status status =
       switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();
   }
+
+  // Log debug info for future debugging.
+  LogReadRequest(req->device_id(), *req, details, timestamp);
 
   return ToGrpcStatus(status, details);
 }
@@ -330,8 +360,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   }
 
   // We need valid election ID for SetForwardingPipelineConfig RPC
-  absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
-                                                req->election_id().low());
+  absl::uint128 election_id =
+      absl::MakeUint128(req->election_id().high(), req->election_id().low());
   if (election_id == 0) {
     return ::grpc::Status(
         ::grpc::StatusCode::INVALID_ARGUMENT,
@@ -372,11 +402,11 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       ::util::Status error;
       if (req->action() ==
           ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT) {
-        error = switch_interface_->PushForwardingPipelineConfig(
-             node_id, req->config());
+        error = switch_interface_->PushForwardingPipelineConfig(node_id,
+                                                                req->config());
       } else {  // VERIFY_AND_SAVE
-        error = switch_interface_->SaveForwardingPipelineConfig(
-             node_id, req->config());
+        error = switch_interface_->SaveForwardingPipelineConfig(node_id,
+                                                                req->config());
       }
       APPEND_STATUS_IF_ERROR(status, error);
       // If the config push was successful or reported reboot required, save
@@ -399,15 +429,14 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       break;
     }
     case ::p4::v1::SetForwardingPipelineConfigRequest::COMMIT: {
-      ::util::Status error = switch_interface_->CommitForwardingPipelineConfig(
-           node_id);
+      ::util::Status error =
+          switch_interface_->CommitForwardingPipelineConfig(node_id);
       APPEND_STATUS_IF_ERROR(status, error);
       break;
     }
     case ::p4::v1::SetForwardingPipelineConfigRequest::RECONCILE_AND_COMMIT:
-      return ::grpc::Status(
-          ::grpc::StatusCode::UNIMPLEMENTED,
-          "RECONCILE_AND_COMMIT action not supported yet");
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                            "RECONCILE_AND_COMMIT action not supported yet");
     default:
       return ::grpc::Status(
           ::grpc::StatusCode::INVALID_ARGUMENT,
@@ -482,7 +511,6 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
           ::grpc::StatusCode::INVALID_ARGUMENT,
           absl::StrCat("Invalid action passed for node ", node_id, "."));
   }
-
 
   return ::grpc::Status::OK;
 }

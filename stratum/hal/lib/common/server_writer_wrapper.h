@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 

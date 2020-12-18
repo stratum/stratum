@@ -11,6 +11,17 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
+stratum_bf_common_deps = [
+    "//stratum/glue:init_google",
+    "//stratum/glue:logging",
+    "//stratum/hal/lib/common:hal",
+    "//stratum/hal/lib/phal:phal_sim",
+    "//stratum/hal/lib/phal",
+    "//stratum/lib/security:auth_policy_checker",
+    "//stratum/lib/security:credentials_manager",
+    "@com_github_google_glog//:glog",
+]
+
 stratum_cc_binary(
     name = "bf_pipeline_builder",
     srcs = [
@@ -39,20 +50,35 @@ stratum_cc_binary(
         "tofino_skip_p4_no_bsp.conf",
     ],
     deps = [
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
         "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
-        "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/phal",
-        "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/pi:pi_node_bf",
-        "//stratum/lib/security:auth_policy_checker",
-        "//stratum/lib/security:credentials_manager",
-        "@com_github_google_glog//:glog",
         "@local_barefoot_bin//:bfsde",
+    ] + stratum_bf_common_deps,
+)
+
+stratum_cc_binary(
+    name = "stratum_bfrt",
+    srcs = [
+        "main_bfrt.cc",
     ],
+    arches = HOST_ARCHES,
+    data = [
+        "tofino_skip_p4.conf",
+        "tofino_skip_p4_no_bsp.conf",
+    ],
+    deps = [
+        "//stratum/hal/lib/barefoot:bf_chassis_manager",
+        "//stratum/hal/lib/barefoot:bf_sde_wrapper",
+        "//stratum/hal/lib/barefoot:bfrt_switch",
+        "//stratum/hal/lib/barefoot:bfrt_node",
+        "//stratum/hal/lib/barefoot:bfrt_action_profile_manager",
+        "//stratum/hal/lib/barefoot:bfrt_pre_manager",
+        "//stratum/hal/lib/barefoot:bfrt_table_manager",
+        "//stratum/hal/lib/barefoot:bfrt_counter_manager",
+        "@local_barefoot_bin//:bfsde",
+    ] + stratum_bf_common_deps,
 )
 
 # Rules for Debian package
@@ -65,6 +91,17 @@ pkg_tar(
     ],
     mode = "0755",
     package_dir = "/usr/bin",
+)
+
+pkg_tar(
+    name = "stratum_bfrt_binaries",
+    srcs = [
+        "deb/start-stratum.sh",
+        ":stratum_bfrt",
+    ],
+    mode = "0755",
+    package_dir = "/usr/bin",
+    symlinks = {"./usr/bin/stratum_bf": "/usr/bin/stratum_bfrt"},
 )
 
 pkg_tar(
@@ -101,10 +138,8 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bf_data",
-    extension = "tar.gz",
+    name = "stratum_common_data",
     deps = [
-        ":stratum_binaries",
         ":stratum_configs",
         ":stratum_shareable_files",
         ":systemd_service",
@@ -114,9 +149,26 @@ pkg_tar(
     ],
 )
 
+pkg_tar(
+    name = "stratum_bf_data",
+    deps = [
+        ":stratum_binaries",
+        ":stratum_common_data",
+    ],
+)
+
+pkg_tar(
+    name = "stratum_bfrt_data",
+    deps = [
+        ":stratum_bfrt_binaries",
+        ":stratum_common_data",
+    ],
+)
+
 pkg_deb(
     name = "stratum_bf_deb",
     architecture = "amd64",
+    conflicts = ["stratum-bfrt"],
     data = ":stratum_bf_data",
     depends = [
         "kmod",
@@ -129,5 +181,28 @@ pkg_deb(
     postinst = "deb/postinst",
     prerm = "deb/prerm",
     recommends = ["systemd"],
+    version = "0.0.1",
+)
+
+pkg_deb(
+    name = "stratum_bfrt_deb",
+    architecture = "amd64",
+    conflicts = ["stratum-bf"],
+    data = ":stratum_bfrt_data",
+    depends = [
+        "systemd",
+        "kmod",
+        "libssl1.1",
+        "libedit2",
+        "libjudydebian1",
+        "libboost-thread1.62.0",
+        "libbz2-1.0",
+    ],
+    description = "The Stratum package for Barefoot Tofino-based platform",
+    homepage = "https://stratumproject.org/",
+    maintainer = "The Stratum Project",
+    package = "stratum-bfrt",
+    postinst = "deb/postinst",
+    prerm = "deb/prerm",
     version = "0.0.1",
 )

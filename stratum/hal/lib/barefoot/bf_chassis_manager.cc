@@ -38,9 +38,11 @@ constexpr int BFChassisManager::kMaxPortStatusEventDepth;
 /* static */
 constexpr int BFChassisManager::kMaxXcvrEventDepth;
 
-BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
+BFChassisManager::BFChassisManager(OperationMode mode,
+                                   PhalInterface* phal_interface,
                                    BfSdeInterface* bf_sde_interface)
-    : initialized_(false),
+    : mode_(mode),
+      initialized_(false),
       port_status_event_channel_(nullptr),
       port_status_event_reader_(nullptr),
       port_status_event_thread_(),
@@ -812,9 +814,10 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 }
 
 std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(
-    PhalInterface* phal_interface, BfSdeInterface* bf_sde_interface) {
+    OperationMode mode, PhalInterface* phal_interface,
+    BfSdeInterface* bf_sde_interface) {
   return absl::WrapUnique(
-      new BFChassisManager(phal_interface, bf_sde_interface));
+      new BFChassisManager(mode, phal_interface, bf_sde_interface));
 }
 
 void BFChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
