@@ -30,7 +30,9 @@ DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
-DEFINE_bool(bf_sim, false, "Run with the Tofino simulator");
+// TODO(bocon): remove bf_sim and enable_onlp declarations
+DEFINE_bool(bf_sim, false, "DEPRECATED: Use -enable_onlp=false instead");
+DECLARE_bool(enable_onlp);
 
 namespace stratum {
 namespace hal {
@@ -132,13 +134,14 @@ void registerDeviceMgrLogger() {
   // does not do any device id checks.
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(unit));
 
+  if (FLAGS_bf_sim) {
+    LOG(WARNING) << "-bf_sim flag is deprecated; use -enable_onlp=false";
+    FLAGS_enable_onlp = false;
+  }
+
   auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
   PhalInterface* phal_impl;
-  if (FLAGS_bf_sim) {
-    phal_impl = PhalSim::CreateSingleton();
-  } else {
-    phal_impl = phal::Phal::CreateSingleton();
-  }
+  phal_impl = phal::Phal::CreateSingleton();
   std::map<int, pi::PINode*> unit_to_pi_node = {
       {unit, pi_node.get()},
   };

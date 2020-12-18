@@ -949,13 +949,13 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   *mutable_state = new_state;
 
   // TODO(antonin): set autoneg based on media type...
-  FrontPanelPortInfo fp_port_info;
-  auto status =
-      phal_interface_->GetFrontPanelPortInfo(slot, port, &fp_port_info);
-  if (!status.ok()) {
-    LOG(ERROR) << "Failure in TransceiverEventHandler: " << status;
-    return;
-  }
+  //FrontPanelPortInfo fp_port_info;
+  //auto status =
+  //    phal_interface_->GetFrontPanelPortInfo(slot, port, &fp_port_info);
+  //if (!status.ok()) {
+  //  LOG(ERROR) << "Failure in TransceiverEventHandler: " << status;
+  //  return;
+  //}
 
   // Finally, before we exit we make sure if the port was HW_STATE_PRESENT,
   // it is set to HW_STATE_READY to show it has been configured and ready.
