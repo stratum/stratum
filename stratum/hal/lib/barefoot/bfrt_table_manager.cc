@@ -447,17 +447,20 @@ struct RegisterClearThreadData {
   // Action and action data
   int action_id;
   RETURN_IF_ERROR(table_data->GetActionId(&action_id));
-  result.mutable_action()->mutable_action()->set_action_id(action_id);
   // TODO(max): perform check if action id is valid for this table.
-  ASSIGN_OR_RETURN(auto action, p4_info_manager_->FindActionByID(action_id));
-  for (const auto& expected_param : action.params()) {
-    std::string value;
-    RETURN_IF_ERROR(table_data->GetParam(expected_param.id(), &value));
-    auto* param = result.mutable_action()->mutable_action()->add_params();
-    param->set_param_id(expected_param.id());
-    param->set_value(value);
+  if (action_id) {
+    ASSIGN_OR_RETURN(auto action, p4_info_manager_->FindActionByID(action_id));
+    result.mutable_action()->mutable_action()->set_action_id(action_id);
+    for (const auto& expected_param : action.params()) {
+      std::string value;
+      RETURN_IF_ERROR(table_data->GetParam(expected_param.id(), &value));
+      auto* param = result.mutable_action()->mutable_action()->add_params();
+      param->set_param_id(expected_param.id());
+      param->set_value(value);
+    }
   }
 
+  // TODO(max): find way to read fields without printing errors.
   // Action profile member id
   uint64 action_member_id;
   if (table_data->GetActionMemberId(&action_member_id).ok()) {
