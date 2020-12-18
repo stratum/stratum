@@ -27,12 +27,14 @@ TEST(ConfigValidator, TestChassisConfig) {
   EXPECT_OK(ReadProtoFromTextFile(filename, &chassis_config));
 }
 
+#ifndef SIM_TARGET
 TEST(ConfigValidator, TestPhalConfig) {
   std::string filename = absl::StrFormat(
       "stratum/hal/config/%s/phal_config.pb.txt", STRINGIFY(PLATFORM));
   PhalInitConfig phal_config;
   EXPECT_OK(ReadProtoFromTextFile(filename, &phal_config));
 }
+#endif
 
 #ifdef BCM_TARGET
 TEST(ConfigValidator, TestBcmConfig) {

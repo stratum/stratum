@@ -8,10 +8,13 @@ load(
     "stratum_cc_test",
 )
 
-def platform_config_test(platform, bcm_target=False):
+def platform_config_test(platform, bcm_target=False, sim_target=False):
     defines = ["PLATFORM=" + platform]
     if bcm_target:
         defines.append("BCM_TARGET")
+
+    if sim_target:
+        defines.append("SIM_TARGET")
 
     stratum_cc_test(
         name = "validate_configs_" + platform,

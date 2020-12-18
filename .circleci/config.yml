@@ -59,7 +59,14 @@ docker_build: &docker_build
     command: |
       docker pull $DOCKER_IMG || true
       cd $DOCKER_SCOPE
-      docker build -f $DOCKER_FILE -t $DOCKER_IMG --cache-from $DOCKER_IMG --label vcs-ref=$CIRCLE_SHA1 .
+      docker build -f $DOCKER_FILE -t $DOCKER_IMG \
+        --cache-from $DOCKER_IMG \
+        --label org.opencontainers.image.source=$CIRCLE_REPOSITORY_URL  \
+        --label org.opencontainers.image.version=$CIRCLE_SHA1 \
+        --label org.opencontainers.image.revision=$CIRCLE_SHA1 \
+        --label build-timestamp=$(date +%FT%T%z) \
+        --label build-machine=circle-ci \
+        .
 docker_push: &docker_push
   run:
     name: Push Docker image
