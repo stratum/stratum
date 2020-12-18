@@ -12,8 +12,8 @@
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
