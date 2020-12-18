@@ -70,7 +70,6 @@ pkg_tar_with_symlinks(
         "barefoot-bin/share/microp_fw/**",
         "barefoot-bin/share/bfsys/**",
         "barefoot-bin/share/tofino_sds_fw/**",
-    ]) + glob([
         "barefoot-bin/share/bf_rt_shared/**",
     ]),
     mode = "0644",
