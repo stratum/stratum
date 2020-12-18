@@ -380,6 +380,7 @@ struct RegisterClearThreadData {
                    p4_info_manager_->FindTableByID(request.table_id()));
   result.set_table_id(request.table_id());
 
+  bool has_priority_field = false;
   // Match keys
   for (const auto& expected_match_field : table.match_fields()) {
     ::p4::v1::FieldMatch match;  // Added to the entry later.
@@ -394,6 +395,7 @@ struct RegisterClearThreadData {
         break;
       }
       case ::p4::config::v1::MatchField::TERNARY: {
+        has_priority_field = true;
         std::string value, mask;
         RETURN_IF_ERROR(
             table_key->GetTernary(expected_match_field.id(), &value, &mask));
@@ -417,6 +419,7 @@ struct RegisterClearThreadData {
         break;
       }
       case ::p4::config::v1::MatchField::RANGE: {
+        has_priority_field = true;
         std::string low, high;
         RETURN_IF_ERROR(
             table_key->GetRange(expected_match_field.id(), &low, &high));
@@ -437,8 +440,9 @@ struct RegisterClearThreadData {
   }
 
   // Priority
-  uint32 bf_priority;
-  if (table_key->GetPriority(&bf_priority).ok()) {
+  if (has_priority_field) {
+    uint32 bf_priority;
+    RETURN_IF_ERROR(table_key->GetPriority(&bf_priority));
     ASSIGN_OR_RETURN(uint64 p4rt_priority,
                      ConvertPriorityFromBfrtToP4rt(bf_priority));
     result.set_priority(p4rt_priority);
