@@ -181,7 +181,7 @@ pkg_deb(
     postinst = "deb/postinst",
     prerm = "deb/prerm",
     recommends = ["systemd"],
-    version = "0.0.2",
+    version = "0.0.1",
 )
 
 pkg_deb(
@@ -204,5 +204,5 @@ pkg_deb(
     package = "stratum-bfrt",
     postinst = "deb/postinst",
     prerm = "deb/prerm",
-    version = "0.0.2",
+    version = "0.0.1",
 )
