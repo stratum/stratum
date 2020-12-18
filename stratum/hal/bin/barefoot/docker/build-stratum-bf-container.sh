@@ -46,6 +46,7 @@ if [ -n "$1" ]; then
   SDE_TAR_DIR=$( cd $(dirname "$SDE_TAR") >/dev/null 2>&1 && pwd )
   SDE_TAR_NAME=$( basename $SDE_TAR )
   DOCKER_OPTS+="-v $SDE_TAR_DIR:/bf-tar "
+  DOCKER_OPTS+="--env JOBS=$JOBS "
   CMD_OPTS+="-t /bf-tar/$SDE_TAR_NAME "
   shift
   i=1

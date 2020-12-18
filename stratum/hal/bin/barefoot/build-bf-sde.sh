@@ -5,7 +5,7 @@
 #
 
 STRATUM_BF_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
-JOBS=4
+JOBS=${JOBS:-4}
 
 print_help() {
 echo "
