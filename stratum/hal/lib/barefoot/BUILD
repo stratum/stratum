@@ -155,6 +155,7 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",

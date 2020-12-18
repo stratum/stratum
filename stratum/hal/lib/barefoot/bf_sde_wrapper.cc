@@ -15,6 +15,7 @@
 #include "lld/lld_sku.h"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
@@ -369,10 +370,11 @@ template <typename T>
         break;
       }
       case bfrt::DataType::BYTE_STREAM: {
-        uint8 v[(field_size + 7) / 8];
-        RETURN_IF_BFRT_ERROR(
-            table_data->getValue(field_id, (field_size + 7) / 8, v));
-        value = PrintArray(v, (field_size + 7) / 8, ",");
+        std::string v((field_size + 7) / 8, '\x00');
+        RETURN_IF_BFRT_ERROR(table_data->getValue(
+            field_id, v.size(),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
+        value = StringToHex(v);
         break;
       }
       case bfrt::DataType::INT_ARR: {
@@ -447,10 +449,11 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
-  int field_size = (field_size_bits + 7) / 8;
-  uint8 field_value[field_size];
-  RETURN_IF_BFRT_ERROR(table_key_->getValue(id, field_size, field_value));
-  value->assign(reinterpret_cast<const char*>(field_value), field_size);
+  value->clear();
+  value->resize((field_size_bits + 7) / 8);
+  RETURN_IF_BFRT_ERROR(table_key_->getValue(
+      id, value->size(),
+      reinterpret_cast<uint8*>(gtl::string_as_array(value))));
 
   return ::util::OkStatus();
 }
@@ -461,13 +464,13 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
-  int field_size = (field_size_bits + 7) / 8;
-  uint8 field_value[field_size];
-  uint8 field_mask[field_size];
-  RETURN_IF_BFRT_ERROR(
-      table_key_->getValueandMask(id, field_size, field_value, field_mask));
-  value->assign(reinterpret_cast<const char*>(field_value), field_size);
-  mask->assign(reinterpret_cast<const char*>(field_mask), field_size);
+  value->clear();
+  value->resize((field_size_bits + 7) / 8);
+  mask->clear();
+  mask->resize((field_size_bits + 7) / 8);
+  RETURN_IF_BFRT_ERROR(table_key_->getValueandMask(
+      id, value->size(), reinterpret_cast<uint8*>(gtl::string_as_array(value)),
+      reinterpret_cast<uint8*>(gtl::string_as_array(mask))));
 
   return ::util::OkStatus();
 }
@@ -478,11 +481,11 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
-  int field_size = (field_size_bits + 7) / 8;
-  uint8 field_value[field_size];
-  RETURN_IF_BFRT_ERROR(
-      table_key_->getValueLpm(id, field_size, field_value, prefix_length));
-  prefix->assign(reinterpret_cast<const char*>(field_value), field_size);
+  prefix->clear();
+  prefix->resize((field_size_bits + 7) / 8);
+  RETURN_IF_BFRT_ERROR(table_key_->getValueLpm(
+      id, prefix->size(),
+      reinterpret_cast<uint8*>(gtl::string_as_array(prefix)), prefix_length));
 
   return ::util::OkStatus();
 }
@@ -493,13 +496,13 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
-  int field_size = (field_size_bits + 7) / 8;
-  uint8 field_low[field_size];
-  uint8 field_high[field_size];
-  RETURN_IF_BFRT_ERROR(
-      table_key_->getValueRange(id, field_size, field_low, field_high));
-  low->assign(reinterpret_cast<const char*>(field_low), field_size);
-  high->assign(reinterpret_cast<const char*>(field_high), field_size);
+  low->clear();
+  low->resize((field_size_bits + 7) / 8);
+  high->clear();
+  high->resize((field_size_bits + 7) / 8);
+  RETURN_IF_BFRT_ERROR(table_key_->getValueRange(
+      id, low->size(), reinterpret_cast<uint8*>(gtl::string_as_array(low)),
+      reinterpret_cast<uint8*>(gtl::string_as_array(high))));
 
   return ::util::OkStatus();
 }
@@ -545,10 +548,11 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   } else {
     RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, &field_size));
   }
-  field_size = (field_size + 7) / 8;
-  uint8 field_data[field_size];
-  table_data_->getValue(id, field_size, field_data);
-  value->assign(reinterpret_cast<const char*>(field_data), field_size);
+  value->clear();
+  value->resize((field_size + 7) / 8);
+  RETURN_IF_BFRT_ERROR(table_data_->getValue(
+      id, value->size(),
+      reinterpret_cast<uint8*>(gtl::string_as_array(value))));
 
   return ::util::OkStatus();
 }
