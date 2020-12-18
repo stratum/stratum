@@ -96,7 +96,9 @@ pkg_tar(
 pkg_tar(
     name = "stratum_bfrt_binaries",
     srcs = [
+        # TODO(bocon): Consider refactoring common start script and builder
         "deb/start-stratum.sh",
+        ":bf_pipeline_builder",
         ":stratum_bfrt",
     ],
     mode = "0755",
