@@ -20,8 +20,8 @@ access P4 Studio SDE. Contact Intel for more details.*
 #### Supported SDE versions
 
  - 9.1.0 (Previous LTS release; to be removed after 9.4+ is released)
- - 9.2.0 (Deprecated; to be removed after 2020-12 release)
- - 9.3.0 (Latest & LTS release)
+ - 9.2.0 (Recommended)
+ - 9.3.0 (Experimental; Latest & LTS release)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -139,12 +139,12 @@ then you can use Bazel to build the Stratum.
 
 #### To build `stratum_bf`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=9.3.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=9.2.0]
 ```
 
 #### To build `stratum_bfrt`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb [--define sde_ver=9.3.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb [--define sde_ver=9.2.0]
 ```
 
 These Bazel targets build the Stratum binary and package all
@@ -167,7 +167,7 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.3.0
+export SDE_VERSION=9.2.0
 export STRATUM_TARGET=stratum_bf
 docker build -t stratumproject/stratum-bf:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
@@ -190,7 +190,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bf:9.3.0 -o stratum-bf-9.3.0-docker.tar
+docker save stratumproject/stratum-bf:9.2.0 -o stratum-bf-9.2.0-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally
