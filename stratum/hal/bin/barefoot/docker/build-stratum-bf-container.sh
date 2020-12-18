@@ -24,6 +24,7 @@ Example:
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
     SDE_INSTALL: Path to BF SDE install directory (set to skip SDE build)
+    STRATUM_DEB: Stratum Debian package (set to skip Stratum build)
     STRATUM_TARGET: stratum_bf or stratum_bfrt (Default: stratum_bf)
     STRATUM_ROOT: The root directory of Stratum.
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
@@ -95,6 +96,14 @@ elif [ -n "$SDE_INSTALL" ]; then
   SDE_VERSION=$(cat $SDE_INSTALL/share/VERSION)
   DOCKER_OPTS+="-v $SDE_INSTALL:/sde-install "
   DOCKER_OPTS+="-e SDE_INSTALL=/sde-install "
+elif [ -n "$STRATUM_DEB" ]; then
+  if [ -n "$SDE_VERSION" ]; then
+    echo "Skipping SDE build..."
+  else
+    echo "Error: Need to set SDE_VERSION"
+    print_help
+    exit 1
+  fi
 else
   echo "Error: SDE_INSTALL_TAR or SDE_INSTALL is not set";
   print_help
@@ -108,23 +117,24 @@ if [ -n "$RELEASE_BUILD" ]; then
 fi
 
 # Build Stratum BF in Docker
-set -x
-docker run --rm \
-  $DOCKER_OPTS \
-  $DOCKER_EXTRA_RUN_OPTS \
-  -v $STRATUM_ROOT:/stratum \
-  -v $(pwd):/output \
-  -w /stratum \
-  --entrypoint bash \
-  $DOCKER_IMG -c \
-    "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
-       $BAZEL_OPTS \
-       --define sde_ver=$SDE_VERSION \
-       --jobs $JOBS && \
-     cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
-     cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
-set +x
-
+if [ -z "$STRATUM_DEB" ]; then
+  set -x
+  docker run --rm \
+    $DOCKER_OPTS \
+    $DOCKER_EXTRA_RUN_OPTS \
+    -v $STRATUM_ROOT:/stratum \
+    -v $(pwd):/output \
+    -w /stratum \
+    --entrypoint bash \
+    $DOCKER_IMG -c \
+      "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
+         $BAZEL_OPTS \
+         --define sde_ver=$SDE_VERSION \
+         --jobs $JOBS && \
+       cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
+       cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
+  set +x
+fi
 
 DOCKER_BUILD_OPTS=""
 if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
@@ -148,6 +158,12 @@ if [ -d .git ]; then
 fi
 popd
 
+if [ -n "$STRATUM_DEB" ]; then
+  STRATUM_DEB_PATH=$(dirname "$STRATUM_DEB")
+else
+  STRATUM_DEB_PATH=$(pwd)
+fi
+
 # Build Stratum BF runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
@@ -158,7 +174,7 @@ docker build \
   -t "$RUNTIME_IMAGE" \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f "$DOCKERFILE_DIR/Dockerfile" \
-  "$(pwd)"
+  "$STRATUM_DEB_PATH"
 
 docker save $RUNTIME_IMAGE | gzip > ${STRATUM_NAME}-${SDE_VERSION}-docker.tar.gz
 
