@@ -601,6 +601,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         }
         break;
       }
+      case ::p4::v1::StreamMessageRequest::kOther:
       case ::p4::v1::StreamMessageRequest::kDigestAck:
       case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,

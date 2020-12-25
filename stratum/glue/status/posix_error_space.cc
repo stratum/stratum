@@ -11,6 +11,7 @@
 #include <string>
 
 #include "stratum/glue/logging.h"
+#include "absl/status/status.h"
 
 // Fake missing error codes on MacOS. Note, that they still have to be unique
 // and must not overlap with existing ones.
@@ -159,7 +160,7 @@ class PosixErrorSpace : public util::ErrorSpace {
   // space. This is basically a call to strerror_r.
   std::string String(int code) const final;
 
-  ::util::error::Code CanonicalCode(const ::util::Status& status) const final;
+  ::absl::StatusCode CanonicalCode(const ::util::Status& status) const final;
 
   // PosixErrorSpace is neither copyable nor movable.
   PosixErrorSpace(const PosixErrorSpace&) = delete;
@@ -173,14 +174,11 @@ PosixErrorSpace::~PosixErrorSpace() {}
 // TODO(unknown): Move to glog/StrError().
 std::string PosixErrorSpace::String(int code) const { return StrError(code); }
 
-::util::error::Code PosixErrorSpace::CanonicalCode(
+::absl::StatusCode PosixErrorSpace::CanonicalCode(
     const ::util::Status& status) const {
-  ::util::error::Code code;
-
   switch (status.error_code()) {
     case 0:
-      code = ::util::error::OK;
-      break;
+      return ::absl::StatusCode::kOk;
     case EINVAL:        // Invalid argument
     case ENAMETOOLONG:  // Filename too long
     case E2BIG:         // Argument list too long
@@ -194,31 +192,26 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ENOTTY:        // Inappropriate I/O control operation
     case EPROTOTYPE:    // Protocol wrong type for socket
     case ESPIPE:        // Invalid seek
-      code = ::util::error::INVALID_ARGUMENT;
-      break;
+      return ::absl::StatusCode::kInvalidArgument;
     case ETIMEDOUT:  // Connection timed out
     case ETIME:      // Timer expired
-      code = ::util::error::DEADLINE_EXCEEDED;
-      break;
+      return ::absl::StatusCode::kDeadlineExceeded;
     case ENODEV:     // No such device
     case ENOENT:     // No such file or directory
     case ENOMEDIUM:  // No medium found
     case ENXIO:      // No such device or address
     case ESRCH:      // No such process
-      code = ::util::error::NOT_FOUND;
-      break;
+      return ::absl::StatusCode::kNotFound;
     case EEXIST:         // File exists
     case EADDRNOTAVAIL:  // Address not available
     case EALREADY:       // Connection already in progress
     case ENOTUNIQ:       // Name not unique on network
-      code = ::util::error::ALREADY_EXISTS;
-      break;
+      return ::absl::StatusCode::kAlreadyExists;
     case EPERM:   // Operation not permitted
     case EACCES:  // Permission denied
     case ENOKEY:  // Required key not available
     case EROFS:   // Read only file system
-      code = ::util::error::PERMISSION_DENIED;
-      break;
+      return ::absl::StatusCode::kPermissionDenied;
     case ENOTEMPTY:   // Directory not empty
     case EISDIR:      // Is a directory
     case ENOTDIR:     // Not a directory
@@ -235,8 +228,7 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ESHUTDOWN:   // Cannot send after transport endpoint shutdown
     case ETXTBSY:     // Text file busy
     case EUNATCH:     // Protocol driver not attached
-      code = ::util::error::FAILED_PRECONDITION;
-      break;
+      return ::absl::StatusCode::kFailedPrecondition;
     case ENOSPC:   // No space left on device
     case EDQUOT:   // Disk quota exceeded
     case EMFILE:   // Too many open files
@@ -247,14 +239,12 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ENOMEM:   // Not enough space
     case ENOSR:    // No STREAM resources
     case EUSERS:   // Too many users
-      code = ::util::error::RESOURCE_EXHAUSTED;
-      break;
+      return ::absl::StatusCode::kResourceExhausted;
     case ECHRNG:     // Channel number out of range
     case EFBIG:      // File too large
     case EOVERFLOW:  // Value too large to be stored in data type
     case ERANGE:     // Result too large
-      code = ::util::error::OUT_OF_RANGE;
-      break;
+      return ::absl::StatusCode::kOutOfRange;
     case ENOPKG:           // Package not installed
     case ENOSYS:           // Function not implemented
     case ENOTSUP:          // Operation not supported
@@ -263,8 +253,7 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case EPROTONOSUPPORT:  // Protocol not supported
     case ESOCKTNOSUPPORT:  // Socket type not supported
     case EXDEV:            // Improper link
-      code = ::util::error::UNIMPLEMENTED;
-      break;
+      return ::absl::StatusCode::kUnimplemented;
     case EAGAIN:        // Resource temporarily unavailable
     case ECOMM:         // Communication error on send
     case ECONNREFUSED:  // Connection refused
@@ -279,15 +268,12 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ENOLCK:        // No locks available
     case ENOLINK:       // Link has been severed
     case ENONET:        // Machine is not on the network
-      code = ::util::error::UNAVAILABLE;
-      break;
+      return ::absl::StatusCode::kUnavailable;
     case EDEADLK:  // Resource deadlock avoided
     case ESTALE:   // Stale file handle
-      code = ::util::error::ABORTED;
-      break;
+      return ::absl::StatusCode::kAborted;
     case ECANCELED:  // Operation cancelled
-      code = ::util::error::CANCELLED;
-      break;
+      return ::absl::StatusCode::kCancelled;
     // NOTE: If you get any of the following (especially in a
     // reproducable way) and can propose a better mapping,
     // please email the owners about updating this mapping.
@@ -322,14 +308,9 @@ std::string PosixErrorSpace::String(int code) const { return StrError(code); }
     case ESTRPIPE:      // Streams pipe error
     case EUCLEAN:       // Structure needs cleaning
     case EXFULL:        // Exchange full
-      code = ::util::error::UNKNOWN;
-      break;
-    default: {
-      code = ::util::error::UNKNOWN;
-      break;
-    }
+    default:
+      return ::absl::StatusCode::kUnknown;
   }
-  return code;
 }
 
 }  // namespace internal

@@ -240,11 +240,11 @@ extern "C" void sdk_linkscan_callback(bcmlt_table_notif_info_t* notify_info,
   uint32* rxpmd = nullptr;
   RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_get(packet, &rxpmd));
   if (shr_pb_printf(pb, "Rxpmd header:\n") == -1) {
-    return ::util::Status(::util::error::Code::INTERNAL, "shr_pb_printf");
+    return ::util::Status(::absl::StatusCode::kInternal, "shr_pb_printf");
   }
   RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_dump(dev_type, rxpmd, BCMPKT_RXPMD_DUMP_F_NONE_ZERO, pb));
   if (shr_pb_printf(pb, "Reasons:\n") == -1) {
-    return ::util::Status(::util::error::Code::INTERNAL, "shr_pb_printf");
+    return ::util::Status(::absl::StatusCode::kInternal, "shr_pb_printf");
   }
   RETURN_IF_BCM_ERROR(bcmpkt_rx_reason_dump(dev_type, rxpmd, pb));
   auto s = absl::StrCat("packet received for netif ", netif_id, ":\n",

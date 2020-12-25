@@ -4,6 +4,7 @@
 
 
 #include "stratum/public/lib/error.h"
+#include "absl/status/status.h"
 
 #include <string>
 
@@ -25,51 +26,51 @@ class StratumErrorSpace : public ::util::ErrorSpace {
     return ErrorCode_Name(static_cast<ErrorCode>(code));
   }
 
-  ::util::error::Code CanonicalCode(const ::util::Status& status) const final {
+  ::absl::StatusCode CanonicalCode(const ::util::Status& status) const final {
     switch (status.error_code()) {
       case ERR_SUCCESS:
-        return ::util::error::OK;
+        return ::absl::StatusCode::kOk;
       case ERR_CANCELLED:
-        return ::util::error::CANCELLED;
+        return ::absl::StatusCode::kCancelled;
       case ERR_UNKNOWN:
-        return ::util::error::UNKNOWN;
+        return ::absl::StatusCode::kUnknown;
       case ERR_PERMISSION_DENIED:
-        return ::util::error::PERMISSION_DENIED;
+        return ::absl::StatusCode::kPermissionDenied;
       case ERR_ABORTED:
-        return ::util::error::ABORTED;
+        return ::absl::StatusCode::kAborted;
       case ERR_DATA_LOSS:
-        return ::util::error::DATA_LOSS;
+        return ::absl::StatusCode::kDataLoss;
       case ERR_UNAUTHENTICATED:
-        return ::util::error::UNAUTHENTICATED;
+        return ::absl::StatusCode::kUnauthenticated;
       case ERR_INTERNAL:
       case ERR_HARDWARE_ERROR:
-        return ::util::error::INTERNAL;
+        return ::absl::StatusCode::kInternal;
       case ERR_INVALID_PARAM:
       case ERR_INVALID_P4_INFO:
-        return ::util::error::INVALID_ARGUMENT;
+        return ::absl::StatusCode::kInvalidArgument;
       case ERR_OPER_TIMEOUT:
-        return ::util::error::DEADLINE_EXCEEDED;
+        return ::absl::StatusCode::kDeadlineExceeded;
       case ERR_ENTRY_NOT_FOUND:
-        return ::util::error::NOT_FOUND;
+        return ::absl::StatusCode::kNotFound;
       case ERR_ENTRY_EXISTS:
-        return ::util::error::ALREADY_EXISTS;
+        return ::absl::StatusCode::kAlreadyExists;
       case ERR_UNIMPLEMENTED:
       case ERR_OPER_NOT_SUPPORTED:
       case ERR_OPER_DISABLED:
-        return ::util::error::UNIMPLEMENTED;
+        return ::absl::StatusCode::kUnimplemented;
       case ERR_FEATURE_UNAVAILABLE:
-        return ::util::error::UNAVAILABLE;
+        return ::absl::StatusCode::kUnavailable;
       case ERR_NO_RESOURCE:
-        return ::util::error::RESOURCE_EXHAUSTED;
+        return ::absl::StatusCode::kResourceExhausted;
       case ERR_FAILED_PRECONDITION:
       case ERR_NOT_INITIALIZED:
-        return ::util::error::FAILED_PRECONDITION;
+        return ::absl::StatusCode::kFailedPrecondition;
       case ERR_OUT_OF_RANGE:
       case ERR_TABLE_FULL:
       case ERR_TABLE_EMPTY:
-        return ::util::error::OUT_OF_RANGE;
+        return ::absl::StatusCode::kOutOfRange;
       default:
-        return ::util::error::UNKNOWN;  // Default error.
+        return ::absl::StatusCode::kUnknown;  // Default error.
     }
   }
 

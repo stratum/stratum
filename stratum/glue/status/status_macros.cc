@@ -53,10 +53,10 @@ static ::util::Status MakeError(const char* filename, int line,
                                 const std::string& message,
                                 bool should_log, LogSeverity log_severity,
                                 bool should_log_stack_trace) {
-  if (ABSL_PREDICT_FALSE(code == ::util::error::OK)) {
+  if (ABSL_PREDICT_FALSE(code == static_cast<int>(::absl::StatusCode::kOk))) {
     LOG(DFATAL) << "Cannot create error with status OK";
     error_space = ::util::Status::canonical_space();
-    code = ::util::error::UNKNOWN;
+    code = static_cast<int>(::absl::StatusCode::kUnknown);
   }
   const ::util::Status status = MakeStatus(error_space, code, message);
   if (ABSL_PREDICT_TRUE(should_log)) {
@@ -108,7 +108,7 @@ MakeErrorStream::Impl::Impl(const ::util::Status& status, const char* file,
       // Make sure we show some error, even if the call is incorrect.
       error_space_(!status.ok() ? status.error_space()
                                 : ::util::Status::canonical_space()),
-      code_(!status.ok() ? status.error_code() : ::util::error::UNKNOWN),
+      code_(!status.ok() ? status.error_code() : static_cast<int>(::absl::StatusCode::kUnknown)),
       prior_message_(status.error_message()),
       is_done_(false),
       // Error code type is not visible here, so we can't call

@@ -111,12 +111,12 @@ class StateMachine {
     // No transitions exist for this state.
     const auto transitions = table_.find(from_state);
     if (transitions == table_.end()) {
-      return ::util::Status(util::error::INTERNAL, "Invalid transition.");
+      return ::util::Status(util::::absl::StatusCode::kInternal, "Invalid transition.");
     }
     // No transition from this state with the given event.
     const auto next_state_iter = transitions->second.find(event);
     if (next_state_iter == transitions->second.end()) {
-      return ::util::Status(util::error::INTERNAL, "Invalid transition.");
+      return ::util::Status(util::::absl::StatusCode::kInternal, "Invalid transition.");
     }
     // A valid transition was found; return the next state.
     return next_state_iter->second;

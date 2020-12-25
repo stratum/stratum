@@ -136,7 +136,7 @@ DummyBox::RegisterNodeEventNotifyWriter(
   absl::WriterMutexLock l(&sdk_lock_);
   if (node_event_notify_writers_.find(node_id) !=
         node_event_notify_writers_.end()) {
-    return ::util::Status(::util::error::ALREADY_EXISTS,
+    return ::util::Status(::absl::StatusCode::kAlreadyExists,
                           "Writer already exists");
   }
 
@@ -148,7 +148,7 @@ DummyBox::RegisterNodeEventNotifyWriter(
   absl::WriterMutexLock l(&sdk_lock_);
   if (node_event_notify_writers_.find(node_id) ==
         node_event_notify_writers_.end()) {
-    return ::util::Status(::util::error::NOT_FOUND,
+    return ::util::Status(::absl::StatusCode::kNotFound,
                           "Writer not found");
   }
   node_event_notify_writers_.erase(node_id);

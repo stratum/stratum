@@ -26,62 +26,17 @@ typedef std::unordered_map<std::string, ErrorSpace*, std::hash<std::string> >
 ABSL_CONST_INIT absl::Mutex registry_lock(absl::kConstInit);
 static ErrorSpaceTable* error_space_table;
 
+static const int CODE_MIN = static_cast<int>(::absl::StatusCode::kOk);
+static const int CODE_MAX = static_cast<int>(::absl::StatusCode::kUnauthenticated);
+
+static inline bool CodeIsValid(int code) {
+  return code >= CODE_MIN && code <= CODE_MAX;
+}
+
 // Convert canonical code to a value known to this binary.
-static inline error::Code MapToLocalCode(int c) {
-  return error::Code_IsValid(c) ? static_cast<error::Code>(c) : error::UNKNOWN;
+static inline ::absl::StatusCode MapToLocalCode(int c) {
+  return CodeIsValid(c) ? static_cast<::absl::StatusCode>(c) : ::absl::StatusCode::kUnknown;
 }
-
-namespace error {
-
-inline std::string CodeEnumToString(error::Code code) {
-  switch (code) {
-    case OK:
-      return "OK";
-    case CANCELLED:
-      return "CANCELLED";
-    case UNKNOWN:
-      return "UNKNOWN";
-    case INVALID_ARGUMENT:
-      return "INVALID_ARGUMENT";
-    case DEADLINE_EXCEEDED:
-      return "DEADLINE_EXCEEDED";
-    case NOT_FOUND:
-      return "NOT_FOUND";
-    case ALREADY_EXISTS:
-      return "ALREADY_EXISTS";
-    case PERMISSION_DENIED:
-      return "PERMISSION_DENIED";
-    case UNAUTHENTICATED:
-      return "UNAUTHENTICATED";
-    case RESOURCE_EXHAUSTED:
-      return "RESOURCE_EXHAUSTED";
-    case FAILED_PRECONDITION:
-      return "FAILED_PRECONDITION";
-    case ABORTED:
-      return "ABORTED";
-    case OUT_OF_RANGE:
-      return "OUT_OF_RANGE";
-    case UNIMPLEMENTED:
-      return "UNIMPLEMENTED";
-    case INTERNAL:
-      return "INTERNAL";
-    case UNAVAILABLE:
-      return "UNAVAILABLE";
-    case DATA_LOSS:
-      return "DATA_LOSS";
-    case DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_:  // NOLINT
-      // We are not adding a default clause here, to explicitly make clang
-      // detect the missing codes. This conversion method must stay in sync
-      // with codes.proto.
-      return "UNKNOWN";
-  }
-
-  // No default clause, clang will abort if a code is missing from
-  // above switch.
-  return "UNKNOWN";
-}
-
-}  // namespace error.
 
 // Special space for the OK error.
 class GenericErrorSpace : public ErrorSpace {
@@ -89,27 +44,20 @@ class GenericErrorSpace : public ErrorSpace {
   GenericErrorSpace() : ErrorSpace("generic") {}
 
   virtual std::string String(int code) const {
-    std::string status;
-    if (code == 0) {
-      status = "OK";
-    } else if (error::Code_IsValid(code)) {
-      // Lower-case the protocol-compiler assigned name for compatibility
-      // with old behavior.
-      status = absl::AsciiStrToLower(
-          error::CodeEnumToString(static_cast<error::Code>(code)));
+    if (CodeIsValid(code)) {
+      return ::absl::StatusCodeToString(static_cast<::absl::StatusCode>(code));
     } else {
       char buf[30];
       snprintf(buf, sizeof(buf), "%d", code);
-      status = buf;
+      return std::string(buf);
     }
-    return status;
   }
 
-  virtual error::Code CanonicalCode(const ::util::Status& status) const {
+  virtual ::absl::StatusCode CanonicalCode(const ::util::Status& status) const {
     if (status.error_space() == Status::canonical_space()) {
       return MapToLocalCode(status.error_code());
     }
-    return error::UNKNOWN;
+    return ::absl::StatusCode::kUnknown;
   }
 };
 
@@ -143,18 +91,18 @@ const std::string* Status::EmptyString() {
 // runs after InitChecker.
 struct InitChecker {
   InitChecker() {
-    Check(::util::Status::OK, 0, "", error::OK);
+    Check(::util::Status::OK, Status::OK_CODE, "", ::absl::StatusCode::kOk);
     Check(::util::Status::CANCELLED, Status::CANCELLED_CODE, "",
-          error::CANCELLED);
-    Check(::util::Status::UNKNOWN, Status::UNKNOWN_CODE, "", error::UNKNOWN);
+          ::absl::StatusCode::kCancelled);
+    Check(::util::Status::UNKNOWN, Status::UNKNOWN_CODE, "", ::absl::StatusCode::kUnknown);
   }
   static void Check(const ::util::Status s, int code, const std::string& msg,
-                    error::Code canonical_code) {
-    assert(s.ok() == (code == 0));
+                    ::absl::StatusCode canonical_code) {
+    assert(s.ok() == (code == static_cast<int>(::absl::StatusCode::kOk)));
     assert(s.error_code() == code);
     assert(s.error_space() == Status::canonical_space());
     assert(s.error_message() == msg);
-    assert(s.ToCanonical().error_code() == canonical_code);
+    assert(s.ToCanonical().CanonicalCode() == canonical_code);
   }
 };
 static InitChecker checker;
@@ -167,9 +115,9 @@ struct Status::Pod {
   Rep* rep_;
 };
 Status::Rep Status::global_reps[3] = {
-    {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr},
-    {ATOMIC_VAR_INIT(kGlobalRef), CANCELLED_CODE, 0, nullptr, nullptr},
-    {ATOMIC_VAR_INIT(kGlobalRef), UNKNOWN_CODE, 0, nullptr, nullptr}};
+    {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, ::absl::StatusCode::kOk, nullptr, nullptr},
+    {ATOMIC_VAR_INIT(kGlobalRef), CANCELLED_CODE, ::absl::StatusCode::kCancelled, nullptr, nullptr},
+    {ATOMIC_VAR_INIT(kGlobalRef), UNKNOWN_CODE, ::absl::StatusCode::kUnknown, nullptr, nullptr}};
 
 const Status::Pod Status::globals[3] = {{&Status::global_reps[0]},
                                         {&Status::global_reps[1]},
@@ -196,7 +144,8 @@ void Status::UnrefSlow(Rep* r) {
 }
 
 Status::Rep* Status::NewRep(const ErrorSpace* space, int code,
-                            const std::string& msg, int canonical_code) {
+                            const std::string& msg,
+                            ::absl::StatusCode canonical_code) {
   DCHECK(space != nullptr);
   DCHECK_NE(code, 0);
   Rep* rep = new Rep;
@@ -207,10 +156,11 @@ Status::Rep* Status::NewRep(const ErrorSpace* space, int code,
 }
 
 void Status::ResetRep(Rep* rep, const ErrorSpace* space, int code,
-                      const std::string& msg, int canonical_code) {
+                      const std::string& msg,
+                      ::absl::StatusCode canonical_code) {
   DCHECK(rep != nullptr);
   DCHECK_EQ(rep->ref, 1);
-  DCHECK(space != canonical_space() || canonical_code == 0);
+  DCHECK(space != canonical_space() || canonical_code == ::absl::StatusCode::kOk);
   rep->code = code;
   rep->space_ptr = space;
   rep->canonical_code = canonical_code;
@@ -223,12 +173,12 @@ void Status::ResetRep(Rep* rep, const ErrorSpace* space, int code,
   }
 }
 
-Status::Status(error::Code code, const std::string& msg) {
-  if (code == 0) {
+Status::Status(::absl::StatusCode code, const std::string& msg) {
+  if (code == ::absl::StatusCode::kOk) {
     // Construct an OK status
     rep_ = &global_reps[0];
   } else {
-    rep_ = NewRep(canonical_space(), code, msg, 0);
+    rep_ = NewRep(canonical_space(), static_cast<int>(code), msg, code);
   }
 }
 
@@ -238,25 +188,25 @@ Status::Status(const ErrorSpace* space, int code, const std::string& msg) {
     // Construct an OK status
     rep_ = &global_reps[0];
   } else {
-    rep_ = NewRep(space, code, msg, 0);
+    rep_ = NewRep(space, code, msg, ::absl::StatusCode::kOk);
   }
 }
 
 int Status::RawCanonicalCode() const {
-  if (rep_->canonical_code > 0) {
-    return rep_->canonical_code;
+  if (static_cast<int>(rep_->canonical_code) > 0) {
+    return static_cast<int>(rep_->canonical_code);
   } else if (error_space() == Status::canonical_space()) {
     return error_code();
   } else {
-    return error_space()->CanonicalCode(*this);
+    return static_cast<int>(error_space()->CanonicalCode(*this));
   }
 }
 
-error::Code Status::CanonicalCode() const {
+::absl::StatusCode Status::CanonicalCode() const {
   return MapToLocalCode(RawCanonicalCode());
 }
 
-void Status::SetCanonicalCode(int canonical_code) {
+void Status::SetCanonicalCode(::absl::StatusCode canonical_code) {
   if (error_space() != Status::canonical_space()) {
     PrepareToModify();
     rep_->canonical_code = canonical_code;
@@ -275,7 +225,7 @@ void Status::Clear() {
 
 void Status::SetError(const ErrorSpace* space, int code,
                       const std::string& msg) {
-  InternalSet(space, code, msg, 0);
+  InternalSet(space, code, msg, ::absl::StatusCode::kOk);
 }
 
 void Status::PrepareToModify() {
@@ -289,7 +239,7 @@ void Status::PrepareToModify() {
 }
 
 void Status::InternalSet(const ErrorSpace* space, int code,
-                         const std::string& msg, int canonical_code) {
+                         const std::string& msg, ::absl::StatusCode canonical_code) {
   DCHECK(space != nullptr);
   if (code == 0) {
     // Construct an OK status

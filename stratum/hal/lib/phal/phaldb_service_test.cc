@@ -174,7 +174,7 @@ TEST_P(PhalDbServiceTest, GetRequestFail) {
 
   EXPECT_CALL(*db_query, Get())
       .WillOnce(Return(
-          ByMove(::util::Status(util::error::NOT_FOUND, "Invalid path"))));
+          ByMove(::util::Status(util::::absl::StatusCode::kNotFound, "Invalid path"))));
 
   ASSERT_OK(
       ParseProtoFromString(invalid_request_path_proto, req.mutable_path()));
@@ -323,7 +323,7 @@ TEST_P(PhalDbServiceTest, SubscribeRequestFail) {
 
   EXPECT_CALL(*db_query, Subscribe(_, poll_interval))
       .WillRepeatedly(
-          Return(ByMove(::util::Status(util::error::CANCELLED, "some error"))));
+          Return(ByMove(::util::Status(util::::absl::StatusCode::kCancelled, "some error"))));
 
   // Prepare request
   ASSERT_OK(ParseProtoFromString(valid_request_path_proto, req.mutable_path()));

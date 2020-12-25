@@ -116,7 +116,7 @@ namespace dummy_switch {
   }
   shutdown = chassis_mgr_->Shutdown().ok() && successful;
   return shutdown ? ::util::OkStatus()
-                  : ::util::Status(::util::error::INTERNAL,
+                  : ::util::Status(::absl::StatusCode::kInternal,
                                    "Got error while shutting down the switch");
 }
 ::util::Status DummySwitch::Freeze() {
@@ -134,7 +134,7 @@ namespace dummy_switch {
     }
   }
   return successful ? chassis_mgr_->Freeze()
-                    : ::util::Status(::util::error::INTERNAL,
+                    : ::util::Status(::absl::StatusCode::kInternal,
                                      "Got error while freezing the switch");
 }
 ::util::Status DummySwitch::Unfreeze() {
@@ -152,7 +152,7 @@ namespace dummy_switch {
     }
   }
   return successful ? chassis_mgr_->Unfreeze()
-                    : ::util::Status(::util::error::INTERNAL,
+                    : ::util::Status(::absl::StatusCode::kInternal,
                                      "Got error while unfreezing the switch");
 }
 ::util::Status DummySwitch::WriteForwardingEntries(
@@ -333,7 +333,7 @@ std::vector<DummyNode*> DummySwitch::GetDummyNodes() {
 ::util::StatusOr<DummyNode*> DummySwitch::GetDummyNode(uint64 node_id) {
   auto node_element = dummy_nodes_.find(node_id);
   if (node_element == dummy_nodes_.end()) {
-    return MAKE_ERROR(::util::error::NOT_FOUND)
+    return MAKE_ERROR(::absl::StatusCode::kNotFound)
            << "DummyNode with id " << node_id << " not found.";
   }
   return ::util::StatusOr<DummyNode*>(node_element->second);

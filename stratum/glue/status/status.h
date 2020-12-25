@@ -13,38 +13,7 @@
 #include "absl/strings/str_cat.h"
 #include "stratum/glue/gtl/source_location.h"
 #include "stratum/glue/logging.h"
-
-// TODO(unknown): Move to Abseil-status when it is available.
-//
-namespace util {
-namespace error {
-enum Code {
-  OK = 0,
-  CANCELLED = 1,
-  UNKNOWN = 2,
-  INVALID_ARGUMENT = 3,
-  DEADLINE_EXCEEDED = 4,
-  NOT_FOUND = 5,
-  ALREADY_EXISTS = 6,
-  PERMISSION_DENIED = 7,
-  RESOURCE_EXHAUSTED = 8,
-  FAILED_PRECONDITION = 9,
-  ABORTED = 10,
-  OUT_OF_RANGE = 11,
-  UNIMPLEMENTED = 12,
-  INTERNAL = 13,
-  UNAVAILABLE = 14,
-  DATA_LOSS = 15,
-  UNAUTHENTICATED = 16,
-  DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_ = 20,
-  // **DO NOT ADD ANYTHING TO THIS**
-};
-static const enum Code Code_MIN = Code::OK;
-static const enum Code Code_MAX = Code::UNAUTHENTICATED;
-inline bool Code_IsValid(int c) { return (c >= Code_MIN) && (c <= Code_MAX); }
-}  // end namespace error
-}  // end namespace util
-
+#include "absl/status/status.h"
 namespace util {
 
 using google::LogSeverity;
@@ -68,7 +37,7 @@ class Status final {
   // code, and error message.  If "code == 0", error_message is
   // ignored and a Status object identical to Status::OK is
   // constructed.
-  Status(::util::error::Code code, const std::string& error_message);
+  Status(::absl::StatusCode code, const std::string& error_message);
 
   // Creates a status in the specified "space", "code" and the
   // associated error message.  If "code == 0", (space,msg) are ignored
@@ -128,17 +97,17 @@ class Status final {
 
   // Returns the canonical code for this Status value.  Automatically
   // converts to the canonical space if necessary.
-  ::util::error::Code CanonicalCode() const;
+  ::absl::StatusCode CanonicalCode() const;
 
   // Sets the equivalent canonical code for a Status with a
   // non-canonical error space.
-  void SetCanonicalCode(int canonical_code);
+  void SetCanonicalCode(::absl::StatusCode canonical_code);
 
   bool operator==(const Status& x) const;
   bool operator!=(const Status& x) const;
 
   // Returns true iff this->CanonicalCode() == expected.
-  bool Matches(::util::error::Code expected) const;
+  bool Matches(::absl::StatusCode expected) const;
 
   // Returns true iff this has the same error_space, error_code,
   // and canonical_code as "x".  I.e., the two Status objects are
@@ -181,7 +150,7 @@ class Status final {
   struct Rep {
     std::atomic<unsigned int> ref;  // reference count.
     int code;                       // code >= 0
-    int canonical_code;             // 0 means use space to calculate
+    ::absl::StatusCode canonical_code;             // 0 means use space to calculate
     const ErrorSpace* space_ptr;    // NULL means canonical_space()
     std::string* message_ptr;       // NULL means empty
   };
@@ -202,7 +171,7 @@ class Status final {
   }
 
   void InternalSet(const ErrorSpace* space, int code, const std::string& msg,
-                   int canonical_code);
+                   ::absl::StatusCode canonical_code);
 
   // Returns the canonical code from the status protocol buffer (if present) or
   // the result of passing this status to the ErrorSpace CanonicalCode method.
@@ -213,9 +182,9 @@ class Status final {
   void PrepareToModify();
 
   static Rep* NewRep(const ErrorSpace*, int code, const std::string&,
-                     int canonical_code);
+                     ::absl::StatusCode canonical_code);
   static void ResetRep(Rep* rep, const ErrorSpace*, int code,
-                       const std::string&, int canonical_code);
+                       const std::string&, ::absl::StatusCode canonical_code);
   static bool EqualsSlow(const ::util::Status& a, const ::util::Status& b);
 
   // Machinery for linker initialization of the global Status objects.
@@ -258,9 +227,9 @@ class ErrorSpace {
   // mapping. The default is to always return UNKNOWN. It is an error to pass a
   // Status that does not belong to this space; ErrorSpace implementations
   // should return UNKNOWN in that case.
-  virtual ::util::error::Code CanonicalCode(
+  virtual ::absl::StatusCode CanonicalCode(
       const ::util::Status& status) const {
-    return error::UNKNOWN;
+    return ::absl::StatusCode::kUnknown;
   }
 
   // Find the error-space with the specified name.  Return the
@@ -342,7 +311,7 @@ inline bool Status::operator==(const Status& x) const {
 
 inline bool Status::operator!=(const Status& x) const { return !(*this == x); }
 
-inline bool Status::Matches(::util::error::Code expected) const {
+inline bool Status::Matches(::absl::StatusCode expected) const {
   return CanonicalCode() == expected;
 }
 
@@ -359,7 +328,7 @@ inline Status OkStatus() { return Status(); }
 
 class ABSL_MUST_USE_RESULT StatusBuilder {
  public:
-  StatusBuilder(::util::error::Code code,
+  StatusBuilder(::absl::StatusCode code,
                 ::stratum::gtl::source_location location)
       : code_(code),
         line_(location.line()),
@@ -369,14 +338,14 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
         log_type_(LogType::kDisabled) {}
 
   StatusBuilder& Log(LogSeverity severity) {
-    if (code_ == ::util::error::Code::OK) return *this;
+    if (code_ == ::absl::StatusCode::kOk) return *this;
     log_type_ = LogType::kLog;
     log_severity_ = severity;
     return *this;
   }
 
   StatusBuilder& VLog(int level) {
-    if (code_ == ::util::error::Code::OK) return *this;
+    if (code_ == ::absl::StatusCode::kOk) return *this;
     log_type_ = LogType::kVLog;
     log_verbose_level_ = level;
     return *this;
@@ -415,7 +384,7 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
     kVLog,
   };
 
-  const ::util::error::Code code_;
+  const ::absl::StatusCode code_;
   const int line_;
   const std::string file_;
   LogSeverity log_severity_;
@@ -426,82 +395,82 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
 
 inline StatusBuilder AbortedErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::ABORTED, location);
+  return StatusBuilder(::absl::StatusCode::kAborted, location);
 }
 
 inline StatusBuilder AlreadyExistsErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::ALREADY_EXISTS, location);
+  return StatusBuilder(::absl::StatusCode::kAlreadyExists, location);
 }
 
 inline StatusBuilder CancelledErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::CANCELLED, location);
+  return StatusBuilder(::absl::StatusCode::kCancelled, location);
 }
 
 inline StatusBuilder DataLossErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::DATA_LOSS, location);
+  return StatusBuilder(::absl::StatusCode::kDataLoss, location);
 }
 
 inline StatusBuilder DeadlineExceededErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::DEADLINE_EXCEEDED, location);
+  return StatusBuilder(::absl::StatusCode::kDeadlineExceeded, location);
 }
 
 inline StatusBuilder FailedPreconditionErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::FAILED_PRECONDITION, location);
+  return StatusBuilder(::absl::StatusCode::kFailedPrecondition, location);
 }
 
 inline StatusBuilder InternalErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::INTERNAL, location);
+  return StatusBuilder(::absl::StatusCode::kInternal, location);
 }
 
 inline StatusBuilder InvalidArgumentErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::INVALID_ARGUMENT, location);
+  return StatusBuilder(::absl::StatusCode::kInvalidArgument, location);
 }
 
 inline StatusBuilder NotFoundErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::NOT_FOUND, location);
+  return StatusBuilder(::absl::StatusCode::kNotFound, location);
 }
 
 inline StatusBuilder OutOfRangeErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::OUT_OF_RANGE, location);
+  return StatusBuilder(::absl::StatusCode::kOutOfRange, location);
 }
 
 inline StatusBuilder PermissionDeniedErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::PERMISSION_DENIED, location);
+  return StatusBuilder(::absl::StatusCode::kPermissionDenied, location);
 }
 
 inline StatusBuilder UnauthenticatedErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::UNAUTHENTICATED, location);
+  return StatusBuilder(::absl::StatusCode::kUnauthenticated, location);
 }
 
 inline StatusBuilder ResourceExhaustedErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::RESOURCE_EXHAUSTED, location);
+  return StatusBuilder(::absl::StatusCode::kResourceExhausted, location);
 }
 
 inline StatusBuilder UnavailableErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::UNAVAILABLE, location);
+  return StatusBuilder(::absl::StatusCode::kUnavailable, location);
 }
 
 inline StatusBuilder UnimplementedErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::UNIMPLEMENTED, location);
+  return StatusBuilder(::absl::StatusCode::kUnimplemented, location);
 }
 
 inline StatusBuilder UnknownErrorBuilder(
     ::stratum::gtl::source_location location) {
-  return StatusBuilder(::util::error::Code::UNKNOWN, location);
+  return StatusBuilder(::absl::StatusCode::kUnknown, location);
 }
 
 }  // namespace util

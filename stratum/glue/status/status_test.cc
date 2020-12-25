@@ -31,12 +31,12 @@ class MyErrorSpace : public util::ErrorSpace {
     return absl::StrCat("error(", code, "%d)");
   }
 
-  ::util::error::Code CanonicalCode(const ::util::Status& status) const {
+  ::absl::StatusCode CanonicalCode(const ::util::Status& status) const {
     switch (status.error_code()) {
       case 60:
-        return ::util::error::PERMISSION_DENIED;
+        return ::absl::StatusCode::kPermissionDenied;
       default:
-        return ::util::error::UNKNOWN;
+        return ::absl::StatusCode::kUnknown;
     }
   }
 };
@@ -51,8 +51,8 @@ static const util::ErrorSpace* OkSpace() {
   return ::util::Status::OK.error_space();
 }
 
-static const int CanonicalCode(const ::util::Status& s) {
-  return s.ToCanonical().error_code();
+static const ::absl::StatusCode CanonicalCode(const ::util::Status& s) {
+  return s.ToCanonical().CanonicalCode();
 }
 
 // Check that s has the specified fields.
@@ -65,11 +65,11 @@ static void CheckStatus(const ::util::Status& s, const util::ErrorSpace* space,
 
   if (code == 0) {
     EXPECT_TRUE(s.ok()) << s;
-    EXPECT_EQ(0, CanonicalCode(s));
+    EXPECT_EQ(::absl::StatusCode::kOk, CanonicalCode(s));
     CHECK_EQ("OK", s.ToString()) << s;
   } else {
     EXPECT_TRUE(!s.ok()) << s;
-    EXPECT_EQ(::util::error::UNKNOWN, CanonicalCode(s));
+    EXPECT_EQ(::absl::StatusCode::kUnknown, CanonicalCode(s));
     EXPECT_THAT(s.ToString(), testing::HasSubstr(space->SpaceName()));
     EXPECT_THAT(s.ToString(), testing::HasSubstr(space->String(code)));
     EXPECT_THAT(s.ToString(), testing::HasSubstr(message));
@@ -102,10 +102,10 @@ TEST(ErrorSpace, FindDestroyed) {
 
 TEST(ErrorSpace, GenericCodeNames) {
   const util::ErrorSpace* e = ::util::Status::CANCELLED.error_space();
-  EXPECT_EQ("OK", e->String(::util::error::OK));
-  EXPECT_EQ("cancelled", e->String(::util::error::CANCELLED));
-  EXPECT_EQ("unknown", e->String(::util::error::UNKNOWN));
-  EXPECT_EQ("aborted", e->String(::util::error::ABORTED));
+  EXPECT_EQ("OK", e->String(static_cast<int>(::absl::StatusCode::kOk)));
+  EXPECT_EQ("cancelled", e->String(static_cast<int>(::absl::StatusCode::kCancelled)));
+  EXPECT_EQ("unknown", e->String(static_cast<int>(::absl::StatusCode::kUnknown)));
+  EXPECT_EQ("aborted", e->String(static_cast<int>(::absl::StatusCode::kAborted)));
   EXPECT_EQ("1000", e->String(1000));  // Out of range
 }
 
@@ -117,11 +117,11 @@ TEST(Status, Empty) {
 TEST(Status, OK) { CheckStatus(::util::Status::OK, OkSpace(), 0, ""); }
 
 TEST(Status, GenericCodes) {
-  EXPECT_EQ(static_cast<int>(::util::error::OK),
+  EXPECT_EQ(static_cast<int>(::absl::StatusCode::kOk),
             static_cast<int>(::util::Status::OK_CODE));
-  EXPECT_EQ(static_cast<int>(::util::error::CANCELLED),
+  EXPECT_EQ(static_cast<int>(::absl::StatusCode::kCancelled),
             static_cast<int>(::util::Status::CANCELLED_CODE));
-  EXPECT_EQ(static_cast<int>(::util::error::UNKNOWN),
+  EXPECT_EQ(static_cast<int>(::absl::StatusCode::kUnknown),
             static_cast<int>(::util::Status::UNKNOWN_CODE));
 }
 
@@ -235,7 +235,7 @@ TEST(Status, UnknownCode) {
   ::util::Status status(&my_error_space, 10, "message");
   ASSERT_TRUE(!status.ok());
   ASSERT_EQ(10, status.error_code());
-  ASSERT_EQ(::util::error::UNKNOWN, CanonicalCode(status));
+  ASSERT_EQ(::absl::StatusCode::kUnknown, CanonicalCode(status));
   ASSERT_EQ(std::string("message"), status.error_message());
   ASSERT_EQ(status.error_space(), &my_error_space);
   ASSERT_THAT(status.ToString(),
@@ -312,8 +312,8 @@ TEST(Status, EqualsCanonicalCodeSame) {
   ::util::Status a = ::util::Status(&my_error_space, 1234, "message");
   ::util::Status b = ::util::Status(&my_error_space, 1234, "message");
   ASSERT_EQ(a, b);
-  a.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
-  b.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
+  a.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
+  b.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
   ASSERT_EQ(a, b);
 }
 
@@ -321,8 +321,8 @@ TEST(Status, EqualsCanonicalCodeMismatch) {
   ::util::Status a = ::util::Status(&my_error_space, 1234, "message");
   ::util::Status b = ::util::Status(&my_error_space, 1234, "message");
   ASSERT_EQ(a, b);
-  a.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
-  b.SetCanonicalCode(::util::error::UNAVAILABLE);
+  a.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
+  b.SetCanonicalCode(::absl::StatusCode::kUnavailable);
   ASSERT_NE(a, b);
 }
 
@@ -340,7 +340,7 @@ static void SanityCheck(const ::util::Status& s, const util::ErrorSpace* space,
   ::util::Status copy(s);
   EXPECT_EQ(s, copy);
 
-  ::util::Status other(::util::error::DEADLINE_EXCEEDED, "_sanity_check_");
+  ::util::Status other(::absl::StatusCode::kDeadlineExceeded, "_sanity_check_");
   EXPECT_NE(other, s);
 
   ::util::Status updated;
@@ -372,17 +372,17 @@ TEST(Status, Globals) {
 TEST(Canonical, WrongSpace) {
   ::util::Status status(&my_error_space, 1, "message");
   const util::ErrorSpace* space = ::util::Status::canonical_space();
-  EXPECT_EQ(::util::error::UNKNOWN, space->CanonicalCode(status));
+  EXPECT_EQ(::absl::StatusCode::kUnknown, space->CanonicalCode(status));
 }
 
 TEST(Canonical, CustomMapping) {
   ::util::Status s(&my_error_space, 60, "message");
-  EXPECT_EQ(::util::error::PERMISSION_DENIED, CanonicalCode(s));
+  EXPECT_EQ(::absl::StatusCode::kPermissionDenied, CanonicalCode(s));
 }
 
 static void VerifyCanonical(const ::util::Status& s,
-                            ::util::error::Code match_code,
-                            ::util::error::Code nomatch_code) {
+                            ::absl::StatusCode match_code,
+                            ::absl::StatusCode nomatch_code) {
   EXPECT_EQ(match_code, s.CanonicalCode());
   EXPECT_TRUE(s.Matches(match_code)) << match_code;
   EXPECT_FALSE(s.Matches(nomatch_code)) << nomatch_code;
@@ -393,38 +393,37 @@ TEST(Canonical, CanonicalCode) {
   ::util::Status cancel = ::util::Status::CANCELLED;
   ::util::Status perm(&my_error_space, 60, "message");
   ::util::Status other(&my_error_space, 10, "message");
-  VerifyCanonical(ok, ::util::error::OK, ::util::error::UNKNOWN);
-  VerifyCanonical(cancel, ::util::error::CANCELLED, ::util::error::UNKNOWN);
-  VerifyCanonical(perm, ::util::error::PERMISSION_DENIED,
-                  ::util::error::UNKNOWN);
-  VerifyCanonical(other, ::util::error::UNKNOWN,
-                  ::util::error::PERMISSION_DENIED);
+  VerifyCanonical(ok, ::absl::StatusCode::kOk, ::absl::StatusCode::kUnknown);
+  VerifyCanonical(cancel, ::absl::StatusCode::kCancelled, ::absl::StatusCode::kUnknown);
+  VerifyCanonical(perm, ::absl::StatusCode::kPermissionDenied,
+                  ::absl::StatusCode::kUnknown);
+  VerifyCanonical(other, ::absl::StatusCode::kUnknown,
+                  ::absl::StatusCode::kPermissionDenied);
 
   // Check handling of a canonical code not known in this address space.
-  perm.SetCanonicalCode(static_cast<int>(::util::error::Code_MAX) + 1);
-  VerifyCanonical(perm, ::util::error::UNKNOWN,
-                  ::util::error::PERMISSION_DENIED);
+  perm.SetCanonicalCode(::absl::StatusCode::kUnknown);
+  VerifyCanonical(perm, ::absl::StatusCode::kUnknown,
+                  ::absl::StatusCode::kPermissionDenied);
 }
 
 TEST(Canonical, SetCanonicalCode) {
   ::util::Status s(&my_error_space, 1234, "message");
-  s.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
+  s.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
   EXPECT_EQ(1234, s.error_code());
-  EXPECT_EQ(::util::error::RESOURCE_EXHAUSTED, CanonicalCode(s));
+  EXPECT_EQ(::absl::StatusCode::kResourceExhausted, CanonicalCode(s));
 }
 
 TEST(Canonical, SetCanonicalCodeIgnoredOnOkStatus) {
   ::util::Status s(&my_error_space, 0, "message");
-  s.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
+  s.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
   EXPECT_TRUE(s.ok());
-  EXPECT_EQ(::util::error::OK, CanonicalCode(s));
+  EXPECT_EQ(::absl::StatusCode::kOk, CanonicalCode(s));
 }
 
 TEST(Canonical, SetCanonicalCodeIgnoredOnCanonicalSpace) {
-  ::util::Status s(::util::error::DEADLINE_EXCEEDED, "message");
-  s.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
-  EXPECT_EQ(::util::error::DEADLINE_EXCEEDED, s.error_code());
-  EXPECT_EQ(::util::error::DEADLINE_EXCEEDED, CanonicalCode(s));
+  ::util::Status s(::absl::StatusCode::kDeadlineExceeded, "message");
+  s.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
+  EXPECT_EQ(::absl::StatusCode::kDeadlineExceeded, CanonicalCode(s));
 }
 
 TEST(Canonical, SetCanonicalCodeOnSharedStatus) {
@@ -432,23 +431,23 @@ TEST(Canonical, SetCanonicalCodeOnSharedStatus) {
 
   // Set canonical code on a copy.
   ::util::Status y = x;
-  y.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
+  y.SetCanonicalCode(::absl::StatusCode::kResourceExhausted);
   EXPECT_NE(x, y);
   EXPECT_EQ(x.error_space(), y.error_space());
   EXPECT_EQ(x.error_code(), y.error_code());
   EXPECT_EQ(x.error_message(), y.error_message());
-  EXPECT_EQ(::util::error::UNKNOWN, CanonicalCode(x));
-  EXPECT_EQ(::util::error::RESOURCE_EXHAUSTED, CanonicalCode(y));
+  EXPECT_EQ(::absl::StatusCode::kUnknown, CanonicalCode(x));
+  EXPECT_EQ(::absl::StatusCode::kResourceExhausted, CanonicalCode(y));
 
   // Yet another copy, with a different code set.
   ::util::Status z = y;
-  z.SetCanonicalCode(::util::error::DEADLINE_EXCEEDED);
+  z.SetCanonicalCode(::absl::StatusCode::kDeadlineExceeded);
   EXPECT_NE(y, z);
   EXPECT_EQ(x.error_space(), z.error_space());
   EXPECT_EQ(x.error_code(), z.error_code());
   EXPECT_EQ(x.error_message(), z.error_message());
-  EXPECT_EQ(::util::error::RESOURCE_EXHAUSTED, CanonicalCode(y));
-  EXPECT_EQ(::util::error::DEADLINE_EXCEEDED, CanonicalCode(z));
+  EXPECT_EQ(::absl::StatusCode::kResourceExhausted, CanonicalCode(y));
+  EXPECT_EQ(::absl::StatusCode::kDeadlineExceeded, CanonicalCode(z));
 }
 
 #ifdef BENCHMARK

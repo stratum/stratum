@@ -19,7 +19,7 @@ namespace internal {
       "Status::OK is not a valid constructor argument to StatusOr<T>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
-  // TODO(unknown): Change this to ::util::error::INVALID_ARGUMENT.
+  // TODO(unknown): Change this to ::absl::StatusCode::kInvalidArgument.
   return ::util::PosixErrorToStatus(EINVAL, kMessage);
 }
 
@@ -28,7 +28,7 @@ namespace internal {
       "NULL is not a valid constructor argument to StatusOr<T*>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
-  // TODO(unknown): Change this to ::util::error::INVALID_ARGUMENT.
+  // TODO(unknown): Change this to ::absl::StatusCode::kInvalidArgument.
   return ::util::PosixErrorToStatus(EINVAL, kMessage);
 }
 

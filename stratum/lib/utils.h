@@ -27,6 +27,7 @@
 #include "grpcpp/grpcpp.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
+#include "absl/status/status.h"
 
 namespace stratum {
 
@@ -219,6 +220,10 @@ inline ::grpc::StatusCode ToGrpcCode(int from) {
   return code;
 }
 
+inline ::grpc::StatusCode ToGrpcCode(::absl::StatusCode from) {
+  return ToGrpcCode(static_cast<int>(from));
+}
+
 // Helper for converting an int error code to a Google RPC canonical error code.
 constexpr ::google::rpc::Code kGoogleRpcCodeMin = ::google::rpc::OK;
 constexpr ::google::rpc::Code kGoogleRpcCodeMax =
@@ -229,6 +234,10 @@ inline ::google::rpc::Code ToGoogleRpcCode(int from) {
     code = static_cast<::google::rpc::Code>(from);
   }
   return code;
+}
+
+inline ::google::rpc::Code ToGoogleRpcCode(::absl::StatusCode from) {
+  return ToGoogleRpcCode(static_cast<int>(from));
 }
 
 // This function takes an unsigned integer encoded as string data and

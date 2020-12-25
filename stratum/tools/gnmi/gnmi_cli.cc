@@ -19,6 +19,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
+#include "absl/status/status.h"
 
 const char kUsage[] =
     R"USAGE(usage: gnmi-cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
@@ -57,7 +58,7 @@ optional arguments:
     const ::grpc::Status _grpc_status = (expr);                              \
     if (ABSL_PREDICT_FALSE(!_grpc_status.ok())) {                            \
       ::util::Status _status(                                                \
-          static_cast<::util::error::Code>(_grpc_status.error_code()),       \
+          static_cast<::absl::StatusCode>(_grpc_status.error_code()),       \
           _grpc_status.error_message());                                     \
       LOG(ERROR) << "Return Error: " << #expr << " failed with " << _status; \
       return _status;                                                        \

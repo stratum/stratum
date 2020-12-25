@@ -54,7 +54,7 @@ TEST_F(StateMachineTest, InvalidTransitionShouldNotChangeState) {
   // Check that current state is maintained when an invalid event is added.
   EXPECT_THAT(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM1,
     "Check processing of invalid transitions", nullptr),
-    StatusIs(util::error::INTERNAL, HasSubstr("Invalid transition.")));
+    StatusIs(util::::absl::StatusCode::kInternal, HasSubstr("Invalid transition.")));
   EXPECT_EQ(example_sm_.CurrentState(), ExampleStateMachine::State::STATE0);
 }
 
@@ -67,18 +67,18 @@ TEST(ResumeStateMachineTest, CallbackFailureShouldNotChangeState) {
   EXPECT_EQ(example_sm.CurrentState(), ExampleStateMachine::State::STATE1);
 
   // Check that the transition to STATE2 fails.
-  auto fail = ::util::Status(util::error::INTERNAL, "Failures are fun!");
+  auto fail = ::util::Status(util::::absl::StatusCode::kInternal, "Failures are fun!");
   EXPECT_CALL(example_sm, EnterState2(ExampleStateMachine::Event::FROM1,
     ExampleStateMachine::State::STATE2, &error_event))
     .WillOnce(Return(fail));
   EXPECT_THAT(example_sm.ProcessEvent(ExampleStateMachine::Event::FROM1,
     "Check processing of failed callbacks", &error_event),
-    StatusIs(util::error::INTERNAL, HasSubstr("Failures are fun!")));
+    StatusIs(util::::absl::StatusCode::kInternal, HasSubstr("Failures are fun!")));
   EXPECT_EQ(example_sm.CurrentState(), ExampleStateMachine::State::STATE1);
 }
 
 TEST_F(StateMachineTest, AddEventsAfterCallbackFailure) {
-  auto fail = ::util::Status(util::error::INTERNAL, "Fail on first try!");
+  auto fail = ::util::Status(util::::absl::StatusCode::kInternal, "Fail on first try!");
   EXPECT_CALL(example_sm_, ExitState0)
     .WillOnce(Return(fail))
     .WillOnce(Return(::util::OkStatus()));
@@ -86,7 +86,7 @@ TEST_F(StateMachineTest, AddEventsAfterCallbackFailure) {
 
   EXPECT_THAT(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM0,
     "Add specified event", nullptr),
-    StatusIs(util::error::INTERNAL, HasSubstr("Fail on first try!")));
+    StatusIs(util::::absl::StatusCode::kInternal, HasSubstr("Fail on first try!")));
   EXPECT_OK(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM0,
     "Add FROM0 event", nullptr));
   EXPECT_EQ(example_sm_.CurrentState(), ExampleStateMachine::State::STATE1);

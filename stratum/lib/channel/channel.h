@@ -84,11 +84,11 @@ namespace stratum {
 //     // Keep reading as long as the Channel is still open.
 //     do {
 //       retval = reader.Read(&buf, timeout);
-//       if (retval.CanonicalCode() == ::util::error::CANCELLED) break;
+//       if (retval.CanonicalCode() == ::absl::StatusCode::kCancelled) break;
 //       // At most every 5 seconds, check whether or not to exit.
 //       if (exit) break;
 //       // If the queue was empty, block on Read again.
-//       if (retval.CanonicalCode() == ::util::error::NOT_FOUND) continue;
+//       if (retval.CanonicalCode() == ::absl::StatusCode::kNotFound) continue;
 //       // Operate on data.
 //       ...
 //     } while (1);
@@ -102,7 +102,7 @@ namespace stratum {
 //   template <typename T>
 //   void ProcessChannel(ChannelReader<T>* reader) {
 //     std::vector<T> Ts;
-//     if (T_reader->ReadAll(&Ts).CanonicalCode() == ::util::error::Cancelled) {
+//     if (T_reader->ReadAll(&Ts).CanonicalCode() == ::absl::StatusCode::kCancelled) {
 //       return;
 //     }
 //     // Operate on the read data.
@@ -127,9 +127,9 @@ namespace stratum {
 //       if (!status_or_ready.ok()) {
 //         auto& status = status_or_ready.status();
 //         // If all Channels are closed, exit.
-//         if (status.CanonicalCode() == ::util::error::CANCELLED) break;
+//         if (status.CanonicalCode() == ::absl::StatusCode::kCancelled) break;
 //         // If both Channels were empty, block on Select again.
-//         if (status.CanonicalCode() == ::util::error::NOT_FOUND) continue;
+//         if (status.CanonicalCode() == ::absl::StatusCode::kNotFound) continue;
 //       }
 //       SelectResult ready_flags = std::move(status_or_ready).ValueOrDie();
 //       // Process T_channel if ready for read.

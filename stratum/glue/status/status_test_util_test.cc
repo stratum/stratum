@@ -15,12 +15,12 @@ TEST(StatusTestUtil, ExpectOkSuccess) { EXPECT_OK(::util::Status::OK); }
 TEST(StatusTestUtil, AssertOkSuccess) { ASSERT_OK(::util::Status::OK); }
 
 TEST(StatusTestUtil, ExpectOkFailure) {
-  ::util::Status error_status(::util::error::UNKNOWN, "error_status_message");
+  ::util::Status error_status(::absl::StatusCode::kUnknown, "error_status_message");
   EXPECT_NONFATAL_FAILURE(EXPECT_OK(error_status), "error_status_message");
 }
 
 TEST(StatusTestUtil, AssertOkFailure) {
   EXPECT_FATAL_FAILURE(
-      ASSERT_OK(::util::Status(::util::error::UNKNOWN, "error_status_message")),
+      ASSERT_OK(::util::Status(::absl::StatusCode::kUnknown, "error_status_message")),
       "error_status_message");
 }

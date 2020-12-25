@@ -13,7 +13,7 @@
 //   ::util::StatusOr<ValueType> Method(arg, ...);
 //
 // Inside the method, to return errors, use the macros
-//   RETURN_ERROR() << "Message with ::util::error::UNKNOWN code";
+//   RETURN_ERROR() << "Message with ::absl::StatusCode::kUnknown code";
 //   RETURN_ERROR(code_enum)
 //       << "Message with an error code, in that error_code's ErrorSpace "
 //       << "(See ErrorCodeOptions below)";
@@ -68,10 +68,10 @@
 //
 // Error codes:
 //
-// Using error codes is optional.  ::util::error::UNKNOWN will be used if no
+// Using error codes is optional.  ::absl::StatusCode::kUnknown will be used if no
 // code is provided.
 //
-// By default, these macros work with canonical ::util::error::Code codes,
+// By default, these macros work with canonical ::absl::StatusCode codes,
 // using the canonical ErrorSpace. These macros will also work with
 // project-specific ErrorSpaces and error code enums if a specialization
 // of ErrorCodeOptions is defined.
@@ -108,7 +108,7 @@
 // The RET_CHECK* macros can only be used in functions that return
 // ::util::Status.
 //
-// The returned error will have the ::util::error::INTERNAL error code and the
+// The returned error will have the ::absl::StatusCode::kInternal error code and the
 // message will include the file and line number.  The current stack trace
 // will also be logged.
 
@@ -126,6 +126,7 @@
 #include "stratum/glue/status/statusor.h"
 
 #include "absl/base/optimization.h"
+#include "absl/status/status.h"
 
 namespace util {
 
@@ -155,7 +156,7 @@ class ErrorCodeOptions;
 
 // Specialization for the canonical error codes and canonical ErrorSpace.
 template <>
-class ErrorCodeOptions< ::util::error::Code> : public BaseErrorCodeOptions {
+class ErrorCodeOptions<::absl::StatusCode> : public BaseErrorCodeOptions {
  public:
   const ::util::ErrorSpace* GetErrorSpace() {
     return ::util::Status::canonical_space();
@@ -213,11 +214,12 @@ class MakeErrorStream {
     MakeErrorStream* wrapped_error_stream_;
   };
 
-  // Make an error with ::util::error::UNKNOWN.
+  // Make an error with ::absl::StatusCode::kUnknown.
   MakeErrorStream(const char* file, int line)
       : impl_(new Impl(file, line,
                        ::util::Status::canonical_space(),
-                       ::util::error::UNKNOWN, this)) {}
+                       static_cast<int>(::absl::StatusCode::kUnknown),
+                       this)) {}
 
   // Make an error with the given error code and error_space.
   MakeErrorStream(const char* file, int line,
@@ -308,7 +310,7 @@ class MakeErrorStream {
   class Impl {
    public:
     Impl(const char* file, int line,
-         const ::util::ErrorSpace* error_space, int  code,
+         const ::util::ErrorSpace* error_space, int code,
          MakeErrorStream* error_stream,
          bool is_logged_by_default = true);
     Impl(const ::util::Status& status, const char* file, int line,
@@ -360,7 +362,7 @@ class MakeErrorStream {
 // Make an error ::util::Status, building message with LOG-style shift
 // operators.  The error also gets sent to LOG(ERROR).
 //
-// Takes an optional error code parameter. Uses ::util::error::UNKNOWN by
+// Takes an optional error code parameter. Uses ::absl::StatusCode::kUnknown by
 // default.  Returns a ::util::Status object that must be returned or stored.
 //
 // Examples:
@@ -487,7 +489,7 @@ class UtilStatusConvertibleToBool {
       STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
 
 // If condition is false, this macro returns, from the current function, a
-// ::util::Status with the ::util::error::INTERNAL code.
+// ::util::Status with the ::absl::StatusCode::kInternal code.
 // For example:
 //   RET_CHECK(condition) << message;
 // is equivalent to:
@@ -503,7 +505,7 @@ class UtilStatusConvertibleToBool {
   while (ABSL_PREDICT_FALSE(!(condition)))                               \
     while (::util::status_macros::helper_log_always_return_true())       \
   return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__,      \
-                                                ::util::error::INTERNAL) \
+                                                ::absl::StatusCode::kInternal) \
       .with_log_stack_trace()                                            \
       .add_ret_check_failure(#condition)
 
@@ -579,7 +581,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
               google::GetReferenceableValue(val2),         \
               #val1 " " #op " " #val2))                               \
     return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                  ::util::error::INTERNAL) \
+                                                  ::absl::StatusCode::kInternal) \
         .with_log_stack_trace() \
         .add_ret_check_failure( \
              ::util::status_macros::internal::ErrorDeleteStringHelper( \
@@ -594,7 +596,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
               google::GetReferenceableValue(val2),         \
               #val1 " " #op " " #val2))                               \
     return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                  ::util::error::INTERNAL) \
+                                                  ::absl::StatusCode::kInternal) \
         .with_log_stack_trace() \
         .add_ret_check_failure( \
              ::util::status_macros::internal::ErrorDeleteStringHelper( \
@@ -605,7 +607,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 ///////////////
 
 // If the two values fail the comparison, this macro returns, from the current
-// function, a ::util::Status with code ::util::error::INTERNAL.
+// function, a ::util::Status with code ::absl::StatusCode::kInternal.
 // For example,
 //   RET_CHECK_EQ(val1, val2) << message;
 // is equivalent to
@@ -637,7 +639,7 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
   LOG(ERROR) << "Return Error: " << " at "                          \
              << __FILE__ << ":" << __LINE__;                        \
   return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                ::util::error::INTERNAL) \
+                                                ::absl::StatusCode::kInternal) \
       .with_log_stack_trace() \
       .add_ret_check_fail_failure()
 

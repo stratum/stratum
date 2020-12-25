@@ -50,7 +50,7 @@
 //
 //  StatusOr<Foo*> FooFactory::MakeNewFoo(int arg) {
 //    if (arg <= 0) {
-//      return ::util::Status(::util::error::INVALID_ARGUMENT,
+//      return ::util::Status(::absl::StatusCode::kInvalidArgument,
 //                            "Arg must be positive");
 //    } else {
 //      return new Foo(arg);

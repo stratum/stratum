@@ -25,6 +25,7 @@ stratum_cc_library(
         "error.h",
     ],
     deps = [
+        "@com_google_absl//absl/status",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/public/proto:error_cc_proto",

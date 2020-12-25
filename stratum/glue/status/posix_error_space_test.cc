@@ -84,53 +84,53 @@ TEST(PosixErrorSpaceTest, TESTToCanonical) {
 
   // Do one conversion with a message embedded.
   status = PosixErrorToStatus(EINVAL, "Canned message");
-  EXPECT_EQ(::util::Status(::util::error::INVALID_ARGUMENT, "Canned message"),
+  EXPECT_EQ(::util::Status(::absl::StatusCode::kInvalidArgument, "Canned message"),
             status.ToCanonical());
 
   // And now we check only the error codes, using one
   // easy / (relatively) obvious mapping for each output
   // code, mostly just for coverage and as a sanity check.
   status = PosixErrorToStatus(EINVAL, "");
-  EXPECT_EQ(::util::error::INVALID_ARGUMENT, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kInvalidArgument, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(ETIMEDOUT, "");
-  EXPECT_EQ(::util::error::DEADLINE_EXCEEDED,
-            status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kDeadlineExceeded,
+            status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(ENOENT, "");
-  EXPECT_EQ(::util::error::NOT_FOUND, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kNotFound, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EEXIST, "");
-  EXPECT_EQ(::util::error::ALREADY_EXISTS, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kAlreadyExists, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EPERM, "");
-  EXPECT_EQ(::util::error::PERMISSION_DENIED,
-            status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kPermissionDenied,
+            status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(ENOTEMPTY, "");
-  EXPECT_EQ(::util::error::FAILED_PRECONDITION,
-            status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kFailedPrecondition,
+            status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(ENOSPC, "");
-  EXPECT_EQ(::util::error::RESOURCE_EXHAUSTED,
-            status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kResourceExhausted,
+            status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EOVERFLOW, "");
-  EXPECT_EQ(::util::error::OUT_OF_RANGE, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kOutOfRange, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EPROTONOSUPPORT, "");
-  EXPECT_EQ(::util::error::UNIMPLEMENTED, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kUnimplemented, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EAGAIN, "");
-  EXPECT_EQ(::util::error::UNAVAILABLE, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kUnavailable, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EDEADLK, "");
-  EXPECT_EQ(::util::error::ABORTED, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kAborted, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(ECANCELED, "");
-  EXPECT_EQ(::util::error::CANCELLED, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kCancelled, status.ToCanonical().CanonicalCode());
 
   status = PosixErrorToStatus(EL2HLT, "");
-  EXPECT_EQ(::util::error::UNKNOWN, status.ToCanonical().error_code());
+  EXPECT_EQ(::absl::StatusCode::kUnknown, status.ToCanonical().CanonicalCode());
 }
 }  // namespace util
