@@ -2,23 +2,23 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
-#include <memory>
-#include <string>
 #include <list>
+#include <memory>
 #include <set>
+#include <string>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/timer_daemon.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -143,8 +143,8 @@ class PerPortGnmiEvent : public PerNodeGnmiEvent<E> {
 template <typename E>
 class PerOpticalPortGnmiEvent : public GnmiEventProcess<E> {
  public:
-  explicit PerOpticalPortGnmiEvent(int32 module, int32 network_interface) :
-      module_(module), network_interface_(network_interface) {}
+  explicit PerOpticalPortGnmiEvent(int32 module, int32 network_interface)
+      : module_(module), network_interface_(network_interface) {}
   ~PerOpticalPortGnmiEvent() override {}
 
   int32 GetModule() const { return module_; }
@@ -269,7 +269,7 @@ class PortLacpRouterMacChangedEvent
     : public PerPortGnmiEvent<PortLacpRouterMacChangedEvent> {
  public:
   PortLacpRouterMacChangedEvent(uint64 node_id, uint32 port_id,
-                                  uint64 new_system_id_mac)
+                                uint64 new_system_id_mac)
       : PerPortGnmiEvent(node_id, port_id),
         new_system_id_mac_(new_system_id_mac) {}
   ~PortLacpRouterMacChangedEvent() override {}
@@ -374,7 +374,7 @@ class PortAutonegChangedEvent
     : public PerPortGnmiEvent<PortAutonegChangedEvent> {
  public:
   PortAutonegChangedEvent(uint64 node_id, uint32 port_id,
-                                const TriState& new_state)
+                          const TriState& new_state)
       : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
   ~PortAutonegChangedEvent() override {}
 
@@ -682,7 +682,7 @@ class EventHandlerList : public EventHandlerListBase {
   ::util::Status Process(const GnmiEvent& base_event) override {
     absl::WriterMutexLock l(&access_lock_);
     if (const E* event = dynamic_cast<const E*>(&base_event)) {
-      VLOG(1) << "Handling " << typeid(E).name();
+      VLOG(1) << "Handling " << CxxDemangle(typeid(E).name());
       CleanUpInactiveRegistrations();
       for (const auto& entry : handlers_) {
         if (auto handler = entry.lock()) {
@@ -691,8 +691,10 @@ class EventHandlerList : public EventHandlerListBase {
       }
     } else {
       // This __really__ should never happen!
-      LOG(ERROR) << "Incorrectly routed event! " << typeid(base_event).name()
-                 << " has been sent to list handling " << typeid(E).name();
+      LOG(ERROR) << "Incorrectly routed event! "
+                 << CxxDemangle(typeid(base_event).name())
+                 << " has been sent to list handling "
+                 << CxxDemangle(typeid(E).name());
     }
     return ::util::OkStatus();
   }

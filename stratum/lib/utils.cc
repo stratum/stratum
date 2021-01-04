@@ -6,18 +6,18 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <cerrno>
-#include <cstring>
-#include <cstdio>
 
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
 #include <fstream>  // IWYU pragma: keep
 #include <string>
 
+#include "absl/strings/str_split.h"
+#include "absl/strings/substitute.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "absl/strings/substitute.h"
-#include "absl/strings/str_split.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 
@@ -152,13 +152,13 @@ std::string StringToHex(const std::string& str) {
     if (PathExists(path_to_make)) {
       if (!IsDir(path_to_make)) {
         return MAKE_ERROR(ERR_INVALID_PARAM)
-            << path_to_make << " is not a dir.";
+               << path_to_make << " is not a dir.";
       }
     } else {
       int ret = mkdir(path_to_make.c_str(), 0755);
       if (ret != 0) {
-        return MAKE_ERROR(ERR_INTERNAL)
-            << "Can not make dir " << path_to_make << ": " << strerror(errno);
+        return MAKE_ERROR(ERR_INTERNAL) << "Can not make dir " << path_to_make
+                                        << ": " << strerror(errno);
       }
     }
 
@@ -220,8 +220,8 @@ bool ProtoLess(const google::protobuf::Message& m1,
 
 // FIXME this are redefinitions of inline methods in the .h file
 /* START GOOGLE ONLY
-bool ProtoEqual(const google::protobuf::Message& m1, const google::protobuf::Message& m2) {
-  MessageDifferencer differencer;
+bool ProtoEqual(const google::protobuf::Message& m1, const
+google::protobuf::Message& m2) { MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
 }
@@ -234,6 +234,18 @@ size_t ProtoHash(const google::protobuf::Message& m) {
   std::string s;
   m.SerializeToString(&s);
   return string_hasher(s);
+}
+
+std::string CxxDemangle(const char* mangled) {
+  int status;
+  char* demangled = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
+  if (demangled) {
+    std::string d(demangled);
+    free(demangled);
+    return d;
+  } else {
+    return mangled;
+  }
 }
 
 }  // namespace stratum

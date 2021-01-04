@@ -5,11 +5,13 @@
 #ifndef STRATUM_LIB_UTILS_H_
 #define STRATUM_LIB_UTILS_H_
 
+#include <cxxabi.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include <chrono>  // NOLINT
 #include <functional>
 #include <ostream>
@@ -245,6 +247,11 @@ inline U ByteStreamToUint(const std::string& bytes) {
   }
   return val;
 }
+
+// Demangles a symbol name, if possible. If it fails, the mangled name is
+// returned instead.
+// Not async-safe, do not use this function inside a signal handler!
+std::string CxxDemangle(const char* mangled);
 
 }  // namespace stratum
 
