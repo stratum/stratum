@@ -616,9 +616,17 @@ struct RegisterClearThreadData {
       // 2.
       wanted_tables.push_back(table_entry);
     }
-    for (const auto& table_entry : wanted_tables) {
+    // TODO(max): can wildcard reads request counter_data?
+    if (table_entry.has_counter_data()) {
+      for (const auto& wanted_table_entry : wanted_tables) {
+        RETURN_IF_ERROR(bf_sde_interface_->SynchronizeCounters(
+            device_, session, wanted_table_entry.table_id(),
+            absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms)));
+      }
+    }
+    for (const auto& wanted_table_entry : wanted_tables) {
       RETURN_IF_ERROR_WITH_APPEND(
-          ReadAllTableEntries(session, table_entry, writer))
+          ReadAllTableEntries(session, wanted_table_entry, writer))
               .with_logging()
           << "Failed to read all table entries for request "
           << table_entry.ShortDebugString() << ".";
