@@ -272,7 +272,7 @@ start-stratum-container.sh
 Here is an example Chassis Config that brings up the first two physical ports:
 ```proto
 chassis {
-  platform: PLT_BAREFOOT_TOFINO
+  platform: PLT_GENERIC_BAREFOOT_TOFINO
   name: "Edgecore Wedge100BF-32x"
 }
 nodes {
