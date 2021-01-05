@@ -259,8 +259,10 @@ container_image(
         "9339",
         "9559",
     ],
+    repository = "stratumproject",
     stamp = True,
     tars = [":stratum_bfrt_data"],
+    workdir = "/var/run/stratum",
 )
 
 container_bundle(
