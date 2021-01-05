@@ -41,6 +41,32 @@ stratum_deps()
 # ---------------------------------------------------------------------------
 #        Load transitive dependencies
 # ---------------------------------------------------------------------------
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+container_deps()
+
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull",
+)
+container_pull(
+  name = "stratum_base",
+  registry = "index.docker.io",
+  repository = "stratumproject/build",
+  tag = "build",
+)
+container_pull(
+  name = "minideb",
+  registry = "index.docker.io",
+  repository = "bitnami/minideb",
+  tag = "stretch",
+)
+
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
 
@@ -115,12 +141,12 @@ latex_repositories()
 # ---------------------------------------------------------------------------
 #       Load dependencies for pipeline PTF rules
 # ---------------------------------------------------------------------------
-load("@rules_python//python:pip.bzl", "pip_import")
-pip_import(
+load("@rules_python//python:pip.bzl", "pip_install")
+pip_install(
     name = "ptf_deps",
     requirements = "//stratum/pipelines/ptf:requirements.txt",
 )
 
-load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
+# load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
 
-ptf_pip_install()
+# ptf_pip_install()

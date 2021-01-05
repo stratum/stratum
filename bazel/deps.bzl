@@ -133,11 +133,19 @@ def stratum_deps():
             ],
         )
 
+    if "io_bazel_rules_docker" not in native.existing_rules():
+        http_archive(
+            name = "io_bazel_rules_docker",
+            sha256 = "1698624e878b0607052ae6131aa216d45ebb63871ec497f26c67455b34119c80",
+            strip_prefix = "rules_docker-0.15.0",
+            urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.15.0/rules_docker-v0.15.0.tar.gz"],
+        )
+
     if "rules_python" not in native.existing_rules():
         http_archive(
             name = "rules_python",
-            url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
-            sha256 = "aa96a691d3a8177f3215b14b0edc9641787abaaa30363a080165d06ab65e1161",
+            url = "https://github.com/bazelbuild/rules_python/releases/download/0.1.0/rules_python-0.1.0.tar.gz",
+            sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
         )
 
     if "cython" not in native.existing_rules():

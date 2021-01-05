@@ -4,6 +4,9 @@
 
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
+load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image")
+load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
+load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
 
 licenses(["notice"])  # Apache v2
 
@@ -207,4 +210,62 @@ pkg_deb(
     postinst = "deb/postinst",
     prerm = "deb/prerm",
     version = "0.0.1",
+)
+
+genrule(
+    name = "gen_sde_version",
+    outs = ["bf_sde_version.txt"],
+    cmd = "printf $(sde_ver) > $@",
+)
+
+download_pkgs(
+    name = "stratum_bfrt_pkg_download",
+    image_tar = "@minideb//image",
+    packages = [
+        "kmod",
+        "libboost-thread1.62.0",
+        "libbz2-1.0",
+        "libedit2",
+        "libjudydebian1",
+        "libssl1.1",
+        "systemd",
+    ],
+)
+
+install_pkgs(
+    name = "stratum_bfrt_pkg_install",
+    image_tar = "@minideb//image",
+    installables_tar = ":stratum_bfrt_pkg_download.tar",
+    output_image_name = "stratum_bfrt_pkg_install",
+)
+
+container_image(
+    name = "stratum_bfrt_docker",
+    base = ":stratum_bfrt_pkg_install.tar",
+    entrypoint = ["start-stratum.sh"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "This Docker image includes runtime library for Barefoot Tofino switches",
+        "stratum-target": "stratum-bfrt",
+        "bf-sde-version": "@bf_sde_version.txt",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    ports = [
+        "28000",
+        "9339",
+        "9559",
+    ],
+    stamp = True,
+    tars = [":stratum_bfrt_data"],
+)
+
+container_bundle(
+    name = "stratum_bfrt_bundle",
+    images = {
+        "stratumproject/stratum-bfrt": ":stratum_bfrt_docker",
+    },
 )
