@@ -5,7 +5,6 @@
 #ifndef STRATUM_LIB_UTILS_H_
 #define STRATUM_LIB_UTILS_H_
 
-#include <cxxabi.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdlib.h>

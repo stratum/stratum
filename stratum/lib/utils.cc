@@ -4,6 +4,7 @@
 
 #include "stratum/lib/utils.h"
 
+#include <cxxabi.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
