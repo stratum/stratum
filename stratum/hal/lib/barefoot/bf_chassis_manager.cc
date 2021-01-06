@@ -405,8 +405,6 @@ BFChassisManager::~BFChassisManager() = default;
   CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
       << "Config needs a Chassis message with correct platform.";
   switch (config.chassis().platform()) {
-    case PLT_BAREFOOT_TOFINO:   // TODO(bocon): remove after 2020-12 release
-    case PLT_BAREFOOT_TOFINO2:  // TODO(bocon): remove after 2020-12 release
     case PLT_GENERIC_BAREFOOT_TOFINO:
     case PLT_GENERIC_BAREFOOT_TOFINO2:
       break;
@@ -414,15 +412,6 @@ BFChassisManager::~BFChassisManager() = default;
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Unsupported platform: "
              << Platform_Name(config.chassis().platform());
-  }
-
-  // TODO(bocon): remove after 2020-12 release
-  if (config.chassis().platform() == PLT_BAREFOOT_TOFINO ||
-      config.chassis().platform() == PLT_BAREFOOT_TOFINO2) {
-    LOG(INFO) << "Chassis type " << Platform_Name(config.chassis().platform())
-              << " is deprecated. Use "
-              << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO) << " or "
-              << Platform_Name(PLT_GENERIC_BAREFOOT_TOFINO2) << " instead.";
   }
 
   // Validate Node messages. Make sure there is no two nodes with the same id.
