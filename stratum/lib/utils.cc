@@ -237,7 +237,7 @@ size_t ProtoHash(const google::protobuf::Message& m) {
   return string_hasher(s);
 }
 
-std::string CxxDemangle(const char* mangled) {
+std::string Demangle(const char* mangled) {
   int status;
   char* demangled = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
   if (demangled) {

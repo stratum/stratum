@@ -250,7 +250,7 @@ inline U ByteStreamToUint(const std::string& bytes) {
 // Demangles a symbol name, if possible. If it fails, the mangled name is
 // returned instead.
 // Not async-safe, do not use this function inside a signal handler!
-std::string CxxDemangle(const char* mangled);
+std::string Demangle(const char* mangled);
 
 }  // namespace stratum
 

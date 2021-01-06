@@ -682,7 +682,7 @@ class EventHandlerList : public EventHandlerListBase {
   ::util::Status Process(const GnmiEvent& base_event) override {
     absl::WriterMutexLock l(&access_lock_);
     if (const E* event = dynamic_cast<const E*>(&base_event)) {
-      VLOG(1) << "Handling " << CxxDemangle(typeid(E).name());
+      VLOG(1) << "Handling " << Demangle(typeid(E).name());
       CleanUpInactiveRegistrations();
       for (const auto& entry : handlers_) {
         if (auto handler = entry.lock()) {
@@ -692,9 +692,9 @@ class EventHandlerList : public EventHandlerListBase {
     } else {
       // This __really__ should never happen!
       LOG(ERROR) << "Incorrectly routed event! "
-                 << CxxDemangle(typeid(base_event).name())
+                 << Demangle(typeid(base_event).name())
                  << " has been sent to list handling "
-                 << CxxDemangle(typeid(E).name());
+                 << Demangle(typeid(E).name());
     }
     return ::util::OkStatus();
   }
