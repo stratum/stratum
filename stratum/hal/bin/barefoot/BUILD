@@ -7,6 +7,7 @@ load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image")
 load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
 load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 
 licenses(["notice"])  # Apache v2
 
@@ -262,6 +263,49 @@ container_image(
     repository = "stratumproject",
     stamp = True,
     tars = [":stratum_bfrt_data"],
+    workdir = "/var/run/stratum",
+)
+
+# Add the stratum-bfrt debian package to image.
+container_image(
+    name = "stratum_bfrt_base",
+    base = "@minideb//image",
+    files = ["stratum_bfrt_deb.deb"],
+)
+
+# Install the stratum-bfrt debian package and its dependencies.
+container_run_and_commit(
+    name = "stratum_bfrt_install_deb",
+    commands = [
+        "install_packages /stratum_bfrt_deb.deb",
+        "rm /stratum_bfrt_deb.deb",
+    ],
+    image = "stratum_bfrt_base.tar",
+)
+
+# Build the final image with correct metadata.
+container_image(
+    name = "stratum_bfrt_final",
+    base = "stratum_bfrt_install_deb_commit.tar",
+    entrypoint = ["start-stratum.sh"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "This Docker image includes runtime library for Barefoot Tofino switches",
+        "stratum-target": "stratum-bfrt",
+        "bf-sde-version": "@bf_sde_version.txt",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    ports = [
+        "9339",
+        "9559",
+        "28000",
+    ],
+    repository = "stratumproject",
+    stamp = True,
     workdir = "/var/run/stratum",
 )
 
