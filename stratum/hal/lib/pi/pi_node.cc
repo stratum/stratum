@@ -35,7 +35,7 @@ namespace {
     if (results->size() != 0)
       return MAKE_ERROR(ERR_INTERNAL) << "Expected empty results vector.";
     results->resize(updates_size);
-    return ::util::Status();
+    return ::util::OkStatus();
   }
   ::util::Status status(::util::Status::canonical_space(), from.code(),
                         from.message());
@@ -50,10 +50,11 @@ namespace {
 
 ::util::Status toUtilStatus(const DeviceMgr::Status& from) {
   if (from.code() == Code::OK) {
-    return ::util::Status();
+    return ::util::OkStatus();
+  } else {
+    return ::util::Status(::util::Status::canonical_space(), from.code(),
+                          from.message());
   }
-  return ::util::Status(::util::Status::canonical_space(), from.code(),
-                        from.message());
 }
 
 }  // namespace
