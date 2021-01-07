@@ -353,6 +353,7 @@ template <typename T>
 
   std::vector<bf_rt_id_t> data_field_ids;
   RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  LOG(INFO) << "Table data {";
   for (const auto& field_id : data_field_ids) {
     std::string field_name;
     RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
@@ -360,6 +361,8 @@ template <typename T>
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
     size_t field_size;
     RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
+    bool is_active;
+    RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
 
     std::string value;
     switch (data_type) {
@@ -388,10 +391,12 @@ template <typename T>
             << "Unknown data_type: " << static_cast<int>(data_type) << ".";
     }
 
-    LOG(INFO) << "Table data {" << field_name << ": field_id: " << field_id
+    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
               << " data_type: " << static_cast<int>(data_type)
-              << " field_size: " << field_size << " value: " << value << "}";
+              << " field_size: " << field_size << " value: " << value
+              << " is_active: " << is_active;
   }
+  LOG(INFO) << "}";
 
   return ::util::OkStatus();
 }
@@ -562,6 +567,17 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 }
 
 ::util::Status TableData::GetActionMemberId(uint64* action_member_id) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  bf_rt_id_t field_id;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$ACTION_MEMBER_ID", &field_id));
+  bool is_active;
+  RETURN_IF_BFRT_ERROR(table_data_->isActive(field_id, &is_active));
+  if (!is_active) {
+    RETURN_ERROR(ERR_ENTRY_NOT_FOUND).without_logging()
+        << "Field $ACTION_MEMBER_ID is not active.";
+  }
+
   return GetField(*table_data_, "$ACTION_MEMBER_ID", action_member_id);
 }
 
@@ -570,6 +586,17 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 }
 
 ::util::Status TableData::GetSelectorGroupId(uint64* selector_group_id) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  bf_rt_id_t field_id;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$SELECTOR_GROUP_ID", &field_id));
+  bool is_active;
+  RETURN_IF_BFRT_ERROR(table_data_->isActive(field_id, &is_active));
+  if (!is_active) {
+    RETURN_ERROR(ERR_ENTRY_NOT_FOUND).without_logging()
+        << "Field $SELECTOR_GROUP_ID is not active.";
+  }
+
   return GetField(*table_data_, "$SELECTOR_GROUP_ID", selector_group_id);
 }
 

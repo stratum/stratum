@@ -279,10 +279,6 @@ class BfSdeWrapper : public BfSdeInterface {
       std::vector<std::vector<uint32>>* member_ids,
       std::vector<std::vector<bool>>* member_status) override
       LOCKS_EXCLUDED(data_lock_);
-  ::util::Status SynchronizeCounters(
-      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, absl::Duration timeout) override
-      LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertTableEntry(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, const TableKeyInterface* table_key,
@@ -315,6 +311,10 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status GetDefaultTableEntry(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, TableDataInterface* table_data) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status SynchronizeCounters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::Duration timeout) override
       LOCKS_EXCLUDED(data_lock_);
 
   ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const override
