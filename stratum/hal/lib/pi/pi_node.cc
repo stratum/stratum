@@ -25,7 +25,7 @@ namespace pi {
 namespace {
 
 // Utility functions to convert between grpc::Status and Stratum
-// Util::Status. This is a bit silly because Util::Status will be converted back
+// util::Status. This is a bit silly because util::Status will be converted back
 // to grpc::Status in the P4Service.
 
 ::util::Status toUtilStatus(const DeviceMgr::Status& from,
@@ -35,9 +35,10 @@ namespace {
     if (results->size() != 0)
       return MAKE_ERROR(ERR_INTERNAL) << "Expected empty results vector.";
     results->resize(updates_size);
-    return ::util::Status();
+    return ::util::OkStatus();
   }
-  ::util::Status status(::util::Status::canonical_space(), from.code(), "");
+  ::util::Status status(::util::Status::canonical_space(), from.code(),
+                        from.message());
   for (const auto& detail : from.details()) {
     ::p4::v1::Error error;
     detail.UnpackTo(&error);
@@ -49,9 +50,11 @@ namespace {
 
 ::util::Status toUtilStatus(const DeviceMgr::Status& from) {
   if (from.code() == Code::OK) {
-    return ::util::Status();
+    return ::util::OkStatus();
+  } else {
+    return ::util::Status(::util::Status::canonical_space(), from.code(),
+                          from.message());
   }
-  return ::util::Status(::util::Status::canonical_space(), from.code(), "");
 }
 
 }  // namespace
