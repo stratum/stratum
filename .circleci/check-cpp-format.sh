@@ -85,6 +85,7 @@ stratum/hal/lib/common/config_monitoring_service.cc
 stratum/hal/lib/common/config_monitoring_service.h
 stratum/hal/lib/common/diag_service.h
 stratum/hal/lib/common/file_service.h
+stratum/hal/lib/common/gnmi_events.h
 stratum/hal/lib/common/p4_service_test.cc
 stratum/hal/lib/common/p4_service.h
 stratum/hal/lib/common/yang_parse_tree_paths.h
@@ -149,6 +150,8 @@ stratum/lib/libcproxy/libcwrapper.h
 stratum/lib/libcproxy/passthrough_proxy.cc
 stratum/lib/libcproxy/passthrough_proxy.h
 stratum/lib/test_utils/p4_proto_builders.cc
+stratum/lib/utils.cc
+stratum/lib/utils.h
 stratum/p4c_backends/common/backend_extension_interface.h
 stratum/p4c_backends/common/backend_pass_manager.h
 stratum/p4c_backends/common/midend_interface.h
