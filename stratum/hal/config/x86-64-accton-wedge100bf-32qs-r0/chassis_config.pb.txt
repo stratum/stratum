@@ -361,7 +361,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 33
+  id: 3300
   name: "33/0"
   slot: 1
   port: 33
@@ -373,7 +373,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 33
+  id: 3302
   name: "33/2"
   slot: 1
   port: 33

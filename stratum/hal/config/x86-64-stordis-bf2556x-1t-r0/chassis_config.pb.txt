@@ -625,7 +625,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 57
+  id: 5700
   name: "57/0"
   slot: 1
   port: 57
@@ -638,7 +638,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 57
+  id: 5701
   name: "57/1"
   slot: 1
   port: 57
@@ -651,7 +651,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 57
+  id: 5702
   name: "57/2"
   slot: 1
   port: 57
@@ -663,7 +663,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 57
+  id: 5703
   name: "57/3"
   slot: 1
   port: 57

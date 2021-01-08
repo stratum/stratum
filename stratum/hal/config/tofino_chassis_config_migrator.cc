@@ -4,6 +4,7 @@
 #include <string>
 
 #include "absl/strings/numbers.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
@@ -48,10 +49,27 @@ ls -1 stratum/hal/config/*/chassis_config.pb.txt | \
     std::vector<std::string> parts = absl::StrSplit(singleton_port.name(), '/');
     CHECK_RETURN_IF_FALSE(parts.size() == 2)
         << "Can't parse port name " << singleton_port.name() << ".";
+    int port_id;
+    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(parts[0], &port_id));
+    int name_channel;
+    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(parts[1], &name_channel));
     int new_port_id;
-    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(parts[0], &new_port_id));
+    std::string new_port_name;
+    if (singleton_port.channel() == 0) {
+      // Non-channelized port.
+      new_port_id = port_id;
+      new_port_name = absl::StrFormat("%i/0", new_port_id);
+    } else {
+      // Channelized port.
+      CHECK_RETURN_IF_FALSE(name_channel + 1 == singleton_port.channel())
+          << "channel field does not match port name in singleton port "
+          << singleton_port.ShortDebugString() << ".";
+      new_port_id = port_id * 100 + name_channel;
+      new_port_name = absl::StrFormat("%i/%i", port_id, name_channel);
+    }
 
     singleton_port.set_id(new_port_id);
+    singleton_port.set_name(new_port_name);
   }
   RETURN_IF_ERROR(WriteProtoToTextFile(config, FLAGS_chassis_config_file));
 
