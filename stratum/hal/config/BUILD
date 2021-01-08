@@ -5,11 +5,10 @@
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "stratum_package",
-    "stratum_cc_test",
+    "stratum_cc_binary",
 )
 load(":platform_config_test.bzl", "platform_config_test")
-load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 package(default_visibility = STRATUM_INTERNAL)
 
@@ -39,7 +38,7 @@ platform_config_test("x86-64-stordis-bf2556x-1t-r0")
 platform_config_test("x86-64-stordis-bf6064x-t-r0")
 
 filegroup(
-    name="platform_configs",
+    name = "platform_configs",
     srcs = glob([
         "*/base_bcm_chassis_map.pb.txt",
         "*/chassis_config.pb.txt",
@@ -55,8 +54,20 @@ filegroup(
 
 pkg_tar(
     name = "platform_configs_tar",
-    extension = "tar.xz",
-    strip_prefix = ".",  # needed to preserve sub-directory structure: https://github.com/bazelbuild/rules_pkg/issues/82
     srcs = [":platform_configs"],
+    extension = "tar.xz",
     mode = "0644",
+    strip_prefix = ".",  # needed to preserve sub-directory structure: https://github.com/bazelbuild/rules_pkg/issues/82
+)
+
+stratum_cc_binary(
+    name = "tofino_chassis_config_migrator",
+    srcs = ["tofino_chassis_config_migrator.cc"],
+    data = [":platform_configs"],
+    deps = [
+        "//stratum/glue:init_google",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/lib:utils",
+        "@com_google_absl//absl/strings",
+    ],
 )

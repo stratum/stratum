@@ -9,7 +9,7 @@ nodes {
   index: 1
 }
 singleton_ports {
-  id: 48
+  id: 1
   name: "1/0"
   slot: 1
   port: 48
@@ -20,7 +20,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 52
+  id: 2
   name: "2/0"
   slot: 1
   port: 52
@@ -31,7 +31,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 444
+  id: 3
   name: "3/0"
   slot: 1
   port: 444
@@ -42,7 +42,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 440
+  id: 4
   name: "4/0"
   slot: 1
   port: 440
@@ -53,7 +53,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 428
+  id: 5
   name: "5/0"
   slot: 1
   port: 428
@@ -64,7 +64,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 424
+  id: 6
   name: "6/0"
   slot: 1
   port: 424
@@ -75,7 +75,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 412
+  id: 7
   name: "7/0"
   slot: 1
   port: 412
@@ -86,7 +86,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 408
+  id: 8
   name: "8/0"
   slot: 1
   port: 408
@@ -97,10 +97,9 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 0
+  id: 9
   name: "9/0"
   slot: 1
-  port: 0
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -108,7 +107,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 4
+  id: 10
   name: "10/0"
   slot: 1
   port: 4
@@ -119,7 +118,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 16
+  id: 11
   name: "11/0"
   slot: 1
   port: 16
@@ -130,7 +129,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 20
+  id: 12
   name: "12/0"
   slot: 1
   port: 20
@@ -141,7 +140,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 32
+  id: 13
   name: "13/0"
   slot: 1
   port: 32
@@ -152,7 +151,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 36
+  id: 14
   name: "14/0"
   slot: 1
   port: 36
@@ -163,7 +162,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 396
+  id: 15
   name: "15/0"
   slot: 1
   port: 396
@@ -174,7 +173,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 392
+  id: 16
   name: "16/0"
   slot: 1
   port: 392
@@ -185,7 +184,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 256
+  id: 17
   name: "17/0"
   slot: 1
   port: 256
@@ -196,7 +195,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 260
+  id: 18
   name: "18/0"
   slot: 1
   port: 260
@@ -207,7 +206,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 188
+  id: 19
   name: "19/0"
   slot: 1
   port: 188
@@ -218,7 +217,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 184
+  id: 20
   name: "20/0"
   slot: 1
   port: 184
@@ -229,7 +228,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 172
+  id: 21
   name: "21/0"
   slot: 1
   port: 172
@@ -240,7 +239,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 168
+  id: 22
   name: "22/0"
   slot: 1
   port: 168
@@ -251,7 +250,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 156
+  id: 23
   name: "23/0"
   slot: 1
   port: 156
@@ -262,7 +261,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 152
+  id: 24
   name: "24/0"
   slot: 1
   port: 152
@@ -273,7 +272,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 140
+  id: 25
   name: "25/0"
   slot: 1
   port: 140
@@ -284,7 +283,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 136
+  id: 26
   name: "26/0"
   slot: 1
   port: 136
@@ -295,7 +294,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 272
+  id: 27
   name: "27/0"
   slot: 1
   port: 272
@@ -306,7 +305,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 276
+  id: 28
   name: "28/0"
   slot: 1
   port: 276
@@ -317,7 +316,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 288
+  id: 29
   name: "29/0"
   slot: 1
   port: 288
@@ -328,7 +327,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 292
+  id: 30
   name: "30/0"
   slot: 1
   port: 292
@@ -339,7 +338,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 304
+  id: 31
   name: "31/0"
   slot: 1
   port: 304
@@ -350,7 +349,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 308
+  id: 32
   name: "32/0"
   slot: 1
   port: 308
@@ -361,7 +360,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 60
+  id: 33
   name: "33/0"
   slot: 1
   port: 60
@@ -372,7 +371,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 56
+  id: 34
   name: "34/0"
   slot: 1
   port: 56
@@ -383,7 +382,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 432
+  id: 35
   name: "35/0"
   slot: 1
   port: 432
@@ -394,7 +393,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 436
+  id: 36
   name: "36/0"
   slot: 1
   port: 436
@@ -405,7 +404,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 416
+  id: 37
   name: "37/0"
   slot: 1
   port: 416
@@ -416,7 +415,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 420
+  id: 38
   name: "38/0"
   slot: 1
   port: 420
@@ -427,7 +426,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 400
+  id: 39
   name: "39/0"
   slot: 1
   port: 400
@@ -438,7 +437,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 404
+  id: 40
   name: "40/0"
   slot: 1
   port: 404
@@ -449,7 +448,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 12
+  id: 41
   name: "41/0"
   slot: 1
   port: 12
@@ -460,7 +459,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 8
+  id: 42
   name: "42/0"
   slot: 1
   port: 8
@@ -471,7 +470,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 28
+  id: 43
   name: "43/0"
   slot: 1
   port: 28
@@ -482,7 +481,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 24
+  id: 44
   name: "44/0"
   slot: 1
   port: 24
@@ -493,7 +492,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 44
+  id: 45
   name: "45/0"
   slot: 1
   port: 44
@@ -504,7 +503,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 40
+  id: 46
   name: "46/0"
   slot: 1
   port: 40
@@ -515,7 +514,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 384
+  id: 47
   name: "47/0"
   slot: 1
   port: 384
@@ -526,7 +525,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 388
+  id: 48
   name: "48/0"
   slot: 1
   port: 388
@@ -537,7 +536,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 268
+  id: 49
   name: "49/0"
   slot: 1
   port: 268
@@ -548,7 +547,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 264
+  id: 50
   name: "50/0"
   slot: 1
   port: 264
@@ -559,7 +558,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 176
+  id: 51
   name: "51/0"
   slot: 1
   port: 176
@@ -570,7 +569,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 180
+  id: 52
   name: "52/0"
   slot: 1
   port: 180
@@ -581,7 +580,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 160
+  id: 53
   name: "53/0"
   slot: 1
   port: 160
@@ -592,7 +591,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 164
+  id: 54
   name: "54/0"
   slot: 1
   port: 164
@@ -603,7 +602,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 144
+  id: 55
   name: "55/0"
   slot: 1
   port: 144
@@ -614,7 +613,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 148
+  id: 56
   name: "56/0"
   slot: 1
   port: 148
@@ -625,7 +624,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 128
+  id: 57
   name: "57/0"
   slot: 1
   port: 128
@@ -636,7 +635,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 132
+  id: 58
   name: "58/0"
   slot: 1
   port: 132
@@ -647,7 +646,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 284
+  id: 59
   name: "59/0"
   slot: 1
   port: 284
@@ -658,7 +657,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 280
+  id: 60
   name: "60/0"
   slot: 1
   port: 280
@@ -669,7 +668,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 300
+  id: 61
   name: "61/0"
   slot: 1
   port: 300
@@ -680,7 +679,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 296
+  id: 62
   name: "62/0"
   slot: 1
   port: 296
@@ -691,7 +690,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 316
+  id: 63
   name: "63/0"
   slot: 1
   port: 316
@@ -702,7 +701,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 312
+  id: 64
   name: "64/0"
   slot: 1
   port: 312
@@ -713,7 +712,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 64
+  id: 65
   name: "65/0"
   slot: 1
   port: 64
