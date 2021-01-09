@@ -14,6 +14,7 @@
 
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/stamping.h"
 
 // TODO(unknown) need to define transformation or comment this out on
 // Google's side
@@ -36,6 +37,7 @@ inline void InitGoogle(const char* usage, int* argc, char*** argv,
   CHECK(!::gflags::SetCommandLineOptionWithMode("minloglevel", "0",
                                                 ::gflags::SET_FLAGS_DEFAULT)
              .empty());
+  ::gflags::SetVersionString(kBuildScmRevision);
   ParseCommandLineFlags(argc, argv, remove_flags);
 }
 

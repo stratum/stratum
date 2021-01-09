@@ -47,3 +47,4 @@ build:tsan --strip=never
 # Release build (build with -O2, no asserts, and strip all symbols)
 build:release --compilation_mode=opt
 build:release --linkopt=-Wl,--strip-all
+build:release --stamp

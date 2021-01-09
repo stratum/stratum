@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "gflags/gflags.h"
+#include "stratum/glue/stamping.h"
 
 #ifdef STRATUM_ARCH_PPC
 
@@ -57,6 +58,11 @@ void InitStratumLogging() {
   if (FLAGS_logtostderr) {
     LogToStderr();
   }
+
+  LOG(INFO) << "Stratum version " << kBuildScmRevision << " ("
+            << kBuildScmStatus << ")"
+            << " built at " << kBuildTimestamp << " on host " << kBuildHost
+            << " by user " << kBuildUser << ".";
 }
 
 LoggingConfig GetCurrentLogLevel() {

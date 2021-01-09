@@ -35,6 +35,7 @@ stratum_cc_library(
     ],
     deps = [
         ":logging",
+        ":stamping",
         "@com_github_gflags_gflags//:gflags",
     ],
 )
@@ -48,6 +49,7 @@ stratum_cc_library(
         "logging.h",
     ],
     deps = [
+        ":stamping",
         "@com_github_google_glog//:glog",
     ],
 )
@@ -57,4 +59,10 @@ stratum_cc_library(
     hdrs = [
         "integral_types.h",
     ],
+)
+
+cc_library(
+    name = "stamping",
+    hdrs = ["stamping.h"],
+    linkstamp = "stamping_linkstamp.cc",
 )
