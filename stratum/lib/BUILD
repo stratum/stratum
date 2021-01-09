@@ -7,6 +7,7 @@ licenses(["notice"])  # Apache v2
 load(
     "//bazel:rules.bzl",
     "stratum_cc_library",
+    "stratum_cc_binary",
     "stratum_cc_test",
     "STRATUM_INTERNAL",
 )
@@ -123,4 +124,34 @@ stratum_cc_test(
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
+)
+
+genrule(
+  name = "version_variables_impl",
+  outs = ["version_variables.cc"],
+  cmd = """echo '#include "stratum/lib/version_variables.h"' >> $@;
+            git_ref=$$(grep STABLE_GIT_REF bazel-out/stable-status.txt \\
+            | sed 's/^STABLE_GIT_REF //');
+            echo 'const char kGitRef[] = "'$$git_ref'";' >> $@;
+            BUILD_TIMESTAMP=$$(grep BUILD_TIMESTAMP bazel-out/volatile-status.txt \\
+            | sed 's/^BUILD_TIMESTAMP //');
+            echo 'const char kBuildTimestamp[] = "'$$BUILD_TIMESTAMP'";' >> $@;
+            STABLE_TS=$$(grep STABLE_TS bazel-out/stable-status.txt \\
+            | sed 's/^STABLE_TS //');
+            echo 'const char kBuildTimestampHuman[] = "'$$STABLE_TS'";' >> $@;
+            """,
+  stamp = 1,
+)
+
+cc_library(
+  name = "version_variables",
+  srcs = ["version_variables.cc"],
+  hdrs = ["version_variables.h"],
+  linkstamp = "version_variables_linkstamp.cc",
+)
+
+cc_binary(
+    name = "stamping_example_main",
+    srcs = ["stamping_example_main.cc"],
+    deps = [":version_variables"],
 )
