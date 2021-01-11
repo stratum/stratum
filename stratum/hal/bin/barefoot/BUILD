@@ -219,53 +219,6 @@ genrule(
     cmd = "printf $(sde_ver) > $@",
 )
 
-download_pkgs(
-    name = "stratum_bfrt_pkg_download",
-    image_tar = "@minideb//image",
-    packages = [
-        "kmod",
-        "libboost-thread1.62.0",
-        "libbz2-1.0",
-        "libedit2",
-        "libjudydebian1",
-        "libssl1.1",
-        "systemd",
-    ],
-)
-
-install_pkgs(
-    name = "stratum_bfrt_pkg_install",
-    image_tar = "@minideb//image",
-    installables_tar = ":stratum_bfrt_pkg_download.tar",
-    output_image_name = "stratum_bfrt_pkg_install",
-)
-
-container_image(
-    name = "stratum_bfrt_docker",
-    base = ":stratum_bfrt_pkg_install.tar",
-    entrypoint = ["start-stratum.sh"],
-    labels = {
-        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
-        "description": "This Docker image includes runtime library for Barefoot Tofino switches",
-        "stratum-target": "stratum-bfrt",
-        "bf-sde-version": "@bf_sde_version.txt",
-        "build-timestamp": "{BUILD_TIMESTAMP}",
-        "build-machine": "{BUILD_HOST}",
-        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
-        "org.opencontainers.image.version": "todo",
-        "org.opencontainers.image.revision": "todo",
-    },
-    ports = [
-        "28000",
-        "9339",
-        "9559",
-    ],
-    repository = "stratumproject",
-    stamp = True,
-    tars = [":stratum_bfrt_data"],
-    workdir = "/var/run/stratum",
-)
-
 # Add the stratum-bfrt debian package to image.
 container_image(
     name = "stratum_bfrt_base",
