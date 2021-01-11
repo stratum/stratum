@@ -27,7 +27,7 @@ Chassis configuration migration and validation tool.
 
 Combine with xargs for bulk migration:
 ls -1 stratum/hal/config/*/chassis_config.pb.txt | \
-  xargs -n 1 bazel run //stratum/hal/config:tofino_chassis_config_migrator -- \
+  xargs -n 1 bazel run //stratum/hal/config:chassis_config_migrator -- \
     -chassis_config_file
 )USAGE";
 
