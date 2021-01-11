@@ -408,4 +408,6 @@ workflows:
       - publish-docker-stratum-replay:
           requires:
             - publish-docker-build
-      - publish-docker-chassis-config-migrator
+      - publish-docker-chassis-config-migrator:
+          requires:
+            - publish-docker-build
