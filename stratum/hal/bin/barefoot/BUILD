@@ -43,6 +43,34 @@ stratum_cc_binary(
     ],
 )
 
+container_image(
+    name = "bf_pipeline_builder_docker",
+    base = "@minideb//image",
+    entrypoint = ["/bf_pipeline_builder"],
+    cmd = ["-help"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "Docker-based distribution of the Stratum-bf pipeline builder",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    files = [":bf_pipeline_builder"],
+    repository = "stratumproject",
+    stamp = True,
+)
+
+container_push(
+   name = "push_bf_pipeline_builder_docker",
+   image = ":bf_pipeline_builder_docker",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "stratumproject/stratum-bf-pipeline-builder",
+   tag = "latest",
+)
+
 stratum_cc_binary(
     name = "stratum_bf",
     srcs = [

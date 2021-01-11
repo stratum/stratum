@@ -255,9 +255,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
-      - DOCKER_FILE: Dockerfile.bf_pipeline_builder
-      - DOCKER_IMG: stratumproject/stratum-bf-pipeline-builder
       - CC: clang
       - CXX: clang++
     steps:
@@ -265,18 +262,13 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build pipeline builder
-          command: |
-            bazel build //stratum/hal/bin/barefoot:bf_pipeline_builder
-            cp bazel-bin/stratum/hal/bin/barefoot/bf_pipeline_builder $DOCKER_SCOPE
       - *docker_login
-      - *docker_build
+      - run:
+          name: Build and push pipeline builder
+          command: bazel run //stratum/hal/bin/barefoot:push_bf_pipeline_builder_docker
       - run:
           name: Test stratum-bf-pipeline-builder Docker image
-          command: |
-            docker run $DOCKER_IMG -version
-      - *docker_push
+          command: docker run stratumproject/stratum-bf-pipeline-builder -version
       - *clean_bazel_cache
       - *save_bazel_cache
 
