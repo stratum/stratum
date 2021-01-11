@@ -4,7 +4,7 @@
 
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
-load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image", "container_push")
 load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
 load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
 load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
@@ -221,25 +221,25 @@ genrule(
 
 # Add the stratum-bfrt debian package to image.
 container_image(
-    name = "stratum_bfrt_base",
+    name = "stratum_bfrt_docker_with_deb",
     base = "@minideb//image",
     files = ["stratum_bfrt_deb.deb"],
 )
 
 # Install the stratum-bfrt debian package and its dependencies.
 container_run_and_commit(
-    name = "stratum_bfrt_install_deb",
+    name = "stratum_bfrt_docker_installed_deb",
     commands = [
         "install_packages /stratum_bfrt_deb.deb",
         "rm /stratum_bfrt_deb.deb",
     ],
-    image = "stratum_bfrt_base.tar",
+    image = ":stratum_bfrt_docker_with_deb.tar",
 )
 
 # Build the final image with correct metadata.
 container_image(
-    name = "stratum_bfrt_final",
-    base = "stratum_bfrt_install_deb_commit.tar",
+    name = "stratum_bfrt_docker",
+    base = ":stratum_bfrt_docker_installed_deb",
     entrypoint = ["start-stratum.sh"],
     labels = {
         "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
@@ -260,6 +260,16 @@ container_image(
     repository = "stratumproject",
     stamp = True,
     workdir = "/var/run/stratum",
+)
+
+# Push the Stratum-bfrt image to DockerHub.
+container_push(
+   name = "push_stratum_bfrt_docker",
+   image = ":stratum_bfrt_docker",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "stratumproject/stratum-bfrt",
+   tag = "$(sde_ver)",
 )
 
 container_bundle(
