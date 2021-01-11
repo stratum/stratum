@@ -7,6 +7,11 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
 )
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_image",
+    "container_push",
+)
 
 licenses(["notice"])  # Apache v2
 
@@ -33,4 +38,32 @@ stratum_cc_binary(
         "@com_google_protobuf//:protobuf",
         "@com_googlesource_code_re2//:re2",
     ],
+)
+
+container_image(
+    name = "stratum-replay_docker",
+    base = "@minideb//image",
+    cmd = ["-help"],
+    entrypoint = ["/stratum-replay"],
+    files = [":stratum-replay"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "Docker-based distribution of the Stratum-bf pipeline builder",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    repository = "stratumproject",
+    stamp = True,
+)
+
+container_push(
+    name = "push_stratum-replay_docker",
+    format = "Docker",
+    image = ":stratum-replay_docker",
+    registry = "index.docker.io",
+    repository = "stratumproject/stratum-replay",
+    tag = "latest",
 )
