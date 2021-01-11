@@ -23,13 +23,43 @@ namespace config {
 const char kUsage[] =
     R"USAGE(usage: --chassis_config_file=<path>
 
-Chassis configuration migration tool.
+Chassis configuration migration and validation tool.
 
-Combine with xargs for mass migration:
+Combine with xargs for bulk migration:
 ls -1 stratum/hal/config/*/chassis_config.pb.txt | \
   xargs -n 1 bazel run //stratum/hal/config:tofino_chassis_config_migrator -- \
     -chassis_config_file
 )USAGE";
+
+::util::Status MigrateSingletonPort(SingletonPort* singleton_port) {
+  // Only change the port name if it matches the <port>/<slot> pattern.
+  bool fix_name = true;
+  std::vector<std::string> parts = absl::StrSplit(singleton_port->name(), '/');
+  if (parts.size() != 2) {
+    LOG(WARNING) << "Can't parse port name " << singleton_port->name()
+                 << " as <port>/<channel>.";
+    fix_name = false;
+  }
+
+  // Fix the port id and name based on slot/port/channel.
+  if (singleton_port->channel() == 0) {
+    // Non-channelized port.
+    singleton_port->set_id(singleton_port->port());
+    if (fix_name) {
+      singleton_port->set_name(absl::StrFormat("%i/0", singleton_port->port()));
+    }
+  } else {
+    // Channelized port.
+    singleton_port->set_id(singleton_port->port() * 100 +
+                           singleton_port->channel() - 1);
+    if (fix_name) {
+      singleton_port->set_name(absl::StrFormat("%i/%i", singleton_port->port(),
+                                               singleton_port->channel() - 1));
+    }
+  }
+
+  return ::util::OkStatus();
+}
 
 ::util::Status Main(int argc, char** argv) {
   ::gflags::SetUsageMessage(kUsage);
@@ -43,34 +73,12 @@ ls -1 stratum/hal/config/*/chassis_config.pb.txt | \
   if (config.chassis().platform() != PLT_GENERIC_BAREFOOT_TOFINO &&
       config.chassis().platform() != PLT_GENERIC_BAREFOOT_TOFINO2) {
     RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Chassis config is not for Tofino platform";
+        << "Chassis config is not for a Tofino platform";
   }
   for (auto& singleton_port : *config.mutable_singleton_ports()) {
-    std::vector<std::string> parts = absl::StrSplit(singleton_port.name(), '/');
-    CHECK_RETURN_IF_FALSE(parts.size() == 2)
-        << "Can't parse port name " << singleton_port.name() << ".";
-    int port_id;
-    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(parts[0], &port_id));
-    int name_channel;
-    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(parts[1], &name_channel));
-    int new_port_id;
-    std::string new_port_name;
-    if (singleton_port.channel() == 0) {
-      // Non-channelized port.
-      new_port_id = port_id;
-      new_port_name = absl::StrFormat("%i/0", new_port_id);
-    } else {
-      // Channelized port.
-      CHECK_RETURN_IF_FALSE(name_channel + 1 == singleton_port.channel())
-          << "channel field does not match port name in singleton port "
-          << singleton_port.ShortDebugString() << ".";
-      new_port_id = port_id * 100 + name_channel;
-      new_port_name = absl::StrFormat("%i/%i", port_id, name_channel);
-    }
-
-    singleton_port.set_id(new_port_id);
-    singleton_port.set_name(new_port_name);
+    RETURN_IF_ERROR(MigrateSingletonPort(&singleton_port));
   }
+
   RETURN_IF_ERROR(WriteProtoToTextFile(config, FLAGS_chassis_config_file));
 
   return ::util::OkStatus();

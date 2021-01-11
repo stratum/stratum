@@ -61,8 +61,8 @@ pkg_tar(
 )
 
 stratum_cc_binary(
-    name = "tofino_chassis_config_migrator",
-    srcs = ["tofino_chassis_config_migrator.cc"],
+    name = "chassis_config_migrator",
+    srcs = ["chassis_config_migrator.cc"],
     data = [":platform_configs"],
     deps = [
         "//stratum/glue:init_google",

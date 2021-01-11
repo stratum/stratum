@@ -12,7 +12,7 @@ singleton_ports {
   id: 1
   name: "1/0"
   slot: 1
-  port: 48
+  port: 1
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -23,7 +23,7 @@ singleton_ports {
   id: 2
   name: "2/0"
   slot: 1
-  port: 52
+  port: 2
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -34,7 +34,7 @@ singleton_ports {
   id: 3
   name: "3/0"
   slot: 1
-  port: 444
+  port: 3
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -45,7 +45,7 @@ singleton_ports {
   id: 4
   name: "4/0"
   slot: 1
-  port: 440
+  port: 4
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -56,7 +56,7 @@ singleton_ports {
   id: 5
   name: "5/0"
   slot: 1
-  port: 428
+  port: 5
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -67,7 +67,7 @@ singleton_ports {
   id: 6
   name: "6/0"
   slot: 1
-  port: 424
+  port: 6
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -78,7 +78,7 @@ singleton_ports {
   id: 7
   name: "7/0"
   slot: 1
-  port: 412
+  port: 7
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -89,7 +89,7 @@ singleton_ports {
   id: 8
   name: "8/0"
   slot: 1
-  port: 408
+  port: 8
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -100,6 +100,7 @@ singleton_ports {
   id: 9
   name: "9/0"
   slot: 1
+  port: 9
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -110,7 +111,7 @@ singleton_ports {
   id: 10
   name: "10/0"
   slot: 1
-  port: 4
+  port: 10
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -121,7 +122,7 @@ singleton_ports {
   id: 11
   name: "11/0"
   slot: 1
-  port: 16
+  port: 11
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -132,7 +133,7 @@ singleton_ports {
   id: 12
   name: "12/0"
   slot: 1
-  port: 20
+  port: 12
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -143,7 +144,7 @@ singleton_ports {
   id: 13
   name: "13/0"
   slot: 1
-  port: 32
+  port: 13
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -154,7 +155,7 @@ singleton_ports {
   id: 14
   name: "14/0"
   slot: 1
-  port: 36
+  port: 14
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -165,7 +166,7 @@ singleton_ports {
   id: 15
   name: "15/0"
   slot: 1
-  port: 396
+  port: 15
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -176,7 +177,7 @@ singleton_ports {
   id: 16
   name: "16/0"
   slot: 1
-  port: 392
+  port: 16
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -187,7 +188,7 @@ singleton_ports {
   id: 17
   name: "17/0"
   slot: 1
-  port: 256
+  port: 17
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -198,7 +199,7 @@ singleton_ports {
   id: 18
   name: "18/0"
   slot: 1
-  port: 260
+  port: 18
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -209,7 +210,7 @@ singleton_ports {
   id: 19
   name: "19/0"
   slot: 1
-  port: 188
+  port: 19
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -220,7 +221,7 @@ singleton_ports {
   id: 20
   name: "20/0"
   slot: 1
-  port: 184
+  port: 20
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -231,7 +232,7 @@ singleton_ports {
   id: 21
   name: "21/0"
   slot: 1
-  port: 172
+  port: 21
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -242,7 +243,7 @@ singleton_ports {
   id: 22
   name: "22/0"
   slot: 1
-  port: 168
+  port: 22
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -253,7 +254,7 @@ singleton_ports {
   id: 23
   name: "23/0"
   slot: 1
-  port: 156
+  port: 23
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -264,7 +265,7 @@ singleton_ports {
   id: 24
   name: "24/0"
   slot: 1
-  port: 152
+  port: 24
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -275,7 +276,7 @@ singleton_ports {
   id: 25
   name: "25/0"
   slot: 1
-  port: 140
+  port: 25
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -286,7 +287,7 @@ singleton_ports {
   id: 26
   name: "26/0"
   slot: 1
-  port: 136
+  port: 26
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -297,7 +298,7 @@ singleton_ports {
   id: 27
   name: "27/0"
   slot: 1
-  port: 272
+  port: 27
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -308,7 +309,7 @@ singleton_ports {
   id: 28
   name: "28/0"
   slot: 1
-  port: 276
+  port: 28
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -319,7 +320,7 @@ singleton_ports {
   id: 29
   name: "29/0"
   slot: 1
-  port: 288
+  port: 29
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -330,7 +331,7 @@ singleton_ports {
   id: 30
   name: "30/0"
   slot: 1
-  port: 292
+  port: 30
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -341,7 +342,7 @@ singleton_ports {
   id: 31
   name: "31/0"
   slot: 1
-  port: 304
+  port: 31
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -352,7 +353,7 @@ singleton_ports {
   id: 32
   name: "32/0"
   slot: 1
-  port: 308
+  port: 32
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -363,7 +364,7 @@ singleton_ports {
   id: 33
   name: "33/0"
   slot: 1
-  port: 60
+  port: 33
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -374,7 +375,7 @@ singleton_ports {
   id: 34
   name: "34/0"
   slot: 1
-  port: 56
+  port: 34
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -385,7 +386,7 @@ singleton_ports {
   id: 35
   name: "35/0"
   slot: 1
-  port: 432
+  port: 35
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -396,7 +397,7 @@ singleton_ports {
   id: 36
   name: "36/0"
   slot: 1
-  port: 436
+  port: 36
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -407,7 +408,7 @@ singleton_ports {
   id: 37
   name: "37/0"
   slot: 1
-  port: 416
+  port: 37
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -418,7 +419,7 @@ singleton_ports {
   id: 38
   name: "38/0"
   slot: 1
-  port: 420
+  port: 38
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -429,7 +430,7 @@ singleton_ports {
   id: 39
   name: "39/0"
   slot: 1
-  port: 400
+  port: 39
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -440,7 +441,7 @@ singleton_ports {
   id: 40
   name: "40/0"
   slot: 1
-  port: 404
+  port: 40
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -451,7 +452,7 @@ singleton_ports {
   id: 41
   name: "41/0"
   slot: 1
-  port: 12
+  port: 41
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -462,7 +463,7 @@ singleton_ports {
   id: 42
   name: "42/0"
   slot: 1
-  port: 8
+  port: 42
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -473,7 +474,7 @@ singleton_ports {
   id: 43
   name: "43/0"
   slot: 1
-  port: 28
+  port: 43
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -484,7 +485,7 @@ singleton_ports {
   id: 44
   name: "44/0"
   slot: 1
-  port: 24
+  port: 44
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -495,7 +496,7 @@ singleton_ports {
   id: 45
   name: "45/0"
   slot: 1
-  port: 44
+  port: 45
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -506,7 +507,7 @@ singleton_ports {
   id: 46
   name: "46/0"
   slot: 1
-  port: 40
+  port: 46
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -517,7 +518,7 @@ singleton_ports {
   id: 47
   name: "47/0"
   slot: 1
-  port: 384
+  port: 47
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -528,7 +529,7 @@ singleton_ports {
   id: 48
   name: "48/0"
   slot: 1
-  port: 388
+  port: 48
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -539,7 +540,7 @@ singleton_ports {
   id: 49
   name: "49/0"
   slot: 1
-  port: 268
+  port: 49
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -550,7 +551,7 @@ singleton_ports {
   id: 50
   name: "50/0"
   slot: 1
-  port: 264
+  port: 50
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -561,7 +562,7 @@ singleton_ports {
   id: 51
   name: "51/0"
   slot: 1
-  port: 176
+  port: 51
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -572,7 +573,7 @@ singleton_ports {
   id: 52
   name: "52/0"
   slot: 1
-  port: 180
+  port: 52
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -583,7 +584,7 @@ singleton_ports {
   id: 53
   name: "53/0"
   slot: 1
-  port: 160
+  port: 53
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -594,7 +595,7 @@ singleton_ports {
   id: 54
   name: "54/0"
   slot: 1
-  port: 164
+  port: 54
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -605,7 +606,7 @@ singleton_ports {
   id: 55
   name: "55/0"
   slot: 1
-  port: 144
+  port: 55
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -616,7 +617,7 @@ singleton_ports {
   id: 56
   name: "56/0"
   slot: 1
-  port: 148
+  port: 56
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -627,7 +628,7 @@ singleton_ports {
   id: 57
   name: "57/0"
   slot: 1
-  port: 128
+  port: 57
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -638,7 +639,7 @@ singleton_ports {
   id: 58
   name: "58/0"
   slot: 1
-  port: 132
+  port: 58
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -649,7 +650,7 @@ singleton_ports {
   id: 59
   name: "59/0"
   slot: 1
-  port: 284
+  port: 59
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -660,7 +661,7 @@ singleton_ports {
   id: 60
   name: "60/0"
   slot: 1
-  port: 280
+  port: 60
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -671,7 +672,7 @@ singleton_ports {
   id: 61
   name: "61/0"
   slot: 1
-  port: 300
+  port: 61
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -682,7 +683,7 @@ singleton_ports {
   id: 62
   name: "62/0"
   slot: 1
-  port: 296
+  port: 62
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -693,7 +694,7 @@ singleton_ports {
   id: 63
   name: "63/0"
   slot: 1
-  port: 316
+  port: 63
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -704,7 +705,7 @@ singleton_ports {
   id: 64
   name: "64/0"
   slot: 1
-  port: 312
+  port: 64
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -715,7 +716,7 @@ singleton_ports {
   id: 65
   name: "65/0"
   slot: 1
-  port: 64
+  port: 65
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
