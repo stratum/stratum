@@ -83,6 +83,7 @@ jobs:
       - CXX: clang++
     steps:
       - checkout
+      - setup_remote_docker
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
@@ -127,6 +128,7 @@ jobs:
       - CXX: clang++
     steps:
       - checkout
+      - setup_remote_docker
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
