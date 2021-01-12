@@ -14,7 +14,13 @@ load(
     "//stratum/p4c_backends/test:build_defs.bzl",
     "p4c_save_ir",
 )
-
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_bundle",
+    "container_image",
+    "container_push",
+)
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
 
 package(
@@ -1934,12 +1940,59 @@ pkg_tar(
 
 pkg_deb(
     name = "p4c_fpm_deb",
-    package = "p4-fpm",
-    version = "0.1",
-    description = "P4 compiler for FPM",
     architecture = "amd64",
     data = ":fpm_p4c_data",
-    maintainer = "https://stratumproject.org/",
+    depends = [
+        "libgmp10",
+        "libgmpxx4ldbl",
+        "gcc",
+    ],
+    description = "P4 compiler for FPM",
+    homepage = "https://stratumproject.org/",
+    maintainer = "The Stratum Project",
+    package = "p4-fpm",
+    version = "0.0.1",
+)
+
+container_image(
+    name = "p4c_fpm_docker_with_deb",
+    base = "@minideb//image",
+    files = ["p4c_fpm_deb.deb"],
+)
+
+container_run_and_commit(
+    name = "p4c_fpm_docker_installed_deb",
+    commands = [
+        "install_packages /p4c_fpm_deb.deb",
+        "rm /p4c_fpm_deb.deb",
+    ],
+    image = ":p4c_fpm_docker_with_deb.tar",
+)
+
+container_image(
+    name = "p4c_fpm_docker",
+    base = ":p4c_fpm_docker_installed_deb",
+    entrypoint = ["p4c-fpm"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "This Docker image includes runtime library for Barefoot Tofino switches",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    repository = "stratumproject",
+    stamp = True,
+)
+
+container_push(
+    name = "push_p4c_fpm_docker",
+    format = "Docker",
+    image = ":p4c_fpm_docker",
+    registry = "index.docker.io",
+    repository = "stratumproject/p4c-fpm",
+    tag = "test",
 )
 
 filegroup(

@@ -177,9 +177,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/p4c_backends/fpm
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/p4c-fpm
       - CC: clang
       - CXX: clang++
     steps:
@@ -187,17 +184,13 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build p4c-fpm
-          command: |
-            bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb
-            cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
       - *docker_login
-      - *docker_build
+      - run:
+          name: Build and push p4c-fpm
+          command: bazel run //stratum/p4c_backends/fpm:push_p4c_fpm_docker
       - run:
           name: Test p4c-fpm Docker image
-          command: |
-            docker run $DOCKER_IMG -version
+          command: docker run stratumproject/p4c-fpm -version
       - *docker_push
       - *clean_bazel_cache
       - *save_bazel_cache
