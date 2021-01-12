@@ -11,6 +11,13 @@ load(
     "stratum_cc_binary",
     "stratum_package",
 )
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_bundle",
+    "container_image",
+    "container_push",
+)
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 
 licenses(["notice"])  # Apache v2
 
@@ -195,4 +202,100 @@ pkg_deb(
     maintainer = "The Stratum Project",
     package = "stratum-bcm-sdklt",
     version = "0.0.1",
+)
+
+container_image(
+    name = "stratum_bcm_opennsa_docker_with_deb",
+    base = "@minideb//image",
+    files = [":stratum_bcm_opennsa_deb.deb"],
+)
+
+container_image(
+    name = "stratum_bcm_sdklt_docker_with_deb",
+    base = "@minideb//image",
+    files = [":stratum_bcm_sdklt_deb.deb"],
+)
+
+container_run_and_commit(
+    name = "stratum_bcm_opennsa_docker_installed_deb",
+    commands = [
+        "install_packages /stratum_bcm_opennsa_deb.deb",
+        "rm /stratum_bcm_opennsa_deb.deb",
+    ],
+    image = ":stratum_bcm_opennsa_docker_with_deb.tar",
+)
+
+container_run_and_commit(
+    name = "stratum_bcm_sdklt_docker_installed_deb",
+    commands = [
+        "install_packages /stratum_bcm_sdklt_deb.deb",
+        "rm /stratum_bcm_sdklt_deb.deb",
+    ],
+    image = ":stratum_bcm_sdklt_docker_with_deb.tar",
+)
+
+container_image(
+    name = "stratum_bcm_opennsa_docker",
+    base = ":stratum_bcm_opennsa_docker_installed_deb",
+    entrypoint = ["start-stratum.sh"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "This is the Stratum runtime Docker image for Broadcom switches",
+        "stratum-target": "stratum_bcm_opennsa",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    ports = [
+        "9339",
+        "9559",
+        "28000",
+    ],
+    repository = "stratumproject",
+    stamp = True,
+    workdir = "/var/run/stratum",
+)
+
+container_image(
+    name = "stratum_bcm_sdklt_docker",
+    base = ":stratum_bcm_sdklt_docker_installed_deb",
+    entrypoint = ["start-stratum.sh"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "This is the Stratum runtime Docker image for Broadcom switches",
+        "stratum-target": "stratum_bcm_sdklt",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    ports = [
+        "9339",
+        "9559",
+        "28000",
+    ],
+    repository = "stratumproject",
+    stamp = True,
+    workdir = "/var/run/stratum",
+)
+
+container_push(
+    name = "push_stratum_bcm_opennsa_docker",
+    format = "Docker",
+    image = ":stratum_bcm_opennsa_docker",
+    registry = "index.docker.io",
+    repository = "stratumproject/stratum-bcm",
+    tag = "opennsa",
+)
+
+container_push(
+    name = "push_stratum_bcm_sdklt_docker",
+    format = "Docker",
+    image = ":stratum_bcm_sdklt_docker",
+    registry = "index.docker.io",
+    repository = "stratumproject/stratum-bcm",
+    tag = "sdklt",
 )

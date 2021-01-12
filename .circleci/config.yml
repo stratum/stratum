@@ -199,9 +199,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bcm:sdklt
       - CC: clang
       - CXX: clang++
     steps:
@@ -209,14 +206,10 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build stratum_bcm
-          command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
-            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
-      - *docker_build
-      - *docker_push
+      - run:
+          name: Build and push stratum_bcm
+          command: bazel run //stratum/hal/bin/bcm/standalone:push_stratum_bcm_sdklt_docker
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -224,9 +217,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bcm:opennsa
       - CC: clang
       - CXX: clang++
     steps:
@@ -234,14 +224,10 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build stratum_bcm
-          command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
-            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
-      - *docker_build
-      - *docker_push
+      - run:
+          name: Build and push stratum_bcm
+          command: bazel run //stratum/hal/bin/bcm/standalone:push_stratum_bcm_opennsa_docker
       - *save_bazel_cache
 
   publish-docker-bf-pipeline-builder:
