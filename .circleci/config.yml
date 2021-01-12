@@ -265,7 +265,7 @@ jobs:
       - *docker_login
       - run:
           name: Build and push stratum-replay
-          command: bazel build //stratum/tools/stratum-replay:push_stratum-replay_docker
+          command: bazel run //stratum/tools/stratum-replay:push_stratum-replay_docker
       - run:
           name: Test stratum-replay Docker image
           command: docker run stratumproject/stratum-replay -version
