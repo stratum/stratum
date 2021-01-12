@@ -191,7 +191,6 @@ jobs:
       - run:
           name: Test p4c-fpm Docker image
           command: docker run stratumproject/p4c-fpm -version
-      - *docker_push
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -228,6 +227,7 @@ jobs:
       - run:
           name: Build and push stratum_bcm
           command: bazel run //stratum/hal/bin/bcm/standalone:push_stratum_bcm_opennsa_docker
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   publish-docker-bf-pipeline-builder:
