@@ -327,18 +327,18 @@ workflows:
       - publish-docker-mininet:
           requires:
             - publish-docker-build
-      - publish-docker-p4c-fpm
-          # requires:
-          #   - publish-docker-build
-      - publish-docker-stratum-bcm-sdklt
-          # requires:
-          #   - publish-docker-build
-      - publish-docker-stratum-bcm-opennsa
-          # requires:
-          #   - publish-docker-build
-      - publish-docker-bf-pipeline-builder
-          # requires:
-          #   - publish-docker-build
-      - publish-docker-stratum-replay
-          # requires:
-          #   - publish-docker-build
+      - publish-docker-p4c-fpm:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bcm-sdklt:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bcm-opennsa:
+          requires:
+            - publish-docker-build
+      - publish-docker-bf-pipeline-builder:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-replay:
+          requires:
+            - publish-docker-build
