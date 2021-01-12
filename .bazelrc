@@ -4,8 +4,6 @@
 # General build options
 build --conlyopt='-std=gnu11'
 build --cxxopt='-std=gnu++11'
-build --copt -Wall
-build --copt -Wno-sign-compare
 build --workspace_status_command=.circleci/workspace_status.sh
 
 # LTO on clang
