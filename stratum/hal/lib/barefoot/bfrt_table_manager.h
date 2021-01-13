@@ -91,6 +91,8 @@ class BfrtTableManager {
       const ::p4::v1::Action& action,
       BfSdeInterface::TableDataInterface* table_data);
 
+  // Builds a SDE table data from the given P4 table entry. The table data
+  // object is reset, even in case of failure.
   ::util::Status BuildTableData(const ::p4::v1::TableEntry& table_entry,
                                 BfSdeInterface::TableDataInterface* table_data);
 
