@@ -40,6 +40,7 @@ stratum_cc_library(
     name = "np4_chassis_manager",
     srcs = ["np4_chassis_manager.cc"],
     hdrs = ["np4_chassis_manager.h"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(craig)
     deps = [
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",

@@ -282,13 +282,17 @@ struct RegisterClearThreadData {
     BfSdeInterface::TableDataInterface* table_data) {
   switch (table_entry.action().type_case()) {
     case ::p4::v1::TableAction::kAction:
-      return BuildTableActionData(table_entry.action().action(), table_data);
+      RETURN_IF_ERROR(
+          BuildTableActionData(table_entry.action().action(), table_data));
+      break;
     case ::p4::v1::TableAction::kActionProfileMemberId:
-      return table_data->SetActionMemberId(
-          table_entry.action().action_profile_member_id());
+      RETURN_IF_ERROR(table_data->SetActionMemberId(
+          table_entry.action().action_profile_member_id()));
+      break;
     case ::p4::v1::TableAction::kActionProfileGroupId:
-      return table_data->SetSelectorGroupId(
-          table_entry.action().action_profile_group_id());
+      RETURN_IF_ERROR(table_data->SetSelectorGroupId(
+          table_entry.action().action_profile_group_id()));
+      break;
     case ::p4::v1::TableAction::kActionProfileActionSet:
     default:
       RETURN_ERROR(ERR_UNIMPLEMENTED)
@@ -300,6 +304,8 @@ struct RegisterClearThreadData {
         table_data->SetCounterData(table_entry.counter_data().byte_count(),
                                    table_entry.counter_data().packet_count()));
   }
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtTableManager::WriteTableEntry(

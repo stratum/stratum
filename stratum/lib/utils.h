@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include <chrono>  // NOLINT
 #include <functional>
 #include <ostream>
@@ -245,6 +246,11 @@ inline U ByteStreamToUint(const std::string& bytes) {
   }
   return val;
 }
+
+// Demangles a symbol name, if possible. If it fails, the mangled name is
+// returned instead.
+// Not async-safe, do not use this function inside a signal handler!
+std::string Demangle(const char* mangled);
 
 }  // namespace stratum
 

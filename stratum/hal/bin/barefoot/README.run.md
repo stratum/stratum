@@ -272,7 +272,7 @@ start-stratum-container.sh
 Here is an example Chassis Config that brings up the first two physical ports:
 ```proto
 chassis {
-  platform: PLT_BAREFOOT_TOFINO
+  platform: PLT_GENERIC_BAREFOOT_TOFINO
   name: "Edgecore Wedge100BF-32x"
 }
 nodes {
@@ -315,7 +315,11 @@ Previously, the port `id` was required to match the BF device port ID for Stratu
 to function. Stratum now reads BF device port ID from the SDK using the `node`,
 `port`, and `channel` params provided in the `singleton_ports` config, which means
 the port `id` can now be set to a user-selected value. The `id` is required, and
-it must be positive and unique across all ports in the config.
+it must be positive and unique across all ports in the config. For consistency we
+use the following schema to derive the default port IDs in our configs:
+
+- Non-channelized ports: ID = front panel port number
+- Channelized ports: ID = front panel port * 100 + channel
 
 The BF device port ID (SDK port ID) can be read using gNMI:
 `/interfaces/interface[name=<name>]/state/ifindex`

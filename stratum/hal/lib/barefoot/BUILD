@@ -65,6 +65,7 @@ stratum_cc_library(
     name = "bf_chassis_manager",
     srcs = ["bf_chassis_manager.cc"],
     hdrs = ["bf_chassis_manager.h"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(antonin)
     deps = [
         ":bf_sde_interface",
         "//stratum/glue:integral_types",
