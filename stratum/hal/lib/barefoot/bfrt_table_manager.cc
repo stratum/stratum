@@ -270,7 +270,6 @@ struct RegisterClearThreadData {
 ::util::Status BfrtTableManager::BuildTableActionData(
     const ::p4::v1::Action& action,
     BfSdeInterface::TableDataInterface* table_data) {
-  RETURN_IF_ERROR(table_data->Reset(action.action_id()));
   for (const auto& param : action.params()) {
     RETURN_IF_ERROR(table_data->SetParam(param.param_id(), param.value()));
   }
@@ -280,6 +279,12 @@ struct RegisterClearThreadData {
 ::util::Status BfrtTableManager::BuildTableData(
     const ::p4::v1::TableEntry& table_entry,
     BfSdeInterface::TableDataInterface* table_data) {
+  if (table_entry.has_counter_data()) {
+    RETURN_IF_ERROR(
+        table_data->SetCounterData(table_entry.counter_data().byte_count(),
+                                   table_entry.counter_data().packet_count()));
+  }
+
   switch (table_entry.action().type_case()) {
     case ::p4::v1::TableAction::kAction:
       return BuildTableActionData(table_entry.action().action(), table_data);
@@ -293,12 +298,6 @@ struct RegisterClearThreadData {
     default:
       RETURN_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported action type: " << table_entry.action().type_case();
-  }
-
-  if (table_entry.has_counter_data()) {
-    RETURN_IF_ERROR(
-        table_data->SetCounterData(table_entry.counter_data().byte_count(),
-                                   table_entry.counter_data().packet_count()));
   }
 }
 
