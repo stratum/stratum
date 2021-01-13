@@ -1157,10 +1157,15 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
   RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(device));
 
   // Set SDE log levels for modules of interest.
+  // TODO(max): create story around SDE logs. How to get them into glog? What
+  // levels to enable for which modules?
   CHECK_RETURN_IF_FALSE(
       bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   CHECK_RETURN_IF_FALSE(
       bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  stat_mgr_enable_detail_trace = false;
   if (VLOG_IS_ON(2)) {
     CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
                                                BF_LOG_INFO) == 0);
