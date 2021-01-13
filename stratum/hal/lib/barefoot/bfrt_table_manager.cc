@@ -270,6 +270,7 @@ struct RegisterClearThreadData {
 ::util::Status BfrtTableManager::BuildTableActionData(
     const ::p4::v1::Action& action,
     BfSdeInterface::TableDataInterface* table_data) {
+  RETURN_IF_ERROR(table_data->Reset(action.action_id()));
   for (const auto& param : action.params()) {
     RETURN_IF_ERROR(table_data->SetParam(param.param_id(), param.value()));
   }
@@ -279,26 +280,32 @@ struct RegisterClearThreadData {
 ::util::Status BfrtTableManager::BuildTableData(
     const ::p4::v1::TableEntry& table_entry,
     BfSdeInterface::TableDataInterface* table_data) {
+  switch (table_entry.action().type_case()) {
+    case ::p4::v1::TableAction::kAction:
+      RETURN_IF_ERROR(
+          BuildTableActionData(table_entry.action().action(), table_data));
+      break;
+    case ::p4::v1::TableAction::kActionProfileMemberId:
+      RETURN_IF_ERROR(table_data->SetActionMemberId(
+          table_entry.action().action_profile_member_id()));
+      break;
+    case ::p4::v1::TableAction::kActionProfileGroupId:
+      RETURN_IF_ERROR(table_data->SetSelectorGroupId(
+          table_entry.action().action_profile_group_id()));
+      break;
+    case ::p4::v1::TableAction::kActionProfileActionSet:
+    default:
+      RETURN_ERROR(ERR_UNIMPLEMENTED)
+          << "Unsupported action type: " << table_entry.action().type_case();
+  }
+
   if (table_entry.has_counter_data()) {
     RETURN_IF_ERROR(
         table_data->SetCounterData(table_entry.counter_data().byte_count(),
                                    table_entry.counter_data().packet_count()));
   }
 
-  switch (table_entry.action().type_case()) {
-    case ::p4::v1::TableAction::kAction:
-      return BuildTableActionData(table_entry.action().action(), table_data);
-    case ::p4::v1::TableAction::kActionProfileMemberId:
-      return table_data->SetActionMemberId(
-          table_entry.action().action_profile_member_id());
-    case ::p4::v1::TableAction::kActionProfileGroupId:
-      return table_data->SetSelectorGroupId(
-          table_entry.action().action_profile_group_id());
-    case ::p4::v1::TableAction::kActionProfileActionSet:
-    default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED)
-          << "Unsupported action type: " << table_entry.action().type_case();
-  }
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtTableManager::WriteTableEntry(
