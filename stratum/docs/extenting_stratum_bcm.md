@@ -235,7 +235,7 @@ In general, most features will require changes to multiple areas of Stratum:
 
 - p4c-fpm Compiler
 
-    Here you decide how your feature will be exposed in P4 code. Hide unnecessary details about implementation details in both Statum and the underlying SDK.
+    Here you decide how your feature will be exposed in P4 code. Hide unnecessary details about implementation details in both Stratum and the underlying SDK.
     - New header fields in `p4_table_defs.proto` and `p4_table_map.proto`
         - E.g. `P4FieldType::P4_FIELD_TYPE_MPLS_LABEL`
     - New Pipeline stages in `p4_annotation.proto`
