@@ -207,7 +207,7 @@ nodes {{
             '-chassis_config_file=%s' % self.chassisConfigFile,
             '-forwarding_pipeline_configs_file=%s/pipe.txt' % self.tmpDir,
             '-persistent_config_dir=%s' % self.tmpDir,
-            '-initial_pipeline=%s' % STRATUM_INIT_PIPELINE,
+            '-initial_pipeline=%s' % self.json,
             '-cpu_port=%s' % self.cpuPort,
             '-external_stratum_urls=0.0.0.0:%d' % self.grpcPort,
             '-local_stratum_url=localhost:%d' % pickUnusedPort(),
