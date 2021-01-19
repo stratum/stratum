@@ -1926,6 +1926,7 @@ pkg_tar(
 
 pkg_tar(
     name = "fpm_p4c_data",
+    extension = "tar.xz",
     deps = [
         ":fpm_p4c_bin",
         ":fpm_p4c_includes",

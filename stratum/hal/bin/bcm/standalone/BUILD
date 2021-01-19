@@ -135,7 +135,8 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "statum_bcm_sdklt_all",
+    name = "stratum_bcm_sdklt_all",
+    extension = "tar.bz2",
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_sdklt_bin",
@@ -144,7 +145,8 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "statum_bcm_opennsa_all",
+    name = "stratum_bcm_opennsa_all",
+    extension = "tar.bz2",
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_opennsa_bin",
@@ -159,7 +161,7 @@ pkg_deb(
         "stratum-bcm-sdk6",
         "stratum-bcm-sdklt",
     ],
-    data = ":statum_bcm_opennsa_all",
+    data = ":stratum_bcm_opennsa_all",
     depends = [
         "kmod",
         "libboost-thread1.62.0",
@@ -184,7 +186,7 @@ pkg_deb(
         "stratum-bcm-opennsa",
         "stratum-bcm-sdk6",
     ],
-    data = ":statum_bcm_sdklt_all",
+    data = ":stratum_bcm_sdklt_all",
     depends = [
         "kmod",
         "libboost-thread1.62.0",
