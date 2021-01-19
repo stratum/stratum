@@ -53,6 +53,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 # Compiler warnings that are threated as errors.
 STRATUM_COMPILER_ERRORS_COMMON = [
     "-Werror=ignored-attributes",
+    "-Werror=unreachable-code",
 ]
 STRATUM_COMPILER_ERRORS_GCC = [
     "-fdiagnostics-color=always",
@@ -63,6 +64,7 @@ STRATUM_COMPILER_ERRORS_LLVM = [
     "-Werror=return-type",  # TODO(max): move to common after gcc update
     "-Werror=reorder-ctor",
     "-Werror=thread-safety-analysis",
+    "-Werror=unreachable-code-aggressive",
 ]
 STRATUM_COMPILER_ERRORS = STRATUM_COMPILER_ERRORS_COMMON + select({
     "//stratum:llvm_compiler": STRATUM_COMPILER_ERRORS_LLVM,

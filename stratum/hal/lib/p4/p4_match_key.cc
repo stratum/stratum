@@ -177,7 +177,6 @@ P4MatchKey::P4MatchKey(
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
              << "Field descriptor " << conversion_entry.ShortDebugString()
              << " does not specify how to convert prefix in LPM match";
-      break;
   }
 
   return status;
@@ -342,7 +341,6 @@ std::unique_ptr<P4MatchKeyTernary> P4MatchKeyTernary::CreateInstance(
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
              << "Field descriptor " << conversion_entry.ShortDebugString()
              << " does not specify how to convert ternary mask";
-      break;
   }
   ::util::Status status =
       ConvertBytes(p4_field_match().ternary().value(), conversion_entry,

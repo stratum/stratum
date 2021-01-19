@@ -179,7 +179,6 @@ namespace {
       }
       default: {
         return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown value type";
-        break;
       }
     }
   }
@@ -256,8 +255,6 @@ namespace {
     CHECK_RETURN_IF_FALSE(stream->Write(resp))
         << "Subscribe stream write failed";
   }
-
-  return ::util::OkStatus();
 }
 
 ::grpc::Status PhalDbService::Subscribe(
