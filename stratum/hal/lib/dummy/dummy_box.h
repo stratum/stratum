@@ -61,7 +61,7 @@ using DummyNodeEventPtr = std::shared_ptr<DummyNodeEvent>;
 
 class DummyBox : public Test::Service {
  public:
-  ~DummyBox();
+  ~DummyBox() override;
   // Override from Test::Service
   // Exposes to external status event generator (e.g. CLI)
   ::grpc::Status

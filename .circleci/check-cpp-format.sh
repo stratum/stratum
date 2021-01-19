@@ -144,6 +144,8 @@ stratum/hal/lib/phal/test_util.h
 stratum/hal/lib/pi/pi_node.cc
 stratum/hal/lib/pi/pi_node.h
 stratum/hal/stub/embedded/main.cc
+stratum/lib/channel/channel.cc
+stratum/lib/channel/channel.h
 stratum/lib/constants.h
 stratum/lib/libcproxy/libcwrapper.cc
 stratum/lib/libcproxy/libcwrapper.h

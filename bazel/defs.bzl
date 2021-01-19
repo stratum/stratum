@@ -60,8 +60,9 @@ STRATUM_COMPILER_ERRORS_GCC = [
 ]
 STRATUM_COMPILER_ERRORS_LLVM = [
     "-Werror=implicit-fallthrough",  # TODO(max): move to common after gcc 7
-    "-Werror=return-type",  # TODO(max): move to common after gcc update
+    "-Werror=inconsistent-missing-destructor-override",
     "-Werror=reorder-ctor",
+    "-Werror=return-type",  # TODO(max): move to common after gcc update
     "-Werror=thread-safety-analysis",
 ]
 STRATUM_COMPILER_ERRORS = STRATUM_COMPILER_ERRORS_COMMON + select({

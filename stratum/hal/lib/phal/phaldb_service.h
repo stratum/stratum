@@ -32,7 +32,7 @@ class PhalDbService final : public PhalDb::Service {
  public:
   explicit PhalDbService(AttributeDatabaseInterface* attribute_db_interface);
 
-  virtual ~PhalDbService();
+  ~PhalDbService() override;
 
   // Sets up the service in coldboot and warmboot mode.
   ::util::Status Setup(bool warmboot);
