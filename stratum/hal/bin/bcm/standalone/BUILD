@@ -168,7 +168,10 @@ pkg_deb(
         "libedit2",
         "libjudydebian1",
         "libssl1.1",
-    ],
+    ] + select({
+        "//stratum/hal/lib/phal:with_tai": ["cassini-tai"],
+        "//conditions:default": [],
+    }),
     description = "Stratum for Broadcom switches using OpenNSA.",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
@@ -191,7 +194,10 @@ pkg_deb(
         "libjudydebian1",
         "libssl1.1",
         "libyaml-0-2",
-    ],
+    ] + select({
+        "//stratum/hal/lib/phal:with_tai": ["cassini-tai"],
+        "//conditions:default": [],
+    }),
     description = "Stratum for Broadcom switches using SDKLT.",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
