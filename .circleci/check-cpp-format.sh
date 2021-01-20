@@ -93,7 +93,17 @@ stratum/hal/lib/common/gnmi_events.h
 stratum/hal/lib/common/p4_service_test.cc
 stratum/hal/lib/common/p4_service.h
 stratum/hal/lib/common/yang_parse_tree_paths.h
+stratum/hal/lib/dummy/dummy_box.cc
+stratum/hal/lib/dummy/dummy_box.h
+stratum/hal/lib/dummy/dummy_chassis_mgr.cc
+stratum/hal/lib/dummy/dummy_chassis_mgr.h
+stratum/hal/lib/dummy/dummy_global_vars.cc
 stratum/hal/lib/dummy/dummy_global_vars.h
+stratum/hal/lib/dummy/dummy_node.cc
+stratum/hal/lib/dummy/dummy_node.h
+stratum/hal/lib/dummy/dummy_switch.cc
+stratum/hal/lib/dummy/dummy_switch.h
+stratum/hal/lib/dummy/dummy_test.proto
 stratum/hal/lib/np4intel/np4_chassis_manager_test.cc
 stratum/hal/lib/np4intel/np4_chassis_manager.cc
 stratum/hal/lib/np4intel/np4_chassis_manager.h
