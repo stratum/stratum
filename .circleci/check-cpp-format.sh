@@ -155,6 +155,14 @@ stratum/hal/lib/phal/tai/tai_switch_configurator.h
 stratum/hal/lib/phal/tai/taish_client.cc
 stratum/hal/lib/phal/tai/taish_client.h
 stratum/hal/lib/phal/test_util.h
+stratum/hal/lib/phal/udev_event_handler_mock.h
+stratum/hal/lib/phal/udev_event_handler_test.cc
+stratum/hal/lib/phal/udev_event_handler.cc
+stratum/hal/lib/phal/udev_event_handler.h
+stratum/hal/lib/phal/udev_interface.h
+stratum/hal/lib/phal/udev_mock.h
+stratum/hal/lib/phal/udev.cc
+stratum/hal/lib/phal/udev.h
 stratum/hal/lib/pi/pi_node.cc
 stratum/hal/lib/pi/pi_node.h
 stratum/hal/stub/embedded/main.cc
