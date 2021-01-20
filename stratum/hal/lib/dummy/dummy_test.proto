@@ -25,11 +25,14 @@ package stratum.hal.dummy_switch;
 import "stratum/hal/lib/common/common.proto";
 
 service Test {
-  // Updates device state such as port operation state, port counters, and so on.
-  rpc DeviceStatusUpdate(DeviceStatusUpdateRequest) returns (DeviceStatusUpdateResponse) { }
+  // Updates device state such as port operation state, port counters, and so
+  // on.
+  rpc DeviceStatusUpdate(DeviceStatusUpdateRequest)
+      returns (DeviceStatusUpdateResponse) {}
 
   // Sends transceiver event to dummy switch.
-  rpc TransceiverEventUpdate(TransceiverEventRequest) returns (TransceiverEventResponse) { }
+  rpc TransceiverEventUpdate(TransceiverEventRequest)
+      returns (TransceiverEventResponse) {}
 }
 
 message DeviceStatusUpdateRequest {
@@ -41,8 +44,7 @@ message DeviceStatusUpdateRequest {
     message Node {
       uint64 node_id = 1;
     }
-    message Chassis {
-    }
+    message Chassis {}
     message PortQueue {
       uint64 node_id = 1;
       uint32 port_id = 2;
@@ -59,7 +61,7 @@ message DeviceStatusUpdateRequest {
   DataResponse state_update = 2;
 }
 
-message DeviceStatusUpdateResponse { }
+message DeviceStatusUpdateResponse {}
 
 message TransceiverEventRequest {
   uint32 slot = 1;
@@ -67,4 +69,4 @@ message TransceiverEventRequest {
   HwState state = 3;
 }
 
-message TransceiverEventResponse { }
+message TransceiverEventResponse {}
