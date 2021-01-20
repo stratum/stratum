@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include "absl/time/time.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/stamping.h"
 
@@ -61,8 +62,8 @@ void InitStratumLogging() {
 
   LOG(INFO) << "Stratum version " << kBuildScmRevision << " ("
             << kBuildScmStatus << ")"
-            << " built at " << kBuildTimestamp << " on host " << kBuildHost
-            << " by user " << kBuildUser << ".";
+            << " built at " << absl::FromTimeT(kBuildTimestamp) << " on host "
+            << kBuildHost << " by user " << kBuildUser << ".";
 }
 
 LoggingConfig GetCurrentLogLevel() {
