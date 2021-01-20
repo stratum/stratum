@@ -603,19 +603,22 @@ struct RegisterClearThreadData {
   absl::ReaderMutexLock l(&lock_);
 
   // We have four cases to handle:
-  // 1. empty table entry: return all tables
-  // 2. table id set, no match key: return all table entires of that table
+  // 1. table id not set: return all table entries from all tables
+  // 2. table id set, no match key: return all table entries of that table
   // 3. table id set, no match key, is_default_action set: return default action
   // 4. table id and match key: return single entry
 
   if (table_entry.match_size() == 0 && !table_entry.is_default_action()) {
     std::vector<::p4::v1::TableEntry> wanted_tables;
-    if (ProtoEqual(table_entry, ::p4::v1::TableEntry::default_instance())) {
+    if (table_entry.table_id() == 0) {
       // 1.
       const ::p4::config::v1::P4Info& p4_info = p4_info_manager_->p4_info();
       for (const auto& table : p4_info.tables()) {
         ::p4::v1::TableEntry te;
         te.set_table_id(table.preamble().id());
+        if (table_entry.has_counter_data()) {
+          te.mutable_counter_data();
+        }
         wanted_tables.push_back(te);
       }
     } else {
