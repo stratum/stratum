@@ -98,9 +98,9 @@ namespace {
         }
       } else {  // change port config if needed
         auto& config_old = port_old.second.config_params();
-        auto& config = singleton_port->config_params();
-        if (config.admin_state() != config_old.admin_state()) {
-          if (config.admin_state() == ADMIN_STATE_ENABLED) {
+        auto& config_new = singleton_port->config_params();
+        if (config_new.admin_state() != config_old.admin_state()) {
+          if (config_new.admin_state() == ADMIN_STATE_ENABLED) {
             APPEND_STATUS_IF_ERROR(
                 status, AddPort(node.id(), singleton_port->name(), port_id));
           } else {
@@ -126,8 +126,8 @@ namespace {
 
       if (singleton_port_old == nullptr) {  // add new port
         auto& singleton_port = port.second;
-        auto& config = singleton_port.config_params();
-        if (config.admin_state() == ADMIN_STATE_ENABLED) {
+        if (singleton_port.config_params().admin_state() ==
+            ADMIN_STATE_ENABLED) {
           APPEND_STATUS_IF_ERROR(
               status, AddPort(node.id(), singleton_port.name(), port_id));
         } else {
@@ -387,7 +387,8 @@ void NP4ChassisManager::ReadPortStatusChangeEvents() {
   // Once the thread is joined, it is safe to reset these pointers.
   port_status_change_event_reader_ = nullptr;
   {
-    absl::WriterMutexLock l(&port_status_change_event_writer_lock_);
+    absl::WriterMutexLock port_status_writer_lock(
+        &port_status_change_event_writer_lock_);
     port_status_change_event_writer_ = nullptr;
   }
   port_status_change_event_channel_ = nullptr;

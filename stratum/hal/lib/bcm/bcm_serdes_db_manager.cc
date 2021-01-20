@@ -84,12 +84,12 @@ BcmSerdesDbManager::~BcmSerdesDbManager() {}
           << "front panel port info: " << fp_port_info.ShortDebugString();
       *bcm_serdes_lane_config = k->second;
       for (int l = 1; l < bcm_port.num_serdes_lanes(); ++l) {
-        auto k = serdes_lane_configs.find(bcm_port.serdes_lane() + l);
-        CHECK_RETURN_IF_FALSE(k != serdes_lane_configs.end())
+        auto m = serdes_lane_configs.find(bcm_port.serdes_lane() + l);
+        CHECK_RETURN_IF_FALSE(m != serdes_lane_configs.end())
             << "Serdes lane " << bcm_port.serdes_lane() + l << " not found in "
             << "serdes DB for " << PrintBcmPort(bcm_port) << " with following "
             << "front panel port info: " << fp_port_info.ShortDebugString();
-        CHECK_RETURN_IF_FALSE(ProtoEqual(*bcm_serdes_lane_config, k->second))
+        CHECK_RETURN_IF_FALSE(ProtoEqual(*bcm_serdes_lane_config, m->second))
             << "Serdes lane configs found for " << PrintBcmPort(bcm_port)
             << " do not have the same value for all the lanes: "
             << j->second.ShortDebugString();

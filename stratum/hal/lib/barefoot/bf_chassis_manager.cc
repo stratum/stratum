@@ -322,13 +322,13 @@ BFChassisManager::~BFChassisManager() = default;
       config_old = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
     }
 
-    auto& config = node_id_to_port_id_to_port_config[node_id][port_id];
+    auto& port_config = node_id_to_port_id_to_port_config[node_id][port_id];
     uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id[node_id][port_id];
     if (config_old == nullptr) {  // new port
-      // if anything fails, config.admin_state will be set to
+      // if anything fails, port_config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      RETURN_IF_ERROR(
-          AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+      RETURN_IF_ERROR(AddPortHelper(node_id, unit, sdk_port_id, singleton_port,
+                                    &port_config));
     } else {  // port already exists, config may have changed
       if (config_old->admin_state == ADMIN_STATE_UNKNOWN) {
         // something is wrong with the port, we make sure the port is deleted
@@ -337,8 +337,8 @@ BFChassisManager::~BFChassisManager() = default;
         if (bf_sde_interface_->IsValidPort(unit, sdk_port_id)) {
           bf_sde_interface_->DeletePort(unit, sdk_port_id);
         }
-        RETURN_IF_ERROR(
-            AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+        RETURN_IF_ERROR(AddPortHelper(node_id, unit, sdk_port_id,
+                                      singleton_port, &port_config));
         continue;
       }
 
@@ -352,10 +352,11 @@ BFChassisManager::~BFChassisManager() = default;
             << "speed_bps field should contain a value";
       }
 
-      // if anything fails, config.admin_state will be set to
+      // if anything fails, port_config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
       RETURN_IF_ERROR(UpdatePortHelper(node_id, unit, sdk_port_id,
-                                       singleton_port, *config_old, &config));
+                                       singleton_port, *config_old,
+                                       &port_config));
     }
   }
 

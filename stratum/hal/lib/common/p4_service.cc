@@ -646,7 +646,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   absl::WriterMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end()) {
-    absl::WriterMutexLock l(&packet_in_thread_lock_);
+    absl::WriterMutexLock packet_in_thread_lock(&packet_in_thread_lock_);
     // This is the first time we are hearing about this node. Lets try to add
     // an RX packet writer for it. If the node_id is invalid, registration will
     // fail.

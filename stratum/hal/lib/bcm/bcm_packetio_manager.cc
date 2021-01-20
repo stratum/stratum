@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 
 #include <arpa/inet.h>
@@ -22,16 +21,16 @@
 #include <memory>
 #include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 DEFINE_int32(knet_rx_buf_size, 512 * 1024,
              "KNET RX socket buffer size (0 = kernel default).");
@@ -60,16 +59,16 @@ namespace {
 
 // Macros to increment the RX/TX counters for a KNET intf. MUST be called inside
 // the class methods only as it accesses class member variables.
-#define INCREMENT_TX_COUNTER(purpose, counter) \
-  do {                                         \
-    absl::WriterMutexLock l(&tx_stats_lock_);  \
-    purpose_to_tx_stats_[purpose].counter++;   \
+#define INCREMENT_TX_COUNTER(purpose, counter)         \
+  do {                                                 \
+    absl::WriterMutexLock stats_lock(&tx_stats_lock_); \
+    purpose_to_tx_stats_[purpose].counter++;           \
   } while (0)
 
-#define INCREMENT_RX_COUNTER(purpose, counter) \
-  do {                                         \
-    absl::WriterMutexLock l(&rx_stats_lock_);  \
-    purpose_to_rx_stats_[purpose].counter++;   \
+#define INCREMENT_RX_COUNTER(purpose, counter)         \
+  do {                                                 \
+    absl::WriterMutexLock stats_lock(&rx_stats_lock_); \
+    purpose_to_rx_stats_[purpose].counter++;           \
   } while (0)
 
 }  // namespace
@@ -859,10 +858,9 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   std::vector<BcmSdkInterface::KnetFilterType> knet_filter_types = {};
   switch (purpose) {
     case GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER:
-      knet_filter_types.push_back(
-          BcmSdkInterface::KnetFilterType::CATCH_ALL);
-          // TODO(max): enable later?
-          // BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH);
+      knet_filter_types.push_back(BcmSdkInterface::KnetFilterType::CATCH_ALL);
+      // TODO(max): enable later?
+      // BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH);
       break;
     case GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW:
       knet_filter_types.push_back(
@@ -1030,7 +1028,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     struct epoll_event pevents[1];  // we care about one event at a time.
     int ret = epoll_wait(efd, pevents, 1, FLAGS_knet_rx_poll_timeout_ms);
     VLOG(2) << "RXThread " << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
-        << " epoll_wait() = " << ret;
+            << " epoll_wait() = " << ret;
     if (ret < 0) {
       VLOG(1) << "Error in epoll_wait(). errno: " << errno << ".";
       INCREMENT_RX_COUNTER(purpose, rx_errors_epoll_wait_failures);
@@ -1077,11 +1075,11 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
               continue;  // let it retry
             }
             meta.ingress_port_id = *ingress_port_id;
-            auto ret = bcm_chassis_ro_interface_->GetParentTrunkId(
+            auto trunk_id = bcm_chassis_ro_interface_->GetParentTrunkId(
                 node_id_, *ingress_port_id);
-            if (ret.ok()) {
+            if (trunk_id.ok()) {
               // If status is OK, there is a parent trunk.
-              meta.ingress_trunk_id = ret.ValueOrDie();
+              meta.ingress_trunk_id = trunk_id.ValueOrDie();
             }
           }
           // Find egress port ID.
