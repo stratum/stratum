@@ -6,7 +6,6 @@ load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
-    "stratum_cc_binary",
     "stratum_cc_test",
 )
 
