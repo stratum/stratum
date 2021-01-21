@@ -260,6 +260,21 @@ message PortConfigParams {
     PORT_MODULATION_NRZ = 1;
     PORT_MODULATION_PAM4 = 2;
   }
+  // Per port shaping config.
+  message ShapingConfig {
+    message PacketShape {
+      int32 rate_pps = 1;
+      int32 burst_size_packets = 2;
+    }
+    message ByteShape {
+      int32 rate_kbits = 1;
+      int32 burst_size_bytes = 2;
+    }
+    oneof shaping {
+      PacketShape packet_shaping = 1;
+      ByteShape byte_shaping = 2;
+    }
+  }
   // The configured admin state for this port.
   AdminState admin_state = 1;
   // The per port MTU (aka max frame size) for this port.
@@ -276,6 +291,8 @@ message PortConfigParams {
   uint64 mac_address = 7;
   // The configured loopback state for this port.
   LoopbackState loopback_mode = 8;
+  // The port shaping configuration for this port.
+  ShapingConfig shaping_config = 9;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,

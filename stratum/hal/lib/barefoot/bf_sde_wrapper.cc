@@ -924,6 +924,26 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
   return ::util::OkStatus();
 }
 
+::util::Status BfSdeWrapper::SetPortShapingRate(int device, int port,
+                                                bool in_pps, uint32 burst_size,
+                                                uint32 rate) {
+  RETURN_IF_BFRT_ERROR(
+      p4_pd_tm_set_port_shaping_rate(device, port, in_pps, burst_size, rate));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::EnablePortShaping(int device, int port,
+                                               TriState enable) {
+  if (enable == TriState::TRI_STATE_TRUE) {
+    RETURN_IF_BFRT_ERROR(p4_pd_tm_enable_port_shaping(device, port));
+  } else if (enable == TriState::TRI_STATE_FALSE) {
+    RETURN_IF_BFRT_ERROR(p4_pd_tm_disable_port_shaping(device, port));
+  }
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BfSdeWrapper::SetPortAutonegPolicy(int device, int port,
                                                   TriState autoneg) {
   ASSIGN_OR_RETURN(auto autoneg_v, AutonegHalToBf(autoneg));

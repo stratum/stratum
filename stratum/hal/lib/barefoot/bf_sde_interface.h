@@ -177,6 +177,14 @@ class BfSdeInterface {
   // Disable a port.
   virtual ::util::Status DisablePort(int device, int port) = 0;
 
+  // Set the port shaping properties on a port.
+  virtual ::util::Status SetPortShapingRate(int device, int port, bool in_pps,
+                                            uint32 burst_size, uint32 rate) = 0;
+
+  // Enable port shaping on a port.
+  virtual ::util::Status EnablePortShaping(int device, int port,
+                                           TriState enable) = 0;
+
   // Get the operational state of a port.
   virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
 

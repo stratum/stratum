@@ -119,6 +119,36 @@ BFChassisManager::~BFChassisManager() = default;
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
+  if (config_params.has_shaping_config()) {
+    LOG(INFO) << "Configuring port shaping on port " << port_id << " in node "
+              << node_id << " (SDK Port " << sdk_port_id
+              << "): " << config_params.shaping_config().ShortDebugString()
+              << ".";
+    switch (config_params.shaping_config().shaping_case()) {
+      case PortConfigParams::ShapingConfig::kPacketShaping:
+        RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
+            unit, sdk_port_id, true,
+            config_params.shaping_config()
+                .packet_shaping()
+                .burst_size_packets(),
+            config_params.shaping_config().packet_shaping().rate_pps()));
+        break;
+      case PortConfigParams::ShapingConfig::kByteShaping:
+        RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
+            unit, sdk_port_id, false,
+            config_params.shaping_config().byte_shaping().burst_size_bytes(),
+            config_params.shaping_config().byte_shaping().rate_kbits()));
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Invalid port shaping config "
+            << config_params.shaping_config().ShortDebugString() << ".";
+    }
+    RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(unit, sdk_port_id,
+                                                         TRI_STATE_TRUE));
+    // TODO(max): update config?
+  }
+
   return ::util::OkStatus();
 }
 
@@ -278,7 +308,7 @@ BFChassisManager::~BFChassisManager() = default;
     }
   }
 
-  for (auto singleton_port : config.singleton_ports()) {
+  for (const auto& singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
 
