@@ -2,8 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/udev_event_handler.h"
+
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
@@ -11,10 +15,6 @@
 #include "stratum/hal/lib/phal/udev_event_handler_mock.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -326,16 +326,16 @@ TEST_F(ConcurrentUdevEventHandlerTest, ManyConcurrentCallbacksExecute) {
   std::vector<pthread_t> test_threads;
   for (int i = 0; i < kNumTestThreads; i++) {
     pthread_t test_thread;
-    ASSERT_EQ(
-        0, pthread_create(&test_thread, nullptr,
-                          +[](void* t) -> void* {
-                            if (!static_cast<ConcurrentUdevEventHandlerTest*>(t)
-                                     ->TriggerSomeCallbacks()
-                                     .ok())
-                              return t;  // Error, non-zero return.
-                            return nullptr;
-                          },
-                          this));
+    ASSERT_EQ(0, pthread_create(
+                     &test_thread, nullptr,
+                     +[](void* t) -> void* {
+                       if (!static_cast<ConcurrentUdevEventHandlerTest*>(t)
+                                ->TriggerSomeCallbacks()
+                                .ok())
+                         return t;  // Error, non-zero return.
+                       return nullptr;
+                     },
+                     this));
     test_threads.push_back(test_thread);
   }
   {

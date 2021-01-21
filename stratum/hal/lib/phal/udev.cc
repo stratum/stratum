@@ -2,11 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/udev.h"
 
-#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

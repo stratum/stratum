@@ -2,15 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_MOCK_H_
 
-#include <utility>
 #include <string>
+#include <utility>
 
-#include "stratum/hal/lib/phal/udev_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/udev_interface.h"
 
 namespace stratum {
 namespace hal {

@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_H_
 
@@ -12,11 +11,11 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/udev_interface.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -27,7 +26,7 @@ namespace hal {
 // Sandcastle stack. The newer version of PHAL will not use this class.
 class Udev : public UdevInterface {
  public:
-  virtual ~Udev();
+  ~Udev() override;
 
   ::util::Status Initialize(const std::string& filter) override
       LOCKS_EXCLUDED(data_lock_);
