@@ -88,7 +88,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
 
   P4Service(OperationMode mode, SwitchInterface* switch_interface,
             AuthPolicyChecker* auth_policy_checker, ErrorBuffer* error_buffer);
-  virtual ~P4Service();
+  ~P4Service() override;
 
   // Sets up the service in coldboot and warmboot mode. In the coldboot mode,
   // the function initializes the class and pushes the saved forwarding pipeline

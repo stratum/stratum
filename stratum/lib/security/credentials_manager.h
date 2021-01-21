@@ -32,7 +32,7 @@ using ::grpc_impl::experimental::TlsServerCredentials;
 // a new connection is created.
 class CredentialsReloadInterface : public TlsCredentialReloadInterface {
  public:
-  ~CredentialsReloadInterface() = default;
+  ~CredentialsReloadInterface() override = default;
   CredentialsReloadInterface(std::string pem_root_certs,
                              std::string server_private_key,
                              std::string server_cert);

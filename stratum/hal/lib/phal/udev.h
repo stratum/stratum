@@ -26,7 +26,7 @@ namespace hal {
 // Sandcastle stack. The newer version of PHAL will not use this class.
 class Udev : public UdevInterface {
  public:
-  virtual ~Udev();
+  ~Udev() override;
 
   ::util::Status Initialize(const std::string& filter) override
       LOCKS_EXCLUDED(data_lock_);
