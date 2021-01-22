@@ -110,6 +110,9 @@ stratum/hal/lib/np4intel/np4_chassis_manager.h
 stratum/hal/lib/np4intel/np4_switch.cc
 stratum/hal/lib/np4intel/np4_switch.h
 stratum/hal/lib/np4intel/test_main.cc
+stratum/hal/lib/p4/p4_match_key_test.cc
+stratum/hal/lib/p4/p4_match_key.cc
+stratum/hal/lib/p4/p4_match_key.h
 stratum/hal/lib/p4/p4_write_request_differ.h
 stratum/hal/lib/phal/adapter.cc
 stratum/hal/lib/phal/adapter.h
