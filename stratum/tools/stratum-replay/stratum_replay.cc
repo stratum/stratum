@@ -108,13 +108,15 @@ using ClientStreamChannelReaderWriter =
   stream_req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(election_id));
 
-  ::grpc::ClientContext context;
-  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
-      stub->StreamChannel(&context);
-  if (!stream->Write(stream_req)) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Failed to send request '" << stream_req.ShortDebugString()
-        << "' to switch.";
+  {
+    ::grpc::ClientContext context;
+    std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+        stub->StreamChannel(&context);
+    if (!stream->Write(stream_req)) {
+      RETURN_ERROR(ERR_INTERNAL)
+          << "Failed to send request '" << stream_req.ShortDebugString()
+          << "' to switch.";
+    }
   }
 
   // Push the given pipeline config.
@@ -176,8 +178,10 @@ using ClientStreamChannelReaderWriter =
     write_req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     write_req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
     VLOG(1) << "Sending request " << write_req.DebugString();
-    ::grpc::ClientContext context;
-    status = stub->Write(&context, write_req, &write_resp);
+    {
+      ::grpc::ClientContext context;
+      status = stub->Write(&context, write_req, &write_resp);
+    }
 
     if (!error_msg.empty()) {
       // Here we expect to get an error, since we only send one update per

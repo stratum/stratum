@@ -194,7 +194,6 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
   }
   ::grpc::ClientContext ctx;
-  ::grpc::Status status;
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials =
       ::grpc::InsecureChannelCredentials();
   if (!FLAGS_ca_cert.empty()) {
