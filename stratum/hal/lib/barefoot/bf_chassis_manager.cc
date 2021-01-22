@@ -119,35 +119,8 @@ BFChassisManager::~BFChassisManager() = default;
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
-  if (config_params.has_shaping_config()) {
-    LOG(INFO) << "Configuring port shaping on port " << port_id << " in node "
-              << node_id << " (SDK Port " << sdk_port_id
-              << "): " << config_params.shaping_config().ShortDebugString()
-              << ".";
-    switch (config_params.shaping_config().shaping_case()) {
-      case PortConfigParams::ShapingConfig::kPacketShaping:
-        RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
-            unit, sdk_port_id, true,
-            config_params.shaping_config()
-                .packet_shaping()
-                .burst_size_packets(),
-            config_params.shaping_config().packet_shaping().rate_pps()));
-        break;
-      case PortConfigParams::ShapingConfig::kByteShaping:
-        RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
-            unit, sdk_port_id, false,
-            config_params.shaping_config().byte_shaping().burst_size_bytes(),
-            config_params.shaping_config().byte_shaping().rate_kbits()));
-        break;
-      default:
-        RETURN_ERROR(ERR_INVALID_PARAM)
-            << "Invalid port shaping config "
-            << config_params.shaping_config().ShortDebugString() << ".";
-    }
-    RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(unit, sdk_port_id,
-                                                         TRI_STATE_TRUE));
-    // TODO(max): update config?
-  }
+  RETURN_IF_ERROR(
+      bf_sde_interface_->EnablePortShaping(unit, sdk_port_id, TRI_STATE_FALSE));
 
   return ::util::OkStatus();
 }
@@ -389,6 +362,34 @@ BFChassisManager::~BFChassisManager() = default;
     }
   }
 
+  if (config.has_vendor_config() &&
+      config.vendor_config().has_tofino_config()) {
+    const auto& node_id_to_port_shaping_config =
+        config.vendor_config().tofino_config().node_id_to_port_shaping_config();
+    for (const auto& key : node_id_to_port_shaping_config) {
+      const uint64 node_id = key.first;
+      const TofinoConfig::BfPortShapingConfig& port_id_to_shaping_config =
+          key.second;
+      CHECK_RETURN_IF_FALSE(node_id_to_port_id_to_sdk_port_id.count(node_id));
+      CHECK_RETURN_IF_FALSE(node_id_to_unit.count(node_id));
+      int unit = node_id_to_unit[node_id];
+      for (const auto& e :
+           port_id_to_shaping_config.per_port_shaping_configs()) {
+        const uint32 port_id = e.first;
+        const TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig&
+            shaping_config = e.second;
+        CHECK_RETURN_IF_FALSE(
+            node_id_to_port_id_to_sdk_port_id[node_id].count(port_id));
+        const uint32 sdk_port_id =
+            node_id_to_port_id_to_sdk_port_id[node_id][port_id];
+        RETURN_IF_ERROR(
+            ApplyPortShapingConfig(node_id, unit, sdk_port_id, shaping_config));
+        node_id_to_port_id_to_port_config[node_id][port_id].shaping_config =
+            shaping_config;
+      }
+    }
+  }
+
   // Clean up from old config.
   for (const auto& node_ports_old : node_id_to_port_id_to_port_config_) {
     auto node_id = node_ports_old.first;
@@ -418,6 +419,40 @@ BFChassisManager::~BFChassisManager() = default;
   node_id_to_sdk_port_id_to_port_id_ = node_id_to_sdk_port_id_to_port_id;
   xcvr_port_key_to_xcvr_state_ = xcvr_port_key_to_xcvr_state;
   initialized_ = true;
+
+  return ::util::OkStatus();
+}
+
+::util::Status BFChassisManager::ApplyPortShapingConfig(
+    uint64 node_id, int unit, uint32 sdk_port_id,
+    const TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig&
+        shaping_config) {
+  LOG(INFO) << "Configuring port shaping on SDK port " << sdk_port_id
+            << " in node " << node_id << ": "
+            << shaping_config.ShortDebugString() << ".";
+  switch (shaping_config.shaping_case()) {
+    case TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig::
+        kPacketShaping:
+      RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
+          unit, sdk_port_id, true,
+          shaping_config.packet_shaping().max_burst_packets(),
+          shaping_config.packet_shaping().max_rate_pps()));
+      break;
+    case TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig::
+        kByteShaping:
+      // The SDE expects the rate in kbps.
+      RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
+          unit, sdk_port_id, false,
+          shaping_config.byte_shaping().max_burst_bytes(),
+          shaping_config.byte_shaping().max_rate_bps() / 1000));
+      break;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM)
+          << "Invalid port shaping config " << shaping_config.ShortDebugString()
+          << ".";
+  }
+  RETURN_IF_ERROR(
+      bf_sde_interface_->EnablePortShaping(unit, sdk_port_id, TRI_STATE_TRUE));
 
   return ::util::OkStatus();
 }

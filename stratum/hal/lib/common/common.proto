@@ -260,21 +260,6 @@ message PortConfigParams {
     PORT_MODULATION_NRZ = 1;
     PORT_MODULATION_PAM4 = 2;
   }
-  // Per port shaping config.
-  message ShapingConfig {
-    message PacketShape {
-      int32 rate_pps = 1;
-      int32 burst_size_packets = 2;
-    }
-    message ByteShape {
-      int32 rate_kbits = 1;
-      int32 burst_size_bytes = 2;
-    }
-    oneof shaping {
-      PacketShape packet_shaping = 1;
-      ByteShape byte_shaping = 2;
-    }
-  }
   // The configured admin state for this port.
   AdminState admin_state = 1;
   // The per port MTU (aka max frame size) for this port.
@@ -291,8 +276,6 @@ message PortConfigParams {
   uint64 mac_address = 7;
   // The configured loopback state for this port.
   LoopbackState loopback_mode = 8;
-  // The port shaping configuration for this port.
-  ShapingConfig shaping_config = 9;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
@@ -666,7 +649,7 @@ message GoogleConfig {
   // chassis map.
   string bcm_chassis_map_id = 1;
   // Maps from the index of the nodes (1-based) to all the configs related to
-  // hat specific node.
+  // that specific node.
   map<uint64, BcmKnetConfig> node_id_to_knet_config = 2;
   map<uint64, BcmRxConfig> node_id_to_rx_config = 3;
   map<uint64, BcmTxConfig> node_id_to_tx_config = 4;
@@ -675,8 +658,35 @@ message GoogleConfig {
   map<uint64, BcmRtag7HashConfig> node_id_to_rtag7_hash_config = 7;
 }
 
+// Config specific to Tofino chassis.
+message TofinoConfig {
+  message BfPortShapingConfig {
+    message BfPerPortShapingConfig {
+      message PacketShape {
+        uint64 max_rate_pps = 1;
+        uint32 max_burst_packets = 2;
+      }
+      message ByteShape {
+        uint64 max_rate_bps = 1;
+        uint32 max_burst_bytes = 2;
+      }
+      oneof shaping {
+        PacketShape packet_shaping = 1;
+        ByteShape byte_shaping = 2;
+      }
+    }
+    // Map from port id to its shaping config given by BfPerPortShapingConfig.
+    map<uint32, BfPerPortShapingConfig> per_port_shaping_configs = 1;
+  }
+
+  // Maps from the index of the nodes (1-based) to all the configs related to
+  // that specific node.
+  map<uint64, BfPortShapingConfig> node_id_to_port_shaping_config = 1;
+}
+
 message VendorConfig {
   GoogleConfig google_config = 1;
+  TofinoConfig tofino_config = 2;
 }
 
 //------------------------------------------------------------------------------

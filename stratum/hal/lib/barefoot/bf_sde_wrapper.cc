@@ -926,9 +926,9 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
 
 ::util::Status BfSdeWrapper::SetPortShapingRate(int device, int port,
                                                 bool in_pps, uint32 burst_size,
-                                                uint32 rate) {
-  RETURN_IF_BFRT_ERROR(
-      p4_pd_tm_set_port_shaping_rate(device, port, in_pps, burst_size, rate));
+                                                uint32 rate_per_second) {
+  RETURN_IF_BFRT_ERROR(p4_pd_tm_set_port_shaping_rate(
+      device, port, in_pps, burst_size, rate_per_second));
 
   return ::util::OkStatus();
 }

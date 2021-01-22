@@ -81,7 +81,7 @@ class BfSdeMock : public BfSdeInterface {
   MOCK_METHOD2(DisablePort, ::util::Status(int device, int port));
   MOCK_METHOD5(SetPortShapingRate,
                ::util::Status(int device, int port, bool in_pps,
-                              uint32 burst_size, uint32 rate));
+                              uint32 burst_size, uint32 rate_per_second));
   MOCK_METHOD3(EnablePortShaping,
                ::util::Status(int device, int port, TriState enable));
   MOCK_METHOD3(SetPortAutonegPolicy,
