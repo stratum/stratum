@@ -60,7 +60,7 @@ void InitStratumLogging() {
     LogToStderr();
   }
 
-  LOG(INFO) << "Stratum version " << kBuildScmRevision << " ("
+  LOG(INFO) << "Stratum version: " << kBuildScmRevision << " ("
             << kBuildScmStatus << ")"
             << " built at " << absl::FromTimeT(kBuildTimestamp) << " on host "
             << kBuildHost << " by user " << kBuildUser << ".";
