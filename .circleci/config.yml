@@ -95,6 +95,8 @@ jobs:
       - run:
           name: Test Stratum targets
           command: xargs -a .circleci/test-targets.txt bazel test
+      - run: git status --porcelain
+      # - run: bazel run //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt
       - *clean_bazel_cache
       - *save_bazel_cache
 
