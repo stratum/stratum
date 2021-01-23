@@ -5,6 +5,7 @@
 build --conlyopt='-std=gnu11'
 build --cxxopt='-std=gnu++11'
 build --workspace_status_command=.circleci/workspace_status.sh
+build --stamp
 
 # General test options
 test --test_output=errors
@@ -47,4 +48,3 @@ build:tsan --strip=never
 # Release build (build with -O2, no asserts, and strip all symbols)
 build:release --compilation_mode=opt
 build:release --linkopt=-Wl,--strip-all
-build:release --stamp
