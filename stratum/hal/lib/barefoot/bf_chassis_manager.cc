@@ -830,9 +830,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     if (config.shaping_config) {
       RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, unit, sdk_port_id,
                                              *config.shaping_config));
-      RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(unit, sdk_port_id,
-                                                           TRI_STATE_TRUE));
-      *config_new->shaping_config = *config.shaping_config;
+      config_new->shaping_config = config.shaping_config;
     }
 
     return ::util::OkStatus();
@@ -855,6 +853,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+  LOG(INFO) << "Resetting port configs for node " << node_id << ".";
   auto* port_id_to_config =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_config != nullptr)
