@@ -224,8 +224,6 @@ BFChassisManager::~BFChassisManager() = default;
   if (config_old.shaping_config) {
     RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, unit, sdk_port_id,
                                            *config_old.shaping_config));
-    RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(unit, sdk_port_id,
-                                                         TRI_STATE_TRUE));
     config_changed = true;
   }
 
