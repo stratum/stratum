@@ -221,6 +221,13 @@ BFChassisManager::~BFChassisManager() = default;
     config->loopback_mode = config_params.loopback_mode();
     config_changed = true;
   }
+  if (config_old.shaping_config) {
+    RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, unit, sdk_port_id,
+                                           *config_old.shaping_config));
+    RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(unit, sdk_port_id,
+                                                         TRI_STATE_TRUE));
+    config_changed = true;
+  }
 
   bool need_disable = false, need_enable = false;
   if (config_params.admin_state() == ADMIN_STATE_DISABLED) {
@@ -427,9 +434,6 @@ BFChassisManager::~BFChassisManager() = default;
     uint64 node_id, int unit, uint32 sdk_port_id,
     const TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig&
         shaping_config) {
-  LOG(INFO) << "Configuring port shaping on SDK port " << sdk_port_id
-            << " in node " << node_id << ": "
-            << shaping_config.ShortDebugString() << ".";
   switch (shaping_config.shaping_case()) {
     case TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig::
         kPacketShaping:
@@ -453,6 +457,9 @@ BFChassisManager::~BFChassisManager() = default;
   }
   RETURN_IF_ERROR(
       bf_sde_interface_->EnablePortShaping(unit, sdk_port_id, TRI_STATE_TRUE));
+  LOG(INFO) << "Configured port shaping on SDK port " << sdk_port_id
+            << " in node " << node_id << ": "
+            << shaping_config.ShortDebugString() << ".";
 
   return ::util::OkStatus();
 }
@@ -818,6 +825,14 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
               << " (SDK port " << sdk_port_id << ").";
       RETURN_IF_ERROR(bf_sde_interface_->EnablePort(unit, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;
+    }
+
+    if (config.shaping_config) {
+      RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, unit, sdk_port_id,
+                                             *config.shaping_config));
+      RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(unit, sdk_port_id,
+                                                           TRI_STATE_TRUE));
+      *config_new->shaping_config = *config.shaping_config;
     }
 
     return ::util::OkStatus();
