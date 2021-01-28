@@ -605,7 +605,6 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
       case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                               "Need to specify either arbitration or packet.");
-        break;
     }
   }
 
