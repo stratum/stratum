@@ -715,7 +715,6 @@ std::string SocketAddress::ToString() const {
 
 std::string SocketAddress::ToPackedString() const {
   LOG(FATAL) << __FUNCTION__ << " not yet implemented in depot3";
-  return "";
 }
 
 IPAddress IPRange::network_address() const {

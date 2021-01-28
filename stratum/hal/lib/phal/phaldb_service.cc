@@ -179,7 +179,6 @@ namespace {
       }
       default: {
         return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown value type";
-        break;
       }
     }
   }
@@ -221,7 +220,8 @@ namespace {
   // Issue the subscribe
   auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
   ASSIGN_OR_RETURN(auto query, adapter->Subscribe(
-      {path}, std::move(writer), absl::Nanoseconds(req->polling_interval())));
+                                   {path}, std::move(writer),
+                                   absl::Nanoseconds(req->polling_interval())));
 
   // Loop around processing messages from the PhalDB writer
   // Note: if the client dies we'll only close the channel
@@ -256,8 +256,6 @@ namespace {
     CHECK_RETURN_IF_FALSE(stream->Write(resp))
         << "Subscribe stream write failed";
   }
-
-  return ::util::OkStatus();
 }
 
 ::grpc::Status PhalDbService::Subscribe(

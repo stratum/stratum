@@ -336,7 +336,6 @@ BfrtNode::~BfrtNode() = default;
     case kTnaExternActionSelectorId:
       return bfrt_action_profile_manager_->WriteActionProfileEntry(session,
                                                                    type, entry);
-      break;
     default:
       RETURN_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
                      << ".";
@@ -352,7 +351,6 @@ BfrtNode::~BfrtNode() = default;
     case kTnaExternActionSelectorId:
       return bfrt_action_profile_manager_->ReadActionProfileEntry(
           session, entry, writer);
-      break;
     default:
       RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
           << "Unsupported extern entry: " << entry.ShortDebugString() << ".";

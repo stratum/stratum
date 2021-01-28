@@ -761,9 +761,8 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
   }
 
   // FIXME(Yi Tseng): Should we use other field to store interface channel?
-  for (auto& channel : interface.physical_channel()) {
-    to.set_channel(channel.value());
-    break;
+  if (interface.physical_channel_size() > 0) {
+    to.set_channel(interface.physical_channel(0).value());
   }
 
   if (interface.has_enabled()) {
