@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Tests for IPAddress and SocketAddress classes.
 
 #include "stratum/glue/net_util/ipaddress.h"
@@ -32,9 +31,9 @@ using absl::kuint128max;
 
 namespace stratum {
 
-#define ARRAYSIZE(a) \
+#define ARRAYSIZE(a)            \
   ((sizeof(a) / sizeof(*(a))) / \
-    static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+   static_cast<size_t>(!(sizeof(a) % sizeof(*(a))))) // NOLINT
 
 #define HAVE_SCOPEDMOCKLOG 0
 #define HAVE_FIXEDARRAY 0
@@ -107,17 +106,17 @@ TEST(IPAddressTest, UnsafeIPv4Strings) {
   // considered unsafe.  We explicitly do not support them
   // (thankfully inet_pton(3) is significantly more sane).
   const char* kUnsafeIPv4Strings[] = {
-    "016.016.016.016",      // 14.14.14.14
-    "016.016.016",          // 14.14.0.14
-    "016.016",              // 14.0.0.14
-    "016",                  // 0.0.0.14
-    "0x0a.0x0a.0x0a.0x0a",  // 10.10.10.10
-    "0x0a.0x0a.0x0a",       // 10.10.0.10
-    "0x0a.0x0a",            // 10.0.0.10
-    "0x0a",                 // 0.0.0.10
-    "42.42.42",             // 42.42.0.42
-    "42.42",                // 42.0.0.42
-    "42",                   // 0.0.0.42
+      "016.016.016.016",      // 14.14.14.14
+      "016.016.016",          // 14.14.0.14
+      "016.016",              // 14.0.0.14
+      "016",                  // 0.0.0.14
+      "0x0a.0x0a.0x0a.0x0a",  // 10.10.10.10
+      "0x0a.0x0a.0x0a",       // 10.10.0.10
+      "0x0a.0x0a",            // 10.0.0.10
+      "0x0a",                 // 0.0.0.10
+      "42.42.42",             // 42.42.0.42
+      "42.42",                // 42.0.0.42
+      "42",                   // 0.0.0.42
   };
 
   IPAddress ip;
@@ -451,11 +450,8 @@ void TestChooseRandomAddress4(int N) {
 
 TEST(IPAddressTest, Joining) {
   std::vector<IPAddress> v = {
-      StringToIPAddressOrDie("192.0.2.0"),
-      StringToIPAddressOrDie("2001:db8::"),
-      StringToIPAddressOrDie("0.0.0.0"),
-      StringToIPAddressOrDie("::")
-  };
+      StringToIPAddressOrDie("192.0.2.0"), StringToIPAddressOrDie("2001:db8::"),
+      StringToIPAddressOrDie("0.0.0.0"), StringToIPAddressOrDie("::")};
   EXPECT_EQ("192.0.2.0!!!2001:db8::!!!0.0.0.0!!!::",
             std::strings::Join(v, "!!!", IPAddressJoinFormatter()));
 }
@@ -470,9 +466,9 @@ void TestChooseRandomAddress6(int N) {
   for (int i = 0; i < N; i++) {
     ptrs[i] = reinterpret_cast<char*>(&ips[i]);
     ips[i].s6_addr32[0] = i;
-    ips[i].s6_addr32[1] = i*2;
-    ips[i].s6_addr32[2] = i*3;
-    ips[i].s6_addr32[3] = i*4;
+    ips[i].s6_addr32[1] = i * 2;
+    ips[i].s6_addr32[2] = i * 3;
+    ips[i].s6_addr32[3] = i * 4;
     count[i] = 0;
   }
   struct hostent host;
@@ -504,9 +500,9 @@ void TestChooseRandomIPAddress(int N) {
   for (int i = 0; i < N; i++) {
     in6_addr ip6;
     ip6.s6_addr32[0] = i;
-    ip6.s6_addr32[1] = i*2;
-    ip6.s6_addr32[2] = i*3;
-    ip6.s6_addr32[3] = i*4;
+    ip6.s6_addr32[1] = i * 2;
+    ip6.s6_addr32[2] = i * 3;
+    ip6.s6_addr32[3] = i * 4;
 
     ipvec.push_back(IPAddress(ip6));
     count[i] = 0;
@@ -745,8 +741,7 @@ TEST(IPAddressTest, Get6to4IPv6Range) {
     const int len6 = len4 + 16;
     EXPECT_TRUE(Get6to4IPv6Range(IPRange(addr4, len4), &iprange6));
     EXPECT_EQ(IPRange(addr6, len6), iprange6);
-    EXPECT_EQ(TruncateIPAddress(addr6, len6),
-              NthAddressInRange(iprange6, 0));
+    EXPECT_EQ(TruncateIPAddress(addr6, len6), NthAddressInRange(iprange6, 0));
     // Make sure reverse direction also works.
     IPAddress compare4;
     EXPECT_TRUE(Get6to4IPv4Address(NthAddressInRange(iprange6, 0), &compare4));
@@ -759,10 +754,10 @@ TEST(IPAddressTest, GetIsatapIPv4Address) {
   const std::string kBadIsatapAddress = "2001:db8::0040:5efe:cf8e:83ca";
   const std::string kTeredoAddress = "2001:0:102:203:200:5efe:506:708";
   const char* kIsatapAddresses[] = {
-    "2001:db8::5efe:cf8e:83ca",
-    "2001:db8::100:5efe:cf8e:83ca",  // Private Multicast? Not likely.
-    "2001:db8::200:5efe:cf8e:83ca",
-    "2001:db8::300:5efe:cf8e:83ca"   // Public Multicast? Also unlikely.
+      "2001:db8::5efe:cf8e:83ca",
+      "2001:db8::100:5efe:cf8e:83ca",  // Private Multicast? Not likely.
+      "2001:db8::200:5efe:cf8e:83ca",
+      "2001:db8::300:5efe:cf8e:83ca"  // Public Multicast? Also unlikely.
   };
   IPAddress addr4, addr6, compare4;
 
@@ -950,8 +945,8 @@ TEST(IPAddressTest, DISABLED_GetCoercedIPv4Address_Hashed_GeneralProperties) {
                                   coerced.ToString().c_str()));
 
     // Make sure it's in the multicast + 240reserved space.
-    uint32 high_byte = ((ntohl(coerced.ipv4_address().s_addr) >> 24)
-                        & 0x000000ff);
+    uint32 high_byte =
+        ((ntohl(coerced.ipv4_address().s_addr) >> 24) & 0x000000ff);
     EXPECT_GE(high_byte, 224u);
 
     // Make sure it's not all 1's.
@@ -1050,18 +1045,30 @@ TEST(IPAddressTest, PTRStringToIPAddress) {
   EXPECT_FALSE(PTRStringToIPAddress(" 1.0.0.127.in-addr.arpa", &ip));
   EXPECT_FALSE(PTRStringToIPAddress("+1.0.0.127.in-addr.arpa", &ip));
   EXPECT_FALSE(PTRStringToIPAddress("1.0.0.127.ip6.arpa", &ip));
-  EXPECT_FALSE(PTRStringToIPAddress("1.1.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
-                                    "1.0.0.4.0.6.8.4.1.0.0.ip6.arpa.", &ip));
-  EXPECT_FALSE(PTRStringToIPAddress("1..0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
-                                    "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa", &ip));
-  EXPECT_FALSE(PTRStringToIPAddress("1.10.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
-                                    "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa", &ip));
-  EXPECT_FALSE(PTRStringToIPAddress("1.0.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
-                                    "1.0.0.4.0.6.8.4.1...0.2.ip6.arpa", &ip));
-  EXPECT_FALSE(PTRStringToIPAddress("1.G.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
-                                    "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa", &ip));
-  EXPECT_FALSE(PTRStringToIPAddress("1.g.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
-                                    "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa", &ip));
+  EXPECT_FALSE(
+      PTRStringToIPAddress("1.1.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
+                           "1.0.0.4.0.6.8.4.1.0.0.ip6.arpa.",
+                           &ip));
+  EXPECT_FALSE(
+      PTRStringToIPAddress("1..0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
+                           "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa",
+                           &ip));
+  EXPECT_FALSE(
+      PTRStringToIPAddress("1.10.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
+                           "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa",
+                           &ip));
+  EXPECT_FALSE(
+      PTRStringToIPAddress("1.0.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
+                           "1.0.0.4.0.6.8.4.1...0.2.ip6.arpa",
+                           &ip));
+  EXPECT_FALSE(
+      PTRStringToIPAddress("1.G.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
+                           "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa",
+                           &ip));
+  EXPECT_FALSE(
+      PTRStringToIPAddress("1.g.0.1.0.0.0.0.0.0.0.0.0.0.0.0.3.0.8.0."
+                           "1.0.0.4.0.6.8.4.1.0.0.2.ip6.arpa",
+                           &ip));
 }
 
 TEST(IPAddressDeathTest, IPAddressLength) {
@@ -1154,15 +1161,15 @@ TEST(IPAddressDeathTest, InvalidPackedStringConversion) {
 
 TEST(ColonlessHexToIPv6AddressTest, BogusInput) {
   const char* bogus[] = {
-    // NULL,
-    "",
-    "bogus",
-    "deadbeef",
-    "fe80000000000000000573fffea000650",  // too long by one characer
-    "fe80000000000000000573fffea0006",  // too short by one characer
-    "fe80000000000000000573fffea0006x",  // not all hex
-    "+e80000000000000000573fffea00065",  // not all hex
-    "0x80000000000000000573fffea00065",  // not all hex
+      // NULL,
+      "",
+      "bogus",
+      "deadbeef",
+      "fe80000000000000000573fffea000650",  // too long by one characer
+      "fe80000000000000000573fffea0006",    // too short by one characer
+      "fe80000000000000000573fffea0006x",   // not all hex
+      "+e80000000000000000573fffea00065",   // not all hex
+      "0x80000000000000000573fffea00065",   // not all hex
   };
 
   IPAddress dummy;
@@ -1730,7 +1737,7 @@ TEST(SocketAddressTest, SocketAddressOrdering) {
   EXPECT_EQ(6u, sock_addrs.size());
 
   std::vector<SocketAddress> sorted_sock_addrs(sock_addrs.begin(),
-                                                sock_addrs.end());
+                                               sock_addrs.end());
   ASSERT_EQ(6u, sorted_sock_addrs.size());
   EXPECT_EQ(sock_addr0, sorted_sock_addrs[0]);
   EXPECT_EQ(sock_addr3, sorted_sock_addrs[1]);
@@ -1864,8 +1871,7 @@ TEST(SocketAddressTest, IsInitializedSocketAddress) {
 
 TEST(SocketAddressDeathTest, UninitializedGenericAddress) {
   SocketAddress empty;
-  EXPECT_DEATH(empty.generic_address(),
-               "uninitialized SocketAddress");
+  EXPECT_DEATH(empty.generic_address(), "uninitialized SocketAddress");
 }
 
 TEST(SocketAddressDeathTest, EmergencyZeroPort) {
@@ -2012,8 +2018,8 @@ TEST(IPRangeTest, DottedQuadNetmasks) {
   IPRange cidr;
   IPRange dotted_quad;
   ASSERT_TRUE(StringToIPRangeAndTruncate(kSubnetString, &cidr));
-  ASSERT_TRUE(StringToIPRangeAndTruncate(kDottedQuadSubnetString,
-                                         &dotted_quad));
+  ASSERT_TRUE(
+      StringToIPRangeAndTruncate(kDottedQuadSubnetString, &dotted_quad));
   ASSERT_TRUE(cidr == dotted_quad);
 
   // Check some corner cases.
@@ -2032,12 +2038,12 @@ TEST(IPRangeTest, DottedQuadNetmasks) {
     std::string expected_host_string;
     int expected_length;
   } dotted_quad_tests[] = {
-    { "1.2.3.4/0.0.0.1", "", -1 },
-    { "1.2.3.4/1.0.0.0", "", -1 },
-    { "1.2.3.4/127.255.255.255", "", -1 },
-    { "1.2.3.4/254.255.255.255", "", -1 },
-    { "1.2.3.4/255.255.255.254", "1.2.3.4", 31 },
-    { "1.2.3.4/0.0.0.0", "0.0.0.0", 0 },
+      {"1.2.3.4/0.0.0.1", "", -1},
+      {"1.2.3.4/1.0.0.0", "", -1},
+      {"1.2.3.4/127.255.255.255", "", -1},
+      {"1.2.3.4/254.255.255.255", "", -1},
+      {"1.2.3.4/255.255.255.254", "1.2.3.4", 31},
+      {"1.2.3.4/0.0.0.0", "0.0.0.0", 0},
   };
 
   for (size_t i = 0; i < ARRAYSIZE(dotted_quad_tests); ++i) {
@@ -2052,11 +2058,10 @@ TEST(IPRangeTest, DottedQuadNetmasks) {
     }
     ASSERT_TRUE(StringToIPRangeAndTruncate(
         dotted_quad_tests[i].dotted_quad_string, &range));
-    ASSERT_TRUE(StringToIPAddress(dotted_quad_tests[i].expected_host_string,
-                                  &host));
-    EXPECT_EQ(host, range.host())
-        << dotted_quad_tests[i].dotted_quad_string
-        << " host equality expectation failed";
+    ASSERT_TRUE(
+        StringToIPAddress(dotted_quad_tests[i].expected_host_string, &host));
+    EXPECT_EQ(host, range.host()) << dotted_quad_tests[i].dotted_quad_string
+                                  << " host equality expectation failed";
     EXPECT_EQ(dotted_quad_tests[i].expected_length, range.length())
         << dotted_quad_tests[i].dotted_quad_string
         << " length equality expectation failed";
@@ -2284,8 +2289,8 @@ TEST(IPRangeTest, LowerAndUpper6) {
   ASSERT_TRUE(StringToIPAddress("::", &expected));
   EXPECT_EQ(expected, range.host());
   EXPECT_EQ(expected, range.network_address());
-  ASSERT_TRUE(StringToIPAddress("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
-                                &expected));
+  ASSERT_TRUE(
+      StringToIPAddress("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", &expected));
   EXPECT_EQ(expected, range.broadcast_address());
 
   // 1:2:3:4:5:6:7:8/113
@@ -2419,19 +2424,15 @@ TEST(IPRangeTest, Truncation) {
   {
     IPAddress addr;
     ASSERT_TRUE(StringToIPAddress("129.240.2.3", &addr));
-    EXPECT_EQ("0.0.0.0/0",
-              TruncatedAddressToIPRange(addr, 0).ToString());
-    EXPECT_EQ("129.192.0.0/10",
-              TruncatedAddressToIPRange(addr, 10).ToString());
-    EXPECT_EQ("129.240.2.3/32",
-              TruncatedAddressToIPRange(addr, 32).ToString());
+    EXPECT_EQ("0.0.0.0/0", TruncatedAddressToIPRange(addr, 0).ToString());
+    EXPECT_EQ("129.192.0.0/10", TruncatedAddressToIPRange(addr, 10).ToString());
+    EXPECT_EQ("129.240.2.3/32", TruncatedAddressToIPRange(addr, 32).ToString());
   }
 
   {
     IPAddress addr;
     ASSERT_TRUE(StringToIPAddress("8001:700:300:1800::1", &addr));
-    EXPECT_EQ("::/0",
-              TruncatedAddressToIPRange(addr, 0).ToString());
+    EXPECT_EQ("::/0", TruncatedAddressToIPRange(addr, 0).ToString());
     EXPECT_EQ("8001:700:300::/48",
               TruncatedAddressToIPRange(addr, 48).ToString());
     EXPECT_EQ("8001:700:300:1800::1/128",
@@ -2440,20 +2441,15 @@ TEST(IPRangeTest, Truncation) {
 
   {
     IPAddress addr;
-    ASSERT_TRUE(StringToIPAddress("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
-                                  &addr));
-    EXPECT_EQ("::/0",
-              TruncatedAddressToIPRange(addr, 0).ToString());
-    EXPECT_EQ("8000::/1",
-              TruncatedAddressToIPRange(addr, 1).ToString());
+    ASSERT_TRUE(
+        StringToIPAddress("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", &addr));
+    EXPECT_EQ("::/0", TruncatedAddressToIPRange(addr, 0).ToString());
+    EXPECT_EQ("8000::/1", TruncatedAddressToIPRange(addr, 1).ToString());
 
-    EXPECT_EQ("ffff:fffe::/31",
-              TruncatedAddressToIPRange(addr, 31).ToString());
-    EXPECT_EQ("ffff:ffff::/32",
-              TruncatedAddressToIPRange(addr, 32).ToString());
+    EXPECT_EQ("ffff:fffe::/31", TruncatedAddressToIPRange(addr, 31).ToString());
+    EXPECT_EQ("ffff:ffff::/32", TruncatedAddressToIPRange(addr, 32).ToString());
     EXPECT_EQ("ffff:ffff:8000::/33",
               TruncatedAddressToIPRange(addr, 33).ToString());
-
 
     EXPECT_EQ("ffff:ffff:ffff:fffe::/63",
               TruncatedAddressToIPRange(addr, 63).ToString());
@@ -2562,8 +2558,7 @@ TEST(IPRangeTest, PacksIPv4AndIPv6Range) {
     int max_subnet_length = (ip.address_family() == AF_INET ? 32 : 128);
     std::string packed;
     IPRange unpacked;
-    for (int subnet_length = 0;
-         subnet_length <= max_subnet_length;
+    for (int subnet_length = 0; subnet_length <= max_subnet_length;
          ++subnet_length) {
       const IPRange truncated = TruncatedAddressToIPRange(ip, subnet_length);
       packed = truncated.ToPackedString();
@@ -2582,8 +2577,8 @@ TEST(IPRangeTest, PacksIPv4AndIPv6Range) {
 
 TEST(IPRangeTest, VerifyPackedStringFormat) {
   std::string ipranges[] = {"0.0.0.0/0", "::/0"};
-  std::string expected_packed[] =
-    {std::string("\xc8", 1), std::string("\x00", 1)};
+  std::string expected_packed[] = {std::string("\xc8", 1),
+                                   std::string("\x00", 1)};
   for (size_t i = 0; i < ARRAYSIZE(ipranges); ++i) {
     IPRange iprange = StringToIPRangeOrDie(ipranges[i]);
     std::string packed;
@@ -2902,25 +2897,9 @@ TEST(IPRangeTest, Hash) {
   IPRange range34(IPAddress::Any6(), 128);
 
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
-      range0,
-      range1,
-      range2,
-      range3,
-      range4,
-      range5,
-      range6,
-      range7,
-      range10,
-      range11,
-      range20,
-      range21,
-      range22,
-      range23,
-      range30,
-      range31,
-      range32,
-      range33,
-      range34,
+      range0,  range1,  range2,  range3,  range4,  range5,  range6,
+      range7,  range10, range11, range20, range21, range22, range23,
+      range30, range31, range32, range33, range34,
   }));
 }
 
@@ -3043,8 +3022,8 @@ TEST(IPRangeTest, IsValidRange) {
 TEST(IPRangeTest, IPAddressIntervalToSubnets_UninitializedIPAddresses) {
   IPAddress first_addr, last_addr;
   std::vector<IPRange> covering_subnets;
-  EXPECT_FALSE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                          &covering_subnets));
+  EXPECT_FALSE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   EXPECT_TRUE(covering_subnets.empty());
 }
 
@@ -3052,8 +3031,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_AddressFamilyMismatch) {
   IPAddress first_addr = StringToIPAddressOrDie("4.1.0.1");
   IPAddress last_addr = StringToIPAddressOrDie("8001:700:300::11");
   std::vector<IPRange> covering_subnets;
-  EXPECT_FALSE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                          &covering_subnets));
+  EXPECT_FALSE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   EXPECT_TRUE(covering_subnets.empty());
 }
 
@@ -3061,8 +3040,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_InvalidInterval) {
   IPAddress first_addr = StringToIPAddressOrDie("4.1.0.1");
   IPAddress last_addr = StringToIPAddressOrDie("4.1.0.0");
   std::vector<IPRange> covering_subnets;
-  EXPECT_FALSE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                          &covering_subnets));
+  EXPECT_FALSE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   EXPECT_TRUE(covering_subnets.empty());
 }
 
@@ -3070,8 +3049,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_SingleAddressInterval) {
   IPAddress first_addr = StringToIPAddressOrDie("4.1.0.1");
   IPAddress last_addr = first_addr;
   std::vector<IPRange> covering_subnets;
-  EXPECT_TRUE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                         &covering_subnets));
+  EXPECT_TRUE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   ASSERT_EQ(1u, covering_subnets.size());
   EXPECT_EQ(IPRange(first_addr), covering_subnets[0]);
 }
@@ -3080,8 +3059,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_MaxIPv4Interval) {
   IPAddress first_addr = StringToIPAddressOrDie("0.0.0.0");
   IPAddress last_addr = StringToIPAddressOrDie("255.255.255.255");
   std::vector<IPRange> covering_subnets;
-  EXPECT_TRUE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                         &covering_subnets));
+  EXPECT_TRUE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   ASSERT_EQ(1u, covering_subnets.size());
   EXPECT_EQ(StringToIPRangeOrDie("0.0.0.0/0"), covering_subnets[0]);
 }
@@ -3091,8 +3070,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_MaxIPv6Interval) {
   IPAddress last_addr =
       StringToIPAddressOrDie("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
   std::vector<IPRange> covering_subnets;
-  EXPECT_TRUE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                         &covering_subnets));
+  EXPECT_TRUE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   ASSERT_EQ(1u, covering_subnets.size());
   EXPECT_EQ(StringToIPRangeOrDie("::0/0"), covering_subnets[0]);
 }
@@ -3102,8 +3081,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_TestIPv4_Case1) {
   IPAddress last_addr = StringToIPAddressOrDie("255.255.255.255");
 
   std::vector<IPRange> covering_subnets;
-  EXPECT_TRUE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                         &covering_subnets));
+  EXPECT_TRUE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   ASSERT_EQ(1u, covering_subnets.size());
   EXPECT_EQ(StringToIPRangeOrDie("255.255.254.0/23"), covering_subnets[0]);
 }
@@ -3122,8 +3101,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_TestIPv4_Case2) {
   expected_covering_subnets.push_back(StringToIPRangeOrDie("6.1.0.0/24"));
 
   std::vector<IPRange> covering_subnets;
-  EXPECT_TRUE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                         &covering_subnets));
+  EXPECT_TRUE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   EXPECT_EQ(expected_covering_subnets, covering_subnets);
 }
 #endif
@@ -3142,8 +3121,8 @@ TEST(IPRangeTest, IPAddressIntervalToSubnets_TestIPv6) {
   expected_covering_subnets.push_back(StringToIPRangeOrDie("2001:2000::/128"));
 
   std::vector<IPRange> covering_subnets;
-  EXPECT_TRUE(IPAddressIntervalToSubnets(first_addr, last_addr,
-                                         &covering_subnets));
+  EXPECT_TRUE(
+      IPAddressIntervalToSubnets(first_addr, last_addr, &covering_subnets));
   EXPECT_EQ(expected_covering_subnets, covering_subnets);
 }
 #endif
@@ -3190,13 +3169,12 @@ TEST(IPRangeTest, NthAddressInRange) {
   EXPECT_EQ("0.0.255.255", NthAddressInRange(range, 0xffff).ToString());
   EXPECT_EQ("255.255.255.255", NthAddressInRange(range, kuint32max).ToString());
 
-  ASSERT_TRUE(StringToIPRange("fedc:ba98:7654:3210:123:4567:89ab:cdef/128",
-                              &range));
+  ASSERT_TRUE(
+      StringToIPRange("fedc:ba98:7654:3210:123:4567:89ab:cdef/128", &range));
   EXPECT_EQ("fedc:ba98:7654:3210:123:4567:89ab:cdef",
             NthAddressInRange(range, 0).ToString());
 
-  ASSERT_TRUE(StringToIPRange("fedc:ba98:7654:3210:123::/80",
-                              &range));
+  ASSERT_TRUE(StringToIPRange("fedc:ba98:7654:3210:123::/80", &range));
   EXPECT_EQ("fedc:ba98:7654:3210:123::f",
             NthAddressInRange(range, 15).ToString());
   EXPECT_EQ("fedc:ba98:7654:3210:123:0:ffff:ffff",
@@ -3220,32 +3198,34 @@ TEST(IPAddress, IndexInRange) {
   EXPECT_EQ(1, IndexInRange(IPRange(StringToIPAddressOrDie("1.1.1.1"), 24),
                             StringToIPAddressOrDie("1.1.1.1")));
 
-  EXPECT_EQ(128, IndexInRange(
-      StringToIPRangeOrDie("2001:718:1001:700:200:5efe:c0a8:0300/120"),
-      StringToIPAddressOrDie("2001:718:1001:700:200:5efe:c0a8:0380")));
-  EXPECT_EQ(286326784, IndexInRange(
-      StringToIPRangeOrDie("2001:718:1001:700:0000:0000:0000:0000/64"),
-      StringToIPAddressOrDie("2001:718:1001:700:0000:0000:1111:0000")));
-  EXPECT_EQ(16, IndexInRange(
-      IPRange(StringToIPAddressOrDie("0:0:0:0:0:0:8:1"), 120),
-      StringToIPAddressOrDie("0:0:0:0:0:0:8:10")));
+  EXPECT_EQ(
+      128, IndexInRange(
+               StringToIPRangeOrDie("2001:718:1001:700:200:5efe:c0a8:0300/120"),
+               StringToIPAddressOrDie("2001:718:1001:700:200:5efe:c0a8:0380")));
+  EXPECT_EQ(
+      286326784,
+      IndexInRange(
+          StringToIPRangeOrDie("2001:718:1001:700:0000:0000:0000:0000/64"),
+          StringToIPAddressOrDie("2001:718:1001:700:0000:0000:1111:0000")));
+  EXPECT_EQ(
+      16, IndexInRange(IPRange(StringToIPAddressOrDie("0:0:0:0:0:0:8:1"), 120),
+                       StringToIPAddressOrDie("0:0:0:0:0:0:8:10")));
 
   EXPECT_DEATH(IndexInRange(StringToIPRangeOrDie("1.1.1.0/24"),
                             StringToIPAddressOrDie("1.1.2.0")),
-                            "is not within");
-  EXPECT_DEATH(IndexInRange(
-      StringToIPRangeOrDie("2001:718:1001:700:200:5efe:c0a8:0300/120"),
-      StringToIPAddressOrDie("3001:718:1001:700:200:5efe:c0a8:0380")),
+               "is not within");
+  EXPECT_DEATH(
+      IndexInRange(
+          StringToIPRangeOrDie("2001:718:1001:700:200:5efe:c0a8:0300/120"),
+          StringToIPAddressOrDie("3001:718:1001:700:200:5efe:c0a8:0380")),
       "is not within");
 
-  EXPECT_DEATH(IndexInRange(
-      StringToIPRangeOrDie("0:0:0:0:0:0:c0a8:0/120"),
-      StringToIPAddressOrDie("192.168.0.10")),
-      "is not within");
-  EXPECT_DEATH(IndexInRange(
-      StringToIPRangeOrDie("192.168.0.0/24"),
-      StringToIPAddressOrDie("0:0:0:0:0:0:c0a8:000a")),
-      "is not within");
+  EXPECT_DEATH(IndexInRange(StringToIPRangeOrDie("0:0:0:0:0:0:c0a8:0/120"),
+                            StringToIPAddressOrDie("192.168.0.10")),
+               "is not within");
+  EXPECT_DEATH(IndexInRange(StringToIPRangeOrDie("192.168.0.0/24"),
+                            StringToIPAddressOrDie("0:0:0:0:0:0:c0a8:000a")),
+               "is not within");
 }
 
 TEST(IPRangeTest, LoggingUninitialized) {
@@ -3267,12 +3247,10 @@ TEST(IPRangeDeathTest, MiscUninitialized) {
 // Invalid conversion in *OrDie() functions.
 TEST(IPRangeDeathTest, InvalidStringConversion) {
   // Invalid conversions.
-  EXPECT_DEATH(StringToIPRangeOrDie("foo/10"),
-               "Invalid IP range foo/10");
+  EXPECT_DEATH(StringToIPRangeOrDie("foo/10"), "Invalid IP range foo/10");
   EXPECT_DEATH(StringToIPRangeOrDie(std::string("128.59.16.20/16")),
                "Invalid IP range");
-  EXPECT_DEATH(StringToIPRangeOrDie("::g/42"),
-               "Invalid IP range ::g/42");
+  EXPECT_DEATH(StringToIPRangeOrDie("::g/42"), "Invalid IP range ::g/42");
   EXPECT_DEATH(StringToIPRangeOrDie("2001:db8:1234::/32"),
                "Invalid IP range 2001:db8:1234::/32");
 
@@ -3316,40 +3294,17 @@ TEST(MaskLengthToIPAddress, InvalidConversions) {
 
 TEST(MaskLengthToIPAddress, IPv4Conversions) {
   const char* kValues[] = {
-    "255.255.255.255",
-    "255.255.255.254",
-    "255.255.255.252",
-    "255.255.255.248",
-    "255.255.255.240",
-    "255.255.255.224",
-    "255.255.255.192",
-    "255.255.255.128",
-    "255.255.255.0",
-    "255.255.254.0",
-    "255.255.252.0",
-    "255.255.248.0",
-    "255.255.240.0",
-    "255.255.224.0",
-    "255.255.192.0",
-    "255.255.128.0",
-    "255.255.0.0",
-    "255.254.0.0",
-    "255.252.0.0",
-    "255.248.0.0",
-    "255.240.0.0",
-    "255.224.0.0",
-    "255.192.0.0",
-    "255.128.0.0",
-    "255.0.0.0",
-    "254.0.0.0",
-    "252.0.0.0",
-    "248.0.0.0",
-    "240.0.0.0",
-    "224.0.0.0",
-    "192.0.0.0",
-    "128.0.0.0",
-    "0.0.0.0"
-  };
+      "255.255.255.255", "255.255.255.254", "255.255.255.252",
+      "255.255.255.248", "255.255.255.240", "255.255.255.224",
+      "255.255.255.192", "255.255.255.128", "255.255.255.0",
+      "255.255.254.0",   "255.255.252.0",   "255.255.248.0",
+      "255.255.240.0",   "255.255.224.0",   "255.255.192.0",
+      "255.255.128.0",   "255.255.0.0",     "255.254.0.0",
+      "255.252.0.0",     "255.248.0.0",     "255.240.0.0",
+      "255.224.0.0",     "255.192.0.0",     "255.128.0.0",
+      "255.0.0.0",       "254.0.0.0",       "252.0.0.0",
+      "248.0.0.0",       "240.0.0.0",       "224.0.0.0",
+      "192.0.0.0",       "128.0.0.0",       "0.0.0.0"};
 
   for (size_t i = 0; i < ABSL_ARRAYSIZE(kValues); ++i) {
     IPAddress mask;
@@ -3363,20 +3318,20 @@ TEST(MaskLengthToIPAddress, IPv6Conversions) {
     int length;
     const std::string expected;
   } kTests[] = {
-    {0, "::"},
-    {1, "8000::"},
-    {15, "fffe::"},
-    {31, "ffff:fffe::"},
-    {47, "ffff:ffff:fffe::"},
-    {59, "ffff:ffff:ffff:ffe0::"},
-    {63, "ffff:ffff:ffff:fffe::"},
-    {64, "ffff:ffff:ffff:ffff::"},
-    {65, "ffff:ffff:ffff:ffff:8000::"},
-    {79, "ffff:ffff:ffff:ffff:fffe::"},
-    {95, "ffff:ffff:ffff:ffff:ffff:fffe::"},
-    {111, "ffff:ffff:ffff:ffff:ffff:ffff:fffe:0"},
-    {127, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe"},
-    {128, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
+      {0, "::"},
+      {1, "8000::"},
+      {15, "fffe::"},
+      {31, "ffff:fffe::"},
+      {47, "ffff:ffff:fffe::"},
+      {59, "ffff:ffff:ffff:ffe0::"},
+      {63, "ffff:ffff:ffff:fffe::"},
+      {64, "ffff:ffff:ffff:ffff::"},
+      {65, "ffff:ffff:ffff:ffff:8000::"},
+      {79, "ffff:ffff:ffff:ffff:fffe::"},
+      {95, "ffff:ffff:ffff:ffff:ffff:fffe::"},
+      {111, "ffff:ffff:ffff:ffff:ffff:ffff:fffe:0"},
+      {127, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe"},
+      {128, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"},
   };
 
   for (const MaskExpected& test : kTests) {
@@ -3391,19 +3346,19 @@ TEST(NetMaskToMaskLength, Invalid) {
   EXPECT_FALSE(NetMaskToMaskLength(uninitialized, nullptr));
 
   const char* kInvalid[] = {
-    "127.0.0.0",
-    "255.255.0.255",
-    "255.254.255.255",
-    "255.0.0.1",
-    "ffff:ffff:7fff::",
-    "7fff:ffff:ffff::",
-    "ffff:ff7f:ffff::",
-    "ffff:ffff:ffff:7fff::",
-    "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffd",
-    "ffff:ffff:ffff:ffff:ffff:ffff:fffd::",
-    "ffff:ffff:ffff:ffff:ffff:fffd::",
-    "ffff:ffff:ffff:ffff:fffd::",
-    "ffff:ffff:ffff:fffd::",
+      "127.0.0.0",
+      "255.255.0.255",
+      "255.254.255.255",
+      "255.0.0.1",
+      "ffff:ffff:7fff::",
+      "7fff:ffff:ffff::",
+      "ffff:ff7f:ffff::",
+      "ffff:ffff:ffff:7fff::",
+      "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffd",
+      "ffff:ffff:ffff:ffff:ffff:ffff:fffd::",
+      "ffff:ffff:ffff:ffff:ffff:fffd::",
+      "ffff:ffff:ffff:ffff:fffd::",
+      "ffff:ffff:ffff:fffd::",
   };
 
   for (const std::string& mask : kInvalid) {
