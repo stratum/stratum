@@ -442,11 +442,10 @@ BFChassisManager::~BFChassisManager() = default;
       break;
     case TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig::
         kByteShaping:
-      // The SDE expects the rate in kbps.
       RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
           unit, sdk_port_id, false,
           shaping_config.byte_shaping().max_burst_bytes(),
-          shaping_config.byte_shaping().max_rate_bps() / 1000));
+          shaping_config.byte_shaping().max_rate_bps()));
       break;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM)

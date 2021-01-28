@@ -925,10 +925,15 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
 }
 
 ::util::Status BfSdeWrapper::SetPortShapingRate(int device, int port,
-                                                bool in_pps, uint32 burst_size,
-                                                uint32 rate_per_second) {
+                                                bool is_in_pps,
+                                                uint32 burst_size,
+                                                uint64 rate_per_second) {
+  if (!is_in_pps) {
+    rate_per_second /= 1000;  // The SDE expects the bitrate in kpps.
+  }
+
   RETURN_IF_BFRT_ERROR(p4_pd_tm_set_port_shaping_rate(
-      device, port, in_pps, burst_size, rate_per_second));
+      device, port, is_in_pps, burst_size, rate_per_second));
 
   return ::util::OkStatus();
 }
