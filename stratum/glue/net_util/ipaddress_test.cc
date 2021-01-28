@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/container/node_hash_set.h"
 #include "absl/hash/hash_testing.h"
 #include "absl/numeric/int128.h"
@@ -30,10 +31,6 @@
 using absl::kuint128max;
 
 namespace stratum {
-
-#define ARRAYSIZE(a)            \
-  ((sizeof(a) / sizeof(*(a))) / \
-   static_cast<size_t>(!(sizeof(a) % sizeof(*(a))))) // NOLINT
 
 #define HAVE_SCOPEDMOCKLOG 0
 #define HAVE_FIXEDARRAY 0
@@ -120,7 +117,7 @@ TEST(IPAddressTest, UnsafeIPv4Strings) {
   };
 
   IPAddress ip;
-  for (size_t i = 0; i < ARRAYSIZE(kUnsafeIPv4Strings); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(kUnsafeIPv4Strings); ++i) {
     EXPECT_FALSE(StringToIPAddress(kUnsafeIPv4Strings[i], &ip));
   }
 }
@@ -771,7 +768,7 @@ TEST(IPAddressTest, GetIsatapIPv4Address) {
   EXPECT_TRUE(GetTeredoInfo(addr6, NULL, NULL, NULL, NULL));
   EXPECT_FALSE(GetIsatapIPv4Address(addr6, NULL));
 
-  for (size_t i = 0; i < ARRAYSIZE(kIsatapAddresses); i++) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(kIsatapAddresses); i++) {
     ASSERT_TRUE(StringToIPAddress(kIsatapAddresses[i], &addr6));
     EXPECT_TRUE(GetIsatapIPv4Address(addr6, NULL));
     EXPECT_TRUE(GetIsatapIPv4Address(addr6, &compare4));
@@ -1173,7 +1170,7 @@ TEST(ColonlessHexToIPv6AddressTest, BogusInput) {
   };
 
   IPAddress dummy;
-  for (size_t i = 0; i < ARRAYSIZE(bogus); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(bogus); ++i) {
     EXPECT_FALSE(ColonlessHexToIPv6Address(bogus[i], NULL));
     EXPECT_FALSE(ColonlessHexToIPv6Address(bogus[i], &dummy));
   }
@@ -2008,7 +2005,7 @@ TEST(IPRangeTest, DottedQuadNetmasks) {
   };
 
   // Check bogus std::strings.
-  for (size_t i = 0; i < ARRAYSIZE(kBogusDottedQuadStrings); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(kBogusDottedQuadStrings); ++i) {
     const std::string& bogus = kBogusDottedQuadStrings[i];
     EXPECT_FALSE(StringToIPRangeAndTruncate(bogus, NULL))
         << "Apparently '" << bogus << "' is actually valid?";
@@ -2046,7 +2043,7 @@ TEST(IPRangeTest, DottedQuadNetmasks) {
       {"1.2.3.4/0.0.0.0", "0.0.0.0", 0},
   };
 
-  for (size_t i = 0; i < ARRAYSIZE(dotted_quad_tests); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(dotted_quad_tests); ++i) {
     IPRange range;
     IPAddress host;
 
@@ -2553,7 +2550,7 @@ TEST(IPRangeTest, PacksIPv4AndIPv6Range) {
                        "127.0.0.1",
                        "2001:dead:beaf::1",
                        "2001:dead::"};
-  for (size_t i = 0; i < ARRAYSIZE(ips); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(ips); ++i) {
     IPAddress ip = StringToIPAddressOrDie(ips[i]);
     int max_subnet_length = (ip.address_family() == AF_INET ? 32 : 128);
     std::string packed;
@@ -2579,7 +2576,7 @@ TEST(IPRangeTest, VerifyPackedStringFormat) {
   std::string ipranges[] = {"0.0.0.0/0", "::/0"};
   std::string expected_packed[] = {std::string("\xc8", 1),
                                    std::string("\x00", 1)};
-  for (size_t i = 0; i < ARRAYSIZE(ipranges); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(ipranges); ++i) {
     IPRange iprange = StringToIPRangeOrDie(ipranges[i]);
     std::string packed;
     IPRange unpacked;
@@ -2605,7 +2602,7 @@ TEST(IPRangeTest, FailsOnBadHeaderLengths) {
   const IPRange original = TruncatedAddressToIPRange(kIpv6, 52);
   const std::string packed = original.ToPackedString();
   int bad_lengths[] = {129, 199, 233, 255, -1, 256, 1000};
-  for (size_t i = 0; i < ARRAYSIZE(bad_lengths); ++i) {
+  for (size_t i = 0; i < ABSL_ARRAYSIZE(bad_lengths); ++i) {
     IPRange result;
     std::string bad_packed = static_cast<char>(bad_lengths[i]) + packed;
     EXPECT_FALSE(PackedStringToIPRange(bad_packed, &result));
