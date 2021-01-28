@@ -331,6 +331,57 @@ in the `singleton_ports` config.
 writing P4Runtime entities and packets. In the future, we may support P4Runtime
 port translation which would allow you to use the user-provide SDN port ID.*
 
+#### Tofino specific configuration (experimental)
+
+Some parts of the ChassisConfig do not apply to all platforms. These are
+organized in the `VendorConfig` part of the configuration file. For Tofino, we
+support the following extensions:
+
+##### Port shaping
+
+Port shaping can be configured on a port-by-port basis with limits in either
+bits per second (bps) or packets per second (pps), by adding the relevant
+entries in the `node_id_to_port_shaping_config` map of the `TofinoConfig`
+message. The following snippet shows singleton port 1 being configured with a
+byte (bps) shaping rate of 1 Gbit/s and a burst size of 16 KB:
+
+```
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 1
+  name: "1/0"
+  slot: 1
+  port: 1
+  speed_bps: 40000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+vendor_config {
+  tofino_config {
+    node_id_to_port_shaping_config {
+      key: 1  # node id reference
+      value {
+        per_port_shaping_configs {
+          key: 1  # singleton port id reference
+          value {
+            byte_shaping {
+              max_rate_bps: 1000000000 # 1G
+              max_burst_bytes: 16384 # 2x MTU
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ### Running with BSP or on Tofino model
 
 ```bash

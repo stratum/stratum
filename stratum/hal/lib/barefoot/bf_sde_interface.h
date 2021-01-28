@@ -177,6 +177,17 @@ class BfSdeInterface {
   // Disable a port.
   virtual ::util::Status DisablePort(int device, int port) = 0;
 
+  // Set the port shaping properties on a port.
+  // If is_in_pps is true, the burst size and rate are measured in packets and
+  // pps. Else, they're in bytes and bps.
+  virtual ::util::Status SetPortShapingRate(int device, int port,
+                                            bool is_in_pps, uint32 burst_size,
+                                            uint64 rate_per_second) = 0;
+
+  // Enable port shaping on a port.
+  virtual ::util::Status EnablePortShaping(int device, int port,
+                                           TriState enable) = 0;
+
   // Get the operational state of a port.
   virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;
 
