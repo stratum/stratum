@@ -43,6 +43,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS_LLVM = [
     "-Wno-unused-lambda-capture",
     "-Wno-unused-template",
 ]
+
 # TODO(max): Bazel currently does not detect GCC, therefore we have to match on
 # the default conditions. See: https://github.com/bazelbuild/bazel/issues/12707
 STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON + select({
@@ -53,6 +54,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 # Compiler warnings that are threated as errors.
 STRATUM_COMPILER_ERRORS_COMMON = [
     "-Werror=ignored-attributes",
+    "-Werror=uninitialized",
 ]
 STRATUM_COMPILER_ERRORS_GCC = [
     "-fdiagnostics-color=always",
@@ -63,6 +65,7 @@ STRATUM_COMPILER_ERRORS_LLVM = [
     "-Werror=inconsistent-missing-destructor-override",
     "-Werror=reorder-ctor",
     "-Werror=return-type",  # TODO(max): move to common after gcc update
+    "-Werror=shadow",  # TODO(max): gcc is stricter about shadowing, move later
     "-Werror=thread-safety-analysis",
 ]
 STRATUM_COMPILER_ERRORS = STRATUM_COMPILER_ERRORS_COMMON + select({

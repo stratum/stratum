@@ -1703,9 +1703,9 @@ namespace {
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     ::p4::v1::MulticastGroupEntry result;
     // Key: $MGID
-    uint64 group_id;
-    RETURN_IF_ERROR(GetField(*table_key, kMgid, &group_id));
-    group_ids->push_back(group_id);
+    uint64 multicast_group_id;
+    RETURN_IF_ERROR(GetField(*table_key, kMgid, &multicast_group_id));
+    group_ids->push_back(multicast_group_id);
     // Data: $MULTICAST_NODE_ID
     std::vector<uint32> mc_node_list;
     RETURN_IF_ERROR(GetField(*table_data, kMcNodeId, &mc_node_list));
@@ -1847,9 +1847,9 @@ namespace {
     const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $sid
-    uint64 session_id;
-    RETURN_IF_ERROR(GetField(*table_key, "$sid", &session_id));
-    session_ids->push_back(session_id);
+    uint64 sid;
+    RETURN_IF_ERROR(GetField(*table_key, "$sid", &sid));
+    session_ids->push_back(sid);
     // Data: $ingress_cos
     uint64 ingress_cos;
     RETURN_IF_ERROR(GetField(*table_data, "$ingress_cos", &ingress_cos));
@@ -2235,10 +2235,10 @@ namespace {
   member_ids->resize(0);
   table_datas->resize(0);
   for (size_t i = 0; i < keys.size(); ++i) {
-    // Key: $sid
-    uint64 member_id;
-    RETURN_IF_ERROR(GetField(*keys[i], "$ACTION_MEMBER_ID", &member_id));
-    member_ids->push_back(member_id);
+    // Key: $ACTION_MEMBER_ID
+    uint64 action_member_id;
+    RETURN_IF_ERROR(GetField(*keys[i], "$ACTION_MEMBER_ID", &action_member_id));
+    member_ids->push_back(action_member_id);
 
     // Data: action params
     auto td = absl::make_unique<TableData>(std::move(datums[i]));
@@ -2375,9 +2375,10 @@ namespace {
     const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $SELECTOR_GROUP_ID
-    uint64 group_id;
-    RETURN_IF_ERROR(GetField(*table_key, "$SELECTOR_GROUP_ID", &group_id));
-    group_ids->push_back(group_id);
+    uint64 selector_group_id;
+    RETURN_IF_ERROR(
+        GetField(*table_key, "$SELECTOR_GROUP_ID", &selector_group_id));
+    group_ids->push_back(selector_group_id);
 
     // Data: $MAX_GROUP_SIZE
     uint64 max_group_size;

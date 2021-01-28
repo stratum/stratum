@@ -138,9 +138,9 @@ namespace {
         }
       } else {  // change port config if needed
         auto& config_old = port_old.second.config_params();
-        auto& config = singleton_port->config_params();
-        if (config.admin_state() != config_old.admin_state()) {
-          if (config.admin_state() == ADMIN_STATE_ENABLED) {
+        auto& config_new = singleton_port->config_params();
+        if (config_new.admin_state() != config_old.admin_state()) {
+          if (config_new.admin_state() == ADMIN_STATE_ENABLED) {
             APPEND_STATUS_IF_ERROR(
                 status,
                 AddPort(dev_mgr, node.id(), singleton_port->name(), port_id));
@@ -167,8 +167,8 @@ namespace {
 
       if (singleton_port_old == nullptr) {  // add new port
         auto& singleton_port = port.second;
-        auto& config = singleton_port.config_params();
-        if (config.admin_state() == ADMIN_STATE_ENABLED) {
+        if (singleton_port.config_params().admin_state() ==
+            ADMIN_STATE_ENABLED) {
           APPEND_STATUS_IF_ERROR(
               status,
               AddPort(dev_mgr, node.id(), singleton_port.name(), port_id));

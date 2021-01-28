@@ -535,38 +535,40 @@ class HalServiceClient {
       return;
     }
 
-    // Build an ONCE subscription request for subtrees that are supported.
-    ::gnmi::SubscribeRequest req;
-    *req.mutable_subscribe()->add_subscription()->mutable_path() =
-        GetPath("interfaces")("interface")("...")();
-    req.mutable_subscribe()->set_mode(::gnmi::SubscriptionList::ONCE);
-
     // A map translating port ID into port name.
     absl::flat_hash_map<uint64, std::string> id_to_name;
 
-    LOG(INFO) << "Sending ONCE subscription: " << req.ShortDebugString();
-    if (!stream->Write(req)) {
-      LOG(ERROR) << "Writing original subscribe request failed.";
-      // Close the stream.
-      stream->WritesDone();
-      return;
-    }
+    // Build an ONCE subscription request for subtrees that are supported.
+    {
+      ::gnmi::SubscribeRequest req;
+      *req.mutable_subscribe()->add_subscription()->mutable_path() =
+          GetPath("interfaces")("interface")("...")();
+      req.mutable_subscribe()->set_mode(::gnmi::SubscriptionList::ONCE);
+      LOG(INFO) << "Sending ONCE subscription: " << req.ShortDebugString();
+      if (!stream->Write(req)) {
+        LOG(ERROR) << "Writing original subscribe request failed.";
+        // Close the stream.
+        stream->WritesDone();
+        return;
+      }
 
-    // Now process all responses until 'sync_response' == true.
-    ::gnmi::SubscribeResponse resp;
-    while (!resp.sync_response()) {
-      if (stream->Read(&resp)) {
-        LOG(INFO) << "resp: " << resp.ShortDebugString();
-        // Process all updates and store name of the interface listed within.
-        for (const auto& update : resp.update().update()) {
-          const auto& path = update.path();
-          int len = path.elem_size();
-          // Is this /interfaces/interface[name=<name>/status/ifindex?
-          if (len > 1 && path.elem(len - 1).name().compare("ifindex") == 0 &&
-              path.elem(1).name().compare("interface") == 0 &&
-              path.elem(1).key().count("name")) {
-            // Save mapping between 'ifindex' and 'name'
-            id_to_name[update.val().uint_val()] = path.elem(1).key().at("name");
+      // Now process all responses until 'sync_response' == true.
+      ::gnmi::SubscribeResponse resp;
+      while (!resp.sync_response()) {
+        if (stream->Read(&resp)) {
+          LOG(INFO) << "resp: " << resp.ShortDebugString();
+          // Process all updates and store name of the interface listed within.
+          for (const auto& update : resp.update().update()) {
+            const auto& path = update.path();
+            int len = path.elem_size();
+            // Is this /interfaces/interface[name=<name>/status/ifindex?
+            if (len > 1 && path.elem(len - 1).name().compare("ifindex") == 0 &&
+                path.elem(1).name().compare("interface") == 0 &&
+                path.elem(1).key().count("name")) {
+              // Save mapping between 'ifindex' and 'name'
+              id_to_name[update.val().uint_val()] =
+                  path.elem(1).key().at("name");
+            }
           }
         }
       }
@@ -680,6 +682,7 @@ class HalServiceClient {
       }
 
       // Now process 4 full sets of responses; each set has 14 counters.
+      ::gnmi::SubscribeResponse resp;
       static constexpr int kNumStatisticsPerInterface = 14;
       for (int i = 0; i < 4 * kNumStatisticsPerInterface; ++i) {
         if (stream->Read(&resp)) {
