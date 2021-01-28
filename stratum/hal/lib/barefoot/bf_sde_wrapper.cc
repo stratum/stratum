@@ -2192,7 +2192,6 @@ namespace {
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteActionProfileMember(device, session, table_id, member_id,
                                   table_data, true);
-  return ::util::OkStatus();
 }
 
 ::util::Status BfSdeWrapper::ModifyActionProfileMember(
