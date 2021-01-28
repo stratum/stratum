@@ -56,7 +56,7 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 
 - [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
 - [Trellis + Stratum example](/tools/mininet/examples/trellis/README.md)
-- [Continuous Certification Program (CCP)](https://certification.opennetworking.org/Stratum/)
+- [Continuous Certification Program (CCP)](https://wiki.opennetworking.org/display/COM/Stratum+Continuous+Certification+Program)
 - [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)
 - [Talks](https://github.com/stratum/stratum/wiki/Talks)
 - [Test Vectors](https://github.com/stratum/testvectors/blob/master/docs/testvectors_overview.md)
