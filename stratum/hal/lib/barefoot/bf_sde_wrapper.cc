@@ -929,7 +929,7 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
                                                 uint32 burst_size,
                                                 uint64 rate_per_second) {
   if (!is_in_pps) {
-    rate_per_second /= 1000;  // The SDE expects the bitrate in kpps.
+    rate_per_second /= 1000;  // The SDE expects the bitrate in kbps.
   }
 
   RETURN_IF_BFRT_ERROR(p4_pd_tm_set_port_shaping_rate(
