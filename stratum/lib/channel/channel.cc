@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/lib/channel/channel.h"
+
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

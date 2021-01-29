@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_LIB_CHANNEL_CHANNEL_H_
 #define STRATUM_LIB_CHANNEL_CHANNEL_H_
 
@@ -10,15 +9,15 @@
 #include <list>
 #include <memory>
 #include <unordered_map>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "stratum/lib/channel/channel_internal.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
+#include "stratum/lib/channel/channel_internal.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 
@@ -212,7 +211,7 @@ class Channel : public channel_internal::ChannelBase {
                 "Channel<T> requires T to be MoveAssignable.");
 
  public:
-  virtual ~Channel() {}
+  ~Channel() override {}
 
   // Creates shared Channel object with given maximum queue depth.
   static std::unique_ptr<Channel<T>> Create(size_t max_depth) {
@@ -350,8 +349,7 @@ class ChannelReader {
   // Private constructor which initializes a ChannelReader from the given
   // Channel.
   explicit ChannelReader(std::shared_ptr<Channel<T>> channel)
-      // FIXME ABSL_DIE_IF_NULL not available in absl
-      : channel_(/*FIXME ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
+      : channel_(ABSL_DIE_IF_NULL(std::move(channel))) {}
 
   std::shared_ptr<Channel<T>> channel_;
 };
@@ -394,8 +392,7 @@ class ChannelWriter {
  private:
   // Private constructor which initializes a ChannelWriter to the given Channel.
   explicit ChannelWriter(std::shared_ptr<Channel<T>> channel)
-      // FIXME ABSL_DIE_IF_NULL not available in absl
-      : channel_(/*ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
+      : channel_(ABSL_DIE_IF_NULL(std::move(channel))) {}
 
   std::shared_ptr<Channel<T>> channel_;
 };
@@ -549,8 +546,9 @@ template <typename T>
   while (queue_.empty()) {
     bool expired = cond_not_empty_.WaitWithDeadline(&queue_lock_, deadline);
     // Could have been signalled because Channel is now closed.
-    if (closed_) return MAKE_ERROR(ERR_CANCELLED).without_logging()
-        << "Channel is closed.";
+    if (closed_)
+      return MAKE_ERROR(ERR_CANCELLED).without_logging()
+             << "Channel is closed.";
     // Could have been signalled even if timeout has expired.
     if (expired && queue_.empty()) {
       return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)

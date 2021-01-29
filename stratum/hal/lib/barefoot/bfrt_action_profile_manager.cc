@@ -51,7 +51,6 @@ BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
           << " is not an action profile member.";
       return DoWriteActionProfileMember(session, bfrt_table_id, type,
                                         act_prof_member);
-      break;
     }
     case kTnaExternActionSelectorId: {
       ::p4::v1::ActionProfileGroup act_prof_group;
@@ -60,13 +59,11 @@ BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
           << " is not an action profile group.";
       return DoWriteActionProfileGroup(session, bfrt_table_id, type,
                                        act_prof_group);
-      break;
     }
     default:
-      RETURN_ERROR() << "Unsupported extern type " << entry.extern_type_id()
-                     << ".";
+      RETURN_ERROR(ERR_INVALID_PARAM)
+          << "Unsupported extern type " << entry.extern_type_id() << ".";
   }
-  return ::util::OkStatus();
 }
 
 ::util::Status BfrtActionProfileManager::ReadActionProfileEntry(

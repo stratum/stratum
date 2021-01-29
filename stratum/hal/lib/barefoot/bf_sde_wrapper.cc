@@ -924,6 +924,31 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
   return ::util::OkStatus();
 }
 
+::util::Status BfSdeWrapper::SetPortShapingRate(int device, int port,
+                                                bool is_in_pps,
+                                                uint32 burst_size,
+                                                uint64 rate_per_second) {
+  if (!is_in_pps) {
+    rate_per_second /= 1000;  // The SDE expects the bitrate in kbps.
+  }
+
+  RETURN_IF_BFRT_ERROR(p4_pd_tm_set_port_shaping_rate(
+      device, port, is_in_pps, burst_size, rate_per_second));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::EnablePortShaping(int device, int port,
+                                               TriState enable) {
+  if (enable == TriState::TRI_STATE_TRUE) {
+    RETURN_IF_BFRT_ERROR(p4_pd_tm_enable_port_shaping(device, port));
+  } else if (enable == TriState::TRI_STATE_FALSE) {
+    RETURN_IF_BFRT_ERROR(p4_pd_tm_disable_port_shaping(device, port));
+  }
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BfSdeWrapper::SetPortAutonegPolicy(int device, int port,
                                                   TriState autoneg) {
   ASSIGN_OR_RETURN(auto autoneg_v, AutonegHalToBf(autoneg));
@@ -2167,7 +2192,6 @@ namespace {
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteActionProfileMember(device, session, table_id, member_id,
                                   table_data, true);
-  return ::util::OkStatus();
 }
 
 ::util::Status BfSdeWrapper::ModifyActionProfileMember(

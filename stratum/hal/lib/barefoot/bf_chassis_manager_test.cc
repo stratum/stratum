@@ -26,6 +26,7 @@ namespace barefoot {
 
 using test_utils::EqualsProto;
 using ::testing::_;
+using ::testing::AtLeast;
 using ::testing::AtMost;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -90,6 +91,10 @@ class ChassisConfigBuilder {
       if (sport.id() == port_id) return &sport;
     }
     return nullptr;
+  }
+
+  void SetVendorConfig(const VendorConfig& vendor_config) {
+    *config_.mutable_vendor_config() = vendor_config;
   }
 
   void RemoveLastPort() { config_.mutable_singleton_ports()->RemoveLast(); }
@@ -290,6 +295,46 @@ TEST_F(BFChassisManagerTest, SetPortLoopback) {
       *bf_sde_mock_,
       SetPortLoopbackMode(kUnit, kPortId + kSdkPortOffset, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_sde_mock_, EnablePort(kUnit, kPortId + kSdkPortOffset));
+
+  ASSERT_OK(PushChassisConfig(builder));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, ApplyPortShaping) {
+  const std::string kVendorConfigText = R"PROTO(
+    tofino_config {
+      node_id_to_port_shaping_config {
+        key: 7654321
+        value {
+          per_port_shaping_configs {
+            key: 12345
+            value {
+              byte_shaping {
+                max_rate_bps: 10000000000 # 10G
+                max_burst_bytes: 16384 # 2x jumbo frame
+              }
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  VendorConfig vendor_config;
+  ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
+
+  ChassisConfigBuilder builder;
+  builder.SetVendorConfig(vendor_config);
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  EXPECT_CALL(*bf_sde_mock_, SetPortShapingRate(kUnit, kPortId + kSdkPortOffset,
+                                                false, 16384, kTenGigBps))
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_, EnablePortShaping(kUnit, kPortId + kSdkPortOffset,
+                                               TRI_STATE_TRUE))
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_, EnablePort(kUnit, kPortId + kSdkPortOffset))
+      .Times(AtLeast(1));
 
   ASSERT_OK(PushChassisConfig(builder));
   ASSERT_OK(ShutdownAndTestCleanState());
