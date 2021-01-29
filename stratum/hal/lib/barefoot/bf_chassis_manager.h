@@ -108,6 +108,9 @@ class BFChassisManager {
     absl::optional<FecMode> fec_mode;  // empty if port add failed
     // empty if loopback mode configuration failed
     absl::optional<LoopbackState> loopback_mode;
+    // empty if no shaping config given
+    absl::optional<TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig>
+        shaping_config;
 
     PortConfig() : admin_state(ADMIN_STATE_UNKNOWN) {}
   };
@@ -152,6 +155,12 @@ class BFChassisManager {
                                   const SingletonPort& singleton_port,
                                   const PortConfig& config_old,
                                   PortConfig* config);
+
+  // Helper to apply a port shaping config to a single port.
+  ::util::Status ApplyPortShapingConfig(
+      uint64 node_id, int unit, uint32 sdk_port_id,
+      const TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig&
+          shaping_config);
 
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
