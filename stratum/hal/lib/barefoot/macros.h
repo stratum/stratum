@@ -79,14 +79,6 @@ class BooleanBfStatus {
            << "'" << #expr << "' failed with error message: " \
            << FixMessage(bf_err_str(__ret.status()))
 
-// Same as RETURN_IF_BFRT_ERROR but does not write to LOG(ERROR).
-#define RETURN_IF_BFRT_ERROR_WITHOUT_LOGGING(expr)            \
-  if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {  \
-  } else /* NOLINT */                                         \
-    return MAKE_ERROR(__ret.error_code()).without_logging()   \
-           << "'" << #expr << "' failed with error message: " \
-           << FixMessage(bf_err_str(__ret.status()))
-
 // A macro for simplify creating a new error or appending new info to an
 // error based on the return value of a SDE function call. The caller function
 // will not return. The variable given as "status" must be an object of type

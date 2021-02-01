@@ -569,19 +569,17 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 ::util::Status TableData::GetActionMemberId(uint64* action_member_id) const {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  // Here we assume that table entries with action IDs (direct match-action) can
+  // never hold action member or group IDs (indirect match-action). Since this
+  // function is regularly called on both, we do not log this error here.
+  if (table->actionIdApplicable()) {
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND).without_logging()
+           << "This direct table does not contain action member IDs.";
+  }
   bf_rt_id_t field_id;
   bfrt::DataType data_type;
-  if (table->actionIdApplicable()) {
-    bf_rt_id_t action_id;
-    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
-    RETURN_IF_BFRT_ERROR_WITHOUT_LOGGING(
-        table->dataFieldIdGet("$ACTION_MEMBER_ID", action_id, &field_id));
-    RETURN_IF_BFRT_ERROR(
-        table->dataFieldDataTypeGet(field_id, action_id, &data_type));
-  } else {
-    RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$ACTION_MEMBER_ID", &field_id));
-    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
-  }
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$ACTION_MEMBER_ID", &field_id));
+  RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
       << "Requested uint64 but field $ACTION_MEMBER_ID has type "
       << static_cast<int>(data_type);
@@ -603,20 +601,17 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 ::util::Status TableData::GetSelectorGroupId(uint64* selector_group_id) const {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  // Here we assume that table entries with action IDs (direct match-action) can
+  // never hold action member or group IDs (indirect match-action). Since this
+  // function is regularly called on both, we do not log this error here.
+  if (table->actionIdApplicable()) {
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND).without_logging()
+           << "This direct table does not contain action group IDs.";
+  }
   bf_rt_id_t field_id;
   bfrt::DataType data_type;
-  if (table->actionIdApplicable()) {
-    bf_rt_id_t action_id;
-    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
-    RETURN_IF_BFRT_ERROR_WITHOUT_LOGGING(
-        table->dataFieldIdGet("$SELECTOR_GROUP_ID", action_id, &field_id));
-    RETURN_IF_BFRT_ERROR(
-        table->dataFieldDataTypeGet(field_id, action_id, &data_type));
-  } else {
-    RETURN_IF_BFRT_ERROR(
-        table->dataFieldIdGet("$SELECTOR_GROUP_ID", &field_id));
-    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
-  }
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$SELECTOR_GROUP_ID", &field_id));
+  RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
       << "Requested uint64 but field $SELECTOR_GROUP_ID has type "
       << static_cast<int>(data_type);
