@@ -314,7 +314,6 @@ class HalServiceClient {
 
   static void* TxPacket(void* arg) {
     TxThreadData* data = static_cast<TxThreadData*>(arg);
-    // FIXME(boc) might use CHECK_NOTNULL instead of ABSL_DIE_IF_NULL
     ClientStreamChannelReaderWriter* stream = ABSL_DIE_IF_NULL(data->stream);
     P4TableMapper* p4_table_mapper = ABSL_DIE_IF_NULL(data->p4_table_mapper);
     ::p4::v1::StreamMessageRequest req;

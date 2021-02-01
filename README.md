@@ -49,13 +49,19 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 ### Tools
 
 - [gNMI CLI Tool](/stratum/tools/gnmi/README.md)
+- [Tofino Pipeline Builder](/stratum/hal/bin/barefoot/README.pipeline.md#stratum-bfpipelineconfig-format-and-the-bfpipelinebuilder)
 - [Stratum-Enabled Mininet](/tools/mininet/README.md)
 - [P4Runtime write request replay tool](/stratum/tools/stratum-replay/README.md)
+- [ChassisConfig Migrator](/stratum/hal/config/chassis_config_migrator.cc)
+- [PHAL CLI Tool](/stratum/hal/lib/phal/phal_cli.cc)
+- [ONLP CLI Tool](/stratum/hal/lib/phal/onlp/onlp_cli.cc)
+- [ONLP PHAL CLI Tool](/stratum/hal/lib/phal/onlp/onlp_phal_cli.cc)
 
 ### Other Documentation
 
 - [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
 - [Trellis + Stratum example](/tools/mininet/examples/trellis/README.md)
+- [Continuous Certification Program (CCP)](https://wiki.opennetworking.org/display/COM/Stratum+Continuous+Certification+Program)
 - [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)
 - [Talks](https://github.com/stratum/stratum/wiki/Talks)
 - [Test Vectors](https://github.com/stratum/testvectors/blob/master/docs/testvectors_overview.md)

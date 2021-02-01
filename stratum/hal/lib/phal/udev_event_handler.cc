@@ -2,15 +2,15 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <utility>
-
 #include "stratum/hal/lib/phal/udev_event_handler.h"
 
+#include <utility>
+
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_int32(udev_polling_interval_ms, 200,
              "Polling interval for checking udev events in the udev thread.");

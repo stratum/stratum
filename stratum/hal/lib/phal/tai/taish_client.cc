@@ -22,6 +22,21 @@ namespace tai {
 TaishClient* TaishClient::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex TaishClient::init_lock_(absl::kConstInit);
 
+TaishClient::TaishClient() : initialized_(false) {}
+
+TaishClient* TaishClient::CreateSingleton() {
+  absl::WriterMutexLock l(&init_lock_);
+  if (!singleton_) {
+    singleton_ = new TaishClient();
+    if (!singleton_->Initialize().ok()) {
+      LOG(ERROR) << "Failed to initialize TaishClient";
+      delete singleton_;
+      return nullptr;
+    }
+  }
+  return singleton_;
+}
+
 util::Status TaishClient::Initialize() {
   CHECK_RETURN_IF_FALSE(!initialized_);
   CHECK_RETURN_IF_FALSE(!FLAGS_taish_addr.empty());
@@ -276,21 +291,6 @@ util::StatusOr<std::string> TaishClient::GetModulationFormatName(
       << "Invalid modulation format id " << id;
   return it->first;
 }
-
-TaishClient* TaishClient::CreateSingleton() {
-  absl::WriterMutexLock l(&init_lock_);
-  if (!singleton_) {
-    singleton_ = new TaishClient();
-    if (!singleton_->Initialize().ok()) {
-      LOG(ERROR) << "Failed to initialize TaishClient";
-      delete singleton_;
-      return nullptr;
-    }
-  }
-  return singleton_;
-}
-
-TaishClient::TaishClient() {}
 
 }  // namespace tai
 }  // namespace phal

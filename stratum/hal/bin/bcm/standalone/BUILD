@@ -135,7 +135,8 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "statum_bcm_sdklt_all",
+    name = "stratum_bcm_sdklt_all",
+    extension = "tar.bz2",
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_sdklt_bin",
@@ -144,7 +145,8 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "statum_bcm_opennsa_all",
+    name = "stratum_bcm_opennsa_all",
+    extension = "tar.bz2",
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_opennsa_bin",
@@ -159,14 +161,17 @@ pkg_deb(
         "stratum-bcm-sdk6",
         "stratum-bcm-sdklt",
     ],
-    data = ":statum_bcm_opennsa_all",
+    data = ":stratum_bcm_opennsa_all",
     depends = [
         "kmod",
         "libboost-thread1.62.0",
         "libedit2",
         "libjudydebian1",
         "libssl1.1",
-    ],
+    ] + select({
+        "//stratum/hal/lib/phal:with_tai": ["cassini-tai"],
+        "//conditions:default": [],
+    }),
     description = "Stratum for Broadcom switches using OpenNSA.",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
@@ -181,7 +186,7 @@ pkg_deb(
         "stratum-bcm-opennsa",
         "stratum-bcm-sdk6",
     ],
-    data = ":statum_bcm_sdklt_all",
+    data = ":stratum_bcm_sdklt_all",
     depends = [
         "kmod",
         "libboost-thread1.62.0",
@@ -189,7 +194,10 @@ pkg_deb(
         "libjudydebian1",
         "libssl1.1",
         "libyaml-0-2",
-    ],
+    ] + select({
+        "//stratum/hal/lib/phal:with_tai": ["cassini-tai"],
+        "//conditions:default": [],
+    }),
     description = "Stratum for Broadcom switches using SDKLT.",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",

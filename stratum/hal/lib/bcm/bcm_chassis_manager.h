@@ -56,7 +56,7 @@ class BcmChassisManager : public BcmChassisRoInterface {
     TrunkMemberBlockState block_state;
   };
 
-  virtual ~BcmChassisManager();
+  ~BcmChassisManager() override;
 
   // Pushes the chassis config. If the class is not initialized, this function
   // calls Initialize() to initialize the SDK and attach all the units. Then it

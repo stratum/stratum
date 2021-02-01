@@ -153,6 +153,7 @@ pkg_tar(
 
 pkg_tar(
     name = "stratum_bf_data",
+    extension = "tar.bz2",
     deps = [
         ":stratum_binaries",
         ":stratum_common_data",
@@ -161,6 +162,7 @@ pkg_tar(
 
 pkg_tar(
     name = "stratum_bfrt_data",
+    extension = "tar.bz2",
     deps = [
         ":stratum_bfrt_binaries",
         ":stratum_common_data",

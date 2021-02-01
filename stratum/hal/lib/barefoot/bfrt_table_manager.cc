@@ -282,13 +282,17 @@ struct RegisterClearThreadData {
     BfSdeInterface::TableDataInterface* table_data) {
   switch (table_entry.action().type_case()) {
     case ::p4::v1::TableAction::kAction:
-      return BuildTableActionData(table_entry.action().action(), table_data);
+      RETURN_IF_ERROR(
+          BuildTableActionData(table_entry.action().action(), table_data));
+      break;
     case ::p4::v1::TableAction::kActionProfileMemberId:
-      return table_data->SetActionMemberId(
-          table_entry.action().action_profile_member_id());
+      RETURN_IF_ERROR(table_data->SetActionMemberId(
+          table_entry.action().action_profile_member_id()));
+      break;
     case ::p4::v1::TableAction::kActionProfileGroupId:
-      return table_data->SetSelectorGroupId(
-          table_entry.action().action_profile_group_id());
+      RETURN_IF_ERROR(table_data->SetSelectorGroupId(
+          table_entry.action().action_profile_group_id()));
+      break;
     case ::p4::v1::TableAction::kActionProfileActionSet:
     default:
       RETURN_ERROR(ERR_UNIMPLEMENTED)
@@ -300,6 +304,8 @@ struct RegisterClearThreadData {
         table_data->SetCounterData(table_entry.counter_data().byte_count(),
                                    table_entry.counter_data().packet_count()));
   }
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtTableManager::WriteTableEntry(
@@ -596,28 +602,39 @@ struct RegisterClearThreadData {
   absl::ReaderMutexLock l(&lock_);
 
   // We have four cases to handle:
-  // 1. empty table entry: return all tables
-  // 2. table id set, no match key: return all table entires of that table
+  // 1. table id not set: return all table entries from all tables
+  // 2. table id set, no match key: return all table entries of that table
   // 3. table id set, no match key, is_default_action set: return default action
   // 4. table id and match key: return single entry
 
   if (table_entry.match_size() == 0 && !table_entry.is_default_action()) {
     std::vector<::p4::v1::TableEntry> wanted_tables;
-    if (ProtoEqual(table_entry, ::p4::v1::TableEntry::default_instance())) {
+    if (table_entry.table_id() == 0) {
       // 1.
       const ::p4::config::v1::P4Info& p4_info = p4_info_manager_->p4_info();
       for (const auto& table : p4_info.tables()) {
         ::p4::v1::TableEntry te;
         te.set_table_id(table.preamble().id());
+        if (table_entry.has_counter_data()) {
+          te.mutable_counter_data();
+        }
         wanted_tables.push_back(te);
       }
     } else {
       // 2.
       wanted_tables.push_back(table_entry);
     }
-    for (const auto& table_entry : wanted_tables) {
+    // TODO(max): can wildcard reads request counter_data?
+    if (table_entry.has_counter_data()) {
+      for (const auto& wanted_table_entry : wanted_tables) {
+        RETURN_IF_ERROR(bf_sde_interface_->SynchronizeCounters(
+            device_, session, wanted_table_entry.table_id(),
+            absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms)));
+      }
+    }
+    for (const auto& wanted_table_entry : wanted_tables) {
       RETURN_IF_ERROR_WITH_APPEND(
-          ReadAllTableEntries(session, table_entry, writer))
+          ReadAllTableEntries(session, wanted_table_entry, writer))
               .with_logging()
           << "Failed to read all table entries for request "
           << table_entry.ShortDebugString() << ".";
