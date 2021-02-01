@@ -1313,6 +1313,15 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
+::util::Status BfSdeWrapper::SetDeflectOnDropDestination(int device, int port,
+                                                         int queue) {
+  // The DoD destination must be a pipe-local port.
+  p4_pd_tm_pipe_t pipe = DEV_PORT_TO_PIPE(port);
+  RETURN_IF_BFRT_ERROR(
+      p4_pd_tm_set_negative_mirror_dest(device, pipe, port, queue));
+  return ::util::OkStatus();
+}
+
 // BFRT
 
 ::util::Status BfSdeWrapper::AddDevice(int device,

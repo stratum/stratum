@@ -237,6 +237,10 @@ class BFChassisManager {
   std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id_
       GUARDED_BY(chassis_lock);
 
+  // Map from node ID to deflect-on-drop configuration.
+  std::map<uint64, TofinoConfig::DeflectOnPacketDropConfig>
+      node_id_to_deflect_on_drop_config_ GUARDED_BY(chassis_lock);
+
   // Map from PortKey representing (slot, port) of a transceiver port to the
   // state of the transceiver module plugged into that (slot, port).
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state_

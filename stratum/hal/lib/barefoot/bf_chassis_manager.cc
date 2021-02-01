@@ -58,6 +58,7 @@ BFChassisManager::BFChassisManager(OperationMode mode,
       node_id_to_port_id_to_singleton_port_key_(),
       node_id_to_port_id_to_sdk_port_id_(),
       node_id_to_sdk_port_id_to_port_id_(),
+      node_id_to_deflect_on_drop_config_(),
       xcvr_port_key_to_xcvr_state_(),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)) {}
@@ -275,6 +276,8 @@ BFChassisManager::~BFChassisManager() = default;
       node_id_to_port_id_to_singleton_port_key;
   std::map<uint64, std::map<uint32, uint32>> node_id_to_port_id_to_sdk_port_id;
   std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id;
+  std::map<uint64, TofinoConfig::DeflectOnPacketDropConfig>
+      node_id_to_deflect_on_drop_config;
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state;
 
   {
@@ -369,6 +372,7 @@ BFChassisManager::~BFChassisManager() = default;
 
   if (config.has_vendor_config() &&
       config.vendor_config().has_tofino_config()) {
+    // Handle port shaping.
     const auto& node_id_to_port_shaping_config =
         config.vendor_config().tofino_config().node_id_to_port_shaping_config();
     for (const auto& key : node_id_to_port_shaping_config) {
@@ -392,6 +396,33 @@ BFChassisManager::~BFChassisManager() = default;
         node_id_to_port_id_to_port_config[node_id][port_id].shaping_config =
             shaping_config;
       }
+    }
+
+    // Handle deflect-on-drop config.
+    const auto& node_id_to_deflect_on_drop_configs =
+        config.vendor_config()
+            .tofino_config()
+            .node_id_to_deflect_on_drop_configs();
+    for (const auto& key : node_id_to_deflect_on_drop_configs) {
+      const uint64 node_id = key.first;
+      const auto& deflect_config = key.second;
+      for (const auto& drop_target : deflect_config.drop_targets()) {
+        const uint32 port_id = drop_target.port();
+        CHECK_RETURN_IF_FALSE(node_id_to_port_id_to_sdk_port_id.count(node_id));
+        CHECK_RETURN_IF_FALSE(node_id_to_unit.count(node_id));
+        int unit = node_id_to_unit[node_id];
+        CHECK_RETURN_IF_FALSE(
+            node_id_to_port_id_to_sdk_port_id[node_id].count(port_id));
+        const uint32 sdk_port_id =
+            node_id_to_port_id_to_sdk_port_id[node_id][port_id];
+        RETURN_IF_ERROR(bf_sde_interface_->SetDeflectOnDropDestination(
+            unit, sdk_port_id, drop_target.queue()));
+        LOG(INFO) << "Configured deflect on drop to target port " << port_id
+                  << " (SDK port " << sdk_port_id << ")"
+                  << " in node " << node_id << ".";
+      }
+      CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
+          &node_id_to_deflect_on_drop_config, node_id, deflect_config));
     }
   }
 
@@ -422,6 +453,7 @@ BFChassisManager::~BFChassisManager() = default;
       node_id_to_port_id_to_singleton_port_key;
   node_id_to_port_id_to_sdk_port_id_ = node_id_to_port_id_to_sdk_port_id;
   node_id_to_sdk_port_id_to_port_id_ = node_id_to_sdk_port_id_to_port_id;
+  node_id_to_deflect_on_drop_config_ = node_id_to_deflect_on_drop_config;
   xcvr_port_key_to_xcvr_state_ = xcvr_port_key_to_xcvr_state;
   initialized_ = true;
 
@@ -877,6 +909,16 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     p.second = config_new;
   }
 
+  for (const auto& drop_target :
+       node_id_to_deflect_on_drop_config_[node_id].drop_targets()) {
+    ASSIGN_OR_RETURN(auto sdk_port_id,
+                     GetSdkPortId(node_id, drop_target.port()));
+    RETURN_IF_ERROR(bf_sde_interface_->SetDeflectOnDropDestination(
+        unit, sdk_port_id, drop_target.queue()));
+    LOG(INFO) << "Configured deflect on drop target port " << sdk_port_id
+              << " in node " << node_id << ".";
+  }
+
   return status;
 }
 
@@ -1185,6 +1227,7 @@ void BFChassisManager::CleanupInternalState() {
   node_id_to_port_id_to_singleton_port_key_.clear();
   node_id_to_port_id_to_sdk_port_id_.clear();
   node_id_to_sdk_port_id_to_port_id_.clear();
+  node_id_to_deflect_on_drop_config_.clear();
   xcvr_port_key_to_xcvr_state_.clear();
 }
 

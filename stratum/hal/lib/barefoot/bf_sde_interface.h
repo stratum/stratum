@@ -219,6 +219,10 @@ class BfSdeInterface {
   // Set the CPU port in the traffic manager.
   virtual ::util::Status SetTmCpuPort(int device, int port) = 0;
 
+  // Sets the (port, queue) deflect destination for dropped packets.
+  virtual ::util::Status SetDeflectOnDropDestination(int device, int port,
+                                                     int queue) = 0;
+
   // Check whether we are running on the software model.
   virtual ::util::StatusOr<bool> IsSoftwareModel(int device) = 0;
 

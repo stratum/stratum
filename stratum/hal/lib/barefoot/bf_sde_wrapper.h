@@ -172,6 +172,8 @@ class BfSdeWrapper : public BfSdeInterface {
       int device, const PortKey& port_key) override;
   ::util::StatusOr<int> GetPcieCpuPort(int device) override;
   ::util::Status SetTmCpuPort(int device, int port) override;
+  ::util::Status SetDeflectOnDropDestination(int device, int port,
+                                             int queue) override;
   ::util::StatusOr<bool> IsSoftwareModel(int device) override;
   std::string GetBfChipType(int device) const override;
   std::string GetSdeVersion() const override;
