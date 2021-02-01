@@ -353,6 +353,7 @@ template <typename T>
 
   std::vector<bf_rt_id_t> data_field_ids;
   RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  LOG(INFO) << "Table data {";
   for (const auto& field_id : data_field_ids) {
     std::string field_name;
     RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
@@ -360,6 +361,8 @@ template <typename T>
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
     size_t field_size;
     RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
+    bool is_active;
+    RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
 
     std::string value;
     switch (data_type) {
@@ -388,10 +391,12 @@ template <typename T>
             << "Unknown data_type: " << static_cast<int>(data_type) << ".";
     }
 
-    LOG(INFO) << "Table data {" << field_name << ": field_id: " << field_id
+    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
               << " data_type: " << static_cast<int>(data_type)
-              << " field_size: " << field_size << " value: " << value << "}";
+              << " field_size: " << field_size << " value: " << value
+              << " is_active: " << is_active;
   }
+  LOG(INFO) << "}";
 
   return ::util::OkStatus();
 }
