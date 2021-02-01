@@ -470,7 +470,6 @@ struct RegisterClearThreadData {
     }
   }
 
-  // TODO(max): find way to read fields without printing errors.
   // Action profile member id
   uint64 action_member_id;
   if (table_data->GetActionMemberId(&action_member_id).ok()) {
