@@ -62,18 +62,7 @@ namespace {
 void StreamMessageCb(uint64_t node_id, ::p4::v1::StreamMessageResponse* msg,
                      void* cookie) {
   auto* pi_node = static_cast<PINode*>(cookie);
-  switch (msg->update_case()) {
-    case ::p4::v1::StreamMessageResponse::kPacket:
-      pi_node->SendPacketIn(msg->packet());
-      break;
-    case ::p4::v1::StreamMessageResponse::kDigest:
-      pi_node->SendDigestList(msg->digest());
-      break;
-    default:
-      VLOG(1) << "Dropping unknown P4Runtime stream message in node " << node_id
-              << ": " << msg->ShortDebugString() << ".";
-      break;
-  }
+  pi_node->SendStreamMessageResponse(*msg);
 }
 
 PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
@@ -188,8 +177,8 @@ std::unique_ptr<PINode> PINode::CreateInstance(
   return ::util::OkStatus();
 }
 
-::util::Status PINode::RegisterPacketReceiveWriter(
-    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+::util::Status PINode::RegisterStreamMessageResponseWriter(
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   absl::MutexLock l(&rx_writer_lock_);
   rx_writer_ = writer;
   // The StreamMessageCb callback is registered with the DeviceMgr instance when
@@ -197,63 +186,26 @@ std::unique_ptr<PINode> PINode::CreateInstance(
   return ::util::OkStatus();
 }
 
-::util::Status PINode::UnregisterPacketReceiveWriter() {
+::util::Status PINode::UnregisterStreamMessageResponseWriter() {
   absl::MutexLock l(&rx_writer_lock_);
   rx_writer_ = nullptr;
   return ::util::OkStatus();
 }
 
-::util::Status PINode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status PINode::SendStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {
     RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
-  ::p4::v1::StreamMessageRequest msg;
-  // a const_cast for the sake of avoiding a copy; should be ok because
-  // stream_message_request_handle does not modify the message.
-  msg.set_allocated_packet(const_cast<::p4::v1::PacketOut*>(&packet));
-  auto status = toUtilStatus(device_mgr_->stream_message_request_handle(msg));
-  msg.release_packet();
-  return status;
+  return toUtilStatus(device_mgr_->stream_message_request_handle(request));
 }
 
-::util::Status PINode::RegisterDigestReceiveWriter(
-    const std::shared_ptr<WriterInterface<::p4::v1::DigestList>>& writer) {
-  absl::MutexLock l(&rx_writer_lock_);
-  rx_digest_list_writer_ = writer;
-  // The StreamMessageCb callback is registered with the DeviceMgr instance when
-  // the P4 forwarding pipeline is assigned.
-  return ::util::OkStatus();
-}
-
-::util::Status PINode::UnregisterDigestReceiveWriter() {
-  absl::MutexLock l(&rx_writer_lock_);
-  rx_digest_list_writer_ = nullptr;
-  return ::util::OkStatus();
-}
-
-::util::Status PINode::AckDigestList(const ::p4::v1::DigestListAck& ack) {
-  absl::ReaderMutexLock l(&lock_);
-  if (!pipeline_initialized_) {
-    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
-  }
-  ::p4::v1::StreamMessageRequest msg;
-  *msg.mutable_digest_ack() = ack;
-  return toUtilStatus(device_mgr_->stream_message_request_handle(msg));
-}
-
-void PINode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
-  // acquire the lock during the Write: SendPacketIn may be called from
-  // different threads and Write is not thread-safe.
+void PINode::SendStreamMessageResponse(
+    const ::p4::v1::StreamMessageResponse& response) {
   absl::MutexLock l(&rx_writer_lock_);
   if (rx_writer_ == nullptr) return;
-  rx_writer_->Write(packet);
-}
-
-void PINode::SendDigestList(const ::p4::v1::DigestList& digest_list) {
-  absl::MutexLock l(&rx_writer_lock_);
-  if (rx_digest_list_writer_ == nullptr) return;
-  rx_digest_list_writer_->Write(digest_list);
+  rx_writer_->Write(response);
 }
 
 }  // namespace pi

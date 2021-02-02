@@ -218,40 +218,20 @@ namespace {
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BFSwitch::RegisterPacketReceiveWriter(
+::util::Status BFSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterPacketReceiveWriter(writer);
+  return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
-
-::util::Status BFSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BFSwitch::UnregisterStreamMessageResponseWriter(uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterPacketReceiveWriter();
+  return pi_node->UnregisterStreamMessageResponseWriter();
 }
-
-::util::Status BFSwitch::TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) {
+::util::Status BFSwitch::SendStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->TransmitPacket(packet);
-}
-
-::util::Status BFSwitch::RegisterDigestReceiveWriter(
-    uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::DigestList>> writer) {
-  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterDigestReceiveWriter(writer);
-}
-
-::util::Status BFSwitch::UnregisterDigestReceiveWriter(uint64 node_id) {
-  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterDigestReceiveWriter();
-}
-
-::util::Status BFSwitch::AckDigestList(uint64 node_id,
-                                       const ::p4::v1::DigestListAck& ack) {
-  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->AckDigestList(ack);
+  return pi_node->SendStreamMessageRequest(request);
 }
 
 ::util::Status BFSwitch::RegisterEventNotifyWriter(

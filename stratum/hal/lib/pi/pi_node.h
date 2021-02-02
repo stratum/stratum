@@ -46,18 +46,13 @@ class PINode final {
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details);
-  ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
+  ::util::Status RegisterStreamMessageResponseWriter(
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
       LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status UnregisterPacketReceiveWriter()
+  ::util::Status UnregisterStreamMessageResponseWriter()
       LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
-  ::util::Status RegisterDigestReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::DigestList>>& writer)
-      LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status UnregisterDigestReceiveWriter()
-      LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status AckDigestList(const ::p4::v1::DigestListAck& ack);
+  ::util::Status SendStreamMessageRequest(
+      const ::p4::v1::StreamMessageRequest& request);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<PINode> CreateInstance(
@@ -78,12 +73,9 @@ class PINode final {
   friend void StreamMessageCb(uint64_t node_id,
                               p4::v1::StreamMessageResponse* msg, void* cookie);
 
-  // Write a packet on the registered RX writer.
-  void SendPacketIn(const ::p4::v1::PacketIn& packet)
-      LOCKS_EXCLUDED(rx_writer_lock_);
-
-  // Write a digest list on the registered RX writer.
-  void SendDigestList(const ::p4::v1::DigestList& digest_list)
+  // Write a response on the registered RX writer.
+  void SendStreamMessageResponse(
+      const ::p4::v1::StreamMessageResponse& response)
       LOCKS_EXCLUDED(rx_writer_lock_);
 
   // Reader-writer lock used to protect access to node-specific state.
@@ -96,11 +88,7 @@ class PINode final {
   mutable absl::Mutex rx_writer_lock_;
 
   // RX packet handler.
-  std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
-      GUARDED_BY(rx_writer_lock_);
-
-  // RX digest handler.
-  std::shared_ptr<WriterInterface<::p4::v1::DigestList>> rx_digest_list_writer_
+  std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> rx_writer_
       GUARDED_BY(rx_writer_lock_);
 
   const int unit_;

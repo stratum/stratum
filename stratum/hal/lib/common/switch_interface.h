@@ -149,39 +149,33 @@ class SwitchInterface {
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) = 0;
 
-  // Registers a writer to be invoked when we receive a packet on any port on
-  // the specified node which are destined for the controller. The sent
-  // ::p4::PacketIn instance includes all the info on where the packet was
-  // received on this node as well as its payload.
-  virtual ::util::Status RegisterPacketReceiveWriter(
+  // Registers a writer to be invoked when we receive a StreamMessageResponse on
+  // the specified node which are destined for the controller. A
+  // StreamMessageResponse can carry many different types of sub-messages, such
+  // as PacketIns, digests or idle timeout notifications.
+  // PacketIns: The sent ::p4::PacketIn instance includes all the info on
+  //      where the packet was received on this node as well as its payload.
+  virtual ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) = 0;
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
+          writer) = 0;
 
   // Unregisters the writer registered to this node by
-  // RegisterPacketReceiveWriter().
-  virtual ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) = 0;
+  // RegisterStreamMessageResponseWriter().
+  virtual ::util::Status UnregisterStreamMessageResponseWriter(
+      uint64 node_id) = 0;
 
-  // Transmits a packet received from controller directly to a port on a given
-  // node (specified by 'node_id') or to the ingress pipeline of the node
-  // to let the chip route the packet. The given ::p4::PacketOut instance
-  // includes all the info on where to transmit the packet as well as its
-  // payload.
-  virtual ::util::Status TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) = 0;
-
-  // Registers a writer to be invoked when we receive a digest list on the
-  // specified node.
-  virtual ::util::Status RegisterDigestReceiveWriter(
-      uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::DigestList>> writer) = 0;
-
-  // Unregisters the writer registered to this node by
-  // RegisterDigestReceiveWriter().
-  virtual ::util::Status UnregisterDigestReceiveWriter(uint64 node_id) = 0;
-
-  // Acknowledges the recival of a previously sent DigestList.
-  virtual ::util::Status AckDigestList(uint64 node_id,
-                                       const ::p4::v1::DigestListAck& ack) = 0;
+  // Sends a request received from the controller to the given node. A
+  // StreamMessageRequest can carry PacketOuts, digest acks, or other
+  // platform-specific requests.
+  // PacketOuts: Transmits a packet received from controller directly to a
+  //      port on a given node (specified by 'node_id') or to the ingress
+  //      pipeline of the node to let the chip route the packet. The given
+  //      ::p4::PacketOut instance includes all the info on where to transmit
+  //      the packet as well as its payload.
+  // DigestListAck: Acknowledges the recival of a previously sent DigestList.
+  virtual ::util::Status SendStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request) = 0;
 
   // Registers a writer for sending gNMI events.
   virtual ::util::Status RegisterEventNotifyWriter(
