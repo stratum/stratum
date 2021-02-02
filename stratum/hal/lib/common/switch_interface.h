@@ -2,21 +2,20 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 
-#include <vector>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -169,6 +168,20 @@ class SwitchInterface {
   // payload.
   virtual ::util::Status TransmitPacket(uint64 node_id,
                                         const ::p4::v1::PacketOut& packet) = 0;
+
+  // Registers a writer to be invoked when we receive a digest list on the
+  // specified node.
+  virtual ::util::Status RegisterDigestReceiveWriter(
+      uint64 node_id,
+      std::shared_ptr<WriterInterface<::p4::v1::DigestList>> writer) = 0;
+
+  // Unregisters the writer registered to this node by
+  // RegisterDigestReceiveWriter().
+  virtual ::util::Status UnregisterDigestReceiveWriter(uint64 node_id) = 0;
+
+  // Acknowledges the recival of a previously sent DigestList.
+  virtual ::util::Status AckDigestList(uint64 node_id,
+                                       const ::p4::v1::DigestListAck& ack) = 0;
 
   // Registers a writer for sending gNMI events.
   virtual ::util::Status RegisterEventNotifyWriter(
