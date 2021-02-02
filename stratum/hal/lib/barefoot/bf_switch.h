@@ -53,6 +53,12 @@ class BFSwitch : public SwitchInterface {
   ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override;
   ::util::Status TransmitPacket(uint64 node_id,
                                 const ::p4::v1::PacketOut& packet) override;
+  ::util::Status RegisterDigestReceiveWriter(
+      uint64 node_id,
+      std::shared_ptr<WriterInterface<::p4::v1::DigestList>> writer) override;
+  ::util::Status UnregisterDigestReceiveWriter(uint64 node_id) override;
+  ::util::Status AckDigestList(uint64 node_id,
+                               const ::p4::v1::DigestListAck& ack) override;
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;
   ::util::Status UnregisterEventNotifyWriter() override;

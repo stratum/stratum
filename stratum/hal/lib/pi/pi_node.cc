@@ -62,12 +62,18 @@ namespace {
 void StreamMessageCb(uint64_t node_id, ::p4::v1::StreamMessageResponse* msg,
                      void* cookie) {
   auto* pi_node = static_cast<PINode*>(cookie);
-  if (!msg->has_packet()) {
-    VLOG(1) << "Dropping P4Runtime stream message in node " << node_id
-            << " as it is not a PacketIn message.";
-    return;
+  switch (msg->update_case()) {
+    case ::p4::v1::StreamMessageResponse::kPacket:
+      pi_node->SendPacketIn(msg->packet());
+      break;
+    case ::p4::v1::StreamMessageResponse::kDigest:
+      pi_node->SendDigestList(msg->digest());
+      break;
+    default:
+      VLOG(1) << "Dropping unknown P4Runtime stream message in node " << node_id
+              << ": " << msg->ShortDebugString() << ".";
+      break;
   }
-  pi_node->SendPacketIn(msg->packet());
 }
 
 PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
@@ -77,6 +83,11 @@ PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
       node_id_(0) {}
 
 PINode::~PINode() = default;
+
+std::unique_ptr<PINode> PINode::CreateInstance(
+    ::pi::fe::proto::DeviceMgr* device_mgr, int unit) {
+  return absl::WrapUnique(new PINode(device_mgr, unit));
+}
 
 ::util::Status PINode::PushChassisConfig(const ChassisConfig& config,
                                          uint64 node_id) {
@@ -206,9 +217,29 @@ PINode::~PINode() = default;
   return status;
 }
 
-std::unique_ptr<PINode> PINode::CreateInstance(
-    ::pi::fe::proto::DeviceMgr* device_mgr, int unit) {
-  return absl::WrapUnique(new PINode(device_mgr, unit));
+::util::Status PINode::RegisterDigestReceiveWriter(
+    const std::shared_ptr<WriterInterface<::p4::v1::DigestList>>& writer) {
+  absl::MutexLock l(&rx_writer_lock_);
+  rx_digest_list_writer_ = writer;
+  // The StreamMessageCb callback is registered with the DeviceMgr instance when
+  // the P4 forwarding pipeline is assigned.
+  return ::util::OkStatus();
+}
+
+::util::Status PINode::UnregisterDigestReceiveWriter() {
+  absl::MutexLock l(&rx_writer_lock_);
+  rx_digest_list_writer_ = nullptr;
+  return ::util::OkStatus();
+}
+
+::util::Status PINode::AckDigestList(const ::p4::v1::DigestListAck& ack) {
+  absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_initialized_) {
+    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+  }
+  ::p4::v1::StreamMessageRequest msg;
+  *msg.mutable_digest_ack() = ack;
+  return toUtilStatus(device_mgr_->stream_message_request_handle(msg));
 }
 
 void PINode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
@@ -217,6 +248,12 @@ void PINode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   absl::MutexLock l(&rx_writer_lock_);
   if (rx_writer_ == nullptr) return;
   rx_writer_->Write(packet);
+}
+
+void PINode::SendDigestList(const ::p4::v1::DigestList& digest_list) {
+  absl::MutexLock l(&rx_writer_lock_);
+  if (rx_digest_list_writer_ == nullptr) return;
+  rx_digest_list_writer_->Write(digest_list);
 }
 
 }  // namespace pi

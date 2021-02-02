@@ -52,6 +52,12 @@ class PINode final {
   ::util::Status UnregisterPacketReceiveWriter()
       LOCKS_EXCLUDED(rx_writer_lock_);
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
+  ::util::Status RegisterDigestReceiveWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::DigestList>>& writer)
+      LOCKS_EXCLUDED(rx_writer_lock_);
+  ::util::Status UnregisterDigestReceiveWriter()
+      LOCKS_EXCLUDED(rx_writer_lock_);
+  ::util::Status AckDigestList(const ::p4::v1::DigestListAck& ack);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<PINode> CreateInstance(
@@ -72,8 +78,12 @@ class PINode final {
   friend void StreamMessageCb(uint64_t node_id,
                               p4::v1::StreamMessageResponse* msg, void* cookie);
 
-  // Write packet on the registered RX writer.
+  // Write a packet on the registered RX writer.
   void SendPacketIn(const ::p4::v1::PacketIn& packet)
+      LOCKS_EXCLUDED(rx_writer_lock_);
+
+  // Write a digest list on the registered RX writer.
+  void SendDigestList(const ::p4::v1::DigestList& digest_list)
       LOCKS_EXCLUDED(rx_writer_lock_);
 
   // Reader-writer lock used to protect access to node-specific state.
@@ -87,6 +97,10 @@ class PINode final {
 
   // RX packet handler.
   std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
+      GUARDED_BY(rx_writer_lock_);
+
+  // RX digest handler.
+  std::shared_ptr<WriterInterface<::p4::v1::DigestList>> rx_digest_list_writer_
       GUARDED_BY(rx_writer_lock_);
 
   const int unit_;

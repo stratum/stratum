@@ -236,6 +236,24 @@ namespace {
   return pi_node->TransmitPacket(packet);
 }
 
+::util::Status BFSwitch::RegisterDigestReceiveWriter(
+    uint64 node_id,
+    std::shared_ptr<WriterInterface<::p4::v1::DigestList>> writer) {
+  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
+  return pi_node->RegisterDigestReceiveWriter(writer);
+}
+
+::util::Status BFSwitch::UnregisterDigestReceiveWriter(uint64 node_id) {
+  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
+  return pi_node->UnregisterDigestReceiveWriter();
+}
+
+::util::Status BFSwitch::AckDigestList(uint64 node_id,
+                                       const ::p4::v1::DigestListAck& ack) {
+  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
+  return pi_node->AckDigestList(ack);
+}
+
 ::util::Status BFSwitch::RegisterEventNotifyWriter(
     std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   return bf_chassis_manager_->RegisterEventNotifyWriter(writer);
