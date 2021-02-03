@@ -7,20 +7,20 @@
 #include <functional>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "stratum/lib/utils.h"
-#include "stratum/lib/libcproxy/passthrough_proxy.h"
 #include "stratum/lib/libcproxy/libcwrapper.h"
+#include "stratum/lib/libcproxy/passthrough_proxy.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
 
 // #include "util/libcproxy/libcproxy.h"
 // #include "util/libcproxy/libcwrapper.h"
@@ -1933,9 +1933,9 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmPacketioManagerTestWithMode, BcmPacketioManagerTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace bcm
 }  // namespace hal
