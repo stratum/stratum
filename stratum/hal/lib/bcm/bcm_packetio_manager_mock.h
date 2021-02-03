@@ -2,14 +2,13 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_MOCK_H_
 
 #include <memory>
 
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 
 namespace stratum {
 namespace hal {
