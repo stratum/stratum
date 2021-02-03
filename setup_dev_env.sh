@@ -31,6 +31,7 @@ Usage: $0
     [--git-email <email>]           use the provided email for git commits
     [--git-editor <editor command>] use the provided editor for git
     [--program <path>]              run the provided program instead of bash
+                                    for example: /stratum/tools/run_unit_tests.sh
     [--np4-intel]                   create NP4 Intel build environment
     [-- [Docker options]]           additional Docker options for running the container
 EOF
