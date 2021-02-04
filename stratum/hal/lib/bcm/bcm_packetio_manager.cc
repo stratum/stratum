@@ -343,36 +343,6 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
 ::util::Status BcmPacketioManager::RegisterPacketReceiveWriter(
     GoogleConfig::BcmKnetIntfPurpose purpose,
-    const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
-        writer) {
-  if (mode_ == OPERATION_MODE_SIM) {
-    LOG(WARNING) << "Skipped registering packet RX writer in "
-                 << "BcmPacketioManager in sim mode for node with ID "
-                 << node_id_ << " mapped to unit " << unit_ << ".";
-    return ::util::OkStatus();
-  }
-
-  // Used only to check the validity of the given purpose. Note that purpose is
-  // already known (after config is pushed), we do not expect any more change
-  // in the corresponding BcmKnetIntf. Any change by later config pushes will
-  // be rejected.
-  ASSIGN_OR_RETURN(const BcmKnetIntf* intf, GetBcmKnetIntf(purpose));
-  {
-    // If it is a valid purpose, update the internal map.
-    absl::WriterMutexLock l(&rx_writer_lock_);
-    purpose_to_rx_writer_[purpose] = writer;
-  }
-  LOG(INFO) << "Registered packet RX writer for KNET interface "
-            << intf->netif_name << " with purpose "
-            << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
-            << " on node with ID " << node_id_ << " mapped to unit " << unit_
-            << ".";
-
-  return ::util::OkStatus();
-}
-
-::util::Status BcmPacketioManager::RegisterPacketReceiveWriterOld(
-    GoogleConfig::BcmKnetIntfPurpose purpose,
     const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped registering packet RX writer in "
@@ -389,7 +359,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
   {
     // If it is a valid purpose, update the internal map.
     absl::WriterMutexLock l(&rx_writer_lock_);
-    purpose_to_rx_writer_old_[purpose] = writer;
+    purpose_to_rx_writer_[purpose] = writer;
   }
   LOG(INFO) << "Registered packet RX writer for KNET interface "
             << intf->netif_name << " with purpose "
@@ -1154,15 +1124,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
         auto* writer = gtl::FindOrNull(purpose_to_rx_writer_, purpose);
         if (writer != nullptr) {
           for (const auto& p : packets) {
-            ::p4::v1::StreamMessageResponse resp;
-            *resp.mutable_packet() = p;
-            (*writer)->Write(resp);
-          }
-        }
-        auto* writer_old = gtl::FindOrNull(purpose_to_rx_writer_old_, purpose);
-        if (writer_old != nullptr) {
-          for (const auto& p : packets) {
-            (*writer_old)->Write(p);
+            (*writer)->Write(p);
           }
         }
       }

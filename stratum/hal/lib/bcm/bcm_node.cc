@@ -10,7 +10,7 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
-#include "stratum/hal/lib/common/channel_writer_wrapper.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/macros.h"
 
 // TODO(unknown): This flag is currently false to skip static entry writes
@@ -326,18 +326,13 @@ BcmNode::~BcmNode() {}
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  auto w =
-      std::make_shared<ConstraintChannelWriter<::p4::v1::StreamMessageResponse,
+  auto packet_in_writer =
+      std::make_shared<ConstraintWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
           writer, &::p4::v1::StreamMessageResponse::mutable_packet);
-  ::p4::v1::PacketIn pkt;
-  LOG(WARNING) << "RegisterStreamMessageResponseWriter: "
-               << Demangle(typeid(w).name());
 
-  bcm_packetio_manager_->RegisterPacketReceiveWriterOld(
-      GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, w);
   return bcm_packetio_manager_->RegisterPacketReceiveWriter(
-      GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, writer);
+      GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, packet_in_writer);
 }
 
 ::util::Status BcmNode::UnregisterStreamMessageResponseWriter() {
