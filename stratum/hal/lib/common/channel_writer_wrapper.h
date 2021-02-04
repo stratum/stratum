@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_CHANNEL_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_CHANNEL_WRITER_WRAPPER_H_
 
@@ -34,6 +33,25 @@ class ChannelWriterWrapper : public WriterInterface<T> {
 
  private:
   std::unique_ptr<ChannelWriter<T>> writer_;
+};
+
+template <typename T, typename R>
+class ConstraintChannelWriter : public WriterInterface<R> {
+ public:
+  explicit ConstraintChannelWriter(std::shared_ptr<WriterInterface<T>> writer,
+                                    R* (T::*get_mutable_inner_message)())
+      : writer_(std::move(writer)),
+        get_mutable_inner_message_(get_mutable_inner_message) {}
+  bool Write(const R& msg) override {
+    if (!writer_) return false;
+    T t;
+    *(t.*get_mutable_inner_message_)() = msg;
+    return writer_->Write(t);
+  }
+
+ private:
+  std::shared_ptr<WriterInterface<T>> writer_;
+  R* (T::*get_mutable_inner_message_)();
 };
 
 }  // namespace hal

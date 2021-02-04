@@ -276,6 +276,11 @@ class BcmPacketioManager {
   // on the node which this class is mapped to.
   virtual ::util::Status RegisterPacketReceiveWriter(
       GoogleConfig::BcmKnetIntfPurpose purpose,
+      const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+          writer);
+
+  virtual ::util::Status RegisterPacketReceiveWriterOld(
+      GoogleConfig::BcmKnetIntfPurpose purpose,
       const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer);
 
   virtual ::util::Status UnregisterPacketReceiveWriter(
@@ -484,8 +489,11 @@ class BcmPacketioManager {
   // Map from purpose for a KNET interface to the RX packet handler. This map
   // is updated every time a controller is connected.
   std::map<GoogleConfig::BcmKnetIntfPurpose,
-           std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>>
+           std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>>
       purpose_to_rx_writer_ GUARDED_BY(rx_writer_lock_);
+  std::map<GoogleConfig::BcmKnetIntfPurpose,
+           std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>>
+      purpose_to_rx_writer_old_ GUARDED_BY(rx_writer_lock_);
 
   // A vector of KnetIntfRxThreadData pointers.
   std::vector<KnetIntfRxThreadData*> knet_intf_rx_thread_data_;

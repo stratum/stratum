@@ -10,6 +10,7 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/lib/macros.h"
 
 // TODO(unknown): This flag is currently false to skip static entry writes
@@ -318,17 +319,28 @@ BcmNode::~BcmNode() {}
   return ::util::OkStatus();
 }
 
-::util::Status BcmNode::RegisterPacketReceiveWriter(
-    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+::util::Status BcmNode::RegisterStreamMessageResponseWriter(
+    const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+        writer) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+  auto w =
+      std::make_shared<ConstraintChannelWriter<::p4::v1::StreamMessageResponse,
+                                               ::p4::v1::PacketIn>>(
+          writer, &::p4::v1::StreamMessageResponse::mutable_packet);
+  ::p4::v1::PacketIn pkt;
+  LOG(WARNING) << "RegisterStreamMessageResponseWriter: "
+               << Demangle(typeid(w).name());
+
+  bcm_packetio_manager_->RegisterPacketReceiveWriterOld(
+      GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, w);
   return bcm_packetio_manager_->RegisterPacketReceiveWriter(
       GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, writer);
 }
 
-::util::Status BcmNode::UnregisterPacketReceiveWriter() {
+::util::Status BcmNode::UnregisterStreamMessageResponseWriter() {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -337,13 +349,22 @@ BcmNode::~BcmNode() {}
       GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER);
 }
 
-::util::Status BcmNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status BcmNode::SendStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& req) {
   absl::ReaderMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  return bcm_packetio_manager_->TransmitPacket(
-      GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, packet);
+  switch (req.update_case()) {
+    case ::p4::v1::StreamMessageRequest::kPacket: {
+      return bcm_packetio_manager_->TransmitPacket(
+          GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, req.packet());
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unsupported StreamMessageRequest "
+                                      << req.ShortDebugString() << ".";
+  }
 }
 
 ::util::Status BcmNode::UpdatePortState(uint32 port_id) {

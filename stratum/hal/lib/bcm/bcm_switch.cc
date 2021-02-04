@@ -188,37 +188,38 @@ BcmSwitch::~BcmSwitch() {}
   return bcm_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BcmSwitch::RegisterPacketReceiveWriter(
+::util::Status BcmSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->RegisterPacketReceiveWriter(writer);
+  return bcm_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status BcmSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BcmSwitch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->UnregisterPacketReceiveWriter();
+  return bcm_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status BcmSwitch::TransmitPacket(uint64 node_id,
-                                         const ::p4::v1::PacketOut& packet) {
+::util::Status BcmSwitch::SendStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->TransmitPacket(packet);
+  return bcm_node->SendStreamMessageRequest(request);
 }
 
 ::util::Status BcmSwitch::RegisterEventNotifyWriter(
@@ -483,7 +484,8 @@ BcmSwitch::~BcmSwitch() {}
         break;
       case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
         switch (req.optical_network_interface().value_case()) {
-          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalTransceiverInfo: {  // NOLINT
+          case SetRequest::Request::OpticalNetworkInterface::ValueCase::
+              kOpticalTransceiverInfo: {  // NOLINT
             status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.optical_network_interface().module(),
                 req.optical_network_interface().network_interface(),
