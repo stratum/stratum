@@ -177,31 +177,32 @@ namespace dummy_switch {
   return node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status DummySwitch::RegisterPacketReceiveWriter(
+::util::Status DummySwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
-  return node->RegisterPacketReceiveWriter(writer);
+  return node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status DummySwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status DummySwitch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
-  return node->UnregisterPacketReceiveWriter();
+  return node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status DummySwitch::TransmitPacket(uint64 node_id,
-                                           const ::p4::v1::PacketOut& packet) {
+::util::Status DummySwitch::SendStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
-  return node->TransmitPacket(packet);
+  return node->SendStreamMessageRequest(request);
 }
 
 ::util::Status DummySwitch::RegisterEventNotifyWriter(

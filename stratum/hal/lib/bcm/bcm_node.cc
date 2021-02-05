@@ -354,7 +354,6 @@ BcmNode::~BcmNode() {}
     case ::p4::v1::StreamMessageRequest::kPacket: {
       return bcm_packetio_manager_->TransmitPacket(
           GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, req.packet());
-      break;
     }
     default:
       RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unsupported StreamMessageRequest "

@@ -173,7 +173,7 @@ class SwitchInterface {
   //      pipeline of the node to let the chip route the packet. The given
   //      ::p4::PacketOut instance includes all the info on where to transmit
   //      the packet as well as its payload.
-  // DigestListAck: Acknowledges the recival of a previously sent DigestList.
+  // DigestListAck: Acknowledges the receipt of a previously sent DigestList.
   virtual ::util::Status SendStreamMessageRequest(
       uint64 node_id, const ::p4::v1::StreamMessageRequest& request) = 0;
 

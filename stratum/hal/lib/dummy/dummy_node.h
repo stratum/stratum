@@ -94,17 +94,18 @@ class DummyNode {
   // The node should sends P4Runtime PacketIn message to the writer
   // if any message or packet comes from the dataplane.
   // The node may add/remove metadata to/from the packet in message.
-  ::util::Status RegisterPacketReceiveWriter(
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer)
+  ::util::Status RegisterStreamMessageResponseWriter(
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(node_lock_);
-  ::util::Status UnregisterPacketReceiveWriter()
+  ::util::Status UnregisterStreamMessageResponseWriter()
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(node_lock_);
 
   // Transmit a packet to the dataplane.
   // The packet out message should contains necessary metadata for the dataplane
   // to handle the packet payload.
   // The node may add/remove metadata to/from the message.
-  ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
+  ::util::Status SendStreamMessageRequest(
+      const ::p4::v1::StreamMessageRequest& request)
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(node_lock_);
 
   // Retrieve port data from this node

@@ -161,22 +161,23 @@ BfrtSwitch::~BfrtSwitch() {}
   return bfrt_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BfrtSwitch::RegisterPacketReceiveWriter(
+::util::Status BfrtSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->RegisterPacketReceiveWriter(writer);
+  return bfrt_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status BfrtSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BfrtSwitch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->UnregisterPacketReceiveWriter();
+  return bfrt_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status BfrtSwitch::TransmitPacket(uint64 node_id,
-                                          const ::p4::v1::PacketOut& packet) {
+::util::Status BfrtSwitch::SendStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->TransmitPacket(packet);
+  return bfrt_node->SendStreamMessageRequest(request);
 }
 
 ::util::Status BfrtSwitch::RegisterEventNotifyWriter(

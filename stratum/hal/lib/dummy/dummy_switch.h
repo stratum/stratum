@@ -54,14 +54,14 @@ class DummySwitch : public SwitchInterface {
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details)
       LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status RegisterPacketReceiveWriter(
+  ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer)
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
       LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id)
+  ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id)
       LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet)
+  ::util::Status SendStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request)
       LOCKS_EXCLUDED(chassis_lock) override;
 
   ::util::Status RegisterEventNotifyWriter(

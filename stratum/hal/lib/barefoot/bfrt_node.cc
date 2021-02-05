@@ -14,6 +14,7 @@
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
@@ -300,17 +301,22 @@ BfrtNode::~BfrtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfrtNode::RegisterPacketReceiveWriter(
-    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+::util::Status BfrtNode::RegisterStreamMessageResponseWriter(
+    const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+        writer) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+  auto packet_in_writer =
+      std::make_shared<ConstraintWriterWrapper<::p4::v1::StreamMessageResponse,
+                                               ::p4::v1::PacketIn>>(
+          writer, &::p4::v1::StreamMessageResponse::mutable_packet);
 
-  return bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer);
+  return bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer);
 }
 
-::util::Status BfrtNode::UnregisterPacketReceiveWriter() {
+::util::Status BfrtNode::UnregisterStreamMessageResponseWriter() {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -319,13 +325,21 @@ BfrtNode::~BfrtNode() = default;
   return bfrt_packetio_manager_->UnregisterPacketReceiveWriter();
 }
 
-::util::Status BfrtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status BfrtNode::SendStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& req) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  return bfrt_packetio_manager_->TransmitPacket(packet);
+  switch (req.update_case()) {
+    case ::p4::v1::StreamMessageRequest::kPacket: {
+      return bfrt_packetio_manager_->TransmitPacket(req.packet());
+    }
+    default:
+      RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unsupported StreamMessageRequest "
+                                      << req.ShortDebugString() << ".";
+  }
 }
 
 ::util::Status BfrtNode::WriteExternEntry(

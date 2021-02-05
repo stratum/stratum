@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SWITCH_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SWITCH_H_
 
@@ -11,13 +10,13 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum//hal/lib/bcm/bcm_global_vars.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 #include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -58,9 +57,8 @@ class BcmSwitch : public SwitchInterface {
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
-          writer) override
-      LOCKS_EXCLUDED(chassis_lock);
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
+      override LOCKS_EXCLUDED(chassis_lock);
   ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SendStreamMessageRequest(
