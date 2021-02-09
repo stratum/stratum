@@ -174,7 +174,7 @@ class SwitchInterface {
   //      ::p4::PacketOut instance includes all the info on where to transmit
   //      the packet as well as its payload.
   // DigestListAck: Acknowledges the receipt of a previously sent DigestList.
-  virtual ::util::Status SendStreamMessageRequest(
+  virtual ::util::Status HandleStreamMessageRequest(
       uint64 node_id, const ::p4::v1::StreamMessageRequest& request) = 0;
 
   // Registers a writer for sending gNMI events.

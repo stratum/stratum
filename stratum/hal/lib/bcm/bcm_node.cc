@@ -344,7 +344,7 @@ BcmNode::~BcmNode() {}
       GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER);
 }
 
-::util::Status BcmNode::SendStreamMessageRequest(
+::util::Status BcmNode::HandleStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& req) {
   absl::ReaderMutexLock l(&lock_);
   if (!initialized_) {

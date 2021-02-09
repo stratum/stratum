@@ -61,7 +61,7 @@ class BcmSwitch : public SwitchInterface {
       override LOCKS_EXCLUDED(chassis_lock);
   ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override
       LOCKS_EXCLUDED(chassis_lock);
-  ::util::Status SendStreamMessageRequest(
+  ::util::Status HandleStreamMessageRequest(
       uint64 node_id, const ::p4::v1::StreamMessageRequest& request) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterEventNotifyWriter(

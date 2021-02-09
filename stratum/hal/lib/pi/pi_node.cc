@@ -192,7 +192,7 @@ std::unique_ptr<PINode> PINode::CreateInstance(
   return ::util::OkStatus();
 }
 
-::util::Status PINode::SendStreamMessageRequest(
+::util::Status PINode::HandleStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {

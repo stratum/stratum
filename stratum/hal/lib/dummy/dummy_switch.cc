@@ -196,13 +196,13 @@ namespace dummy_switch {
   return node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status DummySwitch::SendStreamMessageRequest(
+::util::Status DummySwitch::HandleStreamMessageRequest(
     uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
-  return node->SendStreamMessageRequest(request);
+  return node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status DummySwitch::RegisterEventNotifyWriter(

@@ -585,7 +585,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                    << "is not a master";
         } else {
           // If master, try to transmit the packet.
-          status = switch_interface_->SendStreamMessageRequest(node_id, req);
+          status = switch_interface_->HandleStreamMessageRequest(node_id, req);
         }
         if (!status.ok()) {
           LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
@@ -605,7 +605,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                    << "is not a master";
         } else {
           // If master, try to ack the digest.
-          status = switch_interface_->SendStreamMessageRequest(node_id, req);
+          status = switch_interface_->HandleStreamMessageRequest(node_id, req);
         }
         if (!status.ok()) {
           LOG(INFO) << "Failed to ack digest: " << status;

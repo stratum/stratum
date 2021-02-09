@@ -60,7 +60,7 @@ class DummySwitch : public SwitchInterface {
       LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id)
       LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status SendStreamMessageRequest(
+  ::util::Status HandleStreamMessageRequest(
       uint64 node_id, const ::p4::v1::StreamMessageRequest& request)
       LOCKS_EXCLUDED(chassis_lock) override;
 

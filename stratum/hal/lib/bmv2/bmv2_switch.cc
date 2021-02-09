@@ -150,10 +150,10 @@ Bmv2Switch::~Bmv2Switch() {}
   return pi_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status Bmv2Switch::SendStreamMessageRequest(
+::util::Status Bmv2Switch::HandleStreamMessageRequest(
     uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->SendStreamMessageRequest(request);
+  return pi_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status Bmv2Switch::RegisterEventNotifyWriter(

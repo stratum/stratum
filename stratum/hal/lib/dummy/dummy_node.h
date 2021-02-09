@@ -104,7 +104,7 @@ class DummyNode {
   // The packet out message should contains necessary metadata for the dataplane
   // to handle the packet payload.
   // The node may add/remove metadata to/from the message.
-  ::util::Status SendStreamMessageRequest(
+  ::util::Status HandleStreamMessageRequest(
       const ::p4::v1::StreamMessageRequest& request)
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(node_lock_);
 

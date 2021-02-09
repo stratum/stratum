@@ -891,14 +891,14 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*switch_mock_,
-              SendStreamMessageRequest(kNodeId1, EqualsProto(req1)))
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req1)))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*switch_mock_,
-              SendStreamMessageRequest(kNodeId1, EqualsProto(req2)))
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req2)))
       .WillOnce(Return(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
                                       kOperErrorMsg)));
   EXPECT_CALL(*switch_mock_,
-              SendStreamMessageRequest(kNodeId1, EqualsProto(req3)))
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req3)))
       .WillOnce(Return(::util::OkStatus()));
 
   //----------------------------------------------------------------------------

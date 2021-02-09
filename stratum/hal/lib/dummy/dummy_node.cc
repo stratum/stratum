@@ -94,7 +94,7 @@ namespace dummy_switch {
   return ::util::OkStatus();
 }
 
-::util::Status DummyNode::SendStreamMessageRequest(
+::util::Status DummyNode::HandleStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& request) {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);

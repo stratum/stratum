@@ -211,7 +211,7 @@ BcmSwitch::~BcmSwitch() {}
   return bcm_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status BcmSwitch::SendStreamMessageRequest(
+::util::Status BcmSwitch::HandleStreamMessageRequest(
     uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
@@ -219,7 +219,7 @@ BcmSwitch::~BcmSwitch() {}
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->SendStreamMessageRequest(request);
+  return bcm_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status BcmSwitch::RegisterEventNotifyWriter(

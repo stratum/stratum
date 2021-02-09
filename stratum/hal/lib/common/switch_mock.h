@@ -52,7 +52,7 @@ class SwitchMock : public SwitchInterface {
               writer));
   MOCK_METHOD1(UnregisterStreamMessageResponseWriter,
                ::util::Status(uint64 node_id));
-  MOCK_METHOD2(SendStreamMessageRequest,
+  MOCK_METHOD2(HandleStreamMessageRequest,
                ::util::Status(uint64 node_id,
                               const ::p4::v1::StreamMessageRequest& request));
   MOCK_METHOD1(

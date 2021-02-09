@@ -325,7 +325,7 @@ BfrtNode::~BfrtNode() = default;
   return bfrt_packetio_manager_->UnregisterPacketReceiveWriter();
 }
 
-::util::Status BfrtNode::SendStreamMessageRequest(
+::util::Status BfrtNode::HandleStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& req) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {

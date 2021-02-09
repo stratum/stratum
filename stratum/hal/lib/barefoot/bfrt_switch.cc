@@ -174,10 +174,10 @@ BfrtSwitch::~BfrtSwitch() {}
   return bfrt_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status BfrtSwitch::SendStreamMessageRequest(
+::util::Status BfrtSwitch::HandleStreamMessageRequest(
     uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->SendStreamMessageRequest(request);
+  return bfrt_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status BfrtSwitch::RegisterEventNotifyWriter(

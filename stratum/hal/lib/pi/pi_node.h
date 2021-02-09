@@ -51,7 +51,7 @@ class PINode final {
       LOCKS_EXCLUDED(rx_writer_lock_);
   ::util::Status UnregisterStreamMessageResponseWriter()
       LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status SendStreamMessageRequest(
+  ::util::Status HandleStreamMessageRequest(
       const ::p4::v1::StreamMessageRequest& request);
 
   // Factory function for creating the instance of the class.

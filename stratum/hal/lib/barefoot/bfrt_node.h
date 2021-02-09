@@ -57,7 +57,7 @@ class BfrtNode final {
       const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
           writer) LOCKS_EXCLUDED(lock_);
   ::util::Status UnregisterStreamMessageResponseWriter() LOCKS_EXCLUDED(lock_);
-  ::util::Status SendStreamMessageRequest(
+  ::util::Status HandleStreamMessageRequest(
       const ::p4::v1::StreamMessageRequest& req) LOCKS_EXCLUDED(lock_);
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtNode> CreateInstance(

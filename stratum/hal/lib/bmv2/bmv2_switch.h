@@ -51,7 +51,7 @@ class Bmv2Switch : public SwitchInterface {
       std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
       override;
   ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override;
-  ::util::Status SendStreamMessageRequest(
+  ::util::Status HandleStreamMessageRequest(
       uint64 node_id, const ::p4::v1::StreamMessageRequest& request) override;
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;

@@ -97,7 +97,7 @@ class BcmNode {
   // or to the ingress pipeline of the node to let the chip route the packet.
   // The given P4 PacketOut instance includes all the info on where to
   // transmit the packet as well as its payload.
-  virtual ::util::Status SendStreamMessageRequest(
+  virtual ::util::Status HandleStreamMessageRequest(
       const ::p4::v1::StreamMessageRequest& request)
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(lock_);
 

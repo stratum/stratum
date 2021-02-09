@@ -41,7 +41,7 @@ class BcmNodeMock : public BcmNode {
       ::util::Status(
           std::function<void(const ::p4::v1::StreamMessageResponse& resp)>
               callback));
-  MOCK_METHOD1(SendStreamMessageRequest,
+  MOCK_METHOD1(HandleStreamMessageRequest,
                ::util::Status(const ::p4::v1::StreamMessageRequest& req));
   MOCK_METHOD1(UpdatePortState, ::util::Status(uint32 port_id));
 };
