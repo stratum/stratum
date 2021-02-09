@@ -29,6 +29,7 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 - [Code of Conduct](/CODE_OF_CONDUCT.md)
 - [Contribution Guidelines](/CONTRIBUTING.md)
 - [IDE Setup](https://github.com/stratum/stratum/wiki/IDE-setup-for-development)
+- [Release Plan](stratum/stratum/docs/releases_plan.md)
 - [PHAL Development Tutorial](/stratum/docs/phal_development_tutorial.md)
 - [Stratum Configurators Design Document](/stratum/docs/configurators.md)
 - [Stratum PHAL Overview (Physical Hardware Access Layer)](/stratum/docs/phal.md)
