@@ -77,7 +77,7 @@ Files: .clang-format
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
-Files: .github/ISSUE_TEMPLATE/bug_report.md
+Files: .github/ISSUE_TEMPLATE/*.md
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
