@@ -1626,10 +1626,9 @@ TEST_F(BcmNodeTest, RegisterStreamMessageResponseWriter) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
   auto writer = std::make_shared<WriterMock<::p4::v1::StreamMessageResponse>>();
-  EXPECT_CALL(
-      *bcm_packetio_manager_mock_,
-      RegisterPacketReceiveWriter(
-          GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, _ /*Eq(writer)*/))
+  EXPECT_CALL(*bcm_packetio_manager_mock_,
+              RegisterPacketReceiveWriter(
+                  GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, _))
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
