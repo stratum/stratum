@@ -1,2 +1,0 @@
-# Stratum Release Plan
-
