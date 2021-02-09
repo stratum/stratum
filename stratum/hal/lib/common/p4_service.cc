@@ -608,7 +608,9 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
           status = switch_interface_->SendStreamMessageRequest(node_id, req);
         }
         if (!status.ok()) {
-          LOG_EVERY_N(INFO, 500) << "Failed to ack digest: " << status;
+          LOG(INFO) << "Failed to ack digest: " << status;
+          // TODO(max): investigate if creating response for every failure is
+          // too resource intensive.
           auto resp = ToStreamMessageResponse(status);
           *resp.mutable_error()
                ->mutable_digest_list_ack()
@@ -884,9 +886,8 @@ void P4Service::StreamResponseReceiveHandler(
     uint64 node_id, const ::p4::v1::StreamMessageResponse& resp) {
   // We don't expect arbitration updates from the switch.
   if (resp.has_arbitration()) {
-    LOG(ERROR) << "Received MasterArbitrationUpdate from switch. This should "
+    LOG(FATAL) << "Received MasterArbitrationUpdate from switch. This should "
                   "never happen!";
-    return;
   }
   // We send the responses only to the master controller stream for this node.
   absl::ReaderMutexLock l(&controller_lock_);
