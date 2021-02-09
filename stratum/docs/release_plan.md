@@ -1,3 +1,9 @@
+<!--
+Copyright 2021-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Stratum Release Plan
 
 Stratum follows the "live at head" philosophy where all development happens at HEAD.
