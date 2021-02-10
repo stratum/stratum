@@ -95,6 +95,8 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 ## Tofino
 
+- APS Networks BF2556X-1T
+- APS Networks BF6064X-T
 - Delta AG9064v1
 - Edgecore Wedge100BF-32QS
 - Edgecore Wedge100BF-32X
@@ -106,8 +108,6 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 - Netberg Aurora 610
 - Netberg Aurora 710
 - Netberg Aurora 750
-- Stordis BF6064X
-- Stordis BF2556X
 
 ## Broadcom
 
