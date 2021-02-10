@@ -485,7 +485,7 @@ BcmSwitch::~BcmSwitch() {}
       case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
         switch (req.optical_network_interface().value_case()) {
           case SetRequest::Request::OpticalNetworkInterface::ValueCase::
-              kOpticalTransceiverInfo: {  // NOLINT
+              kOpticalTransceiverInfo: {
             status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.optical_network_interface().module(),
                 req.optical_network_interface().network_interface(),

@@ -165,7 +165,7 @@ class SwitchInterface {
   virtual ::util::Status UnregisterStreamMessageResponseWriter(
       uint64 node_id) = 0;
 
-  // Sends a request received from the controller to the given node. A
+  // Handles a request received from the controller on the given node. A
   // StreamMessageRequest can carry PacketOuts, digest acks, or other
   // platform-specific requests.
   // PacketOuts: Transmits a packet received from controller directly to a

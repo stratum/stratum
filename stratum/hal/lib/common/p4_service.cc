@@ -609,7 +609,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         }
         if (!status.ok()) {
           LOG(INFO) << "Failed to ack digest: " << status;
-          // TODO(max): investigate if creating response for every failure is
+          // TODO(max): investigate if creating responses for every failure is
           // too resource intensive.
           auto resp = ToStreamMessageResponse(status);
           *resp.mutable_error()
