@@ -83,7 +83,15 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   void TearDown() override { server_->Shutdown(); }
 
   void OnPacketReceive(const ::p4::v1::PacketIn& packet) {
-    p4_service_->PacketReceiveHandler(kNodeId1, packet);
+    ::p4::v1::StreamMessageResponse resp;
+    *resp.mutable_packet() = packet;
+    p4_service_->StreamResponseReceiveHandler(kNodeId1, resp);
+  }
+
+  void OnDigestListReceive(const ::p4::v1::DigestList& digest) {
+    ::p4::v1::StreamMessageResponse resp;
+    *resp.mutable_digest() = digest;
+    p4_service_->StreamResponseReceiveHandler(kNodeId1, resp);
   }
 
   void FillTestForwardingPipelineConfigsAndSave(
@@ -159,6 +167,15 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   )";
   static constexpr char kTestPacketMetadata4[] = R"(
   )";
+  static constexpr char kTestDigestList1[] = R"(
+      digest_id: 123456
+      list_id: 654321
+      timestamp: 1234567890
+  )";
+  static constexpr char kTestDigestListAck1[] = R"(
+      digest_id: 123456
+      list_id: 654321
+  )";
   static constexpr char kOperErrorMsg[] = "Some error";
   static constexpr char kAggrErrorMsg[] = "A few errors happened";
   static constexpr uint64 kNodeId1 = 123123123;
@@ -185,6 +202,8 @@ constexpr char P4ServiceTest::kTestPacketMetadata1[];
 constexpr char P4ServiceTest::kTestPacketMetadata2[];
 constexpr char P4ServiceTest::kTestPacketMetadata3[];
 constexpr char P4ServiceTest::kTestPacketMetadata4[];
+constexpr char P4ServiceTest::kTestDigestList1[];
+constexpr char P4ServiceTest::kTestDigestListAck1[];
 constexpr char P4ServiceTest::kOperErrorMsg[];
 constexpr char P4ServiceTest::kAggrErrorMsg[];
 constexpr uint64 P4ServiceTest::kNodeId1;
@@ -852,21 +871,45 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata3, packet3.add_metadata()));
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata4, packet4.add_metadata()));
 
+  // Sample digest lists and acks. We don't care about data.
+  ::p4::v1::DigestList digest_list1;
+  ::p4::v1::DigestListAck digest_ack1;
+  ASSERT_OK(ParseProtoFromString(kTestDigestList1, &digest_list1));
+  ASSERT_OK(ParseProtoFromString(kTestDigestListAck1, &digest_ack1));
+
+  // Sample StreamMessageRequests.
+  ::p4::v1::StreamMessageRequest req1;
+  ::p4::v1::StreamMessageRequest req2;
+  ::p4::v1::StreamMessageRequest req3;
+  *req1.mutable_packet() = packet2;
+  *req2.mutable_packet() = packet4;
+  *req3.mutable_digest_ack() = digest_ack1;
+
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, RegisterPacketReceiveWriter(kNodeId1, _))
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, TransmitPacket(kNodeId1, EqualsProto(packet2)))
+  EXPECT_CALL(*switch_mock_,
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req1)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, TransmitPacket(kNodeId1, EqualsProto(packet4)))
+  EXPECT_CALL(*switch_mock_,
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req2)))
       .WillOnce(Return(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
                                       kOperErrorMsg)));
+  EXPECT_CALL(*switch_mock_,
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req3)))
+      .WillOnce(Return(::util::OkStatus()));
 
   //----------------------------------------------------------------------------
-  // Before any connection, any packet received from the controller will be
+  // Before any connection, any PacketIn received from the CPU will be
   // ignored.
   OnPacketReceive(packet3);
+
+  //----------------------------------------------------------------------------
+  // Before any connection, any digest list received from the switch will be
+  // ignored.
+  OnDigestListReceive(digest_list1);
 
   //----------------------------------------------------------------------------
   // Now start with making the stream channels for all the controllers. We use
@@ -1027,6 +1070,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_TRUE(ProtoEqual(resp.error().packet_out().packet_out(), packet4));
 
   //----------------------------------------------------------------------------
+  // Controller #2 sends some digest ack.
+  *req.mutable_digest_ack() = digest_ack1;
+  ASSERT_TRUE(stream2->Write(req));
+
+  //----------------------------------------------------------------------------
   // Controller #1 tries sends some packet out too. However its packet will be
   // dropped as it is not master any more and a stream error will be generated.
   *req.mutable_packet() = packet1;
@@ -1034,6 +1082,16 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_TRUE(stream1->Read(&resp));
   ASSERT_EQ(::google::rpc::PERMISSION_DENIED, resp.error().canonical_code());
   ASSERT_TRUE(ProtoEqual(resp.error().packet_out().packet_out(), packet1));
+
+  //----------------------------------------------------------------------------
+  // Controller #1 tries sends some digest ack out too. However its ack will be
+  // dropped as it is not master any more and a stream error will be generated.
+  *req.mutable_digest_ack() = digest_ack1;
+  ASSERT_TRUE(stream1->Write(req));
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(::google::rpc::PERMISSION_DENIED, resp.error().canonical_code());
+  ASSERT_TRUE(ProtoEqual(resp.error().digest_list_ack().digest_list_ack(),
+                         digest_ack1));
 
   //----------------------------------------------------------------------------
   // Controller #3 connects. Master will be still Controller #2, as it has the
@@ -1081,6 +1139,14 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
 
   ASSERT_TRUE(stream3->Read(&resp));
   ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+
+  //----------------------------------------------------------------------------
+  // We receive some digest from switch. This will be forwarded to the master
+  // which is Controller #3.
+  OnDigestListReceive(digest_list1);
+
+  ASSERT_TRUE(stream3->Read(&resp));
+  ASSERT_TRUE(ProtoEqual(resp.digest(), digest_list1));
 
   //----------------------------------------------------------------------------
   // Now Controller #1 disconnects. In this case there will be no mastership
@@ -1190,7 +1256,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureWhenRegisterHandlerFails) {
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, RegisterPacketReceiveWriter(kNodeId1, _))
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
       .WillOnce(Return(
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kOperErrorMsg)));
 
@@ -1219,7 +1285,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyControllersPerNode) {
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, RegisterPacketReceiveWriter(kNodeId1, _))
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
       .WillOnce(Return(::util::OkStatus()));
 
   req.mutable_arbitration()->set_device_id(kNodeId1);

@@ -137,22 +137,23 @@ Bmv2Switch::~Bmv2Switch() {}
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status Bmv2Switch::RegisterPacketReceiveWriter(
+::util::Status Bmv2Switch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterPacketReceiveWriter(writer);
+  return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status Bmv2Switch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status Bmv2Switch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterPacketReceiveWriter();
+  return pi_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status Bmv2Switch::TransmitPacket(uint64 node_id,
-                                          const ::p4::v1::PacketOut& packet) {
+::util::Status Bmv2Switch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->TransmitPacket(packet);
+  return pi_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status Bmv2Switch::RegisterEventNotifyWriter(

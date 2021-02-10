@@ -82,19 +82,20 @@ namespace dummy_switch {
   return ::util::OkStatus();
 }
 
-::util::Status DummyNode::RegisterPacketReceiveWriter(
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+::util::Status DummyNode::RegisterStreamMessageResponseWriter(
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
-::util::Status DummyNode::UnregisterPacketReceiveWriter() {
+::util::Status DummyNode::UnregisterStreamMessageResponseWriter() {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
-::util::Status DummyNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status DummyNode::HandleStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& request) {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();

@@ -51,14 +51,14 @@ class BfrtSwitch : public SwitchInterface {
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) override
       LOCKS_EXCLUDED(chassis_lock);
-  ::util::Status RegisterPacketReceiveWriter(
+  ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
+      override LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override
       LOCKS_EXCLUDED(chassis_lock);
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override
-      LOCKS_EXCLUDED(chassis_lock);
-  ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet) override
+  ::util::Status HandleStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override
