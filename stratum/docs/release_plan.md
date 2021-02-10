@@ -11,12 +11,17 @@ This means there are no long term support (LTS) branches, no feature backports a
 we do not practice semantic versioning (SemVer). In return, this lightweight approach
 allows us to be fast moving and adaptive.
 
-Users are exptected to regularly update to the latest version, but for deployments we
-offer quarterly releases. These are tagged off the master branch at the time of
-creation and left untouchted after that. A release contains a list of changes, new
+Users are expected to regularly update to the latest version, but for deployments we
+offer quarterly releases. These are tagged off the main branch at the time of
+creation and left untouched after that. A release contains a list of changes, new
 platforms and pre-built artifacts. We name them based on the release date in the form
 `year.month`, e.g., `21.03` for the March 2021 release. All releases can be found on
 the GitHub [release](https://github.com/stratum/stratum/releases) page.
+
+Releases are tagged in the repository using a fully qualified date string: `YYYY-MM-dd`
+You can check them out in `git` using the tag name.
+
+We may periodically tag the tree in between releases to support community deployments. For example, this could occur after a bug fix or new feature is merged, but before the official release. When this occurs, we will use the date format (`YYYY-MM-dd`) as the tag, but there will not be an entry added to the release page with release notes.
 
 ## Breaking Changes
 
