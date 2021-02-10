@@ -53,12 +53,12 @@ class BfrtNode final {
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) LOCKS_EXCLUDED(lock_);
-  ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
-      LOCKS_EXCLUDED(lock_);
-  ::util::Status UnregisterPacketReceiveWriter() LOCKS_EXCLUDED(lock_);
-  ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
-      LOCKS_EXCLUDED(lock_);
+  ::util::Status RegisterStreamMessageResponseWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+          writer) LOCKS_EXCLUDED(lock_);
+  ::util::Status UnregisterStreamMessageResponseWriter() LOCKS_EXCLUDED(lock_);
+  ::util::Status HandleStreamMessageRequest(
+      const ::p4::v1::StreamMessageRequest& req) LOCKS_EXCLUDED(lock_);
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtNode> CreateInstance(
       BfrtTableManager* bfrt_table_manager,
