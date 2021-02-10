@@ -2208,6 +2208,129 @@ namespace {
   return ::util::OkStatus();
 }
 
+::util::Status BfSdeWrapper::WriteIndirectMeter(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::optional<uint32> meter_index, uint64 cir,
+    uint64 cburst, uint64 pir, uint64 pburst) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  // Meter data: $METER_SPEC_*
+  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_CIR_KBPS", cir));
+  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_CBS_KBITS", cburst));
+  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_PIR_KBPS", pir));
+  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_PBS_KBITS", pburst));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (meter_index) {
+    // Single index target.
+    // Meter key: $METER_INDEX
+    RETURN_IF_ERROR(
+        SetField(table_key.get(), "$METER_INDEX", meter_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  } else {
+    // Wildcard write to all indices.
+    size_t table_size;
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+    for (size_t i = 0; i < table_size; ++i) {
+      // Meter key: $METER_INDEX
+      RETURN_IF_ERROR(SetField(table_key.get(), "$METER_INDEX", i));
+      RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+          *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+    }
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ReadIndirectMeters(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::optional<uint32> meter_index,
+    std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
+    std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
+    std::vector<uint64>* pbursts) {
+  CHECK_RETURN_IF_FALSE(meter_indices);
+  CHECK_RETURN_IF_FALSE(cirs);
+  CHECK_RETURN_IF_FALSE(cbursts);
+  CHECK_RETURN_IF_FALSE(pirs);
+  CHECK_RETURN_IF_FALSE(pbursts);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+
+  // Is this a wildcard read?
+  if (meter_index) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
+
+    // Key: $METER_INDEX
+    RETURN_IF_ERROR(
+        SetField(keys[0].get(), "$METER_INDEX", meter_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  meter_indices->resize(0);
+  cirs->resize(0);
+  cbursts->resize(0);
+  pirs->resize(0);
+  pbursts->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $METER_INDEX
+    uint64 bf_meter_index;
+    RETURN_IF_ERROR(GetField(*table_key, "$METER_INDEX", &bf_meter_index));
+    meter_indices->push_back(bf_meter_index);
+    // Data: $METER_SPEC_CIR_KBPS
+    uint64 cir;
+    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_CIR_KBPS", &cir));
+    cirs->push_back(cir);
+    // Data: $METER_SPEC_CBS_KBITS
+    uint64 cburst;
+    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_CBS_KBITS", &cburst));
+    cbursts->push_back(cburst);
+    // Data: $METER_SPEC_PIR_KBPS
+    uint64 pir;
+    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_PIR_KBPS", &pir));
+    pirs->push_back(pir);
+    // Data: $METER_SPEC_PBS_KBITS
+    uint64 pburst;
+    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_PBS_KBITS", &pburst));
+    pbursts->push_back(pburst);
+
+    CHECK_EQ(meter_indices->size(), keys.size());
+    CHECK_EQ(cirs->size(), keys.size());
+    CHECK_EQ(cbursts->size(), keys.size());
+    CHECK_EQ(pirs->size(), keys.size());
+    CHECK_EQ(pbursts->size(), keys.size());
+  }
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BfSdeWrapper::WriteActionProfileMember(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     uint32 table_id, int member_id, const TableDataInterface* table_data,

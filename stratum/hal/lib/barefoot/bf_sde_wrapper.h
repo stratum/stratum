@@ -246,6 +246,17 @@ class BfSdeWrapper : public BfSdeInterface {
       std::vector<uint32>* register_indices,
       std::vector<uint64>* register_datas, absl::Duration timeout) override
       LOCKS_EXCLUDED(data_lock_);
+  ::util::Status WriteIndirectMeter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> meter_index, uint64 cir,
+      uint64 cburst, uint64 pir, uint64 pburst) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ReadIndirectMeters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> meter_index,
+      std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
+      std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
+      std::vector<uint64>* pbursts) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, int member_id,

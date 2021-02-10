@@ -766,6 +766,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     optional_register_index = register_entry.index().index();
   }
 
+  // TODO(max): we don't translate p4rt id to bfrt here?
   std::vector<uint32> register_indices;
   std::vector<uint64> register_datas;
   RETURN_IF_ERROR(bf_sde_interface_->ReadRegisters(
@@ -825,6 +826,78 @@ BfrtTableManager::ReadDirectCounterEntry(
   RETURN_IF_ERROR(bf_sde_interface_->WriteRegister(
       device_, session, table_id, register_index,
       register_entry.data().bitstring()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadMeterEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::MeterEntry& meter_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
+
+  // Index 0 is a valid value and not a wildcard.
+  absl::optional<uint32> optional_meter_index;
+  if (meter_entry.has_index()) {
+    optional_meter_index = meter_entry.index().index();
+  }
+
+  std::vector<uint32> meter_indices;
+  std::vector<uint64> cirs;
+  std::vector<uint64> cbursts;
+  std::vector<uint64> pirs;
+  std::vector<uint64> pbursts;
+  RETURN_IF_ERROR(bf_sde_interface_->ReadIndirectMeters(
+      device_, session, table_id, optional_meter_index,
+      &meter_indices, &cirs, &cbursts, &pirs, &pbursts));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < meter_indices.size(); ++i) {
+    const uint32 meter_index = meter_indices[i];
+    const uint64 cir = cirs[i];
+    const uint64 cburst = cbursts[i];
+    const uint64 pir = pirs[i];
+    const uint64 pburst = pbursts[i];
+    ::p4::v1::MeterEntry result;
+
+    result.set_meter_id(meter_entry.meter_id());
+    result.mutable_index()->set_index(meter_index);
+    result.mutable_config()->set_cir(cir);
+    result.mutable_config()->set_cburst(cburst);
+    result.mutable_config()->set_pir(pir);
+    result.mutable_config()->set_pburst(pburst);
+
+    *resp.add_entities()->mutable_meter_entry() = result;
+  }
+
+  VLOG(1) << "ReadMeterEntry resp " << resp.DebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteMeterEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::MeterEntry& meter_entry) {
+  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+      << "Update type of RegisterEntry " << meter_entry.ShortDebugString()
+      << " must be MODIFY.";
+
+  ASSIGN_OR_RETURN(uint32 meter_id,
+                   bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
+
+  absl::optional<uint32> meter_index;
+  if (meter_entry.has_index()) {
+    meter_index = meter_entry.index().index();
+  }
+  RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
+      device_, session, meter_id, meter_index, meter_entry.config().cir(),
+      meter_entry.config().cburst(), meter_entry.config().pir(),
+      meter_entry.config().pburst()));
 
   return ::util::OkStatus();
 }
