@@ -2320,13 +2320,13 @@ namespace {
     uint64 pburst;
     RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_PBS_KBITS", &pburst));
     pbursts->push_back(pburst);
-
-    CHECK_EQ(meter_indices->size(), keys.size());
-    CHECK_EQ(cirs->size(), keys.size());
-    CHECK_EQ(cbursts->size(), keys.size());
-    CHECK_EQ(pirs->size(), keys.size());
-    CHECK_EQ(pbursts->size(), keys.size());
   }
+
+  CHECK_EQ(meter_indices->size(), keys.size());
+  CHECK_EQ(cirs->size(), keys.size());
+  CHECK_EQ(cbursts->size(), keys.size());
+  CHECK_EQ(pirs->size(), keys.size());
+  CHECK_EQ(pbursts->size(), keys.size());
 
   return ::util::OkStatus();
 }
