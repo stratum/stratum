@@ -834,6 +834,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::MeterEntry& meter_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+      << "Wildcard MeterEntry reads are not supported.";
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
 
@@ -886,6 +888,9 @@ BfrtTableManager::ReadDirectCounterEntry(
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
       << "Update type of RegisterEntry " << meter_entry.ShortDebugString()
       << " must be MODIFY.";
+  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+      << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
+      << ".";
 
   ASSIGN_OR_RETURN(uint32 meter_id,
                    bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));

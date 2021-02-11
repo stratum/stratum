@@ -11,6 +11,8 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
 // FIXME
@@ -21,6 +23,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+using test_utils::EqualsProto;
 using ::testing::_;
 using ::testing::ByMove;
 using ::testing::DoAll;
@@ -29,6 +32,7 @@ using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Optional;
 using ::testing::Return;
+using ::testing::SetArgPointee;
 
 class BfrtTableManagerTest : public ::testing::Test {
  protected:
@@ -189,12 +193,68 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
       pburst: 200
     }
   )PROTO";
-
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
 
   EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  constexpr int kP4MeterId = 55555;
+  constexpr int kBfRtTableId = 11111;
+  constexpr int kMeterIndex = 12345;
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+
+  {
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4MeterId))
+        .WillOnce(Return(kBfRtTableId));
+
+    std::vector<uint32> meter_indices = {kMeterIndex};
+    std::vector<uint64> cirs = {1};
+    std::vector<uint64> cbursts = {100};
+    std::vector<uint64> pirs = {2};
+    std::vector<uint64> pbursts = {200};
+    EXPECT_CALL(*bf_sde_wrapper_mock_,
+                ReadIndirectMeters(kDevice1, _, kBfRtTableId,
+                                   Optional(kMeterIndex), _, _, _, _, _))
+        .WillOnce(DoAll(SetArgPointee<4>(meter_indices), SetArgPointee<5>(cirs),
+                        SetArgPointee<6>(cbursts), SetArgPointee<7>(pirs),
+                        SetArgPointee<8>(pbursts), Return(::util::OkStatus())));
+    const std::string kMeterResponseText = R"PROTO(
+      entities {
+        meter_entry {
+          meter_id: 55555
+          index {
+            index: 12345
+          }
+          config {
+            cir: 1
+            cburst: 100
+            pir: 2
+            pburst: 200
+          }
+        }
+      }
+    )PROTO";
+    ::p4::v1::ReadResponse resp;
+    ASSERT_OK(ParseProtoFromString(kMeterResponseText, &resp));
+    EXPECT_CALL(writer_mock, Write(EqualsProto(resp))).WillOnce(Return(true));
+  }
+
+  const std::string kMeterEntryText = R"PROTO(
+    meter_id: 55555
+    index {
+      index: 12345
+    }
+  )PROTO";
+  ::p4::v1::MeterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+
+  EXPECT_OK(
+      bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock));
 }
 
 }  // namespace barefoot
