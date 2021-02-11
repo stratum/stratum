@@ -849,8 +849,8 @@ BfrtTableManager::ReadDirectCounterEntry(
   std::vector<uint64> pirs;
   std::vector<uint64> pbursts;
   RETURN_IF_ERROR(bf_sde_interface_->ReadIndirectMeters(
-      device_, session, table_id, optional_meter_index,
-      &meter_indices, &cirs, &cbursts, &pirs, &pbursts));
+      device_, session, table_id, optional_meter_index, &meter_indices, &cirs,
+      &cbursts, &pirs, &pbursts));
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < meter_indices.size(); ++i) {
