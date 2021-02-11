@@ -200,6 +200,35 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
 
+TEST_F(BfrtTableManagerTest, RejectMeterEntryWithoutMeterId) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4MeterId = 55555;
+  constexpr int kBfRtTableId = 11111;
+  constexpr int kMeterIndex = 12345;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  const std::string kMeterEntryText = R"PROTO(
+    meter_id: 0
+    index {
+      index: 12345
+    }
+    config {
+      cir: 1
+      cburst: 100
+      pir: 2
+      pburst: 200
+    }
+  )PROTO";
+  ::p4::v1::MeterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+
+  ::util::Status ret = bfrt_table_manager_->WriteMeterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Missing meter id"));
+}
+
 TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
