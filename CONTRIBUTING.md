@@ -53,4 +53,4 @@ Some additional points:
 ## Community Guidelines
 
 This project follows [Google's Open Source Community
-Guidelines](https://opensource.google.com/conduct/) and ONF's [Code of Conduct](https://github.com/stratum/stratum/blob/master/CODE_OF_CONDUCT.md).
+Guidelines](https://opensource.google.com/conduct/) and ONF's [Code of Conduct](https://github.com/stratum/stratum/blob/main/CODE_OF_CONDUCT.md).

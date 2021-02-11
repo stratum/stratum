@@ -486,7 +486,7 @@ Either the ONL image is not correctly set up or ONLP support is simply broken on
 this particular switch model. As a workaround, [BSP mode](#Running-with-BSP-or-on-Tofino-model),
 which bypasses ONLP, is available.
 
-[start-stratum-container-sh]: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
+[start-stratum-container-sh]: https://github.com/stratum/stratum/blob/main/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 
 ### RESOURCE_EXHAUSTED when pushing pipeline
 
@@ -550,7 +550,7 @@ E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed 
 
 This error occurs when the binary pipeline is not in the correct format.
 Make sure the pipeline config binary has been packed correctly for PI node, like
-so: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/update_config.py#L39-L52.
+so: https://github.com/stratum/stratum/blob/main/stratum/hal/bin/barefoot/update_config.py#L39-L52.
 You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
 Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline
