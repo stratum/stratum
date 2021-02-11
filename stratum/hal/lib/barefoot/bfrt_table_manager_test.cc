@@ -27,6 +27,7 @@ using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
+using ::testing::Optional;
 using ::testing::Return;
 
 class BfrtTableManagerTest : public ::testing::Test {
@@ -158,6 +159,41 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
   ASSERT_OK(ParseProtoFromString(kDirectCounterEntryText, &entry));
 
   EXPECT_OK(bfrt_table_manager_->WriteDirectCounterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4MeterId = 55555;
+  constexpr int kBfRtTableId = 11111;
+  constexpr int kMeterIndex = 12345;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4MeterId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              WriteIndirectMeter(kDevice1, _, kBfRtTableId,
+                                 Optional(kMeterIndex), 1, 100, 2, 200))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kMeterEntryText = R"PROTO(
+    meter_id: 55555
+    index {
+      index: 12345
+    }
+    config {
+      cir: 1
+      cburst: 100
+      pir: 2
+      pburst: 200
+    }
+  )PROTO";
+
+  ::p4::v1::MeterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+
+  EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
 
