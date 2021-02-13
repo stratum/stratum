@@ -445,8 +445,10 @@ struct RegisterClearThreadData {
     }
   }
 
-  // Priority
-  if (has_priority_field) {
+  // Priority.
+  // Default action do not have a priority, even when the table ususally
+  // requires one. The SDE would return 0 (highest).
+  if (has_priority_field && !request.is_default_action()) {
     uint32 bf_priority;
     RETURN_IF_ERROR(table_key->GetPriority(&bf_priority));
     ASSIGN_OR_RETURN(uint64 p4rt_priority,
