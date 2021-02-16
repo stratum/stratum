@@ -21,6 +21,7 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/common/p4_bytestring_verifier_writer_wrapper.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
@@ -303,6 +304,12 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Write from non-master is not permitted.");
   }
 
+  // Check bytestrings here.
+  ::util::Status ret = IsInCanonicalByteStringFormat(*req);
+  if (!ret.ok()) {
+    return ToGrpcStatus(ret, {});
+  }
+
   std::vector<::util::Status> results = {};
   absl::Time timestamp = absl::Now();
   ::util::Status status =
@@ -330,10 +337,11 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
+  P4BytestringVerifierWrapper w2(&wrapper);
   std::vector<::util::Status> details = {};
   absl::Time timestamp = absl::Now();
   ::util::Status status =
-      switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
+      switch_interface_->ReadForwardingEntries(*req, &w2, &details);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();
