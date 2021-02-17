@@ -12,6 +12,7 @@
 #include "absl/strings/match.h"
 #include "absl/synchronization/notification.h"
 #include "gflags/gflags.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/utils.h"
@@ -838,7 +839,23 @@ BfrtTableManager::ReadDirectCounterEntry(
       << "Wildcard MeterEntry reads are not supported.";
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
-
+  bool meter_units_in_bits;  // or packets
+  {
+    absl::ReaderMutexLock l(&lock_);
+    ASSIGN_OR_RETURN(auto meter,
+                     p4_info_manager_->FindMeterByID(meter_entry.meter_id()));
+    switch (meter.spec().unit()) {
+      case ::p4::config::v1::MeterSpec::BYTES:
+        meter_units_in_bits = true;
+        break;
+      case ::p4::config::v1::MeterSpec::PACKETS:
+        meter_units_in_bits = false;
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter"
+                                        << meter.ShortDebugString() << ".";
+    }
+  }
   // Index 0 is a valid value and not a wildcard.
   absl::optional<uint32> optional_meter_index;
   if (meter_entry.has_index()) {
@@ -850,9 +867,10 @@ BfrtTableManager::ReadDirectCounterEntry(
   std::vector<uint64> cbursts;
   std::vector<uint64> pirs;
   std::vector<uint64> pbursts;
+  std::vector<bool> in_pps;
   RETURN_IF_ERROR(bf_sde_interface_->ReadIndirectMeters(
       device_, session, table_id, optional_meter_index, &meter_indices, &cirs,
-      &cbursts, &pirs, &pbursts));
+      &cbursts, &pirs, &pbursts, &in_pps));
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < meter_indices.size(); ++i) {
@@ -892,6 +910,24 @@ BfrtTableManager::ReadDirectCounterEntry(
       << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
       << ".";
 
+  bool meter_units_in_packets;  // or bytes
+  {
+    absl::ReaderMutexLock l(&lock_);
+    ASSIGN_OR_RETURN(auto meter,
+                     p4_info_manager_->FindMeterByID(meter_entry.meter_id()));
+    switch (meter.spec().unit()) {
+      case ::p4::config::v1::MeterSpec::BYTES:
+        meter_units_in_packets = false;
+        break;
+      case ::p4::config::v1::MeterSpec::PACKETS:
+        meter_units_in_packets = true;
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter"
+                                        << meter.ShortDebugString() << ".";
+    }
+  }
+
   ASSIGN_OR_RETURN(uint32 meter_id,
                    bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
 
@@ -900,9 +936,9 @@ BfrtTableManager::ReadDirectCounterEntry(
     meter_index = meter_entry.index().index();
   }
   RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
-      device_, session, meter_id, meter_index, meter_entry.config().cir(),
-      meter_entry.config().cburst(), meter_entry.config().pir(),
-      meter_entry.config().pburst()));
+      device_, session, meter_id, meter_index, meter_units_in_packets,
+      meter_entry.config().cir(), meter_entry.config().cburst(),
+      meter_entry.config().pir(), meter_entry.config().pburst()));
 
   return ::util::OkStatus();
 }

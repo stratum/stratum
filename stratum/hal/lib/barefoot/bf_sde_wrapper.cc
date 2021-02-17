@@ -2210,8 +2210,8 @@ namespace {
 
 ::util::Status BfSdeWrapper::WriteIndirectMeter(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id, absl::optional<uint32> meter_index, uint64 cir,
-    uint64 cburst, uint64 pir, uint64 pburst) {
+    uint32 table_id, absl::optional<uint32> meter_index, bool in_pps,
+    uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
@@ -2225,17 +2225,27 @@ namespace {
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
   // Meter data: $METER_SPEC_*
-  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_CIR_KBPS", cir));
-  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_CBS_KBITS", cburst));
-  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_PIR_KBPS", pir));
-  RETURN_IF_ERROR(SetField(table_data.get(), "$METER_SPEC_PBS_KBITS", pburst));
+  if (in_pps) {
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterCirPps, cir));
+    RETURN_IF_ERROR(
+        SetField(table_data.get(), kMeterCommitedBurstPackets, cburst));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPirPps, pir));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPeakBurstPackets, pburst));
+  } else {
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterCirKbps, cir / 1000));
+    RETURN_IF_ERROR(
+        SetField(table_data.get(), kMeterCommitedBurstKbits, cburst / 1000));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPirKbps, pir / 1000));
+    RETURN_IF_ERROR(
+        SetField(table_data.get(), kMeterPeakBurstKbits, pburst / 1000));
+  }
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   if (meter_index) {
     // Single index target.
     // Meter key: $METER_INDEX
     RETURN_IF_ERROR(
-        SetField(table_key.get(), "$METER_INDEX", meter_index.value()));
+        SetField(table_key.get(), kMeterIndex, meter_index.value()));
     RETURN_IF_BFRT_ERROR(table->tableEntryMod(
         *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
   } else {
@@ -2244,7 +2254,7 @@ namespace {
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
     for (size_t i = 0; i < table_size; ++i) {
       // Meter key: $METER_INDEX
-      RETURN_IF_ERROR(SetField(table_key.get(), "$METER_INDEX", i));
+      RETURN_IF_ERROR(SetField(table_key.get(), kMeterIndex, i));
       RETURN_IF_BFRT_ERROR(table->tableEntryMod(
           *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
     }
@@ -2258,7 +2268,7 @@ namespace {
     uint32 table_id, absl::optional<uint32> meter_index,
     std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
     std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
-    std::vector<uint64>* pbursts) {
+    std::vector<uint64>* pbursts, std::vector<bool>* in_pps) {
   CHECK_RETURN_IF_FALSE(meter_indices);
   CHECK_RETURN_IF_FALSE(cirs);
   CHECK_RETURN_IF_FALSE(cbursts);
@@ -2282,8 +2292,7 @@ namespace {
     RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
 
     // Key: $METER_INDEX
-    RETURN_IF_ERROR(
-        SetField(keys[0].get(), "$METER_INDEX", meter_index.value()));
+    RETURN_IF_ERROR(SetField(keys[0].get(), kMeterIndex, meter_index.value()));
     RETURN_IF_BFRT_ERROR(table->tableEntryGet(
         *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
         bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
@@ -2297,29 +2306,61 @@ namespace {
   cbursts->resize(0);
   pirs->resize(0);
   pbursts->resize(0);
+  in_pps->resize(0);
   for (size_t i = 0; i < keys.size(); ++i) {
     const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $METER_INDEX
     uint64 bf_meter_index;
-    RETURN_IF_ERROR(GetField(*table_key, "$METER_INDEX", &bf_meter_index));
+    RETURN_IF_ERROR(GetField(*table_key, kMeterIndex, &bf_meter_index));
     meter_indices->push_back(bf_meter_index);
-    // Data: $METER_SPEC_CIR_KBPS
-    uint64 cir;
-    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_CIR_KBPS", &cir));
-    cirs->push_back(cir);
-    // Data: $METER_SPEC_CBS_KBITS
-    uint64 cburst;
-    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_CBS_KBITS", &cburst));
-    cbursts->push_back(cburst);
-    // Data: $METER_SPEC_PIR_KBPS
-    uint64 pir;
-    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_PIR_KBPS", &pir));
-    pirs->push_back(pir);
-    // Data: $METER_SPEC_PBS_KBITS
-    uint64 pburst;
-    RETURN_IF_ERROR(GetField(*table_data, "$METER_SPEC_PBS_KBITS", &pburst));
-    pbursts->push_back(pburst);
+
+    // Data: $METER_SPEC_*
+    std::vector<bf_rt_id_t> data_field_ids;
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+    for (const auto& field_id : data_field_ids) {
+      std::string field_name;
+      RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+      if (field_name == kMeterCirKbps) {  // in kbits
+        uint64 cir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cir));
+        cirs->push_back(cir * 1000);
+        in_pps->push_back(false);
+      } else if (field_name == kMeterCommitedBurstKbits) {
+        uint64 cburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cburst));
+        cbursts->push_back(cburst * 1000);
+      } else if (field_name == kMeterPirKbps) {
+        uint64 pir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pir));
+        pirs->push_back(pir * 1000);
+      } else if (field_name == kMeterPeakBurstKbits) {
+        uint64 pburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pburst));
+        pbursts->push_back(pburst * 1000);
+      } else if (field_name == kMeterCirPps) {  // In packets
+        uint64 cir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cir));
+        cirs->push_back(cir);
+        in_pps->push_back(true);
+      } else if (field_name == kMeterCommitedBurstPackets) {
+        uint64 cburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cburst));
+        cbursts->push_back(cburst);
+      } else if (field_name == kMeterPirPps) {
+        uint64 pir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pir));
+        pirs->push_back(pir);
+      } else if (field_name == kMeterPeakBurstPackets) {
+        uint64 pburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pburst));
+        pbursts->push_back(pburst);
+      } else {
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Unknown meter field " << field_name << " in meter with id "
+            << table_id << ".";
+      }
+    }
   }
 
   CHECK_EQ(meter_indices->size(), keys.size());
@@ -2327,6 +2368,7 @@ namespace {
   CHECK_EQ(cbursts->size(), keys.size());
   CHECK_EQ(pirs->size(), keys.size());
   CHECK_EQ(pbursts->size(), keys.size());
+  CHECK_EQ(in_pps->size(), keys.size());
 
   return ::util::OkStatus();
 }

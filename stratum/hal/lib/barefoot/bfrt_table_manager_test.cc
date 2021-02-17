@@ -95,6 +95,28 @@ class BfrtTableManagerTest : public ::testing::Test {
             }
             direct_table_id: 33583783
           }
+          meters {
+            preamble {
+              id: 55555
+              name: "Ingress.control.meter_bytes"
+              alias: "meter_bytes"
+            }
+            spec {
+              unit: BYTES
+            }
+            size: 500
+          }
+          meters {
+            preamble {
+              id: 55556
+              name: "Ingress.control.meter_packets"
+              alias: "meter_packets"
+            }
+            spec {
+              unit: PACKETS
+            }
+            size: 500
+          }
         }
       }
     )PROTO";
@@ -178,7 +200,7 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
   // TODO(max): figure out how to expect the session mock here.
   EXPECT_CALL(*bf_sde_wrapper_mock_,
               WriteIndirectMeter(kDevice1, _, kBfRtTableId,
-                                 Optional(kMeterIndex), 1, 100, 2, 200))
+                                 Optional(kMeterIndex), false, 1, 100, 2, 200))
       .WillOnce(Return(::util::OkStatus()));
 
   const std::string kMeterEntryText = R"PROTO(
@@ -273,12 +295,14 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
     std::vector<uint64> cbursts = {100};
     std::vector<uint64> pirs = {2};
     std::vector<uint64> pbursts = {200};
+    std::vector<bool> in_pps = {true};
     EXPECT_CALL(*bf_sde_wrapper_mock_,
                 ReadIndirectMeters(kDevice1, _, kBfRtTableId,
-                                   Optional(kMeterIndex), _, _, _, _, _))
+                                   Optional(kMeterIndex), _, _, _, _, _, _))
         .WillOnce(DoAll(SetArgPointee<4>(meter_indices), SetArgPointee<5>(cirs),
                         SetArgPointee<6>(cbursts), SetArgPointee<7>(pirs),
-                        SetArgPointee<8>(pbursts), Return(::util::OkStatus())));
+                        SetArgPointee<8>(pbursts), SetArgPointee<9>(in_pps),
+                        Return(::util::OkStatus())));
     const std::string kMeterResponseText = R"PROTO(
       entities {
         meter_entry {

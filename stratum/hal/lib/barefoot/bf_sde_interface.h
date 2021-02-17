@@ -352,8 +352,8 @@ class BfSdeInterface {
   // TODO(max): figure out optional register index API, see TotW#163
   virtual ::util::Status WriteIndirectMeter(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, absl::optional<uint32> meter_index, uint64 cir,
-      uint64 cburst, uint64 pir, uint64 pburst) = 0;
+      uint32 table_id, absl::optional<uint32> meter_index, bool in_pps,
+      uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) = 0;
 
   // Reads the data from an indirect meter, or all meters if index is 0.
   // The table ID must be a BfRt table ID, not P4Runtime.
@@ -363,7 +363,7 @@ class BfSdeInterface {
       uint32 table_id, absl::optional<uint32> meter_index,
       std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
       std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
-      std::vector<uint64>* pbursts) = 0;
+      std::vector<uint64>* pbursts, std::vector<bool>* in_pps) = 0;
 
   // Inserts an action profile member. The table ID must be a BfRt table, not
   // P4Runtime.

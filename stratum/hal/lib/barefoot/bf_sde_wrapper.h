@@ -99,6 +99,7 @@ class BfSdeWrapper : public BfSdeInterface {
  public:
   // Default MTU for ports on Tofino.
   static constexpr int32 kBfDefaultMtu = 10 * 1024;  // 10K
+  static constexpr char kFoo[] = "foo";
 
   // Wrapper around the bfrt session object.
   class Session : public BfSdeInterface::SessionInterface {
@@ -248,15 +249,16 @@ class BfSdeWrapper : public BfSdeInterface {
       LOCKS_EXCLUDED(data_lock_);
   ::util::Status WriteIndirectMeter(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, absl::optional<uint32> meter_index, uint64 cir,
-      uint64 cburst, uint64 pir, uint64 pburst) override
+      uint32 table_id, absl::optional<uint32> meter_index, bool in_pps,
+      uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) override
       LOCKS_EXCLUDED(data_lock_);
   ::util::Status ReadIndirectMeters(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, absl::optional<uint32> meter_index,
       std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
       std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
-      std::vector<uint64>* pbursts) override LOCKS_EXCLUDED(data_lock_);
+      std::vector<uint64>* pbursts, std::vector<bool>* in_pps) override
+      LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, int member_id,
