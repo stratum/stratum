@@ -99,7 +99,6 @@ class BfSdeWrapper : public BfSdeInterface {
  public:
   // Default MTU for ports on Tofino.
   static constexpr int32 kBfDefaultMtu = 10 * 1024;  // 10K
-  static constexpr char kFoo[] = "foo";
 
   // Wrapper around the bfrt session object.
   class Session : public BfSdeInterface::SessionInterface {
