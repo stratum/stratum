@@ -14,18 +14,18 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-using ::stratum::test_utils::EqualsProto;
-using ::stratum::test_utils::StatusIs;
+namespace stratum {
+namespace hal {
+namespace barefoot {
+
+using test_utils::EqualsProto;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
-namespace barefoot {
 
 class BfrtPacketioManagerTest : public ::testing::Test {
  protected:

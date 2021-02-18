@@ -14,10 +14,10 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
+
+using ::testing::HasSubstr;
 
 TEST(PrintP4ObjectIDTest, TestTableID) {
   const int kBaseID = 0x12345;

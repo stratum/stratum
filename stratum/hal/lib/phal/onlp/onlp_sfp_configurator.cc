@@ -10,12 +10,12 @@
 
 #include "stratum/hal/lib/common/common.pb.h"
 
-using namespace google::protobuf::util;  // NOLINT
-
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+
+using namespace google::protobuf::util;  // NOLINT
 
 OnlpSfpConfigurator::OnlpSfpConfigurator(
     std::shared_ptr<OnlpSfpDataSource> datasource, AttributeGroup* sfp_group,

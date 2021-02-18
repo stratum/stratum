@@ -22,13 +22,13 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_test_util.h"
 
+namespace stratum {
+namespace hal {
+
 using ::testing::AnyNumber;
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::ReturnRef;
-
-namespace stratum {
-namespace hal {
 
 // This hidden namespace stores constants related to the test input file.
 namespace {

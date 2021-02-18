@@ -23,11 +23,11 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 
-using ::testing::AnyNumber;
-using ::testing::Return;
-
 namespace stratum {
 namespace p4c_backends {
+
+using ::testing::AnyNumber;
+using ::testing::Return;
 
 // This class is the HiddenTableMapper test fixture.
 class HiddenStaticMapperTest : public testing::Test {

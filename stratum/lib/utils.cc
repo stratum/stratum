@@ -22,9 +22,9 @@
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 
-using ::google::protobuf::util::MessageDifferencer;
-
 namespace stratum {
+
+using ::google::protobuf::util::MessageDifferencer;
 
 ::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
                                    const std::string& filename) {

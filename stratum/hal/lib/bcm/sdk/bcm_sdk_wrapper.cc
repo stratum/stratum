@@ -180,14 +180,14 @@ DEFINE_int32(max_num_linkscan_writers, 10,
              "Max number of linkscan event Writers supported.");
 DECLARE_string(bcm_sdk_checkpoint_dir);
 
-using ::google::protobuf::util::MessageDifferencer;
-
 // TODO(unknown): There are many CHECK_RETURN_IF_FALSE in this file which will
 // need to be changed to return ERR_INTERNAL as opposed to ERR_INVALID_PARAM.
 
 namespace stratum {
 namespace hal {
 namespace bcm {
+
+using ::google::protobuf::util::MessageDifferencer;
 
 constexpr absl::Duration BcmSdkWrapper::kWriteTimeout;
 constexpr int BcmSdkWrapper::kUdfChunkSize;
