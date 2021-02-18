@@ -37,4 +37,4 @@ To start Stratum with SSL/TLS, add the following flags:
 
 [1]:https://grpc.io/docs/guides/auth/#with-server-authentication-ssltls-5
 [2]:https://www.openssl.org/
-[3]:https://github.com/stratum/stratum/blob/master/tools/tls/generate-certs.sh
+[3]:../../../tools/tls/generate-certs.sh
