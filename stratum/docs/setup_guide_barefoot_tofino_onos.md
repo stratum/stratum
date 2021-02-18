@@ -80,7 +80,7 @@ cd stratum
 ./stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 ```
 
-:warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](/stratum/hal/bin/barefoot/README.md#huge-pages--dma-allocation-error).
+:warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](/stratum/hal/bin/barefoot/README.run.md#huge-pages--dma-allocation-error).
 
 :pencil2: (Optional) You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
 
