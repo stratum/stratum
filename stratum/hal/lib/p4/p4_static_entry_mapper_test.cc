@@ -22,13 +22,13 @@
 
 DECLARE_bool(remap_hidden_table_const_entries);
 
+namespace stratum {
+namespace hal {
+
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::HasSubstr;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
 
 // This unnamed namespace hides the text strings that parse into static table
 // update entries for testing.  The tested updates don't need to have complete

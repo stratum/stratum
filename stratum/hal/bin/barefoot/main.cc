@@ -23,8 +23,6 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
-using ::pi::fe::proto::DeviceMgr;
-
 DEFINE_string(bf_sde_install, "/usr",
               "Absolute path to the directory where the BF SDE is installed");
 DEFINE_bool(bf_switchd_background, false,
@@ -36,6 +34,8 @@ DEFINE_bool(bf_sim, false, "Run with the Tofino simulator");
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::pi::fe::proto::DeviceMgr;
 
 namespace {
 

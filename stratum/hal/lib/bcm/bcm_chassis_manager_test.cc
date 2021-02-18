@@ -39,6 +39,10 @@ DECLARE_string(bcm_sdk_shell_log_file);
 DECLARE_string(bcm_sdk_checkpoint_dir);
 DECLARE_string(test_tmpdir);
 
+namespace stratum {
+namespace hal {
+namespace bcm {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -47,10 +51,6 @@ using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 static constexpr uint64 kNodeId = 7654321ULL;
 static constexpr uint32 kPortId = 12345;

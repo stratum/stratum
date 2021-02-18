@@ -8,18 +8,18 @@
 
 #include <vector>
 
-#include "google/protobuf/util/message_differencer.h"
 #include "gmock/gmock.h"
+#include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
+
+using ::testing::HasSubstr;
 
 // This unnamed namespace hides the text strings that parse into static table
 // update entries for testing.  The test strings are pasted from static entry

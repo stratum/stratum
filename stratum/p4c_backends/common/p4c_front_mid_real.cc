@@ -19,10 +19,10 @@
 #include "external/com_github_p4lang_p4c/lib/error.h"
 #include "external/com_github_p4lang_p4c/lib/gc.h"
 
-using StratumP4cContext = P4CContextWithOptions<CompilerOptions>;
-
 namespace stratum {
 namespace p4c_backends {
+
+using StratumP4cContext = P4CContextWithOptions<CompilerOptions>;
 
 P4cFrontMidReal::P4cFrontMidReal()
     : p4c_context_(new StratumP4cContext),
