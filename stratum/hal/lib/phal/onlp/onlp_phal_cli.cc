@@ -23,8 +23,6 @@
 #include "absl/time/time.h"
 #include "re2/re2.h"
 
-using namespace std;  // NOLINT
-
 namespace stratum {
 namespace hal {
 namespace phal {

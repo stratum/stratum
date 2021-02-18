@@ -2,25 +2,22 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/macros.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/macros.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-
-using ::testing::HasSubstr;
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
 namespace bcm {
 
+using ::testing::HasSubstr;
+
 class BcmMacrosTest : public ::testing::Test {
  protected:
-  int FakeBcmFunc(int error_code) {
-    return error_code;
-  }
+  int FakeBcmFunc(int error_code) { return error_code; }
 
   ::util::Status FuncWithReturnIfBcmError(int error_code) {
     RETURN_IF_BCM_ERROR(FakeBcmFunc(error_code));

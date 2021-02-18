@@ -19,12 +19,12 @@
 
 DECLARE_bool(enforce_bytestring_length);
 
+namespace stratum {
+namespace hal {
+
 using ::testing::Combine;
 using ::testing::HasSubstr;
 using ::testing::Range;
-
-namespace stratum {
-namespace hal {
 
 // This class is the P4MatchKey test fixture.
 class P4MatchKeyTest : public testing::Test {

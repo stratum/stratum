@@ -21,6 +21,10 @@
 #include "stratum/lib/channel/channel_mock.h"
 #include "stratum/lib/utils.h"
 
+namespace stratum {
+namespace hal {
+namespace bcm {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -31,10 +35,6 @@ using ::testing::Return;
 using ::testing::Sequence;
 using ::testing::WithArg;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 namespace {
 

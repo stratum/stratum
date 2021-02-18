@@ -32,6 +32,9 @@ DECLARE_string(chassis_config_file);
 DECLARE_string(gnmi_capabilities_file);
 DECLARE_string(test_tmpdir);
 
+namespace stratum {
+namespace hal {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -41,9 +44,6 @@ using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::SetArgPointee;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
 
 class Event;
 

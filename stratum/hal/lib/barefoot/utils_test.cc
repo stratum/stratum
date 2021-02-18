@@ -15,11 +15,11 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::testing::HasSubstr;
 
 TEST(DefaultRangeLowValueTest, HasFullBitwidth) {
   EXPECT_EQ(RangeDefaultLow(0).size(), 0);
