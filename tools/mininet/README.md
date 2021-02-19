@@ -21,7 +21,7 @@ Alternatively, you can obtain the image from Docker Hub:
 
     docker pull opennetworking/mn-stratum
 
-This image is updated daily and built from the master branch of Stratum.
+This image is updated daily and built from the main branch of Stratum.
 
 ## Run container
 
