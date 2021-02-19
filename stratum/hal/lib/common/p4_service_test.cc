@@ -30,6 +30,7 @@ DECLARE_int32(max_num_controllers_per_node);
 DECLARE_int32(max_num_controller_connections);
 DECLARE_string(forwarding_pipeline_configs_file);
 DECLARE_string(write_req_log_file);
+DECLARE_string(read_req_log_file);
 DECLARE_string(test_tmpdir);
 
 namespace stratum {
@@ -74,9 +75,13 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     FLAGS_forwarding_pipeline_configs_file =
         FLAGS_test_tmpdir + "/forwarding_pipeline_configs_file.pb.txt";
     FLAGS_write_req_log_file = FLAGS_test_tmpdir + "/write_req_log_fil.csv";
-    // Before starting the tests, remove the write req file if exists.
+    FLAGS_read_req_log_file = FLAGS_test_tmpdir + "/read_req_log_fil.csv";
+    // Before starting the tests, remove the read and write req file if exists.
     if (PathExists(FLAGS_write_req_log_file)) {
       ASSERT_OK(RemoveFile(FLAGS_write_req_log_file));
+    }
+    if (PathExists(FLAGS_read_req_log_file)) {
+      ASSERT_OK(RemoveFile(FLAGS_read_req_log_file));
     }
   }
 
@@ -749,8 +754,10 @@ TEST_P(P4ServiceTest, ReadSuccess) {
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
       .WillOnce(Return(::util::OkStatus()));
+  const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
   EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _))
-      .WillOnce(Return(::util::OkStatus()));
+      .WillOnce(DoAll(SetArgPointee<2>(kExpectedResults),
+                      Return(::util::OkStatus())));
 
   // Invoke the RPC and validate the results.
   std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
@@ -758,6 +765,9 @@ TEST_P(P4ServiceTest, ReadSuccess) {
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
   EXPECT_TRUE(status.ok());
+  std::string s;
+  ASSERT_OK(ReadFileToString(FLAGS_read_req_log_file, &s));
+  EXPECT_THAT(s, HasSubstr(req.entities(0).ShortDebugString()));
 }
 
 TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
@@ -827,6 +837,9 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
   EXPECT_EQ(kOperErrorMsg, detail.message());
   const auto& errors = error_buffer_->GetErrors();
   EXPECT_TRUE(errors.empty());
+  std::string s;
+  ASSERT_OK(ReadFileToString(FLAGS_read_req_log_file, &s));
+  EXPECT_THAT(s, HasSubstr(req.entities(0).ShortDebugString()));
 }
 
 TEST_P(P4ServiceTest, ReadFailureForAuthError) {
