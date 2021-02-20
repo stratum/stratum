@@ -136,7 +136,7 @@ jobs:
       - *store_bazel_profile
       - run:
           name: Upload coverage report
-          command: bash <(curl -s https://codecov.io/bash) -v -Z -f bazel-out/_coverage/_coverage_report.dat -X s3 -C $CIRCLE_SHA1
+          command: bash <(curl -s https://codecov.io/bash) --required -f bazel-out/_coverage/_coverage_report.dat -X s3 -C $CIRCLE_SHA1
       - *clean_bazel_cache
       - *save_bazel_cache
 
