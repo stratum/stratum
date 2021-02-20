@@ -62,6 +62,21 @@ TEST(PrintP4ObjectIDTest, TestInvalidID) {
   EXPECT_THAT(print_id, HasSubstr("INVALID"));
 }
 
+TEST(ByteStringTest, P4RuntimeByteStringToPaddedByteStringCorrect) {
+  EXPECT_EQ(std::string("\xab", 1),
+            P4RuntimeByteStringToPaddedByteString("\xab", 1));
+  EXPECT_EQ(std::string("\x00\xab", 2),
+            P4RuntimeByteStringToPaddedByteString("\xab", 2));
+  EXPECT_EQ(std::string("\x00\x00\x00", 3),
+            P4RuntimeByteStringToPaddedByteString("\x00", 3));
+  EXPECT_EQ(std::string("\x00\x00", 2),
+            P4RuntimeByteStringToPaddedByteString("", 2));
+  EXPECT_EQ(std::string("\xef", 1),
+            P4RuntimeByteStringToPaddedByteString("\xab\xcd\xef", 1));
+  EXPECT_EQ(std::string("", 0),
+            P4RuntimeByteStringToPaddedByteString("\xab", 0));
+}
+
 // This test fixture provides a common P4PipelineConfig for these tests.
 class TableMapValueTest : public testing::Test {
  protected:
