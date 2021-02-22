@@ -874,19 +874,13 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < meter_indices.size(); ++i) {
-    const uint32 meter_index = meter_indices[i];
-    const uint64 cir = cirs[i];
-    const uint64 cburst = cbursts[i];
-    const uint64 pir = pirs[i];
-    const uint64 pburst = pbursts[i];
     ::p4::v1::MeterEntry result;
-
     result.set_meter_id(meter_entry.meter_id());
-    result.mutable_index()->set_index(meter_index);
-    result.mutable_config()->set_cir(cir);
-    result.mutable_config()->set_cburst(cburst);
-    result.mutable_config()->set_pir(pir);
-    result.mutable_config()->set_pburst(pburst);
+    result.mutable_index()->set_index(meter_indices[i]);
+    result.mutable_config()->set_cir(cirs[i]);
+    result.mutable_config()->set_cburst(cbursts[i]);
+    result.mutable_config()->set_pir(pirs[i]);
+    result.mutable_config()->set_pburst(pbursts[i]);
 
     *resp.add_entities()->mutable_meter_entry() = result;
   }
@@ -923,7 +917,7 @@ BfrtTableManager::ReadDirectCounterEntry(
         meter_units_in_packets = true;
         break;
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter"
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
                                         << meter.ShortDebugString() << ".";
     }
   }

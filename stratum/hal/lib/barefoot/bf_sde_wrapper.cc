@@ -51,6 +51,12 @@ constexpr int _PI_UPDATE_MAX_NAME_SIZE = 100;
 
 // Helper functions for dealing with the SDE API.
 namespace {
+// Convert kbit/s to bytes/s (* 1000 / 8).
+uint64 KbitsToBytesPerSecond(uint64 kbps) { return kbps * 125; }
+
+// Convert bytes/s to kbit/s (/ 1000 * 8).
+uint64 BytesPerSecondToKbits(uint64 bytes) { return bytes / 125; }
+
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
                         std::string field_name, uint64* field_value) {
   bf_rt_id_t field_id;
@@ -2232,13 +2238,14 @@ namespace {
     RETURN_IF_ERROR(SetField(table_data.get(), kMeterPirPps, pir));
     RETURN_IF_ERROR(SetField(table_data.get(), kMeterPeakBurstPackets, pburst));
   } else {
-    // Convert P4RT bytes to SDE kbits (* 8 / 1000).
-    RETURN_IF_ERROR(SetField(table_data.get(), kMeterCirKbps, cir / 125));
     RETURN_IF_ERROR(
-        SetField(table_data.get(), kMeterCommitedBurstKbits, cburst / 125));
-    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPirKbps, pir / 125));
+        SetField(table_data.get(), kMeterCirKbps, BytesPerSecondToKbits(cir)));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterCommitedBurstKbits,
+                             BytesPerSecondToKbits(cburst)));
     RETURN_IF_ERROR(
-        SetField(table_data.get(), kMeterPeakBurstKbits, pburst / 125));
+        SetField(table_data.get(), kMeterPirKbps, BytesPerSecondToKbits(pir)));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPeakBurstKbits,
+                             BytesPerSecondToKbits(pburst)));
   }
 
   auto bf_dev_tgt = GetDeviceTarget(device);
@@ -2322,24 +2329,24 @@ namespace {
     for (const auto& field_id : data_field_ids) {
       std::string field_name;
       RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
-      if (field_name == kMeterCirKbps) {  // In kbits
+      if (field_name == kMeterCirKbps) {  // kbits
         uint64 cir;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cir));
-        cirs->push_back(cir * 125);
+        cirs->push_back(KbitsToBytesPerSecond(cir));
         in_pps->push_back(false);
       } else if (field_name == kMeterCommitedBurstKbits) {
         uint64 cburst;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cburst));
-        cbursts->push_back(cburst * 125);
+        cbursts->push_back(KbitsToBytesPerSecond(cburst));
       } else if (field_name == kMeterPirKbps) {
         uint64 pir;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pir));
-        pirs->push_back(pir * 125);
+        pirs->push_back(KbitsToBytesPerSecond(pir));
       } else if (field_name == kMeterPeakBurstKbits) {
         uint64 pburst;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pburst));
-        pbursts->push_back(pburst * 125);
-      } else if (field_name == kMeterCirPps) {  // In packets
+        pbursts->push_back(KbitsToBytesPerSecond(pburst));
+      } else if (field_name == kMeterCirPps) {  // Packets
         uint64 cir;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cir));
         cirs->push_back(cir);
