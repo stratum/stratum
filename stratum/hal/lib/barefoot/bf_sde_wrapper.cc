@@ -1515,7 +1515,12 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
+#if defined(SDE_9_4_0)
+  RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
+                                           bf_dev_tgt, &table_size));
+#else
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+#endif  // SDE_9_4_0
   uint32 usage;
   RETURN_IF_BFRT_ERROR(table->tableUsageGet(
       *real_session->bfrt_session_, bf_dev_tgt,
@@ -2136,7 +2141,12 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
+#if defined(SDE_9_4_0)
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
+                                             bf_dev_tgt, &table_size));
+#else
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+#endif  // SDE_9_4_0
     for (size_t i = 0; i < table_size; ++i) {
       // Register key: $REGISTER_INDEX
       RETURN_IF_ERROR(SetField(table_key.get(), kRegisterIndex, i));
