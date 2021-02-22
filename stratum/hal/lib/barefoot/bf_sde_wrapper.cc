@@ -304,7 +304,8 @@ template <typename T>
   uint32 entries;
   bfrt::BfRtTable::TableType table_type;
   RETURN_IF_BFRT_ERROR(table->tableTypeGet(&table_type));
-  if (table_type == bfrt::BfRtTable::TableType::METER) {
+  if (table_type == bfrt::BfRtTable::TableType::METER ||
+      table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
     entries = table_size;
@@ -2021,51 +2022,80 @@ namespace {
 
 ::util::Status BfSdeWrapper::ReadIndirectCounter(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
-    absl::optional<uint64>* packet_count, absl::Duration timeout) {
-  CHECK_RETURN_IF_FALSE(byte_count);
-  CHECK_RETURN_IF_FALSE(packet_count);
+    uint32 counter_id, absl::optional<uint32> counter_index,
+    std::vector<uint32>* counter_indices,
+    std::vector<absl::optional<uint64>>* byte_counts,
+    std::vector<absl::optional<uint64>>* packet_counts,
+    absl::Duration timeout) {
+  CHECK_RETURN_IF_FALSE(counter_indices);
+  CHECK_RETURN_IF_FALSE(byte_counts);
+  CHECK_RETURN_IF_FALSE(packet_counts);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
 
+  auto bf_dev_tgt = GetDeviceTarget(device);
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(counter_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
 
   RETURN_IF_ERROR(DoSynchronizeCounters(device, session, counter_id, timeout));
 
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  // Is this a wildcard read?
+  if (counter_index) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
 
-  // Counter key: $COUNTER_INDEX
-  RETURN_IF_ERROR(SetField(table_key.get(), "$COUNTER_INDEX", counter_index));
-
-  // Read the counter data.
-  auto bf_dev_tgt = GetDeviceTarget(device);
-  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
-      *real_session->bfrt_session_, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
-
-  byte_count->reset();
-  packet_count->reset();
-  // Counter data: $COUNTER_SPEC_BYTES
-  bf_rt_id_t field_id;
-  auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_data;
-    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
-    *byte_count = counter_data;
+    // Key: $COUNTER_INDEX
+    RETURN_IF_ERROR(
+        SetField(keys[0].get(), "$COUNTER_INDEX", counter_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
   }
 
-  // Counter data: $COUNTER_SPEC_PKTS
-  bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_data;
-    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
-    *packet_count = counter_data;
+  counter_indices->resize(0);
+  byte_counts->resize(0);
+  packet_counts->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $COUNTER_INDEX
+    uint64 bf_counter_index;
+    RETURN_IF_ERROR(GetField(*table_key, "$COUNTER_INDEX", &bf_counter_index));
+    counter_indices->push_back(bf_counter_index);
+
+    absl::optional<uint64> byte_count;
+    absl::optional<uint64> packet_count;
+    // Counter data: $COUNTER_SPEC_BYTES
+    bf_rt_id_t field_id;
+    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    if (bf_status == BF_SUCCESS) {
+      uint64 counter_data;
+      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
+      byte_count = counter_data;
+    }
+    byte_counts->push_back(byte_count);
+
+    // Counter data: $COUNTER_SPEC_PKTS
+    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+    if (bf_status == BF_SUCCESS) {
+      uint64 counter_data;
+      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
+      packet_count = counter_data;
+    }
+    packet_counts->push_back(packet_count);
   }
+
+  CHECK_EQ(counter_indices->size(), keys.size());
+  CHECK_EQ(byte_counts->size(), keys.size());
+  CHECK_EQ(packet_counts->size(), keys.size());
 
   return ::util::OkStatus();
 }
