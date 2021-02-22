@@ -2,8 +2,8 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_COMMON_WRITER_INTERFACE_H_
-#define STRATUM_HAL_LIB_COMMON_WRITER_INTERFACE_H_
+#ifndef STRATUM_HAL_LIB_COMMON_PROTO_ONEOF_WRITER_WRAPPER_H_
+#define STRATUM_HAL_LIB_COMMON_PROTO_ONEOF_WRITER_WRAPPER_H_
 
 #include <memory>
 #include <utility>
@@ -20,9 +20,9 @@ namespace hal {
 // the same channel across different writers, while maintaining type safety
 // without the need for extra channels and threads.
 template <typename T, typename R>
-class ConstraintWriterWrapper : public WriterInterface<R> {
+class ProtoOneofWriterWrapper : public WriterInterface<R> {
  public:
-  explicit ConstraintWriterWrapper(std::shared_ptr<WriterInterface<T>> writer,
+  explicit ProtoOneofWriterWrapper(std::shared_ptr<WriterInterface<T>> writer,
                                    R* (T::*get_mutable_inner_message)())
       : writer_(std::move(writer)),
         get_mutable_inner_message_(get_mutable_inner_message) {}
@@ -41,4 +41,4 @@ class ConstraintWriterWrapper : public WriterInterface<R> {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_COMMON_WRITER_INTERFACE_H_
+#endif  // STRATUM_HAL_LIB_COMMON_PROTO_ONEOF_WRITER_WRAPPER_H_
