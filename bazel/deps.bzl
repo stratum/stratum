@@ -204,14 +204,6 @@ def stratum_deps():
             branch = "lts_2020_09_23",
         )
 
-    if "com_googlesource_code_cctz" not in native.existing_rules():
-        # CCTZ (Time-zone framework); required for Abseil time
-        remote_workspace(
-            name = "com_googlesource_code_cctz",
-            remote = "https://github.com/google/cctz",
-            commit = "b4935eef53820cf1643355bb15e013b4167a2867",
-        )
-
     if "com_github_google_glog" not in native.existing_rules():
         remote_workspace(
             name = "com_github_google_glog",

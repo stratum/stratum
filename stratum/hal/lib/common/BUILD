@@ -660,6 +660,11 @@ cc_library(
 )
 
 stratum_cc_library(
+    name = "proto_oneof_writer_wrapper",
+    hdrs = ["proto_oneof_writer_wrapper.h"],
+)
+
+stratum_cc_library(
     name = "server_writer_wrapper",
     hdrs = ["server_writer_wrapper.h"],
     deps = [
