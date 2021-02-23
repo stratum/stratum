@@ -852,7 +852,7 @@ BfrtTableManager::ReadDirectCounterEntry(
         meter_units_in_bits = false;
         break;
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter"
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
                                         << meter.ShortDebugString() << ".";
     }
   }
