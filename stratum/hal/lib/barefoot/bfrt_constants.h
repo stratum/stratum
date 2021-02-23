@@ -27,6 +27,15 @@ constexpr char kMgid[] = "$MGID";
 constexpr char kPreMgidTable[] = "$pre.mgid";
 constexpr char kPreNodeTable[] = "$pre.node";
 constexpr char kRegisterIndex[] = "$REGISTER_INDEX";
+constexpr char kMeterIndex[] = "$METER_INDEX";
+constexpr char kMeterCirKbps[] = "$METER_SPEC_CIR_KBPS";
+constexpr char kMeterCommitedBurstKbits[] = "$METER_SPEC_CBS_KBITS";
+constexpr char kMeterPirKbps[] = "$METER_SPEC_PIR_KBPS";
+constexpr char kMeterPeakBurstKbits[] = "$METER_SPEC_PBS_KBITS";
+constexpr char kMeterCirPps[] = "$METER_SPEC_CIR_PPS";
+constexpr char kMeterCommitedBurstPackets[] = "$METER_SPEC_CBS_PKTS";
+constexpr char kMeterPirPps[] = "$METER_SPEC_PIR_PPS";
+constexpr char kMeterPeakBurstPackets[] = "$METER_SPEC_PBS_PKTS";
 
 // TNA specific limits
 constexpr uint16 kMaxCloneSessionId = 1015;

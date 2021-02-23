@@ -200,6 +200,22 @@ class BfSdeMock : public BfSdeInterface {
                      std::vector<uint32>* register_indices,
                      std::vector<uint64>* register_datas,
                      absl::Duration timeout));
+  MOCK_METHOD9(
+      WriteIndirectMeter,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::optional<uint32> meter_index,
+                     bool in_pps, uint64 cir, uint64 cburst, uint64 pir,
+                     uint64 pburst));
+  MOCK_METHOD10(
+      ReadIndirectMeters,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::optional<uint32> meter_index,
+                     std::vector<uint32>* meter_indices,
+                     std::vector<uint64>* cirs, std::vector<uint64>* cbursts,
+                     std::vector<uint64>* pirs, std::vector<uint64>* pbursts,
+                     std::vector<bool>* in_pps));
   MOCK_METHOD5(
       InsertActionProfileMember,
       ::util::Status(int device,

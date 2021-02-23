@@ -179,12 +179,16 @@ BfrtNode::~BfrtNode() = default;
             session, update.type(), update.entity().register_entry());
         break;
       }
-      case ::p4::v1::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kMeterEntry: {
+        status = bfrt_table_manager_->WriteMeterEntry(
+            session, update.type(), update.entity().meter_entry());
+        break;
+      }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kDigestEntry:
       default:
-        status = MAKE_ERROR()
+        status = MAKE_ERROR(ERR_UNIMPLEMENTED)
                  << "Unsupported entity type: " << update.ShortDebugString();
         break;
     }
@@ -280,7 +284,13 @@ BfrtNode::~BfrtNode() = default;
         details->push_back(status);
         break;
       }
-      case ::p4::v1::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kMeterEntry: {
+        auto status = bfrt_table_manager_->ReadMeterEntry(
+            session, entity.meter_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
+        break;
+      }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kDigestEntry:

@@ -79,6 +79,12 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
                                    register_entry.preamble().name(),
                                    bfrt_info));
     }
+
+    // Meters
+    for (const auto& meter_entry : program.p4info().meters()) {
+      RETURN_IF_ERROR(BuildMapping(meter_entry.preamble().id(),
+                                   meter_entry.preamble().name(), bfrt_info));
+    }
   }
 
   return ::util::OkStatus();
