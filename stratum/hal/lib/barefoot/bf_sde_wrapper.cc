@@ -300,7 +300,7 @@ template <typename T>
   CHECK_RETURN_IF_FALSE(table_datums) << "table_datums is null";
 
   // Get number of entries. Some types of tables are preallocated and are always
-  // "full". The SDE does not support querying the useage for these.
+  // "full". The SDE does not support querying the usage on these.
   uint32 entries;
   bfrt::BfRtTable::TableType table_type;
   RETURN_IF_BFRT_ERROR(table->tableTypeGet(&table_type));
