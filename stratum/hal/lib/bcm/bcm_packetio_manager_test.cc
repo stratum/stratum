@@ -26,6 +26,10 @@
 // #include "util/libcproxy/libcwrapper.h"
 // #include "util/libcproxy/passthrough_proxy.h"
 
+namespace stratum {
+namespace hal {
+namespace bcm {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -34,10 +38,6 @@ using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 

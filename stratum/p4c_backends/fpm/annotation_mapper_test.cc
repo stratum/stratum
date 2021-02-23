@@ -21,12 +21,12 @@
 
 DECLARE_string(p4c_annotation_map_files);
 
+namespace stratum {
+namespace p4c_backends {
+
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::Return;
 using ::testing::_;
-
-namespace stratum {
-namespace p4c_backends {
 
 class AnnotationMapperTest : public testing::Test {
  protected:

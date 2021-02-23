@@ -22,6 +22,10 @@
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
 
+namespace stratum {
+namespace hal {
+namespace bcm {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -30,10 +34,6 @@ using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 

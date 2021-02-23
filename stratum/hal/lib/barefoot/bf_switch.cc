@@ -20,11 +20,11 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::stratum::hal::pi::PINode;
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::stratum::hal::pi::PINode;
 
 BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BFChassisManager* bf_chassis_manager,

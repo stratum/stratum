@@ -14,6 +14,9 @@
 #include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
 
+namespace stratum {
+namespace hal {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -23,9 +26,6 @@ using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::WithArgs;
 using ::testing::DoAll;
-
-namespace stratum {
-namespace hal {
 
 // There are two types of tests in this file, namely: ones that can be executed
 // multiple times with different paths and ones that should be executed once. To

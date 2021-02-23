@@ -13,16 +13,16 @@
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/lib/utils.h"
 
+namespace stratum {
+namespace hal {
+namespace barefoot {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
-namespace barefoot {
 
 class BfrtCounterManagerTest : public ::testing::Test {
  protected:

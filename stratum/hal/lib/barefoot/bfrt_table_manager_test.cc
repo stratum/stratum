@@ -13,14 +13,6 @@
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/lib/utils.h"
 
-using ::testing::_;
-using ::testing::ByMove;
-using ::testing::DoAll;
-using ::testing::HasSubstr;
-using ::testing::Invoke;
-using ::testing::InvokeWithoutArgs;
-using ::testing::Return;
-
 // FIXME
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
@@ -28,6 +20,14 @@ DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::testing::_;
+using ::testing::ByMove;
+using ::testing::DoAll;
+using ::testing::HasSubstr;
+using ::testing::Invoke;
+using ::testing::InvokeWithoutArgs;
+using ::testing::Return;
 
 class BfrtTableManagerTest : public ::testing::Test {
  protected:

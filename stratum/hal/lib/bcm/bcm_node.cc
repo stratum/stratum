@@ -10,6 +10,7 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "stratum/hal/lib/common/proto_oneof_writer_wrapper.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/macros.h"
 
@@ -327,7 +328,7 @@ BcmNode::~BcmNode() {}
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   auto packet_in_writer =
-      std::make_shared<ConstraintWriterWrapper<::p4::v1::StreamMessageResponse,
+      std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
           writer, &::p4::v1::StreamMessageResponse::mutable_packet);
 

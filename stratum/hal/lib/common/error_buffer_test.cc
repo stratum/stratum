@@ -2,27 +2,27 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/error_buffer.h"
 
 #include <pthread.h>
-#include <memory>
-#include <algorithm>
 
+#include <algorithm>
+#include <memory>
+
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-
-using ::testing::HasSubstr;
 
 DECLARE_int32(max_num_errors_to_track);
 
 namespace stratum {
 namespace hal {
+
+using ::testing::HasSubstr;
 
 class ErrorBufferTest : public ::testing::Test {
  public:
@@ -77,8 +77,7 @@ TEST_F(ErrorBufferTest, SingleThreadedCase) {
       ::util::Status(StratumErrorSpace(), ERR_UNKNOWN, kErrorMsg2),
       "Some additional info: ", GTL_LOC);
   error_buffer_->AddError(
-      ::util::Status(StratumErrorSpace(), ERR_TABLE_FULL, kErrorMsg3),
-      GTL_LOC);
+      ::util::Status(StratumErrorSpace(), ERR_TABLE_FULL, kErrorMsg3), GTL_LOC);
   ASSERT_TRUE(error_buffer_->ErrorExists());
 
   // Get the errors back and verify.
@@ -114,8 +113,7 @@ TEST_F(ErrorBufferTest, MultiThreadedCase) {
   StartTestThread();
   for (int i = 0; i < FLAGS_max_num_errors_to_track / 2; ++i) {
     error_buffer_->AddError(
-        ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg1),
-        GTL_LOC);
+        ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg1), GTL_LOC);
   }
   WaitForTestThreadToDie();
   ASSERT_TRUE(error_buffer_->ErrorExists());

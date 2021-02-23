@@ -15,12 +15,12 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::pi::fe::proto::DeviceMgr;
-using Code = ::google::rpc::Code;
-
 namespace stratum {
 namespace hal {
 namespace pi {
+
+using ::pi::fe::proto::DeviceMgr;
+using Code = ::google::rpc::Code;
 
 namespace {
 
@@ -171,7 +171,7 @@ std::unique_ptr<PINode> PINode::CreateInstance(
 
   ::p4::v1::ReadResponse response;
   auto status = device_mgr_->read(req, &response);
-  RETURN_IF_ERROR(toUtilStatus(status, details));
+  RETURN_IF_ERROR(toUtilStatus(status, details, response.entities_size()));
   if (!writer->Write(response))
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
   return ::util::OkStatus();
