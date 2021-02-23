@@ -645,6 +645,7 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:proto_oneof_writer_wrapper",
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/lib:macros",
