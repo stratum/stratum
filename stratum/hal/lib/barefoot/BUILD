@@ -17,6 +17,17 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+SDE_DEFINES = select(
+    {
+        "@local_barefoot_bin//:sde_version_9.1.0": ["SDE_9_1_0"],
+        "@local_barefoot_bin//:sde_version_9.2.0": ["SDE_9_2_0"],
+        "@local_barefoot_bin//:sde_version_9.3.0": ["SDE_9_3_0"],
+        "@local_barefoot_bin//:sde_version_9.3.1": ["SDE_9_3_1"],
+        # "@local_barefoot_bin//:sde_version_9.4.0": ["SDE_9_4_0"],
+    },
+    no_match_error = "Unsupported SDE version",
+)
+
 stratum_cc_library(
     name = "bf_switch",
     srcs = ["bf_switch.cc"],
@@ -145,6 +156,7 @@ stratum_cc_library(
     name = "bf_sde_wrapper",
     srcs = ["bf_sde_wrapper.cc"],
     hdrs = ["bf_sde_wrapper.h"],
+    defines = SDE_DEFINES,
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
