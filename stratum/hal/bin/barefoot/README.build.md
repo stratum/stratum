@@ -20,8 +20,10 @@ access P4 Studio SDE. Contact Intel for more details.*
 #### Supported SDE versions
 
  - 9.1.0 (Previous LTS release; to be removed after 9.4+ is released)
- - 9.2.0 (Recommended)
- - 9.3.0 (Experimental; Latest & LTS release)
+ - 9.2.0
+ - 9.3.0
+ - 9.3.1 (Recommended; LTS release)
+ - 9.4.0 (Experimental; Latest)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -139,12 +141,12 @@ then you can use Bazel to build the Stratum.
 
 #### To build `stratum_bf`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=9.2.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
 ```
 
 #### To build `stratum_bfrt`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb [--define sde_ver=9.2.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb
 ```
 
 These Bazel targets build the Stratum binary and package all
@@ -254,11 +256,8 @@ container as in Method 3.
 
 ### Building for a different SDE version
 
-Stratum is designed for the latest Barefoot SDE. You can specify a version by
-using the `--define sde_ver=<SDE version>` flag if you need to build Stratum
-against an older version (e.g. 9.1.0).
-
-This is automatically set to match the BF SDE in Method 1 and Method 2.
+Stratum is designed for the latest Barefoot SDE. The SDE version is detected
+automatically by reading the `$SDE_INSTALL_TAR/share/VERSION` file.
 
 -----
 
