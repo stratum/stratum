@@ -19,7 +19,14 @@ def _impl(repository_ctx):
         print("SDE_INSTALL is deprecated, please use SDE_INSTALL_TAR")
         bf_sde_install_path = repository_ctx.os.environ["SDE_INSTALL"]
         repository_ctx.symlink(bf_sde_install_path, local_install_path)
-    repository_ctx.symlink(Label("@//bazel:external/bfsde.BUILD"), "BUILD")
+    ver = repository_ctx.read(local_install_path + "/share/VERSION").strip("\n")
+    repository_ctx.template(
+        "BUILD",
+        Label("@//bazel:external/bfsde.BUILD"),
+        {"{SDE_VERSION}": ver},
+        executable = False,
+    )
+    print("Detected SDE version: " + ver + ".")
 
 barefoot_configure = repository_rule(
     implementation = _impl,
