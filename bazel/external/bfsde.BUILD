@@ -114,3 +114,17 @@ config_setting(
         ":sde_version_setting": "9.3.0",
     },
 )
+
+config_setting(
+    name = "sde_version_9_3_1",
+    flag_values = {
+        ":sde_version_setting": "9_3_1",
+    },
+)
+
+config_setting(
+    name = "sde_version_9_4_0",
+    flag_values = {
+        ":sde_version_setting": "9_4_0",
+    },
+)
