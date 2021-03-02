@@ -1135,6 +1135,22 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
   }
 }
 
+std::string BfSdeWrapper::GetSdeVersion() const {
+#if defined(SDE_9_1_0)
+  return "9.1.0";
+#elif defined(SDE_9_2_0)
+  return "9.2.0";
+#elif defined(SDE_9_3_0)
+  return "9.3.0";
+#elif defined(SDE_9_3_1)
+  return "9.3.1";
+#elif defined(SDE_9_4_0)
+  return "9.4.0";
+#else
+#error Unsupported SDE version
+#endif
+}
+
 ::util::StatusOr<uint32> BfSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;

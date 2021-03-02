@@ -88,6 +88,7 @@ namespace barefoot {
   const OperationMode mode =
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
+  VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
 
   auto bfrt_table_manager =
       BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
