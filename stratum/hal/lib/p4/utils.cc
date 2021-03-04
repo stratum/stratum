@@ -74,7 +74,7 @@ std::string AddP4ObjectReferenceString(const std::string& log_p4_object) {
 }
 
 std::string Uint64ToByteStream(uint64 val) {
-  uint64 tmp = (htonl(1) == 1)
+  uint64 tmp = (htonl(1) == (1))
                    ? val
                    : (static_cast<uint64>(htonl(val)) << 32) | htonl(val >> 32);
   std::string bytes = "";
