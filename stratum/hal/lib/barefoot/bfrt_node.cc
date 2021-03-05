@@ -57,6 +57,9 @@ BfrtNode::~BfrtNode() = default;
 ::util::Status BfrtNode::SaveForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   RETURN_IF_ERROR(VerifyForwardingPipelineConfig(config));
   BfPipelineConfig bf_config;
   RETURN_IF_ERROR(ExtractBfPipelineConfig(config, &bf_config));
@@ -83,13 +86,12 @@ BfrtNode::~BfrtNode() = default;
 
 ::util::Status BfrtNode::CommitForwardingPipelineConfig() {
   absl::WriterMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(initialized_) << "Not initialized";
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
 
-  if (pipeline_initialized_) {
-    // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
-  }
-
+  // Calling AddDevice() overwrites any previous pipeline.
   RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
 
   // Push pipeline config to the managers.
@@ -120,7 +122,10 @@ BfrtNode::~BfrtNode() = default;
 }
 
 ::util::Status BfrtNode::Shutdown() {
-  // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
+  absl::WriterMutexLock l(&lock_);
+  // TODO(max): do we need to de-init the ASIC or SDE?
+  pipeline_initialized_ = false;
+  initialized_ = false;  // Set to false even if there is an error
   return ::util::OkStatus();
 }
 
@@ -138,6 +143,9 @@ BfrtNode::~BfrtNode() = default;
       << "Request atomicity "
       << ::p4::v1::WriteRequest::Atomicity_Name(req.atomicity())
       << " is not supported.";
+  if (!initialized_ || !pipeline_initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
 
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
@@ -214,6 +222,9 @@ BfrtNode::~BfrtNode() = default;
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
       << "Request device id must be same as id of this BfrtNode.";
+  if (!initialized_ || !pipeline_initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   ::p4::v1::ReadResponse resp;
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
