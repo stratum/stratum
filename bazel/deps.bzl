@@ -213,10 +213,10 @@ def stratum_deps():
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
-        remote_workspace(
+        git_repository(
             name = "com_github_gflags_gflags",
-            remote = "https://github.com/gflags/gflags",
-            commit = "28f50e0fed19872e0fd50dd23ce2ee8cd759338e",
+            remote = "https://github.com/gflags/gflags.git",
+            tag = "v2.2.2"
         )
 
     if "com_google_googletest" not in native.existing_rules():
