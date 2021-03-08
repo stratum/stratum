@@ -123,10 +123,19 @@ BfrtNode::~BfrtNode() = default;
 
 ::util::Status BfrtNode::Shutdown() {
   absl::WriterMutexLock l(&lock_);
-  // TODO(max): do we need to de-init the ASIC or SDE?
+  auto status = ::util::OkStatus();
+  // TODO(max): Check if we need to de-init the ASIC or SDE
+  // TODO(max): Enable other Shutdown calls once implemented.
+  // APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bfrt_action_profile_manager_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, bfrt_packetio_manager_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bfrt_pre_manager_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bfrt_counter_manager_->Shutdown());
+
   pipeline_initialized_ = false;
   initialized_ = false;  // Set to false even if there is an error
-  return ::util::OkStatus();
+
+  return status;
 }
 
 ::util::Status BfrtNode::Freeze() { return ::util::OkStatus(); }
