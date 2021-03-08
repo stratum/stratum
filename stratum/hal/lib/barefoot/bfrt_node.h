@@ -43,9 +43,9 @@ class BfrtNode final {
   ::util::Status CommitForwardingPipelineConfig() LOCKS_EXCLUDED(lock_);
   ::util::Status VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) const;
-  ::util::Status Shutdown();
-  ::util::Status Freeze();
-  ::util::Status Unfreeze();
+  ::util::Status Shutdown() LOCKS_EXCLUDED(lock_);
+  ::util::Status Freeze() LOCKS_EXCLUDED(lock_);
+  ::util::Status Unfreeze() LOCKS_EXCLUDED(lock_);
   ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
                                         std::vector<::util::Status>* results)
       LOCKS_EXCLUDED(lock_);
@@ -105,7 +105,10 @@ class BfrtNode final {
   // Mutex used for exclusive access to rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
 
+  // Flag indicating whether the pipeline has been pushed.
   bool pipeline_initialized_ GUARDED_BY(lock_);
+
+  // Flag indicating whether the chip is initialized.
   bool initialized_ GUARDED_BY(lock_);
 
   // Managers. Not owned by this class.
