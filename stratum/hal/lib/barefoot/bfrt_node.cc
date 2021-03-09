@@ -287,14 +287,9 @@ BfrtNode::~BfrtNode() = default;
       }
       case ::p4::v1::Entity::kCounterEntry: {
         auto status = bfrt_counter_manager_->ReadIndirectCounterEntry(
-            session, entity.counter_entry());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()->mutable_counter_entry()->CopyFrom(
-            status.ValueOrDie());
+            session, entity.counter_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kRegisterEntry: {
