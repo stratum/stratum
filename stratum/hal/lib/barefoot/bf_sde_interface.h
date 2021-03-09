@@ -225,6 +225,9 @@ class BfSdeInterface {
   // Return the chip type as a string.
   virtual std::string GetBfChipType(int device) const = 0;
 
+  // Return the SDE version string.
+  virtual std::string GetSdeVersion() const = 0;
+
   // Send a packet to the PCIe CPU port.
   virtual ::util::Status TxPacket(int device, const std::string& packet) = 0;
 

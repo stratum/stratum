@@ -41,7 +41,6 @@ alias(
     name = "pi_bf",
     actual = select(
         {
-            "@local_barefoot_bin//:sde_version_9.1.0": "@com_github_p4lang_PI_bf_9_1_0//proto/frontend:pifeproto",
             "@local_barefoot_bin//:sde_version_9.2.0": "@com_github_p4lang_PI_bf_9_2_0//proto/frontend:pifeproto",
             "@local_barefoot_bin//:sde_version_9.3.0": "@com_github_p4lang_PI_bf_9_3_0//proto/frontend:pifeproto",
             "@local_barefoot_bin//:sde_version_9.3.1": "@com_github_p4lang_PI_bf_9_3_1//proto/frontend:pifeproto",

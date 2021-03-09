@@ -254,8 +254,7 @@ struct RegisterClearThreadData {
 
   // Priority handling.
   if (!needs_priority && table_entry.priority()) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Non-zero priority for ternary/range/optional match.";
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Non-zero priority for exact/LPM match.";
   } else if (needs_priority && table_entry.priority() == 0) {
     RETURN_ERROR(ERR_INVALID_PARAM)
         << "Zero priority for ternary/range/optional match.";

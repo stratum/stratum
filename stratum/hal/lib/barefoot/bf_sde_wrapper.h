@@ -174,6 +174,7 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status SetTmCpuPort(int device, int port) override;
   ::util::StatusOr<bool> IsSoftwareModel(int device) override;
   std::string GetBfChipType(int device) const override;
+  std::string GetSdeVersion() const override;
   ::util::Status TxPacket(int device, const std::string& packet) override;
   ::util::Status StartPacketIo(int device) override;
   ::util::Status StopPacketIo(int device) override;
