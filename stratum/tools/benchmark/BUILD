@@ -37,6 +37,19 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_library(
+    name = "p4runtime_fixture",
+    testonly = 1,
+    # srcs = ["p4runtime_fixture.cc"],
+    hdrs = ["p4runtime_fixture.h"],
+    deps = [
+        ":p4runtime_session",
+        "//stratum/lib:utils",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
 stratum_cc_binary(
     name = "stratum_benchmark",
     srcs = ["stratum_benchmark.cc"],
@@ -46,6 +59,7 @@ stratum_cc_binary(
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/p4:p4_info_manager",
         "//stratum/hal/lib/p4:utils",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
@@ -53,6 +67,7 @@ stratum_cc_binary(
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_absl//absl/random",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -64,16 +79,17 @@ cc_test(
     linkstatic = True,
     tags = ["manual"],
     deps = [
+        ":p4runtime_fixture",
         ":p4runtime_session",
-        "//stratum/lib:test_main",
-        "//stratum/lib:utils",
-        "//stratum/lib:macros",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
-        "@com_github_gflags_gflags//:gflags",
-        # "//stratum/lib/test_utils:matchers",
+        "//stratum/lib:macros",
+        "//stratum/lib:test_main",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "@com_github_gflags_gflags//:gflags",
         "@com_google_googletest//:gtest",
     ],
 )

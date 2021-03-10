@@ -5,8 +5,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
+#include "stratum/tools/benchmark/p4runtime_fixture.h"
 #include "stratum/tools/benchmark/p4runtime_session.h"
 
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
@@ -26,51 +29,61 @@ namespace tools {
 namespace benchmark {
 namespace {
 
-class FabricTest : public ::testing::Test {
+using test_utils::EqualsProto;
+
+class FabricTest : public hal::P4RuntimeFixture {
  protected:
-  void SetUp() override {
-    // Initialize the connection.
-    ASSERT_OK_AND_ASSIGN(
-        sut_p4rt_session_,
-        P4RuntimeSession::Create(FLAGS_grpc_addr,
-                                 ::grpc::InsecureChannelCredentials(),
-                                 FLAGS_device_id));
-
-    ASSERT_FALSE(FLAGS_p4_info_file.empty());
-    ASSERT_FALSE(FLAGS_p4_pipeline_config_file.empty());
-    ASSERT_OK(ReadProtoFromTextFile(FLAGS_p4_info_file, &p4info_));
-    std::string p4_device_config;
-    ASSERT_OK(
-        ReadFileToString(FLAGS_p4_pipeline_config_file, &p4_device_config));
-    ASSERT_OK(SetForwardingPipelineConfig(sut_p4rt_session_.get(), p4info_,
-                                          p4_device_config));
-
-    // Clear entries here in case the previous test did not (e.g. because it
-    // crashed).
-    ASSERT_OK(ClearTableEntries(sut_p4rt_session_.get()));
-    // Check that switch is in a clean state.
-    ASSERT_OK_AND_ASSIGN(auto read_back_entries,
-                         ReadTableEntries(sut_p4rt_session_.get()));
-    ASSERT_EQ(read_back_entries.size(), 0);
-  }
-
-  void TearDown() override {
-    if (SutP4RuntimeSession() != nullptr) {
-      // Clear all table entries to leave the switch in a clean state.
-      EXPECT_OK(ClearTableEntries(SutP4RuntimeSession()));
+  std::vector<::p4::v1::TableEntry> CreateUpTo16KGenericFarTableEntries(
+      int num_table_entries) {
+    num_table_entries = std::min(num_table_entries, 1024 * 16);
+    std::vector<::p4::v1::TableEntry> table_entries;
+    table_entries.reserve(num_table_entries);
+    for (int i = 0; i < num_table_entries; ++i) {
+      const std::string far_entry_text = R"PROTO(
+        table_id: 49866391 # FabricIngress.spgw.fars
+        match {
+          field_id: 1 # far_id
+          exact {
+            value: "\000\000\000\000"
+          }
+        }
+        action {
+          action {
+            action_id: 24881235 # load_normal_far
+            params {
+              param_id: 1 # drop
+              value: "\x00"
+            }
+            params {
+              param_id: 2 # notify_cp
+              value: "\x00"
+            }
+          }
+        }
+      )PROTO";
+      ::p4::v1::TableEntry entry;
+      CHECK_OK(ParseProtoFromString(far_entry_text, &entry));
+      std::string value = hal::Uint32ToByteStream(i);
+      while (value.size() < 4) value.insert(0, 1, '\x00');
+      CHECK_EQ(4, value.size()) << StringToHex(value) << " for i " << i;
+      entry.mutable_match(0)->mutable_exact()->set_value(value);
+      table_entries.emplace_back(entry);
     }
+
+    return table_entries;
   }
-
-  P4RuntimeSession* SutP4RuntimeSession() const {
-    return sut_p4rt_session_.get();
-  }
-
-  const ::p4::config::v1::P4Info& P4Info() const { return p4info_; }
-
- private:
-  std::unique_ptr<P4RuntimeSession> sut_p4rt_session_;
-  ::p4::config::v1::P4Info p4info_;
 };
+
+TEST_F(FabricTest, CanInsert16KFarEntries) {
+  auto entries = CreateUpTo16KGenericFarTableEntries(16000);
+  ASSERT_OK(InstallTableEntries(SutP4RuntimeSession(), entries));
+  ASSERT_OK_AND_ASSIGN(auto read_entries,
+                       ReadTableEntries(SutP4RuntimeSession()));
+  ASSERT_EQ(entries.size(), read_entries.size());
+  for (size_t i = 0; i < entries.size(); ++i) {
+    ASSERT_THAT(entries[i], EqualsProto(read_entries[i]));
+  }
+}
 
 TEST_F(FabricTest, InsertTableEntry) {
   const std::string entry_text = R"PROTO(

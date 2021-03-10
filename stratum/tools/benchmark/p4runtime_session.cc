@@ -139,9 +139,16 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
                                 const WriteRequest& write_request) {
   grpc::ClientContext context;
   // Empty message; intentionally discarded.
-  WriteResponse pi_response;
-  return GrpcStatusToStatus(
-      session->Stub().Write(&context, write_request, &pi_response));
+  WriteResponse response;
+
+  ::grpc::Status status =
+      session->Stub().Write(&context, write_request, &response);
+  // TODO(max): pack this into the ::util:Status or return a vector?
+  if (!status.ok()) {
+    LOG(ERROR) << hal::P4RuntimeGrpcStatusToString(status);
+  }
+
+  return GrpcStatusToStatus(status);
 }
 
 ::util::StatusOr<std::vector<TableEntry>> ReadTableEntries(
