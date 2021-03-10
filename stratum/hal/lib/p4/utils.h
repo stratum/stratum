@@ -43,6 +43,12 @@ std::string PrintP4ObjectID(int object_id);
 std::string Uint64ToByteStream(uint64 val);
 std::string Uint32ToByteStream(uint32 val);
 
+// Pads a P4Runtime byte string with zeros up to the given width. Surplus bytes
+// will be truncated at the front. The returned string will always be exactly as
+// long as requested.
+std::string P4RuntimeByteStringToPaddedByteString(std::string byte_string,
+                                                  size_t num_bytes);
+
 // Helper to convert a gRPC status with error details to a string. Assumes
 // ::grpc::Status includes a binary error detail which is encoding a serialized
 // version of ::google::rpc::Status proto in which the details are captured

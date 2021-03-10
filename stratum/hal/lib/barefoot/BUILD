@@ -173,6 +173,7 @@ stratum_cc_library(
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
         "//stratum/lib/channel",

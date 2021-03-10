@@ -97,6 +97,18 @@ std::string Uint32ToByteStream(uint32 val) {
   return bytes;
 }
 
+std::string P4RuntimeByteStringToPaddedByteString(std::string byte_string,
+                                                  size_t num_bytes) {
+  if (byte_string.size() > num_bytes) {
+    byte_string.erase(0, byte_string.size() - num_bytes);
+  } else {
+    byte_string.insert(0, num_bytes - byte_string.size(), '\x00');
+  }
+  DCHECK_EQ(num_bytes, byte_string.size());
+
+  return byte_string;
+}
+
 std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
   std::stringstream ss;
   if (!status.error_details().empty()) {
