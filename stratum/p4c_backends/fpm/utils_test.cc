@@ -23,12 +23,12 @@
 #include "external/com_github_p4lang_p4c/lib/compile_context.h"
 #include "external/com_github_p4lang_p4c/lib/cstring.h"
 
+namespace stratum {
+namespace p4c_backends {
+
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::_;
 using ::testing::Return;
-
-namespace stratum {
-namespace p4c_backends {
 
 // This test fixture verifies the p4c utility functions.
 class P4cUtilsTest : public testing::Test {

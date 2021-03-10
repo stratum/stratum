@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 
 #include <cstdarg>
@@ -10,22 +9,22 @@
 #include <set>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_static_entry_mapper_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
+
+namespace stratum {
+namespace hal {
 
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
@@ -1618,8 +1617,8 @@ TEST_F(P4TableMapperTest, TestPrePushStaticEntryChangesError) {
       forwarding_pipeline_config_));
   const std::string kErrorMsg = "static-entry-error";
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePrePushChanges(_, _))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
   ::p4::v1::WriteRequest dummy_static_config;
   ::p4::v1::WriteRequest dummy_out;
   ::util::Status status = p4_table_mapper_->HandlePrePushStaticEntryChanges(
@@ -1659,8 +1658,8 @@ TEST_F(P4TableMapperTest, TestPostPushStaticEntryChangesError) {
       forwarding_pipeline_config_));
   const std::string kErrorMsg = "static-entry-error";
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePostPushChanges(_, _))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
   ::p4::v1::WriteRequest dummy_static_config;
   ::p4::v1::WriteRequest dummy_out;
   ::util::Status status = p4_table_mapper_->HandlePostPushStaticEntryChanges(
@@ -1733,25 +1732,21 @@ TEST_F(P4TableMapperTest, TestHiddenTableActionID) {
 }
 
 // Tests null pointer checks.
-TEST_F(P4TableMapperTest,
-       TestNullPtrChecks) {
+TEST_F(P4TableMapperTest, TestNullPtrChecks) {
   ::util::Status status = p4_table_mapper_->MapFlowEntry(
       table_entry_, ::p4::v1::Update::INSERT, nullptr);
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(),
-              HasSubstr("Null flow_entry!"));
+  EXPECT_THAT(status.error_message(), HasSubstr("Null flow_entry!"));
 
-  status = p4_table_mapper_->MapActionProfileMember(
-      action_profile_member_, nullptr);
+  status =
+      p4_table_mapper_->MapActionProfileMember(action_profile_member_, nullptr);
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(),
-              HasSubstr("Null mapped_action!"));
+  EXPECT_THAT(status.error_message(), HasSubstr("Null mapped_action!"));
 
-  status = p4_table_mapper_->MapActionProfileGroup(
-      action_profile_group_, nullptr);
+  status =
+      p4_table_mapper_->MapActionProfileGroup(action_profile_group_, nullptr);
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(),
-              HasSubstr("Null mapped_action!"));
+  EXPECT_THAT(status.error_message(), HasSubstr("Null mapped_action!"));
 }
 
 }  // namespace hal

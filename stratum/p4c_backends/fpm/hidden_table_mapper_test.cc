@@ -25,12 +25,12 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/lib/macros.h"
 
+namespace stratum {
+namespace p4c_backends {
+
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::AnyNumber;
 using ::testing::Invoke;
-
-namespace stratum {
-namespace p4c_backends {
 
 // This unnamed namespace defines constants for use by parameterized tests.
 namespace {

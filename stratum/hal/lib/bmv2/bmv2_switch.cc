@@ -18,11 +18,11 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::stratum::hal::pi::PINode;
-
 namespace stratum {
 namespace hal {
 namespace bmv2 {
+
+using ::stratum::hal::pi::PINode;
 
 Bmv2Switch::Bmv2Switch(PhalInterface* phal_interface,
                        Bmv2ChassisManager* bmv2_chassis_manager,

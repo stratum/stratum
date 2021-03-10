@@ -20,11 +20,11 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::stratum::hal::pi::PINode;
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::stratum::hal::pi::PINode;
 
 BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BFChassisManager* bf_chassis_manager,
@@ -298,7 +298,7 @@ namespace {
   (void)request;
   (void)details;
   LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
-            << "be peformed when ChassisConfig is pushed again.";
+            << "be performed when ChassisConfig is pushed again.";
   // TODO(antonin)
   return ::util::OkStatus();
 }

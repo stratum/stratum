@@ -61,6 +61,12 @@ class BfrtTableManager {
       const ::p4::v1::Update::Type type,
       const ::p4::v1::RegisterEntry& register_entry) LOCKS_EXCLUDED(lock_);
 
+  // Modify the data of a meter entry.
+  ::util::Status WriteMeterEntry(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::MeterEntry& meter_entry) LOCKS_EXCLUDED(lock_);
+
   // Read the counter data of a table entry.
   ::util::StatusOr<::p4::v1::DirectCounterEntry> ReadDirectCounterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
@@ -71,6 +77,12 @@ class BfrtTableManager {
   ::util::Status ReadRegisterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::RegisterEntry& register_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
+  // Read the data of a meter entry.
+  ::util::Status ReadMeterEntry(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::MeterEntry& meter_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance.

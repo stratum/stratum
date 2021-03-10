@@ -27,15 +27,15 @@
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
 
+namespace stratum {
+namespace p4c_backends {
+
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::SaveArg;
-
-namespace stratum {
-namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
 // data for test use.  The test parameter is used by some tests as a hit/miss

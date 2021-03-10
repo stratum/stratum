@@ -5,14 +5,14 @@ version: 2.1
 
 # Cache Bazel output root (see bazelrc) to speed up job execution time.
 # The idea is to use the last cache available for the same branch, or the one
-# from master if this is the first build for this branch.
+# from main if this is the first build for this branch.
 # TODO: consider using Bazel remote cache (e.g. local HTTP proxy cache backed by S3)
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
     keys:
       - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
       - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
-      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
@@ -389,7 +389,7 @@ workflows:
       - publish-docker-build:
           filters:
             branches:
-              only: master
+              only: main
       - publish-docker-mininet:
           requires:
             - publish-docker-build

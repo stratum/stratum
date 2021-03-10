@@ -247,8 +247,8 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::SetValue(uint64 node_id, const SetRequest& request,
                                     std::vector<::util::Status>* details) {
-  LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
-            << "be peformed when ChassisConfig is pushed again. "
+  LOG(INFO) << "BfrtSwitch::SetValue is not implemented yet, but changes will "
+            << "be performed when ChassisConfig is pushed again. "
             << request.ShortDebugString() << ".";
 
   return ::util::OkStatus();

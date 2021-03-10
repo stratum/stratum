@@ -16,11 +16,11 @@
 DECLARE_string(test_tmpdir);
 DECLARE_string(bcm_serdes_db_proto_file);
 
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
 namespace bcm {
+
+using ::testing::HasSubstr;
 
 class BcmSerdesDbManagerTest : public ::testing::Test {
  protected:
