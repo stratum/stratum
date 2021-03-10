@@ -62,11 +62,6 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
   return bytes / 125;
 }
 
-// Returns the number of bytes needed to encode the given number of bits.
-inline constexpr int NumBitsToNumBytes(int num_bits) {
-  return (num_bits + 7) / 8;  // ceil(num_bits/8)
-}
-
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
                         std::string field_name, uint64* field_value) {
   bf_rt_id_t field_id;

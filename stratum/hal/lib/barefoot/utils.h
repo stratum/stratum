@@ -43,6 +43,10 @@ std::string RangeDefaultHigh(size_t bitwidth);
 ::util::StatusOr<uint64> ConvertPriorityFromP4rtToBfrt(int32 priority);
 ::util::StatusOr<int32> ConvertPriorityFromBfrtToP4rt(uint64 priority);
 
+// Returns the number of bytes needed to encode the given number of bits in a
+// byte string.
+int NumBitsToNumBytes(int num_bits);
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

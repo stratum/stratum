@@ -57,11 +57,11 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional) {
 }
 
 std::string RangeDefaultLow(size_t bitwidth) {
-  return std::string((bitwidth + 7) / 8, '\x00');
+  return std::string(NumBitsToNumBytes(bitwidth), '\x00');
 }
 
 std::string RangeDefaultHigh(size_t bitwidth) {
-  const size_t nbytes = (bitwidth + 7) / 8;
+  const size_t nbytes = NumBitsToNumBytes(bitwidth);
   std::string high(nbytes, '\xff');
   size_t zero_nbits = (nbytes * 8) - bitwidth;
   char mask = 0xff >> zero_nbits;
@@ -78,6 +78,10 @@ std::string RangeDefaultHigh(size_t bitwidth) {
 ::util::StatusOr<int32> ConvertPriorityFromBfrtToP4rt(uint64 priority) {
   CHECK_RETURN_IF_FALSE(priority <= kMaxPriority);
   return static_cast<int32>(kMaxPriority - priority);
+}
+
+int NumBitsToNumBytes(int num_bits) {
+  return (num_bits + 7) / 8;  // ceil(num_bits/8)
 }
 
 }  // namespace barefoot
