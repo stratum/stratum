@@ -298,7 +298,7 @@ namespace {
   (void)request;
   (void)details;
   LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
-            << "be peformed when ChassisConfig is pushed again.";
+            << "be performed when ChassisConfig is pushed again.";
   // TODO(antonin)
   return ::util::OkStatus();
 }
