@@ -37,6 +37,12 @@ constexpr int P4GRPCMaxMetadataSize() {
   return 1024 * 1024;
 }
 
+constexpr int P4GRPCMaxMessageReceiveSize() {
+  // 256MB. Tofino pipelines can be quite large. This will support reading most
+  // pipelines.
+  return 256 * 1024 * 1024;
+}
+
 // Generates an election id that is monotonically increasing with time.
 // Specifically, the upper 64 bits are the unix timestamp in seconds, and the
 // lower 64 bits are 0. This is compatible with election-systems that use the
@@ -168,6 +174,11 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 ::util::Status SetForwardingPipelineConfig(P4RuntimeSession* session,
                                            const p4::config::v1::P4Info& p4info,
                                            const std::string& p4_device_config);
+
+// Gets the current forwarding pipeline from the switch.
+::util::Status GetForwardingPipelineConfig(P4RuntimeSession* session,
+                                           p4::config::v1::P4Info* p4info,
+                                           std::string* p4_device_config);
 
 }  // namespace benchmark
 }  // namespace tools

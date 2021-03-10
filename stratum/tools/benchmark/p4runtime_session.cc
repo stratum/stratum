@@ -19,6 +19,8 @@ namespace stratum {
 namespace tools {
 namespace benchmark {
 using ::p4::config::v1::P4Info;
+using ::p4::v1::GetForwardingPipelineConfigRequest;
+using ::p4::v1::GetForwardingPipelineConfigResponse;
 using ::p4::v1::P4Runtime;
 using ::p4::v1::ReadRequest;
 using ::p4::v1::ReadResponse;
@@ -35,6 +37,7 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
     const std::shared_ptr<grpc::ChannelCredentials>& credentials) {
   grpc::ChannelArguments args;
   args.SetInt(GRPC_ARG_MAX_METADATA_SIZE, P4GRPCMaxMetadataSize());
+  args.SetMaxReceiveMessageSize(P4GRPCMaxMessageReceiveSize());
   return P4Runtime::NewStub(
       grpc::CreateCustomChannel(address, credentials, args));
 }
@@ -217,6 +220,26 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
   return GrpcStatusToStatus(session->Stub().SetForwardingPipelineConfig(
       &context, request, &response));
 }
+
+::util::Status GetForwardingPipelineConfig(P4RuntimeSession* session,
+                                           p4::config::v1::P4Info* p4info,
+                                           std::string* p4_device_config) {
+  GetForwardingPipelineConfigRequest request;
+  request.set_device_id(session->DeviceId());
+  request.set_response_type(GetForwardingPipelineConfigRequest::ALL);
+
+  GetForwardingPipelineConfigResponse response;
+  grpc::ClientContext context;
+  RETURN_IF_ERROR(
+      GrpcStatusToStatus(session->Stub().GetForwardingPipelineConfig(
+          &context, request, &response)));
+
+  *p4info = response.config().p4info();
+  *p4_device_config = response.config().p4_device_config();
+
+  return ::util::OkStatus();
+}
+
 }  // namespace benchmark
 }  // namespace tools
 }  // namespace stratum
