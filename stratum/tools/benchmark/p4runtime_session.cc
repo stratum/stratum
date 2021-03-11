@@ -19,6 +19,7 @@ namespace stratum {
 namespace tools {
 namespace benchmark {
 using ::p4::config::v1::P4Info;
+using ::p4::v1::CounterEntry;
 using ::p4::v1::GetForwardingPipelineConfigRequest;
 using ::p4::v1::GetForwardingPipelineConfigResponse;
 using ::p4::v1::P4Runtime;
@@ -153,9 +154,25 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
 
 ::util::StatusOr<std::vector<TableEntry>> ReadTableEntries(
     P4RuntimeSession* session) {
+  return ReadTableEntries(session, false, false);
+}
+
+::util::StatusOr<std::vector<TableEntry>> ReadTableEntries(
+    P4RuntimeSession* session, bool include_counter_data,
+    bool include_meter_config) {
   ReadRequest read_request;
   read_request.set_device_id(session->DeviceId());
   read_request.add_entities()->mutable_table_entry();
+  if (include_counter_data) {
+    read_request.mutable_entities(0)
+        ->mutable_table_entry()
+        ->mutable_counter_data();
+  }
+  if (include_meter_config) {
+    read_request.mutable_entities(0)
+        ->mutable_table_entry()
+        ->mutable_meter_config();
+  }
   ASSIGN_OR_RETURN(ReadResponse read_response,
                    SendReadRequest(session, read_request));
 
@@ -169,6 +186,27 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
     table_entries.push_back(std::move(entity.table_entry()));
   }
   return std::move(table_entries);
+}
+
+::util::StatusOr<std::vector<CounterEntry>> ReadCounterEntries(
+    P4RuntimeSession* session, int counter_id) {
+  ReadRequest read_request;
+  read_request.set_device_id(session->DeviceId());
+  read_request.add_entities()->mutable_counter_entry()->set_counter_id(
+      counter_id);
+  ASSIGN_OR_RETURN(ReadResponse read_response,
+                   SendReadRequest(session, read_request));
+
+  std::vector<CounterEntry> counter_entries;
+  counter_entries.reserve(read_response.entities().size());
+  for (const auto& entity : read_response.entities()) {
+    if (!entity.has_counter_entry())
+      RETURN_ERROR(ERR_INTERNAL)
+          << "Entity in the read response has no counter entry: "
+          << entity.DebugString();
+    counter_entries.push_back(std::move(entity.counter_entry()));
+  }
+  return std::move(counter_entries);
 }
 
 ::util::Status ClearTableEntries(P4RuntimeSession* session) {
@@ -207,6 +245,20 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
     Update* update = batch_write_request.add_updates();
     update->set_type(Update::INSERT);
     *update->mutable_entity()->mutable_table_entry() = entry;
+  }
+  return SendWriteRequest(session, batch_write_request);
+}
+
+::util::Status ModifyIndirectCounterEntries(
+    P4RuntimeSession* session, absl::Span<const CounterEntry> entries) {
+  WriteRequest batch_write_request;
+  batch_write_request.set_device_id(session->DeviceId());
+  *batch_write_request.mutable_election_id() = session->ElectionId();
+
+  for (const auto& entry : entries) {
+    Update* update = batch_write_request.add_updates();
+    update->set_type(Update::MODIFY);
+    *update->mutable_entity()->mutable_counter_entry() = entry;
   }
   return SendWriteRequest(session, batch_write_request);
 }
