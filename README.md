@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 <p align="center">
-  <img alt="Stratum Logo" src="https://raw.githubusercontent.com/stratum/stratum/main/stratum/docs/images/stratum-logo.png">
+  <img alt="Stratum Logo" src="stratum/docs/images/stratum-logo.png">
 </p>
 
 # Stratum - Enabling the era of next-generation SDN
