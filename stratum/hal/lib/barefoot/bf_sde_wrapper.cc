@@ -24,6 +24,7 @@
 #include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
@@ -51,6 +52,16 @@ constexpr int _PI_UPDATE_MAX_NAME_SIZE = 100;
 
 // Helper functions for dealing with the SDE API.
 namespace {
+// Convert kbit/s to bytes/s (* 1000 / 8).
+inline constexpr uint64 KbitsToBytesPerSecond(uint64 kbps) {
+  return kbps * 125;
+}
+
+// Convert bytes/s to kbit/s (/ 1000 * 8).
+inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
+  return bytes / 125;
+}
+
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
                         std::string field_name, uint64* field_value) {
   bf_rt_id_t field_id;
@@ -293,11 +304,26 @@ template <typename T>
   CHECK_RETURN_IF_FALSE(table_keys) << "table_keys is null";
   CHECK_RETURN_IF_FALSE(table_datums) << "table_datums is null";
 
-  // Get number of entries.
+  // Get number of entries. Some types of tables are preallocated and are always
+  // "full". The SDE does not support querying the usage on these.
   uint32 entries;
-  RETURN_IF_BFRT_ERROR(table->tableUsageGet(
-      *bfrt_session, bf_dev_target,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, &entries));
+  bfrt::BfRtTable::TableType table_type;
+  RETURN_IF_BFRT_ERROR(table->tableTypeGet(&table_type));
+  if (table_type == bfrt::BfRtTable::TableType::METER ||
+      table_type == bfrt::BfRtTable::TableType::COUNTER) {
+    size_t table_size;
+#if defined(SDE_9_4_0)
+    RETURN_IF_BFRT_ERROR(
+        table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
+#else
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+#endif  // SDE_9_4_0
+    entries = table_size;
+  } else {
+    RETURN_IF_BFRT_ERROR(table->tableUsageGet(
+        *bfrt_session, bf_dev_target,
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, &entries));
+  }
 
   table_keys->resize(0);
   table_datums->resize(0);
@@ -373,7 +399,7 @@ template <typename T>
         break;
       }
       case bfrt::DataType::BYTE_STREAM: {
-        std::string v((field_size + 7) / 8, '\x00');
+        std::string v(NumBitsToNumBytes(field_size), '\x00');
         RETURN_IF_BFRT_ERROR(table_data->getValue(
             field_id, v.size(),
             reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
@@ -403,37 +429,64 @@ template <typename T>
 }  // namespace
 
 ::util::Status TableKey::SetExact(int id, const std::string& value) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  std::string v = P4RuntimeByteStringToPaddedByteString(
+      value, NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_key_->setValue(
-      id, reinterpret_cast<const uint8*>(value.data()), value.size()));
+      id, reinterpret_cast<const uint8*>(v.data()), v.size()));
 
   return ::util::OkStatus();
 }
 
 ::util::Status TableKey::SetTernary(int id, const std::string& value,
                                     const std::string& mask) {
-  DCHECK_EQ(value.size(), mask.size());
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  std::string v = P4RuntimeByteStringToPaddedByteString(
+      value, NumBitsToNumBytes(field_size_bits));
+  std::string m = P4RuntimeByteStringToPaddedByteString(
+      mask, NumBitsToNumBytes(field_size_bits));
+  DCHECK_EQ(v.size(), m.size());
   RETURN_IF_BFRT_ERROR(table_key_->setValueandMask(
-      id, reinterpret_cast<const uint8*>(value.data()),
-      reinterpret_cast<const uint8*>(mask.data()), value.size()));
+      id, reinterpret_cast<const uint8*>(v.data()),
+      reinterpret_cast<const uint8*>(m.data()), v.size()));
 
   return ::util::OkStatus();
 }
 
 ::util::Status TableKey::SetLpm(int id, const std::string& prefix,
                                 uint16 prefix_length) {
-  RETURN_IF_BFRT_ERROR(
-      table_key_->setValueLpm(id, reinterpret_cast<const uint8*>(prefix.data()),
-                              prefix_length, prefix.size()));
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  std::string p = P4RuntimeByteStringToPaddedByteString(
+      prefix, NumBitsToNumBytes(field_size_bits));
+  RETURN_IF_BFRT_ERROR(table_key_->setValueLpm(
+      id, reinterpret_cast<const uint8*>(p.data()), prefix_length, p.size()));
 
   return ::util::OkStatus();
 }
 
 ::util::Status TableKey::SetRange(int id, const std::string& low,
                                   const std::string& high) {
-  DCHECK_EQ(low.size(), high.size());
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  size_t field_size_bits;
+  RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
+  std::string l = P4RuntimeByteStringToPaddedByteString(
+      low, NumBitsToNumBytes(field_size_bits));
+  std::string h = P4RuntimeByteStringToPaddedByteString(
+      high, NumBitsToNumBytes(field_size_bits));
+  DCHECK_EQ(l.size(), h.size());
   RETURN_IF_BFRT_ERROR(table_key_->setValueRange(
-      id, reinterpret_cast<const uint8*>(low.data()),
-      reinterpret_cast<const uint8*>(high.data()), low.size()));
+      id, reinterpret_cast<const uint8*>(l.data()),
+      reinterpret_cast<const uint8*>(h.data()), l.size()));
 
   return ::util::OkStatus();
 }
@@ -455,7 +508,7 @@ template <typename T>
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
   value->clear();
-  value->resize((field_size_bits + 7) / 8);
+  value->resize(NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_key_->getValue(
       id, value->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(value))));
@@ -470,9 +523,9 @@ template <typename T>
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
   value->clear();
-  value->resize((field_size_bits + 7) / 8);
+  value->resize(NumBitsToNumBytes(field_size_bits));
   mask->clear();
-  mask->resize((field_size_bits + 7) / 8);
+  mask->resize(NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_key_->getValueandMask(
       id, value->size(), reinterpret_cast<uint8*>(gtl::string_as_array(value)),
       reinterpret_cast<uint8*>(gtl::string_as_array(mask))));
@@ -487,7 +540,7 @@ template <typename T>
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
   prefix->clear();
-  prefix->resize((field_size_bits + 7) / 8);
+  prefix->resize(NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_key_->getValueLpm(
       id, prefix->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(prefix)), prefix_length));
@@ -502,9 +555,9 @@ template <typename T>
   size_t field_size_bits;
   RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(id, &field_size_bits));
   low->clear();
-  low->resize((field_size_bits + 7) / 8);
+  low->resize(NumBitsToNumBytes(field_size_bits));
   high->clear();
-  high->resize((field_size_bits + 7) / 8);
+  high->resize(NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_key_->getValueRange(
       id, low->size(), reinterpret_cast<uint8*>(gtl::string_as_array(low)),
       reinterpret_cast<uint8*>(gtl::string_as_array(high))));
@@ -534,8 +587,23 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 }
 
 ::util::Status TableData::SetParam(int id, const std::string& value) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  size_t field_size_bits;
+  if (action_id) {
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldSizeGet(id, action_id, &field_size_bits));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, &field_size_bits));
+  }
+  std::string p = P4RuntimeByteStringToPaddedByteString(
+      value, NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_data_->setValue(
-      id, reinterpret_cast<const uint8*>(value.data()), value.size()));
+      id, reinterpret_cast<const uint8*>(p.data()), p.size()));
 
   return ::util::OkStatus();
 }
@@ -547,14 +615,15 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   if (table->actionIdApplicable()) {
     RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
   }
-  size_t field_size;
+  size_t field_size_bits;
   if (action_id) {
-    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, action_id, &field_size));
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldSizeGet(id, action_id, &field_size_bits));
   } else {
-    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, &field_size));
+    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(id, &field_size_bits));
   }
   value->clear();
-  value->resize((field_size + 7) / 8);
+  value->resize(NumBitsToNumBytes(field_size_bits));
   RETURN_IF_BFRT_ERROR(table_data_->getValue(
       id, value->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(value))));
@@ -1115,6 +1184,22 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
   }
 }
 
+std::string BfSdeWrapper::GetSdeVersion() const {
+#if defined(SDE_9_1_0)
+  return "9.1.0";
+#elif defined(SDE_9_2_0)
+  return "9.2.0";
+#elif defined(SDE_9_3_0)
+  return "9.3.0";
+#elif defined(SDE_9_3_1)
+  return "9.3.1";
+#elif defined(SDE_9_4_0)
+  return "9.4.0";
+#else
+#error Unsupported SDE version
+#endif
+}
+
 ::util::StatusOr<uint32> BfSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;
@@ -1500,7 +1585,12 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
+#if defined(SDE_9_4_0)
+  RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
+                                           bf_dev_tgt, &table_size));
+#else
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+#endif  // SDE_9_4_0
   uint32 usage;
   RETURN_IF_BFRT_ERROR(table->tableUsageGet(
       *real_session->bfrt_session_, bf_dev_tgt,
@@ -2006,51 +2096,80 @@ namespace {
 
 ::util::Status BfSdeWrapper::ReadIndirectCounter(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
-    absl::optional<uint64>* packet_count, absl::Duration timeout) {
-  CHECK_RETURN_IF_FALSE(byte_count);
-  CHECK_RETURN_IF_FALSE(packet_count);
+    uint32 counter_id, absl::optional<uint32> counter_index,
+    std::vector<uint32>* counter_indices,
+    std::vector<absl::optional<uint64>>* byte_counts,
+    std::vector<absl::optional<uint64>>* packet_counts,
+    absl::Duration timeout) {
+  CHECK_RETURN_IF_FALSE(counter_indices);
+  CHECK_RETURN_IF_FALSE(byte_counts);
+  CHECK_RETURN_IF_FALSE(packet_counts);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
 
+  auto bf_dev_tgt = GetDeviceTarget(device);
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(counter_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
 
   RETURN_IF_ERROR(DoSynchronizeCounters(device, session, counter_id, timeout));
 
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  // Is this a wildcard read?
+  if (counter_index) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
 
-  // Counter key: $COUNTER_INDEX
-  RETURN_IF_ERROR(SetField(table_key.get(), "$COUNTER_INDEX", counter_index));
-
-  // Read the counter data.
-  auto bf_dev_tgt = GetDeviceTarget(device);
-  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
-      *real_session->bfrt_session_, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
-
-  byte_count->reset();
-  packet_count->reset();
-  // Counter data: $COUNTER_SPEC_BYTES
-  bf_rt_id_t field_id;
-  auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_data;
-    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
-    *byte_count = counter_data;
+    // Key: $COUNTER_INDEX
+    RETURN_IF_ERROR(
+        SetField(keys[0].get(), "$COUNTER_INDEX", counter_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
   }
 
-  // Counter data: $COUNTER_SPEC_PKTS
-  bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_data;
-    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
-    *packet_count = counter_data;
+  counter_indices->resize(0);
+  byte_counts->resize(0);
+  packet_counts->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $COUNTER_INDEX
+    uint64 bf_counter_index;
+    RETURN_IF_ERROR(GetField(*table_key, "$COUNTER_INDEX", &bf_counter_index));
+    counter_indices->push_back(bf_counter_index);
+
+    absl::optional<uint64> byte_count;
+    absl::optional<uint64> packet_count;
+    // Counter data: $COUNTER_SPEC_BYTES
+    bf_rt_id_t field_id;
+    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    if (bf_status == BF_SUCCESS) {
+      uint64 counter_data;
+      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
+      byte_count = counter_data;
+    }
+    byte_counts->push_back(byte_count);
+
+    // Counter data: $COUNTER_SPEC_PKTS
+    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+    if (bf_status == BF_SUCCESS) {
+      uint64 counter_data;
+      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
+      packet_count = counter_data;
+    }
+    packet_counts->push_back(packet_count);
   }
+
+  CHECK_EQ(counter_indices->size(), keys.size());
+  CHECK_EQ(byte_counts->size(), keys.size());
+  CHECK_EQ(packet_counts->size(), keys.size());
 
   return ::util::OkStatus();
 }
@@ -2101,12 +2220,12 @@ namespace {
   // parent table and pipeline. We cannot use just "f1" as the field name.
   bf_rt_id_t field_id;
   ASSIGN_OR_RETURN(field_id, GetRegisterDataFieldId(table));
-  size_t data_field_size;
-  RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &data_field_size));
-  // The SDE expects any array with the full width.
-  std::string value((data_field_size + 7) / 8, '\x00');
-  value.replace(value.size() - register_data.size(), register_data.size(),
-                register_data);
+  size_t data_field_size_bits;
+  RETURN_IF_BFRT_ERROR(
+      table->dataFieldSizeGet(field_id, &data_field_size_bits));
+  // The SDE expects a string with the full width.
+  std::string value = P4RuntimeByteStringToPaddedByteString(
+      register_data, data_field_size_bits);
   RETURN_IF_BFRT_ERROR(table_data->setValue(
       field_id, reinterpret_cast<const uint8*>(value.data()), value.size()));
 
@@ -2121,7 +2240,12 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
+#if defined(SDE_9_4_0)
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
+                                             bf_dev_tgt, &table_size));
+#else
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+#endif  // SDE_9_4_0
     for (size_t i = 0; i < table_size; ++i) {
       // Register key: $REGISTER_INDEX
       RETURN_IF_ERROR(SetField(table_key.get(), kRegisterIndex, i));
@@ -2204,6 +2328,178 @@ namespace {
 
   CHECK_EQ(register_indices->size(), keys.size());
   CHECK_EQ(register_datas->size(), keys.size());
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::WriteIndirectMeter(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::optional<uint32> meter_index, bool in_pps,
+    uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) {
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  // Meter data: $METER_SPEC_*
+  if (in_pps) {
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterCirPps, cir));
+    RETURN_IF_ERROR(
+        SetField(table_data.get(), kMeterCommitedBurstPackets, cburst));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPirPps, pir));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPeakBurstPackets, pburst));
+  } else {
+    RETURN_IF_ERROR(
+        SetField(table_data.get(), kMeterCirKbps, BytesPerSecondToKbits(cir)));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterCommitedBurstKbits,
+                             BytesPerSecondToKbits(cburst)));
+    RETURN_IF_ERROR(
+        SetField(table_data.get(), kMeterPirKbps, BytesPerSecondToKbits(pir)));
+    RETURN_IF_ERROR(SetField(table_data.get(), kMeterPeakBurstKbits,
+                             BytesPerSecondToKbits(pburst)));
+  }
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  if (meter_index) {
+    // Single index target.
+    // Meter key: $METER_INDEX
+    RETURN_IF_ERROR(
+        SetField(table_key.get(), kMeterIndex, meter_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+  } else {
+    // Wildcard write to all indices.
+    size_t table_size;
+#if defined(SDE_9_4_0)
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
+                                             bf_dev_tgt, &table_size));
+#else
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+#endif  // SDE_9_4_0
+    for (size_t i = 0; i < table_size; ++i) {
+      // Meter key: $METER_INDEX
+      RETURN_IF_ERROR(SetField(table_key.get(), kMeterIndex, i));
+      RETURN_IF_BFRT_ERROR(table->tableEntryMod(
+          *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+    }
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ReadIndirectMeters(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, absl::optional<uint32> meter_index,
+    std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
+    std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
+    std::vector<uint64>* pbursts, std::vector<bool>* in_pps) {
+  CHECK_RETURN_IF_FALSE(meter_indices);
+  CHECK_RETURN_IF_FALSE(cirs);
+  CHECK_RETURN_IF_FALSE(cbursts);
+  CHECK_RETURN_IF_FALSE(pirs);
+  CHECK_RETURN_IF_FALSE(pbursts);
+  ::absl::ReaderMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  CHECK_RETURN_IF_FALSE(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+  std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+
+  // Is this a wildcard read?
+  if (meter_index) {
+    keys.resize(1);
+    datums.resize(1);
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
+
+    // Key: $METER_INDEX
+    RETURN_IF_ERROR(SetField(keys[0].get(), kMeterIndex, meter_index.value()));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
+  } else {
+    RETURN_IF_ERROR(GetAllEntries(real_session->bfrt_session_, bf_dev_tgt,
+                                  table, &keys, &datums));
+  }
+
+  meter_indices->resize(0);
+  cirs->resize(0);
+  cbursts->resize(0);
+  pirs->resize(0);
+  pbursts->resize(0);
+  in_pps->resize(0);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+    const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+    // Key: $METER_INDEX
+    uint64 bf_meter_index;
+    RETURN_IF_ERROR(GetField(*table_key, kMeterIndex, &bf_meter_index));
+    meter_indices->push_back(bf_meter_index);
+
+    // Data: $METER_SPEC_*
+    std::vector<bf_rt_id_t> data_field_ids;
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+    for (const auto& field_id : data_field_ids) {
+      std::string field_name;
+      RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+      if (field_name == kMeterCirKbps) {  // kbits
+        uint64 cir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cir));
+        cirs->push_back(KbitsToBytesPerSecond(cir));
+        in_pps->push_back(false);
+      } else if (field_name == kMeterCommitedBurstKbits) {
+        uint64 cburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cburst));
+        cbursts->push_back(KbitsToBytesPerSecond(cburst));
+      } else if (field_name == kMeterPirKbps) {
+        uint64 pir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pir));
+        pirs->push_back(KbitsToBytesPerSecond(pir));
+      } else if (field_name == kMeterPeakBurstKbits) {
+        uint64 pburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pburst));
+        pbursts->push_back(KbitsToBytesPerSecond(pburst));
+      } else if (field_name == kMeterCirPps) {  // Packets
+        uint64 cir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cir));
+        cirs->push_back(cir);
+        in_pps->push_back(true);
+      } else if (field_name == kMeterCommitedBurstPackets) {
+        uint64 cburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &cburst));
+        cbursts->push_back(cburst);
+      } else if (field_name == kMeterPirPps) {
+        uint64 pir;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pir));
+        pirs->push_back(pir);
+      } else if (field_name == kMeterPeakBurstPackets) {
+        uint64 pburst;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &pburst));
+        pbursts->push_back(pburst);
+      } else {
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Unknown meter field " << field_name << " in meter with id "
+            << table_id << ".";
+      }
+    }
+  }
+
+  CHECK_EQ(meter_indices->size(), keys.size());
+  CHECK_EQ(cirs->size(), keys.size());
+  CHECK_EQ(cbursts->size(), keys.size());
+  CHECK_EQ(pirs->size(), keys.size());
+  CHECK_EQ(pbursts->size(), keys.size());
+  CHECK_EQ(in_pps->size(), keys.size());
 
   return ::util::OkStatus();
 }

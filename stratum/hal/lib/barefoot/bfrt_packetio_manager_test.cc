@@ -63,10 +63,13 @@ class BfrtPacketioManagerTest : public ::testing::Test {
 
   ::util::Status Shutdown() {
     // Make sure everything like Rx threads will be cleaned up.
-    EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1))
-        .WillOnce(Return(util::OkStatus()));
-    EXPECT_CALL(*bf_sde_wrapper_mock_, UnregisterPacketReceiveWriter(kDevice1))
-        .WillOnce(Return(util::OkStatus()));
+    if (bfrt_packetio_manager_->initialized_) {
+      EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1))
+          .WillOnce(Return(util::OkStatus()));
+      EXPECT_CALL(*bf_sde_wrapper_mock_,
+                  UnregisterPacketReceiveWriter(kDevice1))
+          .WillOnce(Return(util::OkStatus()));
+    }
     packet_rx_writer.release();
     return bfrt_packetio_manager_->Shutdown();
   }

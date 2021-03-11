@@ -12,6 +12,7 @@
 #include "absl/strings/match.h"
 #include "absl/synchronization/notification.h"
 #include "gflags/gflags.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/utils.h"
@@ -253,8 +254,7 @@ struct RegisterClearThreadData {
 
   // Priority handling.
   if (!needs_priority && table_entry.priority()) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Non-zero priority for ternary/range/optional match.";
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Non-zero priority for exact/LPM match.";
   } else if (needs_priority && table_entry.priority() == 0) {
     RETURN_ERROR(ERR_INVALID_PARAM)
         << "Zero priority for ternary/range/optional match.";
@@ -766,6 +766,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     optional_register_index = register_entry.index().index();
   }
 
+  // TODO(max): we don't translate p4rt id to bfrt here?
   std::vector<uint32> register_indices;
   std::vector<uint64> register_datas;
   RETURN_IF_ERROR(bf_sde_interface_->ReadRegisters(
@@ -825,6 +826,112 @@ BfrtTableManager::ReadDirectCounterEntry(
   RETURN_IF_ERROR(bf_sde_interface_->WriteRegister(
       device_, session, table_id, register_index,
       register_entry.data().bitstring()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadMeterEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::MeterEntry& meter_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+      << "Wildcard MeterEntry reads are not supported.";
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
+  bool meter_units_in_bits;  // or packets
+  {
+    absl::ReaderMutexLock l(&lock_);
+    ASSIGN_OR_RETURN(auto meter,
+                     p4_info_manager_->FindMeterByID(meter_entry.meter_id()));
+    switch (meter.spec().unit()) {
+      case ::p4::config::v1::MeterSpec::BYTES:
+        meter_units_in_bits = true;
+        break;
+      case ::p4::config::v1::MeterSpec::PACKETS:
+        meter_units_in_bits = false;
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
+                                        << meter.ShortDebugString() << ".";
+    }
+  }
+  // Index 0 is a valid value and not a wildcard.
+  absl::optional<uint32> optional_meter_index;
+  if (meter_entry.has_index()) {
+    optional_meter_index = meter_entry.index().index();
+  }
+
+  std::vector<uint32> meter_indices;
+  std::vector<uint64> cirs;
+  std::vector<uint64> cbursts;
+  std::vector<uint64> pirs;
+  std::vector<uint64> pbursts;
+  std::vector<bool> in_pps;
+  RETURN_IF_ERROR(bf_sde_interface_->ReadIndirectMeters(
+      device_, session, table_id, optional_meter_index, &meter_indices, &cirs,
+      &cbursts, &pirs, &pbursts, &in_pps));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < meter_indices.size(); ++i) {
+    ::p4::v1::MeterEntry result;
+    result.set_meter_id(meter_entry.meter_id());
+    result.mutable_index()->set_index(meter_indices[i]);
+    result.mutable_config()->set_cir(cirs[i]);
+    result.mutable_config()->set_cburst(cbursts[i]);
+    result.mutable_config()->set_pir(pirs[i]);
+    result.mutable_config()->set_pburst(pbursts[i]);
+
+    *resp.add_entities()->mutable_meter_entry() = result;
+  }
+
+  VLOG(1) << "ReadMeterEntry resp " << resp.DebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteMeterEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::MeterEntry& meter_entry) {
+  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+      << "Update type of RegisterEntry " << meter_entry.ShortDebugString()
+      << " must be MODIFY.";
+  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+      << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
+      << ".";
+
+  bool meter_units_in_packets;  // or bytes
+  {
+    absl::ReaderMutexLock l(&lock_);
+    ASSIGN_OR_RETURN(auto meter,
+                     p4_info_manager_->FindMeterByID(meter_entry.meter_id()));
+    switch (meter.spec().unit()) {
+      case ::p4::config::v1::MeterSpec::BYTES:
+        meter_units_in_packets = false;
+        break;
+      case ::p4::config::v1::MeterSpec::PACKETS:
+        meter_units_in_packets = true;
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
+                                        << meter.ShortDebugString() << ".";
+    }
+  }
+
+  ASSIGN_OR_RETURN(uint32 meter_id,
+                   bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
+
+  absl::optional<uint32> meter_index;
+  if (meter_entry.has_index()) {
+    meter_index = meter_entry.index().index();
+  }
+  RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
+      device_, session, meter_id, meter_index, meter_units_in_packets,
+      meter_entry.config().cir(), meter_entry.config().cburst(),
+      meter_entry.config().pir(), meter_entry.config().pburst()));
 
   return ::util::OkStatus();
 }
