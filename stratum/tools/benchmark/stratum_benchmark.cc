@@ -127,6 +127,9 @@ class FabricBenchmark {
     ASSIGN_OR_RETURN(
         downlink_pdr_table_,
         p4_info_manager_->FindTableByName("FabricIngress.spgw.downlink_pdrs"));
+    ASSIGN_OR_RETURN(
+        ingress_pdr_counter_,
+        p4_info_manager_->FindCounterByName("FabricIngress.spgw.pdr_counter"));
     ASSIGN_OR_RETURN(load_normal_far_action_,
                      p4_info_manager_->FindActionByName(
                          "FabricIngress.spgw.load_normal_far"));
@@ -142,8 +145,9 @@ class FabricBenchmark {
     return ::util::OkStatus();
   }
 
-  ::util::Status DoInsertBenchmark(std::string table_name,
-                                   const std::vector<::p4::v1::TableEntry>& entries) {
+  ::util::Status DoInsertBenchmark(
+      std::string table_name,
+      const std::vector<::p4::v1::TableEntry>& entries) {
     const auto start_time = absl::Now();
     RETURN_IF_ERROR(InstallTableEntries(session_.get(), entries));
     const auto end_time = absl::Now();
@@ -154,8 +158,9 @@ class FabricBenchmark {
     return ::util::OkStatus();
   }
 
-  ::util::Status DoDeleteBenchmark(std::string table_name,
-                                   const std::vector<::p4::v1::TableEntry>& entries) {
+  ::util::Status DoDeleteBenchmark(
+      std::string table_name,
+      const std::vector<::p4::v1::TableEntry>& entries) {
     const auto start_time = absl::Now();
     RETURN_IF_ERROR(RemoveTableEntries(session_.get(), entries));
     const auto end_time = absl::Now();
@@ -166,13 +171,44 @@ class FabricBenchmark {
     return ::util::OkStatus();
   }
 
-  ::util::Status DoReadBenchmark(std::string table_name) {
+  ::util::Status DoReadBenchmark(std::string table_name,
+                                 bool include_counter_data = false) {
     const auto start_time = absl::Now();
-    ASSIGN_OR_RETURN(auto read_entries, ReadTableEntries(session_.get()));
+    ASSIGN_OR_RETURN(
+        auto read_entries,
+        ReadTableEntries(session_.get(), include_counter_data, false));
     const auto end_time = absl::Now();
     absl::Duration d = end_time - start_time;
-    LOG(INFO) << "Reading " << table_name
-              << " entries: " << FormatBenchTime(d, read_entries.size()) << ".";
+    LOG(INFO) << "Reading " << table_name << " entries "
+              << (include_counter_data ? "including counters" : "") << ": "
+              << FormatBenchTime(d, read_entries.size()) << ".";
+
+    return ::util::OkStatus();
+  }
+
+  ::util::Status DoCounterModifyBenchmark(
+      std::string table_name,
+      const std::vector<::p4::v1::CounterEntry>& entries) {
+    const auto start_time = absl::Now();
+    RETURN_IF_ERROR(ModifyIndirectCounterEntries(session_.get(), entries));
+    const auto end_time = absl::Now();
+    absl::Duration d = end_time - start_time;
+    LOG(INFO) << "Modifying " << table_name
+              << " counters: " << FormatBenchTime(d, entries.size()) << ".";
+
+    return ::util::OkStatus();
+  }
+
+  ::util::Status DoCounterReadBenchmark(std::string counter_name,
+                                        int counter_id) {
+    const auto start_time = absl::Now();
+    ASSIGN_OR_RETURN(auto read_entries,
+                     ReadCounterEntries(session_.get(), counter_id));
+    const auto end_time = absl::Now();
+    absl::Duration d = end_time - start_time;
+    LOG(INFO) << "Reading " << counter_name
+              << " counters: " << FormatBenchTime(d, read_entries.size())
+              << ".";
 
     return ::util::OkStatus();
   }
@@ -203,7 +239,8 @@ class FabricBenchmark {
     const std::string table_name = acl_table_.preamble().name();
     auto entries = CreateUpTo16KGenericAclTableEntries(num_table_entries);
     RETURN_IF_ERROR(DoInsertBenchmark(table_name, entries));
-    RETURN_IF_ERROR(DoReadBenchmark(table_name));
+    RETURN_IF_ERROR(DoReadBenchmark(table_name, false));
+    RETURN_IF_ERROR(DoReadBenchmark(table_name, true));
     RETURN_IF_ERROR(DoDeleteBenchmark(table_name, entries));
 
     return ::util::OkStatus();
@@ -231,6 +268,19 @@ class FabricBenchmark {
     RETURN_IF_ERROR(DoInsertBenchmark(table_name, entries));
     RETURN_IF_ERROR(DoReadBenchmark(table_name));
     RETURN_IF_ERROR(DoDeleteBenchmark(table_name, entries));
+
+    return ::util::OkStatus();
+  }
+
+  ::util::Status RunPdrCounterBenchmark() {
+    RETURN_IF_ERROR(ClearTableEntries(session_.get()));
+    const int num_pdr_counters = (ingress_pdr_counter_.size());
+    const std::string table_name = ingress_pdr_counter_.preamble().name();
+    const int counter_id = ingress_pdr_counter_.preamble().id();
+    auto entries =
+        CreateUpTo32KGenericIngressPdrCounterEntries(num_pdr_counters);
+    RETURN_IF_ERROR(DoCounterModifyBenchmark(table_name, entries));
+    RETURN_IF_ERROR(DoCounterReadBenchmark(table_name, counter_id));
 
     return ::util::OkStatus();
   }
@@ -468,6 +518,25 @@ class FabricBenchmark {
     return table_entries;
   }
 
+  std::vector<::p4::v1::CounterEntry>
+  CreateUpTo32KGenericIngressPdrCounterEntries(int num_counter_entries) {
+    num_counter_entries = std::min(num_counter_entries, 32 * 1024);
+    std::vector<::p4::v1::CounterEntry> counter_entries;
+    counter_entries.reserve(num_counter_entries);
+    for (int i = 0; i < num_counter_entries; ++i) {
+      ::p4::v1::CounterEntry entry = CreateGenericIngressPdrCounter();
+      entry.mutable_index()->set_index(i);
+      entry.mutable_data()->set_packet_count(
+          absl::Uniform(bitgen_, 0, UINT16_MAX));
+      entry.mutable_data()->set_byte_count(
+          absl::Uniform(bitgen_, 0, UINT16_MAX));
+
+      counter_entries.emplace_back(entry);
+    }
+
+    return counter_entries;
+  }
+
  private:
   ::p4::v1::TableEntry CreateGenericFarEntry() {
     const std::string base_far_entry_text = R"PROTO(
@@ -573,6 +642,24 @@ class FabricBenchmark {
     return downlink_pdr;
   }
 
+  ::p4::v1::CounterEntry CreateGenericIngressPdrCounter() {
+    const std::string ingress_pdr_counter_text = R"PROTO(
+      counter_id: 0
+      index {
+        index: 0
+      }
+      data {
+        packet_count: 0
+        byte_count: 0
+      }
+    )PROTO";
+    ::p4::v1::CounterEntry ingress_pdr;
+    CHECK_OK(ParseProtoFromString(ingress_pdr_counter_text, &ingress_pdr));
+    ingress_pdr.set_counter_id(ingress_pdr_counter_.preamble().id());
+
+    return ingress_pdr;
+  }
+
   // Shared random generator.
   absl::BitGen bitgen_;
 
@@ -584,6 +671,7 @@ class FabricBenchmark {
   p4::config::v1::Action load_normal_far_action_;
   p4::config::v1::Action load_tunnel_far_action_;
   p4::config::v1::Action load_dbuf_far_action_;
+  p4::config::v1::Counter ingress_pdr_counter_;
 
   // General P4RT objects.
   std::unique_ptr<P4RuntimeSession> session_;
@@ -602,6 +690,7 @@ class FabricBenchmark {
   RETURN_IF_ERROR(benchmark.RunAclBenchmark());
   RETURN_IF_ERROR(benchmark.RunFarBenchmark());
   RETURN_IF_ERROR(benchmark.RunPdrBenchmark());
+  RETURN_IF_ERROR(benchmark.RunPdrCounterBenchmark());
   RETURN_IF_ERROR(benchmark.RunFullSwitchReadBenchmark());
   RETURN_IF_ERROR(benchmark.RunGtpTunnelBenchmark());
 

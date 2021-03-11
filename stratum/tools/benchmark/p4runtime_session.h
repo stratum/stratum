@@ -32,9 +32,9 @@ namespace benchmark {
 // metadata size limit.  For large batches, this easily exceeds the default of
 // 8KB.
 constexpr int P4GRPCMaxMetadataSize() {
-  // 1MB.  Assuming 100 bytes per error, this will support batches of around
-  // 10000 entries without exceeding the maximum metadata size.
-  return 1024 * 1024;
+  // 4MB.  Assuming 100 bytes per error, this will support batches of around
+  // 40000 entries without exceeding the maximum metadata size.
+  return 4 * 1024 * 1024;
 }
 
 constexpr int P4GRPCMaxMessageReceiveSize() {
@@ -154,6 +154,14 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 // Reads table entries.
 ::util::StatusOr<std::vector<p4::v1::TableEntry>> ReadTableEntries(
     P4RuntimeSession* session);
+::util::StatusOr<std::vector<p4::v1::TableEntry>> ReadTableEntries(
+    P4RuntimeSession* session, bool include_counter_data,
+    bool include_meter_config);
+
+// Reads indirect counter entries.
+// TODO(max): passing in raw the counter id is ugly.
+::util::StatusOr<std::vector<p4::v1::CounterEntry>> ReadCounterEntries(
+    P4RuntimeSession* session, int counter_id);
 
 // Removes table entries on the switch.
 ::util::Status RemoveTableEntries(P4RuntimeSession* session,
@@ -169,6 +177,10 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 // Installs the given table entries on the switch.
 ::util::Status InstallTableEntries(
     P4RuntimeSession* session, absl::Span<const p4::v1::TableEntry> entries);
+
+// Writes the given counter entries on the switch.
+::util::Status ModifyIndirectCounterEntries(
+    P4RuntimeSession* session, absl::Span<const p4::v1::CounterEntry> entries);
 
 // Sets the forwarding pipeline from the given p4 info.
 ::util::Status SetForwardingPipelineConfig(P4RuntimeSession* session,
