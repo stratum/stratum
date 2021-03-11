@@ -183,6 +183,16 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
       RETURN_ERROR(ERR_INTERNAL)
           << "Entity in the read response has no table entry: "
           << entity.DebugString();
+    if (include_counter_data && !entity.table_entry().has_counter_data()) {
+      RETURN_ERROR(ERR_INTERNAL)
+          << "TableEntry in the read response has no counter data: "
+          << entity.table_entry().DebugString();
+    }
+    if (include_meter_config && !entity.table_entry().has_meter_config()) {
+      RETURN_ERROR(ERR_INTERNAL)
+          << "TableEntry in the read response has no meter config: "
+          << entity.table_entry().DebugString();
+    }
     table_entries.push_back(std::move(entity.table_entry()));
   }
   return std::move(table_entries);
