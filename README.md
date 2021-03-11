@@ -5,14 +5,19 @@ Copyright 2018-present Open Networking Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-![stratum logo](stratum/docs/images/stratum-logo.png)
+<p align="center">
+  <img alt="Stratum Logo" src="stratum/docs/images/stratum-logo.png">
+</p>
 
 # Stratum - Enabling the era of next-generation SDN
 
-Copyright 2018 Google LLC <br/>
-Copyright 2018-present Open Networking Foundation
-
-Stratum is an open source silicon-independent switch operating system for software defined networks. It is building an open, minimal production-ready distribution for white box switches. Stratum exposes a set of next-generation SDN interfaces including P4Runtime and OpenConfig, enabling interchangeability of forwarding devices and programmability of forwarding behaviors. Current support includes Barefoot Tofino and Broadcom Tomahawk devices, as well as the bmv2 software switch.
+Stratum is an open source silicon-independent switch operating system for
+software defined networks. It is building an open, minimal production-ready
+distribution for white box switches. Stratum exposes a set of next-generation
+SDN interfaces including P4Runtime and OpenConfig, enabling interchangeability
+of forwarding devices and programmability of forwarding behaviors. Current
+support includes Barefoot Tofino and Broadcom Tomahawk devices, as well as the
+bmv2 software switch.
 
 Build status (main): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree/main.svg?style=svg)](https://circleci.com/gh/stratum/stratum/tree/main)
 [![codecov](https://codecov.io/gh/stratum/stratum/branch/main/graph/badge.svg)](https://codecov.io/gh/stratum/stratum)
@@ -21,7 +26,15 @@ Build status (main): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree/m
 
 ## Getting Started with SDN / P4 / Stratum
 
-If you're completly new to the world of P4 and are looking for step-by-step instructions with batteries included, the [NG-SDN](https://github.com/opennetworkinglab/ngsdn-tutorial) tutorial is a good starting point. For material more focused on P4 as a language, have a look at the [p4lang](https://github.com/p4lang/tutorials) tutorials. Finally, there is the "Software-Defined Networks: A Systems Approach" book ([HTML](https://sdn.systemsapproach.org/)) for comprehensive coverage of SDN. Also see the chapter about [Stratum](https://sdn.systemsapproach.org/stratum.html#thin-switch-os) in it.
+If you're completly new to the world of P4 and are looking for step-by-step
+instructions with batteries included, the
+[NG-SDN](https://github.com/opennetworkinglab/ngsdn-tutorial) tutorial is a good
+starting point. For material more focused on P4 as a language, have a look at
+the [p4lang](https://github.com/p4lang/tutorials) tutorials. Finally, there is
+the "Software-Defined Networks: A Systems Approach" book
+([HTML](https://sdn.systemsapproach.org/)) for comprehensive coverage of SDN.
+Also see the chapter about
+[Stratum](https://sdn.systemsapproach.org/stratum.html#thin-switch-os) in it.
 
 ## Table of Contents
 ### Development
@@ -37,10 +50,10 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 ### Platforms
 
 - [Tofino](/stratum/hal/bin/barefoot/README.md)
+  - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
   - [Running Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.run.md)
   - [Testing Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.test.md)
   - [P4Runtime p4_device_config formats](/stratum/hal/bin/barefoot/README.pipeline.md)
-  - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
 - [Broadcom](/stratum/hal/bin/bcm/standalone/README.md)
   - [How to Add a Dataplane Feature to Stratum (BCM)](/stratum/docs/extenting_stratum_bcm.md)
 - [Intel NP4](/stratum/hal/bin/np4intel/docker/README.md)
