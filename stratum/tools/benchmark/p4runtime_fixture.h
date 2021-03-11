@@ -1,10 +1,11 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
-#define STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
+#ifndef STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_
+#define STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_
 
 #include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -89,4 +90,4 @@ class P4RuntimeFixture : public testing::Test {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
+#endif  // STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_

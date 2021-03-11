@@ -1,8 +1,6 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <gperftools/profiler.h>
-
 #include <iostream>
 #include <memory>
 
