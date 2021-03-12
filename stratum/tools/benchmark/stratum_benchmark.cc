@@ -367,7 +367,7 @@ class FabricBenchmark {
 
       // We expect between 1-10 stable uplink destinations accross all tunnels.
       std::string uplink_ipv4_dst = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       // We expect all UEs to be in the same 1-10 subnets.
       std::string ue_ipv4_dst = BytestringToPaddedBytestring(
           hal::Uint32ToByteStream(
@@ -375,15 +375,15 @@ class FabricBenchmark {
           32);
       // Random teid per tunnel.
       std::string teid = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       std::string uplink_counter_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, UINT16_MAX)), 16);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, kuint16max)), 16);
       std::string downlink_counter_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, UINT16_MAX)), 16);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, kuint16max)), 16);
       std::string uplink_far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       std::string downlink_far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
 
       // Uplink PDR (packet detection rule)
       {
@@ -480,7 +480,7 @@ class FabricBenchmark {
     for (int i = 0; i < num_table_entries; ++i) {
       ::p4::v1::TableEntry entry = CreateGenericFarEntry();
       std::string far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       entry.mutable_match(0)->mutable_exact()->set_value(far_id);
       table_entries.emplace_back(entry);
     }
@@ -496,13 +496,13 @@ class FabricBenchmark {
     for (int i = 0; i < num_table_entries; ++i) {
       ::p4::v1::TableEntry entry = CreateGenericUplinkPdrEntry();
       std::string uplink_ipv4_dst = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       std::string uplink_counter_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, UINT16_MAX)), 16);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, kuint16max)), 16);
       std::string teid = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       std::string uplink_far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, UINT32_MAX)), 32);
+          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
       entry.mutable_match(0)->mutable_exact()->set_value(uplink_ipv4_dst);
       entry.mutable_match(1)->mutable_exact()->set_value(teid);
       entry.mutable_action()->mutable_action()->mutable_params(0)->set_value(
@@ -525,9 +525,9 @@ class FabricBenchmark {
       ::p4::v1::CounterEntry entry = CreateGenericIngressPdrCounter();
       entry.mutable_index()->set_index(i);
       entry.mutable_data()->set_packet_count(
-          absl::Uniform(bitgen_, 0, UINT16_MAX));
+          absl::Uniform(bitgen_, 0, kuint16max));
       entry.mutable_data()->set_byte_count(
-          absl::Uniform(bitgen_, 0, UINT16_MAX));
+          absl::Uniform(bitgen_, 0, kuint16max));
 
       counter_entries.emplace_back(entry);
     }
