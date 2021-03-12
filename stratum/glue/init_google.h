@@ -37,7 +37,7 @@ inline void InitGoogle(const char* usage, int* argc, char*** argv,
   CHECK(!::gflags::SetCommandLineOptionWithMode("minloglevel", "0",
                                                 ::gflags::SET_FLAGS_DEFAULT)
              .empty());
-  ::gflags::SetVersionString(kBuildScmRevision);
+  ::gflags::SetVersionString(stratum::kBuildScmRevision);
   ParseCommandLineFlags(argc, argv, remove_flags);
 }
 

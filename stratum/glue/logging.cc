@@ -60,8 +60,10 @@ void InitStratumLogging() {
     LogToStderr();
   }
 
-  LOG(INFO) << "Stratum version: " << kBuildScmRevision << " ("
-            << kBuildScmStatus << ")"
+  LOG(INFO) << "Stratum version "
+            << kBuildScmRevision
+            // TODO(max): enable once CI does not modify the source tree anymore
+            // << " (" << kBuildScmStatus << ")"
             << " built at " << absl::FromTimeT(kBuildTimestamp) << " on host "
             << kBuildHost << " by user " << kBuildUser << ".";
 }

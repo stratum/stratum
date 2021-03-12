@@ -65,5 +65,5 @@ stratum_cc_library(
 cc_library(
     name = "stamping",
     hdrs = ["stamping.h"],
-    linkstamp = "stamping_linkstamp.cc",
+    linkstamp = "stamping.cc",
 )
