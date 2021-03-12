@@ -10,8 +10,10 @@
 # KEY1 VALUE1
 # KEY2 VALUE2
 #
-# Keys starting with "STABLE_" will go into the stable status file. Others in
-# the volatile.
+# Keys starting with "STABLE_" will go into the stable status file. All others
+# into the volatile file.
+# See: $(bazel info output_path)/stable-status.txt
+# and: $(bazel info output_path)/volatile-status.txt
 #
 # If the script exits with non-zero code, it's considered as a failure
 # and the output will be discarded.
