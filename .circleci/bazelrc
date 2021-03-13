@@ -31,3 +31,10 @@ build --profile=/tmp/bazel.profile.json
 # Coverage
 coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
 
+# Pass through of CircleCI Docker setup
+# See: https://docs.bazel.build/versions/master/command-line-reference.html#flag--action_env
+build --action_env=DOCKER_HOST
+build --action_env=DOCKER_CERT_PATH
+build --action_env=DOCKER_MACHINE_NAME
+build --action_env=DOCKER_TLS_VERIFY
+build --action_env=NO_PROXY

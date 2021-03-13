@@ -83,6 +83,7 @@ jobs:
       - CXX: clang++
     steps:
       - checkout
+      - setup_remote_docker
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
@@ -127,6 +128,7 @@ jobs:
       - CXX: clang++
     steps:
       - checkout
+      - setup_remote_docker
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
@@ -177,9 +179,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/p4c_backends/fpm
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/p4c-fpm
       - CC: clang
       - CXX: clang++
     steps:
@@ -187,18 +186,13 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build p4c-fpm
-          command: |
-            bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb
-            cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
       - *docker_login
-      - *docker_build
+      - run:
+          name: Build and push p4c-fpm
+          command: bazel run //stratum/p4c_backends/fpm:push_p4c_fpm_docker
       - run:
           name: Test p4c-fpm Docker image
-          command: |
-            docker run $DOCKER_IMG -version
-      - *docker_push
+          command: docker run stratumproject/p4c-fpm -version
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -206,9 +200,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bcm:sdklt
       - CC: clang
       - CXX: clang++
     steps:
@@ -216,14 +207,10 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build stratum_bcm
-          command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
-            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
-      - *docker_build
-      - *docker_push
+      - run:
+          name: Build and push stratum_bcm
+          command: bazel run //stratum/hal/bin/bcm/standalone:push_stratum_bcm_sdklt_docker
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -231,9 +218,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bcm:opennsa
       - CC: clang
       - CXX: clang++
     steps:
@@ -241,23 +225,17 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build stratum_bcm
-          command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
-            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
-      - *docker_build
-      - *docker_push
+      - run:
+          name: Build and push stratum_bcm
+          command: bazel run //stratum/hal/bin/bcm/standalone:push_stratum_bcm_opennsa_docker
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   publish-docker-bf-pipeline-builder:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
-      - DOCKER_FILE: Dockerfile.bf_pipeline_builder
-      - DOCKER_IMG: stratumproject/stratum-bf-pipeline-builder
       - CC: clang
       - CXX: clang++
     steps:
@@ -265,18 +243,13 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build pipeline builder
-          command: |
-            bazel build //stratum/hal/bin/barefoot:bf_pipeline_builder
-            cp bazel-bin/stratum/hal/bin/barefoot/bf_pipeline_builder $DOCKER_SCOPE
       - *docker_login
-      - *docker_build
+      - run:
+          name: Build and push pipeline builder
+          command: bazel run //stratum/hal/bin/barefoot:push_bf_pipeline_builder_docker
       - run:
           name: Test stratum-bf-pipeline-builder Docker image
-          command: |
-            docker run $DOCKER_IMG -version
-      - *docker_push
+          command: docker run stratumproject/stratum-bf-pipeline-builder -version
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -284,9 +257,6 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/tools/stratum-replay
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-replay
       - CC: clang
       - CXX: clang++
     steps:
@@ -294,18 +264,13 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
-      - run:
-          name: Build stratum-replay
-          command: |
-            bazel build //stratum/tools/stratum-replay:stratum-replay
-            cp bazel-bin/stratum/tools/stratum-replay/stratum-replay $DOCKER_SCOPE
       - *docker_login
-      - *docker_build
+      - run:
+          name: Build and push stratum-replay
+          command: bazel run //stratum/tools/stratum-replay:push_stratum-replay_docker
       - run:
           name: Test stratum-replay Docker image
-          command: |
-            docker run $DOCKER_IMG -version
-      - *docker_push
+          command: docker run stratumproject/stratum-replay -version
       - *clean_bazel_cache
       - *save_bazel_cache
 

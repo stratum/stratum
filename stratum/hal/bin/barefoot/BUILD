@@ -4,6 +4,10 @@
 
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
+load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image", "container_push")
+load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
+load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 
 licenses(["notice"])  # Apache v2
 
@@ -37,6 +41,34 @@ stratum_cc_binary(
         "//stratum/lib:utils",
         "@com_github_nlohmann_json//:json",
     ],
+)
+
+container_image(
+    name = "bf_pipeline_builder_docker",
+    base = "@minideb//image",
+    entrypoint = ["/bf_pipeline_builder"],
+    cmd = ["-help"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "Docker-based distribution of the Stratum-bf pipeline builder",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    files = [":bf_pipeline_builder"],
+    repository = "stratumproject",
+    stamp = True,
+)
+
+container_push(
+   name = "push_bf_pipeline_builder_docker",
+   image = ":bf_pipeline_builder_docker",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "stratumproject/stratum-bf-pipeline-builder",
+   tag = "latest",
 )
 
 stratum_cc_binary(
@@ -209,4 +241,70 @@ pkg_deb(
     postinst = "deb/postinst",
     prerm = "deb/prerm",
     version = "0.0.1",
+)
+
+genrule(
+    name = "gen_sde_version",
+    outs = ["bf_sde_version.txt"],
+    cmd = "printf $(sde_ver) > $@",
+)
+
+# Add the stratum-bfrt debian package to image.
+container_image(
+    name = "stratum_bfrt_docker_with_deb",
+    base = "@minideb//image",
+    files = ["stratum_bfrt_deb.deb"],
+)
+
+# Install the stratum-bfrt debian package and its dependencies.
+container_run_and_commit(
+    name = "stratum_bfrt_docker_installed_deb",
+    commands = [
+        "install_packages /stratum_bfrt_deb.deb",
+        "rm /stratum_bfrt_deb.deb",
+    ],
+    image = ":stratum_bfrt_docker_with_deb.tar",
+)
+
+# Build the final image with correct metadata.
+container_image(
+    name = "stratum_bfrt_docker",
+    base = ":stratum_bfrt_docker_installed_deb",
+    entrypoint = ["start-stratum.sh"],
+    labels = {
+        "maintainer": "Stratum dev <stratum-dev@lists.stratumproject.org>",
+        "description": "This Docker image includes runtime library for Barefoot Tofino switches",
+        "stratum-target": "stratum-bfrt",
+        "bf-sde-version": "@bf_sde_version.txt",
+        "build-timestamp": "{BUILD_TIMESTAMP}",
+        "build-machine": "{BUILD_HOST}",
+        "org.opencontainers.image.source": "todo",  # TODO(max): extend with --workspace_status_command
+        "org.opencontainers.image.version": "todo",
+        "org.opencontainers.image.revision": "todo",
+    },
+    ports = [
+        "9339",
+        "9559",
+        "28000",
+    ],
+    repository = "stratumproject",
+    stamp = True,
+    workdir = "/var/run/stratum",
+)
+
+# Push the Stratum-bfrt image to DockerHub.
+container_push(
+   name = "push_stratum_bfrt_docker",
+   image = ":stratum_bfrt_docker",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "stratumproject/stratum-bfrt",
+   tag = "$(sde_ver)",
+)
+
+container_bundle(
+    name = "stratum_bfrt_bundle",
+    images = {
+        "stratumproject/stratum-bfrt": ":stratum_bfrt_docker",
+    },
 )
