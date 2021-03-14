@@ -26,6 +26,7 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
+#include "stratum/tools/benchmark/entity_management.h"
 #include "stratum/tools/benchmark/p4runtime_session.h"
 
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
@@ -114,6 +115,8 @@ class FabricBenchmark {
     }
 
     // Resolve commonly used P4 objects.
+    RETURN_IF_ERROR(
+        BuildP4RTEntityIdReplacementMap(p4_info_, &p4_id_replacements_));
     p4_info_manager_ = absl::make_unique<hal::P4InfoManager>(p4_info_);
     RETURN_IF_ERROR(p4_info_manager_->InitializeAndVerify());
     ASSIGN_OR_RETURN(
@@ -443,25 +446,28 @@ class FabricBenchmark {
     num_table_entries = std::min(num_table_entries, 1024 * 16);
     std::vector<::p4::v1::TableEntry> table_entries;
     table_entries.reserve(num_table_entries);
-    for (int i = 0; i < num_table_entries; ++i) {
-      const std::string acl_entry_text = R"PROTO(
-      table_id: 39601850
-      match {
-        field_id: 9
-        ternary {
-          value: "\000\000\000\000"
-          mask: "\xff\xff\xff\xff"
+    ::p4::v1::TableEntry acl_entry =
+        HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::TableEntry>(
+            p4_id_replacements_,
+            // p4_info_,
+            R"PROTO(
+        table_id: {FabricIngress.acl.acl}
+        match {
+          field_id: {FabricIngress.acl.acl.ipv4_src}
+          ternary {
+            value: "\000\000\000\000"
+            mask: "\xff\xff\xff\xff"
+          }
         }
-      }
-      action {
         action {
-          action_id: 21161133
+          action {
+            action_id: {FabricIngress.acl.copy_to_cpu}
+          }
         }
-      }
-      priority: 10
-    )PROTO";
-      ::p4::v1::TableEntry entry;
-      CHECK_OK(ParseProtoFromString(acl_entry_text, &entry));
+        priority: 10
+      )PROTO");
+    for (int i = 0; i < num_table_entries; ++i) {
+      ::p4::v1::TableEntry entry = acl_entry;
       std::string value = hal::Uint32ToByteStream(i);
       while (value.size() < 4) value.insert(0, 1, '\x00');
       CHECK_EQ(4, value.size()) << StringToHex(value) << " for i " << i;
@@ -675,6 +681,7 @@ class FabricBenchmark {
   std::unique_ptr<P4RuntimeSession> session_;
   p4::config::v1::P4Info p4_info_;
   std::unique_ptr<hal::P4InfoManager> p4_info_manager_;
+  absl::flat_hash_map<std::string, std::string> p4_id_replacements_;
 };
 
 ::util::Status Main(int argc, char** argv) {
