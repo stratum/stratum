@@ -190,7 +190,7 @@ jobs:
       - run:
           name: Build p4c-fpm
           command: |
-            bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb
+            bazel build --config=release //stratum/p4c_backends/fpm:p4c_fpm_deb
             cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
@@ -219,7 +219,7 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
+            bazel build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
       - *docker_build
@@ -244,7 +244,7 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
+            bazel build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
       - *docker_build
@@ -268,7 +268,7 @@ jobs:
       - run:
           name: Build pipeline builder
           command: |
-            bazel build //stratum/hal/bin/barefoot:bf_pipeline_builder
+            bazel build --config=release //stratum/hal/bin/barefoot:bf_pipeline_builder
             cp bazel-bin/stratum/hal/bin/barefoot/bf_pipeline_builder $DOCKER_SCOPE
       - *docker_login
       - *docker_build
@@ -297,7 +297,7 @@ jobs:
       - run:
           name: Build stratum-replay
           command: |
-            bazel build //stratum/tools/stratum-replay:stratum-replay
+            bazel build --config=release //stratum/tools/stratum-replay:stratum-replay
             cp bazel-bin/stratum/tools/stratum-replay/stratum-replay $DOCKER_SCOPE
       - *docker_login
       - *docker_build
@@ -326,7 +326,7 @@ jobs:
       - run:
           name: Build chassis-config-migrator
           command: |
-            bazel build //stratum/hal/config:chassis_config_migrator
+            bazel build --config=release //stratum/hal/config:chassis_config_migrator
             cp bazel-bin/stratum/hal/config/chassis_config_migrator $DOCKER_SCOPE
       - *docker_login
       - *docker_build
