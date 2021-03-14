@@ -5,8 +5,6 @@
 #ifndef STRATUM_TOOLS_BENCHMARK_P4RUNTIME_SESSION_H_
 #define STRATUM_TOOLS_BENCHMARK_P4RUNTIME_SESSION_H_
 
-#include <stdint.h>
-
 #include <memory>
 #include <string>
 #include <utility>

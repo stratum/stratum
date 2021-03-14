@@ -17,6 +17,22 @@ package(
 )
 
 stratum_cc_library(
+    name = "entity_management",
+    srcs = ["entity_management.cc"],
+    hdrs = ["entity_management.h"],
+    deps = [
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_library(
     name = "p4runtime_session",
     srcs = ["p4runtime_session.cc"],
     hdrs = ["p4runtime_session.h"],
@@ -55,6 +71,7 @@ stratum_cc_binary(
     srcs = ["stratum_benchmark.cc"],
     arches = HOST_ARCHES,
     deps = [
+        ":entity_management",
         ":p4runtime_session",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
