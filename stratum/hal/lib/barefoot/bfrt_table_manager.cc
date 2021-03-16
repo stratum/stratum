@@ -316,10 +316,17 @@ struct RegisterClearThreadData {
       << "Invalid update type " << type;
 
   absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(auto table,
+                   p4_info_manager_->FindTableByID(table_entry.table_id()));
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(table_entry.table_id()));
 
   if (!table_entry.is_default_action()) {
+    if (table.is_const_table()) {
+      RETURN_ERROR(ERR_PERMISSION_DENIED)
+          << "Can't write to table " << table.preamble().name()
+          << " because it has const entries.";
+    }
     ASSIGN_OR_RETURN(auto table_key,
                      bf_sde_interface_->CreateTableKey(table_id));
     RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
