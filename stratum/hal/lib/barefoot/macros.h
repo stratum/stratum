@@ -72,11 +72,11 @@ class BooleanBfStatus {
 
 // A macro for simplify checking and logging the return value of a SDE function
 // call.
-#define RETURN_IF_BFRT_ERROR(expr)                            \
-  if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {  \
-  } else /* NOLINT */                                         \
-    return MAKE_ERROR(__ret.error_code())                     \
-           << "'" << #expr << "' failed with error message: " \
+#define RETURN_IF_BFRT_ERROR(expr)                                            \
+  if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {                  \
+  } else /* NOLINT */                                                         \
+    return MAKE_ERROR(__ret.error_code()).severity(WARNING).without_logging() \
+           << "'" << #expr << "' failed with error message: "                 \
            << FixMessage(bf_err_str(__ret.status()))
 
 // A macro for simplify creating a new error or appending new info to an
