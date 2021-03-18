@@ -68,7 +68,7 @@ TEST(ByteStringTest, P4RuntimeByteStringToPaddedByteStringCorrect) {
   EXPECT_EQ(std::string("\x00\xab", 2),
             P4RuntimeByteStringToPaddedByteString("\xab", 2));
   EXPECT_EQ(std::string("\x00\x00\x00", 3),
-            P4RuntimeByteStringToPaddedByteString("\x00", 3));
+            P4RuntimeByteStringToPaddedByteString(std::string("\x00", 1), 3));
   EXPECT_EQ(std::string("\x00\x00", 2),
             P4RuntimeByteStringToPaddedByteString("", 2));
   EXPECT_EQ(std::string("\xef", 1),
