@@ -294,4 +294,4 @@ switches = {'stratum-bmv2': StratumBmv2Switch}
 hosts = {
     'no-offload-host': NoOffloadHost,
     'no-ipv6-host': NoIpv6OffloadHost
-    }
+}
