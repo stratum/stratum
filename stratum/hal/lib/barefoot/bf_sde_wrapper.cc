@@ -62,6 +62,129 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
   return bytes / 125;
 }
 
+::util::Status DumpTableKey(const bfrt::BfRtTableKey* table_key) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key->tableGet(&table));
+  std::vector<bf_rt_id_t> key_field_ids;
+  RETURN_IF_BFRT_ERROR(table->keyFieldIdListGet(&key_field_ids));
+
+  LOG(INFO) << "Table key {";
+  for (const auto& field_id : key_field_ids) {
+    std::string field_name;
+    bfrt::KeyFieldType key_type;
+    size_t field_size;
+    RETURN_IF_BFRT_ERROR(table->keyFieldNameGet(field_id, &field_name));
+    RETURN_IF_BFRT_ERROR(table->keyFieldTypeGet(field_id, &key_type));
+    RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(field_id, &field_size));
+
+    std::string value;
+    switch (key_type) {
+      case bfrt::KeyFieldType::EXACT: {
+        std::string v(NumBitsToNumBytes(field_size), '\x00');
+        RETURN_IF_BFRT_ERROR(table_key->getValue(
+            field_id, v.size(),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
+        value = StringToHex(v);
+        break;
+      }
+      case bfrt::KeyFieldType::RANGE: {
+        std::string l(NumBitsToNumBytes(field_size), '\x00');
+        std::string h(NumBitsToNumBytes(field_size), '\x00');
+        RETURN_IF_BFRT_ERROR(table_key->getValueRange(
+            field_id, l.size(),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&l)),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&h))));
+        value = absl::StrCat(StringToHex(l), " - ", StringToHex(h));
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INTERNAL)
+            << "Unknown key_type: " << static_cast<int>(key_type) << ".";
+    }
+
+    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
+              << " key_type: " << static_cast<int>(key_type)
+              << " field_size: " << field_size << " value: " << value;
+  }
+  LOG(INFO) << "}";
+
+  return ::util::OkStatus();
+}
+
+::util::Status DumpTableData(const bfrt::BfRtTableData* table_data) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data->getParent(&table));
+
+  LOG(INFO) << "Table data {";
+  std::vector<bf_rt_id_t> data_field_ids;
+  if (table->actionIdApplicable()) {
+    bf_rt_id_t action_id;
+    RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
+    LOG(INFO) << "\taction_id: " << action_id;
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &data_field_ids));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  }
+
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    bfrt::DataType data_type;
+    size_t field_size;
+    bool is_active;
+    if (table->actionIdApplicable()) {
+      bf_rt_id_t action_id;
+      RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldNameGet(field_id, action_id, &field_name));
+      // FIXME
+      // RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id,
+      // &data_type)); RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id,
+      // &field_size)); RETURN_IF_BFRT_ERROR(table_data->isActive(field_id,
+      // &is_active));
+    } else {
+      RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+      RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
+      RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
+      RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
+    }
+
+    std::string value;
+    switch (data_type) {
+      case bfrt::DataType::UINT64: {
+        uint64 v;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
+        value = std::to_string(v);
+        break;
+      }
+      case bfrt::DataType::BYTE_STREAM: {
+        std::string v(NumBitsToNumBytes(field_size), '\x00');
+        RETURN_IF_BFRT_ERROR(table_data->getValue(
+            field_id, v.size(),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
+        value = StringToHex(v);
+        break;
+      }
+      case bfrt::DataType::INT_ARR: {
+        std::vector<uint64_t> v;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
+        value = PrintVector(v, ",");
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INTERNAL)
+            << "Unknown data_type: " << static_cast<int>(data_type) << ".";
+    }
+
+    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
+              << " data_type: " << static_cast<int>(data_type)
+              << " field_size: " << field_size << " value: " << value
+              << " is_active: " << is_active;
+  }
+  LOG(INFO) << "}";
+
+  return ::util::OkStatus();
+}
+
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
                         std::string field_name, uint64* field_value) {
   bf_rt_id_t field_id;
@@ -373,59 +496,6 @@ template <typename T>
   return ::util::OkStatus();
 }
 
-::util::Status DumpTableData(const bfrt::BfRtTableData* table_data) {
-  const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(table_data->getParent(&table));
-
-  std::vector<bf_rt_id_t> data_field_ids;
-  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
-  LOG(INFO) << "Table data {";
-  for (const auto& field_id : data_field_ids) {
-    std::string field_name;
-    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
-    bfrt::DataType data_type;
-    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
-    size_t field_size;
-    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
-    bool is_active;
-    RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
-
-    std::string value;
-    switch (data_type) {
-      case bfrt::DataType::UINT64: {
-        uint64 v;
-        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
-        value = std::to_string(v);
-        break;
-      }
-      case bfrt::DataType::BYTE_STREAM: {
-        std::string v(NumBitsToNumBytes(field_size), '\x00');
-        RETURN_IF_BFRT_ERROR(table_data->getValue(
-            field_id, v.size(),
-            reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
-        value = StringToHex(v);
-        break;
-      }
-      case bfrt::DataType::INT_ARR: {
-        std::vector<uint64_t> v;
-        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
-        value = PrintVector(v, ",");
-        break;
-      }
-      default:
-        RETURN_ERROR(ERR_INTERNAL)
-            << "Unknown data_type: " << static_cast<int>(data_type) << ".";
-    }
-
-    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-              << " data_type: " << static_cast<int>(data_type)
-              << " field_size: " << field_size << " value: " << value
-              << " is_active: " << is_active;
-  }
-  LOG(INFO) << "}";
-
-  return ::util::OkStatus();
-}
 }  // namespace
 
 ::util::Status TableKey::SetExact(int id, const std::string& value) {
