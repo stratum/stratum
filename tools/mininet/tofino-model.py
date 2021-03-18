@@ -26,8 +26,6 @@ TOFINO_MODEL_BIN = 'tofino-model'
 STRATUM_BIN = 'stratum_bf'
 # DEV_STRATUM_BIN = '/root/stratum/bazel-bin/stratum/hal/bin/barefoot/stratum_bf'
 
-
-
 def watchdog(sw):
     try:
         with open(sw.keepalive, "w") as f:
@@ -161,7 +159,7 @@ class StratumTofinoModel(Switch):
             intf_number+=1
 
         data =  { "PortToVeth": portsVeth }
-        return json.dumps(data, indent=4)+"\n"
+        return json.dumps(data, indent=4) + "\n"
 
     def getChassisConfig(self):
         config = """description: "chassis config bf tofino model {name}"
@@ -249,4 +247,3 @@ LINKS = { 'default': Link,  # Note: overridden below
         #   'tcu': TCULink,
         #   'ovs': OVSLink,
           'tofino': TofinoLink}
-
