@@ -116,6 +116,13 @@ uses the correct ones for the platform.
 If you followed the build instructions, these should be on the switch under `/etc/stratum/stratum_configs`.
 Depending on your actual cabling, setup or hardware, you'll have to adjust the config files.
 
+### Pushing a Pipeline
+
+Before P4Runtime requests can be sent to program the data plane, a pipeline has
+to be pushed to the switch. We provide a reference pipeline for Broadcom based
+switches called [main.p4](/stratum/pipelines/main/main.p4). Refer to its
+[README](/stratum/pipelines/main/README.md) for further instructions.
+
 ### Manual SDK setup on the switch
 
 **ONLY needed when not using Docker or the start script!**

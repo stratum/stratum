@@ -8,6 +8,9 @@ SPDX-License-Identifier: Apache-2.0
 
 This document provides an overview of the [TAI library](https://github.com/Telecominfraproject/oopt-tai) and interaction with TAI library wrapper and Stratum.
 
+For instructions on a specific platform or chip, refer to their
+[docs](/README.md#platforms).
+
 ## The Overview
 
 Figure below shows the overview of components which related to TAI support, we will cover these components from bottom to the top in following sections.
@@ -32,7 +35,7 @@ To build PHAL with the TAI backend, add the following define to all Bazel build 
 
 `bazel build --define phal_with_tai=true //stratum/...`
 
-Follow the relevant build instructions for [Broadcom chips](/stratum/hal/bin/bcm/standalone/README.md) as usual.
+Follow the relevant build instructions for [Broadcom chips](/stratum/hal/bin/bcm/standalone/README.md#compile-from-source) as usual.
 
 ### Additional TAI Switch Setup
 
