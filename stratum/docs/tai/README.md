@@ -180,7 +180,7 @@ message PhalDB {
 ```
 > Note that we are not supprting configuring the Hoet Interface in TAI for now. This may be a future task that contributed by the community.
 
-## Supported OpenConfig models(gNMI paths)
+## Supported OpenConfig models (gNMI paths)
 
 The OpenConfig model provides an optical channel configuration. Below are YANG models on GitHub we are using for TAI support:
 
@@ -276,7 +276,7 @@ Find the full TAI attributes' list here:
 | 2         | `MODULATION_FORMAT_DP_16_QAM` |
 | 3         | `MODULATION_FORMAT_DP_8_QAM`  |
 
-## Todos
+## TODOs
 
 ### ChasisConfig to OpenConfig conversion and vise versa
 
