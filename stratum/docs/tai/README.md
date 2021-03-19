@@ -4,7 +4,7 @@ Copyright 2020-present Open Networking Foundation
 
 SPDX-License-Identifier: Apache-2.0
 -->
-# Transponder Abstraction Interface(TAI) support
+# Transponder Abstraction Interface (TAI) support
 
 This document provides an overview of the [TAI library](https://github.com/Telecominfraproject/oopt-tai) and interaction with TAI library wrapper and Stratum.
 
@@ -32,7 +32,7 @@ To build PHAL with the TAI backend, add the following define to all Bazel build 
 
 `bazel build --define phal_with_tai=true //stratum/...`
 
-Follow the relevant build instructions for [Broadcom chips](stratum/hal/bin/bcm/standalone/README.md) as usual.
+Follow the relevant build instructions for [Broadcom chips](/stratum/hal/bin/bcm/standalone/README.md) as usual.
 
 ### Additional TAI Switch Setup
 
