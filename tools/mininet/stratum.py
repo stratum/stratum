@@ -278,8 +278,20 @@ class NoOffloadHost(Host):
             self.cmd(cmd)
         return r
 
+class NoIpv6OffloadHost(NoOffloadHost):
+    def __init__(self, name, inNamespace=True, **params):
+        NoOffloadHost.__init__(self, name, inNamespace=inNamespace, **params)
+
+    def config(self, **params):
+        r = super(NoOffloadHost, self).config(**params)
+        self.cmd("sysctl net.ipv6.conf.%s.disable_ipv6=1" % (self.defaultIntf()))
+        return r
+
 
 # Exports for bin/mn
 switches = {'stratum-bmv2': StratumBmv2Switch}
 
-hosts = {'no-offload-host': NoOffloadHost}
+hosts = {
+    'no-offload-host': NoOffloadHost,
+    'no-ipv6-host': NoIpv6OffloadHost
+}
