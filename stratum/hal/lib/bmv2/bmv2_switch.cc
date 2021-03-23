@@ -178,6 +178,7 @@ Bmv2Switch::~Bmv2Switch() {}
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kForwardingViability:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kSdnPortId:
         resp = bmv2_chassis_manager_->GetPortData(req);
@@ -187,7 +188,7 @@ Bmv2Switch::~Bmv2Switch() {}
             MAKE_ERROR(ERR_UNIMPLEMENTED)
             << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
-            << " is not supported yet: " << req.ShortDebugString() << ".";
+            << " is not supported yet!";
         break;
     }
     if (resp.ok()) {

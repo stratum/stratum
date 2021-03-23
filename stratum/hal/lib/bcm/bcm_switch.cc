@@ -353,7 +353,7 @@ BcmSwitch::~BcmSwitch() {}
         // - port_id: req.forwarding_viable().port_id()
         // and then write it into the response.
         resp.mutable_forwarding_viability()->set_state(
-            TRUNK_MEMBER_BLOCK_STATE_FORWARDING);
+            TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
         break;
       case DataRequest::Request::kMemoryErrorAlarm: {
         // Find current state of memory-error alarm
