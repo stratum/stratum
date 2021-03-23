@@ -175,6 +175,7 @@ Bmv2Switch::~Bmv2Switch() {}
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
