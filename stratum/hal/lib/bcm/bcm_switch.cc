@@ -345,7 +345,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.health_indicator().node_id()
         // - port_id: req.health_indicator().port_id()
         // and then write it into the response.
-        resp.mutable_health_indicator()->set_state(HEALTH_STATE_GOOD);
+        resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
         break;
       case DataRequest::Request::kForwardingViability:
         // Find current port forwarding viable state for port located at:

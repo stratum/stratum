@@ -724,6 +724,14 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
           TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
       break;
     }
+    case DataRequest::Request::kHealthIndicator: {
+      // Find current port health indicator (LED) for port located at:
+      // - node_id: req.health_indicator().node_id()
+      // - port_id: req.health_indicator().port_id()
+      // and then write it into the response.
+      resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
+      break;
+    }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
