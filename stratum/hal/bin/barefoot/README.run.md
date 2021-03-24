@@ -453,6 +453,22 @@ The CLI will start after Stratum and the SDE finish initialization. You may
 need to press "Enter" a few times to see the prompt. Please refer to BF SDE
 documentation for details on how to use the CLI.
 
+### Access BF Shell via telnet (experimental)
+
+When Stratum started, the BF Shell will be enbaled by default.
+
+To access the BF Shell, use the `telnet` command:
+
+```bash
+telnet [Switch IP] 9999
+```
+
+Once enter the BF Shell, type `ucli` to access the BF CLI.
+
+> Since we are not support all features from the BF SHell, using commands other than `ucli` may cause Stratum crash.
+
+To exit the telnet, press `Ctrl` and `]` to close the connection and type `quit` to leave the telnet.
+
 -----
 
 ## Troubleshooting
