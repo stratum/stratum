@@ -28,7 +28,7 @@
 #include "stratum/public/lib/error.h"
 
 DEFINE_string(forwarding_pipeline_configs_file,
-              "/var/run/stratum/pipeline_cfg.pb.txt",
+              "/etc/stratum/pipeline_cfg.pb.txt",
               "The latest set of verified ForwardingPipelineConfig protos "
               "pushed to the switch. This file is updated whenever "
               "ForwardingPipelineConfig proto for switching node is added or "
