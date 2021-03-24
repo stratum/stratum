@@ -457,17 +457,23 @@ documentation for details on how to use the CLI.
 
 When Stratum started, the BF Shell will be enabled by default.
 
-To access the BF Shell, use the `telnet` command:
+To access the BF Shell, run `attach-bf-shell.sh` in the container:
 
 ```bash
-telnet [Switch IP] 9999
+docker exec -it [stratum container name or ID] attach-bf-shell.sh
 ```
+
+This script will start a telnet session that connects to the BF Shell.
 
 Once you have entered the BF Shell, type `ucli` to access the BF CLI.
 
 > Since we do not support all features from the BF Shell, using commands other than `ucli` may cause Stratum crash.
 
-To exit the telnet session, press `Ctrl` and `]` to close the connection and type `quit` to leave the telnet.
+To exit the BF CLI or the BF Shell, use `exit`.
+
+Note that using `Ctrl+C` will end the BF Shell without closing the telnet session.
+
+To exit the telnet session, press `Ctrl` and `]` to escape from the session and type `quit` to exit the telnet.
 
 -----
 

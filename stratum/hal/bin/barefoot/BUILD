@@ -86,6 +86,7 @@ pkg_tar(
     name = "stratum_binaries",
     srcs = [
         "deb/start-stratum.sh",
+        "deb/attach-bf-shell.sh",
         ":bf_pipeline_builder",
         ":stratum_bf",
     ],
@@ -98,6 +99,7 @@ pkg_tar(
     srcs = [
         # TODO(bocon): Consider refactoring common start script and builder
         "deb/start-stratum.sh",
+        "deb/attach-bf-shell.sh",
         ":bf_pipeline_builder",
         ":stratum_bfrt",
     ],
@@ -177,6 +179,7 @@ pkg_deb(
     depends = [
         "kmod",
         "libedit2",
+        "telnet",
     ],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
@@ -201,6 +204,7 @@ pkg_deb(
         "libjudydebian1",
         "libboost-thread1.62.0",
         "libbz2-1.0",
+        "telnet",
     ],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",

@@ -23,7 +23,6 @@ else
     DOCKER_NET_OPTS="-p 28000:28000 "
     DOCKER_NET_OPTS+="-p 9339:9339 "
     DOCKER_NET_OPTS+="-p 9559:9559 "
-    DOCKER_NET_OPTS+="-p 9999:9999 "
 fi
 
 # Mount ONL related directories, if they exist.
