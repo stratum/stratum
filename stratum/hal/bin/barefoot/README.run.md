@@ -455,7 +455,7 @@ documentation for details on how to use the CLI.
 
 ### Access BF Shell via telnet (experimental)
 
-When Stratum started, the BF Shell will be enbaled by default.
+When Stratum started, the BF Shell will be enabled by default.
 
 To access the BF Shell, use the `telnet` command:
 
@@ -463,11 +463,11 @@ To access the BF Shell, use the `telnet` command:
 telnet [Switch IP] 9999
 ```
 
-Once enter the BF Shell, type `ucli` to access the BF CLI.
+Once you have entered the BF Shell, type `ucli` to access the BF CLI.
 
-> Since we are not support all features from the BF SHell, using commands other than `ucli` may cause Stratum crash.
+> Since we do not support all features from the BF Shell, using commands other than `ucli` may cause Stratum crash.
 
-To exit the telnet, press `Ctrl` and `]` to close the connection and type `quit` to leave the telnet.
+To exit the telnet session, press `Ctrl` and `]` to close the connection and type `quit` to leave the telnet.
 
 -----
 
