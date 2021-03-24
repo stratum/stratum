@@ -186,6 +186,7 @@ NP4Switch::~NP4Switch() {}
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kForwardingViability:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kSdnPortId:
         resp = np4_chassis_manager_->GetPortData(req);

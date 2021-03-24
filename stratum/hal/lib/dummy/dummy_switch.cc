@@ -234,10 +234,10 @@ namespace dummy_switch {
   if (node_id != 0) {
     ASSIGN_OR_RETURN(dummy_node, GetDummyNode(node_id));
   }
-  for (const auto& request : requests.requests()) {
+  for (const auto& req : requests.requests()) {
     DataResponse resp;
     ::util::StatusOr<DataResponse> status_or_resp;
-    switch (request.request_case()) {
+    switch (req.request_case()) {
       case Request::kOperStatus:
       case Request::kAdminStatus:
       case Request::kMacAddress:
@@ -249,21 +249,21 @@ namespace dummy_switch {
       case Request::kForwardingViability:
       case Request::kHealthIndicator:
       case Request::kHardwarePort:
-        status_or_resp = dummy_node->RetrievePortData(request);
+        status_or_resp = dummy_node->RetrievePortData(req);
         break;
       case Request::kMemoryErrorAlarm:
       case Request::kFlowProgrammingExceptionAlarm:
       case Request::kNodeInfo:
-        status_or_resp = chassis_mgr_->RetrieveChassisData(request);
+        status_or_resp = chassis_mgr_->RetrieveChassisData(req);
         break;
       case Request::kPortQosCounters:
-        status_or_resp = dummy_node->RetrievePortQosData(request);
+        status_or_resp = dummy_node->RetrievePortQosData(req);
         break;
       case Request::kFrontPanelPortInfo: {
         FrontPanelPortInfo front_panel_port_info;
         std::pair<uint64, uint32> node_port_pair =
-            std::make_pair(request.front_panel_port_info().node_id(),
-                           request.front_panel_port_info().port_id());
+            std::make_pair(req.front_panel_port_info().node_id(),
+                           req.front_panel_port_info().port_id());
         int slot = node_port_id_to_slot[node_port_pair];
         int port = node_port_id_to_port[node_port_pair];
         ::util::Status status = phal_interface_->GetFrontPanelPortInfo(
@@ -277,8 +277,8 @@ namespace dummy_switch {
       }
       case DataRequest::Request::kOpticalTransceiverInfo: {
         ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
-            request.optical_transceiver_info().module(),
-            request.optical_transceiver_info().network_interface(),
+            req.optical_transceiver_info().module(),
+            req.optical_transceiver_info().network_interface(),
             resp.mutable_optical_transceiver_info());
         if (status.ok()) {
           status_or_resp = resp;
@@ -288,18 +288,15 @@ namespace dummy_switch {
         break;
       }
       case DataRequest::Request::kSdnPortId:
-        resp.mutable_sdn_port_id()->set_port_id(
-            request.sdn_port_id().port_id());
+        resp.mutable_sdn_port_id()->set_port_id(req.sdn_port_id().port_id());
         status_or_resp = resp;
         break;
       default:
         status_or_resp =
             MAKE_ERROR(ERR_UNIMPLEMENTED)
             << "DataRequest field "
-            << request.descriptor()
-                   ->FindFieldByNumber(request.request_case())
-                   ->name()
-            << " is not supported yet: " << request.ShortDebugString() << ".";
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet!";
         break;
     }
     if (status_or_resp.ok()) writer->Write(status_or_resp.ValueOrDie());

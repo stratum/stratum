@@ -223,6 +223,15 @@ namespace {
                                       resp.mutable_port_counters()));
       break;
     }
+    case Request::kForwardingViability: {
+      // Find current port forwarding viable state for port located at:
+      // - node_id: req.forwarding_viable().node_id()
+      // - port_id: req.forwarding_viable().port_id()
+      // and then write it into the response.
+      resp.mutable_forwarding_viability()->set_state(
+          TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
+      break;
+    }
     case Request::kAutonegStatus: {
       ASSIGN_OR_RETURN(auto* singleton,
                        GetSingletonPort(request.autoneg_status().node_id(),
