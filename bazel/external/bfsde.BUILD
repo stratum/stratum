@@ -18,8 +18,7 @@ cc_library(
         "barefoot-bin/lib/libbfutils.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
-        "barefoot-bin/lib/libbf_switchd_lib.a",
-    ]),
+    ]) + ["barefoot-bin/lib/libbf_switchd_lib.a"],
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
         "barefoot-bin/include/bf_rt/*.hpp",
@@ -53,13 +52,13 @@ cc_library(
 pkg_tar_with_symlinks(
     name = "bf_library_files",
     srcs = glob([
+        "barefoot-bin/lib/bfshell_plugin_*.so*",
         "barefoot-bin/lib/libavago.so*",
         "barefoot-bin/lib/libbfsys.so*",
         "barefoot-bin/lib/libbfutils.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
-        "barefoot-bin/lib/bfshell_plugin_*.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
@@ -69,11 +68,11 @@ pkg_tar_with_symlinks(
 pkg_tar_with_symlinks(
     name = "bf_shareable_files",
     srcs = glob([
-        "barefoot-bin/share/microp_fw/**",
-        "barefoot-bin/share/bfsys/**",
-        "barefoot-bin/share/tofino_sds_fw/**",
         "barefoot-bin/share/bf_rt_shared/**",
+        "barefoot-bin/share/bfsys/**",
         "barefoot-bin/share/cli/xml/**",
+        "barefoot-bin/share/microp_fw/**",
+        "barefoot-bin/share/tofino_sds_fw/**",
     ]),
     mode = "0644",
     package_dir = "/usr",
