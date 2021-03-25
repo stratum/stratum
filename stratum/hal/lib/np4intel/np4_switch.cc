@@ -183,9 +183,12 @@ NP4Switch::~NP4Switch() {}
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kForwardingViability:
+      case DataRequest::Request::kHealthIndicator:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kSdnPortId:
         resp = np4_chassis_manager_->GetPortData(req);

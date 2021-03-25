@@ -22,7 +22,7 @@ the pipeline config.
 
 ```
 -write_req_log_file=/var/log/stratum/p4_writes.pb.txt
--forwarding_pipeline_configs_file=/var/run/stratum/pipeline_cfg.pb.txt
+-forwarding_pipeline_configs_file=/etc/stratum/pipeline_cfg.pb.txt
 ```
 
 If you override any flags above, make sure to use a non-empty and valid path.
@@ -49,7 +49,7 @@ Next, we can use `docker cp` command to copy files we need
 
 ```
 $ docker cp 4c615277261d:/var/log/stratum/p4_writes.pb.txt .
-$ docker cp 4c615277261d:/var/run/stratum/pipeline_cfg.pb.txt .
+$ docker cp 4c615277261d:/etc/stratum/pipeline_cfg.pb.txt .
 ```
 
 You should be able to see those files in the current working directory.

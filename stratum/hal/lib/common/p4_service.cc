@@ -28,7 +28,7 @@
 #include "stratum/public/lib/error.h"
 
 DEFINE_string(forwarding_pipeline_configs_file,
-              "/var/run/stratum/pipeline_cfg.pb.txt",
+              "/etc/stratum/pipeline_cfg.pb.txt",
               "The latest set of verified ForwardingPipelineConfig protos "
               "pushed to the switch. This file is updated whenever "
               "ForwardingPipelineConfig proto for switching node is added or "
@@ -582,7 +582,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, connection_id)) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED)
                    << "Controller with connection ID " << connection_id
-                   << "is not a master";
+                   << " is not a master";
         } else {
           // If master, try to transmit the packet.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
@@ -602,7 +602,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, connection_id)) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED)
                    << "Controller with connection ID " << connection_id
-                   << "is not a master";
+                   << " is not a master";
         } else {
           // If master, try to ack the digest.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);

@@ -547,7 +547,22 @@ TEST_F(BFChassisManagerTest, GetPortData) {
                   &DataResponse::sdn_port_id, &DataResponse::has_sdn_port_id,
                   &SdnPortId::port_id, sdkPortId);
 
-  // Unsupprorted
+  // Forwarding Viability
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_forwarding_viability,
+                  &DataResponse::forwarding_viability,
+                  &DataResponse::has_forwarding_viability,
+                  &ForwardingViability::state,
+                  TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
+
+  // Health Indicator
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_health_indicator,
+                  &DataResponse::health_indicator,
+                  &DataResponse::has_health_indicator, &HealthIndicator::state,
+                  HEALTH_STATE_UNKNOWN);
+
+  // Unsupported
   DataRequest::Request req;
   req.mutable_lacp_router_mac()->set_node_id(kNodeId);
   req.mutable_lacp_router_mac()->set_port_id(portId);
