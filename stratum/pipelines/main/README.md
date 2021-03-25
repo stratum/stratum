@@ -41,6 +41,13 @@ In a production setup this is the job of a SDN controller like [ONOS](https://gi
 
 For testing and exploration purposes a tool like [p4runtime-shell](https://github.com/p4lang/p4runtime-shell) is useful.
 
+```
+./p4runtime-sh-docker \
+  --grpc-addr <switch ip>:9339 \
+  --device-id 1 --election-id 0,1 \
+  --config <path to main.p4info>,<path to main.pb.bin>
+```
+
 ## More information on the p4c-fpm compiler
 
 See: [p4c-fpm README](../../p4c_backends/README.md)
