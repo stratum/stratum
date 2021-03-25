@@ -641,6 +641,15 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       resp.mutable_admin_status()->set_state(config->admin_state);
       break;
     }
+    case Request::kMacAddress: {
+      // TODO(unknown) Find out why the controller needs it.
+      // Find MAC address of port located at:
+      // - node_id: req.mac_address().node_id()
+      // - port_id: req.mac_address().port_id()
+      // and then write it into the response.
+      resp.mutable_mac_address()->set_mac_address(0ull);
+      break;
+    }
     case Request::kPortSpeed: {
       ASSIGN_OR_RETURN(auto* config,
                        GetPortConfig(request.port_speed().node_id(),

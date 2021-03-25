@@ -328,7 +328,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.mac_address().node_id()
         // - port_id: req.mac_address().port_id()
         // and then write it into the response.
-        resp.mutable_mac_address()->set_mac_address(0x112233445566ull);
+        resp.mutable_mac_address()->set_mac_address(0ull);
         break;
       case DataRequest::Request::kPortCounters: {
         // Find current port counters for port located at:
