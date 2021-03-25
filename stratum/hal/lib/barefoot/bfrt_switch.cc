@@ -205,6 +205,7 @@ BfrtSwitch::~BfrtSwitch() {}
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kForwardingViability:
+      case DataRequest::Request::kHealthIndicator:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
       case DataRequest::Request::kLoopbackStatus:

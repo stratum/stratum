@@ -241,6 +241,14 @@ namespace {
           TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
       break;
     }
+    case DataRequest::Request::kHealthIndicator: {
+      // Find current port health indicator (LED) for port located at:
+      // - node_id: req.health_indicator().node_id()
+      // - port_id: req.health_indicator().port_id()
+      // and then write it into the response.
+      resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
+      break;
+    }
     case Request::kAutonegStatus: {
       ASSIGN_OR_RETURN(auto* singleton,
                        GetSingletonPort(request.autoneg_status().node_id(),
