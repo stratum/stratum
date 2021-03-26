@@ -9,6 +9,8 @@
 #include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
 
+#include "absl/strings/str_replace.h"
+#include "re2/re2.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
@@ -322,17 +324,18 @@ std::string MacAddressToYangString(const uint64& mac_address) {
                          mac_address & 0xFF);
 }
 
-uint64 YangStringToMacAddress(const std::string& yang_string) {
-  std::string tmp_str = yang_string;
-  // Remove colons
-  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
-                tmp_str.end());
-  return strtoull(tmp_str.c_str(), NULL, 16);
-}
+::util::StatusOr<uint64> YangStringToMacAddress(std::string yang_string) {
+  CHECK_RETURN_IF_FALSE(
+      RE2::FullMatch(yang_string, R"#(^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$)#"))
+      << "Provided string " << yang_string << " is not a valid MAC address.";
+  // Remove colons.
+  absl::StrReplaceAll({{":", ""}}, &yang_string);
+  uint64 mac_address;
+  // We rather use an absl internal function than strtoull.
+  CHECK_RETURN_IF_FALSE(absl::numbers_internal::safe_strtou64_base(
+      yang_string, &mac_address, 16));
 
-bool IsMacAddressValid(const std::string& mac_address) {
-  const std::regex mac_address_regex(kMacAddressRegex);
-  return regex_match(mac_address, mac_address_regex);
+  return mac_address;
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
@@ -427,8 +430,6 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
 }
 
 uint64 ConvertHzToMHz(const uint64& val) { return val / 1000000; }
-
-uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
 
 ::util::Status ConvertStringToLogSeverity(const std::string& severity_string,
                                           LoggingConfig* logging_config) {

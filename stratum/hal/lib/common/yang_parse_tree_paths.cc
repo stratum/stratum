@@ -1181,7 +1181,7 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state, uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1249,7 +1249,7 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1349,11 +1349,8 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     std::string mac_address_string = typed_val->string_val();
-    if (!IsMacAddressValid(mac_address_string)) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
-    }
-
-    uint64 mac_address = YangStringToMacAddress(mac_address_string);
+    ASSIGN_OR_RETURN(uint64 mac_address,
+                     YangStringToMacAddress(mac_address_string));
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_mac_address,
@@ -1362,7 +1359,7 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1435,7 +1432,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1503,7 +1500,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -2439,7 +2436,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(
     RETURN_IF_ERROR(SetValue(module, network_interface, tree,
                              &OpticalTransceiverInfo::set_frequency, uint_val));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2801,7 +2798,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
                              &OpticalTransceiverInfo::set_target_output_power,
                              output_power));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2870,7 +2867,7 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
                              &OpticalTransceiverInfo::set_operational_mode,
                              uint_val));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -3566,6 +3563,18 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
           : singleton.name();
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
+  bool port_auto_neg_enabled = false;
+  bool port_enabled = false;
+  bool loopback_enabled = false;
+  uint64 mac_address = kDummyMacAddress;
+  if (singleton.has_config_params()) {
+    port_auto_neg_enabled =
+        IsPortAutonegEnabled(singleton.config_params().autoneg());
+    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
+    mac_address = singleton.config_params().mac_address();
+    loopback_enabled =
+        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
+  }
   TreeNode* node =
       AddSubtreeInterface(name, node_id, port_id, node_config, tree);
 
@@ -3581,25 +3590,12 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "interface", name)("ethernet")("config")("port-speed")());
   SetUpInterfacesInterfaceEthernetConfigPortSpeed(
       node_id, port_id, singleton.speed_bps(), node, tree);
-  bool port_auto_neg_enabled = false;
-  bool port_enabled = false;
-  bool loopback_enabled = false;
-  uint64 mac_address = kDummyMacAddress;
-  if (singleton.has_config_params()) {
-    port_auto_neg_enabled =
-        IsPortAutonegEnabled(singleton.config_params().autoneg());
-    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
-    if (singleton.config_params().has_mac_address()) {
-      mac_address = singleton.config_params().mac_address().mac_address();
-    }
-    loopback_enabled =
-        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
-  }
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
   SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(
       node_id, port_id, port_auto_neg_enabled, node, tree);
+
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node,
@@ -3619,6 +3615,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("present")());
   SetUpComponentsComponentTransceiverStatePresent(node, tree, node_id, port_id);
+
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("serial-no")());
   SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id,
