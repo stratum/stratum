@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_MOCK_H_
 
@@ -10,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -66,7 +65,8 @@ class BcmSdkMock : public BcmSdkInterface {
   MOCK_METHOD1(FindOrCreateL3CpuEgressIntf, ::util::StatusOr<int>(int unit));
   MOCK_METHOD6(FindOrCreateL3PortEgressIntf,
                ::util::StatusOr<int>(int unit, uint64 nexthop_mac, int port,
-                                     int vlan, int router_intf_id, int mpls_label));
+                                     int vlan, int router_intf_id,
+                                     int mpls_label));
   MOCK_METHOD5(FindOrCreateL3TrunkEgressIntf,
                ::util::StatusOr<int>(int unit, uint64 nexthop_mac, int trunk,
                                      int vlan, int router_intf_id));

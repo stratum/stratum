@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_CONSTANTS_H_
 #define STRATUM_HAL_LIB_BCM_CONSTANTS_H_
 
@@ -25,9 +24,6 @@ constexpr int kDefaultCos = 4;
 
 // Misc constants.
 constexpr int kSdkCheckpointFileSize = 50000000;
-constexpr int kSdkCheckpointFileSizeTomahawk = 86000000; // TODO(max): cleanup
-// constexpr int kSdkCheckpointFileSizeTrident2 = 5000000;
-constexpr int kSdkCheckpointFileSizeTrident2 = 50000000;
 constexpr int kDefaultMaxFrameSize = 1518;
 constexpr int kMaxEcmpGroupSize = 1024;
 constexpr int kDefaultMtu = 1500;

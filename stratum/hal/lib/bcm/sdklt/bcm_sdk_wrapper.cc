@@ -2375,7 +2375,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   CHECK_RETURN_IF_FALSE(router_mac);
   CHECK_RETURN_IF_FALSE(mpls_label);
-  CHECK_RETURN_IF_FALSE(mpls_ttl > 0 && mpls_ttl <= UINT8_MAX);
+  CHECK_RETURN_IF_FALSE(mpls_ttl > 0 && mpls_ttl <= kuint8max);
 
   // check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));

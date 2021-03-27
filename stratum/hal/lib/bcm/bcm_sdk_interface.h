@@ -7,10 +7,10 @@
 
 #include <functional>
 #include <map>
-#include <string>
-#include <vector>
 #include <memory>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
@@ -183,8 +183,8 @@ class BcmSdkInterface {
 
   // Generates the configuration file (content) for the SDK.
   virtual ::util::StatusOr<std::string> GenerateBcmConfigFile(
-    const BcmChassisMap& base_bcm_chassis_map,
-    const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) = 0;
+      const BcmChassisMap& base_bcm_chassis_map,
+      const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) = 0;
 
   // Finds the BCM SOC device given PCI bus/PCI slot, creates a soc_cm_dev_t
   // entry that is the main internal SDK data structure that identifies the
@@ -308,14 +308,15 @@ class BcmSdkInterface {
   //     int unit, uint64 nexthop_mac, int port, int vlan, int router_intf_id,
   //     int mpls_label) = 0;
 
-  // Finds an L3 mpls transit egress intf defining the nexthop, given its (nexthop_mac,
-  // port, router_intf_id). If it does not exist, tries to create it. In either
-  // case, returns the ID of the egress intf. Packets sent to the intf
-  // will be sent through the given port. DA will be the given nexthop_mac, and
-  // SA will be found using the given router_intf_id, created previously using
-  // FindOrCreateL3RouterIntf().
-  // virtual ::util::StatusOr<int> FindOrCreateL3MplsTransitEgressIntf(int unit,
-  //     uint64 nexthop_mac, int port, int router_intf_id, uint32 mpls_label) = 0;
+  // Finds an L3 mpls transit egress intf defining the nexthop, given its
+  // (nexthop_mac, port, router_intf_id). If it does not exist, tries to create
+  // it. In either case, returns the ID of the egress intf. Packets sent to the
+  // intf will be sent through the given port. DA will be the given nexthop_mac,
+  // and SA will be found using the given router_intf_id, created previously
+  // using FindOrCreateL3RouterIntf(). virtual ::util::StatusOr<int>
+  // FindOrCreateL3MplsTransitEgressIntf(int unit,
+  //     uint64 nexthop_mac, int port, int router_intf_id, uint32 mpls_label) =
+  //     0;
 
   // Finds an L3 trunk/lag egress intf defining the nexthop, given its
   // (nexthop_mac, trunk, vlan, router_intf_id). If it does not exist, tries to

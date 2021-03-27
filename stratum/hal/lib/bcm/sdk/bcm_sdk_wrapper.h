@@ -32,14 +32,18 @@
 #include "stratum/hal/lib/common/constants.h"
 
 extern "C" {
+// First we undefine symbols that clash with the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+// Then load defines for the SDK.
 #include "sdk_build_flags.h"  // NOLINT
+// These comments ensures that the order is preserved by automatic formatting.
 #include "bcm/field.h"
 #include "bcm/port.h"
 #include "bcm/types.h"
-#include "ibde.h"             // NOLINT
-#include "linux-bde.h"        // NOLINT
+#include "ibde.h"       // NOLINT
+#include "linux-bde.h"  // NOLINT
 #include "soc/cmext.h"
+// Lastly, undefine clashing symbols defined by the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 }
 
@@ -152,12 +156,13 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status DeleteL3RouterIntf(int unit, int router_intf_id) override;
   ::util::Status AttachMplsEncapTunnel(
       int unit, int router_intf_id, const BcmTunnelInit& tunnel_init) override;
-  ::util::Status DetachMplsEncapTunnel(
-      int unit, int router_intf_id) override;
+  ::util::Status DetachMplsEncapTunnel(int unit, int router_intf_id) override;
   ::util::StatusOr<int> FindOrCreateL3CpuEgressIntf(int unit) override;
-  ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(
-      int unit, uint64 nexthop_mac, int port, int vlan,
-      int router_intf_id, int mpls_label) override;
+  ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(int unit,
+                                                     uint64 nexthop_mac,
+                                                     int port, int vlan,
+                                                     int router_intf_id,
+                                                     int mpls_label) override;
   ::util::StatusOr<int> FindOrCreateL3TrunkEgressIntf(
       int unit, uint64 nexthop_mac, int trunk, int vlan,
       int router_intf_id) override;

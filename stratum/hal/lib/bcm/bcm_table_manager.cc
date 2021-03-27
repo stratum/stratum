@@ -2344,6 +2344,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       break;
     case P4_TABLE_MPLS:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_MPLS;
+      break;
     default:
       break;
   }

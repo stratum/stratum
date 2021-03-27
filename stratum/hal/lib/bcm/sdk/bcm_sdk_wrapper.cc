@@ -667,7 +667,8 @@ std::string PrintL3MplsRoute(const bcm_mpls_tunnel_switch_t& tunnel_switch) {
   return buffer.str();
 }
 
-std::string PrintL3MplsTunnelInit(const std::vector<bcm_mpls_egress_label_t>& egress_labels) {
+std::string PrintL3MplsTunnelInit(
+    const std::vector<bcm_mpls_egress_label_t>& egress_labels) {
   std::stringstream buffer;
   buffer << "L3 Mpls tunnel initiator (";
   for (const auto& label : egress_labels) {
@@ -683,9 +684,10 @@ std::string PrintL3MplsTunnelInit(const std::vector<bcm_mpls_egress_label_t>& eg
 
 // Wrapper around SDK calls to see if the L3 intf object exists. If not, try to
 // create it.
-// TODO(max): try to integrate with L3_IIFs that want a MPLS tunnel initiator attached.
-//    This includes checking the tunnel init for MPLS label and ttl and potentially reusing the IFF.
-//    With ECMP groups there should be no need for IIF reuse, since they're shared at EGR intf level.
+// TODO(max): try to integrate with L3_IIFs that want a MPLS tunnel initiator
+//    attached. This includes checking the tunnel init for MPLS label and ttl
+//    and potentially reusing the IFF. With ECMP groups there should be no need
+//    for IIF reuse, since they're shared at EGR intf level.
 int FindOrCreateL3RouterIntfHelper(int unit, bcm_l3_intf_t* l3_intf) {
   // int rv = bcm_l3_intf_find(unit, l3_intf);
   int rv = BCM_E_NOT_FOUND;
@@ -1685,8 +1687,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::DetachMplsEncapTunnel(
-    int unit, int router_intf_id) {
+::util::Status BcmSdkWrapper::DetachMplsEncapTunnel(int unit,
+                                                    int router_intf_id) {
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_initiator_clear(unit, router_intf_id));
 
   return ::util::OkStatus();
@@ -1795,12 +1797,9 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::ModifyL3PortEgressIntf(int unit,
-                                                     int egress_intf_id,
-                                                     uint64 nexthop_mac,
-                                                     int port, int vlan,
-                                                     int mpls_label,
-                                                     int router_intf_id) {
+::util::Status BcmSdkWrapper::ModifyL3PortEgressIntf(
+    int unit, int egress_intf_id, uint64 nexthop_mac, int port, int vlan,
+    int mpls_label, int router_intf_id) {
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
   bcm_l3_egress_t l3_egress;
@@ -2322,7 +2321,8 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                                                        uint64 dst_mac_mask) {
   bcm_l2_station_t l2_station;
   bcm_l2_station_t_init(&l2_station);
-  l2_station.flags = BCM_L2_STATION_IPV4 | BCM_L2_STATION_IPV6 | BCM_L2_STATION_MPLS;
+  l2_station.flags =
+      BCM_L2_STATION_IPV4 | BCM_L2_STATION_IPV6 | BCM_L2_STATION_MPLS;
   l2_station.priority = priority;
   if (vlan > 0) {
     // A specific VLAN is specified.
