@@ -248,7 +248,6 @@ namespace dummy_switch {
       case Request::kPortCounters:
       case Request::kForwardingViability:
       case Request::kHealthIndicator:
-      case Request::kHardwarePort:
         status_or_resp = dummy_node->RetrievePortData(req);
         break;
       case Request::kMemoryErrorAlarm:
