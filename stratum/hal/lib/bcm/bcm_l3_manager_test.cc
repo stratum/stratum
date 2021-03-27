@@ -2,20 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_l3_manager.h"
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/source_location.h"
 
 namespace stratum {
 namespace hal {
@@ -56,6 +55,14 @@ class BcmL3ManagerTest : public ::testing::Test {
     port_nexthop_.set_vlan(kVlan);
     port_nexthop_.set_src_mac(kSrcMac);
     port_nexthop_.set_dst_mac(kDstMac);
+
+    // TODO
+    port_mpls_nexthop_.set_type(BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT);
+    port_mpls_nexthop_.set_unit(kUnit);
+    port_mpls_nexthop_.set_logical_port(kLogicalPort);
+    port_mpls_nexthop_.set_vlan(kVlan);
+    port_mpls_nexthop_.set_src_mac(kSrcMac);
+    port_mpls_nexthop_.set_dst_mac(kDstMac);
 
     trunk_nexthop_.set_type(BcmNonMultipathNexthop::NEXTHOP_TYPE_TRUNK);
     trunk_nexthop_.set_unit(kUnit);
@@ -136,6 +143,7 @@ class BcmL3ManagerTest : public ::testing::Test {
   BcmNonMultipathNexthop cpu_l2_copy_nexthop_;
   BcmNonMultipathNexthop cpu_normal_l3_nexthop_;
   BcmNonMultipathNexthop port_nexthop_;
+  BcmNonMultipathNexthop port_mpls_nexthop_;
   BcmNonMultipathNexthop trunk_nexthop_;
   BcmNonMultipathNexthop drop_nexthop_;
   BcmMultipathNexthop wcmp_nexthop1_;
@@ -255,6 +263,22 @@ TEST_F(BcmL3ManagerTest, FindOrCreateNonMultipathNexthopSuccessForRegularPort) {
       .WillOnce(Return(kEgressIntfId1));
 
   auto ret = bcm_l3_manager_->FindOrCreateNonMultipathNexthop(port_nexthop_);
+  ASSERT_TRUE(ret.ok());
+  EXPECT_EQ(kEgressIntfId1, ret.ValueOrDie());
+}
+
+// TODO
+TEST_F(BcmL3ManagerTest, FindOrCreateNonMultipathNexthopSuccessForMplsPort) {
+  // Expectations for the mock objects.
+  EXPECT_CALL(*bcm_sdk_mock_, FindOrCreateL3RouterIntf(kUnit, kSrcMac, kVlan))
+      .WillOnce(Return(kNewRouterIntfId));
+  EXPECT_CALL(*bcm_sdk_mock_,
+              FindOrCreateL3PortEgressIntf(kUnit, kDstMac, kLogicalPort, kVlan,
+                                           kNewRouterIntfId))
+      .WillOnce(Return(kEgressIntfId1));
+
+  auto ret =
+      bcm_l3_manager_->FindOrCreateNonMultipathNexthop(port_mpls_nexthop_);
   ASSERT_TRUE(ret.ok());
   EXPECT_EQ(kEgressIntfId1, ret.ValueOrDie());
 }
@@ -1311,6 +1335,44 @@ TEST_F(BcmL3ManagerTest, InsertLpmOrHostFlowSuccessForIpv6HostFlow) {
               AddL3HostIpv6(kUnit, 0,
                             std::string("\x01\x02\x03\x04\x05\x06\x07\x08", 8),
                             -1, 100003))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              AddTableEntry(EqualsProto(p4_table_entry)))
+      .WillOnce(Return(::util::OkStatus()));
+
+  ASSERT_OK(bcm_l3_manager_->InsertTableEntry(p4_table_entry));
+}
+
+TEST_F(BcmL3ManagerTest,
+       InsertMplsFlowSuccessForIpv4LpmFlowAndMultipathNexthop) {
+  const std::string kBcmFlowEntryText = R"(
+      unit: 3
+      bcm_table_type: BCM_TABLE_MPLS
+      fields: {
+        type: MPLS_LABEL
+        value {
+          u32: 100
+        }
+      }
+      actions: {
+        type: OUTPUT_L3
+        params {
+          type: EGRESS_INTF_ID
+          value {
+            u32: 200256
+          }
+        }
+      }
+  )";
+
+  // Test BcmFlowEntry.
+  BcmFlowEntry bcm_flow_entry;
+  ASSERT_OK(ParseProtoFromString(kBcmFlowEntryText, &bcm_flow_entry));
+  ::p4::v1::TableEntry p4_table_entry =
+      ExpectFlowConversion(::p4::v1::Update::INSERT, bcm_flow_entry);
+
+  // Expectations for the mock objects.
+  EXPECT_CALL(*bcm_sdk_mock_, AddMplsRoute(kUnit, 100, 200256, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_table_manager_mock_,
               AddTableEntry(EqualsProto(p4_table_entry)))

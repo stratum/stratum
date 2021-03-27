@@ -2,16 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+
 #include <algorithm>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+#include "absl/memory/memory.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -77,6 +78,7 @@ BcmL3Manager::~BcmL3Manager() {}
   int vlan = nexthop.vlan();
   uint64 src_mac = nexthop.src_mac();
   uint64 dst_mac = nexthop.dst_mac();
+  uint32 mpls_swap_label = nexthop.mpls_swap_label();
   int router_intf_id = -1, egress_intf_id = -1;
 
   // Given the router intf, find or create the egress intf.
@@ -84,6 +86,7 @@ BcmL3Manager::~BcmL3Manager() {}
     case BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT: {
       int logical_port = nexthop.logical_port();
       if (logical_port == 0 && src_mac == 0 && dst_mac == 0) {
+        // CPU next hop
         ASSIGN_OR_RETURN(
             egress_intf_id,
             bcm_sdk_interface_->FindOrCreateL3CpuEgressIntf(unit_));
@@ -91,10 +94,14 @@ BcmL3Manager::~BcmL3Manager() {}
         ASSIGN_OR_RETURN(
             router_intf_id,
             bcm_sdk_interface_->FindOrCreateL3RouterIntf(unit_, src_mac, vlan));
-        ASSIGN_OR_RETURN(
-            egress_intf_id,
-            bcm_sdk_interface_->FindOrCreateL3PortEgressIntf(
-                unit_, dst_mac, logical_port, vlan, router_intf_id));
+        if (nexthop.has_tunnel_init()) {
+          RETURN_IF_ERROR(bcm_sdk_interface_->AttachMplsEncapTunnel(
+              unit_, router_intf_id, nexthop.tunnel_init()));
+        }
+        ASSIGN_OR_RETURN(egress_intf_id,
+                         bcm_sdk_interface_->FindOrCreateL3PortEgressIntf(
+                             unit_, dst_mac, logical_port, vlan, router_intf_id,
+                             mpls_swap_label));
       } else {
         return MAKE_ERROR(ERR_INVALID_PARAM)
                << "Invalid nexthop of type NEXTHOP_TYPE_PORT: "
@@ -190,6 +197,7 @@ BcmL3Manager::~BcmL3Manager() {}
   int vlan = nexthop.vlan();
   uint64 src_mac = nexthop.src_mac();
   uint64 dst_mac = nexthop.dst_mac();
+  uint32 mpls_swap_label = nexthop.mpls_swap_label();
   int old_router_intf_id = -1, new_router_intf_id = -1;
 
   // First find the old router intf the given egress intf is using. If the old
@@ -204,14 +212,19 @@ BcmL3Manager::~BcmL3Manager() {}
     case BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT: {
       int logical_port = nexthop.logical_port();
       if (logical_port == 0 && src_mac == 0 && dst_mac == 0) {
+        // CPU next hop
         RETURN_IF_ERROR(
             bcm_sdk_interface_->ModifyL3CpuEgressIntf(unit_, egress_intf_id));
       } else if (logical_port >= 0 && src_mac > 0 && dst_mac > 0) {
         ASSIGN_OR_RETURN(
             new_router_intf_id,
             bcm_sdk_interface_->FindOrCreateL3RouterIntf(unit_, src_mac, vlan));
+        if (nexthop.has_tunnel_init()) {
+          RETURN_IF_ERROR(bcm_sdk_interface_->AttachMplsEncapTunnel(
+              unit_, new_router_intf_id, nexthop.tunnel_init()));
+        }
         RETURN_IF_ERROR(bcm_sdk_interface_->ModifyL3PortEgressIntf(
-            unit_, egress_intf_id, dst_mac, logical_port, vlan,
+            unit_, egress_intf_id, dst_mac, logical_port, vlan, mpls_swap_label,
             new_router_intf_id));
       } else {
         return MAKE_ERROR(ERR_INVALID_PARAM)
@@ -326,7 +339,11 @@ BcmL3Manager::~BcmL3Manager() {}
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
       entry, ::p4::v1::Update::INSERT, &bcm_flow_entry));
-  RETURN_IF_ERROR(InsertLpmOrHostFlow(bcm_flow_entry));
+  if (bcm_flow_entry.bcm_table_type() == BcmFlowEntry::BCM_TABLE_MPLS) {
+    RETURN_IF_ERROR(InsertMplsFlow(bcm_flow_entry));
+  } else {
+    RETURN_IF_ERROR(InsertLpmOrHostFlow(bcm_flow_entry));
+  }
   RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
 
   return ::util::OkStatus();
@@ -374,7 +391,11 @@ BcmL3Manager::~BcmL3Manager() {}
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
       entry, ::p4::v1::Update::MODIFY, &bcm_flow_entry));
-  RETURN_IF_ERROR(ModifyLpmOrHostFlow(bcm_flow_entry));
+  if (bcm_flow_entry.bcm_table_type() == BcmFlowEntry::BCM_TABLE_MPLS) {
+    RETURN_IF_ERROR(ModifyMplsFlow(bcm_flow_entry));
+  } else {
+    RETURN_IF_ERROR(ModifyLpmOrHostFlow(bcm_flow_entry));
+  }
   RETURN_IF_ERROR(bcm_table_manager_->UpdateTableEntry(entry));
 
   return ::util::OkStatus();
@@ -418,7 +439,11 @@ BcmL3Manager::~BcmL3Manager() {}
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
       entry, ::p4::v1::Update::DELETE, &bcm_flow_entry));
-  RETURN_IF_ERROR(DeleteLpmOrHostFlow(bcm_flow_entry));
+  if (bcm_flow_entry.bcm_table_type() == BcmFlowEntry::BCM_TABLE_MPLS) {
+    RETURN_IF_ERROR(DeleteMplsFlow(bcm_flow_entry));
+  } else {
+    RETURN_IF_ERROR(DeleteLpmOrHostFlow(bcm_flow_entry));
+  }
   RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
 
   return ::util::OkStatus();
@@ -465,6 +490,52 @@ BcmL3Manager::~BcmL3Manager() {}
   }
 }
 
+::util::Status BcmL3Manager::InsertMplsFlow(
+    const BcmFlowEntry& bcm_flow_entry) {
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+      << "Received Mpls flow for unit " << bcm_flow_entry.unit() << " on unit "
+      << unit_ << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
+                        BcmFlowEntry::BCM_TABLE_MPLS);
+
+  MplsKey key;
+  MplsActionParams action_params;
+  RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
+  RETURN_IF_ERROR(ExtractMplsActionParams(bcm_flow_entry, &action_params));
+
+  return bcm_sdk_interface_->AddMplsRoute(unit_, key.mpls_label,
+                                          action_params.egress_intf_id,
+                                          action_params.is_intf_multipath);
+}
+
+::util::Status BcmL3Manager::ModifyMplsFlow(
+    const BcmFlowEntry& bcm_flow_entry) {
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+      << "Received Mpls flow for unit " << bcm_flow_entry.unit() << " on unit "
+      << unit_ << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
+                        BcmFlowEntry::BCM_TABLE_MPLS);
+  MplsKey key;
+  MplsActionParams action_params;
+  RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
+  RETURN_IF_ERROR(ExtractMplsActionParams(bcm_flow_entry, &action_params));
+  return bcm_sdk_interface_->ModifyMplsRoute(unit_, key.mpls_label,
+                                             action_params.egress_intf_id,
+                                             action_params.is_intf_multipath);
+}
+
+::util::Status BcmL3Manager::DeleteMplsFlow(
+    const BcmFlowEntry& bcm_flow_entry) {
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+      << "Received Mpls flow for unit " << bcm_flow_entry.unit() << " on unit "
+      << unit_ << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
+                        BcmFlowEntry::BCM_TABLE_MPLS);
+  MplsKey key;
+  RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
+  return bcm_sdk_interface_->DeleteMplsRoute(unit_, key.mpls_label);
+}
+
 std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
     BcmSdkInterface* bcm_sdk_interface, BcmTableManager* bcm_table_manager,
     int unit) {
@@ -503,8 +574,8 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
         if (key->mask_ipv4 != 0 &&
             bcm_table_type == BcmFlowEntry::BCM_TABLE_IPV4_HOST) {
           return MAKE_ERROR(ERR_INVALID_PARAM)
-                  << "Must not specify mask on host dst routes "
-                  << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
+                 << "Must not specify mask on host dst routes "
+                 << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
         }
       }
       break;
@@ -656,6 +727,83 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
         return MAKE_ERROR(ERR_INVALID_PARAM)
                << "Invalid action type. Expecting OUTPUT_{PORT,TRUNK,GROUP} or "
                << "SET_L3_DST_CLASS_ID types: "
+               << bcm_flow_entry.ShortDebugString() << ".";
+    }
+  }
+
+  if (action_params->egress_intf_id <= 0) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Could not resolve an egress_intf_id for "
+           << bcm_flow_entry.ShortDebugString() << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmL3Manager::ExtractMplsKey(const BcmFlowEntry& bcm_flow_entry,
+                                            MplsKey* key) {
+  CHECK_RETURN_IF_FALSE(key != nullptr) << "Null key!";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
+                        BcmFlowEntry::BCM_TABLE_MPLS);
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.fields_size() == 1)
+      << "Expected at exactly one field of type MPLS_LABEL label: "
+      << bcm_flow_entry.ShortDebugString() << ".";
+
+  for (const auto& field : bcm_flow_entry.fields()) {
+    if (field.type() == BcmField::MPLS_LABEL) {
+      key->mpls_label = field.value().u32();
+    } else {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Invalid field type. Expecting only MPLS_LABEL type, but got: "
+             << bcm_flow_entry.ShortDebugString() << ".";
+    }
+  }
+  // Validations
+  if (!key->mpls_label) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Missing Mpls label key in: " << bcm_flow_entry.ShortDebugString()
+           << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmL3Manager::ExtractMplsActionParams(
+    const BcmFlowEntry& bcm_flow_entry, MplsActionParams* action_params) {
+  CHECK_RETURN_IF_FALSE(action_params != nullptr) << "Null action_params!";
+
+  // Find the egress_intf_id.
+  if (bcm_flow_entry.actions_size() > 1) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Expected at most one action of type OUTPUT_{PORT,TRUNK,L3}: "
+           << bcm_flow_entry.ShortDebugString() << ".";
+  }
+  for (const auto& action : bcm_flow_entry.actions()) {
+    switch (action.type()) {
+      case BcmAction::OUTPUT_L3:
+      case BcmAction::OUTPUT_PORT:
+      case BcmAction::OUTPUT_TRUNK: {
+        // We only support the simple case where the egress interface is already
+        // created by the controller.
+        if (action.params_size() == 1 &&
+            action.params(0).type() == BcmAction::Param::EGRESS_INTF_ID) {
+          action_params->egress_intf_id =
+              static_cast<int>(action.params(0).value().u32());
+          if (action.type() == BcmAction::OUTPUT_L3) {
+            action_params->is_intf_multipath = true;
+          }
+        } else {
+          return MAKE_ERROR(ERR_INVALID_PARAM)
+                 << "Invalid action parameters for an action of type "
+                 << "OUTPUT_{PORT,TRUNK,L3}: "
+                 << bcm_flow_entry.ShortDebugString() << ".";
+        }
+        break;
+      }
+      default:
+        return MAKE_ERROR(ERR_INVALID_PARAM)
+               << "Invalid action type. Expecting OUTPUT_{PORT,TRUNK,L3} "
+                  "types: "
                << bcm_flow_entry.ShortDebugString() << ".";
     }
   }

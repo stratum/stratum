@@ -32,14 +32,18 @@
 #include "stratum/hal/lib/common/constants.h"
 
 extern "C" {
+// First we undefine symbols that clash with the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+// Then load defines for the SDK.
 #include "sdk_build_flags.h"  // NOLINT
+// These comments ensures that the order is preserved by automatic formatting.
 #include "bcm/field.h"
 #include "bcm/port.h"
 #include "bcm/types.h"
-#include "ibde.h"             // NOLINT
-#include "linux-bde.h"        // NOLINT
+#include "ibde.h"       // NOLINT
+#include "linux-bde.h"  // NOLINT
 #include "soc/cmext.h"
+// Lastly, undefine clashing symbols defined by the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 }
 
@@ -150,10 +154,15 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::StatusOr<int> FindOrCreateL3RouterIntf(int unit, uint64 router_mac,
                                                  int vlan) override;
   ::util::Status DeleteL3RouterIntf(int unit, int router_intf_id) override;
+  ::util::Status AttachMplsEncapTunnel(
+      int unit, int router_intf_id, const BcmTunnelInit& tunnel_init) override;
+  ::util::Status DetachMplsEncapTunnel(int unit, int router_intf_id) override;
   ::util::StatusOr<int> FindOrCreateL3CpuEgressIntf(int unit) override;
-  ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(
-      int unit, uint64 nexthop_mac, int port, int vlan,
-      int router_intf_id) override;
+  ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(int unit,
+                                                     uint64 nexthop_mac,
+                                                     int port, int vlan,
+                                                     int router_intf_id,
+                                                     int mpls_label) override;
   ::util::StatusOr<int> FindOrCreateL3TrunkEgressIntf(
       int unit, uint64 nexthop_mac, int trunk, int vlan,
       int router_intf_id) override;
@@ -161,8 +170,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status ModifyL3CpuEgressIntf(int unit, int egress_intf_id) override;
   ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
                                         uint64 nexthop_mac, int port, int vlan,
+                                        int mpls_label,
                                         int router_intf_id) override;
-
   ::util::Status ModifyL3TrunkEgressIntf(int unit, int egress_intf_id,
                                          uint64 nexthop_mac, int trunk,
                                          int vlan, int router_intf_id) override;
@@ -187,6 +196,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                int egress_intf_id) override;
   ::util::Status AddL3HostIpv6(int unit, int vrf, const std::string& ipv6,
                                int class_id, int egress_intf_id) override;
+  ::util::Status AddMplsRoute(int unit_, uint32 mpls_label, int egress_intf_id,
+                              bool is_intf_multipath) override;
   ::util::Status ModifyL3RouteIpv4(int unit, int vrf, uint32 subnet,
                                    uint32 mask, int class_id,
                                    int egress_intf_id,
@@ -199,6 +210,9 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                   int egress_intf_id) override;
   ::util::Status ModifyL3HostIpv6(int unit, int vrf, const std::string& ipv6,
                                   int class_id, int egress_intf_id) override;
+  ::util::Status ModifyMplsRoute(int unit_, uint32 mpls_label,
+                                 int egress_intf_id,
+                                 bool is_intf_multipath) override;
   ::util::Status DeleteL3RouteIpv4(int unit, int vrf, uint32 subnet,
                                    uint32 mask) override;
   ::util::Status DeleteL3RouteIpv6(int unit, int vrf, const std::string& subnet,
@@ -206,6 +220,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status DeleteL3HostIpv4(int unit, int vrf, uint32 ipv4) override;
   ::util::Status DeleteL3HostIpv6(int unit, int vrf,
                                   const std::string& ipv6) override;
+  ::util::Status DeleteMplsRoute(int unit_, uint32 mpls_label) override;
   ::util::StatusOr<int> AddMyStationEntry(int unit, int priority, int vlan,
                                           int vlan_mask, uint64 dst_mac,
                                           uint64 dst_mac_mask) override;

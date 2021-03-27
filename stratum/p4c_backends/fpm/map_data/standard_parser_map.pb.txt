@@ -246,10 +246,51 @@ parser_states {
           next_state: "target_parse_arp"
         }
         cases {
+          keyset_values {
+            constant {
+              value: 0x8847
+              mask: 1
+            }
+          }
+          next_state: "target_parse_mpls"
+        }
+        cases {
           is_default: true
           next_state: "accept"
         }
       }
+    }
+  }
+}
+parser_states {
+  key: "target_parse_mpls"
+  value {
+    name: "target_parse_mpls"
+    extracted_header {
+      name: "MPLS Header"
+      header_type: P4_HEADER_MPLS
+      fields {
+        type: P4_FIELD_TYPE_MPLS_LABEL
+        bit_width: 20
+      }
+      fields {
+        type: P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS
+        bit_offset: 20
+        bit_width: 3
+      }
+      fields {
+        type: P4_FIELD_TYPE_MPLS_BOS
+        bit_offset: 23
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_MPLS_TTL
+        bit_offset: 24
+        bit_width: 8
+      }
+    }
+    transition {
+      next_state: "accept"
     }
   }
 }

@@ -156,6 +156,8 @@ BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
           {P4_FIELD_TYPE_ICMP_TYPE, BcmField::ICMP_TYPE_CODE},
           {P4_FIELD_TYPE_L3_CLASS_ID, BcmField::L3_DST_CLASS_ID},
           {P4_FIELD_TYPE_CLONE_PORT, BcmField::CLONE_PORT},
+          {P4_FIELD_TYPE_MPLS_LABEL, BcmField::MPLS_LABEL},
+          {P4_FIELD_TYPE_MPLS_BOS, BcmField::MPLS_BOS},
           // Currently unsupported field types below.
           {P4_FIELD_TYPE_IPV4_IHL, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_IPV4_TOTAL_LENGTH, BcmField::UNKNOWN},
@@ -748,16 +750,19 @@ namespace {
         nexthop.src_mac() == 0) {
       VLOG(1) << "Detected a trap to CPU nexthop: "
               << nexthop.ShortDebugString() << ".";
-    } else if (nexthop.logical_port() == 0 && nexthop.src_mac() > 0 &&
-               nexthop.dst_mac() > 0) {
-      VLOG(1) << "Detected a nexthop to CPU with regular L3 routing: "
-              << nexthop.ShortDebugString() << ".";
 
-    } else if (nexthop.logical_port() > 0 && nexthop.src_mac() > 0 &&
+    } else if (nexthop.logical_port() >= 0 && nexthop.src_mac() > 0 &&
                nexthop.dst_mac() > 0) {
-      VLOG(1) << "Detected a nexthop to port with regular L3 routing: "
-              << nexthop.ShortDebugString() << ".";
-
+      if (nexthop.has_tunnel_init()) {
+        VLOG(1) << "Detected a nexthop to port with tunnel encap routing: "
+                << nexthop.ShortDebugString() << ".";
+      } else if (!nexthop.has_tunnel_init() && nexthop.mpls_swap_label()) {
+        VLOG(1) << "Detected a nexthop to port with Mpls swap routing: "
+                << nexthop.ShortDebugString() << ".";
+      } else {
+        VLOG(1) << "Detected a nexthop to port with regular L3 routing: "
+                << nexthop.ShortDebugString() << ".";
+      }
     } else {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Detected invalid port nexthop: " << nexthop.ShortDebugString()
@@ -823,6 +828,10 @@ namespace {
         //    here as we cannot do rate limiting for such packets.
         // 3- If a regular port/trunk is given the src_mac and dst_mac both
         //    should be non-zero.
+        std::deque<uint32> mpls_labels;
+        std::deque<uint32> mpls_ttls;
+        uint16 ether_type = 0;
+
         for (const auto& field : function.modify_fields()) {
           switch (field.type()) {
             case P4_FIELD_TYPE_ETH_SRC:
@@ -830,6 +839,10 @@ namespace {
               break;
             case P4_FIELD_TYPE_ETH_DST:
               bcm_non_multipath_nexthop->set_dst_mac(field.u64());
+              break;
+            case P4_FIELD_TYPE_ETH_TYPE:
+              // TODO: accept as part of action, but ignore for now
+              ether_type = field.u32();
               break;
             case P4_FIELD_TYPE_EGRESS_PORT: {
               uint32 port_id = static_cast<uint32>(field.u32() + field.u64());
@@ -860,11 +873,25 @@ namespace {
               break;
             }
             case P4_FIELD_TYPE_VLAN_VID:
-              bcm_non_multipath_nexthop->set_vlan(field.u32());
+              bcm_non_multipath_nexthop->set_vlan(field.u32() + field.u64());
               break;
             case P4_FIELD_TYPE_L3_CLASS_ID:
               // TODO(unknown): Ignore class_id for now till we have a
               // resolution for b/73264766.
+              break;
+            case P4_FIELD_TYPE_MPLS_LABEL:
+              // bcm_non_multipath_nexthop->set_mpls_label(field.u32());
+              mpls_labels.push_back(field.u32());
+              break;
+            case P4_FIELD_TYPE_MPLS_TTL:
+              // bcm_non_multipath_nexthop->set_mpls_ttl(field.u32());
+              mpls_ttls.push_back(field.u32());
+              break;
+            case P4_FIELD_TYPE_MPLS_BOS:
+              // TODO: accept as part of action, but ignore for now
+              break;
+            case P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS:
+              // TODO: accept as part of action, but ignore for now
               break;
             default:
               return MAKE_ERROR(ERR_INVALID_PARAM)
@@ -874,6 +901,52 @@ namespace {
                      << ". ActionProfileMember is "
                      << action_profile_member.ShortDebugString() << ".";
           }
+        }
+        bool is_tunnel_init = false;
+        for (const auto& header : function.modify_headers()) {
+          switch (header.header_type()) {
+          case P4HeaderType::P4_HEADER_MPLS:
+            // Check if the necessary parameters to create a header are present.
+            if (header.op_code() == P4HeaderOp::P4_HEADER_SET_VALID
+                && mpls_labels.size() && mpls_ttls.size()) {
+              for (const auto& _ : mpls_labels) {
+                auto label = bcm_non_multipath_nexthop->mutable_tunnel_init()
+                                ->mutable_mpls_tunnel_init()
+                                ->add_labels();
+                label->set_mpls_label(mpls_labels.front());
+                label->set_mpls_ttl(mpls_ttls.front());
+                mpls_labels.pop_front();
+                mpls_ttls.pop_front();
+              }
+              is_tunnel_init = true;
+            } else if (header.op_code() == P4HeaderOp::P4_HEADER_SET_INVALID) {
+              CHECK_RETURN_IF_FALSE(ether_type != 0)
+                  << "Expected EtherType to be present when decaping a header";
+            } else {
+              return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid P4HeaderOp code"
+                  << " or missing parameters :" << header.ShortDebugString();
+            }
+            break;
+          default:
+            return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid P4 header type to"
+                    << " modify: " << P4HeaderType_Name(header.header_type())
+                    << ". MappedAction is " << mapped_action.ShortDebugString()
+                    << ". ActionProfileMember is " << action_profile_member.ShortDebugString() << ".";
+          }
+        }
+        // Consume leftover Mpls headers
+        CHECK_RETURN_IF_FALSE(mpls_labels.size() <= 1) << "Found 2 unused Mpls labels";
+        CHECK_RETURN_IF_FALSE(mpls_ttls.size() <= 1) << "Found 2 unused Mpls ttls";
+        if (mpls_labels.size() == 1) {
+          bcm_non_multipath_nexthop->set_mpls_swap_label(mpls_labels[0]);
+          mpls_labels.pop_front();
+        }
+        if (mpls_ttls.size() == 1) {
+          bcm_non_multipath_nexthop->set_mpls_swap_ttl(mpls_ttls.front());
+          mpls_ttls.pop_front();
+        }
+        if (mpls_labels.size() > 0 && is_tunnel_init) {
+          LOG(WARNING) << "Found unused Mpls labels while having a tunnel init";
         }
       } else if (function.primitives_size() == 1 &&
                  function.primitives(0).op_code() == P4_ACTION_OP_DROP) {
@@ -2268,6 +2341,9 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       break;
     case P4_TABLE_L2_MY_STATION:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_MY_STATION;
+      break;
+    case P4_TABLE_MPLS:
+      bcm_table_type = BcmFlowEntry::BCM_TABLE_MPLS;
       break;
     default:
       break;
