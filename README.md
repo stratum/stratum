@@ -124,18 +124,18 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 ## Broadcom
 
-- Tomahawk
+- Tomahawk (SDKLT, OpenNSA, SDK6)
     - Edgecore AS7712-32X
     - Edgecore AS7716-24XC Cassini
     - Dell Z9100
     - Inventec D7032
     - QCT QuantaMesh T7032-IX1
-- Tomahawk+
+- Tomahawk+ (SDK6)
     - Edgecore AS7716-24SC Cassini
     - Inventec D7054
-- Tomahawk2
-- Tomahawk3
-- Trident2
+- Tomahawk2 (OpenNSA, SDK6)
+- Tomahawk3 (SDK6)
+- Trident2 (OpenNSA, SDK6)
     - Edgecore AS6712
     - Inventec D6254
 
