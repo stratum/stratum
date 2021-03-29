@@ -407,18 +407,30 @@ BFChassisManager::~BFChassisManager() = default;
       const uint64 node_id = key.first;
       const auto& deflect_config = key.second;
       for (const auto& drop_target : deflect_config.drop_targets()) {
-        const uint32 port_id = drop_target.port();
         CHECK_RETURN_IF_FALSE(node_id_to_port_id_to_sdk_port_id.count(node_id));
         CHECK_RETURN_IF_FALSE(node_id_to_unit.count(node_id));
-        int unit = node_id_to_unit[node_id];
-        CHECK_RETURN_IF_FALSE(
-            node_id_to_port_id_to_sdk_port_id[node_id].count(port_id));
-        const uint32 sdk_port_id =
-            node_id_to_port_id_to_sdk_port_id[node_id][port_id];
+        const int unit = node_id_to_unit[node_id];
+        uint32 sdk_port_id;
+        switch (drop_target.port_type_case()) {
+          case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kPort: {
+            const uint32 port_id = drop_target.port();
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id[node_id].count(port_id));
+            sdk_port_id = node_id_to_port_id_to_sdk_port_id[node_id][port_id];
+            break;
+          }
+          case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kSdkPort: {
+            sdk_port_id = drop_target.sdk_port();
+            break;
+          }
+          default:
+            RETURN_ERROR(ERR_INVALID_PARAM)
+                << "Unsupported port type in DropTarget "
+                << drop_target.ShortDebugString();
+        }
         RETURN_IF_ERROR(bf_sde_interface_->SetDeflectOnDropDestination(
             unit, sdk_port_id, drop_target.queue()));
-        LOG(INFO) << "Configured deflect on drop to target port " << port_id
-                  << " (SDK port " << sdk_port_id << ")"
+        LOG(INFO) << "Configured deflect-on-drop to SDK port " << sdk_port_id
                   << " in node " << node_id << ".";
       }
       CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
@@ -911,8 +923,23 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   for (const auto& drop_target :
        node_id_to_deflect_on_drop_config_[node_id].drop_targets()) {
-    ASSIGN_OR_RETURN(auto sdk_port_id,
-                     GetSdkPortId(node_id, drop_target.port()));
+    uint32 sdk_port_id;
+    switch (drop_target.port_type_case()) {
+      case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kPort: {
+        ASSIGN_OR_RETURN(sdk_port_id,
+                         GetSdkPortId(node_id, drop_target.port()));
+        break;
+      }
+      case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kSdkPort: {
+        sdk_port_id = drop_target.sdk_port();
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Unsupported port type in DropTarget "
+            << drop_target.ShortDebugString();
+    }
+
     RETURN_IF_ERROR(bf_sde_interface_->SetDeflectOnDropDestination(
         unit, sdk_port_id, drop_target.queue()));
     LOG(INFO) << "Configured deflect on drop target port " << sdk_port_id

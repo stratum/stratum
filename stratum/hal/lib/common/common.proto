@@ -683,8 +683,11 @@ message TofinoConfig {
   // packets will be deflected to.
   message DeflectOnPacketDropConfig {
     message DropTarget {
-      uint32 port = 1;
-      uint32 queue = 2;
+      oneof port_type {
+        uint32 port = 1;
+        uint32 sdk_port = 2;
+      }
+      uint32 queue = 3;
     }
     repeated DropTarget drop_targets = 1;
   }
