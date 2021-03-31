@@ -59,7 +59,7 @@ fi
 
 # Build with Bazel cache
 if [ -n "$BAZEL_CACHE" ]; then
-  DOCKER_EXTRA_RUN_OPTS+="-v $BAZEL_CACHE:/home/$USER/.cache"
+  DOCKER_EXTRA_RUN_OPTS+="-v $BAZEL_CACHE:/home/$USER/.cache "
 fi
 
 # Build Stratum BCM in Docker
