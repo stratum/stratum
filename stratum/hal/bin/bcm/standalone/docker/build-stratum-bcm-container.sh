@@ -27,6 +27,7 @@ Additional environment variables:
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
     DOCKER_TAG: Tag to use for Docker image (Default: latest)
     RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
+    BAZEL_CACHE: Path to Bazel cache (Default: <empty>)
 "
 }
 
@@ -56,6 +57,11 @@ if [ -n "$RELEASE_BUILD" ]; then
   BAZEL_OPTS+="--config release "
 fi
 
+# Build with Bazel cache
+if [ -n "$BAZEL_CACHE" ]; then
+  DOCKER_EXTRA_RUN_OPTS+="-v $BAZEL_CACHE:/home/$USER/.cache"
+fi
+
 # Build Stratum BCM in Docker
 set -x
 docker run --rm \
@@ -63,6 +69,7 @@ docker run --rm \
   -v $STRATUM_ROOT:/stratum \
   -v $(pwd):/output \
   -w /stratum \
+  --user $USER \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/bcm/standalone:${STRATUM_TARGET}_deb \
@@ -94,7 +101,7 @@ if [ -d .git ]; then
 fi
 popd
 
-# Build Stratum BF runtime Docker image
+# Build Stratum BCM runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$DOCKER_TAG
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"

@@ -110,6 +110,7 @@ fi
 if [ ! -z "$GIT_EDITOR" ]; then
     DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR=\"$GIT_EDITOR\""
 fi
+set -x
 eval docker build $DOCKER_BUILD_OPTIONS - < $DOCKER_FILE
 ERR=$?
 if [ $ERR -ne 0 ]; then
