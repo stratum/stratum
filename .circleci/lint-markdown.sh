@@ -5,4 +5,12 @@
 
 set -ex
 
-docker run --rm -v $(pwd):$(pwd) -w $(pwd) markdownlint/markdownlint -v --rules MD013 .
+# TODO(max): add more files to the checklist over time.
+KNOWN_FILES=(
+  "README.md"
+  "CONTRIBUTING.md"
+)
+
+docker run --rm -v $(pwd):$(pwd) -w $(pwd) markdownlint/markdownlint \
+  -v --rules MD013 \
+  ${KNOWN_FILES[*]}
