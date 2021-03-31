@@ -15,12 +15,12 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::pi::fe::proto::DeviceMgr;
-using Code = ::google::rpc::Code;
-
 namespace stratum {
 namespace hal {
 namespace pi {
+
+using ::pi::fe::proto::DeviceMgr;
+using Code = ::google::rpc::Code;
 
 namespace {
 
@@ -62,12 +62,7 @@ namespace {
 void StreamMessageCb(uint64_t node_id, ::p4::v1::StreamMessageResponse* msg,
                      void* cookie) {
   auto* pi_node = static_cast<PINode*>(cookie);
-  if (!msg->has_packet()) {
-    VLOG(1) << "Dropping P4Runtime stream message in node " << node_id
-            << " as it is not a PacketIn message.";
-    return;
-  }
-  pi_node->SendPacketIn(msg->packet());
+  pi_node->SendStreamMessageResponse(*msg);
 }
 
 PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
@@ -77,6 +72,11 @@ PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
       node_id_(0) {}
 
 PINode::~PINode() = default;
+
+std::unique_ptr<PINode> PINode::CreateInstance(
+    ::pi::fe::proto::DeviceMgr* device_mgr, int unit) {
+  return absl::WrapUnique(new PINode(device_mgr, unit));
+}
 
 ::util::Status PINode::PushChassisConfig(const ChassisConfig& config,
                                          uint64 node_id) {
@@ -171,14 +171,14 @@ PINode::~PINode() = default;
 
   ::p4::v1::ReadResponse response;
   auto status = device_mgr_->read(req, &response);
-  RETURN_IF_ERROR(toUtilStatus(status, details));
+  RETURN_IF_ERROR(toUtilStatus(status, details, response.entities_size()));
   if (!writer->Write(response))
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
   return ::util::OkStatus();
 }
 
-::util::Status PINode::RegisterPacketReceiveWriter(
-    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+::util::Status PINode::RegisterStreamMessageResponseWriter(
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   absl::MutexLock l(&rx_writer_lock_);
   rx_writer_ = writer;
   // The StreamMessageCb callback is registered with the DeviceMgr instance when
@@ -186,37 +186,26 @@ PINode::~PINode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status PINode::UnregisterPacketReceiveWriter() {
+::util::Status PINode::UnregisterStreamMessageResponseWriter() {
   absl::MutexLock l(&rx_writer_lock_);
   rx_writer_ = nullptr;
   return ::util::OkStatus();
 }
 
-::util::Status PINode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status PINode::HandleStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {
     RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
-  ::p4::v1::StreamMessageRequest msg;
-  // a const_cast for the sake of avoiding a copy; should be ok because
-  // stream_message_request_handle does not modify the message.
-  msg.set_allocated_packet(const_cast<::p4::v1::PacketOut*>(&packet));
-  auto status = toUtilStatus(device_mgr_->stream_message_request_handle(msg));
-  msg.release_packet();
-  return status;
+  return toUtilStatus(device_mgr_->stream_message_request_handle(request));
 }
 
-std::unique_ptr<PINode> PINode::CreateInstance(
-    ::pi::fe::proto::DeviceMgr* device_mgr, int unit) {
-  return absl::WrapUnique(new PINode(device_mgr, unit));
-}
-
-void PINode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
-  // acquire the lock during the Write: SendPacketIn may be called from
-  // different threads and Write is not thread-safe.
+void PINode::SendStreamMessageResponse(
+    const ::p4::v1::StreamMessageResponse& response) {
   absl::MutexLock l(&rx_writer_lock_);
   if (rx_writer_ == nullptr) return;
-  rx_writer_->Write(packet);
+  rx_writer_->Write(response);
 }
 
 }  // namespace pi

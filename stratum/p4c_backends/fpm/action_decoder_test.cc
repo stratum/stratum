@@ -19,10 +19,10 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
-using ::testing::_;
-
 namespace stratum {
 namespace p4c_backends {
+
+using ::testing::_;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 

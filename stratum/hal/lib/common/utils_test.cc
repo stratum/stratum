@@ -2,24 +2,22 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/utils.h"
 
-#include <string>
 #include <limits>
+#include <string>
 
-#include "stratum/lib/constants.h"
-#include "stratum/glue/status/canonical_errors.h"
-#include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
 #include "google/protobuf/util/message_differencer.h"
-
-
-using ::google::protobuf::util::MessageDifferencer;
+#include "gtest/gtest.h"
+#include "stratum/glue/status/canonical_errors.h"
+#include "stratum/lib/constants.h"
 
 namespace stratum {
 namespace hal {
+
+using ::google::protobuf::util::MessageDifferencer;
 
 TEST(CommonUtilsTest, PrintNodeForEmptyNodeProto) {
   Node node;
@@ -425,13 +423,15 @@ TEST(DecimalUtilTest, TestFromDoubleToDecimal64) {
 
   // Some edge cases
   ::util::IsOutOfRange(
-    ConvertDoubleToDecimal64(std::numeric_limits<double>::max(), 0).status());
-  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
-    std::numeric_limits<double>::min(), 0).status());
-  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
-    std::numeric_limits<double>::infinity(), 0).status());
-  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
-    std::numeric_limits<double>::lowest(), 0).status());
+      ConvertDoubleToDecimal64(std::numeric_limits<double>::max(), 0).status());
+  ::util::IsOutOfRange(
+      ConvertDoubleToDecimal64(std::numeric_limits<double>::min(), 0).status());
+  ::util::IsOutOfRange(
+      ConvertDoubleToDecimal64(std::numeric_limits<double>::infinity(), 0)
+          .status());
+  ::util::IsOutOfRange(
+      ConvertDoubleToDecimal64(std::numeric_limits<double>::lowest(), 0)
+          .status());
 }
 
 void DecimalToDoubleTest(int64 digits, uint32 precision, double to) {

@@ -14,12 +14,12 @@
 #include "gtest/gtest.h"
 #include "absl/strings/match.h"
 
+namespace stratum {
+namespace p4c_backends {
+
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::ReturnRef;
-
-namespace stratum {
-namespace p4c_backends {
 
 class MetaKeyMapperTest : public testing::Test {
  protected:

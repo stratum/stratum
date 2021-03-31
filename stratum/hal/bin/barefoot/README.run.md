@@ -453,6 +453,25 @@ The CLI will start after Stratum and the SDE finish initialization. You may
 need to press "Enter" a few times to see the prompt. Please refer to BF SDE
 documentation for details on how to use the CLI.
 
+### Access BF Shell via telnet (experimental)
+
+When Stratum started, the BF Shell will be enabled by default. To access the BF
+Shell, run `attach-bf-shell.sh` in the container:
+
+```bash
+docker exec -it [stratum container name or ID] attach-bf-shell.sh
+```
+
+This script will start a telnet session that connects to the BF Shell. Once you
+have entered the BF Shell, type `ucli` to access the BF CLI.
+
+> Since we do not support all features from the BF Shell, using commands other
+  than `ucli` may cause Stratum crash.
+
+To exit the BF CLI or the BF Shell, use `exit`. Note that using `Ctrl+C` will
+end the BF Shell without closing the telnet session. To exit the telnet session,
+press `Ctrl` and `]` to escape from the session and type `quit` to exit telnet.
+
 -----
 
 ## Troubleshooting
@@ -485,8 +504,6 @@ This error occurs when ONLP can not reach the BMC CPU managing the platform.
 Either the ONL image is not correctly set up or ONLP support is simply broken on
 this particular switch model. As a workaround, [BSP mode](#Running-with-BSP-or-on-Tofino-model),
 which bypasses ONLP, is available.
-
-[start-stratum-container-sh]: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 
 ### RESOURCE_EXHAUSTED when pushing pipeline
 
@@ -550,7 +567,7 @@ E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed 
 
 This error occurs when the binary pipeline is not in the correct format.
 Make sure the pipeline config binary has been packed correctly for PI node, like
-so: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/update_config.py#L39-L52.
+so: [update_config.py](/stratum/hal/bin/barefoot/update_config.py#L39-L52).
 You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
 Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline

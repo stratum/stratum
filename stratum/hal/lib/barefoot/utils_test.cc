@@ -15,11 +15,11 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::testing::HasSubstr;
 
 TEST(DefaultRangeLowValueTest, HasFullBitwidth) {
   EXPECT_EQ(RangeDefaultLow(0).size(), 0);
@@ -159,6 +159,12 @@ TEST(IsDontCareMatchTest, ClassifyRangeMatch) {
     m.set_low("\x00", 1);
     m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
     EXPECT_FALSE(IsDontCareMatch(m, 81)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00\x40\x00", 3);
+    m.set_high("\x03\xFF\xFF", 3);
+    EXPECT_FALSE(IsDontCareMatch(m, 18)) << m.DebugString();
   }
 }
 

@@ -12,10 +12,10 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
-using ::testing::Values;
-
 namespace stratum {
 namespace p4c_backends {
+
+using ::testing::Values;
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
 // data for test use.  See INSTANTIATE_TEST_SUITE_P near the end if this file

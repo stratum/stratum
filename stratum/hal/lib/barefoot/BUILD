@@ -17,6 +17,19 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+# These defines depend on the SDE version and can be used to implement
+# version-dependent features or fixes. There is no default condition to ensure
+# a that version upgrade re-visits these.
+SDE_DEFINES = select(
+    {
+        "@local_barefoot_bin//:sde_version_9.2.0": ["SDE_9_2_0"],
+        "@local_barefoot_bin//:sde_version_9.3.0": ["SDE_9_3_0"],
+        "@local_barefoot_bin//:sde_version_9.3.1": ["SDE_9_3_1"],
+        "@local_barefoot_bin//:sde_version_9.4.0": ["SDE_9_4_0"],
+    },
+    no_match_error = "Unsupported SDE version",
+)
+
 stratum_cc_library(
     name = "bf_switch",
     srcs = ["bf_switch.cc"],
@@ -145,6 +158,7 @@ stratum_cc_library(
     name = "bf_sde_wrapper",
     srcs = ["bf_sde_wrapper.cc"],
     hdrs = ["bf_sde_wrapper.h"],
+    defines = SDE_DEFINES,
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
@@ -159,6 +173,7 @@ stratum_cc_library(
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
@@ -244,6 +259,7 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:proto_oneof_writer_wrapper",
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:constants",
         "//stratum/lib:macros",

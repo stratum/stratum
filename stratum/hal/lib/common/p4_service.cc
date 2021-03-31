@@ -28,7 +28,7 @@
 #include "stratum/public/lib/error.h"
 
 DEFINE_string(forwarding_pipeline_configs_file,
-              "/var/run/stratum/pipeline_cfg.pb.txt",
+              "/etc/stratum/pipeline_cfg.pb.txt",
               "The latest set of verified ForwardingPipelineConfig protos "
               "pushed to the switch. This file is updated whenever "
               "ForwardingPipelineConfig proto for switching node is added or "
@@ -87,19 +87,19 @@ P4Service::~P4Service() {}
     connection_ids_.clear();
   }
   {
-    absl::WriterMutexLock l(&packet_in_thread_lock_);
+    absl::WriterMutexLock l(&stream_response_thread_lock_);
     // Unregister writers and close PacketIn Channels.
-    for (const auto& pair : packet_in_channels_) {
+    for (const auto& pair : stream_response_channels_) {
       auto status =
-          switch_interface_->UnregisterPacketReceiveWriter(pair.first);
+          switch_interface_->UnregisterStreamMessageResponseWriter(pair.first);
       if (!status.ok()) {
         LOG(ERROR) << status;
       }
       pair.second->Close();
     }
-    packet_in_channels_.clear();
+    stream_response_channels_.clear();
     // Join threads.
-    for (const auto& tid : packet_in_reader_tids_) {
+    for (const auto& tid : stream_response_reader_tids_) {
       int ret = pthread_join(tid, nullptr);
       if (ret) {
         LOG(ERROR) << "Failed to join thread " << tid << " with error " << ret
@@ -578,20 +578,15 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
       }
       case ::p4::v1::StreamMessageRequest::kPacket: {
         // If this stream is not the master stream generate a stream error.
+        ::util::Status status;
         if (!IsMasterController(node_id, connection_id)) {
-          ::util::Status status = MAKE_ERROR(ERR_PERMISSION_DENIED)
-                                  << "Controller with connection ID "
-                                  << connection_id << "is not a master";
-          LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
-          auto resp = ToStreamMessageResponse(status);
-          *resp.mutable_error()->mutable_packet_out()->mutable_packet_out() =
-              req.packet();
-          stream->Write(resp);  // Best effort.
-          break;
+          status = MAKE_ERROR(ERR_PERMISSION_DENIED)
+                   << "Controller with connection ID " << connection_id
+                   << " is not a master";
+        } else {
+          // If master, try to transmit the packet.
+          status = switch_interface_->HandleStreamMessageRequest(node_id, req);
         }
-        // If master, try to transmit the packet.
-        ::util::Status status =
-            switch_interface_->TransmitPacket(node_id, req.packet());
         if (!status.ok()) {
           LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
           auto resp = ToStreamMessageResponse(status);
@@ -601,7 +596,29 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         }
         break;
       }
-      case ::p4::v1::StreamMessageRequest::kDigestAck:
+      case ::p4::v1::StreamMessageRequest::kDigestAck: {
+        // If this stream is not the master stream generate a stream error.
+        ::util::Status status;
+        if (!IsMasterController(node_id, connection_id)) {
+          status = MAKE_ERROR(ERR_PERMISSION_DENIED)
+                   << "Controller with connection ID " << connection_id
+                   << " is not a master";
+        } else {
+          // If master, try to ack the digest.
+          status = switch_interface_->HandleStreamMessageRequest(node_id, req);
+        }
+        if (!status.ok()) {
+          LOG(INFO) << "Failed to ack digest: " << status;
+          // TODO(max): investigate if creating responses for every failure is
+          // too resource intensive.
+          auto resp = ToStreamMessageResponse(status);
+          *resp.mutable_error()
+               ->mutable_digest_list_ack()
+               ->mutable_digest_list_ack() = req.digest_ack();
+          stream->Write(resp);  // Best effort.
+        }
+        break;
+      }
       case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                               "Need to specify either arbitration or packet.");
@@ -645,34 +662,36 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   absl::WriterMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end()) {
-    absl::WriterMutexLock l(&packet_in_thread_lock_);
+    absl::WriterMutexLock l(&stream_response_thread_lock_);
     // This is the first time we are hearing about this node. Lets try to add
-    // an RX packet writer for it. If the node_id is invalid, registration will
-    // fail.
-    std::shared_ptr<Channel<::p4::v1::PacketIn>> channel =
-        Channel<::p4::v1::PacketIn>::Create(128);
+    // an RX response writer for it. If the node_id is invalid, registration
+    // will fail.
+    std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>> channel =
+        Channel<::p4::v1::StreamMessageResponse>::Create(128);
     // Create the writer and register with the SwitchInterface.
-    auto writer = std::make_shared<ChannelWriterWrapper<::p4::v1::PacketIn>>(
-        ChannelWriter<::p4::v1::PacketIn>::Create(channel));
-    RETURN_IF_ERROR(
-        switch_interface_->RegisterPacketReceiveWriter(node_id, writer));
+    auto writer =
+        std::make_shared<ChannelWriterWrapper<::p4::v1::StreamMessageResponse>>(
+            ChannelWriter<::p4::v1::StreamMessageResponse>::Create(channel));
+    RETURN_IF_ERROR(switch_interface_->RegisterStreamMessageResponseWriter(
+        node_id, writer));
     // Create the reader and pass it to a new thread.
-    auto reader = ChannelReader<::p4::v1::PacketIn>::Create(channel);
+    auto reader =
+        ChannelReader<::p4::v1::StreamMessageResponse>::Create(channel);
     pthread_t tid = 0;
-    int ret = pthread_create(
-        &tid, nullptr, PacketReceiveThreadFunc,
-        new ReaderArgs<::p4::v1::PacketIn>{this, std::move(reader), node_id});
+    int ret = pthread_create(&tid, nullptr, StreamResponseReceiveThreadFunc,
+                             new ReaderArgs<::p4::v1::StreamMessageResponse>{
+                                 this, std::move(reader), node_id});
     if (ret) {
       // Clean up state and return error.
       RETURN_IF_ERROR(
-          switch_interface_->UnregisterPacketReceiveWriter(node_id));
+          switch_interface_->UnregisterStreamMessageResponseWriter(node_id));
       return MAKE_ERROR(ERR_INTERNAL)
              << "Failed to create packet-in receiver thread for node "
              << node_id << " with error " << ret << ".";
     }
     // Store Channel and tid for Teardown().
-    packet_in_reader_tids_.push_back(tid);
-    packet_in_channels_[node_id] = channel;
+    stream_response_reader_tids_.push_back(tid);
+    stream_response_channels_[node_id] = channel;
     node_id_to_controllers_[node_id] = {};
     it = node_id_to_controllers_.find(node_id);
   }
@@ -833,21 +852,23 @@ bool P4Service::IsMasterController(uint64 node_id, uint64 connection_id) const {
   return it->second.begin()->connection_id() == connection_id;
 }
 
-void* P4Service::PacketReceiveThreadFunc(void* arg) {
-  auto* args = reinterpret_cast<ReaderArgs<::p4::v1::PacketIn>*>(arg);
+void* P4Service::StreamResponseReceiveThreadFunc(void* arg) {
+  auto* args =
+      reinterpret_cast<ReaderArgs<::p4::v1::StreamMessageResponse>*>(arg);
   auto* p4_service = args->p4_service;
   auto node_id = args->node_id;
   auto reader = std::move(args->reader);
   delete args;
-  return p4_service->ReceivePackets(node_id, std::move(reader));
+  return p4_service->ReceiveStreamRespones(node_id, std::move(reader));
 }
 
-void* P4Service::ReceivePackets(
-    uint64 node_id, std::unique_ptr<ChannelReader<::p4::v1::PacketIn>> reader) {
+void* P4Service::ReceiveStreamRespones(
+    uint64 node_id,
+    std::unique_ptr<ChannelReader<::p4::v1::StreamMessageResponse>> reader) {
   do {
-    ::p4::v1::PacketIn packet_in;
-    // Block on next packet RX from Channel.
-    int code = reader->Read(&packet_in, absl::InfiniteDuration()).error_code();
+    ::p4::v1::StreamMessageResponse resp;
+    // Block on next stream response RX from Channel.
+    int code = reader->Read(&resp, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -855,20 +876,23 @@ void* P4Service::ReceivePackets(
       LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
       continue;
     }
-    // Handle PacketIn.
-    PacketReceiveHandler(node_id, packet_in);
+    // Handle StreamMessageResponse.
+    StreamResponseReceiveHandler(node_id, resp);
   } while (true);
   return nullptr;
 }
 
-void P4Service::PacketReceiveHandler(uint64 node_id,
-                                     const ::p4::v1::PacketIn& packet) {
-  // We send the packets only to the master controller stream for this node.
+void P4Service::StreamResponseReceiveHandler(
+    uint64 node_id, const ::p4::v1::StreamMessageResponse& resp) {
+  // We don't expect arbitration updates from the switch.
+  if (resp.has_arbitration()) {
+    LOG(FATAL) << "Received MasterArbitrationUpdate from switch. This should "
+                  "never happen!";
+  }
+  // We send the responses only to the master controller stream for this node.
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  ::p4::v1::StreamMessageResponse resp;
-  *resp.mutable_packet() = packet;
   it->second.begin()->stream()->Write(resp);
 }
 

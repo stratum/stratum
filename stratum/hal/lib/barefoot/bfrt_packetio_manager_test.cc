@@ -14,18 +14,18 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-using ::stratum::test_utils::EqualsProto;
-using ::stratum::test_utils::StatusIs;
+namespace stratum {
+namespace hal {
+namespace barefoot {
+
+using test_utils::EqualsProto;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
-namespace barefoot {
 
 class BfrtPacketioManagerTest : public ::testing::Test {
  protected:
@@ -63,10 +63,13 @@ class BfrtPacketioManagerTest : public ::testing::Test {
 
   ::util::Status Shutdown() {
     // Make sure everything like Rx threads will be cleaned up.
-    EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1))
-        .WillOnce(Return(util::OkStatus()));
-    EXPECT_CALL(*bf_sde_wrapper_mock_, UnregisterPacketReceiveWriter(kDevice1))
-        .WillOnce(Return(util::OkStatus()));
+    if (bfrt_packetio_manager_->initialized_) {
+      EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1))
+          .WillOnce(Return(util::OkStatus()));
+      EXPECT_CALL(*bf_sde_wrapper_mock_,
+                  UnregisterPacketReceiveWriter(kDevice1))
+          .WillOnce(Return(util::OkStatus()));
+    }
     packet_rx_writer.release();
     return bfrt_packetio_manager_->Shutdown();
   }

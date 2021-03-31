@@ -18,11 +18,11 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::stratum::hal::pi::PINode;
-
 namespace stratum {
 namespace hal {
 namespace bmv2 {
+
+using ::stratum::hal::pi::PINode;
 
 Bmv2Switch::Bmv2Switch(PhalInterface* phal_interface,
                        Bmv2ChassisManager* bmv2_chassis_manager,
@@ -137,22 +137,23 @@ Bmv2Switch::~Bmv2Switch() {}
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status Bmv2Switch::RegisterPacketReceiveWriter(
+::util::Status Bmv2Switch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterPacketReceiveWriter(writer);
+  return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status Bmv2Switch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status Bmv2Switch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterPacketReceiveWriter();
+  return pi_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status Bmv2Switch::TransmitPacket(uint64 node_id,
-                                          const ::p4::v1::PacketOut& packet) {
+::util::Status Bmv2Switch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->TransmitPacket(packet);
+  return pi_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status Bmv2Switch::RegisterEventNotifyWriter(
@@ -174,9 +175,12 @@ Bmv2Switch::~Bmv2Switch() {}
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kHealthIndicator:
+      case DataRequest::Request::kForwardingViability:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kSdnPortId:
         resp = bmv2_chassis_manager_->GetPortData(req);
@@ -186,7 +190,7 @@ Bmv2Switch::~Bmv2Switch() {}
             MAKE_ERROR(ERR_UNIMPLEMENTED)
             << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
-            << " is not supported yet: " << req.ShortDebugString() << ".";
+            << " is not supported yet!";
         break;
     }
     if (resp.ok()) {

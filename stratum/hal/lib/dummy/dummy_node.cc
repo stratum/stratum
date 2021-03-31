@@ -82,19 +82,20 @@ namespace dummy_switch {
   return ::util::OkStatus();
 }
 
-::util::Status DummyNode::RegisterPacketReceiveWriter(
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+::util::Status DummyNode::RegisterStreamMessageResponseWriter(
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
-::util::Status DummyNode::UnregisterPacketReceiveWriter() {
+::util::Status DummyNode::UnregisterStreamMessageResponseWriter() {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
-::util::Status DummyNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status DummyNode::HandleStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& request) {
   // TODO(Yi Tseng): Implement this method.
   absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
@@ -290,10 +291,6 @@ bool DummyNode::DummyNodeEventWriter::Write(const DummyNodeEventPtr& msg) {
       port_status = ports_state_[port_id];
       resp.mutable_health_indicator()->set_state(
           port_status.health_indicator.state());
-      break;
-    case Request::kHardwarePort:
-      // FIXME(Yi Tseng): Sets hardware port name
-      resp.mutable_hardware_port()->set_name("");
       break;
     default:
       return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";

@@ -98,8 +98,8 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
 
   // Tears down the class. Called in both warmboot or coldboot mode. It will
   // not alter any state on the hardware when called.
-  ::util::Status Teardown()
-      LOCKS_EXCLUDED(config_lock_, controller_lock_, packet_in_thread_lock_);
+  ::util::Status Teardown() LOCKS_EXCLUDED(config_lock_, controller_lock_,
+                                           stream_response_thread_lock_);
 
   // Public helper function called in Setup().
   ::util::Status PushSavedForwardingPipelineConfigs(bool warmboot)
@@ -175,9 +175,10 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // master. This functions also returns the appropriate resp back to the
   // remote controller client(s), while it has the controller_lock_ lock. This
   // will make sure the response is sent back to the client (in case a packet
-  // is received right at the same time) before PacketReceiveHandler() takes
-  // the lock. After successful completion of this function, the first element
-  // in controllers_ set will have the master controller stream for packet I/O.
+  // is received right at the same time) before StreamResponseReceiveHandler()
+  // takes the lock. After successful completion of this function, the first
+  // element in controllers_ set will have the master controller stream for
+  // packet I/O.
   ::util::Status AddOrModifyController(uint64 node_id, uint64 connection_id,
                                        absl::uint128 election_id,
                                        const std::string& uri,
@@ -201,19 +202,21 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   bool IsMasterController(uint64 node_id, uint64 connection_id) const
       LOCKS_EXCLUDED(controller_lock_);
 
-  // Thread function for handling packet RX.
-  static void* PacketReceiveThreadFunc(void* arg)
+  // Thread function for handling stream response RX.
+  static void* StreamResponseReceiveThreadFunc(void* arg)
       LOCKS_EXCLUDED(controller_lock_);
 
   // Blocks on the Channel registered with SwitchInterface to read received
-  // packets.
-  void* ReceivePackets(
-      uint64 node_id, std::unique_ptr<ChannelReader<::p4::v1::PacketIn>> reader)
+  // responses.
+  void* ReceiveStreamRespones(
+      uint64 node_id,
+      std::unique_ptr<ChannelReader<::p4::v1::StreamMessageResponse>> reader)
       LOCKS_EXCLUDED(controller_lock_);
 
-  // Callback to be called whenever we receive a packet on the specified node
-  // which is destined to controller.
-  void PacketReceiveHandler(uint64 node_id, const ::p4::v1::PacketIn& packet)
+  // Callback to be called whenever we receive a stream response on the
+  // specified node which is destined to controller.
+  void StreamResponseReceiveHandler(uint64 node_id,
+                                    const ::p4::v1::StreamMessageResponse& resp)
       LOCKS_EXCLUDED(controller_lock_);
 
   // Mutex lock used to protect node_id_to_controllers_ which is updated
@@ -225,9 +228,9 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // to the switch.
   mutable absl::Mutex config_lock_;
 
-  // Mutex which protects the creation and destruction of the Packet RX
+  // Mutex which protects the creation and destruction of the stream response RX
   // Channels and threads.
-  mutable absl::Mutex packet_in_thread_lock_;
+  mutable absl::Mutex stream_response_thread_lock_;
 
   // Map from node ID to the set of Controller instances corresponding to the
   // external controller clients connected to that node. The Controller
@@ -236,14 +239,14 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   std::map<uint64, std::set<Controller, ControllerComp>> node_id_to_controllers_
       GUARDED_BY(controller_lock_);
 
-  // List of threads which send received packets up to the controller.
-  std::vector<pthread_t> packet_in_reader_tids_
-      GUARDED_BY(packet_in_thread_lock_);
+  // List of threads which send received responses up to the controller.
+  std::vector<pthread_t> stream_response_reader_tids_
+      GUARDED_BY(stream_response_thread_lock_);
 
-  // Map of per-node Channels which are used to forward received packets to
+  // Map of per-node Channels which are used to forward received responses to
   // P4Service.
-  std::map<uint64, std::shared_ptr<Channel<::p4::v1::PacketIn>>>
-      packet_in_channels_ GUARDED_BY(packet_in_thread_lock_);
+  std::map<uint64, std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>>>
+      stream_response_channels_ GUARDED_BY(stream_response_thread_lock_);
 
   // Holds the IDs of all streaming connections. Every time there is a new
   // streaming connection, we select min{1,...,max(connection_ids_) + 1} as

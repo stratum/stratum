@@ -20,11 +20,11 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::stratum::hal::pi::PINode;
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+using ::stratum::hal::pi::PINode;
 
 BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BFChassisManager* bf_chassis_manager,
@@ -218,22 +218,20 @@ namespace {
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BFSwitch::RegisterPacketReceiveWriter(
+::util::Status BFSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterPacketReceiveWriter(writer);
+  return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
-
-::util::Status BFSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BFSwitch::UnregisterStreamMessageResponseWriter(uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterPacketReceiveWriter();
+  return pi_node->UnregisterStreamMessageResponseWriter();
 }
-
-::util::Status BFSwitch::TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) {
+::util::Status BFSwitch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->TransmitPacket(packet);
+  return pi_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status BFSwitch::RegisterEventNotifyWriter(
@@ -256,9 +254,12 @@ namespace {
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kForwardingViability:
+      case DataRequest::Request::kHealthIndicator:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
       case DataRequest::Request::kLoopbackStatus:
@@ -282,7 +283,7 @@ namespace {
             MAKE_ERROR(ERR_UNIMPLEMENTED)
             << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
-            << " is not supported yet: " << req.ShortDebugString() << ".";
+            << " is not supported yet!";
         break;
     }
     if (status.ok()) {
@@ -300,7 +301,7 @@ namespace {
   (void)request;
   (void)details;
   LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
-            << "be peformed when ChassisConfig is pushed again.";
+            << "be performed when ChassisConfig is pushed again.";
   // TODO(antonin)
   return ::util::OkStatus();
 }

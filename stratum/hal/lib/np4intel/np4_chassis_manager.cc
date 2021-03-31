@@ -201,6 +201,15 @@ namespace {
           singleton->config_params().admin_state());
       break;
     }
+    case Request::kMacAddress: {
+      // TODO(unknown) Find out why the controller needs it.
+      // Find MAC address of port located at:
+      // - node_id: req.mac_address().node_id()
+      // - port_id: req.mac_address().port_id()
+      // and then write it into the response.
+      resp.mutable_mac_address()->set_mac_address(0ull);
+      break;
+    }
     case Request::kPortSpeed: {
       ASSIGN_OR_RETURN(auto* singleton,
                        GetSingletonPort(request.port_speed().node_id(),
@@ -221,6 +230,23 @@ namespace {
       RETURN_IF_ERROR(GetPortCounters(request.port_counters().node_id(),
                                       request.port_counters().port_id(),
                                       resp.mutable_port_counters()));
+      break;
+    }
+    case Request::kForwardingViability: {
+      // Find current port forwarding viable state for port located at:
+      // - node_id: req.forwarding_viable().node_id()
+      // - port_id: req.forwarding_viable().port_id()
+      // and then write it into the response.
+      resp.mutable_forwarding_viability()->set_state(
+          TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
+      break;
+    }
+    case DataRequest::Request::kHealthIndicator: {
+      // Find current port health indicator (LED) for port located at:
+      // - node_id: req.health_indicator().node_id()
+      // - port_id: req.health_indicator().port_id()
+      // and then write it into the response.
+      resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
       break;
     }
     case Request::kAutonegStatus: {

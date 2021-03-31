@@ -1,16 +1,13 @@
 # Copyright 2018-present Barefoot Networks, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
-    "stratum_cc_test",
-    "HOST_ARCHES",
 )
-load(":bf_pi.bzl", "barefoot_pi_deps")
+
+licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -34,13 +31,26 @@ stratum_cc_library(
     name = "pi_node",
     srcs = ["pi_node.cc"],
     hdrs = ["pi_node.h"],
-    deps = pi_node_common_deps +
-           ["@com_github_p4lang_PI//proto/frontend:pifeproto"],
+    deps = pi_node_common_deps + [
+        "@com_github_p4lang_PI//proto/frontend:pifeproto",
+    ],
 )
 
-
 # PI Node for Barefoot targets
-barefoot_pi_deps()
+alias(
+    name = "pi_bf",
+    actual = select(
+        {
+            "@local_barefoot_bin//:sde_version_9.2.0": "@com_github_p4lang_PI_bf_9_2_0//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.3.0": "@com_github_p4lang_PI_bf_9_3_0//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.3.1": "@com_github_p4lang_PI_bf_9_3_1//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.4.0": "@com_github_p4lang_PI_bf_9_4_0//proto/frontend:pifeproto",
+        },
+        no_match_error = "Unsupported SDE version",
+    ),
+    visibility = ["//visibility:public"],
+)
+
 stratum_cc_library(
     name = "pi_node_bf",
     srcs = ["pi_node.cc"],
@@ -53,6 +63,7 @@ stratum_cc_library(
     name = "pi_node_np4",
     srcs = ["pi_node.cc"],
     hdrs = ["pi_node.h"],
-    deps = pi_node_common_deps +
-           ["@com_github_p4lang_PI_np4//proto/frontend:pifeproto"],
+    deps = pi_node_common_deps + [
+        "@com_github_p4lang_PI_np4//proto/frontend:pifeproto",
+    ],
 )

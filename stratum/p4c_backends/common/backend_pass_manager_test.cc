@@ -18,13 +18,13 @@
 
 DECLARE_string(p4c_fe_options);
 
+namespace stratum {
+namespace p4c_backends {
+
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::InSequence;
 using ::testing::Return;
-
-namespace stratum {
-namespace p4c_backends {
 
 class BackendPassManagerTest : public testing::Test {
  protected:

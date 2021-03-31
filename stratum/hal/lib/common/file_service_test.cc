@@ -23,10 +23,10 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 
-using ::testing::IsEmpty;
-
 namespace stratum {
 namespace hal {
+
+using ::testing::IsEmpty;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
@@ -143,9 +143,9 @@ TEST_P(FileServiceTest, RemoveSuccess) {
 }
 
 INSTANTIATE_TEST_SUITE_P(FileServiceTestWithMode, FileServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

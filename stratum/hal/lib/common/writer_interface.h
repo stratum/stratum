@@ -2,9 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_WRITER_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_WRITER_INTERFACE_H_
+
+#include <memory>
+#include <utility>
 
 namespace stratum {
 namespace hal {
