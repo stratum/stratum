@@ -68,6 +68,9 @@ constexpr uint8 kIpProtoGre = 47;
 // Precision for converting floating point to ::gnmi::Decimal64
 constexpr uint32 kDefaultPrecision = 2;
 
+// Dummy MAC address used for unsupported DataRequests.
+constexpr uint64 kDummyMacAddress = 0x112233445566ull;
+
 }  // namespace hal
 }  // namespace stratum
 

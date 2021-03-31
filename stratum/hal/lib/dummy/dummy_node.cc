@@ -116,57 +116,57 @@ bool DummyNode::DummyNodeEventWriter::Write(const DummyNodeEventPtr& msg) {
   auto& port_state = dummy_node_->ports_state_[port_id];
   GnmiEvent* event = nullptr;
   switch (state_update.response_case()) {
-    case ::stratum::hal::DataResponse::kOperStatus:
+    case DataResponse::kOperStatus:
       event = new PortOperStateChangedEvent(node_id, port_id,
                                             state_update.oper_status().state());
       port_state.oper_status = state_update.oper_status();
       break;
-    case ::stratum::hal::DataResponse::kAdminStatus:
+    case DataResponse::kAdminStatus:
       event = new PortAdminStateChangedEvent(
           node_id, port_id, state_update.admin_status().state());
       port_state.admin_status = state_update.admin_status();
       break;
-    case ::stratum::hal::DataResponse::kMacAddress:
+    case DataResponse::kMacAddress:
       event = new PortMacAddressChangedEvent(
           node_id, port_id, state_update.mac_address().mac_address());
       port_state.mac_address = state_update.mac_address();
       break;
-    case ::stratum::hal::DataResponse::kPortSpeed:
+    case DataResponse::kPortSpeed:
       event = new PortSpeedBpsChangedEvent(
           node_id, port_id, state_update.port_speed().speed_bps());
       port_state.port_speed = state_update.port_speed();
       break;
-    case ::stratum::hal::DataResponse::kNegotiatedPortSpeed:
+    case DataResponse::kNegotiatedPortSpeed:
       event = new PortNegotiatedSpeedBpsChangedEvent(
           node_id, port_id, state_update.negotiated_port_speed().speed_bps());
       port_state.negotiated_port_speed = state_update.negotiated_port_speed();
       break;
-    case ::stratum::hal::DataResponse::kLacpRouterMac:
+    case DataResponse::kLacpRouterMac:
       event = new PortLacpRouterMacChangedEvent(
           node_id, port_id, state_update.lacp_router_mac().mac_address());
       port_state.lacp_router_mac = state_update.lacp_router_mac();
       break;
-    case ::stratum::hal::DataResponse::kLacpSystemPriority:
+    case DataResponse::kLacpSystemPriority:
       event = new PortLacpSystemPriorityChangedEvent(
           node_id, port_id, state_update.lacp_system_priority().priority());
       port_state.lacp_system_priority = state_update.lacp_system_priority();
       break;
-    case ::stratum::hal::DataResponse::kPortCounters:
+    case DataResponse::kPortCounters:
       event = new PortCountersChangedEvent(node_id, port_id,
                                            state_update.port_counters());
       port_state.port_counters = state_update.port_counters();
       break;
-    case ::stratum::hal::DataResponse::kForwardingViability:
+    case DataResponse::kForwardingViability:
       event = new PortForwardingViabilityChangedEvent(
           node_id, port_id, state_update.forwarding_viability().state());
       port_state.forwarding_viability = state_update.forwarding_viability();
       break;
-    case ::stratum::hal::DataResponse::kHealthIndicator:
+    case DataResponse::kHealthIndicator:
       event = new PortHealthIndicatorChangedEvent(
           node_id, port_id, state_update.health_indicator().state());
       port_state.health_indicator = state_update.health_indicator();
       break;
-    case ::stratum::hal::DataResponse::RESPONSE_NOT_SET:
+    case DataResponse::RESPONSE_NOT_SET:
       LOG(ERROR) << "State update type does not set.";
       return false;
     default:

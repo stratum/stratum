@@ -203,6 +203,7 @@ BfrtSwitch::~BfrtSwitch() {}
       case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
+      case DataRequest::Request::kLacpRouterMac:
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kForwardingViability:
       case DataRequest::Request::kHealthIndicator:
