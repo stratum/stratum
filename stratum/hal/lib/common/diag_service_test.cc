@@ -2,6 +2,8 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/common/diag_service.h"
+
 #include <memory>
 #include <string>
 
@@ -14,7 +16,6 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/diag_service.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
@@ -22,10 +23,10 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 
-using ::testing::IsEmpty;
-
 namespace stratum {
 namespace hal {
+
+using ::testing::IsEmpty;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
@@ -121,9 +122,9 @@ TEST_P(DiagServiceTest, GetBERTResultSuccess) {
 }
 
 INSTANTIATE_TEST_SUITE_P(DiagServiceTestWithMode, DiagServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

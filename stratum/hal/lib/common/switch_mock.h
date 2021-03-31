@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 
@@ -10,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/common/switch_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/common/switch_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -30,9 +29,7 @@ class SwitchMock : public SwitchInterface {
       SaveForwardingPipelineConfig,
       ::util::Status(uint64 node_id,
                      const ::p4::v1::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(
-      CommitForwardingPipelineConfig,
-      ::util::Status(uint64 node_id));
+  MOCK_METHOD1(CommitForwardingPipelineConfig, ::util::Status(uint64 node_id));
   MOCK_METHOD2(
       VerifyForwardingPipelineConfig,
       ::util::Status(uint64 node_id,
@@ -48,14 +45,16 @@ class SwitchMock : public SwitchInterface {
                               WriterInterface<::p4::v1::ReadResponse>* writer,
                               std::vector<::util::Status>* details));
   MOCK_METHOD2(
-      RegisterPacketReceiveWriter,
+      RegisterStreamMessageResponseWriter,
       ::util::Status(
           uint64 node_id,
-          std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer));
-  MOCK_METHOD1(UnregisterPacketReceiveWriter, ::util::Status(uint64 node_id));
-  MOCK_METHOD2(TransmitPacket,
+          std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
+              writer));
+  MOCK_METHOD1(UnregisterStreamMessageResponseWriter,
+               ::util::Status(uint64 node_id));
+  MOCK_METHOD2(HandleStreamMessageRequest,
                ::util::Status(uint64 node_id,
-                              const ::p4::v1::PacketOut& packet));
+                              const ::p4::v1::StreamMessageRequest& request));
   MOCK_METHOD1(
       RegisterEventNotifyWriter,
       ::util::Status(std::shared_ptr<WriterInterface<GnmiEventPtr>> writer));

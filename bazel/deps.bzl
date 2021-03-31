@@ -20,9 +20,10 @@ TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
 TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
 BF_SDE_PI_VER = {
-    "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
     "9_2_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
     "9_3_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_3_1": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_4_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
 }
 GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
@@ -202,14 +203,6 @@ def stratum_deps():
             name = "com_google_absl",
             remote = "https://github.com/abseil/abseil-cpp",
             branch = "lts_2020_09_23",
-        )
-
-    if "com_googlesource_code_cctz" not in native.existing_rules():
-        # CCTZ (Time-zone framework); required for Abseil time
-        remote_workspace(
-            name = "com_googlesource_code_cctz",
-            remote = "https://github.com/google/cctz",
-            commit = "b4935eef53820cf1643355bb15e013b4167a2867",
         )
 
     if "com_github_google_glog" not in native.existing_rules():

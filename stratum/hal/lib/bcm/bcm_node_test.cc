@@ -22,6 +22,10 @@
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
 
+namespace stratum {
+namespace hal {
+namespace bcm {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -30,10 +34,6 @@ using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
@@ -96,15 +96,16 @@ class BcmNodeTest : public ::testing::Test {
     return bcm_node_->WriteForwardingEntries(req, results);
   }
 
-  ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+  ::util::Status RegisterStreamMessageResponseWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+          writer) {
     absl::ReaderMutexLock l(&chassis_lock);
-    return bcm_node_->RegisterPacketReceiveWriter(writer);
+    return bcm_node_->RegisterStreamMessageResponseWriter(writer);
   }
 
-  ::util::Status UnregisterPacketReceiveWriter() {
+  ::util::Status UnregisterStreamMessageResponseWriter() {
     absl::ReaderMutexLock l(&chassis_lock);
-    return bcm_node_->UnregisterPacketReceiveWriter();
+    return bcm_node_->UnregisterStreamMessageResponseWriter();
   }
 
   ::util::Status UpdatePortState(uint32 port_id) {
@@ -1619,26 +1620,26 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteMulticastGroupEntry) {
   EXPECT_EQ(1U, results.size());
 }
 
-// RegisterPacketReceiveWriter() should forward the call to BcmPacketioManager
-// and return success or error based on the returned result.
-TEST_F(BcmNodeTest, RegisterPacketReceiveWriter) {
+// RegisterStreamMessageResponseWriter() should forward the call to
+// BcmPacketioManager and return success or error based on the returned result.
+TEST_F(BcmNodeTest, RegisterStreamMessageResponseWriter) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
+  auto writer = std::make_shared<WriterMock<::p4::v1::StreamMessageResponse>>();
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               RegisterPacketReceiveWriter(
-                  GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, Eq(writer)))
+                  GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, _))
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_OK(RegisterPacketReceiveWriter(writer));
-  EXPECT_THAT(RegisterPacketReceiveWriter(writer),
+  EXPECT_OK(RegisterStreamMessageResponseWriter(writer));
+  EXPECT_THAT(RegisterStreamMessageResponseWriter(writer),
               DerivedFromStatus(DefaultError()));
 }
 
-// UnregisterPacketReceiveWriter() should forward the call to BcmPacketioManager
-// and return success or error based on the returned result.
-TEST_F(BcmNodeTest, UnregisterPacketReceiveWriter) {
+// UnregisterStreamMessageResponseWriter() should forward the call to
+// BcmPacketioManager and return success or error based on the returned result.
+TEST_F(BcmNodeTest, UnregisterStreamMessageResponseWriter) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
   EXPECT_CALL(*bcm_packetio_manager_mock_,
@@ -1647,8 +1648,8 @@ TEST_F(BcmNodeTest, UnregisterPacketReceiveWriter) {
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_OK(UnregisterPacketReceiveWriter());
-  EXPECT_THAT(UnregisterPacketReceiveWriter(),
+  EXPECT_OK(UnregisterStreamMessageResponseWriter());
+  EXPECT_THAT(UnregisterStreamMessageResponseWriter(),
               DerivedFromStatus(DefaultError()));
 }
 

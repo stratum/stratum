@@ -1190,11 +1190,6 @@ message AutonegotiationStatus {
   TriState state = 1;
 }
 
-// Wrapper around the hardware port.
-message HardwarePort {
-  string name = 1;
-}
-
 // Wrapper around the FEC mode.
 message FecStatus {
   FecMode mode = 1;
@@ -1255,7 +1250,6 @@ message DataRequest {
       Port health_indicator = 14;
       Port autoneg_status = 15;
       Port front_panel_port_info = 16;
-      Port hardware_port = 17;
       Port fec_status = 18;
       OpticalNetworkInterface optical_transceiver_info = 19;
       Port loopback_status = 20;
@@ -1288,7 +1282,6 @@ message DataResponse {
     HealthIndicator health_indicator = 14;
     AutonegotiationStatus autoneg_status = 15;
     FrontPanelPortInfo front_panel_port_info = 16;
-    HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
     OpticalTransceiverInfo optical_transceiver_info = 19;
     LoopbackStatus loopback_status = 20;

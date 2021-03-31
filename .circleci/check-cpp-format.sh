@@ -5,8 +5,8 @@
 #
 set -ex
 
-# Files in this branch that are different from master.
-CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/master -- '*.h' '*.cc')
+# Files in this branch that are different from main.
+CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- '*.h' '*.cc')
 
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
@@ -96,7 +96,11 @@ stratum/hal/lib/common/file_service.h
 stratum/hal/lib/common/gnmi_events.h
 stratum/hal/lib/common/p4_service_test.cc
 stratum/hal/lib/common/p4_service.h
+stratum/hal/lib/common/yang_parse_tree_mock.h
+stratum/hal/lib/common/yang_parse_tree_paths.cc
 stratum/hal/lib/common/yang_parse_tree_paths.h
+stratum/hal/lib/common/yang_parse_tree_test.cc
+stratum/hal/lib/common/yang_parse_tree.h
 stratum/hal/lib/dummy/dummy_box.cc
 stratum/hal/lib/dummy/dummy_box.h
 stratum/hal/lib/dummy/dummy_chassis_mgr.cc

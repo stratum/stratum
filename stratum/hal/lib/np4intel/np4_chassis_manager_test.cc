@@ -16,15 +16,15 @@
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
 
+namespace stratum {
+namespace hal {
+namespace np4intel {
+
 using ::testing::_;
 using ::testing::AtMost;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
-namespace np4intel {
 
 namespace {
 

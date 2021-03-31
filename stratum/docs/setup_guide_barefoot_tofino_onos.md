@@ -80,7 +80,7 @@ cd stratum
 ./stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 ```
 
-:warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/README.md#huge-pages--dma-allocation-error).
+:warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](/stratum/hal/bin/barefoot/README.run.md#huge-pages--dma-allocation-error).
 
 :pencil2: (Optional) You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
 
@@ -184,7 +184,7 @@ Device|Type |#pipe|#stg|#prsr|#macblk
 ------|-----|-----|----|-----|-------
 0     |T32D |2    |12  |18   |-1
 ```
-In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_3_0`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_3_0`, `org.opencord.fabric-spgw.tofino.montara_sde_9_3_0`, or `org.opencord.fabric-int.tofino.montara_sde_9_3_0` as the pipeconf for your device.
+In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_3_1`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_3_1`, `org.opencord.fabric-spgw.tofino.montara_sde_9_3_1`, or `org.opencord.fabric-int.tofino.montara_sde_9_3_1` as the pipeconf for your device.
 
 ### Apply netcfg to ONOS
 Register the switch in ONOS by executing:
@@ -217,11 +217,11 @@ In case of problems with these instructions, feel free to create an issue or PR.
 
 ## Useful links
 
-- ["Running Stratum on a Barefoot Tofino based switch"](https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/README.md)
+- ["Running Stratum on a Barefoot Tofino based switch"](/stratum/hal/bin/barefoot/README.md)
     - mostly about building/running Stratum, not preparing the OS or integrating with ONOS
 - [fabric-tofino](https://github.com/opencord/fabric-tofino)
-- ["Running Stratum on a Barefoot Tofino based switch"](https://github.com/stratum/stratum/tree/master/stratum/hal/bin/barefoot)
-- ["Trellis+Stratum example" (Untested)](https://github.com/stratum/stratum/tree/master/tools/mininet/examples/trellis)
+- ["Running Stratum on a Barefoot Tofino based switch"](/stratum/hal/bin/barefoot)
+- ["Trellis+Stratum example" (Untested)](/tools/mininet/examples/trellis)
 - [ONL building](https://opennetlinux.org/doc-building.html)
 - [stratum-bf Docker](https://registry.hub.docker.com/r/stratumproject/stratum-bf)
 - [ONOS CLI](https://wiki.onosproject.org/display/ONOS/Appendix+A+%3A+CLI+commands)

@@ -82,26 +82,32 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 
 ::util::Status BfrtPacketioManager::Shutdown() {
   ::util::Status status;
-  RETURN_IF_ERROR(bf_sde_interface_->StopPacketIo(device_));
-  RETURN_IF_ERROR(bf_sde_interface_->UnregisterPacketReceiveWriter(device_));
   {
     absl::WriterMutexLock l(&rx_writer_lock_);
     rx_writer_ = nullptr;
   }
   {
     absl::WriterMutexLock l(&data_lock_);
+    if (initialized_) {
+      APPEND_STATUS_IF_ERROR(status, bf_sde_interface_->StopPacketIo(device_));
+      APPEND_STATUS_IF_ERROR(
+          status, bf_sde_interface_->UnregisterPacketReceiveWriter(device_));
+      if (!packet_receive_channel_ || !packet_receive_channel_->Close()) {
+        ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                               << "Packet Rx channel is already closed.";
+        APPEND_STATUS_IF_ERROR(status, error);
+      }
+    }
     packetin_header_.clear();
     packetout_header_.clear();
     packetin_header_size_ = 0;
     packetout_header_size_ = 0;
-    if (!packet_receive_channel_ || !packet_receive_channel_->Close()) {
-      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
-                             << "Packet Rx channel is already closed.";
-      APPEND_STATUS_IF_ERROR(status, error);
-    }
     packet_receive_channel_.reset();
     initialized_ = false;
   }
+  // TODO(max): we release the locks between closing the channel and joining the
+  // thread to prevent deadlocks with the RX handler. But there might still be a
+  // bug hiding here.
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (sde_rx_thread_id_ != 0 &&
@@ -292,6 +298,8 @@ class BitBuffer {
     }
 
     ::p4::v1::PacketIn packet_in;
+    // FIXME: returning here in case of parsing errors might not be the best
+    // solution.
     RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
     {
       absl::WriterMutexLock l(&rx_writer_lock_);

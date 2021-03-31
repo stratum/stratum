@@ -19,11 +19,11 @@
 
 DECLARE_bool(skip_p4_min_objects_check);
 
-using gflags::FlagSaver;
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
+
+using gflags::FlagSaver;
+using ::testing::HasSubstr;
 
 // This class is the P4InfoManager test fixture.
 class P4InfoManagerTest : public testing::Test {

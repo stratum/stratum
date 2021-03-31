@@ -174,6 +174,7 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status SetTmCpuPort(int device, int port) override;
   ::util::StatusOr<bool> IsSoftwareModel(int device) override;
   std::string GetBfChipType(int device) const override;
+  std::string GetSdeVersion() const override;
   ::util::Status TxPacket(int device, const std::string& packet) override;
   ::util::Status StartPacketIo(int device) override;
   ::util::Status StopPacketIo(int device) override;
@@ -233,9 +234,11 @@ class BfSdeWrapper : public BfSdeInterface {
       absl::optional<uint64> packet_count) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status ReadIndirectCounter(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
-      absl::optional<uint64>* packet_count, absl::Duration timeout) override
-      LOCKS_EXCLUDED(data_lock_);
+      uint32 counter_id, absl::optional<uint32> counter_index,
+      std::vector<uint32>* counter_indices,
+      std::vector<absl::optional<uint64>>* byte_counts,
+      std::vector<absl::optional<uint64>>* packet_counts,
+      absl::Duration timeout) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status WriteRegister(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, absl::optional<uint32> register_index,
@@ -245,6 +248,18 @@ class BfSdeWrapper : public BfSdeInterface {
       uint32 table_id, absl::optional<uint32> register_index,
       std::vector<uint32>* register_indices,
       std::vector<uint64>* register_datas, absl::Duration timeout) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status WriteIndirectMeter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> meter_index, bool in_pps,
+      uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ReadIndirectMeters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> meter_index,
+      std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
+      std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
+      std::vector<uint64>* pbursts, std::vector<bool>* in_pps) override
       LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,

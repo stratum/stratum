@@ -30,8 +30,6 @@ Usage: $0
     [--git-name <name>]             use the provided name for git commits
     [--git-email <email>]           use the provided email for git commits
     [--git-editor <editor command>] use the provided editor for git
-    [--program <path>]              run the provided program instead of bash
-                                    for example: /stratum/tools/run_unit_tests.sh
     [--np4-intel]                   create NP4 Intel build environment
     [-- [Docker options]]           additional Docker options for running the container
 EOF
@@ -70,11 +68,6 @@ do
         ;;
     --git-editor)
         GIT_EDITOR="$2"
-        shift
-        shift
-        ;;
-    --program)
-        DOCKER_PROGRAM="$2"
         shift
         shift
         ;;
@@ -124,6 +117,11 @@ if [ $ERR -ne 0 ]; then
     exit $ERR
 fi
 
+DOCKER_USER="$USER"
+DOCKER_GID=$(id -g $USER)
+if [ -n "$DOCKER_GID" ]; then
+    DOCKER_USER="$USER:$DOCKER_GID"
+fi
 DOCKER_RUN_OPTIONS="--rm -v $THIS_DIR:/stratum"
 if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
@@ -138,15 +136,5 @@ fi
 if [ "$NP4_INTEL" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v /dev/intel-fpga-fme.0:/dev/intel-fpga-fme.0"
 fi
-
-DOCKER_GID=$(id -g $USER)
-if [ -z "$DOCKER_GID" ]; then
-    DOCKER_GID=$(id -u $USER)
-fi
-if [ -z "$DOCKER_PROGRAM" ]; then
-    DOCKER_PROGRAM="bash"
-    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -it"
-fi
-
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS $@"
-docker run $DOCKER_RUN_OPTIONS -w /stratum --user $USER:$DOCKER_GID $IMAGE_NAME $DOCKER_PROGRAM
+docker run $DOCKER_RUN_OPTIONS -w /stratum --user $DOCKER_USER -ti $IMAGE_NAME bash

@@ -47,12 +47,13 @@ class BFSwitch : public SwitchInterface {
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) override;
-  ::util::Status RegisterPacketReceiveWriter(
+  ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override;
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override;
-  ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet) override;
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
+      override;
+  ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override;
+  ::util::Status HandleStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request) override;
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;
   ::util::Status UnregisterEventNotifyWriter() override;

@@ -161,22 +161,23 @@ BfrtSwitch::~BfrtSwitch() {}
   return bfrt_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BfrtSwitch::RegisterPacketReceiveWriter(
+::util::Status BfrtSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->RegisterPacketReceiveWriter(writer);
+  return bfrt_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status BfrtSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BfrtSwitch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->UnregisterPacketReceiveWriter();
+  return bfrt_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status BfrtSwitch::TransmitPacket(uint64 node_id,
-                                          const ::p4::v1::PacketOut& packet) {
+::util::Status BfrtSwitch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->TransmitPacket(packet);
+  return bfrt_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status BfrtSwitch::RegisterEventNotifyWriter(
@@ -199,9 +200,12 @@ BfrtSwitch::~BfrtSwitch() {}
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kForwardingViability:
+      case DataRequest::Request::kHealthIndicator:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
       case DataRequest::Request::kLoopbackStatus:
@@ -230,9 +234,9 @@ BfrtSwitch::~BfrtSwitch() {}
       default:
         status =
             MAKE_ERROR(ERR_UNIMPLEMENTED)
-            << "Request type "
+            << "DataRequest field "
             << req.descriptor()->FindFieldByNumber(req.request_case())->name()
-            << " is not supported yet: " << req.ShortDebugString() << ".";
+            << " is not supported yet!";
         break;
     }
     if (status.ok()) {
@@ -246,8 +250,8 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::SetValue(uint64 node_id, const SetRequest& request,
                                     std::vector<::util::Status>* details) {
-  LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
-            << "be peformed when ChassisConfig is pushed again. "
+  LOG(INFO) << "BfrtSwitch::SetValue is not implemented yet, but changes will "
+            << "be performed when ChassisConfig is pushed again. "
             << request.ShortDebugString() << ".";
 
   return ::util::OkStatus();
