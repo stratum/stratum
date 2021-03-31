@@ -116,6 +116,7 @@ if [ -n "$BAZEL_CACHE" ]; then
 fi
 
 # Build Stratum BF in Docker
+#FIXME : user only if using cache and special image
 set -x
 docker run --rm \
   $DOCKER_OPTS \

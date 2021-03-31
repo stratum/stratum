@@ -20,7 +20,7 @@ STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
 # FIXME(bocon) add the missing packages
-BF_SDE_VERSIONS=(9.2.0 9.3.0) # 9.3.1 9.4.0 )
+BF_SDE_VERSIONS=(9.2.0 9.3.0 9.3.1 9.4.0)
 
 # ---------- Build Variables -------------
 JOBS=30
@@ -167,4 +167,4 @@ gh release upload -R stratum/stratum $VERSION_LONG *
 
 # ---------- Cleanup -------------
 docker logout
-gh auth logout
+gh auth logout -h github.com
