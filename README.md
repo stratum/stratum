@@ -122,22 +122,35 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 - Netberg Aurora 710
 - Netberg Aurora 750
 
+*Note: Pre-built Stratum binaries for Tofino are available for recent Barefoot
+SDE releases in the [Releases](https://github.com/stratum/stratum/releases/latest)
+page. Vendors, customers, and researchers with access to the Barefoot SDE can
+build Stratum themselves. For access to the SDE, please contact an Intel
+representative.*
+
 ## Broadcom
 
-- Tomahawk
+- Tomahawk (SDKLT, OpenNSA, SDK6)
     - Edgecore AS7712-32X
     - Edgecore AS7716-24XC Cassini
     - Dell Z9100
     - Inventec D7032
     - QCT QuantaMesh T7032-IX1
-- Tomahawk+
+- Tomahawk+ (SDK6)
     - Edgecore AS7716-24SC Cassini
     - Inventec D7054
-- Tomahawk2
-- Tomahawk3
-- Trident2
+- Tomahawk2 (OpenNSA, SDK6)
+- Tomahawk3 (SDK6)
+- Trident2 (OpenNSA, SDK6)
     - Edgecore AS6712
     - Inventec D6254
+
+*Note: Pre-built Stratum binaries for SDKLT and OpenNSA are available in the
+[Releases](https://github.com/stratum/stratum/releases/latest) page. Vendors and
+customers with a Broadcom SLA can build Stratum themselves using the Broadcom
+Switch SDK (SDK6); versions 6.5.17 and 6.5.19 are tested. If you would like to
+use Stratum with SDK6 and you do not have an SLA with Broadcom, contact a
+Broadcom representative or your switch vendor.*
 
 ## Smart NIC
 
