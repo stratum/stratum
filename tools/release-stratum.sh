@@ -75,7 +75,8 @@ fi
 
 # ---------- git tag the release -------------
 if [ ! -d $STRATUM_DIR ]; then
-  git clone https://$GITHUB_TOKEN@github.com/stratum/stratum.git $STRATUM_DIR
+  git clone https://github.com/stratum/stratum.git $STRATUM_DIR
+  TEMP_STRATUM_DIR=1
 fi
 cd $STRATUM_DIR
 git tag $VERSION_LONG
@@ -163,6 +164,9 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
 done
 
 # ---------- Push tag to Github -------------
+if [ -n "$TEMP_STRATUM_DIR"]; then
+  git config url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+fi
 git push origin ${VERSION_LONG}
 
 # ---------- Upload release artifacts to Github -------------
