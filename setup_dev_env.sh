@@ -117,12 +117,11 @@ if [ $ERR -ne 0 ]; then
     exit $ERR
 fi
 
-DOCKER_USER="$USER"
+DOCKER_RUN_OPTIONS="--rm -ti -v $THIS_DIR:/stratum -w /stratum"
 DOCKER_GID=$(id -g $USER)
 if [ -n "$DOCKER_GID" ]; then
-    DOCKER_USER="$USER:$DOCKER_GID"
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS --user $USER:$DOCKER_GID"
 fi
-DOCKER_RUN_OPTIONS="--rm -v $THIS_DIR:/stratum"
 if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi
@@ -137,4 +136,4 @@ if [ "$NP4_INTEL" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v /dev/intel-fpga-fme.0:/dev/intel-fpga-fme.0"
 fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS $@"
-docker run $DOCKER_RUN_OPTIONS -w /stratum --user $DOCKER_USER -ti $IMAGE_NAME bash
+docker run $DOCKER_RUN_OPTIONS $IMAGE_NAME bash
