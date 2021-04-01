@@ -64,7 +64,6 @@ if [ -n "$BAZEL_CACHE" ]; then
 fi
 
 # Build Stratum BCM in Docker
-#FIXME : user only if using cache and special image
 set -x
 docker run --rm \
   $DOCKER_EXTRA_RUN_OPTS \
