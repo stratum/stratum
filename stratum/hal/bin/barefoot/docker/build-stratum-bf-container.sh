@@ -113,6 +113,7 @@ fi
 # Build with Bazel cache
 if [ -n "$BAZEL_CACHE" ]; then
   DOCKER_OPTS+="-v $BAZEL_CACHE:/home/$USER/.cache "
+  DOCKER_OPTS+="--user $USER "
 fi
 
 # Build Stratum BF in Docker
@@ -124,7 +125,6 @@ docker run --rm \
   -v $STRATUM_ROOT:/stratum \
   -v $(pwd):/output \
   -w /stratum \
-  --user $USER \
   --entrypoint bash \
   $DOCKER_IMG -c \
     "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
