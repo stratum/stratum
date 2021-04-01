@@ -5,7 +5,7 @@ ARG BAZELISK_VERSION=1.7.5
 ARG PI_COMMIT=0fbdac256151eb1537cd5ebf19101d5df60767fa
 ARG BMV2_COMMIT=498202d98d83a6c580aa86a3497b9b496bcd43b2
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
-ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-12 main"
+ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-11 main"
 
 # Reasonable for CI
 ARG JOBS=2
@@ -43,12 +43,12 @@ ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang-format-12 clang-12
+    apt-get install -y --no-install-recommends clang-format-11 clang-11
 # Versioned LLVM releases don't come with the meta packages for the
 # clang -> clang-12 symlinks. We create them manually here.
-RUN ln -s /usr/bin/clang-12 /usr/bin/clang
-RUN ln -s /usr/bin/clang++-12 /usr/bin/clang++
-RUN ln -s /usr/bin/clang-format-12 /usr/bin/clang-format
+RUN ln -s /usr/bin/clang-11 /usr/bin/clang
+RUN ln -s /usr/bin/clang++-11 /usr/bin/clang++
+RUN ln -s /usr/bin/clang-format-11 /usr/bin/clang-format
 
 # Install java and lcov for Bazel coverage
 ARG JDK_URL
