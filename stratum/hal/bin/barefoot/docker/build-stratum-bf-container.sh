@@ -29,6 +29,7 @@ Additional environment variables:
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
     RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
+    BAZEL_CACHE: Path to Bazel cache (Default: <empty>)
 "
 }
 
@@ -82,6 +83,7 @@ Build variables:
   Build jobs: $JOBS
   Docker image for building: $DOCKER_IMG
   Release build enabled: ${RELEASE_BUILD:-false}
+  Bazel cache: ${BAZEL_CACHE:-none}
 "
 
 # Set build options for Stratum build
@@ -106,6 +108,12 @@ fi
 BAZEL_OPTS=""
 if [ -n "$RELEASE_BUILD" ]; then
   BAZEL_OPTS+="--config release "
+fi
+
+# Build with Bazel cache
+if [ -n "$BAZEL_CACHE" ]; then
+  DOCKER_OPTS+="-v $BAZEL_CACHE:/home/$USER/.cache "
+  DOCKER_OPTS+="--user $USER "
 fi
 
 # Build Stratum BF in Docker
