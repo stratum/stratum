@@ -14,13 +14,12 @@ fi
 # GITHUB_TOKEN=<FILL IN>
 
 # ---------- Release Variables -------------
-VERSION=$(date +%y.%m)
-VERSION_LONG=$(date +%Y-%m-%d)
+VERSION=21.03 #$(date +%y.%m)
+VERSION_LONG=2021-03-31 #$(date +%Y-%m-%d)
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
-# FIXME(bocon) add the missing packages
-BF_SDE_VERSIONS=(9.2.0 9.3.0 9.3.1 9.4.0)
+BF_SDE_VERSIONS=(9.2.0 9.3.1 9.4.0)
 
 # ---------- Build Variables -------------
 JOBS=30
@@ -80,20 +79,19 @@ git tag $VERSION_LONG
 
 # ---------- Build release builder container -------------
 # This container is currently only used for the BF and BCM builds
-
-# FIXME(bocon) get buildimage
-# docker pull stratumproject/build:build
-# docker tag stratumproject/build:build stratumproject/build:20.12
-
-THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOCKER_FILE=$THIS_DIR/Dockerfile.dev
-
-IMAGE_NAME=stratum-dev
-DOCKER_BUILD_OPTIONS+="-t $IMAGE_NAME "
-#DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --pull"
-DOCKER_BUILD_OPTIONS+="--build-arg USER_NAME=\"$USER\" --build-arg USER_ID=\"$UID\" "
 set -x
-eval docker build $DOCKER_BUILD_OPTIONS - <$DOCKER_FILE
+docker build \
+  -t stratumproject/build:build \
+  -f Dockerfile.build .
+docker tag stratumproject/build:build stratumproject/build:20.12
+docker push stratumproject/build:build
+docker push stratumproject/build:20.12
+
+IMAGE_NAME=stratum-release-builder
+eval docker build \
+  -t $IMAGE_NAME \
+  --build-arg USER_NAME="$USER" --build-arg USER_ID="$UID" \
+  - < Dockerfile.dev
 set +x
 
 # Remove debs and docker.tar.gz files after build
@@ -111,11 +109,14 @@ function clean_up_after_build() {
 
 # ---------- Build: BMv2 -------------
 # TODO(bocon): Investigate using a shared Bazel cache
+set -x
 docker build \
   -t opennetworking/mn-stratum:latest \
   -f tools/mininet/Dockerfile .
-# docker push opennetworking/mn-stratum:${VERSION}
-# docker push opennetworking/mn-stratum:latest
+docker tag opennetworking/mn-stratum:latest opennetworking/mn-stratum:${VERSION}
+docker push opennetworking/mn-stratum:${VERSION}
+docker push opennetworking/mn-stratum:latest
+set +x
 
 # ---------- Build: Broadcom -------------
 for target in ${BCM_TARGETS[@]}; do
@@ -130,8 +131,8 @@ for target in ${BCM_TARGETS[@]}; do
     stratum/hal/bin/bcm/standalone/docker/build-stratum-bcm-container.sh
   mv -f stratum_bcm_${target_short}_deb.deb $RELEASE_DIR/stratum-bcm-${VERSION}-$target_short-amd64.deb
   docker tag stratumproject/stratum-bcm:$target_short stratumproject/stratum-bcm:${VERSION}-$target_short
-  # docker push stratumproject/stratum-bcm:${VERSION}-$target_short
-  # docker push stratumproject/stratum-bcm:$target_short
+  docker push stratumproject/stratum-bcm:${VERSION}-$target_short
+  docker push stratumproject/stratum-bcm:$target_short
   clean_up_after_build
   set +x
 done
@@ -151,8 +152,8 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
       stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh
     mv -f ${target}_deb.deb $RELEASE_DIR/$target_dash-${VERSION}-$sde_version-amd64.deb
     docker tag stratumproject/$target_dash:$sde_version stratumproject/$target_dash:${VERSION}-$sde_version
-    #docker push stratumproject/$target_dash:${VERSION}-$sde_version
-    #docker push stratumproject/$target_dash:$sde_version
+    docker push stratumproject/$target_dash:${VERSION}-$sde_version
+    docker push stratumproject/$target_dash:$sde_version
     clean_up_after_build
     set +x
   done
