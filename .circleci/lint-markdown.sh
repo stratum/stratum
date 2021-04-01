@@ -11,6 +11,9 @@ KNOWN_FILES=(
   "CONTRIBUTING.md"
 )
 
+# For all available rules, see:
+# https://github.com/markdownlint/markdownlint/blob/master/docs/RULES.md
+
 docker run --rm -v $(pwd):$(pwd) -w $(pwd) markdownlint/markdownlint \
   -v --rules MD013 \
   ${KNOWN_FILES[*]}
