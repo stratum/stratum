@@ -14,8 +14,8 @@ fi
 # GITHUB_TOKEN=<FILL IN>
 
 # ---------- Release Variables -------------
-VERSION=21.03 #$(date +%y.%m)
-VERSION_LONG=2021-03-31 #$(date +%Y-%m-%d)
+VERSION=${VERSION:-$(date +%y.%m)}  # 21.03
+VERSION_LONG=${VERSION_LONG:-$(date +%Y-%m-%d)}  # 2021-03-31
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
@@ -26,6 +26,9 @@ JOBS=30
 BAZEL_CACHE=$HOME/.cache
 BF_SDE_INSTALL_TAR_PATH=$HOME/sde
 RELEASE_DIR=$HOME/stratum-release-pkgs
+
+# Clean up and recreate the release package directory
+rm -rfv $RELEASE_DIR
 mkdir -p $RELEASE_DIR
 
 echo "
@@ -83,9 +86,9 @@ set -x
 docker build \
   -t stratumproject/build:build \
   -f Dockerfile.build .
-docker tag stratumproject/build:build stratumproject/build:20.12
+docker tag stratumproject/build:build stratumproject/build:${VERSION}
 docker push stratumproject/build:build
-docker push stratumproject/build:20.12
+docker push stratumproject/build:${VERSION}
 
 IMAGE_NAME=stratum-release-builder
 eval docker build \
@@ -159,12 +162,29 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
   done
 done
 
+# ---------- Push tag to Github -------------
+git push origin ${VERSION_LONG}
+
 # ---------- Upload release artifacts to Github -------------
-# FIXME(bocon): push the tag
+# Generate change list
+PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1)
+echo "## Changelist" > $STRATUM_DIR/release-notes.txt
+git log --oneline --no-decorate $PREV_TAG..HEAD >> $STRATUM_DIR/release-notes.txt
 cd $RELEASE_DIR/
+# Print release artifacts (debian packages)
 ls -lh
 set -x
-gh release upload -R stratum/stratum $VERSION_LONG *
+# Create release and upload artifacts
+gh release create -R stratum/stratum ${VERSION_LONG} \
+  -d -t ${VERSION_LONG} -F $STRATUM_DIR/release-notes.txt
+gh release upload -R stratum/stratum ${VERSION_LONG} *
+rm $STRATUM_DIR/release-notes.txt
+
+# ---------- Misc -------------
+gh issue create -R stratum/stratum \
+  --title "Update dependency versions" \
+  --label "Infra" \
+  --body "Now that Stratum **${VERSION}** is released, update Stratum upstream dependencies to the latest version."
 
 # ---------- Cleanup -------------
 docker logout
