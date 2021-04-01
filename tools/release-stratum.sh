@@ -164,10 +164,12 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
 done
 
 # ---------- Push tag to Github -------------
+set -x
 if [ -n "$TEMP_STRATUM_DIR"]; then
   git config url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
 fi
 git push origin ${VERSION_LONG}
+set +x
 
 # ---------- Upload release artifacts to Github -------------
 # Generate change list
