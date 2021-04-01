@@ -77,7 +77,7 @@ jobs:
   # Build targets and run unit tests.
   unit_tests:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - CC: clang
       - CXX: clang++
@@ -99,7 +99,7 @@ jobs:
   # CDLang
   cdlang_tests:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - CC: clang
       - CXX: clang++
@@ -121,7 +121,7 @@ jobs:
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - CC: clang
       - CXX: clang++
@@ -146,7 +146,7 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: Dockerfile.build
-      - DOCKER_IMG: stratumproject/build:build
+      - DOCKER_IMG: stratumproject/build:build-test
     steps:
       - checkout
       - *docker_login
@@ -175,7 +175,7 @@ jobs:
 
   publish-docker-p4c-fpm:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - DOCKER_SCOPE: stratum/p4c_backends/fpm
       - DOCKER_FILE: Dockerfile
@@ -204,7 +204,7 @@ jobs:
 
   publish-docker-stratum-bcm-sdklt:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
@@ -229,7 +229,7 @@ jobs:
 
   publish-docker-stratum-bcm-opennsa:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
@@ -253,7 +253,7 @@ jobs:
 
   publish-docker-bf-pipeline-builder:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile.bf_pipeline_builder
@@ -282,7 +282,7 @@ jobs:
 
   publish-docker-stratum-replay:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - DOCKER_SCOPE: stratum/tools/stratum-replay
       - DOCKER_FILE: Dockerfile
@@ -311,7 +311,7 @@ jobs:
 
   publish-docker-chassis-config-migrator:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     environment:
       - DOCKER_SCOPE: stratum/hal/config
       - DOCKER_FILE: Dockerfile
@@ -340,7 +340,7 @@ jobs:
 
   cpp-format-check:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     steps:
       - checkout
       - run:
@@ -349,7 +349,7 @@ jobs:
 
   cpp-lint-check:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     steps:
       - checkout
       - run:
@@ -366,7 +366,7 @@ jobs:
           command: reuse lint
   bazel-style-check:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-test
     steps:
       - checkout
       - run:
@@ -377,13 +377,28 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - unit_tests
-      - cdlang_tests
-      - coverage
-      - cpp-format-check
-      - cpp-lint-check
-      - license-check
-      - bazel-style-check
+      - publish-docker-build
+      - unit_tests:
+          requires:
+            - publish-docker-build
+      - cdlang_tests:
+          requires:
+            - publish-docker-build
+      - coverage:
+          requires:
+            - publish-docker-build
+      - cpp-format-check:
+          requires:
+            - publish-docker-build
+      - cpp-lint-check:
+          requires:
+            - publish-docker-build
+      - license-check:
+          requires:
+            - publish-docker-build
+      - bazel-style-check:
+          requires:
+            - publish-docker-build
   docker-publish:
     jobs:
       - publish-docker-build:
