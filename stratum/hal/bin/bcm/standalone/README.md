@@ -6,7 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 -->
 # Stratum on a Broadcom based switch
 
-The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. Tomahawk) using Broadcom SDKs.
+The following guide details how to build Stratum for Broadcom based switches
+(i.e. Tomahawk) using Broadcom SDKs.
+
+For additional information related to optical transponders like the Cassini, see
+the [TAI README](/stratum/docs/tai/README.md).
 
 ## ONLPv2 operating system on the switch
 Stratum requires an ONLPv2 operating system on the switch. ONF maintains a [fork](https://github.com/opennetworkinglab/OpenNetworkLinux) with additional platforms. Follow the [ONL](https://opennetlinux.org/doc-building.html) instructions to setup your device. Here is what your switch should look like:
