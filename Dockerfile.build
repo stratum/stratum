@@ -46,9 +46,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends clang-format-11 clang-11
 # Versioned LLVM releases don't come with the meta packages for the
 # clang -> clang-12 symlinks. We create them manually here.
-RUN ln -s /usr/bin/clang-11 /usr/bin/clang
-RUN ln -s /usr/bin/clang++-11 /usr/bin/clang++
-RUN ln -s /usr/bin/clang-format-11 /usr/bin/clang-format
+RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
+RUN ln -s ../lib/llvm-11/bin/clang++ /usr/bin/clang++
+RUN ln -s ../lib/llvm-11/bin/clang-format /usr/bin/clang-format
 
 # Install java and lcov for Bazel coverage
 ARG JDK_URL
