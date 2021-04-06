@@ -306,7 +306,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.lacp_router_mac().node_id()
         // - port_id: req.lacp_router_mac().port_id()
         // and then write it into the response.
-        resp.mutable_lacp_router_mac()->set_mac_address(0x112233445566ull);
+        resp.mutable_lacp_router_mac()->set_mac_address(kDummyMacAddress);
         break;
       case DataRequest::Request::kLacpSystemPriority:
         // Find LACP System priority of port located at:
@@ -328,7 +328,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.mac_address().node_id()
         // - port_id: req.mac_address().port_id()
         // and then write it into the response.
-        resp.mutable_mac_address()->set_mac_address(0ull);
+        resp.mutable_mac_address()->set_mac_address(kDummyMacAddress);
         break;
       case DataRequest::Request::kPortCounters: {
         // Find current port counters for port located at:
