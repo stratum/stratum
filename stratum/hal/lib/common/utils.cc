@@ -282,7 +282,7 @@ uint64 ConvertStringToSpeedBps(const std::string& speed_string) {
   } else if (speed_string == "SPEED_100GB") {
     return kHundredGigBps;
   } else {
-    return 0LL;
+    return 0ull;
   }
 }
 
