@@ -318,10 +318,10 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
 }
 
 std::string MacAddressToYangString(const uint64& mac_address) {
-  return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
-                         (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
-                         (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
-                         mac_address & 0xFF);
+  return absl::StrFormat("%02x:%02x:%02x:%02x:%02x:%02x",
+                         (mac_address >> 40) & 0xFF, (mac_address >> 32) & 0xFF,
+                         (mac_address >> 24) & 0xFF, (mac_address >> 16) & 0xFF,
+                         (mac_address >> 8) & 0xFF, mac_address & 0xFF);
 }
 
 ::util::StatusOr<uint64> YangStringToMacAddress(std::string yang_string) {
