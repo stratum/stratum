@@ -494,38 +494,22 @@ TEST_F(BcmSwitchTest, GetPortAdminStatus) {
   EXPECT_EQ(error.ToString(), details.at(0).ToString());
 }
 
-TEST_F(BcmSwitchTest, GetPortLoopbackStatus) {
-  PushChassisConfigSuccess();
-
+TEST_F(BcmSwitchTest, GetMacAddressPass) {
   WriterMock<DataResponse> writer;
   DataResponse resp;
-
-  // Expect successful retrieval followed by failure.
-  ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
-  EXPECT_CALL(*bcm_chassis_manager_mock_,
-              GetPortLoopbackState(kNodeId, kPortId))
-      .WillOnce(Return(LOOPBACK_STATE_NONE))
-      .WillOnce(Return(error));
+  // Expect Write() call and store data in resp.
   ExpectMockWriteDataResponse(&writer, &resp);
 
   DataRequest req;
-  auto* req_info = req.add_requests()->mutable_loopback_status();
-  req_info->set_node_id(kNodeId);
-  req_info->set_port_id(kPortId);
-  std::vector<::util::Status> details;
+  auto* request = req.add_requests()->mutable_mac_address();
+  request->set_node_id(1);
+  request->set_port_id(2);
 
+  std::vector<::util::Status> details;
   EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
-  EXPECT_TRUE(resp.has_loopback_status());
-  EXPECT_EQ(LOOPBACK_STATE_NONE, resp.loopback_status().state());
+  EXPECT_TRUE(resp.has_mac_address());
   ASSERT_EQ(details.size(), 1);
   EXPECT_THAT(details.at(0), ::util::OkStatus());
-
-  details.clear();
-  resp.Clear();
-  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
-  EXPECT_FALSE(resp.has_loopback_status());
-  ASSERT_EQ(details.size(), 1);
-  EXPECT_EQ(error.ToString(), details.at(0).ToString());
 }
 
 TEST_F(BcmSwitchTest, GetPortSpeed) {
@@ -664,6 +648,61 @@ TEST_F(BcmSwitchTest, GetNodePacketIoDebugInfoPass) {
   std::vector<::util::Status> details;
   EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
   EXPECT_TRUE(resp.has_node_packetio_debug_info());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, GetPortLoopbackStatus) {
+  PushChassisConfigSuccess();
+
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+
+  // Expect successful retrieval followed by failure.
+  ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
+  EXPECT_CALL(*bcm_chassis_manager_mock_,
+              GetPortLoopbackState(kNodeId, kPortId))
+      .WillOnce(Return(LOOPBACK_STATE_NONE))
+      .WillOnce(Return(error));
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* req_info = req.add_requests()->mutable_loopback_status();
+  req_info->set_node_id(kNodeId);
+  req_info->set_port_id(kPortId);
+  std::vector<::util::Status> details;
+
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_loopback_status());
+  EXPECT_EQ(LOOPBACK_STATE_NONE, resp.loopback_status().state());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+
+  details.clear();
+  resp.Clear();
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_FALSE(resp.has_loopback_status());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_EQ(error.ToString(), details.at(0).ToString());
+}
+
+TEST_F(BcmSwitchTest, GetSdnPortId) {
+  PushChassisConfigSuccess();
+
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* req_info = req.add_requests()->mutable_sdn_port_id();
+  req_info->set_node_id(kNodeId);
+  req_info->set_port_id(kPortId);
+  std::vector<::util::Status> details;
+
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_sdn_port_id());
+  EXPECT_EQ(kPortId, resp.sdn_port_id().port_id());
   ASSERT_EQ(details.size(), 1);
   EXPECT_THAT(details.at(0), ::util::OkStatus());
 }
