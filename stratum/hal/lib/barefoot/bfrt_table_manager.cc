@@ -42,15 +42,6 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     OperationMode mode, BfSdeInterface* bf_sde_interface, int device) {
   return absl::WrapUnique(new BfrtTableManager(mode, bf_sde_interface, device));
 }
-namespace {
-struct RegisterClearThreadData {
-  std::vector<p4::config::v1::Register> registers;
-  BfrtTableManager* mgr;
-
-  explicit RegisterClearThreadData(BfrtTableManager* _mgr)
-      : registers(), mgr(_mgr) {}
-};
-}  // namespace
 
 ::util::Status BfrtTableManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
