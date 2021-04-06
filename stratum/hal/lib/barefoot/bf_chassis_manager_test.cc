@@ -501,6 +501,13 @@ TEST_F(BFChassisManagerTest, GetPortData) {
                   &DataResponse::port_speed, &DataResponse::has_port_speed,
                   &PortSpeed::speed_bps, kHundredGigBps);
 
+  // LACP router MAC
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_lacp_router_mac,
+                  &DataResponse::lacp_router_mac,
+                  &DataResponse::has_lacp_router_mac, &MacAddress::mac_address,
+                  0x112233445566ul);
+
   // Negotiated port speed
   GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
                   &DataRequest::Request::mutable_negotiated_port_speed,
@@ -561,15 +568,6 @@ TEST_F(BFChassisManagerTest, GetPortData) {
                   &DataResponse::health_indicator,
                   &DataResponse::has_health_indicator, &HealthIndicator::state,
                   HEALTH_STATE_UNKNOWN);
-
-  // Unsupported
-  DataRequest::Request req;
-  req.mutable_lacp_router_mac()->set_node_id(kNodeId);
-  req.mutable_lacp_router_mac()->set_port_id(portId);
-  auto status = bf_chassis_manager_->GetPortData(req);
-  EXPECT_FALSE(status.ok());
-  EXPECT_EQ(status.status().error_code(), ERR_INTERNAL);
-  EXPECT_THAT(status.status().error_message(), HasSubstr("Not supported yet"));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

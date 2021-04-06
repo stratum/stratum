@@ -249,7 +249,7 @@ namespace {
       // - node_id: req.mac_address().node_id()
       // - port_id: req.mac_address().port_id()
       // and then write it into the response.
-      resp.mutable_mac_address()->set_mac_address(0ull);
+      resp.mutable_mac_address()->set_mac_address(kDummyMacAddress);
       break;
     }
     case Request::kPortSpeed: {
@@ -266,6 +266,14 @@ namespace {
                            request.negotiated_port_speed().port_id()));
       resp.mutable_negotiated_port_speed()->set_speed_bps(
           singleton->speed_bps());
+      break;
+    }
+    case DataRequest::Request::kLacpRouterMac: {
+      // Find LACP System ID MAC address of port located at:
+      // - node_id: req.lacp_router_mac().node_id()
+      // - port_id: req.lacp_router_mac().port_id()
+      // and then write it into the response.
+      resp.mutable_lacp_router_mac()->set_mac_address(kDummyMacAddress);
       break;
     }
     case Request::kPortCounters: {
