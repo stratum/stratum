@@ -103,9 +103,3 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
-
-# TODO(max): not needed anymore, remove
-# Install git-lfs for OpenNSA
-# TODO the curl line can be dropped in Debian 10
-RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-RUN apt-get install -y --no-install-recommends git-lfs && git lfs install
