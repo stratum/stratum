@@ -5,7 +5,7 @@ ARG BAZELISK_VERSION=1.7.5
 ARG PI_COMMIT=0fbdac256151eb1537cd5ebf19101d5df60767fa
 ARG BMV2_COMMIT=498202d98d83a6c580aa86a3497b9b496bcd43b2
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
-ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch main"
+ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-11 main"
 
 # Reasonable for CI
 ARG JOBS=2
@@ -43,12 +43,17 @@ ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang-format clang
+    apt-get install -y --no-install-recommends clang-format-11 clang-11
+# Versioned LLVM releases don't come with the meta packages for the
+# clang -> clang-12 symlinks. We create them manually here.
+RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
+RUN ln -s ../lib/llvm-11/bin/clang++ /usr/bin/clang++
+RUN ln -s ../lib/llvm-11/bin/clang-format /usr/bin/clang-format
 
 # Install java and lcov for Bazel coverage
 ARG JDK_URL
 ENV JAVA_HOME /usr/local/lib/jvm
-RUN wget $JDK_URL -O $HOME/jdk_11.0.2.tar.gz && \
+RUN wget --quiet $JDK_URL -O $HOME/jdk_11.0.2.tar.gz && \
     mkdir -p $JAVA_HOME && \
     tar xf $HOME/jdk_11.0.2.tar.gz -C $JAVA_HOME --strip-components=1 && \
     rm $HOME/jdk_11.0.2.tar.gz
@@ -80,7 +85,7 @@ RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
 # Bazelisk and Bazel
 ADD .bazelversion .
 ARG BAZELISK_VERSION
-RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 && \
+RUN wget --quiet https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 && \
     mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
     chmod +x /usr/local/bin/bazel && \
     bazel version
@@ -88,7 +93,7 @@ RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VE
 # Tools for style and license checking
 RUN pip install setuptools wheel && \
     pip install 'cpplint==1.*'
-RUN wget -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
+RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
 RUN chmod +x /usr/local/bin/buildifier
 
 # Docker CLI for CI builds
@@ -99,6 +104,7 @@ RUN add-apt-repository \
    stable"
 RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
 
+# TODO(max): not needed anymore, remove
 # Install git-lfs for OpenNSA
 # TODO the curl line can be dropped in Debian 10
 RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
