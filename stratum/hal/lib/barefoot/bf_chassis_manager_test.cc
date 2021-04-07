@@ -340,8 +340,81 @@ TEST_F(BFChassisManagerTest, ApplyPortShaping) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+TEST_F(BFChassisManagerTest, ApplyDeflectOnDrop) {
+  const std::string kVendorConfigText = R"PROTO(
+    tofino_config {
+      node_id_to_deflect_on_drop_configs {
+        key: 7654321
+        value {
+          drop_targets {
+            port: 12345
+            queue: 4
+          }
+          drop_targets {
+            sdk_port: 56789
+            queue: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  VendorConfig vendor_config;
+  ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
+
+  ChassisConfigBuilder builder;
+  builder.SetVendorConfig(vendor_config);
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  EXPECT_CALL(*bf_sde_mock_,
+              SetDeflectOnDropDestination(kUnit, kPortId + kSdkPortOffset, 4))
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_, SetDeflectOnDropDestination(kUnit, 56789, 1))
+      .Times(AtLeast(1));
+
+  ASSERT_OK(PushChassisConfig(builder));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
 TEST_F(BFChassisManagerTest, ReplayPorts) {
-  ASSERT_OK(PushBaseChassisConfig());
+  const std::string kVendorConfigText = R"PROTO(
+    tofino_config {
+      node_id_to_deflect_on_drop_configs {
+        key: 7654321
+        value {
+          drop_targets {
+            port: 12345
+            queue: 4
+          }
+          drop_targets {
+            sdk_port: 56789
+            queue: 1
+          }
+        }
+      }
+      node_id_to_port_shaping_config {
+        key: 7654321
+        value {
+          per_port_shaping_configs {
+            key: 12345
+            value {
+              byte_shaping {
+                max_rate_bps: 10000000000
+                max_burst_bytes: 16384
+              }
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  VendorConfig vendor_config;
+  ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
+
+  ChassisConfigBuilder builder;
+  builder.SetVendorConfig(vendor_config);
+  ASSERT_OK(PushBaseChassisConfig(&builder));
 
   const uint32 sdkPortId = kPortId + kSdkPortOffset;
   EXPECT_CALL(*bf_sde_mock_,
@@ -351,10 +424,20 @@ TEST_F(BFChassisManagerTest, ReplayPorts) {
   // For now, when replaying the port configuration, we set the mtu and autoneg
   // even if the values where already the defaults. This seems like a good idea
   // to ensure configuration consistency.
-  EXPECT_CALL(*bf_sde_mock_, SetPortMtu(kUnit, sdkPortId, 0)).Times(AtMost(1));
+  EXPECT_CALL(*bf_sde_mock_, SetPortMtu(kUnit, sdkPortId, 0)).Times(AtLeast(1));
   EXPECT_CALL(*bf_sde_mock_,
               SetPortAutonegPolicy(kUnit, sdkPortId, TRI_STATE_UNKNOWN))
-      .Times(AtMost(1));
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_, SetDeflectOnDropDestination(kUnit, sdkPortId, 4))
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_, SetDeflectOnDropDestination(kUnit, 56789, 1))
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_,
+              SetPortShapingRate(kUnit, sdkPortId, false, 16384, kTenGigBps))
+      .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_,
+              EnablePortShaping(kUnit, sdkPortId, TRI_STATE_TRUE))
+      .Times(AtLeast(1));
 
   EXPECT_OK(ReplayPortsConfig(kNodeId));
 

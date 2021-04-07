@@ -95,6 +95,8 @@ class BfSdeMock : public BfSdeInterface {
                ::util::StatusOr<uint32>(int device, const PortKey& port_key));
   MOCK_METHOD1(GetPcieCpuPort, ::util::StatusOr<int>(int device));
   MOCK_METHOD2(SetTmCpuPort, ::util::Status(int device, int port));
+  MOCK_METHOD3(SetDeflectOnDropDestination,
+               ::util::Status(int device, int port, int queue));
   MOCK_METHOD1(IsSoftwareModel, ::util::StatusOr<bool>(int device));
   MOCK_CONST_METHOD1(GetBfChipType, std::string(int device));
   MOCK_CONST_METHOD0(GetSdeVersion, std::string());
