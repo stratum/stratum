@@ -1182,6 +1182,7 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state, uint64 node_id,
     }
 
     // Update the chassis config.
+    // TODO(max): use std::find to handle lookup failures.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1351,6 +1352,7 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
     std::string mac_address_string = typed_val->string_val();
     ASSIGN_OR_RETURN(uint64 mac_address,
                      YangStringToMacAddress(mac_address_string));
+
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_mac_address,
@@ -3571,7 +3573,9 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
     port_auto_neg_enabled =
         IsPortAutonegEnabled(singleton.config_params().autoneg());
     port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
-    mac_address = singleton.config_params().mac_address();
+    if (singleton.config_params().has_mac_address()) {
+      mac_address = singleton.config_params().mac_address().mac_address();
+    }
     loopback_enabled =
         IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
   }
