@@ -118,7 +118,9 @@ class YangParseTreeTest : public ::testing::Test {
     singleton_ptr->set_node(kInterface1NodeId);
     singleton_ptr->set_id(kInterface1PortId);
     singleton_ptr->set_speed_bps(kTwentyFiveGigBps);
-    singleton_ptr->mutable_config_params()->set_mac_address(kInterfaceMac);
+    singleton_ptr->mutable_config_params()
+        ->mutable_mac_address()
+        ->set_mac_address(kInterfaceMac);
     // Add one per port per queue stat for this interface.
     NodeConfigParams node_config;
     {
