@@ -3451,7 +3451,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   bool port_auto_neg_enabled = false;
   bool port_enabled = false;
   bool loopback_enabled = false;
-  uint64 mac_address = 0;
+  uint64 mac_address = kDummyMacAddress;
   if (singleton.has_config_params()) {
     port_auto_neg_enabled =
         IsPortAutonegEnabled(singleton.config_params().autoneg());
