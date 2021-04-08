@@ -1211,7 +1211,7 @@ TEST_F(YangParseTreeTest,
                               /* Notification will not be called */ nullptr),
               StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 
-  for (auto mac_string : kInvalidMacStrings) {
+  for (const auto& mac_string : kInvalidMacStrings) {
     // Check reaction to wrong value.
     invalid_val.set_string_val(mac_string);
     EXPECT_THAT(

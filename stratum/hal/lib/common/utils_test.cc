@@ -157,6 +157,14 @@ TEST(CommonUtilsTest, YangStringToMacAddress) {
               IsOkAndHolds(0x000000111111ul));
   EXPECT_THAT(YangStringToMacAddress("0:0:0:0:0:0").status(),
               StatusIs(_, ERR_INVALID_PARAM, _));
+  EXPECT_THAT(YangStringToMacAddress("11:22:33:44:55:66:77").status(),
+              StatusIs(_, ERR_INVALID_PARAM, _));
+  EXPECT_THAT(YangStringToMacAddress("11;22;33;44;55;66").status(),
+              StatusIs(_, ERR_INVALID_PARAM, _));
+  EXPECT_THAT(YangStringToMacAddress("11-22-33-44-55-66").status(),
+              StatusIs(_, ERR_INVALID_PARAM, _));
+  EXPECT_THAT(YangStringToMacAddress("st:ra:tu:mr:oc:ks").status(),
+              StatusIs(_, ERR_INVALID_PARAM, _));
   EXPECT_THAT(YangStringToMacAddress("0").status(),
               StatusIs(_, ERR_INVALID_PARAM, _));
   EXPECT_THAT(YangStringToMacAddress("").status(),
