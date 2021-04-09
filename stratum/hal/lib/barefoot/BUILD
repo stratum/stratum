@@ -130,6 +130,13 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
+    name = "bf_init",
+    srcs = ["bf_init.c"],
+    hdrs = ["bf_init.h"],
+    deps = ["@local_barefoot_bin//:bfsde"],
+)
+
+stratum_cc_library(
     name = "bf_sde_interface",
     hdrs = ["bf_sde_interface.h"],
     deps = [
