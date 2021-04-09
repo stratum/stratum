@@ -51,6 +51,7 @@ stratum_cc_binary(
     ],
     deps = [
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
+        "//stratum/hal/lib/barefoot:bf_init",
         "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
         "//stratum/hal/lib/pi:pi_node_bf",
@@ -70,6 +71,7 @@ stratum_cc_binary(
     ],
     deps = [
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
+        "//stratum/hal/lib/barefoot:bf_init",
         "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bfrt_switch",
         "//stratum/hal/lib/barefoot:bfrt_node",
@@ -83,11 +85,8 @@ stratum_cc_binary(
 
 # Rules for Debian package
 pkg_tar(
-    name = "stratum_binaries",
+    name = "stratum_bf_binary",
     srcs = [
-        "deb/attach-bf-shell.sh",
-        "deb/start-stratum.sh",
-        ":bf_pipeline_builder",
         ":stratum_bf",
     ],
     mode = "0755",
@@ -95,17 +94,24 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bfrt_binaries",
-    # TODO(bocon): Consider refactoring common start script and builder
+    name = "stratum_bfrt_binary",
     srcs = [
-        "deb/attach-bf-shell.sh",
-        "deb/start-stratum.sh",
-        ":bf_pipeline_builder",
         ":stratum_bfrt",
     ],
     mode = "0755",
     package_dir = "/usr/bin",
     symlinks = {"./usr/bin/stratum_bf": "/usr/bin/stratum_bfrt"},
+)
+
+pkg_tar(
+    name = "stratum_bin_tools",
+    srcs = [
+        "deb/attach-bf-shell.sh",
+        "deb/start-stratum.sh",
+        ":bf_pipeline_builder",
+    ],
+    mode = "0755",
+    package_dir = "/usr/bin",
 )
 
 pkg_tar(
@@ -157,7 +163,8 @@ pkg_tar(
     name = "stratum_bf_data",
     extension = "tar.bz2",
     deps = [
-        ":stratum_binaries",
+        ":stratum_bf_binary",
+        ":stratum_bin_tools",
         ":stratum_common_data",
     ],
 )
@@ -166,7 +173,8 @@ pkg_tar(
     name = "stratum_bfrt_data",
     extension = "tar.bz2",
     deps = [
-        ":stratum_bfrt_binaries",
+        ":stratum_bfrt_binary",
+        ":stratum_bin_tools",
         ":stratum_common_data",
     ],
 )

@@ -2,19 +2,13 @@
 // Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-extern "C" {
-
-#include "bf_switchd/bf_switchd.h"
-
-int switch_pci_sysfs_str_get(char* name, size_t name_size);
-}
-
 #include "PI/frontends/proto/device_mgr.h"
 #include "PI/frontends/proto/logging.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_init.h"
 #include "stratum/hal/lib/barefoot/bf_sde_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_switch.h"
 #include "stratum/hal/lib/common/hal.h"
@@ -86,37 +80,11 @@ void registerDeviceMgrLogger() {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
-  char bf_sysfs_fname[128];
-  FILE* fd;
-
-  auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
-
-  /* Parse bf_switchd arguments */
-  CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
-      << "Flag --bf_sde_install is required";
-  switchd_main_ctx->install_dir = strdup(FLAGS_bf_sde_install.c_str());
-  switchd_main_ctx->conf_file = strdup(FLAGS_bf_switchd_cfg.c_str());
-  switchd_main_ctx->skip_p4 = true;
-  if (FLAGS_bf_switchd_background)
-    switchd_main_ctx->running_in_background = true;
-  else
-    switchd_main_ctx->shell_set_ucli = true;
-
-  /* determine if kernel mode packet driver is loaded */
-  switch_pci_sysfs_str_get(bf_sysfs_fname,
-                           sizeof(bf_sysfs_fname) - sizeof("/dev_add"));
-  strncat(bf_sysfs_fname, "/dev_add", sizeof("/dev_add"));
-  printf("bf_sysfs_fname %s\n", bf_sysfs_fname);
-  fd = fopen(bf_sysfs_fname, "r");
-  if (fd != NULL) {
-    /* override previous parsing if bf_kpkt KLM was loaded */
-    printf("kernel mode packet driver present, forcing kernel_pkt option!\n");
-    switchd_main_ctx->kernel_pkt = true;
-    fclose(fd);
-  }
-
+  // Initialize bf_switchd library.
   {
-    int status = bf_switchd_lib_init(switchd_main_ctx.get());
+    CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
+      << "Flag --bf_sde_install is required";
+    int status = InitBfSwitchd(FLAGS_bf_sde_install.c_str(), FLAGS_bf_switchd_cfg.c_str(), FLAGS_bf_switchd_background);
     CHECK_RETURN_IF_FALSE(status == 0)
         << "Error when starting switchd, status: " << status;
     LOG(INFO) << "switchd started successfully";
