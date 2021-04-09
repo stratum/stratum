@@ -21,8 +21,8 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPacketioManager::BfrtPacketioManager(int device,
-                                         BfSdeInterface* bf_sde_interface)
+BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
+                                         int device)
     : initialized_(false),
       packetin_header_(),
       packetout_header_(),
@@ -35,8 +35,8 @@ BfrtPacketioManager::BfrtPacketioManager(int device,
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
 std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
-    int device, BfSdeInterface* bf_sde_interface_) {
-  return absl::WrapUnique(new BfrtPacketioManager(device, bf_sde_interface_));
+    BfSdeInterface* bf_sde_interface_, int device) {
+  return absl::WrapUnique(new BfrtPacketioManager(bf_sde_interface_, device));
 }
 
 ::util::Status BfrtPacketioManager::PushChassisConfig(

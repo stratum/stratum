@@ -38,10 +38,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::Status Main(int argc, char* argv[]) {
-  InitGoogle(argv[0], &argc, &argv, true);
-  InitStratumLogging();
+namespace {
 
+::util::Status InitBfSwitchd() {
   char bf_sysfs_fname[128];
   FILE* fd;
 
@@ -78,6 +77,16 @@ namespace barefoot {
     LOG(INFO) << "switchd started successfully";
   }
 
+  return ::util::OkStatus();
+}
+
+}  // namespace
+
+::util::Status Main(int argc, char* argv[]) {
+  InitGoogle(argv[0], &argc, &argv, true);
+  InitStratumLogging();
+  RETURN_IF_ERROR(InitBfSwitchd());
+
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // components with "device_id" instead of "node_id".
   int device_id = 0;
@@ -95,7 +104,7 @@ namespace barefoot {
   auto bfrt_action_profile_manager =
       BfrtActionProfileManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_packetio_manger =
-      BfrtPacketioManager::CreateInstance(device_id, bf_sde_wrapper);
+      BfrtPacketioManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_pre_manager =
       BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_counter_manager =
@@ -104,6 +113,10 @@ namespace barefoot {
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
       bfrt_packetio_manger.get(), bfrt_pre_manager.get(),
       bfrt_counter_manager.get(), bf_sde_wrapper, device_id);
+  std::map<int, BfrtNode*> device_id_to_bfrt_node = {
+      {device_id, bfrt_node.get()},
+  };
+
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
@@ -111,9 +124,6 @@ namespace barefoot {
     phal_impl = phal::Phal::CreateSingleton();
   }
 
-  std::map<int, BfrtNode*> device_id_to_bfrt_node = {
-      {device_id, bfrt_node.get()},
-  };
   auto bf_chassis_manager =
       BFChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
   auto bf_switch =
