@@ -2,6 +2,11 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/barefoot/bf_init.h"
+
+#include <stdio.h>
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,11 +20,6 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 }  // extern "C"
 #endif
 
-#include <stdio.h>
-#include <string.h>
-
-#include "bf_init.h"
-
 int InitBfSwitchd(const char* bf_sde_install, const char* bf_switchd_cfg,
                   bool bf_switchd_background) {
   char bf_sysfs_fname[128];
@@ -29,11 +29,11 @@ int InitBfSwitchd(const char* bf_sde_install, const char* bf_switchd_cfg,
   bf_switchd_context_t switchd_main_ctx;
 
   if (strlen(bf_sde_install) == 0) return BF_INVALID_ARG;
-  // TODO ensure that bf_sde_install fits
+  // TODO(bocon): ensure that bf_sde_install fits
   strncpy(sde_install, bf_sde_install, sizeof(sde_install));
 
   if (strlen(bf_switchd_cfg) == 0) return BF_INVALID_ARG;
-  // TODO ensure that bf_switchd_cfg fits
+  // TODO(bocon): ensure that bf_switchd_cfg fits
   strncpy(switchd_cfg, bf_switchd_cfg, sizeof(switchd_cfg));
 
   switchd_main_ctx.install_dir = sde_install;
