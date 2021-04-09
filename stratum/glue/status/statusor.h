@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_GLUE_STATUS_STATUSOR_H_
 #define STRATUM_GLUE_STATUS_STATUSOR_H_
 
@@ -209,8 +208,7 @@ struct StatusOrHelper::Specialize<T*> {
 }  // namespace internal
 
 template <typename T>
-inline StatusOr<T>::StatusOr()
-    : status_(::util::Status::UNKNOWN), value_() {}
+inline StatusOr<T>::StatusOr() : status_(::util::Status::UNKNOWN), value_() {}
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const ::util::Status& status)
@@ -253,8 +251,7 @@ inline StatusOr<T>::StatusOr(T&& value)
 template <typename T>
 template <typename U>
 inline StatusOr<T>::StatusOr(StatusOr<U>&& other)  // NOLINT
-    : status_(other.status_),
-      value_(std::move(other.value_)) {}
+    : status_(other.status_), value_(std::move(other.value_)) {}
 
 template <typename T>
 template <typename U>
@@ -304,7 +301,7 @@ inline void StatusOr<T>::EnsureNotOk() {
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os,
-  const ::util::StatusOr<T>& x) {
+                                const ::util::StatusOr<T>& x) {
   os << x.status().ToString();
   return os;
 }
