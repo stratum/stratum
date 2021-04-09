@@ -32,7 +32,7 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<BfSdeMock>();
     bfrt_packetio_manager_ = BfrtPacketioManager::CreateInstance(
-        kDevice1, bf_sde_wrapper_mock_.get());
+        bf_sde_wrapper_mock_.get(), kDevice1);
   }
 
   ::util::Status PushPipelineConfig(const std::string& p4info_str = kP4Info,
