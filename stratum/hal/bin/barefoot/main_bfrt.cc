@@ -39,8 +39,10 @@ namespace barefoot {
   // Initialize bf_switchd library.
   {
     CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
-      << "Flag --bf_sde_install is required";
-    int status = InitBfSwitchd(FLAGS_bf_sde_install.c_str(), FLAGS_bf_switchd_cfg.c_str(), FLAGS_bf_switchd_background);
+        << "Flag --bf_sde_install is required";
+    int status = InitBfSwitchd(FLAGS_bf_sde_install.c_str(),
+                               FLAGS_bf_switchd_cfg.c_str(),
+                               FLAGS_bf_switchd_background);
     CHECK_RETURN_IF_FALSE(status == 0)
         << "Error when starting switchd, status: " << status;
     LOG(INFO) << "switchd started successfully";

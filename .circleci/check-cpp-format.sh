@@ -6,7 +6,7 @@
 set -ex
 
 # Files in this branch that are different from main.
-CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- '*.h' '*.cc')
+CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- '*.h' '*.cc' '*.c')
 
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF

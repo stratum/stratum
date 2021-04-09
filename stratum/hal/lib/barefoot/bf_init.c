@@ -6,8 +6,8 @@
 extern "C" {
 #endif
 
-#include "bf_types/bf_types.h"
 #include "bf_switchd/bf_switchd.h"
+#include "bf_types/bf_types.h"
 
 int switch_pci_sysfs_str_get(char* name, size_t name_size);
 
@@ -17,9 +17,11 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 
 #include <stdio.h>
 #include <string.h>
+
 #include "bf_init.h"
 
-int InitBfSwitchd(const char *bf_sde_install, const char *bf_switchd_cfg, bool bf_switchd_background) {
+int InitBfSwitchd(const char* bf_sde_install, const char* bf_switchd_cfg,
+                  bool bf_switchd_background) {
   char bf_sysfs_fname[128];
   char sde_install[128];
   char switchd_cfg[128];
