@@ -67,7 +67,7 @@ class BfrtPacketioManager {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtPacketioManager> CreateInstance(
-      int device, BfSdeInterface* bf_sde_interface);
+      BfSdeInterface* bf_sde_interface, int device);
 
   // BfrtPacketioManager is neither copyable nor movable.
   BfrtPacketioManager(const BfrtPacketioManager&) = delete;
@@ -80,8 +80,7 @@ class BfrtPacketioManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  // TODO(max): place device last
-  explicit BfrtPacketioManager(int device, BfSdeInterface* bf_sde_interface);
+  explicit BfrtPacketioManager(BfSdeInterface* bf_sde_interface, int device);
 
   // Builds the packet header structure for controller packets.
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info)
