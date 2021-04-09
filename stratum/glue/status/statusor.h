@@ -168,6 +168,22 @@ class ABSL_MUST_USE_RESULT StatusOr {
   // in an arbitrary valid state.
   T ConsumeValueOrDie();
 
+  // Returns the current value if `this->ok() == true`. Otherwise constructs a
+  // value using the provided `default_value`.
+  //
+  // Unlike `ValueOrDie`, this function returns by value, copying the current
+  // value if necessary. If the value type supports an efficient move, it can be
+  // used as follows:
+  //
+  //   T value = std::move(statusor).ValueOr(def);
+  //
+  // Unlike with `ValueOrDie`, calling `std::move()` on the result of `ValueOr`
+  // will still trigger a copy.
+  template <typename U>
+  T ValueOr(U&& default_value) const&;
+  template <typename U>
+  T ValueOr(U&& default_value) &&;
+
   void EnsureOk() const;
 
   void EnsureNotOk();
@@ -287,6 +303,24 @@ inline T StatusOr<T>::ConsumeValueOrDie() {
     internal::StatusOrHelper::Crash(status_);
   }
   return std::move(value_);
+}
+
+template <typename T>
+template <typename U>
+inline T StatusOr<T>::ValueOr(U&& default_value) const& {
+  if (ok()) {
+    return value_;
+  }
+  return std::forward<U>(default_value);
+}
+
+template <typename T>
+template <typename U>
+inline T StatusOr<T>::ValueOr(U&& default_value) && {
+  if (ok()) {
+    return std::move(value_);
+  }
+  return std::forward<U>(default_value);
 }
 
 template <typename T>

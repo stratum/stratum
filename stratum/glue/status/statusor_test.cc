@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/logging.h"
@@ -20,7 +21,8 @@
 namespace util {
 namespace {
 
-using util::PosixErrorToStatus;
+using ::testing::Pointee;
+using ::util::PosixErrorToStatus;
 using ::util::Status;
 
 class Base1 {
@@ -383,6 +385,28 @@ TEST(StatusOrDeathTest, TestPointerValueNotOkConst) {
   const StatusOr<int*> thing(Status::CANCELLED);
   EXPECT_FALSE(thing.ok());
   EXPECT_DEATH(thing.ValueOrDie(), "generic::cancelled");
+}
+
+TEST(StatusOr, ValueOrOk) {
+  const StatusOr<int> status_or = 0;
+  EXPECT_EQ(status_or.ValueOr(-1), 0);
+}
+
+TEST(StatusOr, ValueOrDefault) {
+  const StatusOr<int> status_or(Status::CANCELLED);
+  EXPECT_EQ(status_or.ValueOr(-1), -1);
+}
+
+TEST(StatusOr, MoveOnlyValueOrOk) {
+  EXPECT_THAT(StatusOr<std::unique_ptr<int>>(absl::make_unique<int>(0))
+                  .ValueOr(absl::make_unique<int>(-1)),
+              Pointee(0));
+}
+
+TEST(StatusOr, MoveOnlyValueOrDefault) {
+  EXPECT_THAT(StatusOr<std::unique_ptr<int>>(Status::CANCELLED)
+                  .ValueOr(absl::make_unique<int>(-1)),
+              Pointee(-1));
 }
 
 #ifdef BENCHMARK
