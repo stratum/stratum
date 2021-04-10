@@ -4,6 +4,40 @@
 #ifndef STRATUM_LIB_BAREFOOT_BF_INTERFACE_H_
 #define STRATUM_LIB_BAREFOOT_BF_INTERFACE_H_
 
+// Define C functions to access BfInterface C++ class.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <cstddef>
+
+typedef void* PackedProtobuf;
+
+int bf_init();
+
+int bf_destroy();
+
+int bf_p4_set_pipeline_config(const PackedProtobuf packed_request,
+                              size_t request_size,
+                              PackedProtobuf& packed_response,
+                              size_t& response_size);
+
+int bf_p4_get_pipeline_config(const PackedProtobuf packed_request,
+                              size_t request_size,
+                              PackedProtobuf& packed_response,
+                              size_t& response_size);
+
+int bf_p4_write(const PackedProtobuf packed_request, size_t request_size,
+                PackedProtobuf& packed_response, size_t& response_size);
+
+int bf_p4_read(const PackedProtobuf packed_request, size_t request_size,
+               PackedProtobuf& packed_response, size_t& response_size);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+
 // Define BfInterface C++ class.
 
 #ifdef __cplusplus
@@ -56,38 +90,5 @@ class BfInterface {
 }  // namespace stratum
 
 #endif  //  __cplusplus
-
-// Define C functions to access BfInterface C++ class.
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <cstddef>
-
-typedef void* PackedProtobuf;
-
-int bf_init();
-
-int bf_destroy();
-
-int bf_p4_set_pipeline_config(const PackedProtobuf packed_request,
-                              size_t request_size,
-                              PackedProtobuf& packed_response,
-                              size_t& response_size);
-
-int bf_p4_get_pipeline_config(const PackedProtobuf packed_request,
-                              size_t request_size,
-                              PackedProtobuf& packed_response,
-                              size_t& response_size);
-
-int bf_p4_write(const PackedProtobuf packed_write_request, size_t request_size,
-                PackedProtobuf& packed_read_response, size_t& response_size);
-
-int bf_p4_read(const PackedProtobuf packed_read_request, size_t request_size,
-               PackedProtobuf& packed_read_response, size_t& response_size);
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 #endif  // STRATUM_LIB_BAREFOOT_BF_INTERFACE_H_

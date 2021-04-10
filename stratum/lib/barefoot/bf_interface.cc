@@ -51,9 +51,16 @@ class BfInterfaceImpl : public BfInterface {
 }  // namespace barefoot
 }  // namespace stratum
 
+
+
+
+
+
+
+
 namespace {
 
-static ::stratum::barefoot::BfInterfaceImpl* bf_interface_;
+static ::stratum::barefoot::BfInterface* bf_interface_ = NULL;
 
 // A macro for simplify checking of arguments in the C functions.
 #define CHECK_RETURN_IF_FALSE(cond) \
@@ -65,6 +72,8 @@ static ::stratum::barefoot::BfInterfaceImpl* bf_interface_;
 #define RETURN_STATUS(status) return static_cast<int>(status.code())
 
 // TODO(bocon): consider free if response not null
+// A macro that converts between binary and C++ representations of
+// a protobuf. The C++ objects are used to call the C++ function.
 #define RETURN_CPP_API(RequestProto, ResponseProto, Function)                  \
   CHECK_RETURN_IF_FALSE(packed_response == NULL);                              \
   RequestProto request;                                                        \
@@ -78,7 +87,16 @@ static ::stratum::barefoot::BfInterfaceImpl* bf_interface_;
 
 }  // namespace
 
-// TODO(bocon): Consider templatizing the C methods
+int bf_init() {
+  // TODO: Allocate bf_interface_
+  // TODO: Initialize the SDE
+  return 0;
+}
+
+int bf_destroy() {
+  // TODO: Free bf_interface_
+  return 0;
+}
 
 int bf_p4_set_pipeline_config(const PackedProtobuf packed_request,
                               size_t request_size,
