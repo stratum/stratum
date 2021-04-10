@@ -19,24 +19,23 @@ int bf_destroy();
 
 int bf_p4_set_pipeline_config(const PackedProtobuf packed_request,
                               size_t request_size,
-                              PackedProtobuf& packed_response,
-                              size_t& response_size);
+                              PackedProtobuf* packed_response,
+                              size_t* response_size);
 
 int bf_p4_get_pipeline_config(const PackedProtobuf packed_request,
                               size_t request_size,
-                              PackedProtobuf& packed_response,
-                              size_t& response_size);
+                              PackedProtobuf* packed_response,
+                              size_t* response_size);
 
 int bf_p4_write(const PackedProtobuf packed_request, size_t request_size,
-                PackedProtobuf& packed_response, size_t& response_size);
+                PackedProtobuf* packed_response, size_t* response_size);
 
 int bf_p4_read(const PackedProtobuf packed_request, size_t request_size,
-               PackedProtobuf& packed_response, size_t& response_size);
+               PackedProtobuf* packed_response, size_t* response_size);
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-
 
 // Define BfInterface C++ class.
 
@@ -50,8 +49,8 @@ int bf_p4_read(const PackedProtobuf packed_request, size_t request_size,
 namespace stratum {
 namespace barefoot {
 
-// TODO The "BfSdeInterface" class in HAL implements a shim layer around the
-// Barefoot
+// TODO(bocon): The "BfSdeInterface" class in HAL implements a shim layer
+// around the Barefoot
 class BfInterface {
  public:
   virtual ::absl::Status InitSde() = 0;
