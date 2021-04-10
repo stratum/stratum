@@ -2,10 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/glue/status/statusor.h"
 
 #include <errno.h>
+
 #include <algorithm>
 
 #include "stratum/glue/logging.h"
