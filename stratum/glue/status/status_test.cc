@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/glue/status/status.h"
 
 #include <stdio.h>
@@ -10,10 +9,10 @@
 #include <algorithm>
 
 #include "absl/strings/str_cat.h"
-#include "stratum/glue/init_google.h"
-#include "stratum/glue/logging.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/logging.h"
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
