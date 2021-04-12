@@ -65,13 +65,16 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
   return bytes / 125;
 }
 
-::util::Status DumpTableKey(const bfrt::BfRtTableKey* table_key) {
+::util::StatusOr<std::string> DumpTableKey(
+    const bfrt::BfRtTableKey* table_key) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_key->tableGet(&table));
   std::vector<bf_rt_id_t> key_field_ids;
   RETURN_IF_BFRT_ERROR(table->keyFieldIdListGet(&key_field_ids));
 
-  LOG(INFO) << "Table key {";
+  // LOG(INFO) << "Table key {";
+  std::string s;
+  absl::StrAppend(&s, "table key { ");
   for (const auto& field_id : key_field_ids) {
     std::string field_name;
     bfrt::KeyFieldType key_type;
@@ -105,25 +108,35 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
             << "Unknown key_type: " << static_cast<int>(key_type) << ".";
     }
 
-    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-              << " key_type: " << static_cast<int>(key_type)
-              << " field_size: " << field_size << " value: " << value;
-  }
-  LOG(INFO) << "}";
+    absl::StrAppend(&s, field_name, " { field_id: ", field_id,
+                    " key_type: ", static_cast<int>(key_type),
+                    " field_size: ", field_size, " value: ", value, " } ");
 
-  return ::util::OkStatus();
+    // LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
+    //           << " key_type: " << static_cast<int>(key_type)
+    //           << " field_size: " << field_size << " value: " << value;
+  }
+  absl::StrAppend(&s, "}");
+  // LOG(INFO) << "}";
+
+  return s;
+  // return ::util::OkStatus();
 }
 
-::util::Status DumpTableData(const bfrt::BfRtTableData* table_data) {
+::util::StatusOr<std::string> DumpTableData(
+    const bfrt::BfRtTableData* table_data) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data->getParent(&table));
 
-  LOG(INFO) << "Table data {";
+  std::string s;
+  absl::StrAppend(&s, "table data { ");
+  // LOG(INFO) << "Table data {";
   std::vector<bf_rt_id_t> data_field_ids;
   if (table->actionIdApplicable()) {
     bf_rt_id_t action_id;
     RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
-    LOG(INFO) << "\taction_id: " << action_id;
+    absl::StrAppend(&s, "\taction_id: ", action_id);
+    // LOG(INFO) << "\taction_id: " << action_id;
     RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &data_field_ids));
   } else {
     RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
@@ -139,17 +152,20 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
       RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
       RETURN_IF_BFRT_ERROR(
           table->dataFieldNameGet(field_id, action_id, &field_name));
-      // FIXME
-      // RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id,
-      // &data_type)); RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id,
-      // &field_size)); RETURN_IF_BFRT_ERROR(table_data->isActive(field_id,
-      // &is_active));
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldDataTypeGet(field_id, action_id, &data_type));
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldSizeGet(field_id, action_id, &field_size));
     } else {
       RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
       RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
       RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
-      RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
     }
+    RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
+
+    LOG(ERROR) << "data_type " << static_cast<int>(data_type);
+    LOG(ERROR) << "field_size " << field_size;
+    LOG(ERROR) << "is_active " << is_active;
 
     std::string value;
     switch (data_type) {
@@ -168,9 +184,21 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
         break;
       }
       case bfrt::DataType::INT_ARR: {
-        std::vector<uint64_t> v;
+        // TODO(max): uint32 seems to be the most common type, but we could
+        // differentiate based on field_size, if needed.
+        std::vector<uint32_t> v;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
         value = PrintVector(v, ",");
+        break;
+      }
+      case bfrt::DataType::BOOL_ARR: {
+        std::vector<bool> v;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
+        std::vector<uint16> v_as_ints;
+        for (bool b : v) {
+          v_as_ints.push_back(b);
+        }
+        value = PrintVector(v_as_ints, ",");
         break;
       }
       default:
@@ -178,14 +206,19 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
             << "Unknown data_type: " << static_cast<int>(data_type) << ".";
     }
 
-    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-              << " data_type: " << static_cast<int>(data_type)
-              << " field_size: " << field_size << " value: " << value
-              << " is_active: " << is_active;
+    absl::StrAppend(&s, field_name, " { field_id: ", field_id,
+                    " data_type: ", static_cast<int>(data_type),
+                    " field_size: ", field_size, " value: ", value,
+                    " is_active: ", is_active, " } ");
+    // LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
+    //           << " data_type: " << static_cast<int>(data_type)
+    //           << " field_size: " << field_size << " value: " << value
+    //           << " is_active: " << is_active;
   }
-  LOG(INFO) << "}";
+  absl::StrAppend(&s, "}");
+  // LOG(INFO) << "}";
 
-  return ::util::OkStatus();
+  return s;
 }
 
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
@@ -2765,6 +2798,14 @@ namespace {
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
+  // TODO(max): Explore error lambda function concept. It would shorted and
+  // commonalize the log code.
+  auto invalid = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"), ", ",
+        DumpTableData(table_data.get()).ValueOr("<error parsing data>"));
+  };
+
   // Key: $SELECTOR_GROUP_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
   // Data: $ACTION_MEMBER_ID
@@ -2779,11 +2820,19 @@ namespace {
   auto bf_dev_tgt = GetDeviceTarget(device);
   if (insert) {
     RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
-        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data))
+        << "Could not add action profile group with ID " << group_id << ": "
+        << DumpTableKey(table_key.get()).ValueOr("<error parsing key>") << ", "
+        << DumpTableData(table_data.get());
   } else {
+    // TODO(max): Log better error messages.
     RETURN_IF_BFRT_ERROR(table->tableEntryMod(
-        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data))
+        << "Could not modify action profile group with ID " << group_id << ": "
+        << DumpTableKey(table_key.get()).ValueOr("<error parsing key>") << ", "
+        << DumpTableData(table_data.get()).ValueOr("<error parsing data>");
   }
+  CHECK_RETURN_IF_FALSE(group_id == 0) << invalid();
 
   return ::util::OkStatus();
 }
@@ -2917,6 +2966,7 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   auto bf_dev_tgt = GetDeviceTarget(device);
+
   RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
       *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_,
       *real_table_data->table_data_));
