@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "bf_rt/bf_rt_table.hpp" // TODO(max): backport fix
 #include "nlohmann/json.hpp"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"

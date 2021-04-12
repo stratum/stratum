@@ -435,7 +435,7 @@ template <typename T>
   if (table_type == bfrt::BfRtTable::TableType::METER ||
       table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
-#if defined(SDE_9_4_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
     RETURN_IF_BFRT_ERROR(
         table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
 #else
@@ -1265,6 +1265,8 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   return "9.3.1";
 #elif defined(SDE_9_4_0)
   return "9.4.0";
+#elif defined(SDE_9_5_0)
+  return "9.5.0";
 #else
 #error Unsupported SDE version
 #endif
@@ -1664,7 +1666,7 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
-#if defined(SDE_9_4_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
 #else
@@ -2319,7 +2321,7 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
@@ -2456,7 +2458,7 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
