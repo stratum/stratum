@@ -13,8 +13,8 @@
 // #include "stratum/hal/lib/common/common.pb.h"
 // #include "stratum/hal/lib/p4/p4_table_mapper.h"
 // #include "stratum/hal/lib/phal/phal_sim.h"
+#include "stratum/lib/p4runtime/p4runtime_session.h"
 #include "stratum/lib/utils.h"
-#include "stratum/tools/benchmark/p4runtime_session.h"
 
 DECLARE_string(grpc_addr);
 DECLARE_string(p4_info_file);

@@ -7,10 +7,10 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/p4runtime/p4runtime_fixture.h"
+#include "stratum/lib/p4runtime/p4runtime_session.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "stratum/tools/benchmark/p4runtime_fixture.h"
-#include "stratum/tools/benchmark/p4runtime_session.h"
 
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
 DEFINE_string(p4_info_file, "",
