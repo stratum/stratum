@@ -64,7 +64,7 @@ namespace barefoot {
       BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
   auto bfrt_action_profile_manager =
       BfrtActionProfileManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_packetio_manger =
+  auto bfrt_packetio_manager =
       BfrtPacketioManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_pre_manager =
       BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
@@ -72,7 +72,7 @@ namespace barefoot {
       BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
-      bfrt_packetio_manger.get(), bfrt_pre_manager.get(),
+      bfrt_packetio_manager.get(), bfrt_pre_manager.get(),
       bfrt_counter_manager.get(), bf_sde_wrapper, device_id);
   std::map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},

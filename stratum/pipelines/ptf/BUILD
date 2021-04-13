@@ -17,12 +17,12 @@ package(
 
 filegroup(
     name = "ptf_exec_files",
-    srcs = ["ptf_exec.py"]
+    srcs = ["ptf_exec.py"],
 )
 
 filegroup(
     name = "scapy_exec_files",
-    srcs = ["scapy_exec.py"]
+    srcs = ["scapy_exec.py"],
 )
 
 python_grpc_library(
@@ -31,5 +31,5 @@ python_grpc_library(
 )
 
 scapy_exec(
-    name = "scapy"
-    )
+    name = "scapy",
+)

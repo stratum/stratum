@@ -78,19 +78,19 @@ p4c_save_ir = rule(
         "_model": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("@com_github_p4lang_p4c//:p4include/v1model.p4"), # FIXME
+            default = Label("@com_github_p4lang_p4c//:p4include/v1model.p4"),  # FIXME
         ),
         "_core": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("@com_github_p4lang_p4c//:p4include/core.p4"), # FIXME
+            default = Label("@com_github_p4lang_p4c//:p4include/core.p4"),  # FIXME
         ),
         "_p4c_ir_json_saver": attr.label(
             cfg = "host",
             executable = True,
             default = Label("//stratum/p4c_backends/test:p4c_ir_json_saver"),
         ),
-        "cpp": attr.label_list(default = [Label("@bazel_tools//tools/cpp:current_cc_toolchain")]), # FIXME
+        "cpp": attr.label_list(default = [Label("@bazel_tools//tools/cpp:current_cc_toolchain")]),  # FIXME
         "_cc_toolchain": attr.label(
             default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
         ),

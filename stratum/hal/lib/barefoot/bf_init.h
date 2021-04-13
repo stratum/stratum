@@ -5,6 +5,8 @@
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BF_INIT_H_
 #define STRATUM_HAL_LIB_BAREFOOT_BF_INIT_H_
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

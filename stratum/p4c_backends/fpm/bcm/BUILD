@@ -49,8 +49,8 @@ cc_test(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":bcm_target_info",
-        "@com_google_googletest//:gtest_main",
         "//stratum/public/proto:p4_annotation_cc_proto",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -67,12 +67,12 @@ cc_library(
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
-        "@com_github_google_glog//:glog",
-        "@com_google_protobuf//:protobuf",
+        "//stratum/hal/lib/p4:p4_table_map_cc_proto",
         "//stratum/p4c_backends/fpm:p4c_switch_utils",
         "//stratum/p4c_backends/fpm:tunnel_optimizer_interface",
-        "//stratum/hal/lib/p4:p4_table_map_cc_proto",
         "//stratum/public/proto:p4_table_defs_cc_proto",
+        "@com_github_google_glog//:glog",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -91,10 +91,10 @@ cc_test(
     ],
     deps = [
         ":bcm_tunnel_optimizer",
-        "@com_google_googletest//:gtest_main",
-        "@com_github_p4lang_p4c//:p4c_toolkit",
         "//stratum/hal/lib/p4:p4_table_map_cc_proto",
         "//stratum/lib:utils",
         "//stratum/public/proto:p4_table_defs_cc_proto",
+        "@com_github_p4lang_p4c//:p4c_toolkit",
+        "@com_google_googletest//:gtest_main",
     ],
 )

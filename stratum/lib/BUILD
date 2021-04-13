@@ -6,9 +6,9 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
-    "STRATUM_INTERNAL",
 )
 
 package(
@@ -20,8 +20,8 @@ stratum_cc_library(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
-        "@com_google_absl//absl/base:core_headers",
         "//stratum/glue:integral_types",
+        "@com_google_absl//absl/base:core_headers",
     ],
 )
 
@@ -29,8 +29,8 @@ stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     deps = [
-        "//stratum/glue/status:status_macros",
         "//stratum/glue:logging",
+        "//stratum/glue/status:status_macros",
         "//stratum/public/lib:error",
     ],
 )
@@ -40,9 +40,9 @@ stratum_cc_test(
     srcs = ["macros_test.cc"],
     deps = [
         ":macros",
-        "@com_google_googletest//:gtest_main",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -51,10 +51,10 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "@com_github_google_glog//:glog",
-        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -64,12 +64,12 @@ stratum_cc_library(
     hdrs = ["timer_daemon.h"],
     deps = [
         ":macros",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/public/lib:error",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
     ],
 )
 
@@ -79,13 +79,13 @@ stratum_cc_test(
     deps = [
         ":test_main",
         ":timer_daemon",
-        "@com_google_googletest//:gtest",
-        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -95,16 +95,16 @@ stratum_cc_library(
     hdrs = ["utils.h"],
     deps = [
         ":macros",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/strings",
-        "@com_google_protobuf//:protobuf",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
-        "@com_google_googleapis//google/rpc:code_cc_proto",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/public/lib:error",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/strings",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -115,12 +115,12 @@ stratum_cc_test(
     deps = [
         ":test_main",
         ":utils",
-        "@com_github_google_glog//:glog",
-        "@com_google_googletest//:gtest",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "@com_github_google_glog//:glog",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_googletest//:gtest",
     ],
 )

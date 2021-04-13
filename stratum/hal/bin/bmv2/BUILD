@@ -8,7 +8,7 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 
 stratum_cc_binary(
     name = "stratum_bmv2",
@@ -16,8 +16,8 @@ stratum_cc_binary(
         "main.cc",
     ],
     arches = HOST_ARCHES,
+    data = ["dummy.json"],
     deps = [
-        "@com_github_google_glog//:glog",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/bmv2:bmv2_switch",
@@ -26,11 +26,11 @@ stratum_cc_binary(
         "//stratum/hal/lib/pi:pi_node",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
+        "@com_github_google_glog//:glog",
         "@local_bmv2_bin//:bmv2_headers",
-        "@local_bmv2_bin//:bmv2_simple_switch",
         "@local_bmv2_bin//:bmv2_pi",
+        "@local_bmv2_bin//:bmv2_simple_switch",
     ],
-    data = ["dummy.json"],
 )
 
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")

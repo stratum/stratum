@@ -4,8 +4,7 @@
 
 load("@ptf_deps//:requirements.bzl", ptf_requirement = "requirement")
 
-def scapy_exec( name ):
-
+def scapy_exec(name):
     py_args = []
     py_args.append("--scapy-dir")
     py_args.append(ptf_requirement("scapy")[1:-6])

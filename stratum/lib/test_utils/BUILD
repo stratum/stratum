@@ -8,9 +8,9 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
-    "STRATUM_INTERNAL",
 )
 
 package(
@@ -37,8 +37,8 @@ stratum_cc_library(
         "//stratum/hal/lib/p4:p4_control_cc_proto",
         "//stratum/public/proto:p4_annotation_cc_proto",
         "//stratum/public/proto:p4_table_defs_cc_proto",
-        "@com_google_absl//absl/strings",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -50,7 +50,7 @@ stratum_cc_test(
         ":p4_proto_builders",
         "//stratum/lib:test_main",
         "//stratum/lib:utils",
-        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest",
     ],
 )
