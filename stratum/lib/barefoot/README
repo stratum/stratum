@@ -1,0 +1,13 @@
+export SDE_INSTALL_TAR=/stratum/bf-sde-9.3.0-install.tgz 
+bazel build //stratum/lib/barefoot:stratum_bfrt_lib_deb
+#sudo dpkg -i bazel-bin/stratum/lib/barefoot/stratum_bfrt_lib_deb.deb
+cp -f bazel-bin/stratum/lib/barefoot/stratum_bfrt_lib_deb.deb .
+docker build \
+  -t stratum-bfrt-lib \
+  -f "stratum/lib/barefoot/Dockerfile" \
+  .
+
+docker run --rm -it --network host --privileged -v /dev:/dev -v /sys:/sys stratum-bfrt-lib:latest
+
+cd stratum/lib/barefoot/examples/
+make test_c

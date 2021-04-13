@@ -37,8 +37,9 @@ cc_library(
 
 cc_binary(
     name = "libstratum_bfrt.so",
-    copts = STRATUM_DEFAULT_COPTS,
+    copts = STRATUM_DEFAULT_COPTS,# + ["-fPIC"],
     deps = [":bf_interface"],
+    linkshared = 1,
 )
 
 cc_binary(
@@ -69,9 +70,18 @@ pkg_tar(
     mode = "0644",
     package_dir = "/usr/lib",
     symlinks = {
-        "./usr/lib/libstratum_bfrt.so.0": "libstratum_bfrt.so",
-        "./usr/lib/libstratum_bfrt.so.0.0.0": "libstratum_bfrt.so",
+        "./usr/lib/libstratumBfRt.so.0": "libstratumBfRt.so",
+        "./usr/lib/libstratumBfRt.so.0.0.0": "libstratumBfRt.so",
     },
+)
+
+pkg_tar(
+    name = "stratum_bfrt_header",
+    srcs = [
+        "bf_interface.h",
+    ],
+    mode = "0644",
+    package_dir = "/usr/include/stratum/lib/barefoot/",
 )
 
 # TODO(bocon): need headers
@@ -90,6 +100,7 @@ pkg_tar(
     extension = "tar.bz2",
     deps = [
         ":stratum_bfrt_lib",
+        ":stratum_bfrt_header",
         ":stratum_bin_tools",
         "//stratum/hal/bin/barefoot:stratum_shareable_files",
         "@local_barefoot_bin//:bf_library_files",
@@ -107,7 +118,7 @@ pkg_deb(
     ],
     data = ":stratum_bfrt_lib_data",
     depends = [
-        "kmod",
+        #"kmod",  # TODO(bocon): add this back
         "libboost-thread1.62.0",
         "libbz2-1.0",  # is this needed?
         "libedit2",

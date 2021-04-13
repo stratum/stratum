@@ -4,6 +4,14 @@
 
 #include "stratum/lib/barefoot/bf_interface.h"
 
+/*
+INFO: From Compiling stratum/lib/barefoot/bf_interface.cc:
+In file included from stratum/lib/barefoot/bf_interface.cc:10:0:
+./stratum/glue/init_google.h:13:6: warning: "GOOGLE_BASE_HAS_INITGOOGLE" is not defined [-Wundef]
+ #if !GOOGLE_BASE_HAS_INITGOOGLE
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 // TODO(bocon): absl Mutex
@@ -139,8 +147,8 @@ namespace {
     return ConvertStatusToAbsl(result.status());
   const OperationMode mode =
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
-  VLOG(1) << "Detected is_sw_model: " << is_sw_model;
-  VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
+  LOG(INFO) << "Detected is_sw_model: " << is_sw_model;
+  LOG(INFO) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
 
   bfrt_table_manager_ =
       BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
@@ -227,7 +235,6 @@ int bf_p4_set_pipeline_config(const PackedProtobuf packed_request,
   RETURN_CPP_API(::p4::v1::SetForwardingPipelineConfigRequest,
                  ::p4::v1::SetForwardingPipelineConfigResponse,
                  SetForwardingPipelineConfig);
-                 
 }
 
 int bf_p4_get_pipeline_config(const PackedProtobuf packed_request,
