@@ -137,6 +137,11 @@ class BfSdeInterface {
 
   virtual ~BfSdeInterface() {}
 
+  // Initializes the SDE. Must be called before any other methods.
+  virtual ::util::Status InitializeSde(const std::string& sde_install_path,
+                                       const std::string& sde_config_file,
+                                       bool run_in_background) = 0;
+
   // Add and initialize a device. The device config (pipeline) will be loaded
   // into the ASIC. Can be used to re-initialize an existing device.
   virtual ::util::Status AddDevice(int device,

@@ -30,6 +30,7 @@
 #include "stratum/lib/utils.h"
 
 extern "C" {
+#include "bf_switchd/bf_switchd.h"
 #include "tofino/bf_pal/bf_pal_port_intf.h"
 #include "tofino/bf_pal/dev_intf.h"
 #include "tofino/bf_pal/pltfm_intf.h"
@@ -37,6 +38,8 @@ extern "C" {
 #include "tofino/pdfixed/pd_tm.h"
 // Flag to enable detailed logging in the SDE pipe manager.
 extern bool stat_mgr_enable_detail_trace;
+// Get the /sys fs file name of the first Tofino ASIC.
+int switch_pci_sysfs_str_get(char* name, size_t name_size);
 }
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
@@ -1325,6 +1328,51 @@ std::string BfSdeWrapper::GetSdeVersion() const {
 }
 
 // BFRT
+
+::util::Status BfSdeWrapper::InitializeSde(const std::string& sde_install_path,
+                                           const std::string& sde_config_file,
+                                           bool run_in_background) {
+  CHECK_RETURN_IF_FALSE(sde_install_path != "")
+      << "sde_install_path is required";
+  CHECK_RETURN_IF_FALSE(sde_config_file != "") << "sde_config_file is required";
+
+  // Parse bf_switchd arguments.
+  auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
+  switchd_main_ctx->install_dir = strdup(sde_install_path.c_str());
+  switchd_main_ctx->conf_file = strdup(sde_config_file.c_str());
+  switchd_main_ctx->skip_p4 = true;
+  if (run_in_background) {
+    switchd_main_ctx->running_in_background = true;
+  } else {
+    switchd_main_ctx->shell_set_ucli = true;
+  }
+
+  // Determine if kernel mode packet driver is loaded.
+  std::string bf_sysfs_fname;
+  {
+    char buf[128] = {};
+    CHECK_RETURN_IF_FALSE(
+        switch_pci_sysfs_str_get(buf, sizeof(buf) - sizeof("/dev_add")) == 0);
+    bf_sysfs_fname = buf;
+  }
+  absl::StrAppend(&bf_sysfs_fname, "/dev_add");
+  LOG(INFO) << "bf_sysfs_fname: " << bf_sysfs_fname;
+  if (PathExists(bf_sysfs_fname)) {
+    // Override previous parsing if bf_kpkt KLM was loaded.
+    LOG(INFO)
+        << "kernel mode packet driver present, forcing kernel_pkt option!";
+    switchd_main_ctx->kernel_pkt = true;
+  }
+
+  {
+    int status = bf_switchd_lib_init(switchd_main_ctx.get());
+    CHECK_RETURN_IF_FALSE(status == 0)
+        << "Error when starting switchd, status: " << status;
+    LOG(INFO) << "switchd started successfully";
+  }
+
+  return ::util::OkStatus();
+}
 
 ::util::Status BfSdeWrapper::AddDevice(int device,
                                        const BfrtDeviceConfig& device_config) {

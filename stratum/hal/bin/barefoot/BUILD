@@ -54,7 +54,6 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bf_sde_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
         "//stratum/hal/lib/pi:pi_node_bf",
-        "@local_barefoot_bin//:bfsde",
     ] + stratum_bf_common_deps,
 )
 
@@ -77,7 +76,6 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bfrt_pre_manager",
         "//stratum/hal/lib/barefoot:bfrt_table_manager",
         "//stratum/hal/lib/barefoot:bfrt_counter_manager",
-        "@local_barefoot_bin//:bfsde",
     ] + stratum_bf_common_deps,
 )
 

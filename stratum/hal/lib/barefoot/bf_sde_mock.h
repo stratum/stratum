@@ -62,6 +62,10 @@ class TableDataMock : public BfSdeInterface::TableDataInterface {
 
 class BfSdeMock : public BfSdeInterface {
  public:
+  MOCK_METHOD3(InitializeSde,
+               ::util::Status(const std::string& sde_install_path,
+                              const std::string& sde_config_file,
+                              bool run_in_background));
   MOCK_METHOD2(AddDevice,
                ::util::Status(int device,
                               const BfrtDeviceConfig& device_config));
