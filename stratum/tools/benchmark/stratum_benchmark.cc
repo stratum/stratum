@@ -7,6 +7,7 @@
 #include "absl/random/random.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
@@ -46,6 +47,7 @@ DEFINE_string(ca_cert_file, "",
               "CA certificate, will use insecure credentials if empty.");
 DEFINE_string(client_cert_file, "", "Client certificate (optional).");
 DEFINE_string(client_key_file, "", "Client key (optional).");
+DEFINE_bool(robot, false, "Whether to print results in machine-readable form.");
 
 namespace stratum {
 namespace tools {
@@ -67,9 +69,20 @@ std::string BytestringToPaddedBytestring(std::string bytestring,
 }
 
 std::string FormatBenchTime(absl::Duration d, int ops) {
-  return absl::StrCat(ops, " ops, ", absl::FormatDuration(d), ", ",
-                      FormatDuration(d / ops), "/op, ",
-                      ops / absl::ToDoubleSeconds(d), " ops/s");
+  if (FLAGS_robot) {
+    return absl::StrCat(
+        ops, ", ",
+        absl::ToDoubleMilliseconds(absl::Trunc(d, absl::Microseconds(100))),
+        ", ",
+        absl::ToDoubleMicroseconds(absl::Trunc(d / ops, absl::Microseconds(1))),
+        ", ", ops / absl::ToDoubleSeconds(d));
+  } else {
+    return absl::StrCat(
+        ops, " ops, ",
+        absl::FormatDuration(absl::Trunc(d, absl::Microseconds(100))), ", ",
+        absl::FormatDuration(absl::Trunc(d / ops, absl::Microseconds(1))),
+        "/op, ", ops / absl::ToDoubleSeconds(d), " ops/s");
+  }
 }
 
 // Table sizes are not exact on Tofino and depend on many factors, some even at
@@ -286,8 +299,25 @@ class FabricBenchmark {
     return ::util::OkStatus();
   }
 
+  // Generate interesting batch sizes up the maximum.
+  std::vector<int> SampleBatchSizes(int max_batch_size) {
+    std::vector<int> batch_sizes;
+    for (int i = 0, j = 1; i < 16; ++i, j = 1 << i) {
+      if (max_batch_size > j) {
+        batch_sizes.push_back(j);
+      }
+    }
+    batch_sizes.push_back(max_batch_size);
+
+    return batch_sizes;
+  }
+
   ::util::Status RunGtpTunnelBenchmark() {
-    const int num_tunnels = 5120;
+    // const int num_tunnels = 5120;
+    // const int num_tunnels = 1024;
+    const int num_tunnels =
+        InsertFailureDisallowedFillLevel(uplink_pdr_table_.size());
+
     RETURN_IF_ERROR(ClearTableEntries(session_.get()));
 
     std::vector<std::vector<::p4::v1::TableEntry>> tunnels =
@@ -295,32 +325,24 @@ class FabricBenchmark {
     const int flows_per_tunnel = tunnels[0].size();
     const int total_num_flows = tunnels.size() * flows_per_tunnel;
 
-    const auto start_time = absl::Now();
-    for (const auto& tunnel : tunnels) {
-      RETURN_IF_ERROR(InstallTableEntries(session_.get(), tunnel));
+    std::function<std::string(std::string, int, int)> PrintBenchHeader =
+        [](std::string table_op, int batch_size, int flows_per_tunnel) {
+          return absl::StrFormat(
+              "Batched tunnel %s (batch size %4i, %i flows/tunnel): ", table_op,
+              batch_size, flows_per_tunnel);
+        };
+    if (FLAGS_robot) {
+      LOG(INFO) << "op, batch_size, flow_per_tunnel, #ops, total_time_ms, "
+                   "us_per_op, ops_per_second";
+      PrintBenchHeader = [](std::string table_op, int batch_size,
+                            int flows_per_tunnel) {
+        return absl::StrFormat("batched_%s, %i, %i, ", table_op, batch_size,
+                               flows_per_tunnel);
+      };
     }
-    const auto end_time = absl::Now();
-    absl::Duration d = end_time - start_time;
-    LOG(INFO) << "Inserting singular tunnels (" << tunnels[0].size()
-              << " flows/tunnel): " << FormatBenchTime(d, tunnels.size())
-              << ".";
-    {
-      const auto start_time = absl::Now();
-      ASSIGN_OR_RETURN(auto read_entries, ReadTableEntries(session_.get()));
-      const auto end_time = absl::Now();
-      CHECK_EQ(read_entries.size(), total_num_flows);
-      absl::Duration d = end_time - start_time;
-      LOG(INFO) << "Reading " << read_entries.size() << " flows took " << d
-                << ", " << d / read_entries.size() << "/entry, "
-                << read_entries.size() / absl::ToDoubleSeconds(d)
-                << " entries/s.";
-    }
-
-    RETURN_IF_ERROR(ClearTableEntries(session_.get()));
 
     // Variable-sized batch inserts.
-    for (const auto& tunnels_per_batch : {1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
-                                          num_tunnels / 2, num_tunnels}) {
+    for (const auto& tunnels_per_batch : SampleBatchSizes(num_tunnels)) {
       RETURN_IF_ERROR(ClearTableEntries(session_.get()));
       // Create batches.
       std::vector<std::vector<::p4::v1::TableEntry>> sized_batches;
@@ -341,17 +363,51 @@ class FabricBenchmark {
       // CHECK_EQ(sized_batches.size(),
       //          (tunnels.size() + tunnels_per_batch - 1) / tunnels_per_batch);
 
-      const auto start_time = absl::Now();
-      for (const auto& entries : sized_batches) {
-        RETURN_IF_ERROR(InstallTableEntries(session_.get(), entries));
+      // Measure inserts.
+      {
+        const auto start_time = absl::Now();
+        for (const auto& entries : sized_batches) {
+          RETURN_IF_ERROR(InstallTableEntries(session_.get(), entries));
+        }
+        const auto end_time = absl::Now();
+        absl::Duration d = end_time - start_time;
+        LOG(INFO) << PrintBenchHeader("insert", tunnels_per_batch,
+                                      tunnels[0].size())
+                  << FormatBenchTime(d, tunnels.size());
+        ASSIGN_OR_RETURN(auto read_entries, ReadTableEntries(session_.get()));
+        CHECK_EQ(read_entries.size(), total_num_flows);
       }
-      const auto end_time = absl::Now();
-      absl::Duration d = end_time - start_time;
-      LOG(INFO) << "Batched tunnel insert (batch size " << tunnels_per_batch
-                << ", flows/tunnel " << tunnels[0].size()
-                << "): " << FormatBenchTime(d, tunnels.size()) << ".";
-      ASSIGN_OR_RETURN(auto read_entries, ReadTableEntries(session_.get()));
-      CHECK_EQ(read_entries.size(), total_num_flows);
+      // Measure modifies.
+      if ((1)) {
+        // TODO(max): change dst ip
+        for (const auto& entries : sized_batches) {
+        }
+        const auto start_time = absl::Now();
+        for (const auto& entries : sized_batches) {
+          RETURN_IF_ERROR(ModifyTableEntries(session_.get(), entries));
+        }
+        const auto end_time = absl::Now();
+        absl::Duration d = end_time - start_time;
+        LOG(INFO) << PrintBenchHeader("modify", tunnels_per_batch,
+                                      tunnels[0].size())
+                  << FormatBenchTime(d, tunnels.size());
+        ASSIGN_OR_RETURN(auto read_entries, ReadTableEntries(session_.get()));
+        CHECK_EQ(read_entries.size(), total_num_flows);
+      }
+      // Measure deletes.
+      if ((1)) {
+        const auto start_time = absl::Now();
+        for (const auto& entries : sized_batches) {
+          RETURN_IF_ERROR(RemoveTableEntries(session_.get(), entries));
+        }
+        const auto end_time = absl::Now();
+        absl::Duration d = end_time - start_time;
+        LOG(INFO) << PrintBenchHeader("delete", tunnels_per_batch,
+                                      tunnels[0].size())
+                  << FormatBenchTime(d, tunnels.size());
+        ASSIGN_OR_RETURN(auto read_entries, ReadTableEntries(session_.get()));
+        CHECK_EQ(read_entries.size(), 0);
+      }
     }
 
     return ::util::OkStatus();
@@ -377,63 +433,23 @@ class FabricBenchmark {
               absl::Uniform(ue_bitgen, 0x10000000u, 0x14ffffffu)),
           32);
       // Random teid per tunnel.
-      std::string teid = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
-      std::string uplink_counter_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, kuint16max)), 16);
-      std::string downlink_counter_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0, kuint16max)), 16);
-      std::string uplink_far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
-      std::string downlink_far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
+      uint32 teid = absl::Uniform(bitgen_, 0u, kuint32max);
+      uint16 uplink_counter_id = absl::Uniform(bitgen_, 0, kuint16max);
+      uint16 downlink_counter_id = absl::Uniform(bitgen_, 0, kuint16max);
+      uint32 uplink_far_id = absl::Uniform(bitgen_, 0u, kuint32max);
+      uint32 downlink_far_id = absl::Uniform(bitgen_, 0u, kuint32max);
 
       // Uplink PDR (packet detection rule)
-      {
-        ::p4::v1::TableEntry uplink_pdr = CreateGenericUplinkPdrEntry();
-        uplink_pdr.mutable_match(0)->mutable_exact()->set_value(
-            uplink_ipv4_dst);
-        uplink_pdr.mutable_match(1)->mutable_exact()->set_value(teid);
-        uplink_pdr.mutable_action()
-            ->mutable_action()
-            ->mutable_params(0)
-            ->set_value(uplink_counter_id);
-        uplink_pdr.mutable_action()
-            ->mutable_action()
-            ->mutable_params(1)
-            ->set_value(uplink_far_id);
-        table_entries.emplace_back(uplink_pdr);
-      }
-
+      table_entries.emplace_back(CreateGenericUplinkPdrEntry(
+          uplink_ipv4_dst, teid, uplink_counter_id, uplink_far_id));
       // Downlink PDR (packet detection rule)
-      {
-        ::p4::v1::TableEntry downlink_pdr = CreateGenericDownlinkPdrEntry();
-        downlink_pdr.mutable_match(0)->mutable_exact()->set_value(ue_ipv4_dst);
-        downlink_pdr.mutable_action()
-            ->mutable_action()
-            ->mutable_params(0)
-            ->set_value(downlink_counter_id);
-        downlink_pdr.mutable_action()
-            ->mutable_action()
-            ->mutable_params(1)
-            ->set_value(downlink_far_id);
-        table_entries.emplace_back(downlink_pdr);
-      }
-
-      // Uplink FAR (forwarding action rule)
-      {
-        ::p4::v1::TableEntry uplink_far = CreateGenericFarEntry();
-        uplink_far.mutable_match(0)->mutable_exact()->set_value(uplink_far_id);
-        table_entries.emplace_back(uplink_far);
-      }
-
-      // Downlink FAR (forwarding action rule)
-      {
-        ::p4::v1::TableEntry downlink_far = CreateGenericFarEntry();
-        downlink_far.mutable_match(0)->mutable_exact()->set_value(
-            downlink_far_id);
-        table_entries.emplace_back(downlink_far);
-      }
+      table_entries.emplace_back(CreateDownlinkPdrEntry(
+          ue_ipv4_dst, downlink_counter_id, downlink_far_id));
+      // Uplink tunnel FAR (forwarding action rule)
+      table_entries.emplace_back(CreateTunnelFarEntry(uplink_far_id));
+      // Downlink tunnel FAR (forwarding action rule)
+      table_entries.emplace_back(
+          CreateTunnelFarEntry(downlink_far_id, 1234, "", uplink_ipv4_dst));
 
       tunnels.push_back(table_entries);
     }
@@ -484,10 +500,8 @@ class FabricBenchmark {
     std::vector<::p4::v1::TableEntry> table_entries;
     table_entries.reserve(num_table_entries);
     for (int i = 0; i < num_table_entries; ++i) {
-      ::p4::v1::TableEntry entry = CreateGenericFarEntry();
-      std::string far_id = BytestringToPaddedBytestring(
-          hal::Uint32ToByteStream(absl::Uniform(bitgen_, 0u, kuint32max)), 32);
-      entry.mutable_match(0)->mutable_exact()->set_value(far_id);
+      ::p4::v1::TableEntry entry =
+          CreateTunnelFarEntry(absl::Uniform(bitgen_, 0u, kuint32max));
       table_entries.emplace_back(entry);
     }
 
@@ -542,39 +556,78 @@ class FabricBenchmark {
   }
 
  private:
-  ::p4::v1::TableEntry CreateGenericFarEntry() {
-    const std::string base_far_entry_text = R"PROTO(
-      table_id: 0
-      match {
-        field_id: 1 # far_id
-        exact {
-          value: "\000\000\000\000"
-        }
+  ::util::StatusOr<const ::p4::config::v1::Action::Param> FindActionParamByName(
+      std::string action_name, std::string param_name) {
+    ASSIGN_OR_RETURN(auto action,
+                     p4_info_manager_->FindActionByName(action_name));
+    for (const auto& param : action.params()) {
+      if (param.name() == param_name) {
+        return param;
       }
-      action {
-        action {
-          action_id: 0
-          params {
-            param_id: 1 # drop
-            value: "\x00"
-          }
-          params {
-            param_id: 2 # notify_cp
-            value: "\x00"
-          }
-        }
-      }
-    )PROTO";
-    ::p4::v1::TableEntry far;
-    CHECK_OK(ParseProtoFromString(base_far_entry_text, &far));
-    far.set_table_id(far_table_.preamble().id());
-    far.mutable_action()->mutable_action()->set_action_id(
-        load_normal_far_action_.preamble().id());
+    }
 
-    return far;
+    RETURN_ERROR(ERR_ENTRY_NOT_FOUND)
+        << "Action parameter " << param_name << " not found in action "
+        << action_name << ".";
   }
 
-  ::p4::v1::TableEntry CreateGenericUplinkPdrEntry() {
+  ::p4::v1::TableEntry CreateTunnelFarEntry(
+      uint32 far_id = 1, uint16 tunnel_src_port = 1234,
+      std::string tunnel_src_addr = std::string("\x0a\x00\x00\x01", 4),
+      std::string tunnel_dst_addr = std::string("\x0a\x00\x00\x02", 4)) {
+    ::p4::v1::TableEntry far_entry =
+        HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::TableEntry>(
+            p4_id_replacements_,
+            R"PROTO(
+          table_id: {FabricIngress.spgw.fars}
+          match {
+            field_id: {FabricIngress.spgw.fars.far_id}
+            exact {
+              value: "\x00"
+            }
+          }
+          action {
+            action {
+              action_id: {FabricIngress.spgw.load_tunnel_far}
+              params {
+                param_id: {FabricIngress.spgw.load_tunnel_far.drop}
+                value: "\x00"
+              }
+              params {
+                param_id: {FabricIngress.spgw.load_tunnel_far.notify_cp}
+                value: "\x00"
+              }
+              params {
+                param_id: {FabricIngress.spgw.load_tunnel_far.tunnel_src_port}
+                value: "\x00"
+              }
+              params {
+                param_id: {FabricIngress.spgw.load_tunnel_far.tunnel_src_addr}
+                value: "\x00"
+              }
+              params {
+                param_id: {FabricIngress.spgw.load_tunnel_far.tunnel_dst_addr}
+                value: "\x00"
+              }
+            }
+          }
+        )PROTO");
+
+    far_entry.mutable_match(0)->mutable_exact()->set_value(
+        BytestringToPaddedBytestring(hal::Uint32ToByteStream(far_id), 32));
+    far_entry.mutable_action()->mutable_action()->mutable_params(2)->set_value(
+        hal::Uint32ToByteStream(tunnel_src_port));
+    far_entry.mutable_action()->mutable_action()->mutable_params(3)->set_value(
+        tunnel_src_addr);
+    far_entry.mutable_action()->mutable_action()->mutable_params(4)->set_value(
+        tunnel_dst_addr);
+
+    return far_entry;
+  }
+
+  ::p4::v1::TableEntry CreateGenericUplinkPdrEntry(
+      std::string tunnel_dst_addr = std::string("\x0a\x00\x00\x01", 4),
+      uint32 teid = 1, uint16 counter_id = 1, uint32 far_id = 1) {
     const std::string uplink_pdr_entry_text = R"PROTO(
       table_id: 41289867 # FabricIngress.spgw.uplink_pdrs
       match {
@@ -609,11 +662,21 @@ class FabricBenchmark {
     )PROTO";
     ::p4::v1::TableEntry uplink_pdr;
     CHECK_OK(ParseProtoFromString(uplink_pdr_entry_text, &uplink_pdr));
+    uplink_pdr.mutable_match(0)->mutable_exact()->set_value(
+        BytestringToPaddedBytestring(tunnel_dst_addr, 32));
+    uplink_pdr.mutable_match(1)->mutable_exact()->set_value(
+        BytestringToPaddedBytestring(hal::Uint32ToByteStream(teid), 32));
+    uplink_pdr.mutable_action()->mutable_action()->mutable_params(0)->set_value(
+        BytestringToPaddedBytestring(hal::Uint32ToByteStream(counter_id), 16));
+    uplink_pdr.mutable_action()->mutable_action()->mutable_params(1)->set_value(
+        BytestringToPaddedBytestring(hal::Uint32ToByteStream(far_id), 32));
 
     return uplink_pdr;
   }
 
-  ::p4::v1::TableEntry CreateGenericDownlinkPdrEntry() {
+  ::p4::v1::TableEntry CreateDownlinkPdrEntry(
+      std::string ue_addr = std::string("\x0a\x00\x00\x01", 4),
+      uint16 counter_id = 1, uint32 far_id = 1) {
     const std::string downlink_pdr_entry_text = R"PROTO(
       table_id: 47761714 # FabricIngress.spgw.downlink_pdrs
       match {
@@ -642,6 +705,18 @@ class FabricBenchmark {
     )PROTO";
     ::p4::v1::TableEntry downlink_pdr;
     CHECK_OK(ParseProtoFromString(downlink_pdr_entry_text, &downlink_pdr));
+    downlink_pdr.mutable_match(0)->mutable_exact()->set_value(
+        BytestringToPaddedBytestring(ue_addr, 32));
+    downlink_pdr.mutable_action()
+        ->mutable_action()
+        ->mutable_params(0)
+        ->set_value(BytestringToPaddedBytestring(
+            hal::Uint32ToByteStream(counter_id), 16));
+    downlink_pdr.mutable_action()
+        ->mutable_action()
+        ->mutable_params(1)
+        ->set_value(
+            BytestringToPaddedBytestring(hal::Uint32ToByteStream(far_id), 32));
 
     return downlink_pdr;
   }
