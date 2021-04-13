@@ -1080,11 +1080,11 @@ void SetUpInterfacesInterfaceConfigHealthIndicator(const std::string& state,
     }
     std::string state_string = typed_val->string_val();
     HealthState typed_state;
-    if (state_string.compare("BAD") == 0) {
+    if (state_string == "BAD") {
       typed_state = HealthState::HEALTH_STATE_BAD;
-    } else if (state_string.compare("GOOD") == 0) {
+    } else if (state_string == "GOOD") {
       typed_state = HealthState::HEALTH_STATE_GOOD;
-    } else if (state_string.compare("UNKNOWN") == 0) {
+    } else if (state_string == "UNKNOWN") {
       typed_state = HealthState::HEALTH_STATE_UNKNOWN;
     } else {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";

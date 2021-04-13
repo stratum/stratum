@@ -562,8 +562,8 @@ class HalServiceClient {
           const auto& path = update.path();
           int len = path.elem_size();
           // Is this /interfaces/interface[name=<name>/status/ifindex?
-          if (len > 1 && path.elem(len - 1).name().compare("ifindex") == 0 &&
-              path.elem(1).name().compare("interface") == 0 &&
+          if (len > 1 && path.elem(len - 1).name() == "ifindex" &&
+              path.elem(1).name() == "interface" &&
               path.elem(1).key().count("name")) {
             // Save mapping between 'ifindex' and 'name'
             id_to_name[update.val().uint_val()] = path.elem(1).key().at("name");

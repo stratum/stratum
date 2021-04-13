@@ -181,8 +181,8 @@ void YangParseTree::ProcessPushedConfig(
 }
 
 bool YangParseTree::IsWildcard(const std::string& name) const {
-  if (name.compare("*") == 0) return true;
-  if (name.compare("...") == 0) return true;
+  if (name == "*") return true;
+  if (name == "...") return true;
   return false;
 }
 
