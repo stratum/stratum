@@ -25,7 +25,9 @@ singleton_ports {
   speed_bps: 100000000000  # 100Gbps
   node: 1
   config_params {
-    mac_address: 0x111111111111
+    mac_address {
+      mac_address: 0x111111111111
+    }
   }
 }
 singleton_ports {
@@ -37,7 +39,9 @@ singleton_ports {
   speed_bps: 100000000000  # 100Gbps
   node: 1
   config_params {
-    mac_address: 0x222222222222
+    mac_address {
+      mac_address: 0x222222222222
+    }
   }
 }
 optical_network_interfaces {
