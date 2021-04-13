@@ -2,7 +2,7 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stratum/tools/benchmark/p4runtime_session.h"
+#include "stratum/lib/p4runtime/p4runtime_session.h"
 
 #include <string>
 

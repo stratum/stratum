@@ -2,7 +2,7 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stratum/tools/benchmark/entity_management.h"
+#include "stratum/lib/p4runtime/entity_management.h"
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_replace.h"
