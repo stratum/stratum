@@ -6,9 +6,7 @@ licenses(["notice"])  # Apache v2
 # Build the main P4 pipeline for Broadcom switches.
 
 load("//stratum/p4c_backends/common:build_defs.bzl", "p4_fpm_compile")
-
 load("//bazel/rules:p4c_build_defs.bzl", "p4_bmv2_compile")
-
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 filegroup(
@@ -39,14 +37,14 @@ p4_bmv2_compile(
 
 pkg_tar(
     name = "main_pipelines",
-    extension = "tar.gz",
-    strip_prefix = ".",
     srcs = [
+        "bmv2/main.json",
+        "bmv2/main.p4info",
         "fpm/main.p4info",
         "fpm/main.pb.bin",
         "fpm/main.pb.txt",
-        "bmv2/main.p4info",
-        "bmv2/main.json",
     ],
+    extension = "tar.gz",
     mode = "0644",
+    strip_prefix = ".",
 )

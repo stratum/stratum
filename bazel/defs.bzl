@@ -43,6 +43,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS_LLVM = [
     "-Wno-unused-lambda-capture",
     "-Wno-unused-template",
 ]
+
 # TODO(max): Bazel currently does not detect GCC, therefore we have to match on
 # the default conditions. See: https://github.com/bazelbuild/bazel/issues/12707
 STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON + select({

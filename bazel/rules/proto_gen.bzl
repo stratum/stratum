@@ -23,7 +23,7 @@ def proto_gen_deps():
             remote = "https://github.com/openconfig/goyang",
             commit = "e8b0ed2cbb0c40683bc0785ea2c796b2c12df80f",
             importpath = "github.com/openconfig/goyang",
-            vcs = "git"
+            vcs = "git",
         )
     if "com_github_golang_glog" not in native.existing_rules():
         go_repository(
@@ -31,7 +31,7 @@ def proto_gen_deps():
             remote = "https://github.com/golang/glog",
             commit = "23def4e6c14b4da8ac2ed8007337bc5eb5007998",
             importpath = "github.com/golang/glog",
-            vcs = "git"
+            vcs = "git",
         )
     if "com_github_kylelemons_godebug" not in native.existing_rules():
         go_repository(
@@ -39,7 +39,7 @@ def proto_gen_deps():
             remote = "https://github.com/kylelemons/godebug",
             commit = "9ff306d4fbead574800b66369df5b6144732d58e",
             importpath = "github.com/kylelemons/godebug",
-            vcs = "git"
+            vcs = "git",
         )
 
     if "com_github_openconfig_ygot" not in native.existing_rules():
@@ -50,9 +50,9 @@ def proto_gen_deps():
             importpath = "github.com/openconfig/ygot",
             vcs = "git",
             patches = [
-                "//bazel/patches:ygot.patch"
+                "//bazel/patches:ygot.patch",
             ],
-            patch_args = ["-p1"]
+            patch_args = ["-p1"],
         )
     if "com_github_openconfig_ygot_proto" not in native.existing_rules():
         remote_workspace(

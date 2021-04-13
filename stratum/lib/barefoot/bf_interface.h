@@ -9,13 +9,16 @@
 extern "C" {
 #endif
 
-#include <cstddef>
+#include <stdbool.h>
+#include <stddef.h>
 
+// Type for the binary representation of a Protobuf message.
 typedef void* PackedProtobuf;
 
-int bf_init();
+int bf_p4_init(const char* bf_sde_install, const char* bf_switchd_cfg,
+            bool bf_switchd_background);
 
-int bf_destroy();
+int bf_p4_destroy();
 
 int bf_p4_set_pipeline_config(const PackedProtobuf packed_request,
                               size_t request_size,
@@ -44,6 +47,7 @@ int bf_p4_read(const PackedProtobuf packed_request, size_t request_size,
 #include <vector>
 
 #include "absl/status/status.h"
+#include "absl/synchronization/mutex.h"
 #include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
@@ -53,8 +57,6 @@ namespace barefoot {
 // around the Barefoot
 class BfInterface {
  public:
-  virtual ::absl::Status InitSde() = 0;
-
   // Pushes the P4-based forwarding pipeline configuration of one or more
   // switching nodes.
   virtual ::absl::Status SetForwardingPipelineConfig(
@@ -83,6 +85,26 @@ class BfInterface {
   //   virtual ::absl::Status StreamChannel(
   //       ::grpc::ServerContext* context,
   //       ServerStreamChannelReaderWriter* stream) override;
+
+  virtual ::absl::Status InitSde(absl::string_view bf_sde_install,
+                                 absl::string_view bf_switchd_cfg,
+                                 bool bf_switchd_background) = 0;
+
+  // Creates the singleton instance. Expected to be called once to initialize
+  // the instance.
+  static BfInterface* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
+
+  // Return the singleton instance to be used in the SDE callbacks.
+  static BfInterface* GetSingleton() LOCKS_EXCLUDED(init_lock_);
+
+ protected:
+  // RW mutex lock for protecting the singleton instance initialization and
+  // reading it back from other threads. Unlike other singleton classes, we
+  // use RW lock as we need the pointer to class to be returned.
+  static absl::Mutex init_lock_;
+
+  // The singleton instance.
+  static BfInterface* singleton_ GUARDED_BY(init_lock_);
 };
 
 }  // namespace barefoot

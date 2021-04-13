@@ -1,0 +1,27 @@
+# Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+load("//bazel:rules.bzl", "STRATUM_DEFAULT_COPTS")
+
+licenses(["notice"])  # Apache v2
+
+cc_binary(
+    name = "test_c",
+    srcs = ["test.c"],
+    deps = [
+        "//stratum/lib/barefoot:bf_interface",
+    ],
+)
+
+cc_binary(
+    name = "test_cc",
+    srcs = ["test.cc"],
+    deps = [
+        "//stratum/lib/barefoot:bf_interface",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/synchronization",
+    ],
+)

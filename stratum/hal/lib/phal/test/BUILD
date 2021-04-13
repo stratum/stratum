@@ -21,5 +21,5 @@ proto_library(
 
 cc_proto_library(
     name = "test_cc_proto",
-    deps = [":test_proto"]
+    deps = [":test_proto"],
 )

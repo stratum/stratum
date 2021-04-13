@@ -21,8 +21,13 @@ def genlex(name, src, out, prefix, includes = [], visibility = []):
         visibility = visibility,
     )
 
-def genyacc(name, src, header_out, source_out, extra_outs = [],
-    visibility = []):
+def genyacc(
+        name,
+        src,
+        header_out,
+        source_out,
+        extra_outs = [],
+        visibility = []):
     """Generate a C++ parser from a Yacc file using Bison.
     Args:
       name: The name of the rule.
