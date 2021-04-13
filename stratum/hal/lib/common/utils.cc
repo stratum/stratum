@@ -270,17 +270,17 @@ std::string ConvertSpeedBpsToString(
 
 ::google::protobuf::uint64 ConvertStringToSpeedBps(
     const std::string& speed_string) {
-  if (speed_string.compare("SPEED_10GB") == 0) {
+  if (speed_string == "SPEED_10GB") {
     return kTenGigBps;
-  } else if (speed_string.compare("SPEED_20GB") == 0) {
+  } else if (speed_string == "SPEED_20GB") {
     return kTwentyGigBps;
-  } else if (speed_string.compare("SPEED_25GB") == 0) {
+  } else if (speed_string == "SPEED_25GB") {
     return kTwentyFiveGigBps;
-  } else if (speed_string.compare("SPEED_40GB") == 0) {
+  } else if (speed_string == "SPEED_40GB") {
     return kFortyGigBps;
-  } else if (speed_string.compare("SPEED_50GB") == 0) {
+  } else if (speed_string == "SPEED_50GB") {
     return kFiftyGigBps;
-  } else if (speed_string.compare("SPEED_100GB") == 0) {
+  } else if (speed_string == "SPEED_100GB") {
     return kHundredGigBps;
   } else {
     return 0LL;
