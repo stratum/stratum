@@ -232,6 +232,18 @@ inline ::google::rpc::Code ToGoogleRpcCode(int from) {
   return code;
 }
 
+//
+inline ::grpc::Status StatusToGrpcStatus(const ::util::Status& status) {
+  return ::grpc::Status(static_cast<grpc::StatusCode>(status.error_code()),
+                        std::string(status.error_message()));
+}
+
+//
+inline ::util::Status GrpcStatusToStatus(const ::grpc::Status& status) {
+  return ::util::Status(static_cast<::util::error::Code>(status.error_code()),
+                        status.error_message());
+}
+
 // This function takes an unsigned integer encoded as string data and
 // converts it to the desired unsigned type.  The bytes in the string are
 // assumed to be in network byte order.  The conversion is truncated if the

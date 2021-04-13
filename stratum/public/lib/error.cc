@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/public/lib/error.h"
 
 #include <string>
@@ -57,6 +56,7 @@ class StratumErrorSpace : public ::util::ErrorSpace {
       case ERR_OPER_NOT_SUPPORTED:
       case ERR_OPER_DISABLED:
         return ::util::error::UNIMPLEMENTED;
+      case ERR_UNAVAILABLE:
       case ERR_FEATURE_UNAVAILABLE:
         return ::util::error::UNAVAILABLE;
       case ERR_NO_RESOURCE:
