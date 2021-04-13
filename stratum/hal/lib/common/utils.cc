@@ -2,13 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/utils.h"
 
 #include <cfenv>  // NOLINT
 #include <cmath>
+#include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
-#include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -341,11 +340,11 @@ bool IsMacAddressValid(const std::string& mac_address) {
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
-    return state == TriState::TRI_STATE_TRUE;
+  return state == TriState::TRI_STATE_TRUE;
 }
 
 bool IsAdminStateEnabled(const AdminState& admin_state) {
-    return admin_state == AdminState::ADMIN_STATE_ENABLED;
+  return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
 bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
@@ -431,13 +430,9 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   return status.ConsumeValueOrDie();
 }
 
-uint64 ConvertHzToMHz(const uint64& val) {
-  return val / 1000000;
-}
+uint64 ConvertHzToMHz(const uint64& val) { return val / 1000000; }
 
-uint64 ConvertMHzToHz(const uint64& val) {
-  return val * 1000000;
-}
+uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
 
 }  // namespace hal
 }  // namespace stratum
