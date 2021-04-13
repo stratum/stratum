@@ -9,6 +9,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "bf_rt/bf_rt_info.hpp"
 #include "bf_rt/bf_rt_init.hpp"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/integral_types.h"

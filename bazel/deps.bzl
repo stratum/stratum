@@ -207,17 +207,19 @@ def stratum_deps():
         )
 
     if "com_github_google_glog" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_google_glog",
-            remote = "https://github.com/google/glog",
-            commit = "5b4fb63d277795eea3400e3e6af542f3b765f2d2",
+            sha256 = "9826ccc86e70f1f1710fc1bb5ba1dc807afa6d3eac1cd694b9dd374761bccf59",
+            strip_prefix = "glog-7bba6030c2a0e78c2f169a8a1cf37d899196f053",
+            urls = ["https://github.com/google/glog/archive/7bba6030c2a0e78c2f169a8a1cf37d899196f053.zip"],
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_gflags_gflags",
-            remote = "https://github.com/gflags/gflags",
-            commit = "28f50e0fed19872e0fd50dd23ce2ee8cd759338e",
+            sha256 = "cfdba0f2f17e8b1ff75c98113d5080d8ec016148426abcc19130864e2952d7bd",
+            strip_prefix = "gflags-827c769e5fc98e0f2a34c47cef953cc6328abced",
+            urls = ["https://github.com/gflags/gflags/archive/827c769e5fc98e0f2a34c47cef953cc6328abced.zip"],
         )
 
     if "com_google_googletest" not in native.existing_rules():
