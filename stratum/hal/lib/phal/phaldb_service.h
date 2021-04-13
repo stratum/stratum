@@ -57,7 +57,8 @@ class PhalDbService final : public PhalDb::Service {
   // PhalDbService is neither copyable nor movable.
   PhalDbService(const PhalDbService&) = delete;
   PhalDbService& operator=(const PhalDbService&) = delete;
-  PhalDbService& operator=(PhalDbService&&) = default;
+  PhalDbService(PhalDbService&&) = delete;
+  PhalDbService& operator=(PhalDbService&&) = delete;
 
  private:
   // Actual implementations of the calls. To be moved into an impl.
