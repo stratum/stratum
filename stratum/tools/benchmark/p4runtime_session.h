@@ -165,7 +165,7 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 ::util::Status RemoveTableEntries(P4RuntimeSession* session,
                                   absl::Span<const p4::v1::TableEntry> entries);
 
-// Clears the table entries
+// Clears the table entries.
 ::util::Status ClearTableEntries(P4RuntimeSession* session);
 
 // Installs the given table entry on the switch.
@@ -175,6 +175,11 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 // Installs the given table entries on the switch.
 ::util::Status InstallTableEntries(
     P4RuntimeSession* session, absl::Span<const p4::v1::TableEntry> entries);
+
+// Modifies the given table entries on the switch. The entries must already
+// exists.
+::util::Status ModifyTableEntries(P4RuntimeSession* session,
+                                  absl::Span<const p4::v1::TableEntry> entries);
 
 // Writes the given counter entries on the switch.
 ::util::Status ModifyIndirectCounterEntries(

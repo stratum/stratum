@@ -259,6 +259,20 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
   return SendWriteRequest(session, batch_write_request);
 }
 
+::util::Status ModifyTableEntries(P4RuntimeSession* session,
+                                  absl::Span<const TableEntry> entries) {
+  WriteRequest batch_write_request;
+  batch_write_request.set_device_id(session->DeviceId());
+  *batch_write_request.mutable_election_id() = session->ElectionId();
+
+  for (const auto& entry : entries) {
+    Update* update = batch_write_request.add_updates();
+    update->set_type(Update::MODIFY);
+    *update->mutable_entity()->mutable_table_entry() = entry;
+  }
+  return SendWriteRequest(session, batch_write_request);
+}
+
 ::util::Status ModifyIndirectCounterEntries(
     P4RuntimeSession* session, absl::Span<const CounterEntry> entries) {
   WriteRequest batch_write_request;
