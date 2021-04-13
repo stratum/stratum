@@ -16,7 +16,7 @@ extern "C" {
 typedef void* PackedProtobuf;
 
 int bf_p4_init(const char* bf_sde_install, const char* bf_switchd_cfg,
-            bool bf_switchd_background);
+               bool bf_switchd_background);
 
 int bf_p4_destroy();
 

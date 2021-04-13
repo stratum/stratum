@@ -7,8 +7,8 @@
 /*
 INFO: From Compiling stratum/lib/barefoot/bf_interface.cc:
 In file included from stratum/lib/barefoot/bf_interface.cc:10:0:
-./stratum/glue/init_google.h:13:6: warning: "GOOGLE_BASE_HAS_INITGOOGLE" is not defined [-Wundef]
- #if !GOOGLE_BASE_HAS_INITGOOGLE
+./stratum/glue/init_google.h:13:6: warning: "GOOGLE_BASE_HAS_INITGOOGLE" is not
+defined [-Wundef] #if !GOOGLE_BASE_HAS_INITGOOGLE
       ^~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -214,7 +214,7 @@ using ::stratum::barefoot::BfInterface;
   RETURN_STATUS(status)
 
 int bf_p4_init(const char* bf_sde_install, const char* bf_switchd_cfg,
-            bool bf_switchd_background) {
+               bool bf_switchd_background) {
   // Check if the SDE has already been initialized; presumably if the singleton
   // has been created.
   if (BfInterface::GetSingleton() != nullptr) return -1;

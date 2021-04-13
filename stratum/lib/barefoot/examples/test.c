@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <stdio.h>
+
 #include "stratum/lib/barefoot/bf_interface.h"
 
 const char bf_sde_install[] = "/usr";
@@ -19,10 +20,12 @@ int main() {
   if (status != 0) return status;
   printf("BF SDE successfully initialized\n");
 
-  status = bf_p4_set_pipeline_config(packed_request, request_size, &packed_response, &response_size);
+  status = bf_p4_set_pipeline_config(packed_request, request_size,
+                                     &packed_response, &response_size);
   if (status != 0) return status;
 
-  status = bf_p4_write(packed_request, request_size, &packed_response, &response_size);
+  status = bf_p4_write(packed_request, request_size, &packed_response,
+                       &response_size);
   if (status != 0) return status;
 
   return 0;
