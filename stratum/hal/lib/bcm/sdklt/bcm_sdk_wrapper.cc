@@ -1823,11 +1823,11 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_get(entry_hdl, LINKSCAN_MODEs,
                                                      &linkscan_mode));
     std::string linkscan(linkscan_mode);
-    if (linkscan.compare("SOFTWARE") == 0) {
+    if (linkscan == "SOFTWARE") {
       options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_SW);
-    } else if (linkscan.compare("HARDWARE") == 0) {
+    } else if (linkscan == "HARDWARE") {
       options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_HW);
-    } else if (linkscan.compare("NO_SCAN") == 0) {
+    } else if (linkscan == "NO_SCAN") {
       options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_NONE);
     }
   }
@@ -1853,7 +1853,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_get(entry_hdl, OPMODEs, &op_mode));
     std::string opmode(op_mode);
-    if (opmode.compare(PC_PORT_OPMODE_AUTONEGs) == 0) {
+    if (opmode == PC_PORT_OPMODE_AUTONEGs) {
       options->set_autoneg(TRI_STATE_TRUE);
     } else {
       options->set_autoneg(TRI_STATE_FALSE);
@@ -1921,7 +1921,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       bcmlt_entry_field_array_symbol_get(entry_hdl, STATEs, 0, sym_res, 140,
                                          &actual_count));
   std::string blocked(sym_res[port + 1]);
-  if (blocked.compare(BLOCKs) == 0) {
+  if (blocked == BLOCKs) {
     options->set_blocked(TRI_STATE_TRUE);
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
@@ -2217,11 +2217,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_get(entry_hdl, LINKSCAN_MODEs, &linkscan_str));
     std::string linkscan(linkscan_str);
-    if (linkscan.compare("SOFTWARE") == 0) {
+    if (linkscan == "SOFTWARE") {
       linkscan_mode = BcmPortOptions::LINKSCAN_MODE_SW;
-    } else if (linkscan.compare("HARDWARE") == 0) {
+    } else if (linkscan == "HARDWARE") {
       linkscan_mode = BcmPortOptions::LINKSCAN_MODE_HW;
-    } else if (linkscan.compare("NO_SCAN") == 0) {
+    } else if (linkscan == "NO_SCAN") {
       linkscan_mode = BcmPortOptions::LINKSCAN_MODE_NONE;
     }
   }
@@ -5670,7 +5670,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     }
     std::string bcm_qual_field = HalAclFieldToBcm(table.stage(), field.type());
     std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if ((unknown_qual.compare(bcm_qual_field)) == 0) {
+    if (unknown_qual == bcm_qual_field) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Attempted to create ACL table with invalid predefined "
              << " qualifier: " << field.ShortDebugString() << ".";
@@ -5746,7 +5746,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     }
     std::string bcm_qual_field = HalAclFieldToBcm(table.stage(), field.type());
     std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if ((unknown_qual.compare(bcm_qual_field)) == 0) {
+    if (unknown_qual == bcm_qual_field) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Attempted to create ACL table with invalid predefined "
              << "qualifier: " << field.ShortDebugString() << ".";
@@ -7477,7 +7477,7 @@ namespace {
     for (int i = BcmField::UNKNOWN + 1; i <= BcmField::Type_MAX; ++i) {
       auto field = static_cast<BcmField::Type>(i);
       std::string bcm_qual_field = HalAclFieldToBcm(stage, field);
-      if((unknown_qual.compare(bcm_qual_field)) == 0) {
+      if (unknown_qual == bcm_qual_field) {
          continue;
       }
       RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, bcm_qual_field.c_str(), &value));

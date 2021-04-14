@@ -96,6 +96,9 @@ stratum/hal/lib/common/file_service.h
 stratum/hal/lib/common/gnmi_events.h
 stratum/hal/lib/common/p4_service_test.cc
 stratum/hal/lib/common/p4_service.h
+stratum/hal/lib/common/utils_test.cc
+stratum/hal/lib/common/utils.cc
+stratum/hal/lib/common/utils.h
 stratum/hal/lib/common/yang_parse_tree_mock.h
 stratum/hal/lib/common/yang_parse_tree_paths.cc
 stratum/hal/lib/common/yang_parse_tree_paths.h
