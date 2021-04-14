@@ -1351,8 +1351,7 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   std::string bf_sysfs_fname;
   {
     char buf[128] = {};
-    CHECK_RETURN_IF_FALSE(
-        switch_pci_sysfs_str_get(buf, sizeof(buf) - sizeof("/dev_add")) == 0);
+    RETURN_IF_BFRT_ERROR(switch_pci_sysfs_str_get(buf, sizeof(buf)));
     bf_sysfs_fname = buf;
   }
   absl::StrAppend(&bf_sysfs_fname, "/dev_add");
@@ -1364,12 +1363,9 @@ std::string BfSdeWrapper::GetSdeVersion() const {
     switchd_main_ctx->kernel_pkt = true;
   }
 
-  {
-    int status = bf_switchd_lib_init(switchd_main_ctx.get());
-    CHECK_RETURN_IF_FALSE(status == 0)
-        << "Error when starting switchd, status: " << status;
-    LOG(INFO) << "switchd started successfully";
-  }
+  RETURN_IF_BFRT_ERROR(bf_switchd_lib_init(switchd_main_ctx.get()))
+      << "Error when starting switchd.";
+  LOG(INFO) << "switchd started successfully";
 
   return ::util::OkStatus();
 }
