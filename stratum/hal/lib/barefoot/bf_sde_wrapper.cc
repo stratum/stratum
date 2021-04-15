@@ -72,7 +72,6 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
   std::vector<bf_rt_id_t> key_field_ids;
   RETURN_IF_BFRT_ERROR(table->keyFieldIdListGet(&key_field_ids));
 
-  // LOG(INFO) << "Table key {";
   std::string s;
   absl::StrAppend(&s, "table key { ");
   for (const auto& field_id : key_field_ids) {
@@ -111,16 +110,10 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
     absl::StrAppend(&s, field_name, " { field_id: ", field_id,
                     " key_type: ", static_cast<int>(key_type),
                     " field_size: ", field_size, " value: ", value, " } ");
-
-    // LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-    //           << " key_type: " << static_cast<int>(key_type)
-    //           << " field_size: " << field_size << " value: " << value;
   }
   absl::StrAppend(&s, "}");
-  // LOG(INFO) << "}";
 
   return s;
-  // return ::util::OkStatus();
 }
 
 ::util::StatusOr<std::string> DumpTableData(
@@ -130,13 +123,11 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
 
   std::string s;
   absl::StrAppend(&s, "table data { ");
-  // LOG(INFO) << "Table data {";
   std::vector<bf_rt_id_t> data_field_ids;
   if (table->actionIdApplicable()) {
     bf_rt_id_t action_id;
     RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
     absl::StrAppend(&s, "\taction_id: ", action_id);
-    // LOG(INFO) << "\taction_id: " << action_id;
     RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &data_field_ids));
   } else {
     RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
@@ -163,10 +154,6 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
     }
     RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
 
-    LOG(ERROR) << "data_type " << static_cast<int>(data_type);
-    LOG(ERROR) << "field_size " << field_size;
-    LOG(ERROR) << "is_active " << is_active;
-
     std::string value;
     switch (data_type) {
       case bfrt::DataType::UINT64: {
@@ -192,13 +179,13 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
         break;
       }
       case bfrt::DataType::BOOL_ARR: {
-        std::vector<bool> v;
-        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
-        std::vector<uint16> v_as_ints;
-        for (bool b : v) {
-          v_as_ints.push_back(b);
+        std::vector<bool> bools;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &bools));
+        std::vector<uint16> bools_as_ints;
+        for (bool b : bools) {
+          bools_as_ints.push_back(b);
         }
-        value = PrintVector(v_as_ints, ",");
+        value = PrintVector(bools_as_ints, ",");
         break;
       }
       default:
@@ -210,13 +197,8 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
                     " data_type: ", static_cast<int>(data_type),
                     " field_size: ", field_size, " value: ", value,
                     " is_active: ", is_active, " } ");
-    // LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-    //           << " data_type: " << static_cast<int>(data_type)
-    //           << " field_size: " << field_size << " value: " << value
-    //           << " is_active: " << is_active;
   }
   absl::StrAppend(&s, "}");
-  // LOG(INFO) << "}";
 
   return s;
 }
@@ -2800,6 +2782,7 @@ namespace {
 
   // TODO(max): Explore error lambda function concept. It would shorted and
   // commonalize the log code.
+  // We have to capture the std::unique_ptrs by reference [&] here.
   auto invalid = [&]() -> std::string {
     return absl::StrCat(
         DumpTableKey(table_key.get()).ValueOr("<error parsing key>"), ", ",
