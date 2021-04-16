@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Apache License Version 2.0, January 2004
+# Copyright 2015 Codecov
+# SPDX-License-Identifier: Apache-2.0
 # https://github.com/codecov/codecov-bash/blob/master/LICENSE
 
 set -e +o pipefail
