@@ -10,6 +10,8 @@ typedef bit<32> ipv4_addr_t;
 const bit<16> ETHERTYPE_IPV4 = 0x0800;
 const bit<16> ETHERTYPE_ARP  = 0x0806;
 const bit<8> PROTO_ICMP = 0x01;
+const bit<16> ARP_OPERATION_REQUEST = 1;
+const bit<16> ARP_OPERATION_REPLY = 2;
 const bit<32> DEFAULT_TBL_SIZE = 1024;
 
 @controller_header("packet_in")
@@ -152,7 +154,6 @@ control StratumIngress(
     Counter<bit<64>, PortId_t>(512, CounterType_t.PACKETS_AND_BYTES) tx_port_counter;
 
     DirectCounter<bit<64>>(CounterType_t.PACKETS_AND_BYTES) ipv4_counter;
-    DirectCounter<bit<64>>(CounterType_t.PACKETS) arp_counter;
 
     // Meter< bit<16> > ( 512, MeterType_t.BYTES ) test_meter;
     DirectMeter( MeterType_t.BYTES ) host_bytes;
@@ -198,9 +199,11 @@ control StratumIngress(
         counters = ipv4_counter;
     }
 
-    action reply_station_arp(mac_addr_t target_mac ) {
+    DirectCounter<bit<64>>(CounterType_t.PACKETS) arp_counter;
+
+    action reply_station_arp(mac_addr_t target_mac) {
 	      arp_counter.count();
-        hdr.arp.oper_code = 2; // reply code
+        hdr.arp.oper_code = ARP_OPERATION_REPLY;
         hdr.ethernet.src_addr = target_mac;
         hdr.ethernet.dst_addr = hdr.arp.hw_dst_addr;
         hdr.arp.hw_dst_addr = hdr.ethernet.dst_addr;
@@ -212,7 +215,6 @@ control StratumIngress(
 
         ig_intr_tm_md.ucast_egress_port = ig_intr_md.ingress_port;
         // ig_intr_dprsr_md.drop_ctl = 0x0;
-
     }
 
     table arp_station {
@@ -253,7 +255,6 @@ control StratumIngress(
             //color_source: {ipv4_route.apply(); }
             // missed_source: {ipv4_route.apply(); }
         //}
-        ig_intr_tm_md.bypass_egress = 1w1;
         tx_port_counter.count( ig_intr_tm_md.ucast_egress_port);
     }
 }
@@ -321,8 +322,6 @@ control StratumEgressDeparser(
         in egress_intrinsic_metadata_for_deparser_t eg_dprsr_md) {
     apply {}
 }
-
-
 
 Pipeline(
     StratumIngressParser(),

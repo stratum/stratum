@@ -14,7 +14,7 @@ BF_P4C="$SDE_INSTALL/bin/bf-p4c"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 P4_SRC_DIR=${DIR}
 output_dir="${DIR}/build/"
-p4c_flags="--auto-init-metadata"
+p4c_flags=""
 OTHER_PP_FLAGS=$2
 
 $BF_P4C --arch tna -g --create-graphs --verbose 2 \
