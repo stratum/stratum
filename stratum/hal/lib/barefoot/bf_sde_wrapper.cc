@@ -2747,12 +2747,20 @@ namespace {
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
 
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"),
+        ", member_id: ", member_id, ", ",
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"));
+  };
+
   // Key: $ACTION_MEMBER_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
-                                            bf_dev_tgt, *table_key));
+                                            bf_dev_tgt, *table_key))
+      << "Could not delete action profile member with: " << dump_args();
 
   return ::util::OkStatus();
 }
@@ -2850,7 +2858,6 @@ namespace {
         *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data))
         << "Could not add action profile group with: " << dump_args();
   } else {
-    // TODO(max): Log better error messages.
     RETURN_IF_BFRT_ERROR(table->tableEntryMod(
         *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data))
         << "Could not modify action profile group with: " << dump_args();
@@ -2892,11 +2899,22 @@ namespace {
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"),
+        ", group_id: ", group_id, ", max_group_size: ", max_group_size,
+        ", members: ", PrintVector(member_ids, ","), ", ",
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"));
+  };
+
   // Key: $SELECTOR_GROUP_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
+
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
-                                            bf_dev_tgt, *table_key));
+                                            bf_dev_tgt, *table_key))
+      << "Could not delete action profile group with: " << dump_args();
 
   return ::util::OkStatus();
 }
@@ -3051,9 +3069,17 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
 
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"), ", ",
+        DumpTableKey(real_table_key->table_key_.get())
+            .ValueOr("<error parsing key>"));
+  };
+
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(
-      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_));
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_))
+      << "Could not delete table entry with: " << dump_args();
 
   return ::util::OkStatus();
 }
