@@ -1,5 +1,6 @@
-// Copyright 2019-present Open Networking Foundation
+// Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
+
 #include <core.p4>
 #include <tna.p4>
 
@@ -11,6 +12,18 @@ const bit<16> ETHERTYPE_ARP  = 0x0806;
 const bit<8> PROTO_ICMP = 0x01;
 const bit<32> DEFAULT_TBL_SIZE = 1024;
 
+@controller_header("packet_in")
+header packet_in_header_t {
+    @padding bit<7> pad0;
+    PortId_t        ingress_port;
+}
+
+@controller_header("packet_out")
+header packet_out_header_t {
+    @padding bit<7> pad0;
+    PortId_t        egress_port;
+}
+
 header ethernet_t {
     mac_addr_t dst_addr;
     mac_addr_t src_addr;
@@ -18,10 +31,10 @@ header ethernet_t {
 }
 
 header arp_t {
-    bit<16> hw_type;
-    bit<16> eth_type;
-    bit<16> hw_proto_addr_len;
-    bit<16> oper_code;
+    bit<16>     hw_type;
+    bit<16>     eth_type;
+    bit<16>     hw_proto_addr_len;
+    bit<16>     oper_code;
     mac_addr_t  hw_src_addr;
     ipv4_addr_t proto_src_addr;
     mac_addr_t  hw_dst_addr;
@@ -29,55 +42,73 @@ header arp_t {
 }
 
 header ipv4_t {
-    bit<8>  version_ihl;
-    bit<8>  dscp_ecn;
-    bit<16> total_len;
-    bit<16> identification;
-    bit<3>  flags;
-    bit<13> frag_offset;
-    bit<8>  ttl;
-    bit<8>  protocol;
-    bit<16> hdr_checksum;
+    bit<8>      version_ihl;
+    bit<8>      dscp_ecn;
+    bit<16>     total_len;
+    bit<16>     identification;
+    bit<3>      flags;
+    bit<13>     frag_offset;
+    bit<8>      ttl;
+    bit<8>      protocol;
+    bit<16>     hdr_checksum;
     ipv4_addr_t src_addr;
     ipv4_addr_t dst_addr;
 }
 
 header icmp_t {
-    bit<8> icmp_type;
-    bit<8> icmp_code;
+    bit<8>  icmp_type;
+    bit<8>  icmp_code;
     bit<16> checksum;
     bit<16> identifier;
     bit<16> sequence_number;
     bit<64> timestamp;
 }
 
-struct empty_t {} // no additions to this struct
-
-struct metadata_t {}
-struct headers_t {
-    ethernet_t ethernet;
-    arp_t arp;
-    ipv4_t ipv4;
-    icmp_t icmp;
+header bridged_metadata_t {
+    @padding bit<7> pad0;
+    PortId_t        ig_port;
 }
-//
+
+@flexible
+struct stratum_ingress_metadata_t {
+    bridged_metadata_t bridged;
+}
+
+@flexible
+struct stratum_egress_metadata_t {
+    bridged_metadata_t bridged;
+    PortId_t           cpu_port;
+}
+
+struct headers_t {
+    ethernet_t          ethernet;
+    arp_t               arp;
+    ipv4_t              ipv4;
+    icmp_t              icmp;
+    packet_out_header_t packet_out;
+    packet_in_header_t  packet_in;
+}
+
 // struct digest_macs_t {
 //     // mac_addr_t dst_addr;
 //     PortId_t port;
 //     mac_addr_t src_addr;
 // }
 
-parser StratumIParser( packet_in pkt, 
-    out headers_t hdr, 
-    out metadata_t md, 
-    out ingress_intrinsic_metadata_t ig_intr_md ) {
-
+parser StratumIngressParser(packet_in pkt,
+                            out headers_t hdr,
+                            out stratum_ingress_metadata_t stratum_md,
+                            out ingress_intrinsic_metadata_t ig_intr_md) {
     // Checksum() ipv4_sum;
     state start {
         pkt.extract(ig_intr_md);
         pkt.advance(PORT_METADATA_SIZE);
+        stratum_md = {{0, 0}};
+        stratum_md.bridged.setValid();
+        stratum_md.bridged.ig_port = ig_intr_md.ingress_port;
         transition parse_ethernet;
     }
+
     state parse_ethernet {
         pkt.extract(hdr.ethernet);
         transition select (hdr.ethernet.eth_type){
@@ -86,6 +117,7 @@ parser StratumIParser( packet_in pkt,
             default: reject;
         }
     }
+
     state parse_arp {
         pkt.extract(hdr.arp);
         transition select(hdr.arp.eth_type){
@@ -93,55 +125,54 @@ parser StratumIParser( packet_in pkt,
             default: reject;
         }
     }
+
     state parse_ipv4 {
         pkt.extract(hdr.ipv4);
         // ipv4_sum.add(hdr.ipv4);
-        transition select (hdr.ipv4.protocol){
+        transition select (hdr.ipv4.protocol) {
             PROTO_ICMP: parse_icmp;
             default: accept;
         }
     }
+
     state parse_icmp {
         pkt.extract(hdr.icmp);
         transition accept;
     }
 }
 
-control StratumI (
-    inout headers_t hdr, 
-    inout metadata_t md, 
-    in ingress_intrinsic_metadata_t ig_intr_md,
-    in ingress_intrinsic_metadata_from_parser_t ig_prsr_md, 
-    inout ingress_intrinsic_metadata_for_deparser_t ig_intr_dprsr_md,
-    inout ingress_intrinsic_metadata_for_tm_t ig_intr_tm_md) { 
+control StratumIngress(
+        inout headers_t hdr,
+        inout stratum_ingress_metadata_t stratum_md,
+        in ingress_intrinsic_metadata_t ig_intr_md,
+        in ingress_intrinsic_metadata_from_parser_t ig_prsr_md,
+        inout ingress_intrinsic_metadata_for_deparser_t ig_intr_dprsr_md,
+        inout ingress_intrinsic_metadata_for_tm_t ig_intr_tm_md) {
+    Counter<bit<64>, PortId_t>(512, CounterType_t.PACKETS_AND_BYTES) rx_port_counter;
+    Counter<bit<64>, PortId_t>(512, CounterType_t.PACKETS_AND_BYTES) tx_port_counter;
 
-    Counter< bit<64>, PortId_t >
-        ( 512, CounterType_t.PACKETS_AND_BYTES ) rx_port_counter;
-    Counter< bit<64>, PortId_t >
-        ( 512, CounterType_t.PACKETS_AND_BYTES ) tx_port_counter;
-
-    DirectCounter< bit<64> >
-        ( CounterType_t.PACKETS_AND_BYTES ) ipv4_counter;
-    DirectCounter< bit<64> >
-        ( CounterType_t.PACKETS ) arp_counter;
+    DirectCounter<bit<64>>(CounterType_t.PACKETS_AND_BYTES) ipv4_counter;
+    DirectCounter<bit<64>>(CounterType_t.PACKETS) arp_counter;
 
     // Meter< bit<16> > ( 512, MeterType_t.BYTES ) test_meter;
     DirectMeter( MeterType_t.BYTES ) host_bytes;
 
-    action color_source(){
+    action color_source() {
         hdr.ipv4.dscp_ecn = host_bytes.execute();
     }
-    action missed_source(){
+
+    action missed_source() {
         // hdr.ipv4.dscp_ecn = host_bytes.execute();
         // punt ?
     }
+
     table host_mac {
         key = {
             hdr.ethernet.src_addr: exact;
         }
         actions = {
             color_source;
-            missed_source; 
+            missed_source;
         }
         meters = host_bytes;
         size = DEFAULT_TBL_SIZE;
@@ -149,12 +180,13 @@ control StratumI (
     }
 
     action fwd_route(PortId_t port, mac_addr_t dmac) {
-	ipv4_counter.count();
+	      ipv4_counter.count();
         ig_intr_tm_md.ucast_egress_port = port;
         ig_intr_dprsr_md.drop_ctl = 0x0;
         hdr.ethernet.dst_addr = dmac;
         hdr.ipv4.ttl = hdr.ipv4.ttl + 255;
     }
+
     table ipv4_route {
         key = {
             hdr.ipv4.dst_addr : lpm;
@@ -165,8 +197,9 @@ control StratumI (
         size = DEFAULT_TBL_SIZE;
         counters = ipv4_counter;
     }
+
     action reply_station_arp(mac_addr_t target_mac ) {
-	arp_counter.count();
+	      arp_counter.count();
         hdr.arp.oper_code = 2; // reply code
         hdr.ethernet.src_addr = target_mac;
         hdr.ethernet.dst_addr = hdr.arp.hw_dst_addr;
@@ -181,6 +214,7 @@ control StratumI (
         // ig_intr_dprsr_md.drop_ctl = 0x0;
 
     }
+
     table arp_station {
         key = {
             hdr.arp.oper_code: exact;
@@ -190,7 +224,9 @@ control StratumI (
             reply_station_arp;
         }
         counters = arp_counter;
+        size = 512;
     }
+
     // table icmp {
     //     key = {
     //         // hdr.icmp.
@@ -199,7 +235,7 @@ control StratumI (
     //     }
     // }
 
-    apply{
+    apply {
         rx_port_counter.count(ig_intr_md.ingress_port);
 
         if (hdr.arp.isValid()) {
@@ -222,31 +258,79 @@ control StratumI (
     }
 }
 
-control StratumIDeparser( packet_out pkt, inout headers_t hdr, in metadata_t md, in ingress_intrinsic_metadata_for_deparser_t ig_dprsr_md) { 
+control StratumIngressDeparser(
+        packet_out pkt,
+        inout headers_t hdr,
+        in stratum_ingress_metadata_t stratum_md,
+        in ingress_intrinsic_metadata_for_deparser_t ig_dprsr_md) {
+
     // Digest<digest_macs_t> () digest_macs;
-    apply{
+    apply {
+        pkt.emit(stratum_md.bridged);
         pkt.emit(hdr);
-    } 
+    }
 }
 
-parser StratumEParser( packet_in pkt, out empty_t hdr, out empty_t md, out egress_intrinsic_metadata_t eg_intr_md  ){state start{transition accept;}}
-control StratumE (inout empty_t hdr, inout empty_t md,
-		  in egress_intrinsic_metadata_t eg_intr_md, 
-		  in egress_intrinsic_metadata_from_parser_t eg_prsr_md, 
-	          inout egress_intrinsic_metadata_for_deparser_t eg_dprsr_md, 
-		  inout egress_intrinsic_metadata_for_output_port_t eg_oport_md) { apply{ } }
+parser StratumEgressParser(packet_in pkt,
+                           out headers_t hdr,
+                           out stratum_egress_metadata_t stratum_md,
+                           out egress_intrinsic_metadata_t eg_intr_md) {
+    state start {
+        stratum_md = {{0, 0}, 0};
+        pkt.extract(eg_intr_md);
+        pkt.extract(stratum_md.bridged);
+        transition accept;
+    }
+}
 
-control StratumEDeparser( packet_out pkt, inout empty_t hdr, in empty_t md, in egress_intrinsic_metadata_for_deparser_t eg_dprsr_md){ apply{} }
+control StratumEgress(
+        inout headers_t hdr,
+        inout stratum_egress_metadata_t stratum_md,
+        in egress_intrinsic_metadata_t eg_intr_md,
+        in egress_intrinsic_metadata_from_parser_t eg_prsr_md,
+        inout egress_intrinsic_metadata_for_deparser_t eg_dprsr_md,
+        inout egress_intrinsic_metadata_for_output_port_t eg_oport_md) {
+
+    action set_switch_info(PortId_t cpu_port) {
+        stratum_md.cpu_port = cpu_port;
+    }
+
+    table switch_info {
+        actions = {
+            set_switch_info;
+            @defaultonly NoAction;
+        }
+        default_action = NoAction();
+        const size = 1;
+    }
+
+    apply {
+        switch_info.apply();
+        if (eg_intr_md.egress_port == stratum_md.cpu_port) {
+            hdr.packet_in.setValid();
+            hdr.packet_in.ingress_port = stratum_md.bridged.ig_port;
+            exit;
+        }
+    }
+}
+
+control StratumEgressDeparser(
+        packet_out pkt,
+        inout headers_t hdr,
+        in stratum_egress_metadata_t md,
+        in egress_intrinsic_metadata_for_deparser_t eg_dprsr_md) {
+    apply {}
+}
 
 
 
 Pipeline(
-    StratumIParser(),
-    StratumI(),
-    StratumIDeparser(),
-    StratumEParser(),
-    StratumE(),
-    StratumEDeparser()
+    StratumIngressParser(),
+    StratumIngress(),
+    StratumIngressDeparser(),
+    StratumEgressParser(),
+    StratumEgress(),
+    StratumEgressDeparser()
 ) pipe;
 
 Switch(pipe) main;
