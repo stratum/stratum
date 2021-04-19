@@ -54,6 +54,10 @@ namespace tools {
 namespace benchmark {
 namespace {
 
+using p4runtime::BuildP4RTEntityIdReplacementMap;
+using p4runtime::CreateTlsChannelCredentials;
+using p4runtime::HydrateP4RuntimeProtoFromStringOrDie;
+
 const char kUsage[] =
     R"USAGE(This tool benchmarks P4Runtime requests agains a Stratum instance.
 )USAGE";
@@ -110,8 +114,8 @@ class FabricBenchmark {
           CreateTlsChannelCredentials(ca_cert, client_cert, client_key));
     }
     ASSIGN_OR_RETURN(
-        session_, P4RuntimeSession::Create(FLAGS_grpc_addr, channel_credentials,
-                                           FLAGS_device_id));
+        session_, p4runtime::P4RuntimeSession::Create(
+                      FLAGS_grpc_addr, channel_credentials, FLAGS_device_id));
 
     // Push pipeline config if given, else read from switch.
     if (!FLAGS_p4_info_file.empty() && !FLAGS_p4_pipeline_config_file.empty()) {
@@ -753,7 +757,7 @@ class FabricBenchmark {
   p4::config::v1::Counter ingress_pdr_counter_;
 
   // General P4RT objects.
-  std::unique_ptr<P4RuntimeSession> session_;
+  std::unique_ptr<p4runtime::P4RuntimeSession> session_;
   p4::config::v1::P4Info p4_info_;
   std::unique_ptr<hal::P4InfoManager> p4_info_manager_;
   absl::flat_hash_map<std::string, std::string> p4_id_replacements_;

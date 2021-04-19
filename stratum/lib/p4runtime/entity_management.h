@@ -13,8 +13,7 @@
 #include "stratum/glue/status/status.h"
 
 namespace stratum {
-namespace tools {
-namespace benchmark {
+namespace p4runtime {
 
 // Build a replacement map from the given p4info object for later use with
 // HydrateP4RuntimeProtoFromString. Match fields and action parameters are added
@@ -62,8 +61,7 @@ T HydrateP4RuntimeProtoFromStringOrDie(const ::p4::config::v1::P4Info& p4_info,
 ::util::Status DehydrateP4RuntimeProtoString(
     const ::p4::config::v1::P4Info& p4_info, std::string* proto_string);
 
-}  // namespace benchmark
-}  // namespace tools
+}  // namespace p4runtime
 }  // namespace stratum
 
 #endif  // STRATUM_TOOLS_BENCHMARK_ENTITY_MANAGEMENT_H_

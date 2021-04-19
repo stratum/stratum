@@ -29,10 +29,10 @@ DEFINE_string(p4_pipeline_config_file, "",
 DEFINE_uint64(device_id, 1, "P4Runtime device ID.");
 
 namespace stratum {
-namespace hal {
+namespace p4runtime {
 
 //
-using tools::benchmark::P4RuntimeSession;
+using p4runtime::P4RuntimeSession;
 
 class P4RuntimeFixture : public testing::Test {
  protected:
@@ -94,7 +94,7 @@ class P4RuntimeFixture : public testing::Test {
   ::p4::config::v1::P4Info p4info_;
 };
 
-}  // namespace hal
+}  // namespace p4runtime
 }  // namespace stratum
 
 #endif  // STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_
