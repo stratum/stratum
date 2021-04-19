@@ -65,13 +65,27 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
   return bytes / 125;
 }
 
-::util::Status DumpTableKey(const bfrt::BfRtTableKey* table_key) {
+::util::StatusOr<std::string> DumpTableMetadata(const bfrt::BfRtTable* table) {
+  std::string table_name;
+  RETURN_IF_BFRT_ERROR(table->tableNameGet(&table_name));
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+  bfrt::BfRtTable::TableType table_type;
+  RETURN_IF_BFRT_ERROR(table->tableTypeGet(&table_type));
+
+  return absl::StrCat("table_name: ", table_name, ", table_id: ", table_id,
+                      ", table_type: ", table_type);
+}
+
+::util::StatusOr<std::string> DumpTableKey(
+    const bfrt::BfRtTableKey* table_key) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_key->tableGet(&table));
   std::vector<bf_rt_id_t> key_field_ids;
   RETURN_IF_BFRT_ERROR(table->keyFieldIdListGet(&key_field_ids));
 
-  LOG(INFO) << "Table key {";
+  std::string s;
+  absl::StrAppend(&s, "bfrt_table_key { ");
   for (const auto& field_id : key_field_ids) {
     std::string field_name;
     bfrt::KeyFieldType key_type;
@@ -87,7 +101,17 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
         RETURN_IF_BFRT_ERROR(table_key->getValue(
             field_id, v.size(),
             reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
-        value = StringToHex(v);
+        value = absl::StrCat("0x", StringToHex(v));
+        break;
+      }
+      case bfrt::KeyFieldType::TERNARY: {
+        std::string v(NumBitsToNumBytes(field_size), '\x00');
+        std::string m(NumBitsToNumBytes(field_size), '\x00');
+        RETURN_IF_BFRT_ERROR(table_key->getValueandMask(
+            field_id, v.size(),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&v)),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&m))));
+        value = absl::StrCat("0x", StringToHex(v), " & ", "0x", StringToHex(m));
         break;
       }
       case bfrt::KeyFieldType::RANGE: {
@@ -97,7 +121,16 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
             field_id, l.size(),
             reinterpret_cast<uint8*>(gtl::string_as_array(&l)),
             reinterpret_cast<uint8*>(gtl::string_as_array(&h))));
-        value = absl::StrCat(StringToHex(l), " - ", StringToHex(h));
+        value = absl::StrCat("0x", StringToHex(l), " - ", "0x", StringToHex(h));
+        break;
+      }
+      case bfrt::KeyFieldType::LPM: {
+        std::string v(NumBitsToNumBytes(field_size), '\x00');
+        uint16 p;
+        RETURN_IF_BFRT_ERROR(table_key->getValueLpm(
+            field_id, v.size(),
+            reinterpret_cast<uint8*>(gtl::string_as_array(&v)), &p));
+        value = absl::StrCat("0x", StringToHex(v), "/", p);
         break;
       }
       default:
@@ -105,25 +138,27 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
             << "Unknown key_type: " << static_cast<int>(key_type) << ".";
     }
 
-    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-              << " key_type: " << static_cast<int>(key_type)
-              << " field_size: " << field_size << " value: " << value;
+    absl::StrAppend(&s, field_name, " { field_id: ", field_id,
+                    " key_type: ", static_cast<int>(key_type),
+                    " field_size: ", field_size, " value: ", value, " } ");
   }
-  LOG(INFO) << "}";
+  absl::StrAppend(&s, "}");
 
-  return ::util::OkStatus();
+  return s;
 }
 
-::util::Status DumpTableData(const bfrt::BfRtTableData* table_data) {
+::util::StatusOr<std::string> DumpTableData(
+    const bfrt::BfRtTableData* table_data) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data->getParent(&table));
 
-  LOG(INFO) << "Table data {";
+  std::string s;
+  absl::StrAppend(&s, "bfrt_table_data { ");
   std::vector<bf_rt_id_t> data_field_ids;
   if (table->actionIdApplicable()) {
     bf_rt_id_t action_id;
     RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
-    LOG(INFO) << "\taction_id: " << action_id;
+    absl::StrAppend(&s, "action_id: ", action_id, " ");
     RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &data_field_ids));
   } else {
     RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
@@ -139,17 +174,16 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
       RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
       RETURN_IF_BFRT_ERROR(
           table->dataFieldNameGet(field_id, action_id, &field_name));
-      // FIXME
-      // RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id,
-      // &data_type)); RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id,
-      // &field_size)); RETURN_IF_BFRT_ERROR(table_data->isActive(field_id,
-      // &is_active));
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldDataTypeGet(field_id, action_id, &data_type));
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldSizeGet(field_id, action_id, &field_size));
     } else {
       RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
       RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
       RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
-      RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
     }
+    RETURN_IF_BFRT_ERROR(table_data->isActive(field_id, &is_active));
 
     std::string value;
     switch (data_type) {
@@ -164,13 +198,25 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
         RETURN_IF_BFRT_ERROR(table_data->getValue(
             field_id, v.size(),
             reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
-        value = StringToHex(v);
+        value = absl::StrCat("0x", StringToHex(v));
         break;
       }
       case bfrt::DataType::INT_ARR: {
-        std::vector<uint64_t> v;
+        // TODO(max): uint32 seems to be the most common type, but we could
+        // differentiate based on field_size, if needed.
+        std::vector<uint32_t> v;
         RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
         value = PrintVector(v, ",");
+        break;
+      }
+      case bfrt::DataType::BOOL_ARR: {
+        std::vector<bool> bools;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &bools));
+        std::vector<uint16> bools_as_ints;
+        for (bool b : bools) {
+          bools_as_ints.push_back(b);
+        }
+        value = PrintVector(bools_as_ints, ",");
         break;
       }
       default:
@@ -178,14 +224,14 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
             << "Unknown data_type: " << static_cast<int>(data_type) << ".";
     }
 
-    LOG(INFO) << "\t" << field_name << ": field_id: " << field_id
-              << " data_type: " << static_cast<int>(data_type)
-              << " field_size: " << field_size << " value: " << value
-              << " is_active: " << is_active;
+    absl::StrAppend(&s, field_name, " { field_id: ", field_id,
+                    " data_type: ", static_cast<int>(data_type),
+                    " field_size: ", field_size, " value: ", value,
+                    " is_active: ", is_active, " } ");
   }
-  LOG(INFO) << "}";
+  absl::StrAppend(&s, "}");
 
-  return ::util::OkStatus();
+  return s;
 }
 
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
@@ -2643,6 +2689,16 @@ namespace {
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"),
+        ", member_id: ", member_id, ", ",
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"), ", ",
+        DumpTableData(real_table_data->table_data_.get())
+            .ValueOr("<error parsing data>"));
+  };
+
   // Key: $ACTION_MEMBER_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
 
@@ -2650,11 +2706,13 @@ namespace {
   if (insert) {
     RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*real_session->bfrt_session_,
                                               bf_dev_tgt, *table_key,
-                                              *real_table_data->table_data_));
+                                              *real_table_data->table_data_))
+        << "Could not add action profile member with: " << dump_args();
   } else {
     RETURN_IF_BFRT_ERROR(table->tableEntryMod(*real_session->bfrt_session_,
                                               bf_dev_tgt, *table_key,
-                                              *real_table_data->table_data_));
+                                              *real_table_data->table_data_))
+        << "Could not modify action profile member with: " << dump_args();
   }
 
   return ::util::OkStatus();
@@ -2689,12 +2747,20 @@ namespace {
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
 
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"),
+        ", member_id: ", member_id, ", ",
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"));
+  };
+
   // Key: $ACTION_MEMBER_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
-                                            bf_dev_tgt, *table_key));
+                                            bf_dev_tgt, *table_key))
+      << "Could not delete action profile member with: " << dump_args();
 
   return ::util::OkStatus();
 }
@@ -2765,6 +2831,16 @@ namespace {
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
+  // We have to capture the std::unique_ptrs by reference [&] here.
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"),
+        ", group_id: ", group_id, ", max_group_size: ", max_group_size,
+        ", members: ", PrintVector(member_ids, ","), ", ",
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"), ", ",
+        DumpTableData(table_data.get()).ValueOr("<error parsing data>"));
+  };
+
   // Key: $SELECTOR_GROUP_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
   // Data: $ACTION_MEMBER_ID
@@ -2779,10 +2855,12 @@ namespace {
   auto bf_dev_tgt = GetDeviceTarget(device);
   if (insert) {
     RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
-        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data))
+        << "Could not add action profile group with: " << dump_args();
   } else {
     RETURN_IF_BFRT_ERROR(table->tableEntryMod(
-        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data));
+        *real_session->bfrt_session_, bf_dev_tgt, *table_key, *table_data))
+        << "Could not modify action profile group with: " << dump_args();
   }
 
   return ::util::OkStatus();
@@ -2821,11 +2899,21 @@ namespace {
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"),
+        ", group_id: ", group_id,
+        DumpTableKey(table_key.get()).ValueOr("<error parsing key>"));
+  };
+
   // Key: $SELECTOR_GROUP_ID
   RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
+
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
-                                            bf_dev_tgt, *table_key));
+                                            bf_dev_tgt, *table_key))
+      << "Could not delete action profile group with: " << dump_args();
 
   return ::util::OkStatus();
 }
@@ -2916,10 +3004,22 @@ namespace {
 
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"), ", ",
+        DumpTableKey(real_table_key->table_key_.get())
+            .ValueOr("<error parsing key>"),
+        ", ",
+        DumpTableData(real_table_data->table_data_.get())
+            .ValueOr("<error parsing data>"));
+  };
+
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryAdd(
       *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_,
-      *real_table_data->table_data_));
+      *real_table_data->table_data_))
+      << "Could not add table entry with: " << dump_args();
 
   return ::util::OkStatus();
 }
@@ -2938,10 +3038,21 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
 
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"), ", ",
+        DumpTableKey(real_table_key->table_key_.get())
+            .ValueOr("<error parsing key>"),
+        ", ",
+        DumpTableData(real_table_data->table_data_.get())
+            .ValueOr("<error parsing data>"));
+  };
+
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryMod(
       *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_,
-      *real_table_data->table_data_));
+      *real_table_data->table_data_))
+      << "Could not modify table entry with: " << dump_args();
 
   return ::util::OkStatus();
 }
@@ -2957,9 +3068,17 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
 
+  auto dump_args = [&]() -> std::string {
+    return absl::StrCat(
+        DumpTableMetadata(table).ValueOr("<error reading table>"), ", ",
+        DumpTableKey(real_table_key->table_key_.get())
+            .ValueOr("<error parsing key>"));
+  };
+
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(
-      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_));
+      *real_session->bfrt_session_, bf_dev_tgt, *real_table_key->table_key_))
+      << "Could not delete table entry with: " << dump_args();
 
   return ::util::OkStatus();
 }
