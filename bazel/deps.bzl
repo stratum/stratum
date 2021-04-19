@@ -45,10 +45,11 @@ def stratum_deps():
         )
 
     if "com_google_googleapis" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_googleapis",
-            remote = "https://github.com/googleapis/googleapis",
-            commit = "84c8ad4e52f8eec8f08a60636cfa597b86969b5c",
+            urls = ["https://github.com/googleapis/googleapis/archive/a8cd11e2c420a194348839c6490a8a1bef2835d3.zip"],
+            strip_prefix = "googleapis-a8cd11e2c420a194348839c6490a8a1bef2835d3",
+            sha256 = "bb2b4aa6558e5125a357d829530f2bad932c6f091f0d2faaacfeec185d031ec2",
         )
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
