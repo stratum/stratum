@@ -1,8 +1,8 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_
-#define STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_
+#ifndef STRATUM_LIB_P4RUNTIME_P4RUNTIME_FIXTURE_H_
+#define STRATUM_LIB_P4RUNTIME_P4RUNTIME_FIXTURE_H_
 
 #include <memory>
 #include <string>
@@ -97,4 +97,4 @@ class P4RuntimeFixture : public testing::Test {
 }  // namespace p4runtime
 }  // namespace stratum
 
-#endif  // STRATUM_TOOLS_BENCHMARK_P4RUNTIME_FIXTURE_H_
+#endif  // STRATUM_LIB_P4RUNTIME_P4RUNTIME_FIXTURE_H_
