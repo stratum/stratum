@@ -16,10 +16,17 @@
 #include "stratum/lib/p4runtime/p4runtime_session.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(grpc_addr);
-DECLARE_string(p4_info_file);
-DECLARE_string(p4_pipeline_config_file);
-DECLARE_uint64(device_id);
+DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
+DEFINE_string(p4_info_file, "",
+              "Path to an optional P4Info text proto file. If specified, file "
+              "content will be serialized into the p4info field in "
+              "ForwardingPipelineConfig proto and pushed to the switch.");
+DEFINE_string(p4_pipeline_config_file, "",
+              "Path to an optional P4PipelineConfig bin proto file. If "
+              "specified, file content will be serialized into the "
+              "p4_device_config field in ForwardingPipelineConfig proto "
+              "and pushed to the switch.");
+DEFINE_uint64(device_id, 1, "P4Runtime device ID.");
 
 namespace stratum {
 namespace hal {
