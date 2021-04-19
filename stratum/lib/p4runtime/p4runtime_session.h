@@ -2,8 +2,8 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_TOOLS_BENCHMARK_P4RUNTIME_SESSION_H_
-#define STRATUM_TOOLS_BENCHMARK_P4RUNTIME_SESSION_H_
+#ifndef STRATUM_LIB_P4RUNTIME_P4RUNTIME_SESSION_H_
+#define STRATUM_LIB_P4RUNTIME_P4RUNTIME_SESSION_H_
 
 #include <memory>
 #include <string>
@@ -197,4 +197,4 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 }  // namespace p4runtime
 }  // namespace stratum
 
-#endif  // STRATUM_TOOLS_BENCHMARK_P4RUNTIME_SESSION_H_
+#endif  // STRATUM_LIB_P4RUNTIME_P4RUNTIME_SESSION_H_

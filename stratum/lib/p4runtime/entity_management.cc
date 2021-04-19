@@ -74,5 +74,5 @@ using ::p4::config::v1::P4Info;
   return HydrateP4RuntimeProtoFromString(replacements, proto_string, message);
 }
 
-}  // namespace tools
+}  // namespace p4runtime
 }  // namespace stratum

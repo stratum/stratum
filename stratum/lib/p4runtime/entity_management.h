@@ -2,8 +2,8 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_TOOLS_BENCHMARK_ENTITY_MANAGEMENT_H_
-#define STRATUM_TOOLS_BENCHMARK_ENTITY_MANAGEMENT_H_
+#ifndef STRATUM_LIB_P4RUNTIME_ENTITY_MANAGEMENT_H_
+#define STRATUM_LIB_P4RUNTIME_ENTITY_MANAGEMENT_H_
 
 #include <string>
 
@@ -64,4 +64,4 @@ T HydrateP4RuntimeProtoFromStringOrDie(const ::p4::config::v1::P4Info& p4_info,
 }  // namespace p4runtime
 }  // namespace stratum
 
-#endif  // STRATUM_TOOLS_BENCHMARK_ENTITY_MANAGEMENT_H_
+#endif  // STRATUM_LIB_P4RUNTIME_ENTITY_MANAGEMENT_H_
