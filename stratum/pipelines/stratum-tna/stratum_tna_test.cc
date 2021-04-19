@@ -13,20 +13,16 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(grpc_addr);
-DECLARE_string(p4_info_file);
-DECLARE_string(p4_pipeline_config_file);
-DECLARE_uint64(device_id);
-
 namespace stratum {
 namespace pipelines {
 namespace stratum_tna {
 namespace {
 
-using tools::benchmark::BuildP4RTEntityIdReplacementMap;
-using tools::benchmark::HydrateP4RuntimeProtoFromStringOrDie;
+using p4runtime::BuildP4RTEntityIdReplacementMap;
+using p4runtime::HydrateP4RuntimeProtoFromStringOrDie;
+using p4runtime::P4RuntimeFixture;
 
-class StratumTnaTest : public hal::P4RuntimeFixture {
+class StratumTnaTest : public P4RuntimeFixture {
  protected:
   void SetUp() override {
     P4RuntimeFixture::SetUp();
@@ -34,12 +30,38 @@ class StratumTnaTest : public hal::P4RuntimeFixture {
     for (const auto& e : p4_id_replacements_) {
       LOG(INFO) << e.first << " -> " << e.second;
     }
+
+    // TOOD(max): look this up from the switch somehow
+    ASSERT_OK(SetSwitchInfo(320));
+  }
+
+  ::util::Status SetSwitchInfo(uint16 cpu_port) {
+    ::p4::v1::TableEntry entry =
+        HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::TableEntry>(
+            p4_id_replacements_,
+            R"PROTO(
+        table_id: {StratumEgress.switch_info}
+        action {
+          action {
+            action_id: {StratumEgress.set_switch_info}
+            params {
+              param_id: {StratumEgress.set_switch_info.cpu_port}
+              value: "\x00"
+            }
+          }
+        }
+        is_default_action: true
+      )PROTO");
+    entry.mutable_action()->mutable_action()->mutable_params(0)->set_value(
+        hal::Uint32ToByteStream(cpu_port));
+
+    return ModifyTableEntries(SutP4RuntimeSession(), {entry});
   }
 
   ::p4::v1::TableEntry CreateIpv4RouteEntry(std::string dst_addr, uint32 prefix,
                                             uint16 dst_port, uint64 dst_mac) {
     ::p4::v1::TableEntry route_entry =
-        HydrateP4RuntimeProtoFromStringOrDie< ::p4::v1::TableEntry>(
+        HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::TableEntry>(
             p4_id_replacements_,
             R"PROTO(
         table_id: {StratumIngress.ipv4_route}
@@ -54,11 +76,11 @@ class StratumTnaTest : public hal::P4RuntimeFixture {
           action {
             action_id: {StratumIngress.fwd_route}
             params {
-              param_id: 1 # port
+              param_id: {StratumIngress.fwd_route.port}
               value: "\x00"
             }
             params {
-              param_id: 2 # dmac
+              param_id: {StratumIngress.fwd_route.dmac}
               value: "\x00"
             }
           }

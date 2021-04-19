@@ -12,11 +12,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(grpc_addr);
-DECLARE_string(p4_info_file);
-DECLARE_string(p4_pipeline_config_file);
-DECLARE_uint64(device_id);
-
 namespace stratum {
 namespace tools {
 namespace benchmark {
