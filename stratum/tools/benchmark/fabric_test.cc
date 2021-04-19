@@ -24,7 +24,7 @@ namespace {
 
 using test_utils::EqualsProto;
 
-class FabricTest : public hal::P4RuntimeFixture {
+class FabricTest : public p4runtime::P4RuntimeFixture {
  protected:
   std::vector<::p4::v1::TableEntry> CreateUpTo16KGenericFarTableEntries(
       int num_table_entries) {

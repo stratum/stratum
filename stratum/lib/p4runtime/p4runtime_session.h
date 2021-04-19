@@ -22,8 +22,7 @@
 #include "stratum/glue/status/statusor.h"
 
 namespace stratum {
-namespace tools {
-namespace benchmark {
+namespace p4runtime {
 // The maximum metadata size that a P4Runtime client should accept.  This is
 // necessary, because the P4Runtime protocol returns individual errors to
 // requests in a batch all wrapped in a single status, which counts towards the
@@ -195,8 +194,7 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
                                            p4::config::v1::P4Info* p4info,
                                            std::string* p4_device_config);
 
-}  // namespace benchmark
-}  // namespace tools
+}  // namespace p4runtime
 }  // namespace stratum
 
 #endif  // STRATUM_TOOLS_BENCHMARK_P4RUNTIME_SESSION_H_

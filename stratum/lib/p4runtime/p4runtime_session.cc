@@ -16,8 +16,8 @@
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
-namespace tools {
-namespace benchmark {
+namespace p4runtime {
+
 using ::p4::config::v1::P4Info;
 using ::p4::v1::CounterEntry;
 using ::p4::v1::GetForwardingPipelineConfigRequest;
@@ -323,6 +323,5 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
   return ::util::OkStatus();
 }
 
-}  // namespace benchmark
-}  // namespace tools
+}  // namespace p4runtime
 }  // namespace stratum

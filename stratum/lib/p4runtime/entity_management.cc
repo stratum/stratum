@@ -11,8 +11,7 @@
 #include "stratum/lib/utils.h"
 
 namespace stratum {
-namespace tools {
-namespace benchmark {
+namespace p4runtime {
 
 using ::p4::config::v1::P4Info;
 
@@ -75,6 +74,5 @@ using ::p4::config::v1::P4Info;
   return HydrateP4RuntimeProtoFromString(replacements, proto_string, message);
 }
 
-}  // namespace benchmark
 }  // namespace tools
 }  // namespace stratum
