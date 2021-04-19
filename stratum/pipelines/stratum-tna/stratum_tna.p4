@@ -155,8 +155,8 @@ control StratumIngress(
 
     DirectCounter<bit<64>>(CounterType_t.PACKETS_AND_BYTES) ipv4_counter;
 
-    // Meter< bit<16> > ( 512, MeterType_t.BYTES ) test_meter;
-    DirectMeter( MeterType_t.BYTES ) host_bytes;
+    // Meter< bit<16> > (512, MeterType_t.BYTES) test_meter;
+    DirectMeter(MeterType_t.BYTES) host_bytes;
 
     action color_source() {
         hdr.ipv4.dscp_ecn = host_bytes.execute();

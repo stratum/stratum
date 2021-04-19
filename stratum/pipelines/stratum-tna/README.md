@@ -13,3 +13,8 @@ testing and demonstration purposes.
 
 - Set `SDE_INSTALL` env variable
 - `./build.sh`
+
+## Testing
+
+- `cd stratum/pipelines/stratum-tna/; ./build.sh; prevd`
+- `bazel run //stratum/pipelines/stratum-tna:stratum_tna_test -- --grpc_addr=<switch_address> --p4_info_file=$(pwd)/stratum/pipelines/stratum-tna/build/p4info.pb.txt --p4_pipeline_config_file=$(pwd)/stratum/pipelines/stratum-tna/build/device_config.pb.bin`
