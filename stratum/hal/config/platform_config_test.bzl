@@ -8,7 +8,7 @@ load(
     "stratum_cc_test",
 )
 
-def platform_config_test(platform, bcm_target=False, sim_target=False):
+def platform_config_test(platform, bcm_target = False, sim_target = False):
     defines = ["PLATFORM=" + platform]
     if bcm_target:
         defines.append("BCM_TARGET")
@@ -19,7 +19,7 @@ def platform_config_test(platform, bcm_target=False, sim_target=False):
     stratum_cc_test(
         name = "validate_configs_" + platform,
         srcs = [
-            "config_validator_main.cc"
+            "config_validator_main.cc",
         ],
         deps = [
             "//stratum/glue/status:status_test_util",
@@ -35,5 +35,5 @@ def platform_config_test(platform, bcm_target=False, sim_target=False):
             "@com_github_grpc_grpc//:grpc++",
         ],
         data = native.glob([platform + "/*.pb.txt"]),
-        defines = defines
+        defines = defines,
     )

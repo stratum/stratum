@@ -3,7 +3,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-# This Skylark rule imports the netcope shared libraries and headers since
+# This Starlark rule imports the netcope shared libraries and headers since
 # there is not yet any native support for Bazel in netcope. The NP4_INSTALL
 # environment variable needs to be set, otherwise the Stratum rules which
 # depend on netcope cannot be built.
