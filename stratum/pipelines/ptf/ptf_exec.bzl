@@ -2,11 +2,11 @@
 # Copyright 2019-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@rules_python//python:defs.bzl", "py_binary")
 load("@grpc_py_deps//:requirements.bzl", grpc_all_requirements = "all_requirements", grpc_requirement = "requirement")
 load("@ptf_deps//:requirements.bzl", ptf_all_requirements = "all_requirements", ptf_requirement = "requirement")
 
-def ptf_exec( name, device, pipeline_name, data=None, skip_test=False, skip_bmv2_start=False ):
-
+def ptf_exec(name, device, pipeline_name, data = None, skip_test = False, skip_bmv2_start = False):
     py_data = []
     for x in data:
         py_data.append(x)
@@ -29,15 +29,16 @@ def ptf_exec( name, device, pipeline_name, data=None, skip_test=False, skip_bmv2
     py_args.append(ptf_requirement("ptf")[1:-6])
     py_args.append(" --scapy-dir")
     py_args.append(ptf_requirement("scapy")[1:-6])
-
-    native.py_binary(
+    py_binary(
         name = name,
         srcs = ["//stratum/pipelines/ptf:ptf_exec_files"],
         main = "//stratum/pipelines/ptf:ptf_exec.py",
         args = py_args,
-        deps = ["@com_github_p4lang_p4runtime//:p4runtime_py_grpc",
-                "//stratum/pipelines/ptf:ptf_py_lib"] +
-                depset(grpc_all_requirements).to_list() +
-                depset(ptf_all_requirements).to_list(),
-        data = py_data
+        deps = [
+                   "@com_github_p4lang_p4runtime//:p4runtime_py_grpc",
+                   "//stratum/pipelines/ptf:ptf_py_lib",
+               ] +
+               depset(grpc_all_requirements).to_list() +
+               depset(ptf_all_requirements).to_list(),
+        data = py_data,
     )

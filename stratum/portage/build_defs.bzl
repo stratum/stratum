@@ -45,6 +45,8 @@ load(
     "//devtools/build_cleaner/skylark:build_defs.bzl",
     "register_extension_info",
 )
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 # Generic path & label helpers. ============================================
 
@@ -80,7 +82,7 @@ def _normpath(path):
                 continue
         else:
             level += 1
-        result += [d]
+        result.append(d)
     return sep.join(result)
 
 # Adds a suffix to a label, expanding implicit targets if needed.
@@ -294,7 +296,7 @@ def sc_cc_test(
       linkopts: Analogous to cc_test linkopts argument.
       visibility: Analogous to cc_test visibility argument.
     """
-    native.cc_test(
+    cc_test(
         name = name,
         size = size or "small",
         srcs = sc_platform_select(host = srcs or [], default = []),
@@ -366,7 +368,7 @@ def sc_cc_lib(
         arches = ALL_ARCHES
     defs_plus = (defines or []) + _ARCH_DEFINES
     textual_plus = textual_hdrs | depset(deps.to_list())
-    native.cc_library(
+    cc_library(
         name = name,
         deps = sc_platform_filter(deps, [], arches),
         srcs = sc_platform_filter(srcs, [], arches),
@@ -420,7 +422,7 @@ def sc_cc_bin(
     if not arches:
         arches = ALL_ARCHES
     defs_plus = (defines or []) + _ARCH_DEFINES
-    native.cc_binary(
+    cc_binary(
         name = name,
         deps = sc_platform_filter(
             deps,
@@ -798,7 +800,7 @@ def _gen_py_proto_lib(name, srcs, deps, visibility, testonly):
     """
     regular_proto_name = decorate(name, "default_pb")
     py_name = decorate(name, "py")
-    native.proto_library(
+    proto_library(
         name = regular_proto_name,
         srcs = srcs,
         deps = [decorate(dep, "default_pb") for dep in deps],

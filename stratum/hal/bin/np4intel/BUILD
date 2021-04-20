@@ -3,13 +3,16 @@
 # Copyright 2019-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
+
 licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = ["//visibility:public"],
 )
-
-load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 
 stratum_cc_binary(
     name = "stratum_np4intel",
@@ -36,8 +39,6 @@ stratum_cc_binary(
         ":dpdk_cc_proto",
     ],
 )
-
-load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
 
 pkg_tar(
     name = "stratum_np4intel_bin",

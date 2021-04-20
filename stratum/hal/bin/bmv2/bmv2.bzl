@@ -1,7 +1,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-# This Skylark rule imports the bmv2 shared libraries and headers since there is
+# This Starlark rule imports the bmv2 shared libraries and headers since there is
 # not yet any native support for Bazel in bmv2. The BMV2_INSTALL environment
 # variable needs to be set, otherwise the Stratum rules which depend on bmv2
 # cannot be built.
