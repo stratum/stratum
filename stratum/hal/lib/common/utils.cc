@@ -2,13 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/utils.h"
 
 #include <cfenv>  // NOLINT
 #include <cmath>
+#include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
-#include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -270,17 +269,17 @@ std::string ConvertSpeedBpsToString(
 
 ::google::protobuf::uint64 ConvertStringToSpeedBps(
     const std::string& speed_string) {
-  if (speed_string.compare("SPEED_10GB") == 0) {
+  if (speed_string == "SPEED_10GB") {
     return kTenGigBps;
-  } else if (speed_string.compare("SPEED_20GB") == 0) {
+  } else if (speed_string == "SPEED_20GB") {
     return kTwentyGigBps;
-  } else if (speed_string.compare("SPEED_25GB") == 0) {
+  } else if (speed_string == "SPEED_25GB") {
     return kTwentyFiveGigBps;
-  } else if (speed_string.compare("SPEED_40GB") == 0) {
+  } else if (speed_string == "SPEED_40GB") {
     return kFortyGigBps;
-  } else if (speed_string.compare("SPEED_50GB") == 0) {
+  } else if (speed_string == "SPEED_50GB") {
     return kFiftyGigBps;
-  } else if (speed_string.compare("SPEED_100GB") == 0) {
+  } else if (speed_string == "SPEED_100GB") {
     return kHundredGigBps;
   } else {
     return 0LL;
@@ -341,11 +340,11 @@ bool IsMacAddressValid(const std::string& mac_address) {
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
-    return state == TriState::TRI_STATE_TRUE;
+  return state == TriState::TRI_STATE_TRUE;
 }
 
 bool IsAdminStateEnabled(const AdminState& admin_state) {
-    return admin_state == AdminState::ADMIN_STATE_ENABLED;
+  return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
 bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
@@ -431,13 +430,9 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   return status.ConsumeValueOrDie();
 }
 
-uint64 ConvertHzToMHz(const uint64& val) {
-  return val / 1000000;
-}
+uint64 ConvertHzToMHz(const uint64& val) { return val / 1000000; }
 
-uint64 ConvertMHzToHz(const uint64& val) {
-  return val * 1000000;
-}
+uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
 
 }  // namespace hal
 }  // namespace stratum

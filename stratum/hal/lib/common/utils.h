@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_UTILS_H_
 #define STRATUM_HAL_LIB_COMMON_UTILS_H_
 
@@ -11,13 +10,13 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/glue/integral_types.h"
-#include "stratum/glue/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "gnmi/gnmi.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
 
 namespace stratum {
 namespace hal {
@@ -236,7 +235,10 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state);
 // A helper method that do nothing to the value which pass to it.
 // This is useful if we have a process functor in a helper function but we
 // don't want to do anything to the value.
-template<typename T> T DontProcess(const T& val) { return val; }
+template <typename T>
+T DontProcess(const T& val) {
+  return val;
+}
 
 // A helper method that converts frequency from Hz to MHz.
 uint64 ConvertHzToMHz(const uint64& val);

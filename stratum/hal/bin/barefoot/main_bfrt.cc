@@ -2,13 +2,6 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-extern "C" {
-
-#include "bf_switchd/bf_switchd.h"
-
-int switch_pci_sysfs_str_get(char* name, size_t name_size);
-}
-
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -42,47 +35,13 @@ namespace barefoot {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
-  char bf_sysfs_fname[128];
-  FILE* fd;
-
-  auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
-
-  /* Parse bf_switchd arguments */
-  CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
-      << "Flag --bf_sde_install is required";
-  switchd_main_ctx->install_dir = strdup(FLAGS_bf_sde_install.c_str());
-  switchd_main_ctx->conf_file = strdup(FLAGS_bf_switchd_cfg.c_str());
-  switchd_main_ctx->skip_p4 = true;
-  if (FLAGS_bf_switchd_background)
-    switchd_main_ctx->running_in_background = true;
-  else
-    switchd_main_ctx->shell_set_ucli = true;
-
-  /* determine if kernel mode packet driver is loaded */
-  switch_pci_sysfs_str_get(bf_sysfs_fname,
-                           sizeof(bf_sysfs_fname) - sizeof("/dev_add"));
-  strncat(bf_sysfs_fname, "/dev_add", sizeof("/dev_add"));
-  printf("bf_sysfs_fname %s\n", bf_sysfs_fname);
-  fd = fopen(bf_sysfs_fname, "r");
-  if (fd != NULL) {
-    /* override previous parsing if bf_kpkt KLM was loaded */
-    printf("kernel mode packet driver present, forcing kernel_pkt option!\n");
-    switchd_main_ctx->kernel_pkt = true;
-    fclose(fd);
-  }
-
-  {
-    int status = bf_switchd_lib_init(switchd_main_ctx.get());
-    CHECK_RETURN_IF_FALSE(status == 0)
-        << "Error when starting switchd, status: " << status;
-    LOG(INFO) << "switchd started successfully";
-  }
-
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // components with "device_id" instead of "node_id".
   int device_id = 0;
 
   auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
+  RETURN_IF_ERROR(bf_sde_wrapper->InitializeSde(
+      FLAGS_bf_sde_install, FLAGS_bf_switchd_cfg, FLAGS_bf_switchd_background));
   ASSIGN_OR_RETURN(bool is_sw_model,
                    bf_sde_wrapper->IsSoftwareModel(device_id));
   const OperationMode mode =

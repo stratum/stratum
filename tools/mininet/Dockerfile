@@ -45,7 +45,12 @@ RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 # P4Runtime client, e.g. control plane apps or PTF tests.
 RUN bazel build @com_github_p4lang_p4runtime//:p4runtime_proto \
     @com_google_protobuf//:protobuf_python \
-    @com_google_googleapis//google/rpc/... \
+    @com_google_googleapis//google/rpc:status_cc_proto \
+    @com_google_googleapis//google/rpc:status_proto \
+    @com_google_googleapis//google/rpc:error_details_cc_proto \
+    @com_google_googleapis//google/rpc:error_details_proto \
+    @com_google_googleapis//google/rpc:code_cc_proto \
+    @com_google_googleapis//google/rpc:code_proto \
     @com_github_grpc_grpc//src/compiler:grpc_python_plugin
 ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
 RUN ./bazel-out/host/bin/external/com_google_protobuf/protoc \

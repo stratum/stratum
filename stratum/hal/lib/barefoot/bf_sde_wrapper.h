@@ -136,6 +136,9 @@ class BfSdeWrapper : public BfSdeInterface {
   };
 
   // BfSdeInterface public methods.
+  ::util::Status InitializeSde(const std::string& sde_install_path,
+                               const std::string& sde_config_file,
+                               bool run_in_background) override;
   ::util::Status AddDevice(int device,
                            const BfrtDeviceConfig& device_config) override;
   ::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
