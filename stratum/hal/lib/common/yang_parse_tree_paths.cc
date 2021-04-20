@@ -1159,7 +1159,8 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state, uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
+    // TODO(max): use std::find to handle lookup failures.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1227,7 +1228,7 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1327,12 +1328,9 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     std::string mac_address_string = typed_val->string_val();
-    if (!IsMacAddressValid(mac_address_string)) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
-    }
+    ASSIGN_OR_RETURN(uint64 mac_address,
+                     YangStringToMacAddress(mac_address_string));
 
-    ::google::protobuf::uint64 mac_address =
-        YangStringToMacAddress(mac_address_string);
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_mac_address,
@@ -1341,7 +1339,7 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1401,8 +1399,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     std::string speed_string = typed_val->string_val();
-    ::google::protobuf::uint64 speed_bps =
-        ConvertStringToSpeedBps(speed_string);
+    uint64 speed_bps = ConvertStringToSpeedBps(speed_string);
     if (speed_bps == 0) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
@@ -1415,7 +1412,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1483,7 +1480,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1675,10 +1672,10 @@ void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(uint64 node_id,
 // data from the DataResponse proto received from SwitchInterface, i.e.,
 // "&DataResponse::PortCounters::message", where message field in
 // DataResponse::Counters.
-TreeNodeEventHandler GetPollCounterFunctor(
-    uint64 node_id, uint32 port_id,
-    ::google::protobuf::uint64 (PortCounters::*func_ptr)() const,
-    YangParseTree* tree) {
+TreeNodeEventHandler GetPollCounterFunctor(uint64 node_id, uint32 port_id,
+                                           YangParseTree* tree,
+                                           uint64 (PortCounters::*func_ptr)()
+                                               const) {
   return [tree, node_id, port_id, func_ptr](const GnmiEvent& event,
                                             const ::gnmi::Path& path,
                                             GnmiSubscribeStream* stream) {
@@ -1713,7 +1710,7 @@ void SetUpInterfacesInterfaceStateCountersInOctets(uint64 node_id,
                                                    TreeNode* node,
                                                    YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, &PortCounters::in_octets, tree);
+      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::in_octets);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInOctets);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1736,7 +1733,7 @@ void SetUpInterfacesInterfaceStateCountersOutOctets(uint64 node_id,
                                                     TreeNode* node,
                                                     YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, &PortCounters::out_octets, tree);
+      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::out_octets);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutOctets);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1758,8 +1755,8 @@ void SetUpInterfacesInterfaceStateCountersInUnicastPkts(uint64 node_id,
                                                         uint32 port_id,
                                                         TreeNode* node,
                                                         YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::in_unicast_pkts, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::in_unicast_pkts);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInUnicastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1781,8 +1778,8 @@ void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(uint64 node_id,
                                                          uint32 port_id,
                                                          TreeNode* node,
                                                          YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::out_unicast_pkts, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::out_unicast_pkts);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutUnicastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1804,8 +1801,8 @@ void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
                                                           uint32 port_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::in_broadcast_pkts, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::in_broadcast_pkts);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInBroadcastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1825,8 +1822,8 @@ void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
 // /interfaces/interface[name=<name>]/state/counters/out-broadcast-pkts
 void SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
     uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::out_broadcast_pkts, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::out_broadcast_pkts);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutBroadcastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1849,7 +1846,7 @@ void SetUpInterfacesInterfaceStateCountersInDiscards(uint64 node_id,
                                                      TreeNode* node,
                                                      YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, &PortCounters::in_discards, tree);
+      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::in_discards);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInDiscards);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1871,8 +1868,8 @@ void SetUpInterfacesInterfaceStateCountersOutDiscards(uint64 node_id,
                                                       uint32 port_id,
                                                       TreeNode* node,
                                                       YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id,
-                                            &PortCounters::out_discards, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::out_discards);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutDiscards);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1894,8 +1891,8 @@ void SetUpInterfacesInterfaceStateCountersInUnknownProtos(uint64 node_id,
                                                           uint32 port_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::in_unknown_protos, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::in_unknown_protos);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInUnknownProtos);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1917,8 +1914,8 @@ void SetUpInterfacesInterfaceStateCountersInMulticastPkts(uint64 node_id,
                                                           uint32 port_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::in_multicast_pkts, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::in_multicast_pkts);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInMulticastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1941,7 +1938,7 @@ void SetUpInterfacesInterfaceStateCountersInErrors(uint64 node_id,
                                                    TreeNode* node,
                                                    YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, &PortCounters::in_errors, tree);
+      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::in_errors);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInErrors);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1964,7 +1961,7 @@ void SetUpInterfacesInterfaceStateCountersOutErrors(uint64 node_id,
                                                     TreeNode* node,
                                                     YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, &PortCounters::out_errors, tree);
+      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::out_errors);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutErrors);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1986,8 +1983,8 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
                                                       uint32 port_id,
                                                       TreeNode* node,
                                                       YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id,
-                                            &PortCounters::in_fcs_errors, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::in_fcs_errors);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInFcsErrors);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -2007,8 +2004,8 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
 // /interfaces/interface[name=<name>]/state/counters/out-multicast-pkts
 void SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
     uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(
-      node_id, port_id, &PortCounters::out_multicast_pkts, tree);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
+                                            &PortCounters::out_multicast_pkts);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutMulticastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -2415,7 +2412,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(
     RETURN_IF_ERROR(SetValue(module, network_interface, tree,
                              &OpticalTransceiverInfo::set_frequency, uint_val));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2776,7 +2773,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
                              &OpticalTransceiverInfo::set_target_output_power,
                              output_power));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2841,7 +2838,7 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
                              &OpticalTransceiverInfo::set_operational_mode,
                              uint_val));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -3432,6 +3429,20 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
           : singleton.name();
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
+  bool port_auto_neg_enabled = false;
+  bool port_enabled = false;
+  bool loopback_enabled = false;
+  uint64 mac_address = kDummyMacAddress;
+  if (singleton.has_config_params()) {
+    port_auto_neg_enabled =
+        IsPortAutonegEnabled(singleton.config_params().autoneg());
+    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
+    if (singleton.config_params().has_mac_address()) {
+      mac_address = singleton.config_params().mac_address().mac_address();
+    }
+    loopback_enabled =
+        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
+  }
   TreeNode* node =
       AddSubtreeInterface(name, node_id, port_id, node_config, tree);
 
@@ -3447,25 +3458,12 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "interface", name)("ethernet")("config")("port-speed")());
   SetUpInterfacesInterfaceEthernetConfigPortSpeed(
       node_id, port_id, singleton.speed_bps(), node, tree);
-  bool port_auto_neg_enabled = false;
-  bool port_enabled = false;
-  bool loopback_enabled = false;
-  uint64 mac_address = kDummyMacAddress;
-  if (singleton.has_config_params()) {
-    port_auto_neg_enabled =
-        IsPortAutonegEnabled(singleton.config_params().autoneg());
-    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
-    if (singleton.config_params().has_mac_address()) {
-      mac_address = singleton.config_params().mac_address().mac_address();
-    }
-    loopback_enabled =
-        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
-  }
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
   SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(
       node_id, port_id, port_auto_neg_enabled, node, tree);
+
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node,
@@ -3485,6 +3483,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("present")());
   SetUpComponentsComponentTransceiverStatePresent(node, tree, node_id, port_id);
+
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("serial-no")());
   SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id,

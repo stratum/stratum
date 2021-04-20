@@ -172,8 +172,8 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   return sub_req;
 }
 
-::gnmi::SubscribeRequest build_gnmi_sub_sample_req(
-    std::string path, ::google::protobuf::uint64 interval) {
+::gnmi::SubscribeRequest build_gnmi_sub_sample_req(std::string path,
+                                                   uint64 interval) {
   ::gnmi::SubscribeRequest sub_req;
   auto* sub_list = sub_req.mutable_subscribe();
   sub_list->set_mode(::gnmi::SubscriptionList::STREAM);

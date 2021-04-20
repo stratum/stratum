@@ -9,6 +9,8 @@
 #include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
 
+#include "absl/strings/str_replace.h"
+#include "re2/re2.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
@@ -247,8 +249,7 @@ std::string ConvertAdminStateToString(const AdminState& state) {
   }
 }
 
-std::string ConvertSpeedBpsToString(
-    const ::google::protobuf::uint64& speed_bps) {
+std::string ConvertSpeedBpsToString(const uint64& speed_bps) {
   switch (speed_bps) {
     case kTenGigBps:
       return "SPEED_10GB";
@@ -267,8 +268,7 @@ std::string ConvertSpeedBpsToString(
   }
 }
 
-::google::protobuf::uint64 ConvertStringToSpeedBps(
-    const std::string& speed_string) {
+uint64 ConvertStringToSpeedBps(const std::string& speed_string) {
   if (speed_string == "SPEED_10GB") {
     return kTenGigBps;
   } else if (speed_string == "SPEED_20GB") {
@@ -282,7 +282,7 @@ std::string ConvertSpeedBpsToString(
   } else if (speed_string == "SPEED_100GB") {
     return kHundredGigBps;
   } else {
-    return 0LL;
+    return 0ull;
   }
 }
 
@@ -317,26 +317,25 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
   return state == TRUNK_MEMBER_BLOCK_STATE_FORWARDING;
 }
 
-std::string MacAddressToYangString(
-    const ::google::protobuf::uint64& mac_address) {
-  return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
-                         (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
-                         (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
-                         mac_address & 0xFF);
+std::string MacAddressToYangString(const uint64& mac_address) {
+  return absl::StrFormat("%02x:%02x:%02x:%02x:%02x:%02x",
+                         (mac_address >> 40) & 0xFF, (mac_address >> 32) & 0xFF,
+                         (mac_address >> 24) & 0xFF, (mac_address >> 16) & 0xFF,
+                         (mac_address >> 8) & 0xFF, mac_address & 0xFF);
 }
 
-::google::protobuf::uint64 YangStringToMacAddress(
-    const std::string& yang_string) {
-  std::string tmp_str = yang_string;
-  // Remove colons
-  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
-                tmp_str.end());
-  return strtoull(tmp_str.c_str(), NULL, 16);
-}
+::util::StatusOr<uint64> YangStringToMacAddress(std::string yang_string) {
+  CHECK_RETURN_IF_FALSE(
+      RE2::FullMatch(yang_string, R"#(^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$)#"))
+      << "Provided string " << yang_string << " is not a valid MAC address.";
+  // Remove colons.
+  absl::StrReplaceAll({{":", ""}}, &yang_string);
+  uint64 mac_address;
+  // We rather use an absl internal function than strtoull.
+  CHECK_RETURN_IF_FALSE(absl::numbers_internal::safe_strtou64_base(
+      yang_string, &mac_address, 16));
 
-bool IsMacAddressValid(const std::string& mac_address) {
-  const std::regex mac_address_regex(kMacAddressRegex);
-  return regex_match(mac_address, mac_address_regex);
+  return mac_address;
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
