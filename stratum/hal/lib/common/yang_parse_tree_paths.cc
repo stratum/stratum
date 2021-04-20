@@ -1331,8 +1331,7 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
 
-    ::google::protobuf::uint64 mac_address =
-        YangStringToMacAddress(mac_address_string);
+    uint64 mac_address = YangStringToMacAddress(mac_address_string);
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_mac_address,
@@ -1401,8 +1400,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     std::string speed_string = typed_val->string_val();
-    ::google::protobuf::uint64 speed_bps =
-        ConvertStringToSpeedBps(speed_string);
+    uint64 speed_bps = ConvertStringToSpeedBps(speed_string);
     if (speed_bps == 0) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
@@ -1675,10 +1673,10 @@ void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(uint64 node_id,
 // data from the DataResponse proto received from SwitchInterface, i.e.,
 // "&DataResponse::PortCounters::message", where message field in
 // DataResponse::Counters.
-TreeNodeEventHandler GetPollCounterFunctor(
-    uint64 node_id, uint32 port_id,
-    ::google::protobuf::uint64 (PortCounters::*func_ptr)() const,
-    YangParseTree* tree) {
+TreeNodeEventHandler GetPollCounterFunctor(uint64 node_id, uint32 port_id,
+                                           uint64 (PortCounters::*func_ptr)()
+                                               const,
+                                           YangParseTree* tree) {
   return [tree, node_id, port_id, func_ptr](const GnmiEvent& event,
                                             const ::gnmi::Path& path,
                                             GnmiSubscribeStream* stream) {
