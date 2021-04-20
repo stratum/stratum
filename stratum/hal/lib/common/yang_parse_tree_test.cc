@@ -3602,7 +3602,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -3621,7 +3621,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -3641,7 +3641,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power input_power;
   input_power.set_interval(expected_value);
 
@@ -3726,7 +3726,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -3745,7 +3745,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -3764,7 +3764,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power input_power;
   input_power.set_max_time(expected_value);
 
@@ -3849,7 +3849,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -3868,7 +3868,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -3887,7 +3887,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power input_power;
   input_power.set_min_time(expected_value);
 
@@ -4116,7 +4116,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -4136,7 +4136,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -4156,7 +4156,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::OpticalTransceiverInfo::Power output_power;
   output_power.set_interval(expected_value);
 
@@ -4241,7 +4241,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -4260,7 +4260,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -4280,7 +4280,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power output_power;
   output_power.set_max_time(expected_value);
 
@@ -4365,7 +4365,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -4384,7 +4384,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -4404,7 +4404,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::OpticalTransceiverInfo::Power output_power;
   output_power.set_min_time(expected_value);
 

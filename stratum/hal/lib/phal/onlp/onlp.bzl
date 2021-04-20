@@ -1,7 +1,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-# This Skylark rule imports the onlp shared libraries and headers
+# This Starlark rule imports the onlp shared libraries and headers
 # The ONLP_INSTALL environment variable needs to be set
 # otherwise will download the prebuit libraries
 

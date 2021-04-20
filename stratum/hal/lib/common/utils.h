@@ -173,12 +173,10 @@ std::string ConvertPortStateToString(const PortState& state);
 std::string ConvertAdminStateToString(const AdminState& state);
 
 // A helper function that convert speed number to string format.
-std::string ConvertSpeedBpsToString(
-    const ::google::protobuf::uint64& speed_bps);
+std::string ConvertSpeedBpsToString(const uint64& speed_bps);
 
 // A helper function that convert OpenConfig speed string to speed number.
-::google::protobuf::uint64 ConvertStringToSpeedBps(
-    const std::string& speed_string);
+uint64 ConvertStringToSpeedBps(const std::string& speed_string);
 
 // A helper function that convert gRPC alarm severity enum to string.
 std::string ConvertAlarmSeverityToString(const Alarm::Severity& severity);
@@ -192,14 +190,12 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
 // A helper function that convert data received from the HAL into a format
 // expected by the gNMI interface (MAC addresses are expected to be
 // std::strings in the following format: "XX:XX:XX:XX:XX:XX").
-std::string MacAddressToYangString(
-    const ::google::protobuf::uint64& mac_address);
+std::string MacAddressToYangString(const uint64& mac_address);
 
 // A helper function that convert data received from the gNMI interface into a
 // format expected by the HAL (MAC addresses are expected to be
-// ::google::protobuf::uint64).
-::google::protobuf::uint64 YangStringToMacAddress(
-    const std::string& yang_string);
+// uint64).
+uint64 YangStringToMacAddress(const std::string& yang_string);
 
 // A helper function that check if string of mac_address is valid.
 bool IsMacAddressValid(const std::string& mac_address);

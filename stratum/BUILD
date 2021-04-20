@@ -2,14 +2,13 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_package",
-    "stratum_platform_select",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",

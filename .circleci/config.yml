@@ -364,14 +364,15 @@ jobs:
       - run:
           name: Run reuse
           command: reuse lint
+
   bazel-style-check:
     docker:
       - image: stratumproject/build:build
     steps:
       - checkout
       - run:
-          name: Run buildifier
-          command: buildifier --lint=warn -r ./ || true
+          name: Run buildifier script
+          command: .circleci/check-bazel-format.sh
 
 workflows:
   version: 2

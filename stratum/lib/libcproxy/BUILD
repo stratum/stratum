@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-licenses(["notice"])  # Apache v2
-
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load(
     "//bazel:rules.bzl",
-    "stratum_cc_library",
-    "stratum_cc_test",
     "STRATUM_INTERNAL",
+    "stratum_cc_library",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     # default_hdrs_check = "strict",
