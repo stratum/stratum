@@ -42,20 +42,20 @@ class P4RuntimeFixture : public testing::Test {
   ~P4RuntimeFixture() override {}
 
   void SetUp() override {
-    // Initialize the connection.
-    ASSERT_OK_AND_ASSIGN(
-        sut_p4rt_session_,
-        P4RuntimeSession::Create(FLAGS_grpc_addr,
-                                 ::grpc::InsecureChannelCredentials(),
-                                 FLAGS_device_id));
-
+    // Check inputs early to avoid creating a session.
     ASSERT_FALSE(FLAGS_p4_info_file.empty());
     ASSERT_FALSE(FLAGS_p4_pipeline_config_file.empty());
     ASSERT_OK(ReadProtoFromTextFile(FLAGS_p4_info_file, &p4info_));
     std::string p4_device_config;
     ASSERT_OK(
         ReadFileToString(FLAGS_p4_pipeline_config_file, &p4_device_config));
-    LOG(ERROR) << "Pushing pipeline";
+
+    // Initialize the connection.
+    ASSERT_OK_AND_ASSIGN(
+        sut_p4rt_session_,
+        P4RuntimeSession::Create(FLAGS_grpc_addr,
+                                 ::grpc::InsecureChannelCredentials(),
+                                 FLAGS_device_id));
     ASSERT_OK(SetForwardingPipelineConfig(sut_p4rt_session_.get(), p4info_,
                                           p4_device_config));
 
@@ -66,6 +66,7 @@ class P4RuntimeFixture : public testing::Test {
     ASSERT_OK_AND_ASSIGN(auto read_back_entries,
                          ReadTableEntries(sut_p4rt_session_.get()));
     ASSERT_EQ(read_back_entries.size(), 0);
+    LOG(INFO) << "Pushed pipeline";
   }
 
   void TearDown() override {

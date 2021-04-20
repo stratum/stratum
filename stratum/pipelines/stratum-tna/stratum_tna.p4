@@ -255,7 +255,7 @@ control StratumIngress(
             //color_source: {ipv4_route.apply(); }
             // missed_source: {ipv4_route.apply(); }
         //}
-        tx_port_counter.count( ig_intr_tm_md.ucast_egress_port);
+        tx_port_counter.count(ig_intr_tm_md.ucast_egress_port);
     }
 }
 

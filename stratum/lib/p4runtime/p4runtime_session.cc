@@ -305,7 +305,7 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
 }
 
 ::util::Status GetForwardingPipelineConfig(P4RuntimeSession* session,
-                                           p4::config::v1::P4Info* p4info,
+                                           P4Info* p4info,
                                            std::string* p4_device_config) {
   GetForwardingPipelineConfigRequest request;
   request.set_device_id(session->DeviceId());

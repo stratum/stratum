@@ -26,6 +26,7 @@ class StratumTnaTest : public P4RuntimeFixture {
  protected:
   void SetUp() override {
     P4RuntimeFixture::SetUp();
+    if (HasFailure()) return;
     ASSERT_OK(BuildP4RTEntityIdReplacementMap(P4Info(), &p4_id_replacements_));
     for (const auto& e : p4_id_replacements_) {
       LOG(INFO) << e.first << " -> " << e.second;
@@ -34,6 +35,8 @@ class StratumTnaTest : public P4RuntimeFixture {
     // TOOD(max): look this up from the switch somehow
     ASSERT_OK(SetSwitchInfo(320));
   }
+
+  void TearDown() override { P4RuntimeFixture::TearDown(); }
 
   ::util::Status SetSwitchInfo(uint16 cpu_port) {
     ::p4::v1::TableEntry entry =
