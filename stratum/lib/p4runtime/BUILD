@@ -42,6 +42,7 @@ stratum_cc_library(
         "//stratum/hal/lib/p4:utils",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
+        "//stratum/lib/channel:channel",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_grpc_grpc//:grpc++_public_hdrs",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
