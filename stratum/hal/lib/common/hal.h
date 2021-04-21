@@ -151,6 +151,7 @@ class Hal final {
   // in the class destructor.
   absl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
 
+  // Thread id for the signal waiter thread.
   pthread_t signal_waiter_tid_;
 
   // The lock used for initialization of the singleton.
