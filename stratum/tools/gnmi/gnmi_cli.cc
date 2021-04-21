@@ -6,7 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <thread>
+#include <thread>  // NOLINT
 #include <vector>
 
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
