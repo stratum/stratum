@@ -5,7 +5,6 @@
 #include <csignal>
 #include <iostream>
 #include <memory>
-#include <regex>  // NOLINT
 #include <string>
 #include <thread>
 #include <vector>
@@ -119,22 +118,19 @@ void AddPathElem(std::string elem_name, std::string elem_kv,
                  ::gnmi::PathElem* elem) {
   elem->set_name(elem_name);
   if (!elem_kv.empty()) {
-    std::regex ex("\\[([^=]+)=([^\\]]+)\\]");
-    std::smatch sm;
-    std::regex_match(elem_kv, sm, ex);
-    (*elem->mutable_key())[sm.str(1)] = sm.str(2);
+    std::string key, value;
+    RE2::FullMatch(elem_kv, "\\[([^=]+)=([^\\]]+)\\]", &key, &value);
+    (*elem->mutable_key())[key] = value;
   }
 }
 
 void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
-  std::regex ex("/([^/\\[]+)(\\[([^=]+=[^\\]]+)\\])?");
-  std::sregex_iterator iter(path_str.begin(), path_str.end(), ex);
-  std::sregex_iterator end;
-  while (iter != end) {
-    std::smatch sm = *iter;
+  re2::StringPiece input(path_str);
+  std::string elem_name, elem_kv;
+  while (RE2::Consume(&input, "/([^/\\[]+)(\\[([^=]+=[^\\]]+)\\])?", &elem_name,
+                      &elem_kv)) {
     auto* elem = path->add_elem();
-    AddPathElem(sm.str(1), sm.str(2), elem);
-    iter++;
+    AddPathElem(elem_name, elem_kv, elem);
   }
 }
 
