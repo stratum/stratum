@@ -6,11 +6,9 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <thread>  // NOLINT
 #include <vector>
 
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
-#include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "gflags/gflags.h"
@@ -104,12 +102,13 @@ void HandleSignal(int signal) {
   if (signal == SIGINT) shutdown.store(true);
 }
 
-void ContextCancelThreadFunc() {
+void* ContextCancelThreadFunc(void*) {
   while (!shutdown.load()) {
     absl::SleepFor(absl::Milliseconds(500));
   }
   if (ctx_) ctx_->TryCancel();
   LOG(INFO) << "Client context cancelled.";
+  return nullptr;
 }
 
 bool StringToBool(std::string str) {
@@ -223,10 +222,14 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   ::grpc::ClientContext ctx;
   ctx_ = &ctx;
   CHECK_RETURN_IF_FALSE(std::signal(SIGINT, HandleSignal) != SIG_ERR);
-  auto context_cancel_thread = std::thread(ContextCancelThreadFunc);
-  auto cleaner = gtl::MakeCleanup([&context_cancel_thread, &ctx] {
+  pthread_t context_cancel_tid;
+  CHECK_RETURN_IF_FALSE(pthread_create(&context_cancel_tid, nullptr,
+                                       ContextCancelThreadFunc, nullptr) == 0);
+  auto cleaner = gtl::MakeCleanup([&context_cancel_tid, &ctx] {
     shutdown.store(true);
-    context_cancel_thread.join();
+    if (pthread_join(context_cancel_tid, nullptr) != 0) {
+      LOG(ERROR) << "Failed to join the context cancel thread.";
+    }
     // We call this to synchronize the internal client context state.
     ctx.TryCancel();
   });
@@ -322,7 +325,6 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   } else {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
   }
-  shutdown.store(true);
   LOG(INFO) << "Done.";
 
   return ::util::OkStatus();
