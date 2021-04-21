@@ -4,7 +4,6 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include <chrono>  // NOLINT
 #include <utility>
 
 #include "absl/base/macros.h"
@@ -245,7 +244,7 @@ void Hal::HandleSignal(int value) {
   // with no deadline will block forever, as it waits for all the active RPCs
   // to finish. To fix this, we give a deadline set to "now" so the call returns
   // immediately.
-  external_server_->Shutdown(std::chrono::system_clock::now());
+  external_server_->Shutdown(absl::ToChronoTime(absl::Now()));
 }
 
 Hal* Hal::CreateSingleton(OperationMode mode, SwitchInterface* switch_interface,
