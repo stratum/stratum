@@ -91,8 +91,11 @@ optional arguments:
   --client-key             gRPC Client key
 )USAGE";
 
-// Flag to indicate that SIGINT has been received and we should shutdown.
+// Atomic flag to indicate that SIGINT has been received and we should shutdown.
 std::atomic_bool shutdown(false);
+// Since we set the shutdown flag from a signal handler, it must be implemented
+// in lock-free manner.
+static_assert(ATOMIC_BOOL_LOCK_FREE == 2, "std::atomic_bool is not lock-free");
 
 // Pointer to the client context to cancel the blocking calls.
 grpc::ClientContext* ctx_ = nullptr;
