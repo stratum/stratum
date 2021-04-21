@@ -4,6 +4,7 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
+#include <atomic>
 #include <utility>
 
 #include "absl/base/macros.h"
@@ -45,12 +46,27 @@ namespace hal {
 
 namespace {
 
+// This atomic int indicates that a signal has been received and we should
+// initiate shutdown.
+std::atomic_int signal_value(0);
+// Since the signal value is set from a signal handler, it must be implemented
+// in lock-free manner to be async-safe.
+static_assert(ATOMIC_INT_LOCK_FREE == 2, "std::atomic_int is not lock-free");
+
 // Signal received callback which is registered as the handler for SIGINT and
 // SIGTERM signals using signal() system call.
-void SignalRcvCallback(int value) {
+void SignalRcvCallback(int value) { signal_value.store(value); }
+
+// Thread waiting for a signal value change and then starting the HAL shutdown.
+void* SignalWaiterThreadFunc(void*) {
+  while (!signal_value.load()) {
+    absl::SleepFor(absl::Milliseconds(500));
+  }
   Hal* hal = Hal::GetSingleton();
-  if (hal == nullptr) return;
-  hal->HandleSignal(value);
+  if (hal == nullptr) return nullptr;
+  hal->HandleSignal(signal_value.load());
+
+  return nullptr;
 }
 
 // Set the channel arguments to match the defualt keep-alive parameters set by
@@ -87,7 +103,8 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       diag_service_(nullptr),
       file_service_(nullptr),
       external_server_(nullptr),
-      old_signal_handlers_() {}
+      old_signal_handlers_(),
+      signal_waiter_tid_(0) {}
 
 Hal::~Hal() {
   // TODO(unknown): Handle this error?
@@ -329,6 +346,10 @@ Hal* Hal::GetSingleton() {
     }
     old_signal_handlers_[s] = h;
   }
+  // Start the signal waiter thread that initiates shutdown.
+  CHECK_RETURN_IF_FALSE(pthread_create(&signal_waiter_tid_, nullptr,
+                                       SignalWaiterThreadFunc, nullptr) == 0)
+      << "Could not start the signal waiter thread.";
 
   return ::util::OkStatus();
 }
@@ -339,6 +360,10 @@ Hal* Hal::GetSingleton() {
     signal(e.first, e.second);
   }
   old_signal_handlers_.clear();
+  // Join thread.
+  if (signal_waiter_tid_ && pthread_join(signal_waiter_tid_, nullptr) != 0) {
+    RETURN_ERROR(ERR_INTERNAL) << "Failed to join the signal waiter thread.";
+  }
 
   return ::util::OkStatus();
 }

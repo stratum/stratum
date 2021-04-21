@@ -151,6 +151,8 @@ class Hal final {
   // in the class destructor.
   absl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
 
+  pthread_t signal_waiter_tid_;
+
   // The lock used for initialization of the singleton.
   static absl::Mutex init_lock_;
 
