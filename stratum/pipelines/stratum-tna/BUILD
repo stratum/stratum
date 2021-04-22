@@ -3,10 +3,17 @@
 
 # Use sh_binary?
 
+load("@rules_cc//cc:defs.bzl", "cc_test")
+load("//stratum/hal/bin/barefoot:bf_pipeline_builder.bzl", "packed_bf_pipeline")
+
 exports_files([
-    "build/device_config.pb.bin",
     "build/p4info.pb.txt",
 ])
+
+packed_bf_pipeline(
+    name = "stratum_tna_device_config",
+    conf = "build/stratum_tna.conf",
+)
 
 cc_test(
     name = "stratum_tna_test",

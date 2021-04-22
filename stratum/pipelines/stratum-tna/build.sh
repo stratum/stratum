@@ -27,8 +27,5 @@ $BF_P4C --arch tna -g --create-graphs --verbose 2 \
       ${DIR}/stratum_tna.p4
 
 # Generate the pipeline config binary.
-bazel run //stratum/hal/bin/barefoot:bf_pipeline_builder -- \
-    -p4c_conf_file=${output_dir}/stratum_tna.conf \
-    -bf_pipeline_config_binary_file=${output_dir}/device_config.pb.bin
+bazel build //stratum/pipelines/stratum-tna:stratum_tna_device_config
 
-echo "Built pipeline: ${output_dir}/device_config.pb.bin"
