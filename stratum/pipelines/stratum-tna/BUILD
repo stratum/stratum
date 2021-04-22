@@ -30,3 +30,9 @@ cc_test(
         "@com_google_googletest//:gtest",
     ],
 )
+
+sh_binary(
+    name = "build",
+    srcs = ["build.sh"],
+    data = ["//stratum/pipelines/stratum-tna:stratum_tna.p4"],
+)
