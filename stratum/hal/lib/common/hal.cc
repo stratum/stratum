@@ -4,7 +4,6 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include <atomic>
 #include <utility>
 
 #include "absl/base/macros.h"
@@ -46,28 +45,9 @@ namespace hal {
 
 namespace {
 
-// This atomic int indicates that a signal has been received and we should
-// initiate shutdown.
-std::atomic_int signal_value(0);
-// Since the signal value is set from a signal handler, it must be implemented
-// in lock-free manner to be async-safe.
-static_assert(ATOMIC_INT_LOCK_FREE == 2, "std::atomic_int is not lock-free");
-
 // Signal received callback which is registered as the handler for SIGINT and
 // SIGTERM signals using signal() system call.
-void SignalRcvCallback(int value) { signal_value.store(value); }
-
-// Thread waiting for a signal value change and then starting the HAL shutdown.
-void* SignalWaiterThreadFunc(void*) {
-  while (!signal_value.load()) {
-    absl::SleepFor(absl::Milliseconds(500));
-  }
-  Hal* hal = Hal::GetSingleton();
-  if (hal == nullptr) return nullptr;
-  hal->HandleSignal(signal_value.load());
-
-  return nullptr;
-}
+void SignalRcvCallback(int value) { Hal::signal_value.store(value); }
 
 // Set the channel arguments to match the defualt keep-alive parameters set by
 // the google3 side net/grpc clients.
@@ -87,6 +67,7 @@ void SetGrpcServerKeepAliveArgs(::grpc::ServerBuilder* builder) {
 
 Hal* Hal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex Hal::init_lock_(absl::kConstInit);
+std::atomic_int Hal::signal_value(0);
 
 Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
          AuthPolicyChecker* auth_policy_checker,
@@ -389,6 +370,17 @@ Hal* Hal::GetSingleton() {
   }
 
   return ::util::OkStatus();
+}
+
+void* Hal::SignalWaiterThreadFunc(void*) {
+  while (!Hal::signal_value.load()) {
+    absl::SleepFor(absl::Milliseconds(500));
+  }
+  Hal* hal = Hal::GetSingleton();
+  if (hal == nullptr) return nullptr;
+  hal->HandleSignal(signal_value.load());
+
+  return nullptr;
 }
 
 }  // namespace hal

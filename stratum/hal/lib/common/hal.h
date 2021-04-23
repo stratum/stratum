@@ -9,6 +9,7 @@
 
 #include <signal.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
@@ -91,6 +92,13 @@ class Hal final {
   Hal(const Hal&) = delete;
   Hal& operator=(const Hal&) = delete;
 
+  // This atomic int indicates that a signal has been received and we should
+  // initiate shutdown.
+  static std::atomic_int signal_value;
+  // Since the signal value is set from a signal handler, it must be implemented
+  // in lock-free manner to be async-safe.
+  static_assert(ATOMIC_INT_LOCK_FREE == 2, "std::atomic_int is not lock-free");
+
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
@@ -109,6 +117,10 @@ class Hal final {
   // Sends an RPC to procmon gRPC service to checkin. To be called before
   // ::grpc::Server::Wait().
   ::util::Status ProcmonCheckin();
+
+  // Thread function waiting for a change of signal_value and then initialting
+  // the HAL shutdown.
+  static void* SignalWaiterThreadFunc(void*);
 
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
