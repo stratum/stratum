@@ -339,7 +339,8 @@ Hal* Hal::GetSingleton() {
   }
   // Create the pipe to transfer signals.
   int pipe_fds[2];
-  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0) << "Could not create pipe.";
+  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
+      << "Could not create pipe for signal handling.";
   pipe_read_fd_ = pipe_fds[0];
   pipe_write_fd_ = pipe_fds[1];
   // Start the signal waiter thread that initiates shutdown.
@@ -356,7 +357,7 @@ Hal* Hal::GetSingleton() {
     signal(e.first, e.second);
   }
   old_signal_handlers_.clear();
-  // Close pipe to unblock the reader thread.
+  // Close pipe to unblock the waiter thread.
   if (pipe_write_fd_ != -1) close(pipe_write_fd_);
   if (pipe_read_fd_ != -1) close(pipe_read_fd_);
   // Join thread.
@@ -392,9 +393,12 @@ Hal* Hal::GetSingleton() {
 
 void* Hal::SignalWaiterThreadFunc(void*) {
   int signal_value;
-  if (read(Hal::pipe_read_fd_, &signal_value, sizeof(signal_value)) !=
-      sizeof(signal_value)) {
-    LOG(ERROR) << "Error reading signal from pipe: " << strerror(errno);
+  int ret = read(Hal::pipe_read_fd_, &signal_value, sizeof(signal_value));
+  if (ret == 0) {  // Pipe has been closed.
+    return nullptr;
+  } else if (ret != sizeof(signal_value)) {
+    LOG(ERROR) << "Error reading complete signal from pipe: " << ret << ": "
+               << strerror(errno);
     return nullptr;
   }
   Hal* hal = Hal::GetSingleton();
