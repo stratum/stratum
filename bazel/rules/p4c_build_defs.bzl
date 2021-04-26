@@ -119,3 +119,41 @@ p4_bmv2_compile = rule(
     },
     output_to_genfiles = True,
 )
+
+def compile_bf_pipeline(name, src):
+    """compiles bf-p4c tna programs
+    """
+    cmd = "bf-p4c --arch tna -g --create-graphs --verbose 2" + \
+          " -o build_out/ " + \
+          " --p4runtime-files build_out/p4info.pb.txt --p4runtime-force-std-externs " + \
+          "$<"
+
+    # $BF_P4C --arch tna -g --create-graphs --verbose 2 \
+    #       -o ${output_dir} -I ${P4_SRC_DIR} \
+    #       ${OTHER_PP_FLAGS} \
+    #       ${p4c_flags} \
+    #       --p4runtime-files ${output_dir}/p4info.pb.txt \
+    #       --p4runtime-force-std-externs \
+    #       ${DIR}/stratum_tna.p4
+
+
+    native.genrule(
+        name = name,
+        srcs = [src],
+        outs = [
+            "build_out/bfrt.json",
+            "build_out/events.json",
+            "build_out/manifest.json",
+            "build_out/p4info.pb.txt",
+            "build_out/source.json", 
+            "build_out/stratum_tna.conf", 
+            "build_out/stratum_tna.p4pp",
+            "build_out/pipe/tofino.bin", 
+            "build_out/pipe/context.json", 
+            "build_out/pipe/stratum_tna.dynhash.json",
+            "build_out/pipe/stratum_tna.bfa",
+            "build_out/pipe/stratum_tna.prim.json"
+        ],
+        # tools = ["//stratum/hal/bin/barefoot:bf_pipeline_builder"],
+        cmd = cmd,
+    )

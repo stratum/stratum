@@ -91,11 +91,11 @@ struct headers_t {
     packet_in_header_t  packet_in;
 }
 
-// struct digest_macs_t {
-//     // mac_addr_t dst_addr;
-//     PortId_t port;
-//     mac_addr_t src_addr;
-// }
+struct digest_macs_t {
+    // mac_addr_t dst_addr;
+    PortId_t port;
+    mac_addr_t src_addr;
+}
 
 parser StratumIngressParser(packet_in pkt,
                             out headers_t hdr,

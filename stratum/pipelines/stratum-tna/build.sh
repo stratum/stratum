@@ -13,11 +13,12 @@ BF_P4C="$SDE_INSTALL/bin/bf-p4c"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 P4_SRC_DIR=${DIR}
-output_dir="${DIR}/build"
+output_dir="${DIR}/build_out"
 p4c_flags=""
 OTHER_PP_FLAGS=$2
 
 rm -rf ${output_dir}
+
 $BF_P4C --arch tna -g --create-graphs --verbose 2 \
       -o ${output_dir} -I ${P4_SRC_DIR} \
       ${OTHER_PP_FLAGS} \
@@ -27,5 +28,5 @@ $BF_P4C --arch tna -g --create-graphs --verbose 2 \
       ${DIR}/stratum_tna.p4
 
 # Generate the pipeline config binary.
-bazel build //stratum/pipelines/stratum-tna:stratum_tna_device_config
+# bazel build //stratum/pipelines/stratum-tna:stratum_tna_device_config
 

@@ -5,14 +5,20 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_test")
 load("//stratum/hal/bin/barefoot:bf_pipeline_builder.bzl", "packed_bf_pipeline")
+load("//bazel/rules:p4c_build_defs.bzl", "compile_bf_pipeline")
 
-exports_files([
-    "build/p4info.pb.txt",
-])
+# exports_files([
+#     "build_out/p4info.pb.txt",
+# ])
+
+compile_bf_pipeline(
+    name = "stratum_tna_compile",
+    src = "stratum_tna.p4"
+)
 
 packed_bf_pipeline(
     name = "stratum_tna_device_config",
-    conf = "build/stratum_tna.conf",
+    conf = "build_out/stratum_tna.conf",
 )
 
 cc_test(
@@ -37,3 +43,4 @@ cc_test(
         "@com_google_googletest//:gtest",
     ],
 )
+
