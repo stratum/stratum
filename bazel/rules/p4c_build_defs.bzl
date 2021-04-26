@@ -120,40 +120,26 @@ p4_bmv2_compile = rule(
     output_to_genfiles = True,
 )
 
-def p4_tna_compile(name, src):
-    """compiles bf-p4c tna programs
-    """
-    cmd = "bf-p4c --arch tna -g --create-graphs --verbose 2" + \
-          " -o build_out/ " + \
-          " --p4runtime-files build_out/p4info.pb.txt --p4runtime-force-std-externs " + \
-          "$<"
-
-    # $BF_P4C --arch tna -g --create-graphs --verbose 2 \
-    #       -o ${output_dir} -I ${P4_SRC_DIR} \
-    #       ${OTHER_PP_FLAGS} \
-    #       ${p4c_flags} \
-    #       --p4runtime-files ${output_dir}/p4info.pb.txt \
-    #       --p4runtime-force-std-externs \
-    #       ${DIR}/stratum_tna.p4
-
+def p4_tna_compile(name, src, out_p4_info, out_bfrt_json, out_p4_pipeline_binary, out_context_json):
+    """Compiles single-pipe TNA P4 programs with the bf-p4c compiler."""
+    cmd = "$(location @local_barefoot_bin//:bf-p4c) --arch tna -g" + \
+          " --create-graphs --verbose 2  --p4runtime-force-std-externs" + \
+          " --p4runtime-files $(@D)/" + out_p4_info + \
+          " --bf-rt-schema $(@D)/" + out_bfrt_json + " -o $(@D)" + \
+          " $<" + \
+          " && cp $(@D)/pipe/tofino.bin $(@D)/" + out_p4_pipeline_binary + \
+          " && cp $(@D)/pipe/context.json $(@D)/" + out_context_json
 
     native.genrule(
         name = name,
         srcs = [src],
         outs = [
-            "build_out/bfrt.json",
-            "build_out/events.json",
-            "build_out/manifest.json",
-            "build_out/p4info.pb.txt",
-            "build_out/source.json", 
-            "build_out/stratum_tna.conf", 
-            "build_out/stratum_tna.p4pp",
-            "build_out/pipe/tofino.bin", 
-            "build_out/pipe/context.json", 
-            "build_out/pipe/stratum_tna.dynhash.json",
-            "build_out/pipe/stratum_tna.bfa",
-            "build_out/pipe/stratum_tna.prim.json"
+            name + ".conf",
+            out_p4_info,
+            out_bfrt_json,
+            out_p4_pipeline_binary,
+            out_context_json,
         ],
-        # tools = ["//stratum/hal/bin/barefoot:bf_pipeline_builder"],
+        tools = ["@local_barefoot_bin//:bf-p4c"],
         cmd = cmd,
     )
