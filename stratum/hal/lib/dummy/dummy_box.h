@@ -120,6 +120,9 @@ class DummyBox : public Test::Service {
       node_event_notify_writers_ GUARDED_BY(sdk_lock_);
   std::shared_ptr<WriterInterface<GnmiEventPtr>> chassis_event_notify_writer_
       GUARDED_BY(sdk_lock_);
+
+  // Thread id of the gRPC server thread.
+  pthread_t external_server_tid_ GUARDED_BY(sdk_lock_);
 };
 
 }  // namespace dummy_switch

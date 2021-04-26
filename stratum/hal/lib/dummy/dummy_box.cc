@@ -197,8 +197,7 @@ DummyBox* DummyBox::GetSingleton() {
 
   // Create another thread to run "external_server_->Wait()" since we can not
   // block the main thread here
-  pthread_t external_server_thread_;
-  int ret = pthread_create(&external_server_thread_, nullptr,
+  int ret = pthread_create(&external_server_tid_, nullptr,
                            ExternalServerWaitingFunc, nullptr);
 
   if (ret != 0) {
@@ -214,12 +213,14 @@ DummyBox* DummyBox::GetSingleton() {
   absl::WriterMutexLock l(&sdk_lock_);
   LOG(INFO) << "Shutting down the DummyBox.";
   external_server_->Shutdown(std::chrono::system_clock::now());
+  if (external_server_tid_) pthread_join(external_server_tid_, nullptr);
   initialized_ = false;
   return ::util::OkStatus();
 }
 
 DummyBox::~DummyBox() {}
-DummyBox::DummyBox() : initialized_(false), xcvr_writer_id_(0) {}
+DummyBox::DummyBox()
+    : initialized_(false), xcvr_writer_id_(0), external_server_tid_(0) {}
 
 }  // namespace dummy_switch
 }  // namespace hal
