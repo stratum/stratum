@@ -137,7 +137,7 @@ fi
 # the jsonschema library. And the new version of pyresistent(0.17.x) requires
 # Python >= 3.5
 # TODO: Remove this once we move to Python3
-$sudo pip install pyrsistent==0.14.0
+# $sudo pip install pyrsistent==0.14.0
 
 # Set up SDE build directory in /tmp
 tmpdir="$(mktemp -d /tmp/bf_sde.XXXXXX)"
