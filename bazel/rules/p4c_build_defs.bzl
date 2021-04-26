@@ -120,7 +120,7 @@ p4_bmv2_compile = rule(
     output_to_genfiles = True,
 )
 
-def compile_bf_pipeline(name, src):
+def p4_tna_compile(name, src):
     """compiles bf-p4c tna programs
     """
     cmd = "bf-p4c --arch tna -g --create-graphs --verbose 2" + \
