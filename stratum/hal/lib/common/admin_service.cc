@@ -2,19 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <string>
-
 #include "stratum/hal/lib/common/admin_service.h"
 
+#include <string>
+
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
+#include "stratum/hal/lib/common/admin_utils_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/hal/lib/common/admin_utils_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -54,8 +54,7 @@ AdminService::AdminService(OperationMode mode,
 ::grpc::Status AdminService::Time(::grpc::ServerContext* context,
                                   const ::gnoi::system::TimeRequest* req,
                                   ::gnoi::system::TimeResponse* resp) {
-  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, Time,
-                           context);
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, Time, context);
   resp->set_time(helper_->GetTime());
   return ::grpc::Status::OK;
 }
@@ -63,8 +62,7 @@ AdminService::AdminService(OperationMode mode,
 ::grpc::Status AdminService::Reboot(::grpc::ServerContext* context,
                                     const ::gnoi::system::RebootRequest* req,
                                     ::gnoi::system::RebootResponse* resp) {
-  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, Reboot,
-                           context);
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, Reboot, context);
   absl::WriterMutexLock l(&reboot_lock_);
 
   if (reboot_timer_) {
@@ -81,26 +79,30 @@ AdminService::AdminService(OperationMode mode,
   if (!req->message().empty()) {
     // TODO(Yi): use reboot(int, int, int, void*) for reboot message
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                            "Reboot message is not supported");
+                          "Reboot message is not supported");
   }
   switch (req->method()) {
-    case gnoi::system::RebootMethod::COLD : {
+    case gnoi::system::RebootMethod::COLD: {
       ++reboot_count_;
-      TimerDaemon::RequestOneShotTimer(delay, [this]() {
-        hal_signal_handle_(SIGINT);
-        return ::util::OkStatus();
-      }, &reboot_timer_);
+      TimerDaemon::RequestOneShotTimer(
+          delay,
+          [this]() {
+            hal_signal_handle_(SIGINT);
+            return ::util::OkStatus();
+          },
+          &reboot_timer_);
       LOG(INFO) << "Rebooting in " << delay << " ms.";
       break;
     }
-    case gnoi::system::RebootMethod::UNKNOWN : {
+    case gnoi::system::RebootMethod::UNKNOWN: {
       return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                             "Invalid reboot method UNKNOWN.");
     }
     default: {
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                            "Unsupported reboot method " +
-                            ::gnoi::system::RebootMethod_Name(req->method()));
+      return ::grpc::Status(
+          ::grpc::StatusCode::UNIMPLEMENTED,
+          "Unsupported reboot method " +
+              ::gnoi::system::RebootMethod_Name(req->method()));
     }
   }
   return ::grpc::Status::OK;
@@ -142,7 +144,6 @@ AdminService::AdminService(OperationMode mode,
 
 ::grpc::Status AdminService::ValidatePackageMessage(
     const gnoi::system::Package& package) {
-
   if (package.activate()) {
     // TODO(unknown): remove when ActivatePackage will be implemented
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
@@ -241,8 +242,7 @@ AdminService::AdminService(OperationMode mode,
                           "The hash method must be specified");
   }
 
-  if (!fs_helper->CheckHashSumFile(tmp_file_name,
-                                   msg.hash().hash(),
+  if (!fs_helper->CheckHashSumFile(tmp_file_name, msg.hash().hash(),
                                    msg.hash().method())) {
     fs_helper->RemoveFile(tmp_file_name);
     fs_helper->RemoveDir(tmp_dir_name);
