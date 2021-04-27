@@ -1,7 +1,6 @@
 // Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <atomic>
 #include <csignal>
 #include <iostream>
 #include <memory>
@@ -9,8 +8,6 @@
 #include <vector>
 
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
 #include "grpcpp/grpcpp.h"
@@ -89,22 +86,31 @@ optional arguments:
   --client-key             gRPC Client key
 )USAGE";
 
-// Atomic flag to indicate that SIGINT has been received and we should shutdown.
-std::atomic_bool shutdown(false);
-// Since we set the shutdown flag from a signal handler, it must be implemented
-// in lock-free manner.
-static_assert(ATOMIC_BOOL_LOCK_FREE == 2, "std::atomic_bool is not lock-free");
+// Pipe file descriptors used to transfer signals from the handler to the cancel
+// function.
+int pipe_read_fd_ = -1;
+int pipe_write_fd_ = -1;
 
 // Pointer to the client context to cancel the blocking calls.
 grpc::ClientContext* ctx_ = nullptr;
 
 void HandleSignal(int signal) {
-  if (signal == SIGINT) shutdown.store(true);
+  static_assert(sizeof(signal) <= PIPE_BUF,
+                "PIPE_BUF is smaller than the number of bytes that can be "
+                "written atomically to a pipe.");
+  // No reasonable error handling possible.
+  write(pipe_write_fd_, &signal, sizeof(signal));
 }
 
 void* ContextCancelThreadFunc(void*) {
-  while (!shutdown.load()) {
-    absl::SleepFor(absl::Milliseconds(500));
+  int signal_value;
+  int ret = read(pipe_read_fd_, &signal_value, sizeof(signal_value));
+  if (ret == 0) {  // Pipe has been closed.
+    return nullptr;
+  } else if (ret != sizeof(signal_value)) {
+    LOG(ERROR) << "Error reading complete signal from pipe: " << ret << ": "
+               << strerror(errno);
+    return nullptr;
   }
   if (ctx_) ctx_->TryCancel();
   LOG(INFO) << "Client context cancelled.";
@@ -221,15 +227,26 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
 
   ::grpc::ClientContext ctx;
   ctx_ = &ctx;
+  // Create the pipe to transfer signals.
+  {
+    int pipe_fds[2];
+    CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
+        << "Could not create pipe for signal handling.";
+    pipe_read_fd_ = pipe_fds[0];
+    pipe_write_fd_ = pipe_fds[1];
+  }
   CHECK_RETURN_IF_FALSE(std::signal(SIGINT, HandleSignal) != SIG_ERR);
   pthread_t context_cancel_tid;
   CHECK_RETURN_IF_FALSE(pthread_create(&context_cancel_tid, nullptr,
                                        ContextCancelThreadFunc, nullptr) == 0);
   auto cleaner = gtl::MakeCleanup([&context_cancel_tid, &ctx] {
-    shutdown.store(true);
+    int signal = SIGINT;
+    write(pipe_write_fd_, &signal, sizeof(signal));
     if (pthread_join(context_cancel_tid, nullptr) != 0) {
       LOG(ERROR) << "Failed to join the context cancel thread.";
     }
+    close(pipe_write_fd_);
+    close(pipe_read_fd_);
     // We call this to synchronize the internal client context state.
     ctx.TryCancel();
   });
