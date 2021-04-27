@@ -2,6 +2,9 @@
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+# For bfrt_python
+export PYTHONPATH=/usr
+
 FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
 
 # Find kernel module if KDRV_PATH is not set
@@ -85,9 +88,6 @@ else
 fi
 
 mkdir -p /var/run/stratum /var/log/stratum
-
-export PYTHONHOME=/usr/lib/python3.4/
-export PYTHONPATH=/usr/lib/python3.4/
 
 exec /usr/bin/stratum_bf \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
