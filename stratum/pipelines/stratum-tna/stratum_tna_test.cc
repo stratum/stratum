@@ -13,6 +13,9 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
+DECLARE_string(p4_info_file);
+DECLARE_string(p4_pipeline_config_file);
+
 namespace stratum {
 namespace pipelines {
 namespace stratum_tna {
@@ -25,6 +28,10 @@ using p4runtime::P4RuntimeFixture;
 class StratumTnaTest : public P4RuntimeFixture {
  protected:
   void SetUp() override {
+    FLAGS_p4_info_file =
+        "stratum/pipelines/stratum-tna/stratum_tna_p4info.pb.txt";
+    FLAGS_p4_pipeline_config_file =
+        "stratum/pipelines/stratum-tna/stratum_tna.pb.bin";
     P4RuntimeFixture::SetUp();
     if (HasFailure()) return;
     ASSERT_OK(BuildP4RTEntityIdReplacementMap(P4Info(), &p4_id_replacements_));
