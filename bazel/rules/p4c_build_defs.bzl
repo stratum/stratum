@@ -120,26 +120,23 @@ p4_bmv2_compile = rule(
     output_to_genfiles = True,
 )
 
-def p4_tna_compile(name, src, out_p4_info, out_bfrt_json, out_p4_pipeline_binary, out_context_json):
+def p4_tna_compile(name, src):
     """Compiles single-pipe TNA P4 programs with the bf-p4c compiler."""
     cmd = "$(location @local_barefoot_bin//:bf-p4c) --arch tna -g" + \
           " --create-graphs --verbose 2  --p4runtime-force-std-externs" + \
-          " --p4runtime-files $(@D)/" + out_p4_info + \
-          " --bf-rt-schema $(@D)/" + out_bfrt_json + " -o $(@D)" + \
-          " $<" + \
-          " && cp $(@D)/pipe/tofino.bin $(@D)/" + out_p4_pipeline_binary + \
-          " && cp $(@D)/pipe/context.json $(@D)/" + out_context_json
+          " --p4runtime-files $(@D)/p4info.pb.txt" + \
+          " --bf-rt-schema $(@D)/bfrt.json -o $(@D) $<" + \
+          " && CONF_FILE=`ls $(@D)/*.conf | head -1`" + \
+          " && $(location //stratum/hal/bin/barefoot:bf_pipeline_builder) -p4c_conf_file=$$CONF_FILE -bf_pipeline_config_binary_file=$(@D)/" + name + ".pb.bin" + \
+          " && cp $(@D)/p4info.pb.txt $(@D)/" + name + "_p4info.pb.txt"
 
     native.genrule(
         name = name,
         srcs = [src],
-        outs = [
-            name + ".conf",
-            out_p4_info,
-            out_bfrt_json,
-            out_p4_pipeline_binary,
-            out_context_json,
+        outs = [name + ".pb.bin", name + "_p4info.pb.txt"],
+        tools = [
+            "@local_barefoot_bin//:bf-p4c",
+            "//stratum/hal/bin/barefoot:bf_pipeline_builder",
         ],
-        tools = ["@local_barefoot_bin//:bf-p4c"],
         cmd = cmd,
     )

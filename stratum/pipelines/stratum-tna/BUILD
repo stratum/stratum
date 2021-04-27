@@ -10,16 +10,12 @@ load("//bazel/rules:p4c_build_defs.bzl", "p4_tna_compile")
 p4_tna_compile(
     name = "stratum_tna",
     src = "stratum_tna.p4",
-    out_bfrt_json = "stratum_tna_bfrt.json",
-    out_context_json = "stratum_tna_context.json",
-    out_p4_info = "stratum_tna_p4info.pb.txt",
-    out_p4_pipeline_binary = "stratum_tna.bin",
 )
 
-packed_bf_pipeline(
-    name = "stratum_tna_device_config",
-    conf = "stratum_tna.conf",
-)
+# packed_bf_pipeline(
+#     name = "stratum_tna_device_config",
+#     src = ["stratum_tna.tar"],
+# )
 
 cc_test(
     name = "stratum_tna_test",
