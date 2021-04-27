@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 FROM bitnami/minideb:stretch
-ADD ./stratum-replay /
+ADD ./stratum_replay /
 
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
-LABEL description="Docker-based distribution of the stratum-replay tool"
+LABEL description="Docker-based distribution of the stratum_replay tool"
 
-ENTRYPOINT [ "/stratum-replay" ]
+ENTRYPOINT [ "/stratum_replay" ]

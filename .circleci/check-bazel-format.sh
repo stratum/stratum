@@ -66,7 +66,7 @@ stratum/testing/protos/BUILD
 stratum/testing/scenarios/BUILD
 stratum/testing/tests/BUILD
 stratum/tools/gnmi/BUILD
-stratum/tools/stratum-replay/BUILD
+stratum/tools/stratum_replay/BUILD
 \0
 EOF
 

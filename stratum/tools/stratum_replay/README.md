@@ -59,11 +59,11 @@ $ ls
 p4_writes.pb.txt  pipeline_cfg.pb.txt
 ```
 
-Copy those files to your laptop or the place you are going to run stratum-replay tool.
+Copy those files to your laptop or the place you are going to run stratum_replay tool.
 
 ## Step 2 - Replay the pipeline, and P4Runtime writes
 
-We provide a container image that includes a prebuilt stratum-replay binary.
+We provide a container image that includes a prebuilt stratum_replay binary.
 
 To use it, you can run the following commands:
 
@@ -71,7 +71,7 @@ To use it, you can run the following commands:
 docker run \
   -v $PWD:$PWD \
   -w $PWD \
-  stratumproject/stratum-replay \
+  stratumproject/stratum_replay \
   -grpc-addr="ip-of-switch-to-replay-on:9339" \
   -pipeline-cfg pipeline_cfg.pb.txt \
   p4_writes.pb.txt
@@ -122,7 +122,7 @@ for a given pipeline config file.
 
 # Usage and available options:
 
-`stratum-replay [options] [p4runtime write log file]`
+`stratum_replay [options] [p4runtime write log file]`
 
 ```
 -device_id: The device ID (default: 1)
