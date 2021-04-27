@@ -129,3 +129,8 @@ config_setting(
         ":sde_version_setting": "9.5.0",
     },
 )
+
+alias(
+    name = "bf-p4c",
+    actual = "barefoot-bin/bin/bf-p4c",
+)
