@@ -10,7 +10,7 @@ gNMI tool
 ### Usage
 
 ```
-usage: gnmi-cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
+usage: gnmi_cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
 
 Basic gNMI CLI
 
@@ -38,14 +38,14 @@ optional arguments:
 
 ```
 # To get port index (which is used when referring to a port in P4Runtime)
-bazel run //stratum/tools/gnmi:gnmi-cli -- get /interfaces/interface[name=1/1/1]/state/ifindex
+bazel run //stratum/tools/gnmi:gnmi_cli -- get /interfaces/interface[name=1/1/1]/state/ifindex
 
 # To set port health indicator
-bazel run //stratum/tools/gnmi:gnmi-cli -- set /interfaces/interface[name=1/1/1]/config/health-indicator --string-val GOOD
+bazel run //stratum/tools/gnmi:gnmi_cli -- set /interfaces/interface[name=1/1/1]/config/health-indicator --string-val GOOD
 
 # To subscribe one sample of port operation status per second
-bazel run //stratum/tools/gnmi:gnmi-cli -- sub-sample /interfaces/interface[name=1/1/1]/state/oper-status --interval 1000
+bazel run //stratum/tools/gnmi:gnmi_cli -- sub-sample /interfaces/interface[name=1/1/1]/state/oper-status --interval 1000
 
 # To push chassis config
-bazel run //stratum/tools/gnmi:gnmi-cli -- --replace --bytes_val_file [chassis config file] set /
+bazel run //stratum/tools/gnmi:gnmi_cli -- --replace --bytes_val_file [chassis config file] set /
 ```
