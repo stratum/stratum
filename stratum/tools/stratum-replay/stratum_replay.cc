@@ -66,10 +66,10 @@ using ClientStreamChannelReaderWriter =
   auto channel_credentials = ::grpc::InsecureChannelCredentials();
   if (!FLAGS_ca_cert.empty()) {
     ::grpc::string pem_root_certs;
-    ::grpc_impl::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
+    ::grpc::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
         pem_key_cert_pair;
     auto key_materials_config =
-        std::make_shared<::grpc_impl::experimental::TlsKeyMaterialsConfig>();
+        std::make_shared<::grpc::experimental::TlsKeyMaterialsConfig>();
     RETURN_IF_ERROR(ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
     key_materials_config->set_pem_root_certs(pem_root_certs);
 
@@ -80,7 +80,7 @@ using ClientStreamChannelReaderWriter =
           FLAGS_client_key, &pem_key_cert_pair.private_key));
       key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
     }
-    auto cred_opts = ::grpc_impl::experimental::TlsCredentialsOptions(
+    auto cred_opts = ::grpc::experimental::TlsCredentialsOptions(
         GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
         key_materials_config, nullptr, nullptr);
     channel_credentials = grpc::experimental::TlsCredentials(cred_opts);
