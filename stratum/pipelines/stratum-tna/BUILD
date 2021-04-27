@@ -4,7 +4,6 @@
 # Use sh_binary?
 
 load("@rules_cc//cc:defs.bzl", "cc_test")
-load("//stratum/hal/bin/barefoot:bf_pipeline_builder.bzl", "packed_bf_pipeline")
 load("//bazel/rules:p4c_build_defs.bzl", "p4_tna_compile")
 
 p4_tna_compile(
@@ -20,6 +19,10 @@ p4_tna_compile(
 cc_test(
     name = "stratum_tna_test",
     srcs = ["stratum_tna_test.cc"],
+    data = [
+        "stratum_tna.pb.bin",
+        "stratum_tna_p4info.pb.txt",
+    ],
     linkstatic = True,
     tags = ["manual"],
     deps = [
