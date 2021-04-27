@@ -85,7 +85,7 @@ cd stratum
 :pencil2: (Optional) You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
 
 ```
-for port in 9339 9559 28000; do
+for port in 9339 9559; do
     ssh \
         -o ExitOnForwardFailure=yes \
         -f \

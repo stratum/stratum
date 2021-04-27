@@ -20,8 +20,7 @@ fi
 if [[ "$PLATFORM" == 'barefoot-tofino-model' ]]; then
     DOCKER_NET_OPTS="--network host "
 else
-    DOCKER_NET_OPTS="-p 28000:28000 "
-    DOCKER_NET_OPTS+="-p 9339:9339 "
+    DOCKER_NET_OPTS="-p 9339:9339 "
     DOCKER_NET_OPTS+="-p 9559:9559 "
 fi
 

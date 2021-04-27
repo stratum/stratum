@@ -70,7 +70,7 @@ def setup_and_launch_ptf_runner(device, pipeline_name, protobuf_dir, ptf_dir, sc
             " --device-id 1" +\
             " --device " + device +\
             " --port-map " + EXTERNAL_PATH_P4_FABRIC_TEST + "/port_map.veth.json" +\
-            " --grpc-addr localhost:28000" +\
+            " --grpc-addr localhost:9559" +\
             " --p4info " + PIPELINE_PATH_BINARY + pipeline_name + ".p4info" +\
             " --bmv2-json " + PIPELINE_PATH_BINARY + pipeline_name + ".json" +\
             " --cpu-port 64" +\

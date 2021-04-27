@@ -30,14 +30,12 @@ constexpr char kDefaultAuthPolicyFilePath[] =
 
 // This URL is used by a local Stratum stub binary running on the switch to
 // talk to Stratum process over an insecure connection.
-constexpr char kLocalStratumUrl[] = "localhost:28000";
+constexpr char kLocalStratumUrl[] = "localhost:9559";
 
 // This URL is used by external gNMI, gNOI and P4Runtime clients.
 // TCP port 9339 is an IANA-reserved port for gNMI and gNOI.
 // TCP port 9559 is an IANA-reserved port for P4Runtime.
-// TODO(max): Remove the deprecated port 28000 from default list.
-constexpr char kExternalStratumUrls[] =
-    "0.0.0.0:28000,0.0.0.0:9339,0.0.0.0:9559";
+constexpr char kExternalStratumUrls[] = "0.0.0.0:9339,0.0.0.0:9559";
 
 // Default URLs for the Sandcastle services Stratum service will connect to
 // over gRPC.
