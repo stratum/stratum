@@ -16,4 +16,4 @@ testing and demonstration purposes.
 
 ## Testing
 
-- `bazel run //stratum/pipelines/stratum-tna:stratum_tna_test -- --grpc_addr=<switch_address>
+- `bazel run //stratum/pipelines/stratum-tna:stratum_tna_test -- --grpc_addr=<switch_address>`
