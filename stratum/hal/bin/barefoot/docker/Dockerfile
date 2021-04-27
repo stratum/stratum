@@ -10,7 +10,6 @@ ADD ./${STRATUM_TARGET}_deb.deb /
 RUN install_packages ./${STRATUM_TARGET}_deb.deb
 RUN rm ./${STRATUM_TARGET}_deb.deb
 
-EXPOSE 28000/tcp
 EXPOSE 9339/tcp
 EXPOSE 9559/tcp
 
