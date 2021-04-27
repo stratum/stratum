@@ -59,6 +59,7 @@ pkg_tar_with_symlinks(
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
+        "barefoot-bin/lib/python3.4/**/*",
     ]),
     mode = "0644",
     package_dir = "/usr",

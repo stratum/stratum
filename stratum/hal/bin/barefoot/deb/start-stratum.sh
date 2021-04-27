@@ -60,7 +60,7 @@ fi
 # Set up port map for device
 PORT_MAP="/etc/stratum/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
-    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]]; then 
+    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]]; then
         echo "Cannot find port map file $PORT_MAP for $PLATFORM"
         exit 255
     fi
@@ -85,6 +85,9 @@ else
 fi
 
 mkdir -p /var/run/stratum /var/log/stratum
+
+export PYTHONHOME=/usr/lib/python3.4/
+export PYTHONPATH=/usr/lib/python3.4/
 
 exec /usr/bin/stratum_bf \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
