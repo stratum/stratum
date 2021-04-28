@@ -1,2 +1,4 @@
--bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+-bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf
 -bf_switchd_background=true
+-enable_onlp=false
+-bf_sim
