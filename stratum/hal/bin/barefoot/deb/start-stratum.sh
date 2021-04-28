@@ -60,7 +60,7 @@ fi
 # Set up port map for device
 PORT_MAP="/etc/stratum/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
-    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]]; then 
+    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]] && [[ "$PLATFORM" != 'tahoe-imt-2624b' ]]; then
         echo "Cannot find port map file $PORT_MAP for $PLATFORM"
         exit 255
     fi
