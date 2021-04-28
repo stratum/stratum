@@ -13,9 +13,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(p4_info_file);
-DECLARE_string(p4_pipeline_config_file);
-
 namespace stratum {
 namespace pipelines {
 namespace stratum_tna {
