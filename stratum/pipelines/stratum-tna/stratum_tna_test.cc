@@ -111,9 +111,10 @@ class StratumTnaTest : public P4RuntimeFixture {
 };
 
 TEST_F(StratumTnaTest, InsertTableEntry) {
-  ASSERT_OK(InstallTableEntry(
-      SutP4RuntimeSession(),
-      CreateIpv4RouteEntry("\x0a\x00\x00\x01", 24, 1, 0x000000aaaaaa)));
+  ASSERT_OK(
+      InstallTableEntry(SutP4RuntimeSession(),
+                        CreateIpv4RouteEntry(std::string("\x0a\x00\x00\x00", 4),
+                                             24, 1, 0x000000aaaaaa)));
 }
 
 }  // namespace
