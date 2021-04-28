@@ -2,19 +2,18 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
-    "stratum_cc_library",
     "STRATUM_INTERNAL",
 )
 
+licenses(["notice"])  # Apache v2
+
 package(
-#    default_copts = [
-#        "-DDISABLE_GOOGLE_GLOBAL_USING_DECLARATIONS",
-#    ],
-#    default_hdrs_check = "warn",
+    # default_copts = [
+    #     "-DDISABLE_GOOGLE_GLOBAL_USING_DECLARATIONS",
+    # ],
+    # default_hdrs_check = "warn",
     default_visibility = STRATUM_INTERNAL,
 )
 
@@ -68,12 +67,12 @@ cc_library(
         ":midend_p4c_open",
         ":p4c_front_mid_interface",
         "//stratum/glue:logging",
-        "@com_google_absl//absl/debugging:leak_check",
-        "@com_google_absl//absl/memory",
         "@com_github_p4lang_p4c//:control_plane",
         "@com_github_p4lang_p4c//:control_plane_h",
         "@com_github_p4lang_p4c//:p4c_frontend_midend",
         "@com_github_p4lang_p4c//:p4c_toolkit",
+        "@com_google_absl//absl/debugging:leak_check",
+        "@com_google_absl//absl/memory",
     ],
 )
 
@@ -93,15 +92,15 @@ cc_library(
         ":backend_extension_interface",
         ":p4c_front_mid_interface",
         "//stratum/glue:logging",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "@com_github_p4lang_p4c//:p4c_backend_p4test_lib",
         "@com_github_p4lang_p4c//:p4c_frontend_midend",
         "@com_github_p4lang_p4c//:p4c_ir",
-        "@com_github_p4lang_p4c//:p4c_backend_p4test_lib",
         "@com_github_p4lang_p4c//:p4c_toolkit",
-        "@com_google_protobuf//:protobuf",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "//stratum/lib:utils",
-        "//stratum/lib:macros",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -120,10 +119,10 @@ cc_test(
         ":backend_pass_manager",
         ":p4c_common_mocks",
         "//stratum/glue:logging",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
         "@com_github_p4lang_p4c//:p4c_frontend_midend",
         "@com_github_p4lang_p4c//:p4c_ir",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -164,11 +163,11 @@ cc_test(
     deps = [
         ":midend_p4c_open",
         "//stratum/glue:logging",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
         "@com_github_p4lang_p4c//:p4c_frontend_midend",
         "@com_github_p4lang_p4c//:p4c_ir",
-        "//stratum/p4c_backends/test:ir_test_helpers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -181,9 +180,9 @@ cc_library(
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
+        "//stratum/glue:logging",
         "@com_github_p4lang_p4c//:p4c_frontend_midend",
         "@com_github_p4lang_p4c//:p4c_ir",
-        "//stratum/glue:logging",
     ],
 )
 
@@ -205,10 +204,10 @@ cc_test(
     deps = [
         ":program_inspector",
         "//stratum/glue:logging",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
         "@com_github_p4lang_p4c//:p4c_frontend_midend",
         "@com_github_p4lang_p4c//:p4c_ir",
-        "//stratum/p4c_backends/test:ir_test_helpers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
