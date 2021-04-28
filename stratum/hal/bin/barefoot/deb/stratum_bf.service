@@ -5,6 +5,7 @@ Description=Stratum service
 Documentation=https://www.opennetworking.org/stratum/
 ConditionPathExists=/usr/bin/stratum_bf
 ConditionPathExists=/usr/bin/start-stratum.sh
+After=boardutil.service
 
 [Service]
 Type=simple
