@@ -151,7 +151,9 @@ cp -f $STRATUM_BF_DIR/stratum_profile.yaml $SDE/p4studio_build/profiles/
 
 # Build BF SDE
 pushd $SDE/p4studio_build
-./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc
+# TODO: add ability to push custom flags
+#./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc
+./p4studio_build.py -up stratum_profile -imt -fa -wk -j$JOBS
 popd
 echo "BF SDE build complete."
 
