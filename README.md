@@ -65,7 +65,7 @@ Also see the chapter about
 - [gNMI CLI Tool](/stratum/tools/gnmi/README.md)
 - [Tofino Pipeline Builder](/stratum/hal/bin/barefoot/README.pipeline.md#stratum-bfpipelineconfig-format-and-the-bfpipelinebuilder)
 - [Stratum-Enabled Mininet](/tools/mininet/README.md)
-- [P4Runtime write request replay tool](/stratum/tools/stratum-replay/README.md)
+- [P4Runtime write request replay tool](/stratum/tools/stratum_replay/README.md)
 - [ChassisConfig Migrator](/stratum/hal/config/chassis_config_migrator.cc)
 - [PHAL CLI Tool](/stratum/hal/lib/phal/phal_cli.cc)
 - [ONLP CLI Tool](/stratum/hal/lib/phal/onlp/onlp_cli.cc)

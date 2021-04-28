@@ -15,7 +15,7 @@ package(
 )
 
 stratum_cc_binary(
-    name = "gnmi-cli",
+    name = "gnmi_cli",
     srcs = ["gnmi_cli.cc"],
     arches = HOST_ARCHES,
     deps = [

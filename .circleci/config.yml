@@ -284,7 +284,7 @@ jobs:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/tools/stratum-replay
+      - DOCKER_SCOPE: stratum/tools/stratum_replay
       - DOCKER_FILE: Dockerfile
       - DOCKER_IMG: stratumproject/stratum-replay
       - CC: clang
@@ -295,14 +295,14 @@ jobs:
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
-          name: Build stratum-replay
+          name: Build stratum_replay
           command: |
-            bazel build --config=release //stratum/tools/stratum-replay:stratum-replay
-            cp bazel-bin/stratum/tools/stratum-replay/stratum-replay $DOCKER_SCOPE
+            bazel build --config=release //stratum/tools/stratum_replay:stratum_replay
+            cp bazel-bin/stratum/tools/stratum_replay/stratum_replay $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - run:
-          name: Test stratum-replay Docker image
+          name: Test stratum_replay Docker image
           command: |
             docker run $DOCKER_IMG -version
       - *docker_push

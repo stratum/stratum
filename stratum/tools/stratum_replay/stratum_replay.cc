@@ -38,7 +38,7 @@ namespace tools {
 namespace p4rt_replay {
 
 const char kUsage[] = R"USAGE(
-Usage: stratum-replay [options] [p4runtime write log file]
+Usage: stratum_replay [options] [p4runtime write log file]
   This tool replays P4Runtime write requests to a Stratum device from a given
   Stratum P4Runtime write request log.
 

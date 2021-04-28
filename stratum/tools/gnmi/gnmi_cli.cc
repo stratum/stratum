@@ -21,7 +21,7 @@
 #include "stratum/lib/utils.h"
 
 const char kUsage[] =
-    R"USAGE(usage: gnmi-cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
+    R"USAGE(usage: gnmi_cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
 
 Basic gNMI CLI
 
