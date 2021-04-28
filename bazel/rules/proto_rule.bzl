@@ -3,19 +3,19 @@
 
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
-def wrapped_proto_library(name,
-                          srcs = [],
-                          new_proto_dir = "",
-                          rewrite_proto_imports = None,
-                          deps = [],
-                          proto_source_root = ""):
-
+def wrapped_proto_library(
+        name,
+        srcs = [],
+        new_proto_dir = "",
+        rewrite_proto_imports = None,
+        deps = [],
+        proto_source_root = ""):
     if rewrite_proto_imports:
         for item in rewrite_proto_imports.items():
             old_prefix = item[0]
             prefix = item[1]
             if "#" in prefix or "#" in old_prefix:
-              fail("prefix and old_prefix cannot contain #")
+                fail("prefix and old_prefix cannot contain #")
             cmd = "sed 's#import[ \t]*\"%s#import \"%s#g' $< > $(OUTS)" % (old_prefix, prefix)
     else:
         cmd = "cp $< $(OUTS)"
@@ -41,9 +41,9 @@ def wrapped_proto_library(name,
             gen_srcs.append(src)
 
     proto_library(
-      name = name,
-      srcs = gen_srcs,
-      deps = deps
+        name = name,
+        srcs = gen_srcs,
+        deps = deps,
     )
 
 # --------------- NOTES ------------------

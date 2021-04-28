@@ -17,7 +17,9 @@ bazel/google/BUILD
 bazel/patches/BUILD
 bazel/rules/BUILD
 bazel/rules/build_tools.bzl
+bazel/rules/lexyacc.bzl
 bazel/rules/proto_gen.bzl
+bazel/rules/proto_rule.bzl
 bazel/rules/test_rule.bzl
 bazel/rules/yang_to_proto_rule.bzl
 stratum/BUILD
@@ -46,9 +48,14 @@ stratum/hal/lib/phal/tai/BUILD
 stratum/hal/lib/phal/test/BUILD
 stratum/hal/lib/pi/BUILD
 stratum/hal/stub/embedded/BUILD
+stratum/lib/BUILD
+stratum/lib/channel/BUILD
+stratum/lib/test_utils/BUILD
+stratum/p4c_backends/common/BUILD
 stratum/p4c_backends/common/build_defs.bzl
 stratum/p4c_backends/fpm/bcm/BUILD
 stratum/p4c_backends/ir/BUILD
+stratum/p4c_backends/test/BUILD
 stratum/p4c_backends/test/build_defs.bzl
 stratum/pipelines/loopback/BUILD
 stratum/pipelines/main/BUILD
@@ -57,6 +64,7 @@ stratum/pipelines/ptf/ptf_exec.bzl
 stratum/pipelines/ptf/scapy_exec.bzl
 stratum/portage/BUILD
 stratum/portage/build_defs.bzl
+stratum/procmon/BUILD
 stratum/public/lib/BUILD
 stratum/public/model/BUILD
 stratum/public/proto/BUILD
