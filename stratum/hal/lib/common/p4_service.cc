@@ -47,6 +47,10 @@ DEFINE_int32(max_num_controllers_per_node, 5,
 DEFINE_int32(max_num_controller_connections, 20,
              "Max number of active/inactive streaming connections from outside "
              "controllers (for all of the nodes combined).");
+DEFINE_int32(incompatible_legacy_bytestring_responses, false,
+             "Enables the legacy padded byte string format in P4Runtime "
+             "responses. The strings are left unchanged from the underlying "
+             "switch implementation.");
 
 namespace stratum {
 namespace hal {
@@ -304,12 +308,6 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Write from non-master is not permitted.");
   }
 
-  // Check bytestrings here.
-  ::util::Status ret = IsInCanonicalByteStringFormat(*req);
-  if (!ret.ok()) {
-    return ToGrpcStatus(ret, {});
-  }
-
   std::vector<::util::Status> results = {};
   absl::Time timestamp = absl::Now();
   ::util::Status status =
@@ -336,12 +334,17 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid device ID.");
   }
 
+  WriterInterface<::p4::v1::ReadResponse>* w;
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
   P4BytestringVerifierWrapper w2(&wrapper);
+  w = &wrapper;
+  if (!FLAGS_incompatible_legacy_bytestring_responses) {
+    w = &w2;
+  }
   std::vector<::util::Status> details = {};
   absl::Time timestamp = absl::Now();
   ::util::Status status =
-      switch_interface_->ReadForwardingEntries(*req, &w2, &details);
+      switch_interface_->ReadForwardingEntries(*req, w, &details);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();
@@ -897,7 +900,7 @@ void P4Service::StreamResponseReceiveHandler(
     LOG(FATAL) << "Received MasterArbitrationUpdate from switch. This should "
                   "never happen!";
   }
-  if (resp->has_packet()) {
+  if (resp->has_packet() && !FLAGS_incompatible_legacy_bytestring_responses) {
     CanonicalizePacketIn(resp->mutable_packet());
   }
 
