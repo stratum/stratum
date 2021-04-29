@@ -1,0 +1,529 @@
+description: "Default Chassis Config for imt2624b"
+chassis {
+  platform: PLT_GENERIC_BAREFOOT_TOFINO
+  name: "tahoe-imt-2624b"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 100
+  name: "veth1"
+  slot: 1
+  port: 1
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 101
+  name: "veth2"
+  slot: 2
+  port: 2
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 102
+  name: "veth3"
+  slot: 3
+  port: 3
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 103
+  name: "veth4"
+  slot: 4
+  port: 4
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 104
+  name: "veth5"
+  slot: 5
+  port: 5
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 105
+  name: "veth6"
+  slot: 6
+  port: 6
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 106
+  name: "veth7"
+  slot: 7
+  port: 7
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 107
+  name: "veth8"
+  slot: 8
+  port: 8
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 108
+  name: "veth9"
+  slot: 9
+  port: 9
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 109
+  name: "veth10"
+  slot: 10
+  port: 10
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 110
+  name: "veth11"
+  slot: 11
+  port: 11
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 111
+  name: "veth12"
+  slot: 12
+  port: 12
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 112
+  name: "veth13"
+  slot: 13
+  port: 13
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 113
+  name: "veth14"
+  slot: 14
+  port: 14
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 114
+  name: "veth15"
+  slot: 15
+  port: 15
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 115
+  name: "veth16"
+  slot: 16
+  port: 16
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 116
+  name: "veth17"
+  slot: 17
+  port: 17
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 117
+  name: "veth18"
+  slot: 18
+  port: 18
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 118
+  name: "veth19"
+  slot: 19
+  port: 19
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 119
+  name: "veth20"
+  slot: 20
+  port: 20
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 120
+  name: "veth21"
+  slot: 21
+  port: 21
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 121
+  name: "veth22"
+  slot: 22
+  port: 22
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 122
+  name: "veth23"
+  slot: 23
+  port: 23
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 123
+  name: "veth24"
+  slot: 24
+  port: 24
+  channel: 1
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 124
+  name: "veth25"
+  slot: 25
+  port: 25
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 125
+  name: "veth26"
+  slot: 26
+  port: 26
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 126
+  name: "veth27"
+  slot: 27
+  port: 27
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+
+singleton_ports {
+  id: 127
+  name: "veth28"
+  slot: 28
+  port: 28
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 128
+  name: "veth29"
+  slot: 29
+  port: 29
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 129
+  name: "veth30"
+  slot: 30
+  port: 30
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 130
+  name: "veth31"
+  slot: 31
+  port: 31
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 131
+  name: "veth32"
+  slot: 32
+  port: 32
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 132
+  name: "veth33"
+  slot: 33
+  port: 33
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 133
+  name: "veth34"
+  slot: 34
+  port: 34
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 134
+  name: "veth35"
+  slot: 35
+  port: 35
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 135
+  name: "veth36"
+  slot: 36
+  port: 36
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 136
+  name: "veth37"
+  slot: 37
+  port: 37
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 137
+  name: "veth38"
+  slot: 38
+  port: 38
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 138
+  name: "veth39"
+  slot: 39
+  port: 39
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+
+singleton_ports {
+  id: 139
+  name: "veth40"
+  slot: 40
+  port: 40
+  channel: 1
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}

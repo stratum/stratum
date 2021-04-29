@@ -18,6 +18,9 @@ stratum_profile:
       - bf_drivers_configure_options: ''
       - pi
       - bf-runtime
+    - bf-platforms:
+      - bf_platforms_configure_options: 'enable_thrift=no --with-tahoeimt-plat'
+      - bsp_path: '/bf-platforms'
 
   # Tofino architecture
-  tofino_architecture: all
+  tofino_architecture: tofino
