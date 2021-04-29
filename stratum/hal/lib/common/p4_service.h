@@ -216,7 +216,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // Callback to be called whenever we receive a stream response on the
   // specified node which is destined to controller.
   void StreamResponseReceiveHandler(uint64 node_id,
-                                    const ::p4::v1::StreamMessageResponse& resp)
+                                    ::p4::v1::StreamMessageResponse* resp)
       LOCKS_EXCLUDED(controller_lock_);
 
   // Mutex lock used to protect node_id_to_controllers_ which is updated

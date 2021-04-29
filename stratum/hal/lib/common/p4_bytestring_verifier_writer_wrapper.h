@@ -73,6 +73,14 @@ inline ::util::Status IsInCanonicalByteStringFormat(
   return ::util::OkStatus();
 }
 
+// Canonicalizes the metadata byte strings of a PacketIn.
+inline ::util::Status CanonicalizePacketIn(::p4::v1::PacketIn* packet) {
+  for (auto& metadata : *packet->mutable_metadata()) {
+    metadata.set_value(ByteStringToP4RuntimeByteString(metadata.value()));
+  }
+  return ::util::OkStatus();
+}
+
 // Wrapper
 class P4BytestringVerifierWrapper
     : public WriterInterface<::p4::v1::ReadResponse> {
