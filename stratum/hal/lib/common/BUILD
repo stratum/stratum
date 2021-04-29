@@ -560,6 +560,7 @@ stratum_cc_library(
         ":error_buffer",
         ":server_writer_wrapper",
         ":switch_interface",
+        ":p4_bytestring_verifier_writer_wrapper",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
@@ -679,6 +680,14 @@ stratum_cc_library(
     deps = [
         ":writer_interface",
         "//stratum/lib/channel",
+    ],
+)
+stratum_cc_library(
+    name = "p4_bytestring_verifier_writer_wrapper",
+    hdrs = ["p4_bytestring_verifier_writer_wrapper.h"],
+    deps = [
+        ":writer_interface",
+        "//stratum/hal/lib/p4:utils",
     ],
 )
 

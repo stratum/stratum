@@ -21,6 +21,7 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/common/p4_bytestring_verifier_writer_wrapper.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
@@ -46,6 +47,10 @@ DEFINE_int32(max_num_controllers_per_node, 5,
 DEFINE_int32(max_num_controller_connections, 20,
              "Max number of active/inactive streaming connections from outside "
              "controllers (for all of the nodes combined).");
+DEFINE_int32(incompatible_legacy_bytestring_responses, false,
+             "Enables the legacy padded byte string format in P4Runtime "
+             "responses. The strings are left unchanged from the underlying "
+             "switch implementation.");
 
 namespace stratum {
 namespace hal {
@@ -329,11 +334,17 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid device ID.");
   }
 
+  WriterInterface<::p4::v1::ReadResponse>* w;
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
+  P4BytestringVerifierWrapper w2(&wrapper);
+  w = &wrapper;
+  if (!FLAGS_incompatible_legacy_bytestring_responses) {
+    w = &w2;
+  }
   std::vector<::util::Status> details = {};
   absl::Time timestamp = absl::Now();
   ::util::Status status =
-      switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
+      switch_interface_->ReadForwardingEntries(*req, w, &details);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();
@@ -889,11 +900,23 @@ void P4Service::StreamResponseReceiveHandler(
     LOG(FATAL) << "Received MasterArbitrationUpdate from switch. This should "
                   "never happen!";
   }
+  ::p4::v1::StreamMessageResponse canonical_response = resp;
+  if (canonical_response.has_packet() &&
+      !FLAGS_incompatible_legacy_bytestring_responses) {
+    CanonicalizePacketIn(canonical_response.mutable_packet());
+  }
+  if (canonical_response.has_digest() &&
+      !FLAGS_incompatible_legacy_bytestring_responses) {
+  }
+  if (canonical_response.has_idle_timeout_notification() &&
+      !FLAGS_incompatible_legacy_bytestring_responses) {
+    // Fix contained table entries here.
+  }
   // We send the responses only to the master controller stream for this node.
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  it->second.begin()->stream()->Write(resp);
+  it->second.begin()->stream()->Write(canonical_response);
 }
 
 }  // namespace hal
