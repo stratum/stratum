@@ -888,27 +888,35 @@ void* P4Service::ReceiveStreamRespones(
       continue;
     }
     // Handle StreamMessageResponse.
-    StreamResponseReceiveHandler(node_id, &resp);
+    StreamResponseReceiveHandler(node_id, resp);
   } while (true);
   return nullptr;
 }
 
 void P4Service::StreamResponseReceiveHandler(
-    uint64 node_id, ::p4::v1::StreamMessageResponse* resp) {
+    uint64 node_id, const ::p4::v1::StreamMessageResponse& resp) {
   // We don't expect arbitration updates from the switch.
-  if (resp->has_arbitration()) {
+  if (resp.has_arbitration()) {
     LOG(FATAL) << "Received MasterArbitrationUpdate from switch. This should "
                   "never happen!";
   }
-  if (resp->has_packet() && !FLAGS_incompatible_legacy_bytestring_responses) {
-    CanonicalizePacketIn(resp->mutable_packet());
+  ::p4::v1::StreamMessageResponse canonical_response = resp;
+  if (canonical_response.has_packet() &&
+      !FLAGS_incompatible_legacy_bytestring_responses) {
+    CanonicalizePacketIn(canonical_response.mutable_packet());
   }
-
+  if (canonical_response.has_digest() &&
+      !FLAGS_incompatible_legacy_bytestring_responses) {
+  }
+  if (canonical_response.has_idle_timeout_notification() &&
+      !FLAGS_incompatible_legacy_bytestring_responses) {
+    // Fix contained table entries here.
+  }
   // We send the responses only to the master controller stream for this node.
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  it->second.begin()->stream()->Write(*resp);
+  it->second.begin()->stream()->Write(canonical_response);
 }
 
 }  // namespace hal
