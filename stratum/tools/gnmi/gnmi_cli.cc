@@ -4,7 +4,6 @@
 #include <csignal>
 #include <iostream>
 #include <memory>
-#include <regex>  // NOLINT
 #include <string>
 #include <vector>
 
@@ -14,11 +13,52 @@
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/security/credentials.h"
 #include "grpcpp/security/tls_credentials_options.h"
+#include "re2/re2.h"
+#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
+
+DEFINE_string(grpc_addr, "127.0.0.1:9339", "gNMI server address");
+DEFINE_string(bool_val, "", "Boolean value to be set");
+DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
+DEFINE_string(uint_val, "", "Unsigned integer value to be set (64-bit)");
+DEFINE_string(string_val, "", "String value to be set");
+DEFINE_string(float_val, "", "Floating point value to be set");
+DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
+
+DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
+DEFINE_bool(replace, false, "Use replace instead of update");
+DEFINE_string(get_type, "ALL", "The gNMI get request type");
+DEFINE_string(ca_cert, "", "CA certificate");
+DEFINE_string(client_cert, "", "Client certificate");
+DEFINE_string(client_key, "", "Client key");
+
+#define PRINT_MSG(msg, prompt)                   \
+  do {                                           \
+    std::cout << prompt << std::endl;            \
+    std::cout << msg.DebugString() << std::endl; \
+  } while (0)
+
+#define RETURN_IF_GRPC_ERROR(expr)                                           \
+  do {                                                                       \
+    const ::grpc::Status _grpc_status = (expr);                              \
+    if (ABSL_PREDICT_FALSE(!_grpc_status.ok() &&                             \
+                           _grpc_status.error_code() != grpc::CANCELLED)) {  \
+      ::util::Status _status(                                                \
+          static_cast<::util::error::Code>(_grpc_status.error_code()),       \
+          _grpc_status.error_message());                                     \
+      LOG(ERROR) << "Return Error: " << #expr << " failed with " << _status; \
+      return _status;                                                        \
+    }                                                                        \
+  } while (0)
+
+namespace stratum {
+namespace tools {
+namespace gnmi {
+namespace {
 
 const char kUsage[] =
     R"USAGE(usage: gnmi_cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
@@ -46,74 +86,65 @@ optional arguments:
   --client-key             gRPC Client key
 )USAGE";
 
-#define PRINT_MSG(msg, prompt)                   \
-  do {                                           \
-    std::cout << prompt << std::endl;            \
-    std::cout << msg.DebugString() << std::endl; \
-  } while (0)
+// Pipe file descriptors used to transfer signals from the handler to the cancel
+// function.
+int pipe_read_fd_ = -1;
+int pipe_write_fd_ = -1;
 
-#define RETURN_IF_GRPC_ERROR(expr)                                           \
-  do {                                                                       \
-    const ::grpc::Status _grpc_status = (expr);                              \
-    if (ABSL_PREDICT_FALSE(!_grpc_status.ok())) {                            \
-      ::util::Status _status(                                                \
-          static_cast<::util::error::Code>(_grpc_status.error_code()),       \
-          _grpc_status.error_message());                                     \
-      LOG(ERROR) << "Return Error: " << #expr << " failed with " << _status; \
-      return _status;                                                        \
-    }                                                                        \
-  } while (0)
+// Pointer to the client context to cancel the blocking calls.
+grpc::ClientContext* ctx_ = nullptr;
 
-DEFINE_string(grpc_addr, "127.0.0.1:9339", "gNMI server address");
-DEFINE_string(bool_val, "", "Boolean value to be set");
-DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
-DEFINE_string(uint_val, "", "Unsigned integer value to be set (64-bit)");
-DEFINE_string(string_val, "", "String value to be set");
-DEFINE_string(float_val, "", "Floating point value to be set");
-DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
+void HandleSignal(int signal) {
+  static_assert(sizeof(signal) <= PIPE_BUF,
+                "PIPE_BUF is smaller than the number of bytes that can be "
+                "written atomically to a pipe.");
+  // No reasonable error handling possible.
+  write(pipe_write_fd_, &signal, sizeof(signal));
+}
 
-DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
-DEFINE_bool(replace, false, "Use replace instead of update");
-DEFINE_string(get_type, "ALL", "The gNMI get request type");
-DEFINE_string(ca_cert, "", "CA certificate");
-DEFINE_string(client_cert, "", "Client certificate");
-DEFINE_string(client_key, "", "Client key");
+void* ContextCancelThreadFunc(void*) {
+  int signal_value;
+  int ret = read(pipe_read_fd_, &signal_value, sizeof(signal_value));
+  if (ret == 0) {  // Pipe has been closed.
+    return nullptr;
+  } else if (ret != sizeof(signal_value)) {
+    LOG(ERROR) << "Error reading complete signal from pipe: " << ret << ": "
+               << strerror(errno);
+    return nullptr;
+  }
+  if (ctx_) ctx_->TryCancel();
+  LOG(INFO) << "Client context cancelled.";
+  return nullptr;
+}
 
-namespace stratum {
-namespace tools {
-namespace gnmi {
-
-bool str_to_bool(std::string str) {
+bool StringToBool(std::string str) {
   return (str == "y") || (str == "true") || (str == "t") || (str == "yes") ||
          (str == "1");
 }
 
-void add_path_elem(std::string elem_name, std::string elem_kv,
-                   ::gnmi::PathElem* elem) {
+void AddPathElem(std::string elem_name, std::string elem_kv,
+                 ::gnmi::PathElem* elem) {
   elem->set_name(elem_name);
   if (!elem_kv.empty()) {
-    std::regex ex("\\[([^=]+)=([^\\]]+)\\]");
-    std::smatch sm;
-    std::regex_match(elem_kv, sm, ex);
-    (*elem->mutable_key())[sm.str(1)] = sm.str(2);
+    std::string key, value;
+    RE2::FullMatch(elem_kv, "\\[([^=]+)=([^\\]]+)\\]", &key, &value);
+    (*elem->mutable_key())[key] = value;
   }
 }
 
-void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
-  std::regex ex("/([^/\\[]+)(\\[([^=]+=[^\\]]+)\\])?");
-  std::sregex_iterator iter(path_str.begin(), path_str.end(), ex);
-  std::sregex_iterator end;
-  while (iter != end) {
-    std::smatch sm = *iter;
+void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
+  re2::StringPiece input(path_str);
+  std::string elem_name, elem_kv;
+  while (RE2::Consume(&input, "/([^/\\[]+)(\\[([^=]+=[^\\]]+)\\])?", &elem_name,
+                      &elem_kv)) {
     auto* elem = path->add_elem();
-    add_path_elem(sm.str(1), sm.str(2), elem);
-    iter++;
+    AddPathElem(elem_name, elem_kv, elem);
   }
 }
 
-::gnmi::GetRequest build_gnmi_get_req(std::string path) {
+::gnmi::GetRequest BuildGnmiGetRequest(std::string path) {
   ::gnmi::GetRequest req;
-  build_gnmi_path(path, req.add_path());
+  BuildGnmiPath(path, req.add_path());
   req.set_encoding(::gnmi::PROTO);
   ::gnmi::GetRequest::DataType data_type;
   if (!::gnmi::GetRequest::DataType_Parse(FLAGS_get_type, &data_type)) {
@@ -125,7 +156,7 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   return req;
 }
 
-::gnmi::SetRequest build_gnmi_set_req(std::string path) {
+::gnmi::SetRequest BuildGnmiSetRequest(std::string path) {
   ::gnmi::SetRequest req;
   ::gnmi::Update* update;
   if (FLAGS_replace) {
@@ -133,9 +164,9 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   } else {
     update = req.add_update();
   }
-  build_gnmi_path(path, update->mutable_path());
+  BuildGnmiPath(path, update->mutable_path());
   if (!FLAGS_bool_val.empty()) {
-    update->mutable_val()->set_bool_val(str_to_bool(FLAGS_bool_val));
+    update->mutable_val()->set_bool_val(StringToBool(FLAGS_bool_val));
   } else if (!FLAGS_int_val.empty()) {
     update->mutable_val()->set_int_val(stoll(FLAGS_int_val));
   } else if (!FLAGS_uint_val.empty()) {
@@ -154,25 +185,25 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   return req;
 }
 
-::gnmi::SetRequest build_gnmi_del_req(std::string path) {
+::gnmi::SetRequest BuildGnmiDeleteRequest(std::string path) {
   ::gnmi::SetRequest req;
   auto* del = req.add_delete_();
-  build_gnmi_path(path, del);
+  BuildGnmiPath(path, del);
   return req;
 }
 
-::gnmi::SubscribeRequest build_gnmi_sub_onchange_req(std::string path) {
+::gnmi::SubscribeRequest BuildGnmiSubOnchangeRequest(std::string path) {
   ::gnmi::SubscribeRequest sub_req;
   auto* sub_list = sub_req.mutable_subscribe();
   sub_list->set_mode(::gnmi::SubscriptionList::STREAM);
   sub_list->set_updates_only(true);
   auto* sub = sub_list->add_subscription();
   sub->set_mode(::gnmi::ON_CHANGE);
-  build_gnmi_path(path, sub->mutable_path());
+  BuildGnmiPath(path, sub->mutable_path());
   return sub_req;
 }
 
-::gnmi::SubscribeRequest build_gnmi_sub_sample_req(std::string path,
+::gnmi::SubscribeRequest BuildGnmiSubSampleRequest(std::string path,
                                                    uint64 interval) {
   ::gnmi::SubscribeRequest sub_req;
   auto* sub_list = sub_req.mutable_subscribe();
@@ -181,20 +212,45 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   auto* sub = sub_list->add_subscription();
   sub->set_mode(::gnmi::SAMPLE);
   sub->set_sample_interval(interval);
-  build_gnmi_path(path, sub->mutable_path());
+  BuildGnmiPath(path, sub->mutable_path());
   return sub_req;
 }
 
-::grpc::ClientReaderWriterInterface<
-    ::gnmi::SubscribeRequest, ::gnmi::SubscribeResponse>* stream_reader_writer;
-
 ::util::Status Main(int argc, char** argv) {
+  ::gflags::SetUsageMessage(kUsage);
+  InitGoogle(argv[0], &argc, &argv, true);
+  stratum::InitStratumLogging();
   if (argc < 2) {
     std::cout << kUsage << std::endl;
     RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
   }
+
   ::grpc::ClientContext ctx;
-  ::grpc::Status status;
+  ctx_ = &ctx;
+  // Create the pipe to transfer signals.
+  {
+    int pipe_fds[2];
+    CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
+        << "Could not create pipe for signal handling.";
+    pipe_read_fd_ = pipe_fds[0];
+    pipe_write_fd_ = pipe_fds[1];
+  }
+  CHECK_RETURN_IF_FALSE(std::signal(SIGINT, HandleSignal) != SIG_ERR);
+  pthread_t context_cancel_tid;
+  CHECK_RETURN_IF_FALSE(pthread_create(&context_cancel_tid, nullptr,
+                                       ContextCancelThreadFunc, nullptr) == 0);
+  auto cleaner = gtl::MakeCleanup([&context_cancel_tid, &ctx] {
+    int signal = SIGINT;
+    write(pipe_write_fd_, &signal, sizeof(signal));
+    if (pthread_join(context_cancel_tid, nullptr) != 0) {
+      LOG(ERROR) << "Failed to join the context cancel thread.";
+    }
+    close(pipe_write_fd_);
+    close(pipe_read_fd_);
+    // We call this to synchronize the internal client context state.
+    ctx.TryCancel();
+  });
+
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials =
       ::grpc::InsecureChannelCredentials();
   if (!FLAGS_ca_cert.empty()) {
@@ -243,27 +299,26 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   std::string path = std::string(argv[2]);
 
   if (cmd == "get") {
-    ::gnmi::GetRequest req = build_gnmi_get_req(path);
+    ::gnmi::GetRequest req = BuildGnmiGetRequest(path);
     PRINT_MSG(req, "REQUEST");
     ::gnmi::GetResponse resp;
     RETURN_IF_GRPC_ERROR(stub->Get(&ctx, req, &resp));
     PRINT_MSG(resp, "RESPONSE");
   } else if (cmd == "set") {
-    ::gnmi::SetRequest req = build_gnmi_set_req(path);
+    ::gnmi::SetRequest req = BuildGnmiSetRequest(path);
     PRINT_MSG(req, "REQUEST");
     ::gnmi::SetResponse resp;
     RETURN_IF_GRPC_ERROR(stub->Set(&ctx, req, &resp));
     PRINT_MSG(resp, "RESPONSE");
   } else if (cmd == "del") {
-    ::gnmi::SetRequest req = build_gnmi_del_req(path);
+    ::gnmi::SetRequest req = BuildGnmiDeleteRequest(path);
     PRINT_MSG(req, "REQUEST");
     ::gnmi::SetResponse resp;
     RETURN_IF_GRPC_ERROR(stub->Set(&ctx, req, &resp));
     PRINT_MSG(resp, "RESPONSE");
   } else if (cmd == "sub-onchange") {
-    auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
-    stream_reader_writer = stream_reader_writer_ptr.get();
-    ::gnmi::SubscribeRequest req = build_gnmi_sub_onchange_req(path);
+    auto stream_reader_writer = stub->Subscribe(&ctx);
+    ::gnmi::SubscribeRequest req = BuildGnmiSubOnchangeRequest(path);
     PRINT_MSG(req, "REQUEST");
     CHECK_RETURN_IF_FALSE(stream_reader_writer->Write(req))
         << "Can not write request.";
@@ -273,10 +328,9 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
     }
     RETURN_IF_GRPC_ERROR(stream_reader_writer->Finish());
   } else if (cmd == "sub-sample") {
-    auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
-    stream_reader_writer = stream_reader_writer_ptr.get();
+    auto stream_reader_writer = stub->Subscribe(&ctx);
     ::gnmi::SubscribeRequest req =
-        build_gnmi_sub_sample_req(path, FLAGS_interval);
+        BuildGnmiSubSampleRequest(path, FLAGS_interval);
     PRINT_MSG(req, "REQUEST");
     CHECK_RETURN_IF_FALSE(stream_reader_writer->Write(req))
         << "Can not write request.";
@@ -288,26 +342,16 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   } else {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
   }
+  LOG(INFO) << "Done.";
 
   return ::util::OkStatus();
 }
 
-void HandleSignal(int signal) {
-  (void)signal;
-  // Terminate the stream
-  if (stream_reader_writer != nullptr) {
-    stream_reader_writer->WritesDone();
-  }
-}
-
+}  // namespace
 }  // namespace gnmi
 }  // namespace tools
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  ::gflags::SetUsageMessage(kUsage);
-  InitGoogle(argv[0], &argc, &argv, true);
-  stratum::InitStratumLogging();
-  std::signal(SIGINT, stratum::tools::gnmi::HandleSignal);
   return stratum::tools::gnmi::Main(argc, argv).error_code();
 }
