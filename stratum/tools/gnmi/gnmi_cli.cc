@@ -231,11 +231,8 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   ctx_ = &ctx;
   // Create the pipe to transfer signals.
   {
-    int pipe_fds[2];
-    CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
-        << "Could not create pipe for signal handling.";
-    pipe_read_fd_ = pipe_fds[0];
-    pipe_write_fd_ = pipe_fds[1];
+    RETURN_IF_ERROR(
+        CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
   }
   CHECK_RETURN_IF_FALSE(std::signal(SIGINT, HandleSignal) != SIG_ERR);
   pthread_t context_cancel_tid;

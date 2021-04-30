@@ -5,8 +5,10 @@
 #include "stratum/lib/utils.h"
 
 #include <cxxabi.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <cerrno>
 #include <cstdio>
@@ -247,6 +249,23 @@ std::string Demangle(const char* mangled) {
   } else {
     return mangled;
   }
+}
+
+::util::Status CreatePipeForSignalHandling(int* read_fd, int* write_fd) {
+  static_assert(sizeof(int) <= PIPE_BUF,
+                "PIPE_BUF is smaller than the number of bytes that can be "
+                "written atomically to a pipe.");
+  int pipe_fds[2];  // [0] is read side, [1] is write side.
+  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0) << "Could not create pipe.";
+  // Set write side to non-blocking mode.
+  int flags = fcntl(pipe_fds[1], F_GETFL);
+  CHECK_RETURN_IF_FALSE(flags != -1) << "Could not read file descriptor flags.";
+  CHECK_RETURN_IF_FALSE(fcntl(pipe_fds[1], F_SETFL, flags | O_NONBLOCK) != -1)
+      << "Could not set file descriptor flags.";
+  *read_fd = pipe_fds[0];
+  *write_fd = pipe_fds[1];
+
+  return ::util::OkStatus();
 }
 
 }  // namespace stratum

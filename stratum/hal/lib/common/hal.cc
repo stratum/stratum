@@ -5,7 +5,6 @@
 #include "stratum/hal/lib/common/hal.h"
 
 #include <limits.h>
-#include <unistd.h>
 
 #include <utility>
 
@@ -340,11 +339,7 @@ Hal* Hal::GetSingleton() {
     old_signal_handlers_[s] = h;
   }
   // Create the pipe to transfer signals.
-  int pipe_fds[2];
-  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
-      << "Could not create pipe for signal handling.";
-  pipe_read_fd_ = pipe_fds[0];
-  pipe_write_fd_ = pipe_fds[1];
+  RETURN_IF_ERROR(CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
   // Start the signal waiter thread that initiates shutdown.
   CHECK_RETURN_IF_FALSE(pthread_create(&signal_waiter_tid_, nullptr,
                                        SignalWaiterThreadFunc, nullptr) == 0)
