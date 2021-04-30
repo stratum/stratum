@@ -54,8 +54,10 @@ void SignalRcvCallback(int value) {
   static_assert(sizeof(value) <= PIPE_BUF,
                 "PIPE_BUF is smaller than the number of bytes that can be "
                 "written atomically to a pipe.");
+  int saved_errno = errno;
   // No reasonable error handling possible.
   write(Hal::pipe_write_fd_, &value, sizeof(value));
+  errno = saved_errno;
 }
 
 // Set the channel arguments to match the defualt keep-alive parameters set by

@@ -98,8 +98,10 @@ void HandleSignal(int signal) {
   static_assert(sizeof(signal) <= PIPE_BUF,
                 "PIPE_BUF is smaller than the number of bytes that can be "
                 "written atomically to a pipe.");
+  int saved_errno = errno;
   // No reasonable error handling possible.
   write(pipe_write_fd_, &signal, sizeof(signal));
+  errno = saved_errno;
 }
 
 void* ContextCancelThreadFunc(void*) {
