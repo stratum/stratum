@@ -256,12 +256,14 @@ std::string Demangle(const char* mangled) {
                 "PIPE_BUF is smaller than the number of bytes that can be "
                 "written atomically to a pipe.");
   int pipe_fds[2];  // [0] is read side, [1] is write side.
-  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0) << "Could not create pipe.";
+  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
+      << "Could not create pipe: " << strerror(errno) << ".";
   // Set write side to non-blocking mode.
   int flags = fcntl(pipe_fds[1], F_GETFL);
-  CHECK_RETURN_IF_FALSE(flags != -1) << "Could not read file descriptor flags.";
+  CHECK_RETURN_IF_FALSE(flags != -1)
+      << "Could not read file descriptor flags: " << strerror(errno) << ".";
   CHECK_RETURN_IF_FALSE(fcntl(pipe_fds[1], F_SETFL, flags | O_NONBLOCK) != -1)
-      << "Could not set file descriptor flags.";
+      << "Could not set file descriptor flags: " << strerror(errno) << ".";
   *read_fd = pipe_fds[0];
   *write_fd = pipe_fds[1];
 
