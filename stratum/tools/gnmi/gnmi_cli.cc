@@ -98,6 +98,8 @@ void HandleSignal(int signal) {
   static_assert(sizeof(signal) <= PIPE_BUF,
                 "PIPE_BUF is smaller than the number of bytes that can be "
                 "written atomically to a pipe.");
+  // We must restore any changes made to errno at the end of the handler:
+  // https://www.gnu.org/software/libc/manual/html_node/POSIX-Safety-Concepts.html
   int saved_errno = errno;
   // No reasonable error handling possible.
   write(pipe_write_fd_, &signal, sizeof(signal));
