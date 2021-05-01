@@ -98,8 +98,12 @@ void HandleSignal(int signal) {
   static_assert(sizeof(signal) <= PIPE_BUF,
                 "PIPE_BUF is smaller than the number of bytes that can be "
                 "written atomically to a pipe.");
+  // We must restore any changes made to errno at the end of the handler:
+  // https://www.gnu.org/software/libc/manual/html_node/POSIX-Safety-Concepts.html
+  int saved_errno = errno;
   // No reasonable error handling possible.
   write(pipe_write_fd_, &signal, sizeof(signal));
+  errno = saved_errno;
 }
 
 void* ContextCancelThreadFunc(void*) {
@@ -229,11 +233,8 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   ctx_ = &ctx;
   // Create the pipe to transfer signals.
   {
-    int pipe_fds[2];
-    CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
-        << "Could not create pipe for signal handling.";
-    pipe_read_fd_ = pipe_fds[0];
-    pipe_write_fd_ = pipe_fds[1];
+    RETURN_IF_ERROR(
+        CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
   }
   CHECK_RETURN_IF_FALSE(std::signal(SIGINT, HandleSignal) != SIG_ERR);
   pthread_t context_cancel_tid;

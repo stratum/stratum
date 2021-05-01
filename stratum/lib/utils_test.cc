@@ -321,4 +321,13 @@ TEST(CommonUtilsTest, Demangle) {
   EXPECT_EQ("invalid", Demangle("invalid"));
 }
 
+TEST(CommonUtilsTest, CreatePipeForSignalHandling) {
+  int read_fd, write_fd = -1;
+  EXPECT_OK(CreatePipeForSignalHandling(&read_fd, &write_fd));
+  EXPECT_NE(-1, read_fd);
+  EXPECT_NE(-1, write_fd);
+  close(read_fd);
+  close(write_fd);
+}
+
 }  // namespace stratum
