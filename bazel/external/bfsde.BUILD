@@ -10,15 +10,46 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
+# We import the static libraries explicitly to make sure they are linked with
+# -Wl,-whole-archive later.
+cc_import(
+    name = "libbf_switchd_lib",
+    static_library = "barefoot-bin/lib/libbf_switchd_lib.a",
+    alwayslink = 1,
+)
+
+cc_import(
+    name = "libbfsys",
+    static_library = "barefoot-bin/lib/libbfsys.a",
+    alwayslink = 1,
+)
+
+cc_import(
+    name = "libbfutils",
+    static_library = "barefoot-bin/lib/libbfutils.a",
+    alwayslink = 1,
+)
+
+cc_import(
+    name = "libdriver",
+    static_library = "barefoot-bin/lib/libdriver.a",
+    alwayslink = 1,
+)
+
+cc_import(
+    name = "libdru_sim",
+    static_library = "barefoot-bin/lib/libdru_sim.a",
+    alwayslink = 1,
+)
+
 cc_library(
     name = "bfsde",
-    srcs = glob([
-        "barefoot-bin/lib/libavago.so*",
-        "barefoot-bin/lib/libbfsys.so*",
-        "barefoot-bin/lib/libbfutils.so*",
-        "barefoot-bin/lib/libdriver.so*",
-        "barefoot-bin/lib/libpython3.4m.so*",
-    ]) + ["barefoot-bin/lib/libbf_switchd_lib.a"],
+    srcs = [
+        # libavago.a is not compiled with -fPIC, therefore we have to use the
+        # shared library instead. libavago is not compiled as part of the SDE,
+        # but included in binary form.
+        "barefoot-bin/lib/libavago.so",
+    ],
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
         "barefoot-bin/include/bf_rt/*.hpp",
@@ -42,6 +73,11 @@ cc_library(
     ],
     strip_include_prefix = "barefoot-bin/include",
     deps = [
+        ":libbf_switchd_lib",
+        ":libbfsys",
+        ":libbfutils",
+        ":libdriver",
+        ":libdru_sim",
         # TODO(bocon): PI needed when linking libdriver.so if/when pi is
         # enabled when building bf-drivers. This shouldn't hurt, but can
         # be excluded if/when PI is removed from the SDE build options.
@@ -53,12 +89,7 @@ pkg_tar_with_symlinks(
     name = "bf_library_files",
     srcs = glob([
         "barefoot-bin/lib/bfshell_plugin_*.so*",
-        "barefoot-bin/lib/libavago.so*",
-        "barefoot-bin/lib/libbfsys.so*",
-        "barefoot-bin/lib/libbfutils.so*",
-        "barefoot-bin/lib/libdriver.so*",
-        "barefoot-bin/lib/libdru_sim.so*",
-        "barefoot-bin/lib/libpython3.4m.so*",
+        "barefoot-bin/lib/libavago*.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
