@@ -13,12 +13,6 @@ package(
 # We import the static libraries explicitly to make sure they are linked with
 # -Wl,-whole-archive later.
 cc_import(
-    name = "libavago",
-    static_library = "barefoot-bin/lib/libavago.a",
-    alwayslink = 1,
-)
-
-cc_import(
     name = "libbf_switchd_lib",
     static_library = "barefoot-bin/lib/libbf_switchd_lib.a",
     alwayslink = 1,
@@ -50,7 +44,12 @@ cc_import(
 
 cc_library(
     name = "bfsde",
-    srcs = [],
+    srcs = [
+        # libavago.a is not compiled with -fPIC, therefore we have to use the
+        # shared library instead. libavago is not compiled as part of the SDE,
+        # but included in binary form.
+        "barefoot-bin/lib/libavago.so",
+    ],
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
         "barefoot-bin/include/bf_rt/*.hpp",
@@ -74,7 +73,6 @@ cc_library(
     ],
     strip_include_prefix = "barefoot-bin/include",
     deps = [
-        ":libavago",
         ":libbf_switchd_lib",
         ":libbfsys",
         ":libbfutils",
@@ -91,6 +89,7 @@ pkg_tar_with_symlinks(
     name = "bf_library_files",
     srcs = glob([
         "barefoot-bin/lib/bfshell_plugin_*.so*",
+        "barefoot-bin/lib/libavago*.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
