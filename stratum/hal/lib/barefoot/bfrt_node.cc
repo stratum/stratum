@@ -228,7 +228,7 @@ BfrtNode::~BfrtNode() = default;
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  absl::WriterMutexLock l(&lock_);
+  absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
       << "Request device id must be same as id of this BfrtNode.";
   if (!initialized_ || !pipeline_initialized_) {
@@ -353,7 +353,7 @@ BfrtNode::~BfrtNode() = default;
 
 ::util::Status BfrtNode::HandleStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& req) {
-  absl::WriterMutexLock l(&lock_);
+  absl::ReaderMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
