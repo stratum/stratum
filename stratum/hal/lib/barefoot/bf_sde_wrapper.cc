@@ -874,44 +874,48 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   return ::util::OkStatus();
 }
 
-::util::Status TableData::GetCounterData(uint64* bytes, uint64* packets) const {
+::util::Status TableData::GetByteCounter(uint64* bytes) const {
   CHECK_RETURN_IF_FALSE(bytes);
-  CHECK_RETURN_IF_FALSE(packets);
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
-
   bf_rt_id_t action_id = 0;
   if (table->actionIdApplicable()) {
     RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
   }
-
   bf_rt_id_t field_id;
-  // Try to read byte counter.
-  bf_status_t bf_status;
   if (action_id) {
-    bf_status =
-        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id);
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id));
   } else {
-    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
   }
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_val;
-    RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
-    *bytes = counter_val;
-  }
+  uint64 counter_val;
+  RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
+  *bytes = counter_val;
 
-  // Try to read packet counter.
+  return ::util::OkStatus();
+}
+
+::util::Status TableData::GetPacketCounter(uint64* packets) const {
+  CHECK_RETURN_IF_FALSE(packets);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  bf_rt_id_t field_id;
   if (action_id) {
-    bf_status =
-        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id);
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id));
   } else {
-    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
   }
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_val;
-    RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
-    *packets = counter_val;
-  }
+  uint64 counter_val;
+  RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
+  *packets = counter_val;
 
   return ::util::OkStatus();
 }

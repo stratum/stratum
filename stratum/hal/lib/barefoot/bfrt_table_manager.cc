@@ -486,10 +486,33 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     result.mutable_action()->set_action_profile_group_id(selector_group_id);
   }
 
-  // Counter data
-  uint64 bytes, packets;
-  if (table_data->GetCounterData(&bytes, &packets).ok()) {
-    if (request.has_counter_data()) {
+  // Counter data, if applicable.
+  // We check for direct resources, since some calls to this function set the
+  // counter_data field for tables without direct counters.
+  if (request.has_counter_data() && table.direct_resource_ids_size()) {
+    for (const int id : table.direct_resource_ids()) {
+      uint64 bytes = 0, packets = 0;
+      ASSIGN_OR_RETURN(auto direct_counter,
+                       p4_info_manager_->FindDirectCounterByID(id));
+      switch (direct_counter.spec().unit()) {
+        case ::p4::config::v1::CounterSpec::BYTES:
+          RETURN_IF_ERROR(table_data->GetByteCounter(&bytes));
+          break;
+        case ::p4::config::v1::CounterSpec::PACKETS:
+          RETURN_IF_ERROR(table_data->GetPacketCounter(&packets));
+          break;
+        case ::p4::config::v1::CounterSpec::BOTH:
+          RETURN_IF_ERROR(table_data->GetByteCounter(&bytes));
+          RETURN_IF_ERROR(table_data->GetPacketCounter(&packets));
+          break;
+        default:
+          RETURN_ERROR(ERR_INVALID_PARAM)
+              << "Unsupported counter spec "
+              << ::p4::config::v1::CounterSpec::Unit_Name(
+                     direct_counter.spec().unit())
+              << " on direct resource of request "
+              << request.ShortDebugString();
+      }
       result.mutable_counter_data()->set_byte_count(bytes);
       result.mutable_counter_data()->set_packet_count(packets);
     }
@@ -743,7 +766,10 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   uint64 bytes = 0;
   uint64 packets = 0;
-  RETURN_IF_ERROR(table_data->GetCounterData(&bytes, &packets));
+  // This will fail for byte-only or packet-only meters. See: BuildP4TableEntry.
+  RETURN_IF_ERROR(table_data->GetByteCounter(&bytes));
+  RETURN_IF_ERROR(table_data->GetPacketCounter(&packets));
+
   result.mutable_data()->set_byte_count(static_cast<int64>(bytes));
   result.mutable_data()->set_packet_count(static_cast<int64>(packets));
 

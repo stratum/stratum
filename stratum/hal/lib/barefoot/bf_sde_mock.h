@@ -57,8 +57,8 @@ class TableDataMock : public BfSdeInterface::TableDataInterface {
   MOCK_CONST_METHOD1(GetSelectorGroupId,
                      ::util::Status(uint64* selector_group_id));
   MOCK_METHOD2(SetCounterData, ::util::Status(uint64 bytes, uint64 packets));
-  MOCK_CONST_METHOD2(GetCounterData,
-                     ::util::Status(uint64* bytes, uint64* packets));
+  MOCK_CONST_METHOD1(GetByteCounter, ::util::Status(uint64* bytes));
+  MOCK_CONST_METHOD1(GetPacketCounter, ::util::Status(uint64* packets));
   MOCK_CONST_METHOD1(GetActionId, ::util::Status(int* action_id));
   MOCK_METHOD1(Reset, ::util::Status(int action_id));
 };

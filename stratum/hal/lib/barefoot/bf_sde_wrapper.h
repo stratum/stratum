@@ -76,7 +76,8 @@ class TableData : public BfSdeInterface::TableDataInterface {
   ::util::Status SetSelectorGroupId(uint64 selector_group_id) override;
   ::util::Status GetSelectorGroupId(uint64* selector_group_id) const override;
   ::util::Status SetCounterData(uint64 bytes, uint64 packets) override;
-  ::util::Status GetCounterData(uint64* bytes, uint64* packets) const override;
+  ::util::Status GetByteCounter(uint64* bytes) const override;
+  ::util::Status GetPacketCounter(uint64* packets) const override;
   ::util::Status GetActionId(int* action_id) const override;
   ::util::Status Reset(int action_id) override;
 
