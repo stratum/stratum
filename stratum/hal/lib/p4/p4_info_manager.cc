@@ -32,6 +32,7 @@ P4InfoManager::P4InfoManager(const ::p4::config::v1::P4Info& p4_info)
       action_map_("Action"),
       action_profile_map_("Action-Profile"),
       counter_map_("Counter"),
+      direct_counter_map_("Direct-Counter"),
       meter_map_("Meter"),
       value_set_map_("ValueSet"),
       register_map_("Register") {}
@@ -41,6 +42,7 @@ P4InfoManager::P4InfoManager()
       action_map_("Action"),
       action_profile_map_("Action-Profile"),
       counter_map_("Counter"),
+      direct_counter_map_("Direct-Counter"),
       meter_map_("Meter"),
       value_set_map_("ValueSet"),
       register_map_("Register") {}
@@ -68,6 +70,8 @@ P4InfoManager::~P4InfoManager() {}
                                      p4_info_.action_profiles(), preamble_cb));
   APPEND_STATUS_IF_ERROR(
       status, counter_map_.BuildMaps(p4_info_.counters(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(status, direct_counter_map_.BuildMaps(
+                                     p4_info_.direct_counters(), preamble_cb));
   APPEND_STATUS_IF_ERROR(status,
                          meter_map_.BuildMaps(p4_info_.meters(), preamble_cb));
   APPEND_STATUS_IF_ERROR(
@@ -118,6 +122,16 @@ P4InfoManager::FindCounterByID(uint32 counter_id) const {
 ::util::StatusOr<const ::p4::config::v1::Counter>
 P4InfoManager::FindCounterByName(const std::string& counter_name) const {
   return counter_map_.FindByName(counter_name);
+}
+
+::util::StatusOr<const ::p4::config::v1::DirectCounter>
+P4InfoManager::FindDirectCounterByID(uint32 counter_id) const {
+  return direct_counter_map_.FindByID(counter_id);
+}
+
+::util::StatusOr<const ::p4::config::v1::DirectCounter>
+P4InfoManager::FindDirectCounterByName(const std::string& counter_name) const {
+  return direct_counter_map_.FindByName(counter_name);
 }
 
 ::util::StatusOr<const ::p4::config::v1::Meter> P4InfoManager::FindMeterByID(
@@ -257,8 +271,10 @@ void P4InfoManager::DumpNamesToIDs() const {
   action_map_.DumpNamesToIDs();
   action_profile_map_.DumpNamesToIDs();
   counter_map_.DumpNamesToIDs();
+  direct_counter_map_.DumpNamesToIDs();
   meter_map_.DumpNamesToIDs();
   value_set_map_.DumpNamesToIDs();
+  register_map_.DumpNamesToIDs();
 }
 
 ::util::Status P4InfoManager::VerifyRequiredObjects() {
