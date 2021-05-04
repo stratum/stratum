@@ -111,18 +111,19 @@ class BfrtNode final {
   // Flag indicating whether the chip is initialized.
   bool initialized_ GUARDED_BY(lock_);
 
+  // Stores pipeline information for this node.
+  BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
+
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  // Not owned by this class.
+  BfSdeInterface* bf_sde_interface_ = nullptr;
+
   // Managers. Not owned by this class.
   BfrtTableManager* bfrt_table_manager_;
   BfrtActionProfileManager* bfrt_action_profile_manager_;
   BfrtPacketioManager* bfrt_packetio_manager_;
   BfrtPreManager* bfrt_pre_manager_;
   BfrtCounterManager* bfrt_counter_manager_;
-
-  // Stores pipeline information for this node.
-  BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
-
-  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
-  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the

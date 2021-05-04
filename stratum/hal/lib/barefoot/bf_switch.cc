@@ -31,8 +31,8 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BfSdeInterface* bf_sde_interface,
                    const std::map<int, PINode*>& unit_to_pi_node)
     : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
-      bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
       unit_to_pi_node_(unit_to_pi_node),
       node_id_to_pi_node_() {
   for (const auto& entry : unit_to_pi_node_) {

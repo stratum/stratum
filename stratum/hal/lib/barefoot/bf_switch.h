@@ -97,12 +97,12 @@ class BFSwitch : public SwitchInterface {
   // instance of this class per chassis.
   PhalInterface* phal_interface_;  // not owned by this class.
 
+  // Pointer to a BfSdeInterface implementation that wraps SDE API calls.
+  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
+
   // Per chassis Managers. Note that there is only one instance of this class
   // per chassis.
   BFChassisManager* bf_chassis_manager_;  // not owned by the class.
-
-  // Pointer to a BfSdeInterface implementation that wraps SDE API calls.
-  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
 
   // Map from zero-based unit number corresponding to a node/ASIC to a pointer
   // to PINode which contain all the per-node managers for that node/ASIC. This
