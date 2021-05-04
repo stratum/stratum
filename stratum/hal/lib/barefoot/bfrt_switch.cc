@@ -27,9 +27,9 @@ BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
                        BFChassisManager* bf_chassis_manager,
                        BfSdeInterface* bf_sde_interface,
                        const std::map<int, BfrtNode*>& device_id_to_bfrt_node)
-    : phal_interface_(CHECK_NOTNULL(phal_interface)),
-      bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
+    : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
       device_id_to_bfrt_node_(device_id_to_bfrt_node),
       node_id_to_bfrt_node_() {
   for (const auto& entry : device_id_to_bfrt_node_) {

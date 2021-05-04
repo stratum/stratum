@@ -124,11 +124,11 @@ class BfrtPacketioManager {
   size_t packetin_header_size_ GUARDED_BY(data_lock_);
   size_t packetout_header_size_ GUARDED_BY(data_lock_);
 
-  //
+  // Buffer channel for packets coming from the SDE to this manager.
   std::shared_ptr<Channel<std::string>> packet_receive_channel_
       GUARDED_BY(data_lock_);
 
-  //
+  // The ID of the RX thread which handles receiving packets from the SDE.
   pthread_t sde_rx_thread_id_ GUARDED_BY(data_lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.

@@ -153,13 +153,13 @@ class BfrtTableManager {
   std::vector<TimerDaemon::DescriptorPtr> register_timer_descriptors_
       GUARDED_BY(lock_);
 
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
+
   // Helper class to validate the P4Info and requests against it.
   // TODO(max): Maybe this manager should be created in the node and passed down
   // to all feature managers.
   std::unique_ptr<P4InfoManager> p4_info_manager_ GUARDED_BY(lock_);
-
-  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
-  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.

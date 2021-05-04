@@ -15,8 +15,8 @@ namespace barefoot {
 
 BfrtActionProfileManager::BfrtActionProfileManager(
     BfSdeInterface* bf_sde_interface, int device)
-    : p4_info_manager_(nullptr),
-      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      p4_info_manager_(nullptr),
       device_(device) {}
 
 std::unique_ptr<BfrtActionProfileManager>

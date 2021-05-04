@@ -16,7 +16,11 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtIdMapper::BfrtIdMapper() {}
+BfrtIdMapper::BfrtIdMapper()
+    : bfrt_to_p4info_id_(),
+      p4info_to_bfrt_id_(),
+      act_profile_to_selector_mapping_(),
+      act_selector_to_profile_mapping_() {}
 
 std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
   return absl::WrapUnique(new BfrtIdMapper());
