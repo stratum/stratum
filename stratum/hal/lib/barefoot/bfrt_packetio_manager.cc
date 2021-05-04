@@ -24,10 +24,12 @@ namespace barefoot {
 BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
                                          int device)
     : initialized_(false),
+      rx_writer_(nullptr),
       packetin_header_(),
       packetout_header_(),
       packetin_header_size_(),
       packetout_header_size_(),
+      packet_receive_channel_(nullptr),
       sde_rx_thread_id_(0),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       device_(device) {}

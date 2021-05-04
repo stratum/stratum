@@ -23,7 +23,39 @@
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
+                   BfrtActionProfileManager* bfrt_action_profile_manager,
+                   BfrtPacketioManager* bfrt_packetio_manager,
+                   BfrtPreManager* bfrt_pre_manager,
+                   BfrtCounterManager* bfrt_counter_manager,
+                   BfSdeInterface* bf_sde_interface, int device_id)
+    : pipeline_initialized_(false),
+      initialized_(false),
+      bfrt_config_(),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
+      bfrt_action_profile_manager_(
+          ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
+      bfrt_packetio_manager_(bfrt_packetio_manager),
+      bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
+      bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
+      node_id_(0),
+      device_id_(device_id) {}
+
 BfrtNode::~BfrtNode() = default;
+
+// Factory function for creating the instance of the class.
+std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
+    BfrtTableManager* bfrt_table_manager,
+    BfrtActionProfileManager* bfrt_action_profile_manager,
+    BfrtPacketioManager* bfrt_packetio_manager,
+    BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
+    BfSdeInterface* bf_sde_interface, int device_id) {
+  return absl::WrapUnique(new BfrtNode(
+      bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
+      bfrt_pre_manager, bfrt_counter_manager, bf_sde_interface, device_id));
+}
 
 ::util::Status BfrtNode::PushChassisConfig(const ChassisConfig& config,
                                            uint64 node_id) {
@@ -396,36 +428,6 @@ BfrtNode::~BfrtNode() = default;
           << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
   }
 }
-
-// Factory function for creating the instance of the class.
-std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
-    BfrtTableManager* bfrt_table_manager,
-    BfrtActionProfileManager* bfrt_action_profile_manager,
-    BfrtPacketioManager* bfrt_packetio_manager,
-    BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
-    BfSdeInterface* bf_sde_interface, int device_id) {
-  return absl::WrapUnique(new BfrtNode(
-      bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_pre_manager, bfrt_counter_manager, bf_sde_interface, device_id));
-}
-
-BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
-                   BfrtActionProfileManager* bfrt_action_profile_manager,
-                   BfrtPacketioManager* bfrt_packetio_manager,
-                   BfrtPreManager* bfrt_pre_manager,
-                   BfrtCounterManager* bfrt_counter_manager,
-                   BfSdeInterface* bf_sde_interface, int device_id)
-    : pipeline_initialized_(false),
-      initialized_(false),
-      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
-      bfrt_action_profile_manager_(
-          ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
-      bfrt_packetio_manager_(bfrt_packetio_manager),
-      bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
-      bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
-      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
-      node_id_(0),
-      device_id_(device_id) {}
 
 }  // namespace barefoot
 }  // namespace hal

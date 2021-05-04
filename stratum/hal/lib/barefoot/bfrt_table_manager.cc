@@ -34,8 +34,8 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
                                    BfSdeInterface* bf_sde_interface, int device)
     : mode_(mode),
       register_timer_descriptors_(),
-      p4_info_manager_(nullptr),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      p4_info_manager_(nullptr),
       device_(device) {}
 
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
