@@ -11,17 +11,17 @@ namespace p4_proto_builders {
 hal::P4ControlStatement HitBuilder::Build() {
   hal::P4ControlStatement control_statement;
   // If there is no condition or control block, there is nothing to populate.
-  if (condition_.ByteSize() == 0 && control_block_.ByteSize() == 0) {
+  if (condition_.ByteSizeLong() == 0 && control_block_.ByteSizeLong() == 0) {
     return control_statement;
   }
   // Populate the condition.
   hal::P4IfStatement* branch = control_statement.mutable_branch();
-  if (condition_.ByteSize() != 0) {
+  if (condition_.ByteSizeLong() != 0) {
     *branch->mutable_condition()->mutable_hit() = condition_;
     branch->mutable_condition()->set_not_operator(on_hit_ == use_false_);
   }
   // Populate the control block.
-  if (control_block_.ByteSize() != 0) {
+  if (control_block_.ByteSizeLong() != 0) {
     if (use_false_) {
       *branch->mutable_false_block() = control_block_;
     } else {
@@ -40,17 +40,17 @@ hal::P4ControlStatement IsValidBuilder::Build() {
   branch->mutable_condition()->mutable_is_valid()->set_header_type(
       header_type_);
   if (use_not_) {
-    if (invalid_control_block_.ByteSize() != 0) {
+    if (invalid_control_block_.ByteSizeLong() != 0) {
       *branch->mutable_true_block() = invalid_control_block_;
     }
-    if (valid_control_block_.ByteSize() != 0) {
+    if (valid_control_block_.ByteSizeLong() != 0) {
       *branch->mutable_false_block() = valid_control_block_;
     }
   } else {
-    if (invalid_control_block_.ByteSize() != 0) {
+    if (invalid_control_block_.ByteSizeLong() != 0) {
       *branch->mutable_false_block() = invalid_control_block_;
     }
-    if (valid_control_block_.ByteSize() != 0) {
+    if (valid_control_block_.ByteSizeLong() != 0) {
       *branch->mutable_true_block() = valid_control_block_;
     }
   }
