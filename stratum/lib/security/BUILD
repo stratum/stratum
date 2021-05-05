@@ -2,7 +2,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
 load(
     "//bazel:rules.bzl",
     "HOST_ARCHES",
@@ -147,7 +146,7 @@ stratum_cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],

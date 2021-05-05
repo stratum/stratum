@@ -46,7 +46,7 @@ stratum_cc_test(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
