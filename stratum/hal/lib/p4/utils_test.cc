@@ -77,6 +77,18 @@ TEST(ByteStringTest, P4RuntimeByteStringToPaddedByteStringCorrect) {
             P4RuntimeByteStringToPaddedByteString("\xab", 0));
 }
 
+TEST(ByteStringTest, ByteStringToP4RuntimeByteStringCorrect) {
+  EXPECT_EQ(std::string("\xab", 1),
+            ByteStringToP4RuntimeByteString(std::string("\x00\xab", 2)));
+  EXPECT_EQ(std::string("\x00", 1),
+            ByteStringToP4RuntimeByteString(std::string("\x00", 1)));
+  EXPECT_EQ(std::string("\xab", 1),
+            ByteStringToP4RuntimeByteString(std::string("\xab", 1)));
+  EXPECT_EQ("", ByteStringToP4RuntimeByteString(""));
+  EXPECT_EQ(std::string("\xab", 1), ByteStringToP4RuntimeByteString(std::string(
+                                        "\x00\x00\x00\x00\xab", 5)));
+}
+
 // This test fixture provides a common P4PipelineConfig for these tests.
 class TableMapValueTest : public testing::Test {
  protected:
