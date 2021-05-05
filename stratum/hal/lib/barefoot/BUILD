@@ -412,6 +412,7 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:writer_interface",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:utils",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_absl//absl/container:flat_hash_map",
