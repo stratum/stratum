@@ -49,6 +49,9 @@ std::string Uint32ToByteStream(uint32 val);
 std::string P4RuntimeByteStringToPaddedByteString(std::string byte_string,
                                                   size_t num_bytes);
 
+// Converts a byte string to a canonical P4Runtime byte string.
+std::string ByteStringToP4RuntimeByteString(std::string bytes);
+
 // Helper to convert a gRPC status with error details to a string. Assumes
 // ::grpc::Status includes a binary error detail which is encoding a serialized
 // version of ::google::rpc::Status proto in which the details are captured
