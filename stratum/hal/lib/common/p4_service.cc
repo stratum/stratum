@@ -620,8 +620,10 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         break;
       }
       case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
-        return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                              "Need to specify either arbitration or packet.");
+      case ::p4::v1::StreamMessageRequest::kOther:
+        return ::grpc::Status(
+            ::grpc::StatusCode::INVALID_ARGUMENT,
+            "Need to specify either arbitration, packet or digest ack.");
     }
   }
 
@@ -893,7 +895,12 @@ void P4Service::StreamResponseReceiveHandler(
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  it->second.begin()->stream()->Write(resp);
+  if (!it->second.begin()->stream()->Write(resp)) {
+    LOG_EVERY_N(ERROR, 500)
+        << "Can't send StreamMessageResponse " << resp.ShortDebugString()
+        << " to controller " << it->second.begin()->Name()
+        << " because stream channel is closed.";
+  }
 }
 
 }  // namespace hal
