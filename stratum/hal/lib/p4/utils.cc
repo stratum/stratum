@@ -8,6 +8,8 @@
 
 #include <arpa/inet.h>
 
+#include <algorithm>
+
 #include "absl/strings/str_format.h"
 #include "absl/strings/substitute.h"
 #include "google/rpc/code.pb.h"
@@ -107,6 +109,12 @@ std::string P4RuntimeByteStringToPaddedByteString(std::string byte_string,
   DCHECK_EQ(num_bytes, byte_string.size());
 
   return byte_string;
+}
+
+std::string ByteStringToP4RuntimeByteString(std::string bytes) {
+  // Remove leading zeros.
+  bytes.erase(0, std::min(bytes.find_first_not_of('\x00'), bytes.size() - 1));
+  return bytes;
 }
 
 std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
