@@ -169,7 +169,7 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.2.0
+export SDE_VERSION=9.3.1
 export STRATUM_TARGET=stratum_bf
 docker build -t stratumproject/stratum-bf:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
@@ -192,7 +192,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bf:9.2.0 -o stratum-bf-9.2.0-docker.tar
+docker save stratumproject/stratum-bf:9.3.1 -o stratum-bf-9.3.1-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally
