@@ -20,6 +20,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/lib/channel/channel.h"
 
 namespace stratum {
 namespace p4runtime {
@@ -71,6 +72,8 @@ class P4RuntimeSession {
   static std::unique_ptr<P4RuntimeSession> Default(
       std::unique_ptr<p4::v1::P4Runtime::Stub> stub, uint32_t device_id);
 
+  ~P4RuntimeSession();
+
   // Disable copy semantics.
   P4RuntimeSession(const P4RuntimeSession&) = delete;
   P4RuntimeSession& operator=(const P4RuntimeSession&) = delete;
@@ -85,6 +88,18 @@ class P4RuntimeSession {
   p4::v1::Uint128 ElectionId() const { return election_id_; }
   // Return the P4Runtime stub.
   p4::v1::P4Runtime::Stub& Stub() { return *stub_; }
+  // Reads back stream message response.
+  ABSL_MUST_USE_RESULT bool StreamChannelRead(
+      p4::v1::StreamMessageResponse& response) {
+    return stream_channel_->Read(&response);
+  }
+  // Writes stream message request.
+  ABSL_MUST_USE_RESULT bool StreamChannelWrite(
+      const p4::v1::StreamMessageRequest& request) {
+    return stream_channel_->Write(request);
+  }
+  // Cancels the RPC. It is done in a best-effort fashion.
+  void TryCancel() { stream_channel_context_->TryCancel(); }
 
  private:
   P4RuntimeSession(uint32_t device_id,
@@ -93,10 +108,15 @@ class P4RuntimeSession {
       : device_id_(device_id),
         stub_(std::move(stub)),
         stream_channel_context_(absl::make_unique<grpc::ClientContext>()),
-        stream_channel_(stub_->StreamChannel(stream_channel_context_.get())) {
+        stream_channel_(stub_->StreamChannel(stream_channel_context_.get())),
+        stream_response_handler_tid_(0) {
     election_id_.set_high(absl::Uint128High64(election_id));
     election_id_.set_low(absl::Uint128Low64(election_id));
   }
+
+  void ReadStreamResponses();
+
+  static void* StreamResponseHandlerThreadFunc(void* arg);
 
   // The id of the node that this session belongs to.
   uint32_t device_id_;
@@ -111,6 +131,12 @@ class P4RuntimeSession {
   std::unique_ptr<grpc::ClientReaderWriter<p4::v1::StreamMessageRequest,
                                            p4::v1::StreamMessageResponse>>
       stream_channel_;
+
+  // The
+  pthread_t stream_response_handler_tid_;
+  //
+  std::unique_ptr<Channel<::p4::v1::StreamMessageResponse>>
+      stream_response_channel_;
 };
 
 // Create P4Runtime stub.
@@ -183,6 +209,9 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 // Writes the given counter entries on the switch.
 ::util::Status ModifyIndirectCounterEntries(
     P4RuntimeSession* session, absl::Span<const p4::v1::CounterEntry> entries);
+
+::util::Status SendPacketOut(P4RuntimeSession* session,
+                             const p4::v1::PacketOut& packet);
 
 // Sets the forwarding pipeline from the given p4 info.
 ::util::Status SetForwardingPipelineConfig(P4RuntimeSession* session,

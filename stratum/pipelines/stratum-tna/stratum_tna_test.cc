@@ -117,6 +117,32 @@ TEST_F(StratumTnaTest, InsertTableEntry) {
                                              24, 1, 0x000000aaaaaa)));
 }
 
+TEST_F(StratumTnaTest, PacketOut) {
+  ::p4::v1::PacketOut packet_out =
+      HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::PacketOut>(
+          p4_id_replacements_,
+          R"PROTO(
+              payload: "\x00\x00\x00\xcc\xcc\xcc\x00\x00\x00\xaa\xaa\xaa\x08\x00"
+              metadata {
+                metadata_id: 1
+                value: "\x01\x0c"
+              }
+              metadata {
+                metadata_id: 2
+                value: "\x00"
+              }
+              metadata {
+                metadata_id: 3
+                value: "\xBF\x01"
+              }
+      )PROTO");
+
+  // FIXME: Wait for port up.
+  absl::SleepFor(absl::Seconds(2));
+
+  EXPECT_OK(SendPacketOut(SutP4RuntimeSession(), packet_out));
+}
+
 }  // namespace
 }  // namespace stratum_tna
 }  // namespace pipelines
