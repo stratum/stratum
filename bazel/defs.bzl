@@ -83,10 +83,10 @@ STRATUM_DEFAULT_COPTS = select({
                         STRATUM_DISABLED_COMPILER_WARNINGS + \
                         STRATUM_COMPILER_ERRORS
 
-STRATUM_TEST_COPTS = STRATUM_DEFAULT_COPTS + select({
+STRATUM_TEST_COPTS = select({
     "//stratum:llvm_compiler": ABSL_LLVM_TEST_FLAGS,
     "//conditions:default": ABSL_GCC_TEST_FLAGS,
-})
+}) + STRATUM_DEFAULT_COPTS
 
 STRATUM_DEFAULT_LINKOPTS = select({
     "//conditions:default": [],

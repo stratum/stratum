@@ -389,6 +389,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "onlp_phal_test",
     srcs = ["onlp_phal_test.cc"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(max)
     deps = [
         ":onlp_phal",
         ":onlp_wrapper_mock",
