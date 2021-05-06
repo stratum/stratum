@@ -63,14 +63,17 @@ class BfrtPacketioManagerTest : public ::testing::Test {
 
   ::util::Status Shutdown() {
     // Make sure everything like Rx threads will be cleaned up.
-    if (bfrt_packetio_manager_->initialized_) {
-      EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1))
-          .WillOnce(Return(util::OkStatus()));
-      EXPECT_CALL(*bf_sde_wrapper_mock_,
-                  UnregisterPacketReceiveWriter(kDevice1))
-          .WillOnce(Return(util::OkStatus()));
+    {
+      absl::WriterMutexLock l(&bfrt_packetio_manager_->data_lock_);
+      if (bfrt_packetio_manager_->initialized_) {
+        EXPECT_CALL(*bf_sde_wrapper_mock_, StopPacketIo(kDevice1))
+            .WillOnce(Return(util::OkStatus()));
+        EXPECT_CALL(*bf_sde_wrapper_mock_,
+                    UnregisterPacketReceiveWriter(kDevice1))
+            .WillOnce(Return(util::OkStatus()));
+      }
     }
-    packet_rx_writer.release();
+    packet_rx_writer.reset();
     return bfrt_packetio_manager_->Shutdown();
   }
 
@@ -139,16 +142,15 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   std::unique_ptr<ChannelWriter<std::string>> packet_rx_writer;
 };
 
-// Basic set up and shutdown test
+constexpr int BfrtPacketioManagerTest::kDevice1;
+constexpr char BfrtPacketioManagerTest::kP4Info[];
 
 // TODO(Yi Tseng): These two methods will always return OK status
 // We can add tests for these methods if we modify them.
 // TEST_F(BfrtPacketioManagerTest, PushChassisConfig) {}
 // TEST_F(BfrtPacketioManagerTest, VerifyChassisConfig) {}
 
-constexpr int BfrtPacketioManagerTest::kDevice1;
-constexpr char BfrtPacketioManagerTest::kP4Info[];
-
+// Basic set up and shutdown test.
 TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfigAndShutdown) {
   EXPECT_OK(PushPipelineConfig());
   EXPECT_OK(Shutdown());
