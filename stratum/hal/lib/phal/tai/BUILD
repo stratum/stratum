@@ -109,6 +109,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "tai_optics_datasource_test",
     srcs = ["tai_optics_datasource_test.cc"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(max)
     deps = [
         ":tai_interface",
         ":tai_interface_mock",

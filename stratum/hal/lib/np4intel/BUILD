@@ -69,6 +69,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "np4_chassis_manager_test",
     srcs = ["np4_chassis_manager_test.cc"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(craig)
     deps = [
         ":np4_chassis_manager",
         ":test_main",

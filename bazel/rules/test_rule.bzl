@@ -2,15 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@rules_cc//cc:defs.bzl", "cc_test")
+load(
+    "//bazel:defs.bzl",
+    "STRATUM_DEFAULT_LINKOPTS",
+    "STRATUM_TEST_COPTS",
+)
 
 def stratum_cc_test(
         name,
         deps = None,
         srcs = None,
         data = None,
-        copts = None,
+        copts = [],
         defines = None,
-        linkopts = None,
+        linkopts = [],
         size = "small",
         visibility = None):
     cc_test(
@@ -18,9 +23,9 @@ def stratum_cc_test(
         deps = deps,
         srcs = srcs,
         data = data,
-        copts = copts,
+        copts = STRATUM_TEST_COPTS + copts,
         defines = defines,
-        linkopts = linkopts,
+        linkopts = STRATUM_DEFAULT_LINKOPTS + linkopts,
         size = size,
         visibility = visibility,
     )
