@@ -141,6 +141,12 @@ BfChassisManager::~BfChassisManager() = default;
   }
   config->loopback_mode = config_params.loopback_mode();
 
+  if (config_params.frequency() != 0) {
+    RETURN_IF_ERROR(
+        onlp_interface_->SetSfpFrequency(unit, sdk_port_id, config_params.frequency()));
+  }
+  config->frequency = config_params.frequency();
+
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
     RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
