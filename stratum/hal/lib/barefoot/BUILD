@@ -421,7 +421,6 @@ stratum_cc_library(
 stratum_cc_test(
     name = "bfrt_packetio_manager_test",
     srcs = ["bfrt_packetio_manager_test.cc"],
-    copts = ["-Wno-thread-safety-analysis"],  # TODO(max)
     deps = [
         ":bf_sde_mock",
         ":bfrt_packetio_manager",
