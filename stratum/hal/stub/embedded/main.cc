@@ -700,7 +700,7 @@ class HalServiceClient {
 
 ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
 
-int Main(int argc, char** argv) {
+::util::Status Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
   HalServiceClient client(FLAGS_url);
@@ -724,10 +724,10 @@ int Main(int argc, char** argv) {
   } else if (FLAGS_start_gnmi_subscription_session) {
     client.StartGnmiSubscriptionSession();
   } else {
-    LOG(ERROR) << "Invalid command.";
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid command.";
   }
 
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace stub
@@ -735,6 +735,5 @@ int Main(int argc, char** argv) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  FLAGS_logtostderr = true;
-  return stratum::hal::stub::Main(argc, argv);
+  return stratum::hal::stub::Main(argc, argv).error_code();
 }
