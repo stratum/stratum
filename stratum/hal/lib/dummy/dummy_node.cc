@@ -311,9 +311,11 @@ int32 DummyNode::Slot() const { return slot_; }
 
 int32 DummyNode::Index() const { return index_; }
 
-DummyNode* DummyNode::CreateInstance(const uint64 id, const std::string& name,
-                                     const int32 slot, const int32 index) {
-  return new DummyNode(id, name, slot, index);
+std::unique_ptr<DummyNode> DummyNode::CreateInstance(const uint64 id,
+                                                     const std::string& name,
+                                                     const int32 slot,
+                                                     const int32 index) {
+  return absl::WrapUnique(new DummyNode(id, name, slot, index));
 }
 
 DummyNode::DummyNode(const uint64 id, const std::string& name, const int32 slot,
