@@ -101,7 +101,7 @@ class DummySwitch : public SwitchInterface {
 
   PhalInterface* phal_interface_;
   DummyChassisManager* chassis_mgr_;
-  ::absl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
+  ::absl::flat_hash_map<uint64, std::unique_ptr<DummyNode>> dummy_nodes_;
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_;
 
   // gets slot number for a node_id + port_id pair
