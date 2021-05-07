@@ -430,5 +430,53 @@ uint64 ConvertHzToMHz(const uint64& val) { return val / 1000000; }
 
 uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
 
+::util::Status ConvertStringToLogSeverity(const std::string& severity_string,
+                                          LoggingConfig* logging_config) {
+  if (severity_string == "CRITICAL") {
+    logging_config->first = "3";
+    logging_config->second = "0";
+  } else if (severity_string == "ERROR") {
+    logging_config->first = "2";
+    logging_config->second = "0";
+  } else if (severity_string == "WARNING") {
+    logging_config->first = "1";
+    logging_config->second = "0";
+  } else if (severity_string == "NOTICE") {
+    logging_config->first = "0";
+    logging_config->second = "0";
+  } else if (severity_string == "INFORMATIONAL") {
+    logging_config->first = "0";
+    logging_config->second = "1";
+  } else if (severity_string == "DEBUG") {
+    logging_config->first = "0";
+    logging_config->second = "2";
+  } else {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Invalid severity string \"" << severity_string << "\".";
+  }
+
+  return ::util::OkStatus();
+}
+
+std::string ConvertLogSeverityToString(const LoggingConfig& logging_config) {
+  const std::string& glog_severity = logging_config.first;
+  const std::string& glog_verbosity = logging_config.second;
+  if (glog_severity == "0" && glog_verbosity >= "2") {
+    return "DEBUG";
+  } else if (glog_severity == "0" && glog_verbosity == "1") {
+    return "INFORMATIONAL";
+  } else if (glog_severity == "0") {
+    return "NOTICE";
+  } else if (glog_severity == "1") {
+    return "WARNING";
+  } else if (glog_severity == "2") {
+    return "ERROR";
+  } else if (glog_severity == "3") {
+    return "CRITICAL";
+  } else {
+    return "UNKNOWN";
+  }
+}
+
 }  // namespace hal
 }  // namespace stratum

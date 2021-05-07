@@ -424,6 +424,9 @@ class YangParseTree {
   void AddSubtreeChassis(const Chassis& chassis)
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
+  // Add supported leaf handles for the system.
+  void AddSubtreeSystem() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+
   // Configure the root element.
   void AddRoot() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 

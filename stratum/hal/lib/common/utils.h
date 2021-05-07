@@ -242,6 +242,13 @@ uint64 ConvertHzToMHz(const uint64& val);
 // A helper method that converts frequency from MHz to Hz.
 uint64 ConvertMHzToHz(const uint64& val);
 
+// A helper method that converts glog log level to Openconfig severity string.
+std::string ConvertLogSeverityToString(const LoggingConfig& logging_config);
+
+// A helper method that converts Openconfig severity to glog log level.
+::util::Status ConvertStringToLogSeverity(const std::string& severity_string,
+                                          LoggingConfig* logging_config);
+
 }  // namespace hal
 }  // namespace stratum
 

@@ -12,6 +12,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/constants.h"
 
 namespace stratum {
@@ -462,6 +463,43 @@ TEST(DecimalUtilTest, TestFromDecimal64ToDouble) {
 
   DecimalToDoubleTest(0ll, 0, 0);
   DecimalToDoubleTest(-0ll, -0, 0);
+}
+
+TEST(LogSeverityUtilTest, TestFromLogSeverityToString) {
+  EXPECT_EQ("DEBUG", ConvertLogSeverityToString(LoggingConfig("0", "2")));
+  EXPECT_EQ("INFORMATIONAL",
+            ConvertLogSeverityToString(LoggingConfig("0", "1")));
+  EXPECT_EQ("NOTICE", ConvertLogSeverityToString(LoggingConfig("0", "0")));
+  EXPECT_EQ("WARNING", ConvertLogSeverityToString(LoggingConfig("1", "0")));
+  EXPECT_EQ("ERROR", ConvertLogSeverityToString(LoggingConfig("2", "0")));
+  EXPECT_EQ("CRITICAL", ConvertLogSeverityToString(LoggingConfig("3", "0")));
+}
+
+TEST(LogSeverityUtilTest, TestFromStringToLogSeverity) {
+  LoggingConfig logging_config;
+  ASSERT_OK(ConvertStringToLogSeverity("DEBUG", &logging_config));
+  EXPECT_EQ("0", logging_config.first);
+  EXPECT_EQ("2", logging_config.second);
+
+  ASSERT_OK(ConvertStringToLogSeverity("INFORMATIONAL", &logging_config));
+  EXPECT_EQ("0", logging_config.first);
+  EXPECT_EQ("1", logging_config.second);
+
+  ASSERT_OK(ConvertStringToLogSeverity("NOTICE", &logging_config));
+  EXPECT_EQ("0", logging_config.first);
+  EXPECT_EQ("0", logging_config.second);
+
+  ASSERT_OK(ConvertStringToLogSeverity("WARNING", &logging_config));
+  EXPECT_EQ("1", logging_config.first);
+  EXPECT_EQ("0", logging_config.second);
+
+  ASSERT_OK(ConvertStringToLogSeverity("ERROR", &logging_config));
+  EXPECT_EQ("2", logging_config.first);
+  EXPECT_EQ("0", logging_config.second);
+
+  ASSERT_OK(ConvertStringToLogSeverity("CRITICAL", &logging_config));
+  EXPECT_EQ("3", logging_config.first);
+  EXPECT_EQ("0", logging_config.second);
 }
 
 }  // namespace hal

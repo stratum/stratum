@@ -59,6 +59,28 @@ void InitStratumLogging() {
   }
 }
 
+LoggingConfig GetCurrentLogLevel() {
+  std::string minloglevel = "UNKNOWN";
+  ::gflags::GetCommandLineOption("minloglevel", &minloglevel);
+  std::string verbosity = "UNKNOWN";
+  ::gflags::GetCommandLineOption("v", &verbosity);
+
+  return std::make_pair(minloglevel, verbosity);
+}
+
+bool SetLogLevel(const LoggingConfig& logging_config) {
+  // stderrthreshold is set in addition to minloglevel in case file logging is
+  // enabled by the user.
+  return !::gflags::SetCommandLineOption("stderrthreshold",
+                                         logging_config.first.c_str())
+              .empty() &&
+         !::gflags::SetCommandLineOption("minloglevel",
+                                         logging_config.first.c_str())
+              .empty() &&
+         !::gflags::SetCommandLineOption("v", logging_config.second.c_str())
+              .empty();
+}
+
 }  // namespace stratum
 
 // ostream overload for std::nulptr_t for C++11

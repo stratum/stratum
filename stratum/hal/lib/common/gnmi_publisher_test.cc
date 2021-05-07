@@ -480,6 +480,15 @@ INSTANTIATE_TEST_SUITE_P(
                                      "device1.domain.net.com:ce-1/1")("output")(
             "queues")("queue", "BE1")("state")("dropped-pkts")()));
 
+// Due to Google's restriction on the size of a function frame, this automation
+// had to be split into separate calls.
+INSTANTIATE_TEST_SUITE_P(
+    SubscriptionSupportedSystemPathsTestWithPath,
+    SubscriptionSupportedPathsTest,
+    ::testing::Values(
+        GetPath("system")("logging")("console")("config")("severity")(),
+        GetPath("system")("logging")("console")("state")("severity")()));
+
 // All paths that support OnReplace only be tested by this parametrized
 // test that takes the path as a parameter.
 class ReplaceSupportedPathsTest
