@@ -1210,8 +1210,8 @@ BENCHMARK(BM_CountLeadingZeros32);
 BENCHMARK(BM_CountLeadingZeros64);
 
 int main(int argc, char **argv) {
-  LogToStderr();
   InitGoogle("", &argc, &argv, true);
+  InitStratumLogging();
   RunSpecifiedBenchmarks();
 
   CHECK_LE(max_bytes, kMaxBytes);
