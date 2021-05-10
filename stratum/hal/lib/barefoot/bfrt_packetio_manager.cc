@@ -260,6 +260,9 @@ class BitBuffer {
     auto metadata = packet->add_metadata();
     metadata->set_metadata_id(p.first);
     metadata->set_value(bit_buf.PopField(p.second));
+    VLOG(1) << "Encoded PacketIn metadata field with id " << p.first
+            << " bitwidth " << p.second << " value 0x"
+            << StringToHex(metadata->value());
   }
   packet->set_payload(buffer.data() + packetin_header_size_,
                       buffer.size() - packetin_header_size_);

@@ -1618,8 +1618,7 @@ BfSdeWrapper::CreateTableData(int table_id, int action_id) {
   if (!(*rx_writer)->TryWrite(buffer).ok()) {
     LOG_EVERY_N(INFO, 500) << "Dropped packet received from CPU.";
   }
-
-  VLOG(1) << "Received packet from CPU " << buffer.size() << " bytes "
+  VLOG(1) << "Received " << buffer.size() << " byte packet from CPU "
           << StringToHex(buffer);
 
   return ::util::OkStatus();
