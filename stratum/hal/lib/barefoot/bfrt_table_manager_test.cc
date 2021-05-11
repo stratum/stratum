@@ -144,7 +144,7 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
 
   EXPECT_CALL(*table_key_mock, SetPriority(kBfrtPriority))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*table_data_mock, SetOnlyCounterData(200, 100))
+  EXPECT_CALL(*table_data_mock, SetCounterData(200, 100))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
       .WillOnce(Return(kBfRtTableId));
