@@ -171,7 +171,7 @@ std::unique_ptr<PINode> PINode::CreateInstance(
 
   ::p4::v1::ReadResponse response;
   auto status = device_mgr_->read(req, &response);
-  RETURN_IF_ERROR(toUtilStatus(status, details, response.entities_size()));
+  RETURN_IF_ERROR(toUtilStatus(status, details, req.entities_size()));
   if (!writer->Write(response))
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
   return ::util::OkStatus();

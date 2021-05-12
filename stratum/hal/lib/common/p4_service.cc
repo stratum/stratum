@@ -243,6 +243,11 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   if (FLAGS_read_req_log_file.empty()) {
     return;
   }
+  if (results.size() != req.entities_size()) {
+    LOG(ERROR) << "Size mismatch: " << results.size()
+               << " != " << req.entities_size() << ". Did not log anything!";
+    return;
+  }
   std::string msg = "";
   std::string ts =
       absl::FormatTime("%Y-%m-%d %H:%M:%E6S", timestamp, absl::LocalTimeZone());
