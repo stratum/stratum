@@ -78,20 +78,19 @@ pkg_tar(
 )
 
 pkg_deb(
-    name = "stratum_bmv2_debian",
+    name = "stratum_bmv2_deb",
     architecture = "amd64",
-    built_using = "bazel (0.14.1)",
     data = ":stratum_bmv2_data",
     depends = [
         "libjudy-dev",
         "libgmp-dev",
         "libpcap-dev",
-        "libboost1.55-all-dev",
+        "libboost1.62-all-dev",
     ],
     description_file = "debian/description",
     homepage = "https://stratumproject.org/",
-    maintainer = "https://stratumproject.org/",
-    package = "stratum_bmv2",
+    maintainer = "The Stratum Project",
+    package = "stratum-bmv2",
     postinst = "debian/postinst",
-    version = "0.1.1",
+    version = "0.0.1",
 )
