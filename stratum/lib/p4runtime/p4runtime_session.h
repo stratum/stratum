@@ -119,19 +119,18 @@ std::unique_ptr<p4::v1::P4Runtime::Stub> CreateP4RuntimeStub(
     const std::shared_ptr<grpc::ChannelCredentials>& credentials);
 
 // Create secure TLS gRPC channel credentials.
-inline ::util::StatusOr<std::shared_ptr<grpc_impl::ChannelCredentials>>
+inline ::util::StatusOr<std::shared_ptr<grpc::ChannelCredentials>>
 CreateTlsChannelCredentials(const std::string& pem_root_certs,
                             const std::string& client_cert,
                             const std::string& client_private_key) {
   auto key_materials_config =
-      std::make_shared<::grpc_impl::experimental::TlsKeyMaterialsConfig>();
+      std::make_shared<::grpc::experimental::TlsKeyMaterialsConfig>();
   key_materials_config->set_pem_root_certs(pem_root_certs);
-  ::grpc_impl::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
-      pem_key_cert_pair;
+  ::grpc::experimental::TlsKeyMaterialsConfig::PemKeyCertPair pem_key_cert_pair;
   pem_key_cert_pair.cert_chain = client_cert;
   pem_key_cert_pair.private_key = client_private_key;
   key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
-  auto cred_opts = ::grpc_impl::experimental::TlsCredentialsOptions(
+  auto cred_opts = ::grpc::experimental::TlsCredentialsOptions(
       GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
       key_materials_config, nullptr, nullptr);
 
