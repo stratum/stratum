@@ -835,52 +835,11 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   return ::util::OkStatus();
 }
 
-::util::Status TableData::SetOnlyCounterData(uint64 bytes, uint64 packets) {
-  const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
-
-  bf_rt_id_t action_id = 0;
-  if (table->actionIdApplicable()) {
-    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
-  }
-  if (!action_id) {
-    bf_rt_id_t table_id;
-    table->tableIdGet(&table_id);
-    std::string table_name;
-    table->tableNameGet(&table_name);
-    LOG(WARNING) << "Trying to set counter data on a table entry without "
-                 << "action ID. This might not behave as expected, please "
-                 << "report this to the Stratum authors: table_id " << table_id
-                 << " table_name " << table_name << ".";
-  }
-  std::vector<bf_rt_id_t> ids;
-  bf_rt_id_t field_id_bytes;
-  bf_status_t has_bytes =
-      table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id_bytes);
-  if (has_bytes == BF_SUCCESS) {
-    ids.push_back(field_id_bytes);
-  }
-  bf_rt_id_t field_id_packets;
-  bf_status_t has_packets =
-      table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id_packets);
-  if (has_packets == BF_SUCCESS) {
-    ids.push_back(field_id_packets);
-  }
-  if (action_id) {
-    RETURN_IF_BFRT_ERROR(table->dataReset(ids, action_id, table_data_.get()));
-  } else {
-    RETURN_IF_BFRT_ERROR(table->dataReset(ids, table_data_.get()));
-  }
-  if (has_bytes == BF_SUCCESS) {
-    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_bytes, bytes));
-  }
-  if (has_packets == BF_SUCCESS) {
-    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_packets, packets));
-  }
-
-  return ::util::OkStatus();
-}
-
+// The P4Runtime `CounterData` message has no mechanism to differentiate between
+// byte-only, packet-only or both counter types. This make it impossible to
+// recognize a counter reset (set, e.g., bytes to zero) request from a set
+// request for a packet-only counter. Therefore we have to be careful when
+// making set calls for those fields against the SDE.
 ::util::Status TableData::SetCounterData(uint64 bytes, uint64 packets) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
@@ -899,17 +858,17 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
                  << "report this to the Stratum authors: table_id " << table_id
                  << " table_name " << table_name << ".";
   }
-  bf_rt_id_t field_id_bytes;
-  bf_status_t has_bytes =
-      table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id_bytes);
-  bf_rt_id_t field_id_packets;
-  bf_status_t has_packets =
-      table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id_packets);
-  if (has_bytes == BF_SUCCESS) {
-    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_bytes, bytes));
-  }
-  if (has_packets == BF_SUCCESS) {
-    RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id_packets, packets));
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    if (field_name == "$COUNTER_SPEC_BYTES") {
+      RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id, bytes));
+    } else if (field_name == "$COUNTER_SPEC_PKTS") {
+      RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id, packets));
+    }
+    // Uninteresting field, ignore.
   }
 
   return ::util::OkStatus();

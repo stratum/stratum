@@ -685,8 +685,9 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
 
   // Fetch existing entry with action data. This is needed since the P4RT
-  // request does not provide the action (id), but the SDE requires it in the
-  // later modify call.
+  // request does not provide the action ID and data, but we have to provide the
+  // current values in the later modify call to the SDE, else we would modify
+  // the table entry.
   RETURN_IF_ERROR(bf_sde_interface_->GetTableEntry(
       device_, session, table_id, table_key.get(), table_data.get()));
 
@@ -697,9 +698,9 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     return ::util::OkStatus();
   }
 
-  RETURN_IF_ERROR(table_data->SetOnlyCounterData(
-      direct_counter_entry.data().byte_count(),
-      direct_counter_entry.data().packet_count()));
+  RETURN_IF_ERROR(
+      table_data->SetCounterData(direct_counter_entry.data().byte_count(),
+                                 direct_counter_entry.data().packet_count()));
 
   RETURN_IF_ERROR(bf_sde_interface_->ModifyTableEntry(
       device_, session, table_id, table_key.get(), table_data.get()));
