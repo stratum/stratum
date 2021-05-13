@@ -98,13 +98,7 @@ ENV RUNTIME_DEPS \
     telnet \
     python-pexpect \
     tcpdump \
-    screen \
-    libboost-filesystem1.62.0 \
-    libboost-program-options1.62.0 \
-    libboost-thread1.62.0 \
-    libjudydebian1 \
-    libgmp10 \
-    libpcap0.8
+    screen
 RUN install_packages $RUNTIME_DEPS
 
 COPY --from=builder /output /

@@ -52,7 +52,10 @@ pkg_tar(
 
 pkg_tar(
     name = "stratum_bmv2_config",
-    srcs = ["stratum_bmv2.environment"],
+    srcs = [
+        "chassis_config.pb.txt",
+        "stratum_bmv2.environment",
+    ],
     mode = "0644",
     package_dir = "/etc/stratum",
     strip_prefix = "/stratum/hal/bin/bmv2",
@@ -74,6 +77,7 @@ pkg_tar(
         ":stratum_bmv2_config",
         ":stratum_bmv2_pipeline",
         ":stratum_bmv2_service",
+        "@local_bmv2_bin//:bmv2_library_files",
     ],
 )
 
@@ -82,12 +86,14 @@ pkg_deb(
     architecture = "amd64",
     data = ":stratum_bmv2_data",
     depends = [
-        "libjudy-dev",
-        "libgmp-dev",
+        "libboost-filesystem1.62.0",
+        "libboost-program-options1.62.0",
+        "libboost-thread1.62.0",
+        "libgmp10",
+        "libjudydebian1",
         "libpcap-dev",
-        "libboost1.62-all-dev",
     ],
-    description_file = "debian/description",
+    description = "The Stratum package for BMv2 software switches",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
     package = "stratum-bmv2",

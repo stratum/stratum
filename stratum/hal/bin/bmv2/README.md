@@ -15,25 +15,25 @@ The `stratum_bmv2` binary is a standalone executable which includes:
 1. a Stratum implementation for bmv2
 2. the `v1model` datapath
 
-## Building the `stratum_bmv2` binary
+## Building the `stratum_bmv2` package
 
-To build the binary, start the development docker container and run bazel:
+To build the Debian package, start the development docker container and run
+Bazel:
 
 ```bash
 setup_dev_env.sh  # You're inside the Docker container now
-bazel build //stratum/hal/bin/bmv2:stratum_bmv2
+bazel build //stratum/hal/bin/bmv2:stratum_bmv2_deb
 ```
 
 ## Running the `stratum_bmv2` binary
 
-As of now the `stratum_bmv2` binary *can only be run from the root of your
-Stratum Bazel workspace*:
+As of now the `stratum_bmv2` binary can be run from Bazel or directly, if
+installed as from a Debian package:
 
-```
+```bash
+# Or just `stratum_bmv2`
 ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 \
-    --persistent_config_dir=<config dir> \
-    --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
-    --chassis_config_file=<config dir>/chassis_config.pb.txt \
+    --chassis_config_file=/etc/stratum/chassis_config.pb.txt \
     --bmv2_log_level=debug
 ```
 
@@ -44,7 +44,7 @@ E0808 17:57:36.513905 29298 utils.cc:76] Return Error: ReadFileToString(filename
 W0808 17:57:36.513913 29298 config_monitoring_service.cc:106] No saved chassis config found in . This is normal when the switch is just installed.
 ```
 
-For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
+For a sample `chassis_config.pb.txt` file, see chassis_config.pb.txt in this
 directory. For each singleton port, use the Linux interface name as the `name`
 and set the `admin_state` to `ADMIN_STATE_ENABLED`.
 
@@ -69,5 +69,5 @@ cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
     --grpc-addr <YOUR_HOST_IP_ADDRESS>:9559 --json <prog>.json --p4info <prog>.proto.txt
 ```
 
-You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2` if you do not have your own
-P4 program.
+You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2`
+if you do not have your own P4 program.

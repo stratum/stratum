@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
+load("@//bazel/rules:package_rule.bzl", "pkg_tar_with_symlinks")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -31,4 +32,15 @@ cc_import(
     hdrs = [],  # see cc_library rule above
     shared_library = "bmv2-bin/lib/libbmpi.so",
     alwayslink = 1,
+)
+
+pkg_tar_with_symlinks(
+    name = "bmv2_library_files",
+    srcs = glob([
+        "bmv2-bin/lib/libbmpi.so*",
+        "bmv2-bin/lib/libsimpleswitch_runner.so.*",
+    ]),
+    mode = "0644",
+    package_dir = "/usr",
+    strip_prefix = "bmv2-bin",
 )
