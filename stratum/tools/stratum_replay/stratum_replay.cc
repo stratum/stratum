@@ -27,7 +27,7 @@ DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
 DEFINE_string(pipeline_cfg, "pipeline_cfg.pb.txt", "The pipeline config file.");
 DEFINE_string(election_id, "0,1",
               "Election id for arbitration update (high,low).");
-DEFINE_uint64(device_id, 1, "The device ID.");
+DEFINE_uint64(device_id, 1, "P4Runtime device ID.");
 DEFINE_string(ca_cert, "",
               "CA certificate, will use insecure credentials if empty.");
 DEFINE_string(client_cert, "", "Client certificate (optional).");

@@ -121,7 +121,8 @@ std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
   std::stringstream ss;
   if (!status.error_details().empty()) {
     ss << "(overall error code: "
-       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
+       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code())) << " ("
+       << status.error_code() << ")"
        << ", overall error message: "
        << (status.error_message().empty() ? "None" : status.error_message())
        << "). Error details: ";
@@ -133,9 +134,12 @@ std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
         ::p4::v1::Error detail;
         if (details.details(i).UnpackTo(&detail)) {
           ss << "\n(error #" << i + 1 << ": error code: "
-             << ::google::rpc::Code_Name(ToGoogleRpcCode(detail.code()))
+             << ::google::rpc::Code_Name(
+                    ToGoogleRpcCode(detail.canonical_code()))
+             << " (" << detail.code() << ")"
              << ", error message: "
              << (detail.message().empty() ? "None" : detail.message()) << ") ";
+          ss << detail.ShortDebugString();
         }
       }
     }

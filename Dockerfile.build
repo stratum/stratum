@@ -33,7 +33,7 @@ ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
     gnupg2 software-properties-common python-pip python-dev python3-dev \
-    apt-transport-https libelf-dev libbz2-dev
+    python3-pip apt-transport-https libelf-dev libbz2-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
@@ -95,6 +95,9 @@ RUN pip install setuptools wheel && \
     pip install 'cpplint==1.*'
 RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
 RUN chmod +x /usr/local/bin/buildifier
+
+# Python3 libs for bf-p4c
+RUN pip3 install packaging jsl jsonschema==2.6.0
 
 # Docker CLI for CI builds
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
