@@ -1,0 +1,10 @@
+#!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+# If systemd is installed,
+if command -v systemctl &> /dev/null; then
+  # Stop and disable Stratum service
+  systemctl stop stratum_bmv2.service
+  systemctl disable stratum_bmv2.service
+fi

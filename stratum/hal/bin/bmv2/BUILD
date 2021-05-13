@@ -98,5 +98,6 @@ pkg_deb(
     maintainer = "The Stratum Project",
     package = "stratum-bmv2",
     postinst = "debian/postinst",
+    prerm = "debian/prerm",
     version = "0.0.1",
 )
