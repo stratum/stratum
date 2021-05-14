@@ -1,4 +1,7 @@
-description: "Sample config"
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+description: "Sample config for Stratum-bmv2"
 chassis {
   platform: PLT_P4_SOFT_SWITCH
   name: "bmv2-simple_switch"

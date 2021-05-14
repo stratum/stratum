@@ -28,17 +28,9 @@ RUN python setup.py install --root /output
 # Install `m` utility so user can attach to a mininet host directly
 RUN cp util/m /output/bin/m && sed -i 's#sudo##g' /output/bin/m
 
-# Build stratum_bmv2
+# Copy Stratum souce to build additionally needed targets.
 COPY . /tmp/stratum
 WORKDIR /tmp/stratum
-
-RUN bazel build //stratum/hal/bin/bmv2:stratum_bmv2
-
-# Put aside stratum_bmv2 binary and shared objects needed for runtime.
-RUN mkdir -p /output/usr/local/bin
-RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
-RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
-RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 
 # As well as the P4Runtime Python bindings installed by PI. This is not needed
 # to run mininet, but it's useful to execute Python scripts acting as a
@@ -98,16 +90,13 @@ ENV RUNTIME_DEPS \
     telnet \
     python-pexpect \
     tcpdump \
-    screen \
-    libboost-filesystem1.62.0 \
-    libboost-program-options1.62.0 \
-    libboost-thread1.62.0 \
-    libjudydebian1 \
-    libgmp10 \
-    libpcap0.8
+    screen
 RUN install_packages $RUNTIME_DEPS
 
 COPY --from=builder /output /
+
+ADD ./stratum_bmv2_deb.deb /
+RUN install_packages /stratum_bmv2_deb.deb
 RUN ldconfig
 
 WORKDIR /root

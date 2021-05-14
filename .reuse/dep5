@@ -57,14 +57,6 @@ Files: stratum/hal/bin/barefoot/*.pb.txt
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
-Files: stratum/hal/config/*.pb.tx
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
-Files: stratum/hal/bin/bmv2/sample_config.proto.txt
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
 Files: stratum/hal/lib/common/gnmi_caps.pb.txt
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
