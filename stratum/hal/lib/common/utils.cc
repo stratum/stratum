@@ -233,6 +233,18 @@ std::string ConvertPortStateToString(const PortState& state) {
   }
 }
 
+PortState ConvertStringToPortState(const std::string& state_string) {
+  if (state_string == "UP") {
+    return PORT_STATE_UP;
+  } else if (state_string == "DOWN") {
+    return PORT_STATE_DOWN;
+  } else if (state_string == "LOWER_LAYER_DOWN") {
+    return PORT_STATE_FAILED;
+  } else {
+    return PORT_STATE_UNKNOWN;
+  }
+}
+
 std::string ConvertAdminStateToString(const AdminState& state) {
   switch (state) {
     case ADMIN_STATE_ENABLED:

@@ -914,11 +914,63 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/last-change
-void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
-  auto poll_functor = UnsupportedFunc();
-  auto on_change_functor = UnsupportedFunc();
+void SetUpInterfacesInterfaceStateLastChange(const std::string& name,
+                                             uint32 port_id, TreeNode* node,
+                                             YangParseTree* tree) {
+  uint64 now = absl::ToUnixNanos(absl::Now());
+  PortState last_state;
+  ::gnmi::Path oper_status_path =
+      GetPath("interfaces")("interface", name)("state")("oper-status")();
+  auto poll_functor = [&now, &last_state, oper_status_path, tree](
+                          const GnmiEvent& event, const ::gnmi::Path& path,
+                          GnmiSubscribeStream* stream) -> ::util::Status {
+    auto oper_status_node = tree->FindNodeOrNull(oper_status_path);
+    CHECK_RETURN_IF_FALSE(oper_status_node) << "Referenced node not found!";
+    PortState new_state;
+    InlineGnmiSubscribeStream inline_stream(
+        [&new_state,
+         oper_status_path](const ::gnmi::SubscribeResponse& msg) -> bool {
+          // If msg has empty update, it might be a sync_response for
+          // GetRequest.
+          if (!msg.has_update()) return msg.sync_response();
+          for (const auto& update : msg.update().update()) {
+            if (update.path() == oper_status_path) {
+              new_state = ConvertStringToPortState(update.val().string_val());
+              return true;
+            }
+          }
+          return false;
+        });
+    RETURN_IF_ERROR(
+        (oper_status_node->GetOnPollHandler())(event, &inline_stream));
+    if (last_state != new_state) {
+      now = absl::ToUnixNanos(absl::Now());
+      last_state = new_state;
+    }
+    return SendResponse(GetResponse(path, now), stream);
+  };
+  auto on_change_functor = [&now, &last_state, port_id](
+                               const GnmiEvent& event, const ::gnmi::Path& path,
+                               GnmiSubscribeStream* stream) {
+    // We are interested in PortOperStateChangedEvents only!
+    const PortOperStateChangedEvent* change =
+        dynamic_cast<const PortOperStateChangedEvent*>(&event);
+    if (change == nullptr || change->GetPortId() != port_id) {
+      // This is not the event you are looking for...
+      return ::util::OkStatus();
+    }
+    PortState new_state = change->GetNewState();
+    if (last_state != new_state) {
+      now = absl::ToUnixNanos(absl::Now());
+      last_state = new_state;
+      return SendResponse(GetResponse(path, now), stream);
+    }
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortOperStateChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -3218,7 +3270,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   // No need to lock the mutex - it is locked by method calling this one.
   TreeNode* node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("last-change")());
-  SetUpInterfacesInterfaceStateLastChange(node);
+  SetUpInterfacesInterfaceStateLastChange(name, port_id, node, tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("ifindex")());

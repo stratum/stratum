@@ -169,6 +169,9 @@ std::string ConvertHwStateToString(const HwState& state);
 // A helper function that convert Stratum port state enum to string.
 std::string ConvertPortStateToString(const PortState& state);
 
+// A helper function that convert OpenConfig port state string to PortState.
+PortState ConvertStringToPortState(const std::string& state_string);
+
 // A helper function that convert Stratum admin state enum to string.
 std::string ConvertAdminStateToString(const AdminState& state);
 
