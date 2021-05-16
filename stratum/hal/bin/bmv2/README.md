@@ -71,3 +71,26 @@ cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
 
 You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2`
 if you do not have your own P4 program.
+
+## Notes
+
+### P4Runtime canonical byte strings
+
+P4Runtime defines a [canonical byte string representation](https://s3-us-west-2.amazonaws.com/p4runtime/docs/master/P4Runtime-Spec.html#sec-bytestrings)
+for binary data in proto messages such as TableEntries and PacketIn/Outs. In
+short, it requires that the binary strings must not contain redundant bytes,
+ i.e., `\x00\xab` vs `\xab`.
+ Stratum-bmv2 does not yet support canonical byte strings although support is planned for the near future. If using a p4runtime client that defaults to canonical bytestrings usage (e.g. `p4lang/p4runtime-sh`) make sure the legacy byte-padded format is used instead. For `p4lang/p4runtime-sh` this is:
+
+ ```python
+ P4Runtime sh >>> global_options["canonical_bytestrings"] = False
+ ```
+
+ if using the shell or:
+
+ ```python
+from p4runtime_sh.global_options import global_options
+global_options["canonical_bytestrings"] = False
+ ```
+
+if using python directly.
