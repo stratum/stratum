@@ -112,7 +112,7 @@ void registerDeviceMgrLogger() {
   auto bf_chassis_manager =
       BfChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
   auto bf_switch =
-      BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
+      BfSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
                                bf_sde_wrapper, device_id_to_pi_node);
 
   // Create the 'Hal' class instance.

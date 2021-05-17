@@ -26,7 +26,7 @@ namespace barefoot {
 
 using ::stratum::hal::pi::PINode;
 
-BFSwitch::BFSwitch(PhalInterface* phal_interface,
+BfSwitch::BfSwitch(PhalInterface* phal_interface,
                    BfChassisManager* bf_chassis_manager,
                    BfSdeInterface* bf_sde_interface,
                    const std::map<int, PINode*>& unit_to_pi_node)
@@ -42,9 +42,9 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
   }
 }
 
-BFSwitch::~BFSwitch() {}
+BfSwitch::~BfSwitch() {}
 
-::util::Status BFSwitch::PushChassisConfig(const ChassisConfig& config) {
+::util::Status BfSwitch::PushChassisConfig(const ChassisConfig& config) {
   // Verify the config first. No need to continue if verification is not OK.
   // Push config to PHAL first and then the rest of the managers.
   RETURN_IF_ERROR(VerifyChassisConfig(config));
@@ -67,7 +67,7 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::VerifyChassisConfig(const ChassisConfig& config) {
+::util::Status BfSwitch::VerifyChassisConfig(const ChassisConfig& config) {
   // First make sure PHAL is happy with the config then continue with the rest
   // of the managers and nodes.
   absl::ReaderMutexLock l(&chassis_lock);
@@ -124,7 +124,7 @@ namespace {
 }
 }  // namespace
 
-::util::Status BFSwitch::PushForwardingPipelineConfig(
+::util::Status BfSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
 
@@ -149,7 +149,7 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::SaveForwardingPipelineConfig(
+::util::Status BfSwitch::SaveForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
 
@@ -166,7 +166,7 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
+::util::Status BfSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->CommitForwardingPipelineConfig());
 
@@ -176,7 +176,7 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::VerifyForwardingPipelineConfig(
+::util::Status BfSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   ::p4::v1::ForwardingPipelineConfig config;
   RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
@@ -185,17 +185,17 @@ namespace {
   return pi_node->VerifyForwardingPipelineConfig(config);
 }
 
-::util::Status BFSwitch::Shutdown() {
+::util::Status BfSwitch::Shutdown() {
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(status, bf_chassis_manager_->Shutdown());
   return status;
 }
 
-::util::Status BFSwitch::Freeze() { return ::util::OkStatus(); }
+::util::Status BfSwitch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::Unfreeze() { return ::util::OkStatus(); }
+::util::Status BfSwitch::Unfreeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::WriteForwardingEntries(
+::util::Status BfSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
@@ -206,7 +206,7 @@ namespace {
   return pi_node->WriteForwardingEntries(req, results);
 }
 
-::util::Status BFSwitch::ReadForwardingEntries(
+::util::Status BfSwitch::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
@@ -218,32 +218,32 @@ namespace {
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BFSwitch::RegisterStreamMessageResponseWriter(
+::util::Status BfSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
     std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
-::util::Status BFSwitch::UnregisterStreamMessageResponseWriter(uint64 node_id) {
+::util::Status BfSwitch::UnregisterStreamMessageResponseWriter(uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->UnregisterStreamMessageResponseWriter();
 }
-::util::Status BFSwitch::HandleStreamMessageRequest(
+::util::Status BfSwitch::HandleStreamMessageRequest(
     uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->HandleStreamMessageRequest(request);
 }
 
-::util::Status BFSwitch::RegisterEventNotifyWriter(
+::util::Status BfSwitch::RegisterEventNotifyWriter(
     std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   return bf_chassis_manager_->RegisterEventNotifyWriter(writer);
 }
 
-::util::Status BFSwitch::UnregisterEventNotifyWriter() {
+::util::Status BfSwitch::UnregisterEventNotifyWriter() {
   return bf_chassis_manager_->UnregisterEventNotifyWriter();
 }
 
-::util::Status BFSwitch::RetrieveValue(uint64 node_id,
+::util::Status BfSwitch::RetrieveValue(uint64 node_id,
                                        const DataRequest& request,
                                        WriterInterface<DataResponse>* writer,
                                        std::vector<::util::Status>* details) {
@@ -296,30 +296,30 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::SetValue(uint64 node_id, const SetRequest& request,
+::util::Status BfSwitch::SetValue(uint64 node_id, const SetRequest& request,
                                   std::vector<::util::Status>* details) {
   (void)node_id;
   (void)request;
   (void)details;
-  LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
+  LOG(INFO) << "BfSwitch::SetValue is not implemented yet, but changes will "
             << "be performed when ChassisConfig is pushed again.";
   // TODO(antonin)
   return ::util::OkStatus();
 }
 
-::util::StatusOr<std::vector<std::string>> BFSwitch::VerifyState() {
+::util::StatusOr<std::vector<std::string>> BfSwitch::VerifyState() {
   return std::vector<std::string>();
 }
 
-std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
+std::unique_ptr<BfSwitch> BfSwitch::CreateInstance(
     PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
     BfSdeInterface* bf_sde_interface,
     const std::map<int, PINode*>& unit_to_pi_node) {
-  return absl::WrapUnique(new BFSwitch(phal_interface, bf_chassis_manager,
+  return absl::WrapUnique(new BfSwitch(phal_interface, bf_chassis_manager,
                                        bf_sde_interface, unit_to_pi_node));
 }
 
-::util::StatusOr<PINode*> BFSwitch::GetPINodeFromUnit(int unit) const {
+::util::StatusOr<PINode*> BfSwitch::GetPINodeFromUnit(int unit) const {
   PINode* pi_node = gtl::FindPtrOrNull(unit_to_pi_node_, unit);
   if (pi_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
@@ -327,7 +327,7 @@ std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
   return pi_node;
 }
 
-::util::StatusOr<PINode*> BFSwitch::GetPINodeFromNodeId(uint64 node_id) const {
+::util::StatusOr<PINode*> BfSwitch::GetPINodeFromNodeId(uint64 node_id) const {
   PINode* pi_node = gtl::FindPtrOrNull(node_id_to_pi_node_, node_id);
   if (pi_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM)

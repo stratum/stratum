@@ -560,7 +560,7 @@ will crash the switch:
     @           0x9f8403 pi::fe::proto::DeviceMgrImp::pipeline_config_set()
     @           0x9f7e31 pi::fe::proto::DeviceMgr::pipeline_config_set()
     @           0x7220d6 stratum::hal::pi::PINode::PushForwardingPipelineConfig()
-    @           0x41fb99 stratum::hal::barefoot::BFSwitch::PushForwardingPipelineConfig()
+    @           0x41fb99 stratum::hal::barefoot::BfSwitch::PushForwardingPipelineConfig()
     @           0x65db56 stratum::hal::P4Service::SetForwardingPipelineConfig()
 ```
 
