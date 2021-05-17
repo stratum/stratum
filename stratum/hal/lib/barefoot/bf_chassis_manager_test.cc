@@ -57,7 +57,7 @@ constexpr LoopbackState kDefaultLoopbackMode = LOOPBACK_STATE_UNKNOWN;
 class ChassisConfigBuilder {
  public:
   explicit ChassisConfigBuilder(uint64 node_id = kNodeId) : node_id(node_id) {
-    config_.set_description("Test config for BFChassisManager");
+    config_.set_description("Test config for BfChassisManager");
     auto* chassis = config_.mutable_chassis();
     chassis->set_platform(PLT_GENERIC_BAREFOOT_TOFINO);
     chassis->set_name("Tofino");
@@ -108,15 +108,15 @@ class ChassisConfigBuilder {
 
 }  // namespace
 
-class BFChassisManagerTest : public ::testing::Test {
+class BfChassisManagerTest : public ::testing::Test {
  protected:
-  BFChassisManagerTest() {}
+  BfChassisManagerTest() {}
 
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
     // TODO(max): create parametrized test suite over mode.
-    bf_chassis_manager_ = BFChassisManager::CreateInstance(
+    bf_chassis_manager_ = BfChassisManager::CreateInstance(
         OPERATION_MODE_STANDALONE, phal_mock_.get(), bf_sde_mock_.get());
     ON_CALL(*bf_sde_mock_, IsValidPort(_, _))
         .WillByDefault(
@@ -239,24 +239,24 @@ class BFChassisManagerTest : public ::testing::Test {
 
   std::unique_ptr<PhalMock> phal_mock_;
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
-  std::unique_ptr<BFChassisManager> bf_chassis_manager_;
+  std::unique_ptr<BfChassisManager> bf_chassis_manager_;
 
   static constexpr int kTestTransceiverWriterId = 20;
 };
 
-TEST_F(BFChassisManagerTest, PreFirstConfigPushState) {
+TEST_F(BfChassisManagerTest, PreFirstConfigPushState) {
   ASSERT_OK(CheckCleanInternalState());
   EXPECT_FALSE(Initialized());
   // TODO(antonin): add more checks (to verify that method calls fail as
   // expected)
 }
 
-TEST_F(BFChassisManagerTest, FirstConfigPush) {
+TEST_F(BfChassisManagerTest, FirstConfigPush) {
   ASSERT_OK(PushBaseChassisConfig());
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, RemovePort) {
+TEST_F(BfChassisManagerTest, RemovePort) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
@@ -267,7 +267,7 @@ TEST_F(BFChassisManagerTest, RemovePort) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, AddPortFec) {
+TEST_F(BfChassisManagerTest, AddPortFec) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
@@ -284,7 +284,7 @@ TEST_F(BFChassisManagerTest, AddPortFec) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, SetPortLoopback) {
+TEST_F(BfChassisManagerTest, SetPortLoopback) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
@@ -300,7 +300,7 @@ TEST_F(BFChassisManagerTest, SetPortLoopback) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, ApplyPortShaping) {
+TEST_F(BfChassisManagerTest, ApplyPortShaping) {
   const std::string kVendorConfigText = R"PROTO(
     tofino_config {
       node_id_to_port_shaping_config {
@@ -340,7 +340,7 @@ TEST_F(BFChassisManagerTest, ApplyPortShaping) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, ApplyDeflectOnDrop) {
+TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
   const std::string kVendorConfigText = R"PROTO(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
@@ -376,7 +376,7 @@ TEST_F(BFChassisManagerTest, ApplyDeflectOnDrop) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, ReplayPorts) {
+TEST_F(BfChassisManagerTest, ReplayPorts) {
   const std::string kVendorConfigText = R"PROTO(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
@@ -444,7 +444,7 @@ TEST_F(BFChassisManagerTest, ReplayPorts) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, TransceiverEvent) {
+TEST_F(BfChassisManagerTest, TransceiverEvent) {
   ASSERT_OK(PushBaseChassisConfig());
   auto xcvr_event_writer = GetTransceiverEventWriter();
 
@@ -461,7 +461,7 @@ TEST_F(BFChassisManagerTest, TransceiverEvent) {
 }
 
 template <typename T>
-T GetPortData(BFChassisManager* bf_chassis_manager_, uint64 node_id,
+T GetPortData(BfChassisManager* bf_chassis_manager_, uint64 node_id,
               int port_id,
               DataRequest::Request::Port* (
                   DataRequest::Request::*get_mutable_message_func)(),
@@ -479,7 +479,7 @@ T GetPortData(BFChassisManager* bf_chassis_manager_, uint64 node_id,
 }
 
 template <typename T, typename U>
-void GetPortDataTest(BFChassisManager* bf_chassis_manager_, uint64 node_id,
+void GetPortDataTest(BfChassisManager* bf_chassis_manager_, uint64 node_id,
                      int port_id,
                      DataRequest::Request::Port* (
                          DataRequest::Request::*get_mutable_message_func)(),
@@ -495,7 +495,7 @@ void GetPortDataTest(BFChassisManager* bf_chassis_manager_, uint64 node_id,
 }
 
 template <typename T>
-void GetPortDataTest(BFChassisManager* bf_chassis_manager_, uint64 node_id,
+void GetPortDataTest(BfChassisManager* bf_chassis_manager_, uint64 node_id,
                      int port_id,
                      DataRequest::Request::Port* (
                          DataRequest::Request::*get_mutable_message_func)(),
@@ -510,7 +510,7 @@ void GetPortDataTest(BFChassisManager* bf_chassis_manager_, uint64 node_id,
   EXPECT_THAT(val, EqualsProto(expected_msg));
 }
 
-TEST_F(BFChassisManagerTest, GetPortData) {
+TEST_F(BfChassisManagerTest, GetPortData) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
@@ -655,7 +655,7 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, UpdateInvalidPort) {
+TEST_F(BfChassisManagerTest, UpdateInvalidPort) {
   ASSERT_OK(PushBaseChassisConfig());
   ChassisConfigBuilder builder;
   const uint32 portId = kPortId + 1;
@@ -686,7 +686,7 @@ TEST_F(BFChassisManagerTest, UpdateInvalidPort) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, ResetPortsConfig) {
+TEST_F(BfChassisManagerTest, ResetPortsConfig) {
   ASSERT_OK(PushBaseChassisConfig());
   EXPECT_OK(bf_chassis_manager_->ResetPortsConfig(kNodeId));
 
@@ -700,7 +700,7 @@ TEST_F(BFChassisManagerTest, ResetPortsConfig) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, GetSdkPortId) {
+TEST_F(BfChassisManagerTest, GetSdkPortId) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
@@ -712,7 +712,7 @@ TEST_F(BFChassisManagerTest, GetSdkPortId) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BFChassisManagerTest, VerifyChassisConfigSuccess) {
+TEST_F(BfChassisManagerTest, VerifyChassisConfigSuccess) {
   const std::string kConfigText1 = R"(
       description: "Sample Generic Tofino config 2x25G ports."
       chassis {

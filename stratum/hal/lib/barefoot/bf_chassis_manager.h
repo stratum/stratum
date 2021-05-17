@@ -27,9 +27,9 @@ namespace barefoot {
 // Lock which protects chassis state across the entire switch.
 extern absl::Mutex chassis_lock;
 
-class BFChassisManager {
+class BfChassisManager {
  public:
-  virtual ~BFChassisManager();
+  virtual ~BfChassisManager();
 
   virtual ::util::Status PushChassisConfig(const ChassisConfig& config)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
@@ -78,20 +78,20 @@ class BFChassisManager {
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BFChassisManager> CreateInstance(
+  static std::unique_ptr<BfChassisManager> CreateInstance(
       OperationMode mode, PhalInterface* phal_interface,
       BfSdeInterface* bf_sde_interface);
 
-  // BFChassisManager is neither copyable nor movable.
-  BFChassisManager(const BFChassisManager&) = delete;
-  BFChassisManager& operator=(const BFChassisManager&) = delete;
-  BFChassisManager(BFChassisManager&&) = delete;
-  BFChassisManager& operator=(BFChassisManager&&) = delete;
+  // BfChassisManager is neither copyable nor movable.
+  BfChassisManager(const BfChassisManager&) = delete;
+  BfChassisManager& operator=(const BfChassisManager&) = delete;
+  BfChassisManager(BfChassisManager&&) = delete;
+  BfChassisManager& operator=(BfChassisManager&&) = delete;
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFChassisManager(OperationMode mode, PhalInterface* phal_interface,
+  BfChassisManager(OperationMode mode, PhalInterface* phal_interface,
                    BfSdeInterface* bf_sde_interface);
 
   // Maximum depth of port status change event channel.
@@ -252,7 +252,7 @@ class BFChassisManager {
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_;  // not owned by this class.
 
-  friend class BFChassisManagerTest;
+  friend class BfChassisManagerTest;
 };
 
 }  // namespace barefoot

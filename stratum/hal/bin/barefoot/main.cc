@@ -110,7 +110,7 @@ void registerDeviceMgrLogger() {
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
   auto bf_chassis_manager =
-      BFChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
+      BfChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
   auto bf_switch =
       BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
                                bf_sde_wrapper, device_id_to_pi_node);

@@ -74,7 +74,7 @@ namespace barefoot {
       {device_id, bfrt_node.get()},
   };
   auto bf_chassis_manager =
-      BFChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
+      BfChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
   auto bf_switch =
       BfrtSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
                                  bf_sde_wrapper, device_id_to_bfrt_node);

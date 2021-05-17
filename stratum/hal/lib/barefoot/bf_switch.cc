@@ -27,7 +27,7 @@ namespace barefoot {
 using ::stratum::hal::pi::PINode;
 
 BFSwitch::BFSwitch(PhalInterface* phal_interface,
-                   BFChassisManager* bf_chassis_manager,
+                   BfChassisManager* bf_chassis_manager,
                    BfSdeInterface* bf_sde_interface,
                    const std::map<int, PINode*>& unit_to_pi_node)
     : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
@@ -312,7 +312,7 @@ namespace {
 }
 
 std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
-    PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
+    PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
     BfSdeInterface* bf_sde_interface,
     const std::map<int, PINode*>& unit_to_pi_node) {
   return absl::WrapUnique(new BFSwitch(phal_interface, bf_chassis_manager,
