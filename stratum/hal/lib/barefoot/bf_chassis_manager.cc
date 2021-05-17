@@ -34,11 +34,11 @@ using TransceiverEvent = PhalInterface::TransceiverEvent;
 ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
 
 /* static */
-constexpr int BFChassisManager::kMaxPortStatusEventDepth;
+constexpr int BfChassisManager::kMaxPortStatusEventDepth;
 /* static */
-constexpr int BFChassisManager::kMaxXcvrEventDepth;
+constexpr int BfChassisManager::kMaxXcvrEventDepth;
 
-BFChassisManager::BFChassisManager(OperationMode mode,
+BfChassisManager::BfChassisManager(OperationMode mode,
                                    PhalInterface* phal_interface,
                                    BfSdeInterface* bf_sde_interface)
     : mode_(mode),
@@ -63,9 +63,9 @@ BFChassisManager::BFChassisManager(OperationMode mode,
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)) {}
 
-BFChassisManager::~BFChassisManager() = default;
+BfChassisManager::~BfChassisManager() = default;
 
-::util::Status BFChassisManager::AddPortHelper(
+::util::Status BfChassisManager::AddPortHelper(
     uint64 node_id, int unit, uint32 sdk_port_id,
     const SingletonPort& singleton_port /* desired config */,
     /* out */ PortConfig* config /* new config */) {
@@ -126,7 +126,7 @@ BFChassisManager::~BFChassisManager() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::UpdatePortHelper(
+::util::Status BfChassisManager::UpdatePortHelper(
     uint64 node_id, int unit, uint32 sdk_port_id,
     const SingletonPort& singleton_port /* desired config */,
     const PortConfig& config_old /* current config */,
@@ -261,7 +261,7 @@ BFChassisManager::~BFChassisManager() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::PushChassisConfig(
+::util::Status BfChassisManager::PushChassisConfig(
     const ChassisConfig& config) {
   if (!initialized_) RETURN_IF_ERROR(RegisterEventWriters());
 
@@ -359,7 +359,7 @@ BFChassisManager::~BFChassisManager() = default;
       // was added and the speed_bps was set.
       if (!config_old->speed_bps) {
         RETURN_ERROR(ERR_INTERNAL)
-            << "Invalid internal state in BFChassisManager, "
+            << "Invalid internal state in BfChassisManager, "
             << "speed_bps field should contain a value";
       }
 
@@ -472,7 +472,7 @@ BFChassisManager::~BFChassisManager() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::ApplyPortShapingConfig(
+::util::Status BfChassisManager::ApplyPortShapingConfig(
     uint64 node_id, int unit, uint32 sdk_port_id,
     const TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig&
         shaping_config) {
@@ -505,7 +505,7 @@ BFChassisManager::~BFChassisManager() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::VerifyChassisConfig(
+::util::Status BfChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
   CHECK_RETURN_IF_FALSE(config.trunk_ports_size() == 0)
       << "Trunk ports are not supported on Tofino.";
@@ -637,21 +637,21 @@ BFChassisManager::~BFChassisManager() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::RegisterEventNotifyWriter(
+::util::Status BfChassisManager::RegisterEventNotifyWriter(
     const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
   absl::WriterMutexLock l(&gnmi_event_lock_);
   gnmi_event_writer_ = writer;
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::UnregisterEventNotifyWriter() {
+::util::Status BfChassisManager::UnregisterEventNotifyWriter() {
   absl::WriterMutexLock l(&gnmi_event_lock_);
   gnmi_event_writer_ = nullptr;
   return ::util::OkStatus();
 }
 
-::util::StatusOr<const BFChassisManager::PortConfig*>
-BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
+::util::StatusOr<const BfChassisManager::PortConfig*>
+BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   auto* port_id_to_config =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_config != nullptr)
@@ -663,7 +663,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return config;
 }
 
-::util::StatusOr<DataResponse> BFChassisManager::GetPortData(
+::util::StatusOr<DataResponse> BfChassisManager::GetPortData(
     const DataRequest::Request& request) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -790,7 +790,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return resp;
 }
 
-::util::StatusOr<PortState> BFChassisManager::GetPortState(uint64 node_id,
+::util::StatusOr<PortState> BfChassisManager::GetPortState(uint64 node_id,
                                                            uint32 port_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -821,7 +821,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return port_state;
 }
 
-::util::Status BFChassisManager::GetPortCounters(uint64 node_id, uint32 port_id,
+::util::Status BfChassisManager::GetPortCounters(uint64 node_id, uint32 port_id,
                                                  PortCounters* counters) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -831,7 +831,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return bf_sde_interface_->GetPortCounters(unit, sdk_port_id, counters);
 }
 
-::util::StatusOr<std::map<uint64, int>> BFChassisManager::GetNodeIdToUnitMap()
+::util::StatusOr<std::map<uint64, int>> BfChassisManager::GetNodeIdToUnitMap()
     const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -839,7 +839,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return node_id_to_unit_;
 }
 
-::util::Status BFChassisManager::ReplayPortsConfig(uint64 node_id) {
+::util::Status BfChassisManager::ReplayPortsConfig(uint64 node_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -863,12 +863,12 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
     if (!config.speed_bps) {
       RETURN_ERROR(ERR_INTERNAL)
-          << "Invalid internal state in BFChassisManager, "
+          << "Invalid internal state in BfChassisManager, "
           << "speed_bps field should contain a value";
     }
     if (!config.fec_mode) {
       RETURN_ERROR(ERR_INTERNAL)
-          << "Invalid internal state in BFChassisManager, "
+          << "Invalid internal state in BfChassisManager, "
           << "fec_mode field should contain a value";
     }
 
@@ -949,7 +949,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return status;
 }
 
-::util::Status BFChassisManager::ResetPortsConfig(uint64 node_id) {
+::util::Status BfChassisManager::ResetPortsConfig(uint64 node_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -967,7 +967,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::GetFrontPanelPortInfo(
+::util::Status BfChassisManager::GetFrontPanelPortInfo(
     uint64 node_id, uint32 port_id, FrontPanelPortInfo* fp_port_info) {
   auto* port_id_to_port_key =
       gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
@@ -981,14 +981,14 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
                                                 fp_port_info);
 }
 
-std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(
+std::unique_ptr<BfChassisManager> BfChassisManager::CreateInstance(
     OperationMode mode, PhalInterface* phal_interface,
     BfSdeInterface* bf_sde_interface) {
   return absl::WrapUnique(
-      new BFChassisManager(mode, phal_interface, bf_sde_interface));
+      new BfChassisManager(mode, phal_interface, bf_sde_interface));
 }
 
-void BFChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
+void BfChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
                                                   uint32 port_id,
                                                   PortState new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
@@ -1005,7 +1005,7 @@ void BFChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   }
 }
 
-void BFChassisManager::ReadPortStatusEvents() {
+void BfChassisManager::ReadPortStatusEvents() {
   PortStatusEvent event;
   while (true) {
     // port_status_event_reader_ does not need to be protected by a mutex
@@ -1055,7 +1055,7 @@ void BFChassisManager::ReadPortStatusEvents() {
   }
 }
 
-void BFChassisManager::ReadTransceiverEvents() {
+void BfChassisManager::ReadTransceiverEvents() {
   TransceiverEvent event;
   while (true) {
     // xcvr_event_reader_ does not need to be protected by a mutex because this
@@ -1077,7 +1077,7 @@ void BFChassisManager::ReadTransceiverEvents() {
   }
 }
 
-void BFChassisManager::TransceiverEventHandler(int slot, int port,
+void BfChassisManager::TransceiverEventHandler(int slot, int port,
                                                HwState new_state) {
   absl::WriterMutexLock l(&chassis_lock);
 
@@ -1136,7 +1136,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   }
 }
 
-::util::Status BFChassisManager::RegisterEventWriters() {
+::util::Status BfChassisManager::RegisterEventWriters() {
   if (initialized_) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "RegisterEventWriters() can be called only before the class is "
@@ -1179,7 +1179,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::UnregisterEventWriters() {
+::util::Status BfChassisManager::UnregisterEventWriters() {
   absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(status,
@@ -1215,7 +1215,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   return status;
 }
 
-::util::StatusOr<int> BFChassisManager::GetUnitFromNodeId(
+::util::StatusOr<int> BfChassisManager::GetUnitFromNodeId(
     uint64 node_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -1227,7 +1227,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   return *unit;
 }
 
-::util::StatusOr<uint32> BFChassisManager::GetSdkPortId(uint64 node_id,
+::util::StatusOr<uint32> BfChassisManager::GetSdkPortId(uint64 node_id,
                                                         uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -1246,7 +1246,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
   return *sdk_port_id;
 }
 
-void BFChassisManager::CleanupInternalState() {
+void BfChassisManager::CleanupInternalState() {
   unit_to_node_id_.clear();
   node_id_to_unit_.clear();
   node_id_to_port_id_to_port_state_.clear();
@@ -1258,7 +1258,7 @@ void BFChassisManager::CleanupInternalState() {
   xcvr_port_key_to_xcvr_state_.clear();
 }
 
-::util::Status BFChassisManager::Shutdown() {
+::util::Status BfChassisManager::Shutdown() {
   ::util::Status status = ::util::OkStatus();
   {
     absl::ReaderMutexLock l(&chassis_lock);

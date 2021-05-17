@@ -76,7 +76,7 @@ class BfrtSwitch : public SwitchInterface {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtSwitch> CreateInstance(
-      PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
+      PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
       BfSdeInterface* bf_sde_interface,
       const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
@@ -90,7 +90,7 @@ class BfrtSwitch : public SwitchInterface {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   BfrtSwitch(PhalInterface* phal_interface,
-             BFChassisManager* bf_chassis_manager,
+             BfChassisManager* bf_chassis_manager,
              BfSdeInterface* bf_sde_interface,
              const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
@@ -112,7 +112,7 @@ class BfrtSwitch : public SwitchInterface {
 
   // Per chassis Managers. Note that there is only one instance of this class
   // per chassis.
-  BFChassisManager* bf_chassis_manager_;  // not owned by the class.
+  BfChassisManager* bf_chassis_manager_;  // not owned by the class.
 
   // Map from zero-based device_id number corresponding to a node/ASIC to a
   // pointer to BfrtNode which contain all the per-node managers for that
