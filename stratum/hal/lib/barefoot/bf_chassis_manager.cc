@@ -44,12 +44,8 @@ BfChassisManager::BfChassisManager(OperationMode mode,
     : mode_(mode),
       initialized_(false),
       port_status_event_channel_(nullptr),
-      port_status_event_reader_(nullptr),
-      port_status_event_thread_(),
       xcvr_event_writer_id_(kInvalidWriterId),
       xcvr_event_channel_(nullptr),
-      xcvr_event_reader_(nullptr),
-      xcvr_event_thread_(),
       gnmi_event_writer_(nullptr),
       unit_to_node_id_(),
       node_id_to_unit_(),
@@ -1005,16 +1001,30 @@ void BfChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   }
 }
 
-void BfChassisManager::ReadPortStatusEvents() {
+void* BfChassisManager::PortStatusEventHandlerThreadFunc(void* arg) {
+  CHECK(arg != nullptr);
+  // Retrieve arguments.
+  auto* args = reinterpret_cast<ReaderArgs<PortStatusEvent>*>(arg);
+  auto* manager = args->manager;
+  std::unique_ptr<ChannelReader<PortStatusEvent>> reader =
+      std::move(args->reader);
+  delete args;
+  manager->ReadPortStatusEvents(reader);
+  return nullptr;
+}
+
+void BfChassisManager::ReadPortStatusEvents(
+    const std::unique_ptr<ChannelReader<PortStatusEvent>>& reader) {
   PortStatusEvent event;
-  while (true) {
-    // port_status_event_reader_ does not need to be protected by a mutex
-    // because this thread is the only one accessing it. It is assigned in
-    // RegisterEventWriters and then left untouched until UnregisterEventWriters
-    // is called. UnregisterEventWriters joins this thread before resetting the
-    // reader.
-    int code = port_status_event_reader_->Read(&event, absl::InfiniteDuration())
-                   .error_code();
+  do {
+    // Check switch shutdown.
+    // TODO(max): This check should be on the shutdown variable.
+    {
+      absl::ReaderMutexLock l(&chassis_lock);
+      if (!initialized_) break;
+    }
+    // Block on the next linkscan event message from the Channel.
+    int code = reader->Read(&event, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -1023,48 +1033,73 @@ void BfChassisManager::ReadPortStatusEvents() {
       continue;
     }
     // Handle received message.
-    {
-      absl::WriterMutexLock l(&chassis_lock);
-      const uint64* node_id = gtl::FindOrNull(unit_to_node_id_, event.device);
-      if (node_id == nullptr) {
-        LOG(ERROR) << "Unknown unit / device id " << event.device << ".";
-        continue;
-      }
-      const uint32* port_id = gtl::FindOrNull(
-          node_id_to_sdk_port_id_to_port_id_[*node_id], event.port);
-      if (port_id == nullptr) {
-        // We get a notification for all ports, even ports that were not added,
-        // when doing a Fast Refresh, which can be confusing, so we use VLOG
-        // instead.
-        // LOG(ERROR) << "Unknown port " << event.port << " in node "
-        //            << *node_id << ".";
-        VLOG(1) << "Unknown SDK port " << event.port << " in node " << *node_id
-                << ".";
-        continue;
-      }
-      auto* state = gtl::FindOrNull(node_id_to_port_id_to_port_state_[*node_id],
-                                    *port_id);
-      LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
-                << " (SDK port " << event.port
-                << "): " << PrintPortState(event.state) << ".";
-      if (state != nullptr) {
-        *state = event.state;
-      }
-      SendPortOperStateGnmiEvent(*node_id, *port_id, event.state);
-    }
-  }
+    PortStatusEventHandler(event.device, event.port, event.state);
+  } while (true);
 }
 
-void BfChassisManager::ReadTransceiverEvents() {
-  TransceiverEvent event;
-  while (true) {
-    // xcvr_event_reader_ does not need to be protected by a mutex because this
-    // thread is the only one accessing it. It is assigned in
-    // RegisterEventWriters and then left untouched until UnregisterEventWriters
-    // is called. UnregisterEventWriters joins this thread before resetting the
-    // reader.
-    int code =
-        xcvr_event_reader_->Read(&event, absl::InfiniteDuration()).error_code();
+void BfChassisManager::PortStatusEventHandler(int device, int port,
+                                              PortState new_state) {
+  absl::WriterMutexLock l(&chassis_lock);
+  // TODO(max): check for shutdown here
+  // if (shutdown) {
+  //   VLOG(1) << "The class is already shutdown. Exiting.";
+  //   return;
+  // }
+
+  // Update the state.
+  const uint64* node_id = gtl::FindOrNull(unit_to_node_id_, device);
+  if (node_id == nullptr) {
+    LOG(ERROR) << "Inconsistent state. Device " << device << " is not known!";
+    return;
+  }
+  const uint32* port_id =
+      gtl::FindOrNull(node_id_to_sdk_port_id_to_port_id_[*node_id], port);
+  if (port_id == nullptr) {
+    // We get a notification for all ports, even ports that were not added,
+    // when doing a Fast Refresh, which can be confusing, so we use VLOG
+    // instead.
+    VLOG(1)
+        << "Ignored an unknown SdkPort " << port << " on node " << *node_id
+        << ". Most probably this is a non-configured channel of a flex port.";
+    return;
+  }
+  node_id_to_port_id_to_port_state_[*node_id][*port_id] = new_state;
+
+  // Notify the managers about the change of port state.
+  // Nothing to do for now.
+
+  // Notify gNMI about the change of logical port state.
+  SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
+
+  LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
+            << " (SDK port " << port << "): " << PrintPortState(new_state)
+            << ".";
+}
+
+void* BfChassisManager::TransceiverEventHandlerThreadFunc(void* arg) {
+  CHECK(arg != nullptr);
+  // Retrieve arguments.
+  auto* args = reinterpret_cast<ReaderArgs<TransceiverEvent>*>(arg);
+  auto* manager = args->manager;
+  std::unique_ptr<ChannelReader<TransceiverEvent>> reader =
+      std::move(args->reader);
+  delete args;
+  manager->ReadTransceiverEvents(reader);
+  return nullptr;
+}
+
+void BfChassisManager::ReadTransceiverEvents(
+    const std::unique_ptr<ChannelReader<TransceiverEvent>>& reader) {
+  do {
+    // Check switch shutdown.
+    // TODO(max): This check should be on the shutdown variable.
+    {
+      absl::ReaderMutexLock l(&chassis_lock);
+      if (!initialized_) break;
+    }
+    TransceiverEvent event;
+    // Block on the next transceiver event message from the Channel.
+    int code = reader->Read(&event, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -1074,7 +1109,7 @@ void BfChassisManager::ReadTransceiverEvents() {
     }
     // Handle received message.
     TransceiverEventHandler(event.slot, event.port, event.state);
-  }
+  } while (true);
 }
 
 void BfChassisManager::TransceiverEventHandler(int slot, int port,
@@ -1142,8 +1177,9 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
            << "RegisterEventWriters() can be called only before the class is "
            << "initialized.";
   }
-
-  {
+  // If we have not done that yet, create port status event Channel, register
+  // Writer, and create Reader thread.
+  if (!port_status_event_channel_) {
     port_status_event_channel_ =
         Channel<PortStatusEvent>::Create(kMaxPortStatusEventDepth);
     // Create and hand-off Writer to the BfSdeInterface.
@@ -1152,28 +1188,56 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
     RETURN_IF_ERROR(
         bf_sde_interface_->RegisterPortStatusEventWriter(std::move(writer)));
     LOG(INFO) << "Port status notification callback registered successfully";
-
-    port_status_event_reader_ =
+    // Create and hand-off Reader to new reader thread.
+    auto reader =
         ChannelReader<PortStatusEvent>::Create(port_status_event_channel_);
-    port_status_event_thread_ =
-        std::thread([this]() { this->ReadPortStatusEvents(); });
+    pthread_t port_status_event_reader_tid;
+    int ret = pthread_create(
+        &port_status_event_reader_tid, nullptr,
+        PortStatusEventHandlerThreadFunc,
+        new ReaderArgs<PortStatusEvent>{this, std::move(reader)});
+    if (ret != 0) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to create port status thread. Err: " << ret << ".";
+    }
+    // We don't care about the return value. The thread should exit following
+    // the closing of the Channel in UnregisterEventWriters().
+    ret = pthread_detach(port_status_event_reader_tid);
+    if (ret != 0) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to detach port status thread. Err: " << ret << ".";
+    }
   }
 
+  // If we have not done that yet, create transceiver module insert/removal
+  // event Channel, register ChannelWriter, and create ChannelReader thread.
   if (xcvr_event_writer_id_ == kInvalidWriterId) {
     xcvr_event_channel_ = Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
+    // Create and hand-off ChannelWriter to the PhalInterface.
     auto writer = ChannelWriter<TransceiverEvent>::Create(xcvr_event_channel_);
     int priority = PhalInterface::kTransceiverEventWriterPriorityHigh;
     ASSIGN_OR_RETURN(xcvr_event_writer_id_,
                      phal_interface_->RegisterTransceiverEventWriter(
                          std::move(writer), priority));
-
-    xcvr_event_reader_ =
-        ChannelReader<TransceiverEvent>::Create(xcvr_event_channel_);
-    xcvr_event_thread_ =
-        std::thread([this]() { this->ReadTransceiverEvents(); });
-  } else {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Transceiver event handler already registered.";
+    // Create and hand-off ChannelReader to new reader thread.
+    auto reader = ChannelReader<TransceiverEvent>::Create(xcvr_event_channel_);
+    pthread_t xcvr_event_reader_tid;
+    int ret = pthread_create(
+        &xcvr_event_reader_tid, nullptr, TransceiverEventHandlerThreadFunc,
+        new ReaderArgs<TransceiverEvent>{this, std::move(reader)});
+    if (ret != 0) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to create transceiver event thread. Err: " << ret
+             << ".";
+    }
+    // We don't care about the return value of the thread. It should exit once
+    // the Channel is closed in UnregisterEventWriters().
+    ret = pthread_detach(xcvr_event_reader_tid);
+    if (ret != 0) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to detach transceiver event thread. Err: " << ret
+             << ".";
+    }
   }
 
   return ::util::OkStatus();
@@ -1182,8 +1246,10 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
 ::util::Status BfChassisManager::UnregisterEventWriters() {
   absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
+  // Unregister the linkscan and transceiver module event Writers.
   APPEND_STATUS_IF_ERROR(status,
                          bf_sde_interface_->UnregisterPortStatusEventWriter());
+  // Close Channel.
   if (!port_status_event_channel_ || !port_status_event_channel_->Close()) {
     ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                            << "Error when closing port status change"
@@ -1196,6 +1262,7 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
                            phal_interface_->UnregisterTransceiverEventWriter(
                                xcvr_event_writer_id_));
     xcvr_event_writer_id_ = kInvalidWriterId;
+    // Close Channel.
     if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
       ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
                              << "Error when closing transceiver event channel.";
@@ -1204,14 +1271,6 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
     xcvr_event_channel_.reset();
   }
 
-  port_status_event_thread_.join();
-  // Once the thread is joined, it is safe to reset these pointers.
-  port_status_event_reader_ = nullptr;
-  port_status_event_channel_ = nullptr;
-
-  xcvr_event_thread_.join();
-  xcvr_event_reader_ = nullptr;
-  xcvr_event_channel_ = nullptr;
   return status;
 }
 

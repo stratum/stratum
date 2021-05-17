@@ -154,7 +154,6 @@ class BfChassisManagerTest : public ::testing::Test {
     CHECK_RETURN_IF_FALSE(bf_chassis_manager_->port_status_event_channel_ ==
                           nullptr);
     CHECK_RETURN_IF_FALSE(bf_chassis_manager_->xcvr_event_channel_ == nullptr);
-    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->xcvr_event_reader_ == nullptr);
     return ::util::OkStatus();
   }
 

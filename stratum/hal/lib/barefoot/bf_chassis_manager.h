@@ -6,7 +6,6 @@
 
 #include <map>
 #include <memory>
-#include <thread>  // NOLINT
 
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
@@ -89,14 +88,12 @@ class BfChassisManager {
   BfChassisManager& operator=(BfChassisManager&&) = delete;
 
  private:
-  // Private constructor. Use CreateInstance() to create an instance of this
-  // class.
-  BfChassisManager(OperationMode mode, PhalInterface* phal_interface,
-                   BfSdeInterface* bf_sde_interface);
-
-  // Maximum depth of port status change event channel.
-  static constexpr int kMaxPortStatusEventDepth = 1024;
-  static constexpr int kMaxXcvrEventDepth = 1024;
+  // ReaderArgs encapsulates the arguments for a Channel reader thread.
+  template <typename T>
+  struct ReaderArgs {
+    BfChassisManager* manager;
+    std::unique_ptr<ChannelReader<T>> reader;
+  };
 
   struct PortConfig {
     // ADMIN_STATE_UNKNOWN indicate that something went wrong during the port
@@ -115,10 +112,20 @@ class BfChassisManager {
     PortConfig() : admin_state(ADMIN_STATE_UNKNOWN) {}
   };
 
+  // Maximum depth of port status change event channel.
+  static constexpr int kMaxPortStatusEventDepth = 1024;
+  static constexpr int kMaxXcvrEventDepth = 1024;
+
+  // Private constructor. Use CreateInstance() to create an instance of this
+  // class.
+  BfChassisManager(OperationMode mode, PhalInterface* phal_interface,
+                   BfSdeInterface* bf_sde_interface);
+
   ::util::StatusOr<const PortConfig*> GetPortConfig(uint64 node_id,
                                                     uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
+  // Registers/Unregisters all the event Writers (if not done yet).
   ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
   ::util::Status UnregisterEventWriters() LOCKS_EXCLUDED(chassis_lock);
 
@@ -132,18 +139,44 @@ class BfChassisManager {
                                   PortState new_state)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
-  // Thread function for reading and processing port state events.
-  void ReadPortStatusEvents() LOCKS_EXCLUDED(chassis_lock);
-
-  // Thread function for reading and processing transceiver events.
-  void ReadTransceiverEvents() LOCKS_EXCLUDED(chassis_lock);
-
   // Transceiver module insert/removal event handler. This method is executed by
-  // ReadTransceiverEvents in the xcvr_event_thread_ thread which processes
-  // transceiver module insert/removal events. Port is the 1-based frontpanel
-  // port number.
+  // a ChannelReader thread which processes transceiver module insert/removal
+  // events. Port is the 1-based frontpanel port number.
+  // NOTE: This method should never be executed directly from a context which
+  // first accesses the internal structures of a class below BfChassisManager
+  // as this may result in deadlock.
   void TransceiverEventHandler(int slot, int port, HwState new_state)
       LOCKS_EXCLUDED(chassis_lock);
+
+  // Thread function for reading transceiver events from xcvr_event_channel_.
+  // Invoked with "this" as the argument in pthread_create.
+  static void* TransceiverEventHandlerThreadFunc(void* arg)
+      LOCKS_EXCLUDED(chassis_lock, gnmi_event_lock_);
+
+  // Reads and processes transceiver events using the given ChannelReader.
+  // Called by TransceiverEventHandlerThreadFunc.
+  void ReadTransceiverEvents(
+      const std::unique_ptr<ChannelReader<PhalInterface::TransceiverEvent>>&
+          reader) LOCKS_EXCLUDED(chassis_lock);
+
+  // Port status event handler. This method is executed by a ChannelReader
+  // thread which processes SDE port status events. Port is the sdk port number
+  // used by the SDE. NOTE: This method should never be executed directly from a
+  // context which first accesses the internal structures of a class below
+  // BfChassisManager as this may result in deadlock.
+  void PortStatusEventHandler(int device, int port, PortState new_state)
+      LOCKS_EXCLUDED(chassis_lock);
+
+  // Thread function for reading port status events from
+  // port_status_event_channel_.
+  static void* PortStatusEventHandlerThreadFunc(void* arg)
+      LOCKS_EXCLUDED(chassis_lock);
+
+  // Reads and processes port state events using the given ChannelReader. Called
+  // by PortStatusEventHandlerThreadFunc.
+  void ReadPortStatusEvents(
+      const std::unique_ptr<ChannelReader<BfSdeInterface::PortStatusEvent>>&
+          reader) LOCKS_EXCLUDED(chassis_lock);
 
   // helper to add / configure / enable a port with BfSdeInterface
   ::util::Status AddPortHelper(uint64 node_id, int unit, uint32 port_id,
@@ -174,26 +207,18 @@ class BfChassisManager {
 
   bool initialized_ GUARDED_BY(chassis_lock);
 
+  // Channel for receiving port status events from the BfSdeInterface.
   std::shared_ptr<Channel<BfSdeInterface::PortStatusEvent>>
       port_status_event_channel_ GUARDED_BY(chassis_lock);
-
-  std::unique_ptr<ChannelReader<BfSdeInterface::PortStatusEvent>>
-      port_status_event_reader_;
-
-  std::thread port_status_event_thread_;
 
   // The id of the transceiver module insert/removal event ChannelWriter, as
   // returned by PhalInterface::RegisterTransceiverEventChannelWriter(). Used to
   // remove the handler later if needed.
   int xcvr_event_writer_id_;
 
+  // Channel for receiving transceiver events from the Phal.
   std::shared_ptr<Channel<PhalInterface::TransceiverEvent>> xcvr_event_channel_
       GUARDED_BY(chassis_lock);
-
-  std::unique_ptr<ChannelReader<PhalInterface::TransceiverEvent>>
-      xcvr_event_reader_;
-
-  std::thread xcvr_event_thread_;
 
   // WriterInterface<GnmiEventPtr> object for sending event notifications.
   mutable absl::Mutex gnmi_event_lock_;
