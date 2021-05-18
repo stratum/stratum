@@ -508,8 +508,7 @@ extern "C" void sdk_linkscan_callback(int unit, bcm_port_t port,
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
     return;
   }
-  LOG(INFO) << "Unit: " << unit << " Port: " << port << " Link: "
-            << "changed.";
+  VLOG(1) << "Link on unit: " << unit << " Port: " << port << " changed.";
   // Forward the event.
   bcm_sdk_wrapper->OnLinkscanEvent(unit, port, info);
 }
@@ -5133,27 +5132,6 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
     uint32 value) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
-}
-
-void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
-  /* Create LinkscanEvent message. */
-  PortState state;
-  if (linkstatus == PORT_STATE_UP) {
-    state = PORT_STATE_UP;
-  } else if (linkstatus == PORT_STATE_DOWN) {
-    state = PORT_STATE_DOWN;
-  } else {
-    state = PORT_STATE_UNKNOWN;
-  }
-  LinkscanEvent event = {unit, port, state};
-
-  {
-    absl::ReaderMutexLock l(&linkscan_writers_lock_);
-    // Invoke the Writers based on priority.
-    for (const auto& w : linkscan_event_writers_) {
-      w.writer->Write(event, kWriteTimeout).IgnoreError();
-    }
-  }
 }
 
 }  // namespace bcm
