@@ -183,6 +183,22 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 ::util::Status ModifyIndirectCounterEntries(
     P4RuntimeSession* session, absl::Span<const p4::v1::CounterEntry> entries);
 
+// Installs the given action profile member entry on the switch.
+::util::Status InstallActionProfileMemberEntry(
+    P4RuntimeSession* session, const p4::v1::ActionProfileMember entry);
+
+// Installs the given action profile member entries on the switch.
+::util::Status InstallActionProfileMemberEntries(
+    P4RuntimeSession* session, absl::Span<const p4::v1::ActionProfileMember> entries);
+
+// Installs the given action profile group entry on the switch.
+::util::Status InstallActionProfileGroupEntry(
+    P4RuntimeSession* session, const p4::v1::ActionProfileGroup entry);
+
+// Installs the given action profile group entries on the switch.
+::util::Status InstallActionProfileGroupEntries(
+    P4RuntimeSession* session, absl::Span<const p4::v1::ActionProfileGroup> entries);
+
 // Sets the forwarding pipeline from the given p4 info.
 ::util::Status SetForwardingPipelineConfig(P4RuntimeSession* session,
                                            const p4::config::v1::P4Info& p4info,

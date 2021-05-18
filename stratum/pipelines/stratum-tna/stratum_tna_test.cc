@@ -107,6 +107,57 @@ class StratumTnaTest : public P4RuntimeFixture {
     return route_entry;
   }
 
+  ::p4::v1::ActionProfileMember CreateActionProfileMember(uint32 member_id,uint16 dst_port, uint64 dst_mac) {
+    ::p4::v1::ActionProfileMember ap_entry =
+        HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::ActionProfileMember>(
+            p4_id_replacements_,
+            R"PROTO(
+        action_profile_id: {StratumIngress.ipv4_ap}
+          member_id: "\x00"
+          action {
+            action_id: {StratumIngress.fwd_route}
+            params {
+              param_id: {StratumIngress.fwd_route.port}
+              value: "\x00"
+            }
+            params {
+              param_id: {StratumIngress.fwd_route.dmac}
+              value: "\x00"
+            }
+          }
+      )PROTO");
+    ap_entry.set_member_id(member_id);
+    ap_entry.mutable_action()
+        ->mutable_params(0)
+        ->set_value(hal::Uint32ToByteStream(dst_port));
+    ap_entry.mutable_action()
+        ->mutable_params(1)
+        ->set_value(hal::Uint64ToByteStream(dst_mac));
+
+    return ap_entry;
+  }
+
+  ::p4::v1::ActionProfileGroup CreateActionProfileGroup(uint32 group_id, int32 max_size) {
+    ::p4::v1::ActionProfileGroup ap_entry =
+        HydrateP4RuntimeProtoFromStringOrDie<::p4::v1::ActionProfileGroup>(
+            p4_id_replacements_,
+            R"PROTO(
+        action_profile_id: {StratumIngress.ipv4_ap}
+        members {
+          member_id: "\x00"
+        }
+        members {
+          member_id: "\x00"
+        }
+      )PROTO");
+      // TODO what is the method membership space here ???? (renner)
+    // ap_entry.mutable_member_id()->set_value(member_id);
+    ap_entry.set_group_id(group_id);
+    ap_entry.set_max_size(max_size);
+
+    return ap_entry;
+  }
+
   absl::flat_hash_map<std::string, std::string> p4_id_replacements_;
 };
 
@@ -115,6 +166,18 @@ TEST_F(StratumTnaTest, InsertTableEntry) {
       InstallTableEntry(SutP4RuntimeSession(),
                         CreateIpv4RouteEntry(std::string("\x0a\x00\x00\x00", 4),
                                              24, 1, 0x000000aaaaaa)));
+}
+
+TEST_F(StratumTnaTest, InsertActionProfileMember) {
+  ASSERT_OK(
+      InstallActionProfileMemberEntry(SutP4RuntimeSession(),
+                        CreateActionProfileMember(1, 1, 0x000000aaaaaa)));
+  ASSERT_OK(
+      InstallActionProfileMemberEntry(SutP4RuntimeSession(),
+                        CreateActionProfileMember(2, 2, 0x000000bbbbbb)));
+  ASSERT_OK(
+      InstallActionProfileGroupEntry(SutP4RuntimeSession(),
+                        CreateActionProfileGroup(1)));
 }
 
 }  // namespace

@@ -28,6 +28,8 @@ using ::p4::v1::ReadResponse;
 using ::p4::v1::SetForwardingPipelineConfigRequest;
 using ::p4::v1::SetForwardingPipelineConfigResponse;
 using ::p4::v1::TableEntry;
+using ::p4::v1::ActionProfileMember;
+using ::p4::v1::ActionProfileGroup;
 using ::p4::v1::Update;
 using ::p4::v1::WriteRequest;
 using ::p4::v1::WriteResponse;
@@ -283,6 +285,47 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
     Update* update = batch_write_request.add_updates();
     update->set_type(Update::MODIFY);
     *update->mutable_entity()->mutable_counter_entry() = entry;
+  }
+  return SendWriteRequest(session, batch_write_request);
+}
+
+::util::Status InstallActionProfileMemberEntry(
+  P4RuntimeSession* session, const ActionProfileMember entry ){
+  return InstallActionProfileMemberEntries(session, absl::MakeConstSpan(&entry, 1));
+}
+
+::util::Status InstallActionProfileMemberEntries(
+  P4RuntimeSession* session, absl::Span<const ActionProfileMember> entries ){
+
+  WriteRequest batch_write_request;
+  batch_write_request.set_device_id(session->DeviceId());
+  *batch_write_request.mutable_election_id() = session->ElectionId();
+
+  for (const auto& entry : entries) {
+    Update* update = batch_write_request.add_updates();
+    update->set_type(Update::INSERT);
+    *update->mutable_entity()->mutable_action_profile_member() = entry;
+  }
+
+  return SendWriteRequest(session, batch_write_request);
+}
+
+::util::Status InstallActionProfileGroupEntry(
+  P4RuntimeSession* session, const ActionProfileGroup entry ){
+  return InstallActionProfileGroupEntries(session, absl::MakeConstSpan(&entry, 1));
+}
+
+::util::Status InstallActionProfileGroupEntries(
+  P4RuntimeSession* session, absl::Span<const ActionProfileGroup> entries ){
+
+  WriteRequest batch_write_request;
+  batch_write_request.set_device_id(session->DeviceId());
+  *batch_write_request.mutable_election_id() = session->ElectionId();
+
+  for (const auto& entry : entries) {
+    Update* update = batch_write_request.add_updates();
+    update->set_type(Update::INSERT);
+    *update->mutable_entity()->mutable_action_profile_group() = entry;
   }
   return SendWriteRequest(session, batch_write_request);
 }
