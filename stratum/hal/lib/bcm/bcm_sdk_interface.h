@@ -7,10 +7,10 @@
 
 #include <functional>
 #include <map>
-#include <string>
-#include <vector>
 #include <memory>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
@@ -183,8 +183,8 @@ class BcmSdkInterface {
 
   // Generates the configuration file (content) for the SDK.
   virtual ::util::StatusOr<std::string> GenerateBcmConfigFile(
-    const BcmChassisMap& base_bcm_chassis_map,
-    const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) = 0;
+      const BcmChassisMap& base_bcm_chassis_map,
+      const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) = 0;
 
   // Finds the BCM SOC device given PCI bus/PCI slot, creates a soc_cm_dev_t
   // entry that is the main internal SDK data structure that identifies the
@@ -234,9 +234,6 @@ class BcmSdkInterface {
 
   // Stops linkscan.
   virtual ::util::Status StopLinkscan(int unit) = 0;
-
-  // Create link scan event message
-  virtual void OnLinkscanEvent(int unit, int port, PortState linkstatus) = 0;
 
   // Registers a Writer through which to send any linkscan events. The message
   // contains a tuple (unit, port, state), where port refers to the Broadcom SDK

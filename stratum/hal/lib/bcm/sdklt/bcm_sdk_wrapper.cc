@@ -214,19 +214,13 @@ extern "C" void sdk_linkscan_callback(bcmlt_table_notif_info_t* notify_info,
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
     return;
   }
-
-  bcmlt_entry_handle_t eh;
-  int unit;
-  PortState linkstatus;
-  uint64_t port, link = 0;
-  unit = notify_info->unit;
-  eh = notify_info->entry_hdl;
-  bcmlt_entry_field_get(eh, "PORT_ID", &port);
-  bcmlt_entry_field_get(eh, "LINK_STATE", &link);
-  LOG(INFO) << "Unit: " << unit << " Port: " << port << " Link: "
-            << (link ? "UP" : "DOWN") << ".";
-  linkstatus = link ? PORT_STATE_UP : PORT_STATE_DOWN;
-
+  int unit = notify_info->unit;
+  uint64_t port = 0, link = 0;
+  bcmlt_entry_field_get(notify_info->entry_hdl, "PORT_ID", &port);
+  bcmlt_entry_field_get(notify_info->entry_hdl, "LINK_STATE", &link);
+  PortState linkstatus = link ? PORT_STATE_UP : PORT_STATE_DOWN;
+  VLOG(1) << "Link on unit: " << unit << " Port: " << port << "changed to "
+          << (link ? "UP" : "DOWN") << ".";
   // Forward the event.
   bcm_sdk_wrapper->OnLinkscanEvent(unit, port, linkstatus);
 }
@@ -7756,18 +7750,9 @@ pthread_t BcmSdkWrapper::GetDiagShellThreadId() const {
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported.";
 }
 
-void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
-  /* Create LinkscanEvent message. */
-  PortState state;
-  if (linkstatus == PORT_STATE_UP) {
-    state = PORT_STATE_UP;
-  } else if (linkstatus == PORT_STATE_DOWN) {
-    state = PORT_STATE_DOWN;
-  } else {
-    state = PORT_STATE_UNKNOWN;
-  }
-  LinkscanEvent event = {unit, port, state};
-
+void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState port_state) {
+  // Create LinkscanEvent message.
+  LinkscanEvent event = {unit, port, port_state};
   {
     absl::ReaderMutexLock l(&linkscan_writers_lock_);
     // Invoke the Writers based on priority.

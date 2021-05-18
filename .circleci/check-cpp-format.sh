@@ -76,6 +76,8 @@ stratum/hal/lib/bcm/bcm_packetio_manager_mock.h
 stratum/hal/lib/bcm/bcm_packetio_manager_test.cc
 stratum/hal/lib/bcm/bcm_packetio_manager.cc
 stratum/hal/lib/bcm/bcm_packetio_manager.h
+stratum/hal/lib/bcm/bcm_sdk_interface.h
+stratum/hal/lib/bcm/bcm_sdk_mock.h
 stratum/hal/lib/bcm/bcm_serdes_db_manager_mock.h
 stratum/hal/lib/bcm/bcm_serdes_db_manager_test.cc
 stratum/hal/lib/bcm/bcm_serdes_db_manager.cc
