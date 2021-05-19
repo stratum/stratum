@@ -87,7 +87,7 @@ class DummyNode {
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) SHARED_LOCKS_REQUIRED(chassis_lock)
+      std::vector<::util::Status>* details, absl::Time deadline) SHARED_LOCKS_REQUIRED(chassis_lock)
       LOCKS_EXCLUDED(node_lock_);
 
   // Register/Unregister a packet receive writer.

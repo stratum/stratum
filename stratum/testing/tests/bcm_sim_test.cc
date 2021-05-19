@@ -71,7 +71,8 @@ TEST_F(BcmSimTest, TestBasicFunctionality) {
   request.add_entities()->mutable_table_entry();
   request.add_entities()->mutable_action_profile_group();
   request.add_entities()->mutable_action_profile_member();
-  status = bcm_switch_->ReadForwardingEntries(request, &buffer, &details);
+  status = bcm_switch_->ReadForwardingEntries(request, &buffer, &details,
+                                              absl::InfiniteFuture());
   if (!status.ok()) {
     std::string msg = "Failed to read forwarding entries. Details:";
     for (const auto& d : details) {

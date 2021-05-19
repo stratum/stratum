@@ -136,13 +136,13 @@ NP4Switch::~NP4Switch() {}
 ::util::Status NP4Switch::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
-    std::vector<::util::Status>* details) {
+    std::vector<::util::Status>* details, absl::Time deadline) {
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(req.device_id()));
-  return pi_node->ReadForwardingEntries(req, writer, details);
+  return pi_node->ReadForwardingEntries(req, writer, details, deadline);
 }
 
 ::util::Status NP4Switch::RegisterStreamMessageResponseWriter(

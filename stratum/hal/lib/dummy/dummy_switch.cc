@@ -168,13 +168,13 @@ namespace dummy_switch {
 ::util::Status DummySwitch::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
-    std::vector<::util::Status>* details) {
+    std::vector<::util::Status>* details, absl::Time deadline) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   uint64 node_id = req.device_id();
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
-  return node->ReadForwardingEntries(req, writer, details);
+  return node->ReadForwardingEntries(req, writer, details, deadline);
 }
 
 ::util::Status DummySwitch::RegisterStreamMessageResponseWriter(

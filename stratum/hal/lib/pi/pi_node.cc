@@ -161,7 +161,7 @@ std::unique_ptr<PINode> PINode::CreateInstance(
 ::util::Status PINode::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
-    std::vector<::util::Status>* details) {
+    std::vector<::util::Status>* details, absl::Time deadline) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {
     RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";

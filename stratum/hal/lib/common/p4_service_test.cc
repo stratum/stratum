@@ -755,7 +755,7 @@ TEST_P(P4ServiceTest, ReadSuccess) {
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
       .WillOnce(Return(::util::OkStatus()));
   const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
-  EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _))
+  EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _, _))
       .WillOnce(DoAll(SetArgPointee<2>(kExpectedResults),
                       Return(::util::OkStatus())));
 
@@ -816,7 +816,7 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
 
   const std::vector<::util::Status> kExpectedDetails = {
       ::util::Status(StratumErrorSpace(), ERR_TABLE_FULL, kOperErrorMsg)};
-  EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _))
+  EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _, _))
       .WillOnce(DoAll(SetArgPointee<2>(kExpectedDetails),
                       Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL,
                                             kAggrErrorMsg))));

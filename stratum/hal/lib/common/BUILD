@@ -694,6 +694,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
