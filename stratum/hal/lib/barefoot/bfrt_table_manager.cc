@@ -486,13 +486,12 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     result.mutable_action()->set_action_profile_group_id(selector_group_id);
   }
 
-  // Counter data
+  // Counter data, if applicable.
   uint64 bytes, packets;
-  if (table_data->GetCounterData(&bytes, &packets).ok()) {
-    if (request.has_counter_data()) {
-      result.mutable_counter_data()->set_byte_count(bytes);
-      result.mutable_counter_data()->set_packet_count(packets);
-    }
+  if (request.has_counter_data() &&
+      table_data->GetCounterData(&bytes, &packets).ok()) {
+    result.mutable_counter_data()->set_byte_count(bytes);
+    result.mutable_counter_data()->set_packet_count(packets);
   }
 
   return result;

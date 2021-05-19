@@ -880,37 +880,35 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
 
+  // Clear values in case we set only one of them later.
+  *bytes = 0;
+  *packets = 0;
+
   bf_rt_id_t action_id = 0;
   if (table->actionIdApplicable()) {
     RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
   }
 
-  bf_rt_id_t field_id;
-  // Try to read byte counter.
-  bf_status_t bf_status;
+  std::vector<bf_rt_id_t> data_field_ids;
   if (action_id) {
-    bf_status =
-        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id);
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &data_field_ids));
   } else {
-    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
   }
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_val;
-    RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
-    *bytes = counter_val;
-  }
-
-  // Try to read packet counter.
-  if (action_id) {
-    bf_status =
-        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id);
-  } else {
-    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
-  }
-  if (bf_status == BF_SUCCESS) {
-    uint64 counter_val;
-    RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &counter_val));
-    *packets = counter_val;
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    if (action_id) {
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldNameGet(field_id, action_id, &field_name));
+    } else {
+      RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    }
+    if (field_name == "$COUNTER_SPEC_BYTES") {
+      RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, bytes));
+    } else if (field_name == "$COUNTER_SPEC_PKTS") {
+      RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, packets));
+    }
+    // Uninteresting field, ignore.
   }
 
   return ::util::OkStatus();
