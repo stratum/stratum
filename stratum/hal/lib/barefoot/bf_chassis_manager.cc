@@ -264,7 +264,7 @@ BfChassisManager::~BfChassisManager() = default;
   // new maps
   std::map<int, uint64> unit_to_node_id;
   std::map<uint64, int> node_id_to_unit;
-  std::map<uint64, std::map<uint32, PortState>>
+  std::map<uint64, std::map<uint32, OperStatus>>
       node_id_to_port_id_to_port_state;
   std::map<uint64, std::map<uint32, PortConfig>>
       node_id_to_port_id_to_port_config;
@@ -295,7 +295,7 @@ BfChassisManager::~BfChassisManager() = default;
           << "Invalid ChassisConfig, unknown node id " << node_id
           << " for port " << port_id << ".";
     }
-    node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
+    node_id_to_port_id_to_port_state[node_id][port_id] = OperStatus();
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
@@ -671,7 +671,8 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       ASSIGN_OR_RETURN(auto port_state,
                        GetPortState(request.oper_status().node_id(),
                                     request.oper_status().port_id()));
-      resp.mutable_oper_status()->set_state(port_state);
+      resp.mutable_oper_status()->set_state(port_state.state());
+      resp.mutable_oper_status()->set_last_change(port_state.last_change());
       break;
     }
     case Request::kAdminStatus: {
@@ -707,7 +708,7 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       ASSIGN_OR_RETURN(auto port_state,
                        GetPortState(request.negotiated_port_speed().node_id(),
                                     request.negotiated_port_speed().port_id()));
-      if (port_state != PORT_STATE_UP) break;
+      if (port_state.state() != PORT_STATE_UP) break;
       resp.mutable_negotiated_port_speed()->set_speed_bps(*config->speed_bps);
       break;
     }
@@ -786,8 +787,8 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return resp;
 }
 
-::util::StatusOr<PortState> BfChassisManager::GetPortState(uint64 node_id,
-                                                           uint32 port_id) {
+::util::StatusOr<OperStatus> BfChassisManager::GetPortState(uint64 node_id,
+                                                            uint32 port_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -797,23 +798,26 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
-  const PortState* port_state_ptr =
+  const OperStatus* port_state_ptr =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
   // TODO(antonin): Once we implement PushChassisConfig, port_state_ptr should
   // never be NULL
-  if (port_state_ptr != nullptr && *port_state_ptr != PORT_STATE_UNKNOWN) {
+  if (port_state_ptr != nullptr &&
+      port_state_ptr->state() != PORT_STATE_UNKNOWN) {
     return *port_state_ptr;
   }
 
-  // If state is unknown, query the state
+  // If state is unknown, query the state.
   LOG(INFO) << "Querying state of port " << port_id << " in node " << node_id
             << ".";
+  OperStatus port_state;
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-  ASSIGN_OR_RETURN(auto port_state,
+  ASSIGN_OR_RETURN(auto state,
                    bf_sde_interface_->GetPortState(unit, sdk_port_id));
+  port_state.set_state(state);
   LOG(INFO) << "State of port " << port_id << " in node " << node_id
             << " (SDK port " << sdk_port_id
-            << "): " << PrintPortState(port_state);
+            << "): " << PrintPortState(port_state.state());
   return port_state;
 }
 
@@ -841,8 +845,9 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   }
   ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
 
-  for (auto& p : node_id_to_port_id_to_port_state_[node_id])
-    p.second = PORT_STATE_UNKNOWN;
+  for (auto& p : node_id_to_port_id_to_port_state_[node_id]) {
+    p.second.set_state(PORT_STATE_UNKNOWN);
+  }
 
   LOG(INFO) << "Replaying ports for node " << node_id << ".";
 
@@ -959,7 +964,10 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   CHECK_RETURN_IF_FALSE(port_id_to_state != nullptr)
       << "Node " << node_id << " has a configuration mismatch.";
   for (auto& p : *port_id_to_config) p.second = PortConfig();
-  for (auto& p : *port_id_to_state) p.second = PORT_STATE_UNKNOWN;
+  for (auto& p : *port_id_to_state) {
+    p.second.set_state(PORT_STATE_UNKNOWN);
+    p.second.set_last_change(0);
+  }
   return ::util::OkStatus();
 }
 
@@ -986,7 +994,7 @@ std::unique_ptr<BfChassisManager> BfChassisManager::CreateInstance(
 
 void BfChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
                                                   uint32 port_id,
-                                                  PortState new_state) {
+                                                  OperStatus new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
   // Allocate and initialize a PortOperStateChangedEvent event and pass it to
@@ -1015,7 +1023,6 @@ void* BfChassisManager::PortStatusEventHandlerThreadFunc(void* arg) {
 
 void BfChassisManager::ReadPortStatusEvents(
     const std::unique_ptr<ChannelReader<PortStatusEvent>>& reader) {
-  PortStatusEvent event;
   do {
     // Check switch shutdown.
     // TODO(max): This check should be on the shutdown variable.
@@ -1023,6 +1030,7 @@ void BfChassisManager::ReadPortStatusEvents(
       absl::ReaderMutexLock l(&chassis_lock);
       if (!initialized_) break;
     }
+    PortStatusEvent event;
     // Block on the next linkscan event message from the Channel.
     int code = reader->Read(&event, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
@@ -1033,12 +1041,15 @@ void BfChassisManager::ReadPortStatusEvents(
       continue;
     }
     // Handle received message.
-    PortStatusEventHandler(event.device, event.port, event.state);
+    OperStatus port_status;
+    port_status.set_state(event.state);
+    port_status.set_last_change(event.last_change);
+    PortStatusEventHandler(event.device, event.port, port_status);
   } while (true);
 }
 
 void BfChassisManager::PortStatusEventHandler(int device, int port,
-                                              PortState new_state) {
+                                              OperStatus new_state) {
   absl::WriterMutexLock l(&chassis_lock);
   // TODO(max): check for shutdown here
   // if (shutdown) {
@@ -1072,8 +1083,8 @@ void BfChassisManager::PortStatusEventHandler(int device, int port,
   SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
 
   LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
-            << " (SDK port " << port << "): " << PrintPortState(new_state)
-            << ".";
+            << " (SDK port " << port
+            << "): " << PrintPortState(new_state.state()) << ".";
 }
 
 void* BfChassisManager::TransceiverEventHandlerThreadFunc(void* arg) {

@@ -160,14 +160,15 @@ class PortOperStateChangedEvent
     : public PerPortGnmiEvent<PortOperStateChangedEvent> {
  public:
   PortOperStateChangedEvent(uint64 node_id, uint32 port_id,
-                            const PortState& new_state)
+                            const OperStatus& new_state)
       : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
   ~PortOperStateChangedEvent() override {}
 
-  PortState GetNewState() const { return new_state_; }
+  PortState GetNewState() const { return new_state_.state(); }
+  uint64 GetNewLastChange() const { return new_state_.last_change(); }
 
  private:
-  PortState new_state_;
+  OperStatus new_state_;
 };
 
 // A Port's Administrative State Has Changed event.

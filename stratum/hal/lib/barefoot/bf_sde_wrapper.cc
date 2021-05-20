@@ -1089,7 +1089,9 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
 ::util::Status BfSdeWrapper::OnPortStatusEvent(int device, int port, bool up) {
   // Create PortStatusEvent message.
   PortState state = up ? PORT_STATE_UP : PORT_STATE_DOWN;
-  PortStatusEvent event = {device, port, state};
+  // Read this from the SDE, once available.
+  uint64 last_change = absl::ToUnixNanos(absl::Now());
+  PortStatusEvent event = {device, port, state, last_change};
 
   {
     absl::ReaderMutexLock l(&port_status_event_writer_lock_);

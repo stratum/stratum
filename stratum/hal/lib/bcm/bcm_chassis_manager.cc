@@ -322,16 +322,16 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   return *trunk_id_to_sdk_trunk;
 }
 
-::util::StatusOr<PortState> BcmChassisManager::GetPortState(
+::util::StatusOr<OperStatus> BcmChassisManager::GetPortState(
     uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  const std::map<uint32, PortState>* port_id_to_port_state =
+  const std::map<uint32, OperStatus>* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
-  const PortState* port_state =
+  const OperStatus* port_state =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
   CHECK_RETURN_IF_FALSE(port_state != nullptr)
       << "Port " << port_id << " is not known on node " << node_id << ".";
@@ -339,7 +339,7 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   return *port_state;
 }
 
-::util::StatusOr<PortState> BcmChassisManager::GetPortState(
+::util::StatusOr<OperStatus> BcmChassisManager::GetPortState(
     const SdkPort& sdk_port) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -1208,7 +1208,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   // Now populate port-related maps.
 
   // Temporary maps to hold the port state, admin state, and health state.
-  std::map<uint64, std::map<uint32, PortState>>
+  std::map<uint64, std::map<uint32, OperStatus>>
       tmp_node_id_to_port_id_to_port_state;
   std::map<uint64, std::map<uint32, AdminState>>
       tmp_node_id_to_port_id_to_admin_state;
@@ -1274,13 +1274,15 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         // node_id_to_port_id_to_{port,health,loopback}_state_, we keep the
         // state as is. Otherwise, we assume this is the first time we are
         // seeing this port and set the state to unknown.
-        const PortState* port_state = gtl::FindOrNull(
+        const OperStatus* port_state = gtl::FindOrNull(
             node_id_to_port_id_to_port_state_[node_id], port_id);
         if (port_state != nullptr) {
           tmp_node_id_to_port_id_to_port_state[node_id][port_id] = *port_state;
         } else {
-          tmp_node_id_to_port_id_to_port_state[node_id][port_id] =
-              PORT_STATE_UNKNOWN;
+          tmp_node_id_to_port_id_to_port_state[node_id][port_id].set_state(
+              PORT_STATE_UNKNOWN);
+          tmp_node_id_to_port_id_to_port_state[node_id][port_id]
+              .set_last_change(0);
         }
         const HealthState* health_state = gtl::FindOrNull(
             node_id_to_port_id_to_health_state_[node_id], port_id);
@@ -1780,13 +1782,16 @@ void* BcmChassisManager::ReadLinkscanEvents(
       continue;
     }
     // Handle received message.
-    LinkscanEventHandler(event.unit, event.port, event.state);
+    OperStatus port_status;
+    port_status.set_state(event.state);
+    port_status.set_last_change(event.last_change);
+    LinkscanEventHandler(event.unit, event.port, port_status);
   } while (true);
   return nullptr;
 }
 
 void BcmChassisManager::LinkscanEventHandler(int unit, int logical_port,
-                                             PortState new_state) {
+                                             OperStatus new_state) {
   absl::WriterMutexLock l(&chassis_lock);
   if (shutdown) {
     VLOG(1) << "The class is already shutdown. Exiting.";
@@ -1828,7 +1833,8 @@ void BcmChassisManager::LinkscanEventHandler(int unit, int logical_port,
   if (!status.ok()) {
     LOG(ERROR) << "Failed to update managers on node " << *node_id
                << " on port " << *port_id << " state change to "
-               << PortState_Name(new_state) << " with error: " << status << ".";
+               << PortState_Name(new_state.state()) << " with error: " << status
+               << ".";
   }
   // Notify gNMI about the change of logical port state.
   SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
@@ -1864,12 +1870,12 @@ void BcmChassisManager::LinkscanEventHandler(int unit, int logical_port,
             << PrintPortProperties(*node_id, *port_id, bcm_port->slot(),
                                    bcm_port->port(), bcm_port->channel(), unit,
                                    logical_port, bcm_port->speed_bps())
-            << ": " << PrintPortState(new_state);
+            << ": " << PrintPortState(new_state.state());
 }
 
 void BcmChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
                                                    uint32 port_id,
-                                                   PortState new_state) {
+                                                   OperStatus new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
   // Allocate and initialize a PortOperStateChangedEvent event and pass it to

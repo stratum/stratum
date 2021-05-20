@@ -34,6 +34,7 @@ class BfSdeInterface {
     int device;
     int port;
     PortState state;
+    uint64 last_change;
   };
 
   // SessionInterface is a proxy class for BfRt sessions. Most API calls require

@@ -120,10 +120,10 @@ class BcmChassisManager : public BcmChassisRoInterface {
       uint64 node_id) const override SHARED_LOCKS_REQUIRED(chassis_lock);
   ::util::StatusOr<std::map<uint32, SdkTrunk>> GetTrunkIdToSdkTrunkMap(
       uint64 node_id) const override SHARED_LOCKS_REQUIRED(chassis_lock);
-  ::util::StatusOr<PortState> GetPortState(uint64 node_id,
-                                           uint32 port_id) const override
+  ::util::StatusOr<OperStatus> GetPortState(uint64 node_id,
+                                            uint32 port_id) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
-  ::util::StatusOr<PortState> GetPortState(const SdkPort& sdk_port)
+  ::util::StatusOr<OperStatus> GetPortState(const SdkPort& sdk_port)
       const override SHARED_LOCKS_REQUIRED(chassis_lock);
   ::util::StatusOr<TrunkState> GetTrunkState(uint64 node_id,
                                              uint32 trunk_id) const override
@@ -321,7 +321,7 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // NOTE: This method should never be executed directly from a context which
   // first accesses the internal structures of a class below BcmChassisManager
   // as this may result in deadlock.
-  void LinkscanEventHandler(int unit, int logical_port, PortState new_state)
+  void LinkscanEventHandler(int unit, int logical_port, OperStatus new_state)
       LOCKS_EXCLUDED(chassis_lock);
 
   // Transceiver module insert/removal event handler. This method is executed by
@@ -359,7 +359,7 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // ChannelWriter<GnmiEventPtr> object. Called by LinkscanEventHandler and
   // expects chassis_lock to be held.
   void SendPortOperStateGnmiEvent(uint64 node_id, uint32 port_id,
-                                  PortState new_state)
+                                  OperStatus new_state)
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(gnmi_event_lock_);
 
   // Sets the speed for a flex port group after a chassis config is pushed. The
@@ -503,12 +503,12 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // state of the transceiver module plugged into that (slot, port).
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state_;
 
-  // Map from node ID to another map from port ID to PortState representing
+  // Map from node ID to another map from port ID to OperStatus representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
   // After chassis config push, if there is already a state for a port in this
   // map, we keep the state, otherwise we initialize the state to
   // PORT_STATE_UNKNOWN and let the next linkscan event update the state.
-  std::map<uint64, std::map<uint32, PortState>>
+  std::map<uint64, std::map<uint32, OperStatus>>
       node_id_to_port_id_to_port_state_;
 
   // Map from node ID to another map from trunk ID to TrunkState representing

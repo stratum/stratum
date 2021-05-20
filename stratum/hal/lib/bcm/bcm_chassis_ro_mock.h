@@ -32,8 +32,9 @@ class BcmChassisRoMock : public BcmChassisRoInterface {
   MOCK_CONST_METHOD1(
       GetTrunkIdToSdkTrunkMap,
       ::util::StatusOr<std::map<uint32, SdkTrunk>>(uint64 node_id));
-  MOCK_CONST_METHOD2(GetPortState, ::util::StatusOr<PortState>(uint64 node_id,
-                                                               uint32 port_id));
+  MOCK_CONST_METHOD2(GetPortState,
+                     ::util::StatusOr<OperStatus>(uint64 node_id,
+                                                  uint32 port_id));
   MOCK_CONST_METHOD2(GetTrunkState,
                      ::util::StatusOr<TrunkState>(uint64 node_id,
                                                   uint32 trunk_id));
@@ -43,7 +44,7 @@ class BcmChassisRoMock : public BcmChassisRoInterface {
   MOCK_CONST_METHOD2(GetParentTrunkId,
                      ::util::StatusOr<uint32>(uint64 node_id, uint32 port_id));
   MOCK_CONST_METHOD1(GetPortState,
-                     ::util::StatusOr<PortState>(const SdkPort& sdk_port));
+                     ::util::StatusOr<OperStatus>(const SdkPort& sdk_port));
   MOCK_CONST_METHOD2(GetPortAdminState,
                      ::util::StatusOr<AdminState>(uint64 node_id,
                                                   uint32 port_id));

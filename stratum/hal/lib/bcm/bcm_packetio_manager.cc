@@ -439,9 +439,9 @@ BcmPacketioManager::~BcmPacketioManager() {}
       if (!members.empty()) {
         for (uint32 member : members) {
           ASSIGN_OR_RETURN(
-              PortState port_state,
+              OperStatus port_state,
               bcm_chassis_ro_interface_->GetPortState(node_id_, member));
-          if (port_state == PORT_STATE_UP) {
+          if (port_state.state() == PORT_STATE_UP) {
             port_id = member;
             break;
           }
@@ -455,10 +455,10 @@ BcmPacketioManager::~BcmPacketioManager() {}
       }
     } else {
       // TX to regular port. If the port is not up we should discard it.
-      ASSIGN_OR_RETURN(PortState port_state,
+      ASSIGN_OR_RETURN(OperStatus port_state,
                        bcm_chassis_ro_interface_->GetPortState(
                            node_id_, meta.egress_port_id));
-      if (port_state != PORT_STATE_UP) {
+      if (port_state.state() != PORT_STATE_UP) {
         INCREMENT_TX_COUNTER(purpose, tx_drops_down_port);
         return MAKE_ERROR(ERR_INVALID_PARAM)
                << "Port with ID " << meta.egress_port_id << " is not UP.";

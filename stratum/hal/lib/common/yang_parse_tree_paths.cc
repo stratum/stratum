@@ -914,11 +914,19 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/last-change
-void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
-  auto poll_functor = UnsupportedFunc();
-  auto on_change_functor = UnsupportedFunc();
+void SetUpInterfacesInterfaceStateLastChange(uint64 node_id, uint32 port_id,
+                                             TreeNode* node,
+                                             YangParseTree* tree) {
+  auto poll_functor = GetOnPollFunctor(
+      node_id, port_id, tree, &DataResponse::oper_status,
+      &DataResponse::has_oper_status,
+      &DataRequest::Request::mutable_oper_status, &OperStatus::last_change);
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOperStateChangedEvent::GetNewLastChange);
+  auto register_functor = RegisterFunc<PortOperStateChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -3218,7 +3226,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   // No need to lock the mutex - it is locked by method calling this one.
   TreeNode* node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("last-change")());
-  SetUpInterfacesInterfaceStateLastChange(node);
+  SetUpInterfacesInterfaceStateLastChange(node_id, port_id, node, tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("ifindex")());

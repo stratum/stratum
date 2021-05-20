@@ -165,6 +165,7 @@ class BcmSdkInterface {
     int unit;
     int port;
     PortState state;
+    uint64 last_change;
   };
 
   // A few predefined priority values that can be used by external functions

@@ -928,10 +928,10 @@ namespace {
         BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
       int port = member_nexthop_info->bcm_port;
       ASSIGN_OR_RETURN(
-          PortState port_state,
+          OperStatus port_state,
           bcm_chassis_ro_interface_->GetPortState(SdkPort(unit_, port)));
       // Only add member if port is UP.
-      if (port_state != PORT_STATE_UP) continue;
+      if (port_state.state() != PORT_STATE_UP) continue;
     }
     auto* nexthop_member = bcm_multipath_nexthop->add_members();
     nexthop_member->set_egress_intf_id(member_nexthop_info->egress_intf_id);

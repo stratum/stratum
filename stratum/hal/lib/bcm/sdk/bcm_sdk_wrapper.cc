@@ -4772,7 +4772,8 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
   } else {
     state = PORT_STATE_UNKNOWN;
   }
-  LinkscanEvent event = {unit, port, state};
+  uint64 last_change = absl::ToUnixNanos(absl::Now());
+  LinkscanEvent event = {unit, port, state, last_change};
 
   {
     absl::ReaderMutexLock l(&linkscan_writers_lock_);

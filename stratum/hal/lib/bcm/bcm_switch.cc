@@ -262,7 +262,7 @@ BcmSwitch::~BcmSwitch() {}
         if (!port_state.ok()) {
           status.Update(port_state.status());
         } else {
-          resp.mutable_oper_status()->set_state(port_state.ValueOrDie());
+          *resp.mutable_oper_status() = port_state.ValueOrDie();
         }
         break;
       }

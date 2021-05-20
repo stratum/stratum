@@ -55,12 +55,12 @@ class BcmChassisRoInterface {
       uint64 node_id) const = 0;
 
   // Returns a state of a singleton port given its ID and the ID of its node.
-  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
+  virtual ::util::StatusOr<OperStatus> GetPortState(uint64 node_id,
                                                    uint32 port_id) const = 0;
 
   // Returns the state of a singleton port given the unit and BCM logical port
   // number.
-  virtual ::util::StatusOr<PortState> GetPortState(
+  virtual ::util::StatusOr<OperStatus> GetPortState(
       const SdkPort& sdk_port) const = 0;
 
   // Returns a state of a trunk port port given its ID and the ID of its node.

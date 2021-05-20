@@ -48,8 +48,8 @@ class BfChassisManager {
   virtual ::util::StatusOr<DataResponse> GetPortData(
       const DataRequest::Request& request) SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
-                                                   uint32 port_id)
+  virtual ::util::StatusOr<OperStatus> GetPortState(uint64 node_id,
+                                                    uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   virtual ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
@@ -136,7 +136,7 @@ class BfChassisManager {
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
   void SendPortOperStateGnmiEvent(uint64 node_id, uint32 port_id,
-                                  PortState new_state)
+                                  OperStatus new_state)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   // Transceiver module insert/removal event handler. This method is executed by
@@ -164,7 +164,7 @@ class BfChassisManager {
   // used by the SDE. NOTE: This method should never be executed directly from a
   // context which first accesses the internal structures of a class below
   // BfChassisManager as this may result in deadlock.
-  void PortStatusEventHandler(int device, int port, PortState new_state)
+  void PortStatusEventHandler(int device, int port, OperStatus new_state)
       LOCKS_EXCLUDED(chassis_lock);
 
   // Thread function for reading port status events from
@@ -231,9 +231,9 @@ class BfChassisManager {
   // Map from node ID to unit number.
   std::map<uint64, int> node_id_to_unit_ GUARDED_BY(chassis_lock);
 
-  // Map from node ID to another map from port ID to PortState representing
+  // Map from node ID to another map from port ID to OperStatus representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
-  std::map<uint64, std::map<uint32, PortState>>
+  std::map<uint64, std::map<uint32, OperStatus>>
       node_id_to_port_id_to_port_state_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from port ID to port configuration.
