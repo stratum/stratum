@@ -619,7 +619,7 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
   bf_rt_id_t priority_field_id;
   RETURN_IF_BFRT_ERROR(
-      table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id));
+      table->keyFieldIdGet(kMatchPriority, &priority_field_id));
   RETURN_IF_BFRT_ERROR(table_key_->setValue(priority_field_id, priority));
 
   return ::util::OkStatus();
@@ -706,7 +706,7 @@ template <typename T>
   // const bfrt::BfRtTable* table;
   // RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
   uint64 bf_priority;
-  RETURN_IF_ERROR(GetField(*table_key_, "$MATCH_PRIORITY", &bf_priority));
+  RETURN_IF_ERROR(GetField(*table_key_, kMatchPriority, &bf_priority));
   *priority = bf_priority;
 
   return ::util::OkStatus();
@@ -772,7 +772,7 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 }
 
 ::util::Status TableData::SetActionMemberId(uint64 action_member_id) {
-  return SetField(table_data_.get(), "$ACTION_MEMBER_ID", action_member_id);
+  return SetField(table_data_.get(), kActionMemberId, action_member_id);
 }
 
 ::util::Status TableData::GetActionMemberId(uint64* action_member_id) const {
@@ -787,7 +787,7 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   }
   bf_rt_id_t field_id;
   bfrt::DataType data_type;
-  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$ACTION_MEMBER_ID", &field_id));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kActionMemberId, &field_id));
   RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
       << "Requested uint64 but field $ACTION_MEMBER_ID has type "
@@ -804,7 +804,7 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
 }
 
 ::util::Status TableData::SetSelectorGroupId(uint64 selector_group_id) {
-  return SetField(table_data_.get(), "$SELECTOR_GROUP_ID", selector_group_id);
+  return SetField(table_data_.get(), kSelectorGroupId, selector_group_id);
 }
 
 ::util::Status TableData::GetSelectorGroupId(uint64* selector_group_id) const {
@@ -819,7 +819,7 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   }
   bf_rt_id_t field_id;
   bfrt::DataType data_type;
-  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$SELECTOR_GROUP_ID", &field_id));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kSelectorGroupId, &field_id));
   RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::UINT64)
       << "Requested uint64 but field $SELECTOR_GROUP_ID has type "
@@ -863,9 +863,9 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   for (const auto& field_id : data_field_ids) {
     std::string field_name;
     RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
-    if (field_name == "$COUNTER_SPEC_BYTES") {
+    if (field_name == kCounterBytes) {
       RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id, bytes));
-    } else if (field_name == "$COUNTER_SPEC_PKTS") {
+    } else if (field_name == kCounterPackets) {
       RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id, packets));
     }
     // Uninteresting field, ignore.
@@ -903,9 +903,9 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
     } else {
       RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
     }
-    if (field_name == "$COUNTER_SPEC_BYTES") {
+    if (field_name == kCounterBytes) {
       RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, bytes));
-    } else if (field_name == "$COUNTER_SPEC_PKTS") {
+    } else if (field_name == kCounterPackets) {
       RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, packets));
     }
     // Uninteresting field, ignore.
@@ -2041,7 +2041,8 @@ namespace {
   CHECK_RETURN_IF_FALSE(real_session);
 
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet("$mirror.cfg", &table));
+  RETURN_IF_BFRT_ERROR(
+      bfrt_info_->bfrtTableFromNameGet(kMirrorConfigTable, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
@@ -2102,7 +2103,8 @@ namespace {
   CHECK_RETURN_IF_FALSE(real_session);
 
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet("$mirror.cfg", &table));
+  RETURN_IF_BFRT_ERROR(
+      bfrt_info_->bfrtTableFromNameGet(kMirrorConfigTable, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
@@ -2134,7 +2136,8 @@ namespace {
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet("$mirror.cfg", &table));
+  RETURN_IF_BFRT_ERROR(
+      bfrt_info_->bfrtTableFromNameGet(kMirrorConfigTable, &table));
   bf_rt_id_t action_id;
   RETURN_IF_BFRT_ERROR(table->actionIdGet("$normal", &action_id));
   std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
@@ -2216,12 +2219,12 @@ namespace {
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
   // Counter key: $COUNTER_INDEX
-  RETURN_IF_ERROR(SetField(table_key.get(), "$COUNTER_INDEX", counter_index));
+  RETURN_IF_ERROR(SetField(table_key.get(), kCounterIndex, counter_index));
 
   // Counter data: $COUNTER_SPEC_BYTES
   if (byte_count.has_value()) {
     bf_rt_id_t field_id;
-    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    auto bf_status = table->dataFieldIdGet(kCounterBytes, &field_id);
     if (bf_status == BF_SUCCESS) {
       RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, byte_count.value()));
     }
@@ -2229,7 +2232,7 @@ namespace {
   // Counter data: $COUNTER_SPEC_PKTS
   if (packet_count.has_value()) {
     bf_rt_id_t field_id;
-    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+    auto bf_status = table->dataFieldIdGet(kCounterPackets, &field_id);
     if (bf_status == BF_SUCCESS) {
       RETURN_IF_BFRT_ERROR(
           table_data->setValue(field_id, packet_count.value()));
@@ -2273,7 +2276,7 @@ namespace {
 
     // Key: $COUNTER_INDEX
     RETURN_IF_ERROR(
-        SetField(keys[0].get(), "$COUNTER_INDEX", counter_index.value()));
+        SetField(keys[0].get(), kCounterIndex, counter_index.value()));
     RETURN_IF_BFRT_ERROR(table->tableEntryGet(
         *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
         bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
@@ -2290,14 +2293,14 @@ namespace {
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $COUNTER_INDEX
     uint64 bf_counter_index;
-    RETURN_IF_ERROR(GetField(*table_key, "$COUNTER_INDEX", &bf_counter_index));
+    RETURN_IF_ERROR(GetField(*table_key, kCounterIndex, &bf_counter_index));
     counter_indices->push_back(bf_counter_index);
 
     absl::optional<uint64> byte_count;
     absl::optional<uint64> packet_count;
     // Counter data: $COUNTER_SPEC_BYTES
     bf_rt_id_t field_id;
-    auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
+    auto bf_status = table->dataFieldIdGet(kCounterBytes, &field_id);
     if (bf_status == BF_SUCCESS) {
       uint64 counter_data;
       RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
@@ -2306,7 +2309,7 @@ namespace {
     byte_counts->push_back(byte_count);
 
     // Counter data: $COUNTER_SPEC_PKTS
-    bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
+    bf_status = table->dataFieldIdGet(kCounterPackets, &field_id);
     if (bf_status == BF_SUCCESS) {
       uint64 counter_data;
       RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
@@ -2433,7 +2436,7 @@ namespace {
 
     // Key: $REGISTER_INDEX
     RETURN_IF_ERROR(
-        SetField(keys[0].get(), "$REGISTER_INDEX", register_index.value()));
+        SetField(keys[0].get(), kRegisterIndex, register_index.value()));
     RETURN_IF_BFRT_ERROR(table->tableEntryGet(
         *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
         bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
@@ -2449,8 +2452,7 @@ namespace {
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $REGISTER_INDEX
     uint64 bf_register_index;
-    RETURN_IF_ERROR(
-        GetField(*table_key, "$REGISTER_INDEX", &bf_register_index));
+    RETURN_IF_ERROR(GetField(*table_key, kRegisterIndex, &bf_register_index));
     register_indices->push_back(bf_register_index);
     // Data: <register_name>.f1
     ASSIGN_OR_RETURN(auto f1_field_id, GetRegisterDataFieldId(table));
@@ -2677,7 +2679,7 @@ namespace {
   };
 
   // Key: $ACTION_MEMBER_ID
-  RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
+  RETURN_IF_ERROR(SetField(table_key.get(), kActionMemberId, member_id));
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   if (insert) {
@@ -2732,7 +2734,7 @@ namespace {
   };
 
   // Key: $ACTION_MEMBER_ID
-  RETURN_IF_ERROR(SetField(table_key.get(), "$ACTION_MEMBER_ID", member_id));
+  RETURN_IF_ERROR(SetField(table_key.get(), kActionMemberId, member_id));
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
@@ -2764,7 +2766,7 @@ namespace {
     RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
     RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
     // Key: $ACTION_MEMBER_ID
-    RETURN_IF_ERROR(SetField(keys[0].get(), "$ACTION_MEMBER_ID", member_id));
+    RETURN_IF_ERROR(SetField(keys[0].get(), kActionMemberId, member_id));
     RETURN_IF_BFRT_ERROR(table->tableEntryGet(
         *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
         bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
@@ -2778,7 +2780,7 @@ namespace {
   for (size_t i = 0; i < keys.size(); ++i) {
     // Key: $sid
     uint64 member_id;
-    RETURN_IF_ERROR(GetField(*keys[i], "$ACTION_MEMBER_ID", &member_id));
+    RETURN_IF_ERROR(GetField(*keys[i], kActionMemberId, &member_id));
     member_ids->push_back(member_id);
 
     // Data: action params
@@ -2819,12 +2821,12 @@ namespace {
   };
 
   // Key: $SELECTOR_GROUP_ID
-  RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
+  RETURN_IF_ERROR(SetField(table_key.get(), kSelectorGroupId, group_id));
   // Data: $ACTION_MEMBER_ID
-  RETURN_IF_ERROR(SetField(table_data.get(), "$ACTION_MEMBER_ID", member_ids));
+  RETURN_IF_ERROR(SetField(table_data.get(), kActionMemberId, member_ids));
   // Data: $ACTION_MEMBER_STATUS
   RETURN_IF_ERROR(
-      SetField(table_data.get(), "$ACTION_MEMBER_STATUS", member_status));
+      SetField(table_data.get(), kActionMemberStatus, member_status));
   // Data: $MAX_GROUP_SIZE
   RETURN_IF_ERROR(
       SetField(table_data.get(), "$MAX_GROUP_SIZE", max_group_size));
@@ -2885,7 +2887,7 @@ namespace {
   };
 
   // Key: $SELECTOR_GROUP_ID
-  RETURN_IF_ERROR(SetField(table_key.get(), "$SELECTOR_GROUP_ID", group_id));
+  RETURN_IF_ERROR(SetField(table_key.get(), kSelectorGroupId, group_id));
 
   auto bf_dev_tgt = GetDeviceTarget(device);
   RETURN_IF_BFRT_ERROR(table->tableEntryDel(*real_session->bfrt_session_,
@@ -2921,7 +2923,7 @@ namespace {
     RETURN_IF_BFRT_ERROR(table->keyAllocate(&keys[0]));
     RETURN_IF_BFRT_ERROR(table->dataAllocate(&datums[0]));
     // Key: $SELECTOR_GROUP_ID
-    RETURN_IF_ERROR(SetField(keys[0].get(), "$SELECTOR_GROUP_ID", group_id));
+    RETURN_IF_ERROR(SetField(keys[0].get(), kSelectorGroupId, group_id));
     RETURN_IF_BFRT_ERROR(table->tableEntryGet(
         *real_session->bfrt_session_, bf_dev_tgt, *keys[0],
         bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, datums[0].get()));
@@ -2939,7 +2941,7 @@ namespace {
     const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
     // Key: $SELECTOR_GROUP_ID
     uint64 group_id;
-    RETURN_IF_ERROR(GetField(*table_key, "$SELECTOR_GROUP_ID", &group_id));
+    RETURN_IF_ERROR(GetField(*table_key, kSelectorGroupId, &group_id));
     group_ids->push_back(group_id);
 
     // Data: $MAX_GROUP_SIZE
@@ -2949,13 +2951,13 @@ namespace {
 
     // Data: $ACTION_MEMBER_ID
     std::vector<uint32> members;
-    RETURN_IF_ERROR(GetField(*table_data, "$ACTION_MEMBER_ID", &members));
+    RETURN_IF_ERROR(GetField(*table_data, kActionMemberId, &members));
     member_ids->push_back(members);
 
     // Data: $ACTION_MEMBER_STATUS
     std::vector<bool> member_enabled;
     RETURN_IF_ERROR(
-        GetField(*table_data, "$ACTION_MEMBER_STATUS", &member_enabled));
+        GetField(*table_data, kActionMemberStatus, &member_enabled));
     member_status->push_back(member_enabled);
   }
 
