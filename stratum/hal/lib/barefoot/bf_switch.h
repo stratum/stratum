@@ -46,7 +46,7 @@ class BfSwitch : public SwitchInterface {
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) override;
+      std::vector<::util::Status>* details, absl::Time deadline) override;
   ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
       std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)

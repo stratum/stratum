@@ -40,10 +40,11 @@ class SwitchMock : public SwitchInterface {
   MOCK_METHOD2(WriteForwardingEntries,
                ::util::Status(const ::p4::v1::WriteRequest& req,
                               std::vector<::util::Status>* results));
-  MOCK_METHOD3(ReadForwardingEntries,
+  MOCK_METHOD4(ReadForwardingEntries,
                ::util::Status(const ::p4::v1::ReadRequest& req,
                               WriterInterface<::p4::v1::ReadResponse>* writer,
-                              std::vector<::util::Status>* details));
+                              std::vector<::util::Status>* details,
+                              absl::Time deadline));
   MOCK_METHOD2(
       RegisterStreamMessageResponseWriter,
       ::util::Status(

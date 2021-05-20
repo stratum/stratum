@@ -52,7 +52,7 @@ class DummySwitch : public SwitchInterface {
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details)
+      std::vector<::util::Status>* details, absl::Time deadline)
       LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/time/time.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -144,10 +145,13 @@ class SwitchInterface {
   // some of the entries requested are not supported, the returned status may
   // still be OK and the non supported entries will be specified in `details`).
   // Note that there is no requirement on the order of entries in this vector.
+  // If `deadline` is not InfiniteFuture, this method "may" return before
+  // finishing the entire request. Note that not all implementations support
+  // early cancellation.
   virtual ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) = 0;
+      std::vector<::util::Status>* details, absl::Time deadline) = 0;
 
   // Registers a writer to be invoked when we receive a StreamMessageResponse on
   // the specified node which are destined for the controller. A

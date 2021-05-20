@@ -174,7 +174,7 @@ BcmSwitch::~BcmSwitch() {}
 ::util::Status BcmSwitch::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
-    std::vector<::util::Status>* details) {
+    std::vector<::util::Status>* details, absl::Time deadline) {
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
@@ -185,7 +185,7 @@ BcmSwitch::~BcmSwitch() {}
   }
   // Get BcmNode which the device_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(req.device_id()));
-  return bcm_node->ReadForwardingEntries(req, writer, details);
+  return bcm_node->ReadForwardingEntries(req, writer, details, deadline);
 }
 
 ::util::Status BcmSwitch::RegisterStreamMessageResponseWriter(

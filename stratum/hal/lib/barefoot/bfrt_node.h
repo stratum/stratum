@@ -52,7 +52,7 @@ class BfrtNode final {
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) LOCKS_EXCLUDED(lock_);
+      std::vector<::util::Status>* details, absl::Time deadline) LOCKS_EXCLUDED(lock_);
   ::util::Status RegisterStreamMessageResponseWriter(
       const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
           writer) LOCKS_EXCLUDED(lock_);

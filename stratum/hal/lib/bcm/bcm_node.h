@@ -79,7 +79,7 @@ class BcmNode {
   virtual ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) SHARED_LOCKS_REQUIRED(chassis_lock)
+      std::vector<::util::Status>* details, absl::Time deadline) SHARED_LOCKS_REQUIRED(chassis_lock)
       LOCKS_EXCLUDED(lock_);
 
   // Registers a writer to be invoked on receipt of a packet on any port on this

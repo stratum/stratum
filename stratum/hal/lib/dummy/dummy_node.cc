@@ -76,7 +76,7 @@ namespace dummy_switch {
 ::util::Status DummyNode::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
-    std::vector<::util::Status>* details) {
+    std::vector<::util::Status>* details, absl::Time deadline) {
   // TODO(Yi Tseng): Implement this method.
   absl::ReaderMutexLock l(&node_lock_);
   return ::util::OkStatus();

@@ -259,7 +259,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
 ::util::Status BfrtNode::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
-    std::vector<::util::Status>* details) {
+    std::vector<::util::Status>* details, absl::Time deadline) {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
       << "Request device id must be same as id of this BfrtNode.";
@@ -270,6 +270,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
   for (const auto& entity : req.entities()) {
+    // if (deadline < absl::Now()) {
+    //   break;
+    //   return MAKE_ERROR(ERR_CANCELLED) << "";
+    // }
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
         auto status = bfrt_table_manager_->ReadTableEntry(

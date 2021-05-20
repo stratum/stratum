@@ -337,8 +337,13 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
   std::vector<::util::Status> details = {};
   absl::Time timestamp = absl::Now();
-  ::util::Status status =
-      switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
+  // auto deadline = min(context->deadline() - 100ms), 0);
+  // TODO(max): check where deadline comes from, and relation to isCancelled()
+  absl::Time deadline = absl::FromChrono(context->deadline());
+  LOG(ERROR) << absl::FormatTime(deadline);
+  auto t = absl::InfiniteFuture();
+  ::util::Status status = switch_interface_->ReadForwardingEntries(
+      *req, &wrapper, &details, deadline);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();

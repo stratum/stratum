@@ -45,7 +45,7 @@ class PINode final {
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details);
+      std::vector<::util::Status>* details, absl::Time deadline);
   ::util::Status RegisterStreamMessageResponseWriter(
       std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
       LOCKS_EXCLUDED(rx_writer_lock_);

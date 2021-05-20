@@ -53,7 +53,7 @@ class BcmSwitch : public SwitchInterface {
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) override
+      std::vector<::util::Status>* details, absl::Time deadline) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
