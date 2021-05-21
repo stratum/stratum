@@ -83,6 +83,9 @@ kernel module; for example, if you only plan to use the Tofino model simulator.
 
 **This method is recommended for most users as well as automated builds.**
 
+**The SDE must be built inside the Stratum development Docker container, else
+there will be linking errors!**
+
 #### Step 1: Generate the SDE install tarball
 The first step is to build the SDE:
 
