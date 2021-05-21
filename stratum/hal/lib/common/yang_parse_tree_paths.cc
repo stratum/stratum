@@ -1508,6 +1508,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
                          IsPortAutonegEnabled);
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2380,7 +2381,10 @@ void SetUpComponentsComponentOpticalChannelStateFrequency(
   auto poll_functor =
       GetOnPollFunctor(module, network_interface, tree,
                        &OpticalTransceiverInfo::frequency, &ConvertHzToMHz);
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2432,9 +2436,10 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(
     node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
     return ::util::OkStatus();
   };
-
+  auto on_change_functor = UnsupportedFunc();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2794,9 +2799,10 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 
     return ::util::OkStatus();
   };
-
+  auto on_change_functor = UnsupportedFunc();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2809,7 +2815,10 @@ void SetUpComponentsComponentOpticalChannelStateOperationalMode(
   auto poll_functor = GetOnPollFunctor(
       module, network_interface, tree,
       &OpticalTransceiverInfo::operational_mode, &DontProcess<uint64>);
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2859,9 +2868,10 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
 
     return ::util::OkStatus();
   };
-
+  auto on_change_functor = UnsupportedFunc();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2875,8 +2885,10 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
                                   GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, line_port), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2888,8 +2900,10 @@ void SetUpComponentsComponentOpticalChannelStateLinePort(
                                   GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, line_port), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2905,8 +2919,10 @@ void SetUpComponentsComponentConfigName(const std::string& name,
   // This /config node represents the component name in the configuration tree,
   // so it doesn't support OnChange/OnUpdate/OnReplace until the yang tree
   // supports nodes renaming.
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2917,8 +2933,10 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
                              GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, name), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2930,8 +2948,10 @@ void SetUpComponentsComponentStateType(const std::string& type,
                              GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, type), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2943,8 +2963,10 @@ void SetUpComponentsComponentStateDescription(const std::string& description,
                                     GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, description), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2974,7 +2996,10 @@ void SetUpComponentsComponentStatePartNo(uint64 node_id, TreeNode* node,
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3004,7 +3029,10 @@ void SetUpComponentsComponentStateMfgName(uint64 node_id, TreeNode* node,
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3171,7 +3199,10 @@ void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
-  node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
