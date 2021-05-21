@@ -177,6 +177,7 @@ pkg_deb(
     depends = [
         "kmod",
         "libedit2",
+        "systemd",
         "telnet",
     ],
     description = "The Stratum package for Barefoot Tofino-based platform",
@@ -196,10 +197,7 @@ pkg_deb(
     data = ":stratum_bfrt_data",
     depends = [
         "kmod",
-        "libboost-thread1.62.0",
-        "libbz2-1.0",
         "libedit2",
-        "libjudydebian1",
         "libssl1.1",
         "systemd",
         "telnet",
