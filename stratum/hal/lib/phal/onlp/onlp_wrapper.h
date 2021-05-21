@@ -59,7 +59,8 @@ class OidInfo {
   uint8_t GetType() const { return ONLP_OID_TYPE_GET(oid_info_.id); }
 
  private:
-  onlp_oid_hdr_t oid_info_;
+  // Mutable because some ONLP macros do unfortunate non-const casts.
+  mutable onlp_oid_hdr_t oid_info_;
 };
 
 class SfpInfo : public OidInfo {
