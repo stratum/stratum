@@ -146,8 +146,9 @@ template <typename T>
 ::util::StatusOr<SfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
       << "Cannot get SFP info: OID " << oid << " is not an SFP.";
-  // Default value of the SFP info
-  onlp_sfp_info_t sfp_info = {{oid}};
+  // Default value of the SFP info.
+  onlp_sfp_info_t sfp_info = {};
+  sfp_info.hdr.id = oid;
   if (onlp_functions_.onlp_sfp_is_present(oid)) {
     CHECK_RETURN_IF_FALSE(
         ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
