@@ -260,6 +260,9 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
+  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
+  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
       << "Request device id must be same as id of this BfrtNode.";
