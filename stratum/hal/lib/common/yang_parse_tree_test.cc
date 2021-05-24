@@ -173,6 +173,12 @@ class YangParseTreeTest : public ::testing::Test {
     parse_tree_.AddSubtreeNode(node);
   }
 
+  void AddSubtreeSystem() {
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
+    parse_tree_.AddSubtreeSystem();
+  }
+
   // A method helping testing if the OnXxx method of a leaf specified by 'path'.
   // It takes care of all the boiler plate code:
   // - adds an interface named "interface-1"
@@ -196,6 +202,8 @@ class YangParseTreeTest : public ::testing::Test {
     AddSubtreeNode("node-1", kInterface1NodeId);
     // The test requires one optical interface branch to be added.
     AddSubtreeOpticalInterface("optical-interface-1");
+    // The test requires the system branch to be added.
+    AddSubtreeSystem();
 
     // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
     // of the 'resp' variable is then checked.
@@ -379,6 +387,8 @@ class YangParseTreeTest : public ::testing::Test {
     AddSubtreeNode("node-1", kInterface1NodeId);
     // The test requires one optical interface branch to be added.
     AddSubtreeOpticalInterface("optical-interface-1");
+    // The test requires the system branch to be added.
+    AddSubtreeSystem();
     // Make a copy-on-write pointer to current chassis configuration.
     CopyOnWriteChassisConfig config(&chassis_config);
 
@@ -4690,6 +4700,304 @@ TEST_F(YangParseTreeOpticalChannelTest,
   // Check that we retrieve the component name.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().string_val(), "OPTICAL_CHANNEL");
+}
+
+// Check if the '/system/logging/console/state/severity' OnPoll action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleStateSeverityOnPollSuccess) {
+  auto path = GetPath("system")("logging")("console")("state")("severity")();
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+}
+
+// Check if the '/system/logging/console/state/severity' OnChange action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleStateSeverityOnChangeSuccess) {
+  auto path = GetPath("system")("logging")("console")("state")("severity")();
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kSeverityInformationalString[] = "INFORMATIONAL";
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+  static constexpr char kSeverityWarningString[] = "WARNING";
+  static constexpr char kSeverityErrorString[] = "ERROR";
+  static constexpr char kSeverityCriticalString[] = "CRITICAL";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogSeverityWarningString[] = "1";
+  static constexpr char kGlogSeverityErrorString[] = "2";
+  static constexpr char kGlogSeverityFatalString[] = "3";
+  static constexpr char kGlogVerbosityZeroString[] = "0";
+  static constexpr char kGlogVerbosityOneString[] = "1";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('DEBUG' case).
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityTwoString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityDebugString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('INFORMATIONAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityOneString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityInformationalString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('NOTICE' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('WARNING' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityWarningString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityWarningString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('ERROR' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityErrorString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityErrorString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('CRITICAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityFatalString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityCriticalString);
+}
+
+// Check if the '/system/logging/console/config/severity' OnPoll action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnPollSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+}
+
+// Check if the '/system/logging/console/config/severity' OnChange action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnChangeSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kSeverityInformationalString[] = "INFORMATIONAL";
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+  static constexpr char kSeverityWarningString[] = "WARNING";
+  static constexpr char kSeverityErrorString[] = "ERROR";
+  static constexpr char kSeverityCriticalString[] = "CRITICAL";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogSeverityWarningString[] = "1";
+  static constexpr char kGlogSeverityErrorString[] = "2";
+  static constexpr char kGlogSeverityFatalString[] = "3";
+  static constexpr char kGlogVerbosityZeroString[] = "0";
+  static constexpr char kGlogVerbosityOneString[] = "1";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('DEBUG' case).
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityTwoString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityDebugString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('INFORMATIONAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityOneString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityInformationalString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('NOTICE' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('WARNING' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityWarningString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityWarningString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('ERROR' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityErrorString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityErrorString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('CRITICAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityFatalString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityCriticalString);
+}
+
+// Check if the '/system/logging/console/config/severity' OnUpdate action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnUpdateSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeveritySomethingString[] = "SOMETHING";
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kSeverityDebugString);
+  ASSERT_OK(ExecuteOnUpdate(
+      path, val, /* SetValue will not be called */ nullptr, &notification));
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  ConsoleLogSeverityChangedEvent* event =
+      dynamic_cast<ConsoleLogSeverityChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetState(),
+            LoggingConfig(kGlogSeverityInfoString, kGlogVerbosityTwoString));
+
+  // Check reaction to wrong value.
+  val.set_string_val(kSeveritySomethingString);
+  EXPECT_THAT(ExecuteOnUpdate(path, val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("Invalid severity string")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+}
+
+// Check if the '/system/logging/console/config/severity' OnReplace action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnReplaceSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeveritySomethingString[] = "SOMETHING";
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kSeverityDebugString);
+  ASSERT_OK(ExecuteOnReplace(
+      path, val, /* SetValue will not be called */ nullptr, &notification));
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  ConsoleLogSeverityChangedEvent* event =
+      dynamic_cast<ConsoleLogSeverityChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetState(),
+            LoggingConfig(kGlogSeverityInfoString, kGlogVerbosityTwoString));
+
+  // Check reaction to wrong value.
+  val.set_string_val(kSeveritySomethingString);
+  EXPECT_THAT(ExecuteOnReplace(path, val,
+                               /* SetValue will not be called */ nullptr,
+                               /* Notification will not be called */
+                               nullptr),
+              StatusIs(_, _, ContainsRegex("Invalid severity string")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnReplace(path, wrong_type_val,
+                               /* SetValue will not be called */ nullptr,
+                               /* Notification will not be called */
+                               nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 }
 
 }  // namespace hal

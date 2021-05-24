@@ -9,6 +9,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -432,6 +433,24 @@ class OpticalOutputPowerChangedEvent
 
  private:
   const OpticalTransceiverInfo::Power new_output_power_;
+};
+
+// Console log severity has been changed event.
+class ConsoleLogSeverityChangedEvent
+    : public GnmiEventProcess<ConsoleLogSeverityChangedEvent> {
+ public:
+  explicit ConsoleLogSeverityChangedEvent(const std::string& new_severity,
+                                          const std::string& new_verbosity)
+      : new_glog_severity_(new_severity), new_glog_verbosity_(new_verbosity) {}
+  ~ConsoleLogSeverityChangedEvent() override {}
+
+  const LoggingConfig GetState() const {
+    return LoggingConfig(new_glog_severity_, new_glog_verbosity_);
+  }
+
+ private:
+  const std::string new_glog_severity_;
+  const std::string new_glog_verbosity_;
 };
 
 // Configuration Has Been Pushed event.

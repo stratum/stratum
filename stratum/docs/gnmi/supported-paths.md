@@ -368,3 +368,17 @@ Supported gNMI paths
  - Subscription mode: ONCE, POLL, SAMPLE
  - Get type: ALL, STATE
  - Set mode: Not valid
+
+### System
+
+`/system/logging/console/config/severity`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
+ - Get type: ALL, STATE
+ - Set mode: REPLACE, UPDATE
+
+`/system/logging/console/state/severity`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
+ - Get type: ALL, STATE
+ - Set mode: Not valid

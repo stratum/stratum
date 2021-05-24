@@ -741,6 +741,7 @@ stratum_cc_library(
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
+        "//stratum/glue/status:statusor",
         "//stratum/public/lib:error",
     ],
 )
@@ -756,6 +757,7 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
         "//stratum/lib:constants",
+        "//stratum/glue/status:status_test_util",
     ],
 )
 

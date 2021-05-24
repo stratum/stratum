@@ -5,6 +5,9 @@
 #ifndef STRATUM_GLUE_LOGGING_H_
 #define STRATUM_GLUE_LOGGING_H_
 
+#include <string>
+#include <utility>
+
 #include "gflags/gflags.h"
 
 // P4c lib/log.h already defines the ERROR macro.
@@ -34,6 +37,15 @@ namespace stratum {
 // Initializes all Stratum specific changes to logging. This should be called
 // after InitGoogle by every Stratum binary.
 void InitStratumLogging();
+
+// An alias for the pair of (glog_severity, glog_verbosity).
+using LoggingConfig = std::pair<std::string, std::string>;
+
+// Returns the current glog logging configuration.
+LoggingConfig GetCurrentLogLevel();
+
+// Sets a new glog log level for the process. Returns true on success.
+bool SetLogLevel(const LoggingConfig& logging_config);
 }  // namespace stratum
 
 // ostream overload for std::nulptr_t for C++11

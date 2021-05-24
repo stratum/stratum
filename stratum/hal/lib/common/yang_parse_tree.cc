@@ -174,6 +174,8 @@ void YangParseTree::ProcessPushedConfig(
   }
   // Add all chassis-related gNMI paths.
   AddSubtreeChassis(change.new_config_.chassis());
+  // Add all system-related gNMI paths.
+  AddSubtreeSystem();
   // Add all node-related gNMI paths.
   for (const auto& node : change.new_config_.nodes()) {
     AddSubtreeNode(node);
@@ -315,6 +317,10 @@ void YangParseTree::AddSubtreeNode(const Node& node) {
 
 void YangParseTree::AddSubtreeChassis(const Chassis& chassis) {
   YangParseTreePaths::AddSubtreeChassis(chassis, this);
+}
+
+void YangParseTree::AddSubtreeSystem() {
+  YangParseTreePaths::AddSubtreeSystem(this);
 }
 
 void YangParseTree::AddSubtreeAllInterfaces() {
