@@ -10,6 +10,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
@@ -50,6 +51,10 @@ class BfChassisManager {
 
   virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
                                                    uint32 port_id)
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  virtual ::util::StatusOr<absl::Time> GetPortTimeLastChanged(uint64 node_id,
+                                                              uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   virtual ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
@@ -235,6 +240,11 @@ class BfChassisManager {
   // the state of the singleton port uniquely identified by (node ID, port ID).
   std::map<uint64, std::map<uint32, PortState>>
       node_id_to_port_id_to_port_state_ GUARDED_BY(chassis_lock);
+
+  // Map from node ID to another map from port ID to timestamp when the port
+  // last changed state.
+  std::map<uint64, std::map<uint32, absl::Time>>
+      node_id_to_port_id_to_time_last_changed_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from port ID to port configuration.
   // We may change this once missing "get" methods get added to BfSdeInterface,
