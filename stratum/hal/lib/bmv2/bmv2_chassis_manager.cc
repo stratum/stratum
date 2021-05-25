@@ -410,7 +410,7 @@ void Bmv2ChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   // the memory allocated to this event object once the event is handled by
   // the GnmiPublisher.
   if (!gnmi_event_writer_->Write(GnmiEventPtr(
-          new PortOperStateChangedEvent(node_id, port_id, new_state)))) {
+          new PortOperStateChangedEvent(node_id, port_id, new_state, 0)))) {
     // Remove WriterInterface if it is no longer operational.
     gnmi_event_writer_.reset();
   }

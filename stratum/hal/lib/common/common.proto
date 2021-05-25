@@ -1106,7 +1106,8 @@ message OpticalTransceiverInfo {
 
 // Wrapper around oper state of a port.
 message OperStatus {
-  PortState state = 1;  // required
+  PortState state = 1;           // required
+  uint64 time_last_changed = 2;  // optional
 }
 
 // Wrapper around loopback state of a port.
