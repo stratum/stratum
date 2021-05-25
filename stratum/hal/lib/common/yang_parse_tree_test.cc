@@ -919,11 +919,11 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateOperStatusOnChangeSuccess) {
                                     "interface-1")("state")("oper-status")();
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOperStateChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, PORT_STATE_UP),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOperStateChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                PORT_STATE_UP, 0),
+      &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
@@ -2210,17 +2210,53 @@ TEST_F(YangParseTreeTest,
             kTrunkMemberBlockStateForwarding);
 }
 
-// Check if the '/interfaces/interface/state/last-change' OnPoll
-// action works correctly.
+// Check if the '/interfaces/interface/state/last-change' OnPoll action works
+// correctly.
 TEST_F(YangParseTreeTest, InterfacesInterfaceStateLastChangeOnPollSuccess) {
   auto path = GetPath("interfaces")("interface",
                                     "interface-1")("state")("last-change")();
-  static constexpr char kUnsupportedString[] = "unsupported yet";
+  static constexpr auto kLastChangeTime = 12345;
+
+  // Mock implementation of RetrieveValue() that sends a response set to
+  // kLastChangeTime.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_oper_status()->set_time_last_changed(
+                            kLastChangeTime);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
+
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
 
+  // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().string_val(), kUnsupportedString);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kLastChangeTime);
+}
+
+// Check if the '/interfaces/interface/state/last-change' OnChange action works
+// correctly.
+TEST_F(YangParseTreeTest, InterfacesInterfaceStateLastChangeOnChangeSuccess) {
+  auto path = GetPath("interfaces")("interface",
+                                    "interface-1")("state")("last-change")();
+  static constexpr auto kLastChangeTime = 12345;
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortOperStateChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                PORT_STATE_UP, kLastChangeTime),
+      &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kLastChangeTime);
 }
 
 // Check if the '/interfaces/interface/ethernet/config/forwarding-viable'

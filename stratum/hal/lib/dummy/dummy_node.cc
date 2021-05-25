@@ -117,8 +117,8 @@ bool DummyNode::DummyNodeEventWriter::Write(const DummyNodeEventPtr& msg) {
   GnmiEvent* event = nullptr;
   switch (state_update.response_case()) {
     case DataResponse::kOperStatus:
-      event = new PortOperStateChangedEvent(node_id, port_id,
-                                            state_update.oper_status().state());
+      event = new PortOperStateChangedEvent(
+          node_id, port_id, state_update.oper_status().state(), 0);
       port_state.oper_status = state_update.oper_status();
       break;
     case DataResponse::kAdminStatus:
