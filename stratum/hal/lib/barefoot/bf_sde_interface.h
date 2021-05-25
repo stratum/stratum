@@ -179,6 +179,9 @@ class BfSdeInterface {
   // Disable a port.
   virtual ::util::Status DisablePort(int device, int port) = 0;
 
+  // Sometinh led.
+  virtual ::util::Status SetLed(int device, int port) = 0;
+
   // Set the port shaping properties on a port.
   // If is_in_pps is true, the burst size and rate are measured in packets and
   // pps. Else, they're in bytes and bps.

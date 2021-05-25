@@ -30,6 +30,7 @@ Additional environment variables:
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
     RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
     BAZEL_CACHE: Path to Bazel cache (Default: <empty>)
+    BSP: Path to BSP package (Default: <empty>)
 "
 }
 
@@ -59,6 +60,12 @@ if [ -n "$1" ]; then
       CMD_OPTS+="-k /kernel-tar$i/$KERNEL_HEADERS_TAR_NAME "
       ((i+=1))
   done
+  # Build with BSP?
+  if [ -n "$BSP" ]; then
+    DOCKER_OPTS+="-v $BSP:/bsp-tar "
+    CMD_OPTS+="--bsp-path /bsp-tar "
+  fi
+
   echo "Building BF SDE"
   set -x
   docker run --rm \

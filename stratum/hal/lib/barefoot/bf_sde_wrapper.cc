@@ -29,6 +29,12 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
 
+// BSP includes.
+#include "bf_pltfm_types/bf_pltfm_types.h"
+//
+#include "bf_led/bf_led.h"
+#include "bf_pltfm/accton-bf/bf_mav_led.h"
+
 extern "C" {
 #include "bf_switchd/bf_switchd.h"
 #include "tofino/bf_pal/bf_pal_port_intf.h"
@@ -1145,6 +1151,17 @@ BfSdeWrapper::BfSdeWrapper()
 ::util::Status BfSdeWrapper::DisablePort(int device, int port) {
   RETURN_IF_BFRT_ERROR(bf_pal_port_disable(static_cast<bf_dev_id_t>(device),
                                            static_cast<bf_dev_port_t>(port)));
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::SetLed(int device, int port) {
+  // The port info is derived from the port string like "1/0".
+  // bf_pltfm_port_info_t port_info = {};
+  // port_info.conn_id = 1;
+  // port_info.chnl_id = 0;
+  // RETURN_IF_BFRT_ERROR(bf_port_led_set(device, &port_info, BF_LED_PORT_RED));
+  // RETURN_IF_BFRT_ERROR(bf_pltfm_port_led_by_cpld_set(
+  //     device, nullptr, BF_MAV_PORT_LED_RED, LED_BLINK));
   return ::util::OkStatus();
 }
 
