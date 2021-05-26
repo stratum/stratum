@@ -22,16 +22,12 @@ cc_import(
     name = "bmv2_simple_switch",
     hdrs = [],  # see cc_library rule above
     shared_library = "bmv2-bin/lib/libsimpleswitch_runner.so",
-    # If alwayslink is turned on, libsimpleswitch_runner.so will be forcely linked
-    # into any binary that depends on it.
-    alwayslink = 1,
 )
 
 cc_import(
     name = "bmv2_pi",
     hdrs = [],  # see cc_library rule above
     shared_library = "bmv2-bin/lib/libbmpi.so",
-    alwayslink = 1,
 )
 
 pkg_tar_with_symlinks(
