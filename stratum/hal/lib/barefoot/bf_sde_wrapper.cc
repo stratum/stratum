@@ -1215,7 +1215,9 @@ bool BfSdeWrapper::IsValidPort(int device, int port) {
   return is_sw_model;
 }
 
-std::string BfSdeWrapper::GetBfChipType(int device) const {
+// Helper functions around reading the switch SKU.
+namespace {
+std::string GetBfChipFamilyAndType(int device) {
   bf_dev_type_t dev_type = lld_sku_get_dev_type(device);
   switch (dev_type) {
     case BF_DEV_BFNT10064Q:
@@ -1279,6 +1281,32 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
     default:
       return "UNKNOWN";
   }
+}
+
+std::string GetBfChipRevision(int device) {
+  bf_sku_chip_part_rev_t revision_number;
+  lld_sku_get_chip_part_revision_number(device, &revision_number);
+  switch (revision_number) {
+    case BF_SKU_CHIP_PART_REV_A0:
+      return "A0";
+    case BF_SKU_CHIP_PART_REV_B0:
+      return "B0";
+    default:
+      return "UNKOWN";
+  }
+}
+
+std::string GetBfChipId(int device) {
+  uint64 chip_id = 0;
+  lld_sku_get_chip_id(device, &chip_id);
+  return absl::StrCat("0x", absl::Hex(chip_id));
+}
+}  // namespace
+
+std::string BfSdeWrapper::GetBfChipType(int device) const {
+  return absl::StrCat(GetBfChipFamilyAndType(device), ", revision ",
+                      GetBfChipRevision(device), ", chip_id ",
+                      GetBfChipId(device));
 }
 
 std::string BfSdeWrapper::GetSdeVersion() const {

@@ -48,6 +48,7 @@ namespace barefoot {
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
+  VLOG(1) << "Switch SKU: " << bf_sde_wrapper->GetBfChipType(device_id);
 
   auto bfrt_table_manager =
       BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
