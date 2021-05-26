@@ -55,6 +55,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 STRATUM_COMPILER_ERRORS_COMMON = [
     "-Werror=delete-non-virtual-dtor",
     "-Werror=ignored-attributes",
+    "-Werror=ignored-qualifiers",
     "-Werror=shift-negative-value",
     "-Werror=uninitialized",
     "-Werror=unreachable-code",

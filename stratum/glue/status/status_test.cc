@@ -50,7 +50,7 @@ static const util::ErrorSpace* OkSpace() {
   return ::util::Status::OK.error_space();
 }
 
-static const int CanonicalCode(const ::util::Status& s) {
+static int CanonicalCode(const ::util::Status& s) {
   return s.ToCanonical().error_code();
 }
 
