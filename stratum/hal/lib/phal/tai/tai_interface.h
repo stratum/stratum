@@ -19,6 +19,8 @@ namespace tai {
 // components such as module, network interface, and host interface.
 class TaiInterface {
  public:
+  virtual ~TaiInterface() {}
+
   // Initialize the TAI interface.
   virtual util::Status Initialize() = 0;
 

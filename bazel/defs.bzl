@@ -53,6 +53,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 
 # Compiler warnings that are threated as errors.
 STRATUM_COMPILER_ERRORS_COMMON = [
+    "-Werror=delete-non-virtual-dtor",
     "-Werror=ignored-attributes",
     "-Werror=uninitialized",
     "-Werror=unreachable-code",
