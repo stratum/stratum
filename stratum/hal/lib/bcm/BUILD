@@ -2,7 +2,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load(
     "//bazel:rules.bzl",
@@ -96,7 +96,7 @@ stratum_cc_test(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "bcm_acl_manager_mock",
     testonly = 1,
     hdrs = ["bcm_acl_manager_mock.h"],
@@ -230,7 +230,7 @@ stratum_cc_test(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "bcm_diag_shell_interface",
     srcs = ["bcm_diag_shell.h"],
     defines = ["NDEBUG"],
