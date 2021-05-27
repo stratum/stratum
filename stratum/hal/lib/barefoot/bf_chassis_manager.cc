@@ -50,6 +50,7 @@ BfChassisManager::BfChassisManager(OperationMode mode,
       unit_to_node_id_(),
       node_id_to_unit_(),
       node_id_to_port_id_to_port_state_(),
+      node_id_to_port_id_to_time_last_changed_(),
       node_id_to_port_id_to_port_config_(),
       node_id_to_port_id_to_singleton_port_key_(),
       node_id_to_port_id_to_sdk_port_id_(),
@@ -266,6 +267,8 @@ BfChassisManager::~BfChassisManager() = default;
   std::map<uint64, int> node_id_to_unit;
   std::map<uint64, std::map<uint32, PortState>>
       node_id_to_port_id_to_port_state;
+  std::map<uint64, std::map<uint32, absl::Time>>
+      node_id_to_port_id_to_time_last_changed;
   std::map<uint64, std::map<uint32, PortConfig>>
       node_id_to_port_id_to_port_config;
   std::map<uint64, std::map<uint32, PortKey>>
@@ -296,6 +299,8 @@ BfChassisManager::~BfChassisManager() = default;
           << " for port " << port_id << ".";
     }
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
+    node_id_to_port_id_to_time_last_changed[node_id][port_id] =
+        absl::UnixEpoch();
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
@@ -456,6 +461,8 @@ BfChassisManager::~BfChassisManager() = default;
   unit_to_node_id_ = unit_to_node_id;
   node_id_to_unit_ = node_id_to_unit;
   node_id_to_port_id_to_port_state_ = node_id_to_port_id_to_port_state;
+  node_id_to_port_id_to_time_last_changed_ =
+      node_id_to_port_id_to_time_last_changed;
   node_id_to_port_id_to_port_config_ = node_id_to_port_id_to_port_config;
   node_id_to_port_id_to_singleton_port_key_ =
       node_id_to_port_id_to_singleton_port_key;
@@ -672,6 +679,11 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
                        GetPortState(request.oper_status().node_id(),
                                     request.oper_status().port_id()));
       resp.mutable_oper_status()->set_state(port_state);
+      ASSIGN_OR_RETURN(absl::Time last_changed,
+                       GetPortTimeLastChanged(request.oper_status().node_id(),
+                                              request.oper_status().port_id()));
+      resp.mutable_oper_status()->set_time_last_changed(
+          absl::ToUnixNanos(last_changed));
       break;
     }
     case Request::kAdminStatus: {
@@ -817,6 +829,19 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return port_state;
 }
 
+::util::StatusOr<absl::Time> BfChassisManager::GetPortTimeLastChanged(
+    uint64 node_id, uint32 port_id) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  CHECK_RETURN_IF_FALSE(
+      node_id_to_port_id_to_time_last_changed_.count(node_id));
+  CHECK_RETURN_IF_FALSE(
+      node_id_to_port_id_to_time_last_changed_[node_id].count(port_id));
+  return node_id_to_port_id_to_time_last_changed_[node_id][port_id];
+}
+
 ::util::Status BfChassisManager::GetPortCounters(uint64 node_id, uint32 port_id,
                                                  PortCounters* counters) {
   if (!initialized_) {
@@ -843,6 +868,10 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   for (auto& p : node_id_to_port_id_to_port_state_[node_id])
     p.second = PORT_STATE_UNKNOWN;
+
+  for (auto& p : node_id_to_port_id_to_time_last_changed_[node_id]) {
+    p.second = absl::UnixEpoch();
+  }
 
   LOG(INFO) << "Replaying ports for node " << node_id << ".";
 
@@ -958,8 +987,14 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_state != nullptr)
       << "Node " << node_id << " has a configuration mismatch.";
+  auto* port_id_to_last_changed =
+      gtl::FindOrNull(node_id_to_port_id_to_time_last_changed_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_last_changed != nullptr)
+      << "Node " << node_id << " has a configuration mismatch.";
   for (auto& p : *port_id_to_config) p.second = PortConfig();
   for (auto& p : *port_id_to_state) p.second = PORT_STATE_UNKNOWN;
+  for (auto& p : *port_id_to_last_changed) p.second = absl::UnixEpoch();
+
   return ::util::OkStatus();
 }
 
@@ -1064,6 +1099,7 @@ void BfChassisManager::PortStatusEventHandler(int device, int port,
     return;
   }
   node_id_to_port_id_to_port_state_[*node_id][*port_id] = new_state;
+  node_id_to_port_id_to_time_last_changed_[*node_id][*port_id] = absl::Now();
 
   // Notify the managers about the change of port state.
   // Nothing to do for now.
@@ -1309,6 +1345,7 @@ void BfChassisManager::CleanupInternalState() {
   unit_to_node_id_.clear();
   node_id_to_unit_.clear();
   node_id_to_port_id_to_port_state_.clear();
+  node_id_to_port_id_to_time_last_changed_.clear();
   node_id_to_port_id_to_port_config_.clear();
   node_id_to_port_id_to_singleton_port_key_.clear();
   node_id_to_port_id_to_sdk_port_id_.clear();
