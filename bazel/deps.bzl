@@ -157,7 +157,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_openconfig_public",
             remote = "https://github.com/openconfig/public",
-            commit = "5897507ecdb54453d4457e7dbb0a3d4b7ead4314",
+            commit = "624655d053ad1fdda62901c7e2055c22cd5d6a05",
             build_file = "@//bazel:external/ocpublic.BUILD",
         )
 
@@ -165,7 +165,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_openconfig_hercules",
             remote = "https://github.com/openconfig/hercules",
-            commit = "cd48feeaaa54426df561d8c961d18d344365998b",
+            commit = "ca3575e85500fa089dfe0b8cd3ea71943267102e",
             build_file = "@//bazel:external/hercules.BUILD",
         )
 
@@ -173,7 +173,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_yang_models_yang",
             remote = "https://github.com/YangModels/yang",
-            commit = "31daa2507ae507776c23b4d4176b6cdcef2a308c",
+            commit = "ed2ce1028ff57d667764dbdbe3c37328820f0e50",
             build_file = "@//bazel:external/yang.BUILD",
         )
 
