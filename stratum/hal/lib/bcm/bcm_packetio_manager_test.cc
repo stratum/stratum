@@ -626,11 +626,13 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode1) {
       .WillOnce(Return(kSocket2))
       .WillOnce(Return(kSocket2));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket2, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
@@ -820,8 +822,10 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode2) {
       .WillOnce(Return(kSocket1))
       .WillOnce(Return(kSocket1));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
@@ -986,11 +990,13 @@ TEST_P(BcmPacketioManagerTest,
       .WillOnce(Return(kSocket2))
       .WillOnce(Return(kSocket2));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket2, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
@@ -1128,8 +1134,10 @@ TEST_P(BcmPacketioManagerTest,
       .Times(1)
       .WillOnce(Return(kSocket1));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1))
@@ -1214,8 +1222,10 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*LibcProxyMock::Instance(), Socket(_, _, _))
       .Times(3)
       .WillRepeatedly(Return(kSocket1));
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), SetSockOpt(kSocket1, _, _, _, _))
@@ -1400,8 +1410,10 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*LibcProxyMock::Instance(), Socket(_, _, _))
       .Times(3)
       .WillRepeatedly(Return(kSocket1));
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), SetSockOpt(kSocket1, _, _, _, _))
@@ -1611,8 +1623,10 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   EXPECT_CALL(*LibcProxyMock::Instance(), Socket(_, _, _))
       .Times(3)
       .WillRepeatedly(Return(kSocket1));
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), SetSockOpt(kSocket1, _, _, _, _))
