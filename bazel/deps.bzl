@@ -258,7 +258,8 @@ def stratum_deps():
         git_repository(
             name = "com_github_jbeder_yaml_cpp",
             remote = "https://github.com/jbeder/yaml-cpp.git",
-            commit = "de8253fcb075c049c4ad1c466c504bf3cf022f45",
+            commit = "a6bbe0e50ac4074f0b9b44188c28cf00caf1a723",
+            shallow_since = "1609854028 -0600",
         )
 
     # -----------------------------------------------------------------------------
