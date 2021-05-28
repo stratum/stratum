@@ -224,10 +224,11 @@ def stratum_deps():
         )
 
     if "com_google_googletest" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_googletest",
-            remote = "https://github.com/google/googletest",
-            branch = "3525e3984282c827c7207245b1d4a47f4eaf3c91",
+            sha256 = "d3d307a240e129bb57da8aae64f3b0099bf1b8efff7249df993b619b8641ec77",
+            strip_prefix = "googletest-a3460d1aeeaa43fdf137a6adefef10ba0b59fe4b",
+            urls = ["https://github.com/google/googletest/archive/a3460d1aeeaa43fdf137a6adefef10ba0b59fe4b.zip"],
         )
 
     if "com_googlesource_code_re2" not in native.existing_rules():
