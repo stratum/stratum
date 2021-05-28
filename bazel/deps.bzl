@@ -180,8 +180,8 @@ def stratum_deps():
     if "com_github_nlohmann_json" not in native.existing_rules():
         http_archive(
             name = "com_github_nlohmann_json",
-            url = "https://github.com/nlohmann/json/releases/download/v3.7.3/include.zip",
-            sha256 = "87b5884741427220d3a33df1363ae0e8b898099fbc59f1c451113f6732891014",
+            url = "https://github.com/nlohmann/json/releases/download/v3.9.1/include.zip",
+            sha256 = "6bea5877b1541d353bd77bdfbdb2696333ae5ed8f9e8cc22df657192218cad91",
             build_file = "@//bazel:external/json.BUILD",
         )
 
@@ -224,10 +224,11 @@ def stratum_deps():
         )
 
     if "com_google_googletest" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_googletest",
-            remote = "https://github.com/google/googletest",
-            branch = "3525e3984282c827c7207245b1d4a47f4eaf3c91",
+            sha256 = "d3d307a240e129bb57da8aae64f3b0099bf1b8efff7249df993b619b8641ec77",
+            strip_prefix = "googletest-a3460d1aeeaa43fdf137a6adefef10ba0b59fe4b",
+            urls = ["https://github.com/google/googletest/archive/a3460d1aeeaa43fdf137a6adefef10ba0b59fe4b.zip"],
         )
 
     if "com_googlesource_code_re2" not in native.existing_rules():
