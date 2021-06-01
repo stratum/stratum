@@ -159,7 +159,6 @@ extern int bcm_field_qualify_IcmpTypeCode_get(int unit, bcm_field_entry_t entry,
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"

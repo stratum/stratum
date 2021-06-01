@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "absl/base/macros.h"
+#include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_cat.h"
@@ -31,7 +32,6 @@
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
@@ -227,7 +227,7 @@ extern "C" void sdk_linkscan_callback(bcmlt_table_notif_info_t* notify_info,
 
 ::util::StatusOr<std::string> dump_rxpmd_header(int unit, int netif_id, bcmpkt_packet_t *packet) {
   auto pb = shr_pb_create();
-  auto _ = gtl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
+  auto _ = absl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
   bcmdrd_dev_type_t dev_type;
 
   RETURN_IF_BCM_ERROR(bcmpkt_dev_type_get(unit, &dev_type));
@@ -271,7 +271,7 @@ int bcmpkt_data_dump(shr_pb_t *pb, const uint8_t *data, int size) {
 
 std::string bcmpkt_data_buf_dump(const bcmpkt_data_buf_t *dbuf) {
   auto pb = shr_pb_create();
-  auto _ = gtl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
+  auto _ = absl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
   shr_pb_printf(pb, "head - %p\n", dbuf->head);
   shr_pb_printf(pb, "data - %p\n", dbuf->data);
   shr_pb_printf(pb, "len - %" PRIu32 "\n", dbuf->len);
@@ -1463,7 +1463,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Enable packet counters on all ports
   // TODO(max): only add configured ports to bitmap, reduces polling CPU load
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_CONTROLs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_add(entry_hdl, PORTSs, 0,
                                                   all_ports_no_cpu_bitmap, 3));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, INTERVALs,
@@ -1477,17 +1477,17 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                                 BCMLT_PRIORITY_NORMAL));
   for (auto const& p : configured_ports) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MACs, &entry_hdl));
-    auto cl1 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    auto cl1 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                   BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MAC_ERRs, &entry_hdl));
-    auto cl2 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    auto cl2 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                   BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_L3s, &entry_hdl));
-    auto cl3 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    auto cl3 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                   BCMLT_PRIORITY_NORMAL));
@@ -1936,7 +1936,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Read good counters
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MACs, &entry_hdl));
-  auto cl1 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto cl1 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
@@ -1959,7 +1959,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // Read error counters
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MAC_ERRs, &entry_hdl));
-  auto cl2 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto cl2 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
@@ -4080,7 +4080,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_FDB_VLANs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, DEST_TYPEs,
@@ -4102,7 +4102,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_FDB_VLANs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
@@ -5687,7 +5687,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
 
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_allocate(unit, FP_ING_GRP_TEMPLATEs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, FP_ING_GRP_TEMPLATE_IDs, stage_id));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODE_AUTOs, 1));
@@ -6666,7 +6666,7 @@ namespace {
                               int rule_id, int policy_id, int meter_id) {
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, FP_ING_ENTRYs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, FP_ING_ENTRY_IDs, acl_id));
   RETURN_IF_BCM_ERROR(

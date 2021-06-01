@@ -8,6 +8,7 @@
 #include <sstream>  // IWYU pragma: keep
 #include <utility>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/str_cat.h"
@@ -17,7 +18,6 @@
 #include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
@@ -546,7 +546,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   uint64 node_id = 0;
 
   // The cleanup object. Will call RemoveController() upon exit.
-  auto cleaner = gtl::MakeCleanup([this, &node_id, &connection_id]() {
+  auto cleaner = absl::MakeCleanup([this, &node_id, &connection_id]() {
     this->RemoveController(node_id, connection_id);
   });
 

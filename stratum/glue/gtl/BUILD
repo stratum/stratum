@@ -45,21 +45,3 @@ stratum_cc_library(
     name = "source_location",
     hdrs = ["source_location.h"],
 )
-
-stratum_cc_library(
-    name = "cleanup",
-    hdrs = ["cleanup.h"],
-    deps = [
-        "@com_google_absl//absl/base:core_headers",
-    ],
-)
-
-stratum_cc_test(
-    name = "cleanup_test",
-    srcs = ["cleanup_test.cc"],
-    deps = [
-        ":cleanup",
-        "//stratum/glue:integral_types",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
