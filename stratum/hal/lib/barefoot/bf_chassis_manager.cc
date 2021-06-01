@@ -974,30 +974,6 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return status;
 }
 
-::util::Status BfChassisManager::ResetPortsConfig(uint64 node_id) {
-  if (!initialized_) {
-    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
-  }
-  LOG(INFO) << "Resetting port configs for node " << node_id << ".";
-  auto* port_id_to_config =
-      gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_config != nullptr)
-      << "Node " << node_id << " is not configured or not known.";
-  auto* port_id_to_state =
-      gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_state != nullptr)
-      << "Node " << node_id << " has a configuration mismatch.";
-  auto* port_id_to_last_changed =
-      gtl::FindOrNull(node_id_to_port_id_to_time_last_changed_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_last_changed != nullptr)
-      << "Node " << node_id << " has a configuration mismatch.";
-  for (auto& p : *port_id_to_config) p.second = PortConfig();
-  for (auto& p : *port_id_to_state) p.second = PORT_STATE_UNKNOWN;
-  for (auto& p : *port_id_to_last_changed) p.second = absl::UnixEpoch();
-
-  return ::util::OkStatus();
-}
-
 ::util::Status BfChassisManager::GetFrontPanelPortInfo(
     uint64 node_id, uint32 port_id, FrontPanelPortInfo* fp_port_info) {
   auto* port_id_to_port_key =

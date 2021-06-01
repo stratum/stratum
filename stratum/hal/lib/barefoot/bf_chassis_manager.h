@@ -64,9 +64,6 @@ class BfChassisManager {
   virtual ::util::Status ReplayPortsConfig(uint64 node_id)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::Status ResetPortsConfig(uint64 node_id)
-      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
-
   virtual ::util::Status GetFrontPanelPortInfo(uint64 node_id, uint32 port_id,
                                                FrontPanelPortInfo* fp_port_info)
       SHARED_LOCKS_REQUIRED(chassis_lock);

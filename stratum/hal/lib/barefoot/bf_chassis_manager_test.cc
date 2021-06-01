@@ -706,20 +706,6 @@ TEST_F(BfChassisManagerTest, UpdateInvalidPort) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(BfChassisManagerTest, ResetPortsConfig) {
-  ASSERT_OK(PushBaseChassisConfig());
-  EXPECT_OK(bf_chassis_manager_->ResetPortsConfig(kNodeId));
-
-  // Invalid node ID
-  auto status = bf_chassis_manager_->ResetPortsConfig(kNodeId + 1);
-  EXPECT_FALSE(status.ok());
-  EXPECT_EQ(status.error_code(), ERR_INVALID_PARAM);
-  std::stringstream err_msg;
-  err_msg << "Node " << kNodeId + 1 << " is not configured or not known.";
-  EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
-  ASSERT_OK(ShutdownAndTestCleanState());
-}
-
 TEST_F(BfChassisManagerTest, GetSdkPortId) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
