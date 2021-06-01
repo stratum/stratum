@@ -70,10 +70,6 @@ class BfChassisManager {
   ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id,
-                                                uint32 port_id) const
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfChassisManager> CreateInstance(
       OperationMode mode, PhalInterface* phal_interface,
@@ -126,6 +122,11 @@ class BfChassisManager {
   // Returns the state of a port given its ID and the ID of its node.
   ::util::StatusOr<PortState> GetPortState(uint64 node_id,
                                            const uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  // Returns the SDK port number for the given port. Also called SDN or data
+  // plane port.
+  ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id, uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Registers/Unregisters all the event Writers (if not done yet).
