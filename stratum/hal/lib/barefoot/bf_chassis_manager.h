@@ -49,10 +49,6 @@ class BfChassisManager {
   virtual ::util::StatusOr<DataResponse> GetPortData(
       const DataRequest::Request& request) SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
-                                                   uint32 port_id)
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
   virtual ::util::StatusOr<absl::Time> GetPortTimeLastChanged(uint64 node_id,
                                                               uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
@@ -125,6 +121,10 @@ class BfChassisManager {
 
   ::util::StatusOr<const PortConfig*> GetPortConfig(uint64 node_id,
                                                     uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  // Returns the state of a port given its ID and the ID of its node.
+  ::util::StatusOr<PortState> GetPortState(uint64 node_id, uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Registers/Unregisters all the event Writers (if not done yet).

@@ -798,8 +798,8 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return resp;
 }
 
-::util::StatusOr<PortState> BfChassisManager::GetPortState(uint64 node_id,
-                                                           uint32 port_id) {
+::util::StatusOr<PortState> BfChassisManager::GetPortState(
+    uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
