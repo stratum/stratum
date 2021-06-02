@@ -6,6 +6,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load(
     "//bazel:rules.bzl",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
@@ -269,6 +270,17 @@ stratum_cc_library(
         "//stratum/public/proto:error_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_googleapis//google/rpc:status_cc_proto",
+    ],
+)
+
+stratum_cc_library(
+    name = "bfrt_node_mock",
+    testonly = 1,
+    hdrs = ["bfrt_node_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_node",
+        "@com_google_googletest//:gtest",
     ],
 )
 

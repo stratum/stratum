@@ -28,36 +28,39 @@ namespace barefoot {
 // The BfrtNode class encapsulates all per P4-native node/chip/ASIC
 // functionalities, primarily the flow managers. Calls made to this class are
 // processed and passed through to the BfRt API.
-class BfrtNode final {
+class BfrtNode {
  public:
-  ~BfrtNode();
+  virtual ~BfrtNode();
 
-  ::util::Status PushChassisConfig(const ChassisConfig& config, uint64 node_id)
+  virtual ::util::Status PushChassisConfig(const ChassisConfig& config,
+                                           uint64 node_id)
       LOCKS_EXCLUDED(lock_);
-  ::util::Status VerifyChassisConfig(const ChassisConfig& config,
-                                     uint64 node_id) LOCKS_EXCLUDED(lock_);
-  ::util::Status PushForwardingPipelineConfig(
+  virtual ::util::Status VerifyChassisConfig(const ChassisConfig& config,
+                                             uint64 node_id)
+      LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status PushForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config);
-  ::util::Status SaveForwardingPipelineConfig(
+  virtual ::util::Status SaveForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
-  ::util::Status CommitForwardingPipelineConfig() LOCKS_EXCLUDED(lock_);
-  ::util::Status VerifyForwardingPipelineConfig(
+  virtual ::util::Status CommitForwardingPipelineConfig() LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) const;
-  ::util::Status Shutdown() LOCKS_EXCLUDED(lock_);
-  ::util::Status Freeze() LOCKS_EXCLUDED(lock_);
-  ::util::Status Unfreeze() LOCKS_EXCLUDED(lock_);
-  ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
-                                        std::vector<::util::Status>* results)
+  virtual ::util::Status Shutdown() LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status Freeze() LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status Unfreeze() LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status WriteForwardingEntries(
+      const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results)
       LOCKS_EXCLUDED(lock_);
-  ::util::Status ReadForwardingEntries(
+  virtual ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) LOCKS_EXCLUDED(lock_);
-  ::util::Status RegisterStreamMessageResponseWriter(
+  virtual ::util::Status RegisterStreamMessageResponseWriter(
       const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
           writer) LOCKS_EXCLUDED(lock_);
-  ::util::Status UnregisterStreamMessageResponseWriter() LOCKS_EXCLUDED(lock_);
-  ::util::Status HandleStreamMessageRequest(
+  virtual ::util::Status UnregisterStreamMessageResponseWriter()
+      LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status HandleStreamMessageRequest(
       const ::p4::v1::StreamMessageRequest& req) LOCKS_EXCLUDED(lock_);
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtNode> CreateInstance(
@@ -73,6 +76,10 @@ class BfrtNode final {
   BfrtNode& operator=(const BfrtNode&) = delete;
   BfrtNode(BfrtNode&&) = delete;
   BfrtNode& operator=(BfrtNode&&) = delete;
+
+ protected:
+  // Default constructor. To be called by the Mock class instance only.
+  BfrtNode();
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
