@@ -49,10 +49,6 @@ class BfChassisManager {
   virtual ::util::StatusOr<DataResponse> GetPortData(
       const DataRequest::Request& request) SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
-                                                   uint32 port_id)
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
   virtual ::util::StatusOr<absl::Time> GetPortTimeLastChanged(uint64 node_id,
                                                               uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
@@ -64,9 +60,6 @@ class BfChassisManager {
   virtual ::util::Status ReplayPortsConfig(uint64 node_id)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::Status ResetPortsConfig(uint64 node_id)
-      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
-
   virtual ::util::Status GetFrontPanelPortInfo(uint64 node_id, uint32 port_id,
                                                FrontPanelPortInfo* fp_port_info)
       SHARED_LOCKS_REQUIRED(chassis_lock);
@@ -75,10 +68,6 @@ class BfChassisManager {
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
-  virtual ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id,
-                                                uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
@@ -128,6 +117,15 @@ class BfChassisManager {
 
   ::util::StatusOr<const PortConfig*> GetPortConfig(uint64 node_id,
                                                     uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  // Returns the state of a port given its ID and the ID of its node.
+  ::util::StatusOr<PortState> GetPortState(uint64 node_id, uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  // Returns the SDK port number for the given port. Also called SDN or data
+  // plane port.
+  ::util::StatusOr<uint32> GetSdkPortId(uint64 node_id, uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Registers/Unregisters all the event Writers (if not done yet).

@@ -672,6 +672,12 @@ TEST_F(BfChassisManagerTest, GetPortData) {
                   &DataResponse::has_health_indicator, &HealthIndicator::state,
                   HEALTH_STATE_UNKNOWN);
 
+  // SDN port ID
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_sdn_port_id,
+                  &DataResponse::sdn_port_id, &DataResponse::has_sdn_port_id,
+                  &SdnPortId::port_id, sdkPortId);
+
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
@@ -703,32 +709,6 @@ TEST_F(BfChassisManagerTest, UpdateInvalidPort) {
   err_msg << "Port " << portId << " in node " << kNodeId
           << " is not valid (SDK Port " << sdkPortId << ").";
   EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
-  ASSERT_OK(ShutdownAndTestCleanState());
-}
-
-TEST_F(BfChassisManagerTest, ResetPortsConfig) {
-  ASSERT_OK(PushBaseChassisConfig());
-  EXPECT_OK(bf_chassis_manager_->ResetPortsConfig(kNodeId));
-
-  // Invalid node ID
-  auto status = bf_chassis_manager_->ResetPortsConfig(kNodeId + 1);
-  EXPECT_FALSE(status.ok());
-  EXPECT_EQ(status.error_code(), ERR_INVALID_PARAM);
-  std::stringstream err_msg;
-  err_msg << "Node " << kNodeId + 1 << " is not configured or not known.";
-  EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
-  ASSERT_OK(ShutdownAndTestCleanState());
-}
-
-TEST_F(BfChassisManagerTest, GetSdkPortId) {
-  ChassisConfigBuilder builder;
-  ASSERT_OK(PushBaseChassisConfig(&builder));
-
-  SingletonPort* sport = builder.GetPort(kPortId);
-  auto resp = bf_chassis_manager_->GetSdkPortId(sport->node(), kPortId);
-  EXPECT_OK(resp);
-  EXPECT_EQ(resp.ValueOrDie(), kPortId + kSdkPortOffset);
-
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
