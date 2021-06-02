@@ -4,7 +4,10 @@
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
 #include <string>
+#include <utility>
 
+#include "absl/strings/match.h"
+#include "absl/synchronization/notification.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "gmock/gmock.h"
@@ -16,6 +19,7 @@
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
+#include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -24,6 +28,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+using PortStatusEvent = BfSdeInterface::PortStatusEvent;
 using test_utils::EqualsProto;
 using ::testing::_;
 using ::testing::AtLeast;
@@ -34,6 +39,7 @@ using ::testing::Invoke;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
+using ::testing::SaveArg;
 using ::testing::SetArgPointee;
 using ::testing::WithArg;
 
@@ -52,6 +58,19 @@ constexpr uint64 kDefaultSpeedBps = kHundredGigBps;
 constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
 constexpr TriState kDefaultAutoneg = TRI_STATE_UNKNOWN;
 constexpr LoopbackState kDefaultLoopbackMode = LOOPBACK_STATE_UNKNOWN;
+
+MATCHER_P(GnmiEventEq, event, "") {
+  if (absl::StrContains(typeid(*event).name(), "PortOperStateChangedEvent")) {
+    const auto& cast_event =
+        static_cast<const PortOperStateChangedEvent&>(*event);
+    const auto& cast_arg = static_cast<const PortOperStateChangedEvent&>(*arg);
+    return cast_event.GetPortId() == cast_arg.GetPortId() &&
+           cast_event.GetNodeId() == cast_arg.GetNodeId() &&
+           cast_event.GetNewState() == cast_arg.GetNewState() &&
+           cast_event.GetTimeLastChanged() == cast_arg.GetTimeLastChanged();
+  }
+  return false;
+}
 
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
@@ -179,9 +198,13 @@ class BfChassisManagerTest : public ::testing::Test {
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     RegisterSdkPortId(builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED));
 
-    // RegisterPortStatusEventWriter called because this is the first call
-    // to PushChassisConfig
-    EXPECT_CALL(*bf_sde_mock_, RegisterPortStatusEventWriter(_));
+    // Save the SDE channel writer to trigger port events with it later.
+    EXPECT_CALL(*bf_sde_mock_, RegisterPortStatusEventWriter(_))
+        .WillOnce([this](std::unique_ptr<ChannelWriter<PortStatusEvent>> arg0) {
+          sde_event_writer_ = std::move(arg0);
+          return ::util::OkStatus();
+        });
+
     EXPECT_CALL(*bf_sde_mock_, AddPort(kUnit, kPortId + kSdkPortOffset,
                                        kDefaultSpeedBps, kDefaultFecMode));
     EXPECT_CALL(*bf_sde_mock_, EnablePort(kUnit, kPortId + kSdkPortOffset));
@@ -228,6 +251,15 @@ class BfChassisManagerTest : public ::testing::Test {
     return ::util::OkStatus();
   }
 
+  ::util::Status RegisterEventNotifyWriter(
+      const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
+    return bf_chassis_manager_->RegisterEventNotifyWriter(writer);
+  }
+
+  ::util::Status UnregisterEventNotifyWriter() {
+    return bf_chassis_manager_->UnregisterEventNotifyWriter();
+  }
+
   std::unique_ptr<ChannelWriter<TransceiverEvent>> GetTransceiverEventWriter() {
     absl::WriterMutexLock l(&chassis_lock);
     CHECK(bf_chassis_manager_->xcvr_event_channel_ != nullptr)
@@ -238,12 +270,17 @@ class BfChassisManagerTest : public ::testing::Test {
 
   void TriggerPortStatusEvent(int device, int port, PortState state,
                               absl::Time time_last_changed) {
-    bf_chassis_manager_->PortStatusEventHandler(device, port, state,
-                                                time_last_changed);
+    PortStatusEvent event;
+    event.device = device;
+    event.port = port;
+    event.state = state;
+    event.time_last_changed = time_last_changed;
+    ASSERT_OK(sde_event_writer_->Write(event, absl::Seconds(1)));
   }
 
   std::unique_ptr<PhalMock> phal_mock_;
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
+  std::unique_ptr<ChannelWriter<PortStatusEvent>> sde_event_writer_;
   std::unique_ptr<BfChassisManager> bf_chassis_manager_;
 
   static constexpr int kTestTransceiverWriterId = 20;
@@ -522,8 +559,9 @@ TEST_F(BfChassisManagerTest, GetPortData) {
   const uint32 portId = kPortId + 1;
   const uint32 sdkPortId = portId + kSdkPortOffset;
   const int port = kPort + 1;
-  constexpr absl::Time kPortTimeLastChangedDontCare = absl::UnixEpoch();
-  constexpr absl::Time kPortTimeLastChangedUp = absl::FromUnixSeconds(12345);
+  constexpr absl::Time kPortTimeLastChanged1 = absl::FromUnixSeconds(1234);
+  constexpr absl::Time kPortTimeLastChanged2 = absl::FromUnixSeconds(5678);
+  constexpr absl::Time kPortTimeLastChanged3 = absl::FromUnixSeconds(9012);
 
   RegisterSdkPortId(builder.AddPort(portId, port, ADMIN_STATE_ENABLED,
                                     kHundredGigBps, FEC_MODE_ON, TRI_STATE_TRUE,
@@ -571,32 +609,63 @@ TEST_F(BfChassisManagerTest, GetPortData) {
   ON_CALL(*bf_sde_mock_, IsValidPort(_, _))
       .WillByDefault(
           WithArg<1>(Invoke([](uint32 id) { return id > kSdkPortOffset; })));
+
+  // WriterInterface for reporting gNMI events.
+  auto gnmi_event_writer = std::make_shared<WriterMock<GnmiEventPtr>>();
+  GnmiEventPtr link_up(
+      new PortOperStateChangedEvent(kNodeId, portId, PORT_STATE_UP,
+                                    absl::ToUnixNanos(kPortTimeLastChanged1)));
+  GnmiEventPtr link_down(
+      new PortOperStateChangedEvent(kNodeId, portId, PORT_STATE_DOWN,
+                                    absl::ToUnixNanos(kPortTimeLastChanged2)));
+  GnmiEventPtr link_up_again(
+      new PortOperStateChangedEvent(kNodeId, portId, PORT_STATE_UP,
+                                    absl::ToUnixNanos(kPortTimeLastChanged3)));
+  absl::Notification first_link_up;
+  EXPECT_CALL(*gnmi_event_writer,
+              Write(Matcher<const GnmiEventPtr&>(GnmiEventEq(link_up))))
+      .WillOnce(
+          DoAll([&first_link_up] { first_link_up.Notify(); }, Return(true)));
+  EXPECT_CALL(*gnmi_event_writer,
+              Write(Matcher<const GnmiEventPtr&>(GnmiEventEq(link_down))))
+      .WillOnce(Return(true));
+  absl::Notification port_flip_done;
+  EXPECT_CALL(*gnmi_event_writer,
+              Write(Matcher<const GnmiEventPtr&>(GnmiEventEq(link_up_again))))
+      .WillOnce(
+          DoAll([&port_flip_done] { port_flip_done.Notify(); }, Return(true)));
+
   ASSERT_OK(PushChassisConfig(builder));
 
+  // Register gNMI event writer.
+  EXPECT_OK(RegisterEventNotifyWriter(gnmi_event_writer));
+
+  // Operation status.
   // Emulate a few port status events.
   TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_UP,
-                         kPortTimeLastChangedDontCare);
+                         kPortTimeLastChanged1);
   TriggerPortStatusEvent(kUnit, 12, PORT_STATE_UP,
-                         kPortTimeLastChangedDontCare);  // Unknown port
+                         kPortTimeLastChanged1);  // Unknown port
   TriggerPortStatusEvent(456, sdkPortId, PORT_STATE_UP,
-                         kPortTimeLastChangedDontCare);  // Unknown device
-
-  // Operation status
+                         kPortTimeLastChanged1);  // Unknown device
+  ASSERT_TRUE(first_link_up.WaitForNotificationWithTimeout(absl::Seconds(5)));
   GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
                   &DataRequest::Request::mutable_oper_status,
                   &DataResponse::oper_status, &DataResponse::has_oper_status,
                   &OperStatus::state, PORT_STATE_UP);
 
-  // Check time last changed by simulating a port flip.
+  // Time last changed.
+  // Check by simulating a port flip.
   TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_DOWN,
-                         kPortTimeLastChangedDontCare);
+                         kPortTimeLastChanged2);
   TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_UP,
-                         kPortTimeLastChangedUp);
+                         kPortTimeLastChanged3);
+  ASSERT_TRUE(port_flip_done.WaitForNotificationWithTimeout(absl::Seconds(5)));
   OperStatus oper_status =
       GetPortData(bf_chassis_manager_.get(), kNodeId, portId,
                   &DataRequest::Request::mutable_oper_status,
                   &DataResponse::oper_status, &DataResponse::has_oper_status);
-  EXPECT_EQ(kPortTimeLastChangedUp,
+  EXPECT_EQ(kPortTimeLastChanged3,
             absl::FromUnixNanos(oper_status.time_last_changed()));
 
   // Admin status
@@ -685,6 +754,7 @@ TEST_F(BfChassisManagerTest, GetPortData) {
                   &DataResponse::sdn_port_id, &DataResponse::has_sdn_port_id,
                   &SdnPortId::port_id, sdkPortId);
 
+  ASSERT_OK(UnregisterEventNotifyWriter());
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
