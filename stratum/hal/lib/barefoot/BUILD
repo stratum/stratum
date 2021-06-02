@@ -77,6 +77,26 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "bfrt_switch_test",
+    srcs = ["bfrt_switch_test.cc"],
+    deps = [
+        ":bf_chassis_manager_mock",
+        ":bf_sde_mock",
+        ":bfrt_node_mock",
+        ":bfrt_switch",
+        ":test_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:phal_mock",
+        "//stratum/hal/lib/common:switch_interface",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
 stratum_cc_library(
     name = "bf_chassis_manager",
     srcs = ["bf_chassis_manager.cc"],

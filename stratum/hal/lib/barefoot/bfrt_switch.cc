@@ -108,6 +108,7 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  // TODO(max): This should be a ReaderMutexLock?
   absl::WriterMutexLock l(&chassis_lock);
   return DoVerifyForwardingPipelineConfig(node_id, config);
 }
