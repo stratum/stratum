@@ -6,6 +6,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load(
     "//bazel:rules.bzl",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
@@ -128,6 +129,17 @@ stratum_cc_test(
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
         "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
+    name = "bf_chassis_manager_mock",
+    testonly = 1,
+    hdrs = ["bf_chassis_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bf_chassis_manager",
         "@com_google_googletest//:gtest",
     ],
 )
