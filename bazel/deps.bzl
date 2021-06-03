@@ -201,10 +201,11 @@ def stratum_deps():
     #        Third party C++ libraries for common
     # -----------------------------------------------------------------------------
     if "com_google_absl" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_absl",
-            remote = "https://github.com/abseil/abseil-cpp",
-            branch = "lts_2021_03_24",
+            urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.tar.gz"],
+            strip_prefix = "abseil-cpp-20210324.2",
+            sha256 = "59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f",
         )
 
     if "com_github_google_glog" not in native.existing_rules():
