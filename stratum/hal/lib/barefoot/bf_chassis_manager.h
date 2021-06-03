@@ -64,10 +64,10 @@ class BfChassisManager {
                                                FrontPanelPortInfo* fp_port_info)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
+  virtual ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
+  virtual ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
@@ -80,6 +80,10 @@ class BfChassisManager {
   BfChassisManager& operator=(const BfChassisManager&) = delete;
   BfChassisManager(BfChassisManager&&) = delete;
   BfChassisManager& operator=(BfChassisManager&&) = delete;
+
+ protected:
+  // Default constructor. To be called by the Mock class instance only.
+  BfChassisManager();
 
  private:
   // ReaderArgs encapsulates the arguments for a Channel reader thread.
