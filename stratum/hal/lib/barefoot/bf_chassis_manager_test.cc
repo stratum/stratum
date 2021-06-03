@@ -236,8 +236,10 @@ class BfChassisManagerTest : public ::testing::Test {
         bf_chassis_manager_->xcvr_event_channel_);
   }
 
-  void TriggerPortStatusEvent(int device, int port, PortState state) {
-    bf_chassis_manager_->PortStatusEventHandler(device, port, state);
+  void TriggerPortStatusEvent(int device, int port, PortState state,
+                              absl::Time time_last_changed) {
+    bf_chassis_manager_->PortStatusEventHandler(device, port, state,
+                                                time_last_changed);
   }
 
   std::unique_ptr<PhalMock> phal_mock_;
@@ -520,6 +522,8 @@ TEST_F(BfChassisManagerTest, GetPortData) {
   const uint32 portId = kPortId + 1;
   const uint32 sdkPortId = portId + kSdkPortOffset;
   const int port = kPort + 1;
+  constexpr absl::Time kPortTimeLastChangedDontCare = absl::UnixEpoch();
+  constexpr absl::Time kPortTimeLastChangedUp = absl::FromUnixSeconds(12345);
 
   RegisterSdkPortId(builder.AddPort(portId, port, ADMIN_STATE_ENABLED,
                                     kHundredGigBps, FEC_MODE_ON, TRI_STATE_TRUE,
@@ -570,9 +574,12 @@ TEST_F(BfChassisManagerTest, GetPortData) {
   ASSERT_OK(PushChassisConfig(builder));
 
   // Emulate a few port status events.
-  TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_UP);
-  TriggerPortStatusEvent(kUnit, 12, PORT_STATE_UP);       // Unknown port
-  TriggerPortStatusEvent(456, sdkPortId, PORT_STATE_UP);  // Unknown device
+  TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_UP,
+                         kPortTimeLastChangedDontCare);
+  TriggerPortStatusEvent(kUnit, 12, PORT_STATE_UP,
+                         kPortTimeLastChangedDontCare);  // Unknown port
+  TriggerPortStatusEvent(456, sdkPortId, PORT_STATE_UP,
+                         kPortTimeLastChangedDontCare);  // Unknown device
 
   // Operation status
   GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
@@ -581,16 +588,16 @@ TEST_F(BfChassisManagerTest, GetPortData) {
                   &OperStatus::state, PORT_STATE_UP);
 
   // Check time last changed by simulating a port flip.
-  int64 pre_event = absl::ToUnixNanos(absl::Now());
-  TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_DOWN);
-  TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_UP);
-  int64 post_event = absl::ToUnixNanos(absl::Now());
+  TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_DOWN,
+                         kPortTimeLastChangedDontCare);
+  TriggerPortStatusEvent(kUnit, sdkPortId, PORT_STATE_UP,
+                         kPortTimeLastChangedUp);
   OperStatus oper_status =
       GetPortData(bf_chassis_manager_.get(), kNodeId, portId,
                   &DataRequest::Request::mutable_oper_status,
                   &DataResponse::oper_status, &DataResponse::has_oper_status);
-  EXPECT_LE(pre_event, oper_status.time_last_changed());
-  EXPECT_GE(post_event, oper_status.time_last_changed());
+  EXPECT_EQ(kPortTimeLastChangedUp,
+            absl::FromUnixNanos(oper_status.time_last_changed()));
 
   // Admin status
   GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,

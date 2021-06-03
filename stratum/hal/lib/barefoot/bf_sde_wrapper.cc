@@ -960,13 +960,15 @@ namespace {
 // A callback function executed in SDE port state change thread context.
 bf_status_t sde_port_status_callback(bf_dev_id_t device, bf_dev_port_t dev_port,
                                      bool up, void* cookie) {
+  absl::Time timestamp = absl::Now();
   BfSdeWrapper* bf_sde_wrapper = BfSdeWrapper::GetSingleton();
   if (!bf_sde_wrapper) {
     LOG(ERROR) << "BfSdeWrapper singleton instance is not initialized.";
     return BF_INTERNAL_ERROR;
   }
   // Forward the event.
-  auto status = bf_sde_wrapper->OnPortStatusEvent(device, dev_port, up);
+  auto status =
+      bf_sde_wrapper->OnPortStatusEvent(device, dev_port, up, timestamp);
 
   return status.ok() ? BF_SUCCESS : BF_INTERNAL_ERROR;
 }
@@ -1086,10 +1088,11 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
   return ::util::OkStatus();
 }
 
-::util::Status BfSdeWrapper::OnPortStatusEvent(int device, int port, bool up) {
+::util::Status BfSdeWrapper::OnPortStatusEvent(int device, int port, bool up,
+                                               absl::Time timestamp) {
   // Create PortStatusEvent message.
   PortState state = up ? PORT_STATE_UP : PORT_STATE_DOWN;
-  PortStatusEvent event = {device, port, state};
+  PortStatusEvent event = {device, port, state, timestamp};
 
   {
     absl::ReaderMutexLock l(&port_status_event_writer_lock_);
