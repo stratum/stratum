@@ -43,6 +43,19 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       node_id_(0),
       device_id_(device_id) {}
 
+BfrtNode::BfrtNode()
+    : pipeline_initialized_(false),
+      initialized_(false),
+      bfrt_config_(),
+      bf_sde_interface_(nullptr),
+      bfrt_table_manager_(nullptr),
+      bfrt_action_profile_manager_(nullptr),
+      bfrt_packetio_manager_(nullptr),
+      bfrt_pre_manager_(nullptr),
+      bfrt_counter_manager_(nullptr),
+      node_id_(0),
+      device_id_(-1) {}
+
 BfrtNode::~BfrtNode() = default;
 
 // Factory function for creating the instance of the class.
