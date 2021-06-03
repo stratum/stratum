@@ -285,6 +285,17 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "bfrt_node_mock",
+    testonly = 1,
+    hdrs = ["bfrt_node_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_node",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
     name = "bfrt_table_manager",
     srcs = ["bfrt_table_manager.cc"],
     hdrs = ["bfrt_table_manager.h"],
