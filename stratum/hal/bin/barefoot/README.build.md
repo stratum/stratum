@@ -21,7 +21,8 @@ access P4 Studio SDE. Contact Intel for more details.*
 
  - 9.2.0
  - 9.3.0
- - 9.3.1 (Recommended; LTS release)
+ - 9.3.1
+ - 9.3.2 (Recommended; LTS release)
  - 9.4.0
  - 9.5.0 (Experimental; LTS release; Latest)
 
@@ -172,7 +173,7 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.3.1
+export SDE_VERSION=9.3.2
 export STRATUM_TARGET=stratum_bf
 docker build -t stratumproject/stratum-bf:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
@@ -195,7 +196,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bf:9.3.1 -o stratum-bf-9.3.1-docker.tar
+docker save stratumproject/stratum-bf:9.3.2 -o stratum-bf-9.3.2-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally
