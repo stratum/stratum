@@ -60,6 +60,26 @@ BfChassisManager::BfChassisManager(OperationMode mode,
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)) {}
 
+BfChassisManager::BfChassisManager()
+    : mode_(OPERATION_MODE_STANDALONE),
+      initialized_(false),
+      port_status_event_channel_(nullptr),
+      xcvr_event_writer_id_(kInvalidWriterId),
+      xcvr_event_channel_(nullptr),
+      gnmi_event_writer_(nullptr),
+      unit_to_node_id_(),
+      node_id_to_unit_(),
+      node_id_to_port_id_to_port_state_(),
+      node_id_to_port_id_to_time_last_changed_(),
+      node_id_to_port_id_to_port_config_(),
+      node_id_to_port_id_to_singleton_port_key_(),
+      node_id_to_port_id_to_sdk_port_id_(),
+      node_id_to_sdk_port_id_to_port_id_(),
+      node_id_to_deflect_on_drop_config_(),
+      xcvr_port_key_to_xcvr_state_(),
+      phal_interface_(nullptr),
+      bf_sde_interface_(nullptr) {}
+
 BfChassisManager::~BfChassisManager() = default;
 
 ::util::Status BfChassisManager::AddPortHelper(

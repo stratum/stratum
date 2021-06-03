@@ -133,6 +133,17 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
+    name = "bf_chassis_manager_mock",
+    testonly = 1,
+    hdrs = ["bf_chassis_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bf_chassis_manager",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
     name = "bf_sde_interface",
     hdrs = ["bf_sde_interface.h"],
     deps = [

@@ -64,10 +64,10 @@ class BfChassisManager {
                                                FrontPanelPortInfo* fp_port_info)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
+  virtual ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
+  virtual ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
@@ -80,6 +80,10 @@ class BfChassisManager {
   BfChassisManager& operator=(const BfChassisManager&) = delete;
   BfChassisManager(BfChassisManager&&) = delete;
   BfChassisManager& operator=(BfChassisManager&&) = delete;
+
+ protected:
+  // Default constructor. To be called by the Mock class instance only.
+  BfChassisManager();
 
  private:
   // ReaderArgs encapsulates the arguments for a Channel reader thread.
@@ -120,8 +124,7 @@ class BfChassisManager {
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Returns the state of a port given its ID and the ID of its node.
-  ::util::StatusOr<PortState> GetPortState(uint64 node_id,
-                                           const uint32 port_id) const
+  ::util::StatusOr<PortState> GetPortState(uint64 node_id, uint32 port_id) const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Returns the SDK port number for the given port. Also called SDN or data
