@@ -1083,12 +1083,14 @@ void BfChassisManager::ReadPortStatusEvents(
       continue;
     }
     // Handle received message.
-    PortStatusEventHandler(event.device, event.port, event.state);
+    PortStatusEventHandler(event.device, event.port, event.state,
+                           event.time_last_changed);
   } while (true);
 }
 
 void BfChassisManager::PortStatusEventHandler(int device, int port,
-                                              PortState new_state) {
+                                              PortState new_state,
+                                              absl::Time time_last_changed) {
   absl::WriterMutexLock l(&chassis_lock);
   // TODO(max): check for shutdown here
   // if (shutdown) {
@@ -1114,7 +1116,8 @@ void BfChassisManager::PortStatusEventHandler(int device, int port,
     return;
   }
   node_id_to_port_id_to_port_state_[*node_id][*port_id] = new_state;
-  node_id_to_port_id_to_time_last_changed_[*node_id][*port_id] = absl::Now();
+  node_id_to_port_id_to_time_last_changed_[*node_id][*port_id] =
+      time_last_changed;
 
   // Notify the managers about the change of port state.
   // Nothing to do for now.

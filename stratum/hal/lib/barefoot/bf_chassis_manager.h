@@ -171,7 +171,8 @@ class BfChassisManager {
   // used by the SDE. NOTE: This method should never be executed directly from a
   // context which first accesses the internal structures of a class below
   // BfChassisManager as this may result in deadlock.
-  void PortStatusEventHandler(int device, int port, PortState new_state)
+  void PortStatusEventHandler(int device, int port, PortState new_state,
+                              absl::Time time_last_changed)
       LOCKS_EXCLUDED(chassis_lock);
 
   // Thread function for reading port status events from

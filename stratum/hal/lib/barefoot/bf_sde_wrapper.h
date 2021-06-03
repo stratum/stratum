@@ -374,7 +374,8 @@ class BfSdeWrapper : public BfSdeInterface {
   // Called whenever a port status event is received from SDK. It forwards the
   // port status event to the module who registered a callback by calling
   // RegisterPortStatusEventWriter().
-  ::util::Status OnPortStatusEvent(int device, int dev_port, bool up)
+  ::util::Status OnPortStatusEvent(int device, int dev_port, bool up,
+                                   absl::Time timestamp)
       LOCKS_EXCLUDED(port_status_event_writer_lock_);
 
   // BfSdeWrapper is neither copyable nor movable.
