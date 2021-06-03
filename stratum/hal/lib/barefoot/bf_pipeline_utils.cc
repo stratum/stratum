@@ -23,7 +23,7 @@ namespace barefoot {
 namespace {
 // Helper function to convert a uint32 to a little-endian byte string.
 std::string Uint32ToLeByteStream(uint32 val) {
-  uint32 tmp = (htonl(1) == 1) ? __builtin_bswap32(val) : val;
+  uint32 tmp = (htonl(1) == (1)) ? __builtin_bswap32(val) : val;
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
   return bytes;
