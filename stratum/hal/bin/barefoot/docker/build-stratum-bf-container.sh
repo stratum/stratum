@@ -17,9 +17,9 @@ It also builds the kernel module if kernel header tarball is given.
 Usage: $0 [SDE_TAR [KERNEL_HEADERS_TAR]...]
 
 Example:
-    $0 ~/bf-sde-9.3.1.tgz
-    $0 ~/bf-sde-9.3.1.tgz ~/linux-4.14.49-ONL.tar.xz
-    SDE_INSTALL_TAR=~/bf-sde-9.3.1-install.tgz $0
+    $0 ~/bf-sde-9.3.2.tgz
+    $0 ~/bf-sde-9.3.2.tgz ~/linux-4.14.49-ONL.tar.xz
+    SDE_INSTALL_TAR=~/bf-sde-9.3.2-install.tgz $0
 
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
