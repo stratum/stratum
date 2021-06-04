@@ -143,7 +143,8 @@ class BfChassisManager {
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
   void SendPortOperStateGnmiEvent(uint64 node_id, uint32 port_id,
-                                  PortState new_state)
+                                  PortState new_state,
+                                  absl::Time time_last_changed)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   // Transceiver module insert/removal event handler. This method is executed by

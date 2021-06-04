@@ -1034,9 +1034,9 @@ std::unique_ptr<BfChassisManager> BfChassisManager::CreateInstance(
       new BfChassisManager(mode, phal_interface, bf_sde_interface));
 }
 
-void BfChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
-                                                  uint32 port_id,
-                                                  PortState new_state) {
+void BfChassisManager::SendPortOperStateGnmiEvent(
+    uint64 node_id, uint32 port_id, PortState new_state,
+    absl::Time time_last_changed) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
   // Allocate and initialize a PortOperStateChangedEvent event and pass it to
@@ -1044,8 +1044,9 @@ void BfChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   // The GnmiEventPtr is a smart pointer (shared_ptr<>) and it takes care of
   // the memory allocated to this event object once the event is handled by
   // the GnmiPublisher.
-  if (!gnmi_event_writer_->Write(GnmiEventPtr(
-          new PortOperStateChangedEvent(node_id, port_id, new_state, 0)))) {
+  if (!gnmi_event_writer_->Write(GnmiEventPtr(new PortOperStateChangedEvent(
+          node_id, port_id, new_state,
+          absl::ToUnixNanos(time_last_changed))))) {
     // Remove WriterInterface if it is no longer operational.
     gnmi_event_writer_.reset();
   }
@@ -1123,7 +1124,7 @@ void BfChassisManager::PortStatusEventHandler(int device, int port,
   // Nothing to do for now.
 
   // Notify gNMI about the change of logical port state.
-  SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
+  SendPortOperStateGnmiEvent(*node_id, *port_id, new_state, time_last_changed);
 
   LOG(INFO) << "State of port " << *port_id << " in node " << *node_id
             << " (SDK port " << port << "): " << PrintPortState(new_state)
