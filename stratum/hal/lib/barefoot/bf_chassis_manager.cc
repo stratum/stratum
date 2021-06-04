@@ -120,12 +120,6 @@ BFChassisManager::~BFChassisManager() = default;
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
-  if (config_params.frequency() != 0) {
-    RETURN_IF_ERROR(
-        onlp_interface_->SetSfpFrequency(unit, sdk_port_id, config_params.frequency()));
-  }
-  config->frequency = config_params.frequency();
-
   RETURN_IF_ERROR(
       bf_sde_interface_->EnablePortShaping(unit, sdk_port_id, TRI_STATE_FALSE));
 
