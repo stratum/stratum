@@ -29,16 +29,16 @@ using ::stratum::hal::pi::PINode;
 BfSwitch::BfSwitch(PhalInterface* phal_interface,
                    BfChassisManager* bf_chassis_manager,
                    BfSdeInterface* bf_sde_interface,
-                   const std::map<int, PINode*>& unit_to_pi_node)
+                   const std::map<int, PINode*>& device_to_pi_node)
     : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
-      unit_to_pi_node_(unit_to_pi_node),
+      device_to_pi_node_(device_to_pi_node),
       node_id_to_pi_node_() {
-  for (const auto& entry : unit_to_pi_node_) {
-    CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
+  for (const auto& entry : device_to_pi_node_) {
+    CHECK_GE(entry.first, 0) << "Invalid device number " << entry.first << ".";
     CHECK_NE(entry.second, nullptr)
-        << "Detected null PINode for unit " << entry.first << ".";
+        << "Detected null PINode for device " << entry.first << ".";
   }
 }
 
@@ -51,13 +51,13 @@ BfSwitch::~BfSwitch() {}
   absl::WriterMutexLock l(&chassis_lock);
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
-  ASSIGN_OR_RETURN(const auto& node_id_to_unit,
-                   bf_chassis_manager_->GetNodeIdToUnitMap());
+  ASSIGN_OR_RETURN(const auto& node_id_to_device,
+                   bf_chassis_manager_->GetNodeIdToDeviceMap());
   node_id_to_pi_node_.clear();
-  for (const auto& entry : node_id_to_unit) {
+  for (const auto& entry : node_id_to_device) {
     uint64 node_id = entry.first;
-    int unit = entry.second;
-    ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromUnit(unit));
+    int device = entry.second;
+    ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromDevice(device));
     RETURN_IF_ERROR(pi_node->PushChassisConfig(config, node_id));
     node_id_to_pi_node_[node_id] = pi_node;
   }
@@ -76,21 +76,21 @@ BfSwitch::~BfSwitch() {}
   APPEND_STATUS_IF_ERROR(status,
                          bf_chassis_manager_->VerifyChassisConfig(config));
 
-  // Get the current copy of the node_id_to_unit from chassis manager. If this
+  // Get the current copy of the node_id_to_device from chassis manager. If this
   // fails with ERR_NOT_INITIALIZED, do not verify anything at the node level.
-  // Note that we do not expect any change in node_id_to_unit. Any change in
+  // Note that we do not expect any change in node_id_to_device. Any change in
   // this map will be detected in bcm_chassis_manager_->VerifyChassisConfig.
-  auto ret = bf_chassis_manager_->GetNodeIdToUnitMap();
+  auto ret = bf_chassis_manager_->GetNodeIdToDeviceMap();
   if (!ret.ok()) {
     if (ret.status().error_code() != ERR_NOT_INITIALIZED) {
       APPEND_STATUS_IF_ERROR(status, ret.status());
     }
   } else {
-    const auto& node_id_to_unit = ret.ValueOrDie();
-    for (const auto& entry : node_id_to_unit) {
+    const auto& node_id_to_device = ret.ValueOrDie();
+    for (const auto& entry : node_id_to_device) {
       uint64 node_id = entry.first;
-      int unit = entry.second;
-      ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromUnit(unit));
+      int device = entry.second;
+      ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromDevice(device));
       APPEND_STATUS_IF_ERROR(status,
                              pi_node->VerifyChassisConfig(config, node_id));
     }
@@ -138,14 +138,14 @@ namespace {
   LOG(INFO) << "P4-based forwarding pipeline config pushed successfully to "
             << "node with ID " << node_id << ".";
 
-  ASSIGN_OR_RETURN(const auto& node_id_to_unit,
-                   bf_chassis_manager_->GetNodeIdToUnitMap());
+  ASSIGN_OR_RETURN(const auto& node_id_to_device,
+                   bf_chassis_manager_->GetNodeIdToDeviceMap());
 
-  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_unit, node_id))
-      << "Unable to find unit number for node " << node_id;
-  int unit = gtl::FindOrDie(node_id_to_unit, node_id);
-  ASSIGN_OR_RETURN(auto cpu_port, bf_sde_interface_->GetPcieCpuPort(unit));
-  RETURN_IF_ERROR(bf_sde_interface_->SetTmCpuPort(unit, cpu_port));
+  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_device, node_id))
+      << "Unable to find device number for node " << node_id;
+  int device = gtl::FindOrDie(node_id_to_device, node_id);
+  ASSIGN_OR_RETURN(auto cpu_port, bf_sde_interface_->GetPcieCpuPort(device));
+  RETURN_IF_ERROR(bf_sde_interface_->SetTmCpuPort(device, cpu_port));
   return ::util::OkStatus();
 }
 
@@ -314,15 +314,15 @@ namespace {
 std::unique_ptr<BfSwitch> BfSwitch::CreateInstance(
     PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
     BfSdeInterface* bf_sde_interface,
-    const std::map<int, PINode*>& unit_to_pi_node) {
+    const std::map<int, PINode*>& device_to_pi_node) {
   return absl::WrapUnique(new BfSwitch(phal_interface, bf_chassis_manager,
-                                       bf_sde_interface, unit_to_pi_node));
+                                       bf_sde_interface, device_to_pi_node));
 }
 
-::util::StatusOr<PINode*> BfSwitch::GetPINodeFromUnit(int unit) const {
-  PINode* pi_node = gtl::FindPtrOrNull(unit_to_pi_node_, unit);
+::util::StatusOr<PINode*> BfSwitch::GetPINodeFromDevice(int device) const {
+  PINode* pi_node = gtl::FindPtrOrNull(device_to_pi_node_, device);
   if (pi_node == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Device " << device << " is unknown.";
   }
   return pi_node;
 }
