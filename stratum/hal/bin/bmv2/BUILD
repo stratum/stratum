@@ -54,19 +54,12 @@ pkg_tar(
     name = "stratum_bmv2_config",
     srcs = [
         "chassis_config.pb.txt",
+        "dummy.json",
         "stratum_bmv2.environment",
+        "//stratum/hal/lib/common:gnmi_caps.pb.txt",
     ],
     mode = "0644",
     package_dir = "/etc/stratum",
-    strip_prefix = "/stratum/hal/bin/bmv2",
-)
-
-pkg_tar(
-    name = "stratum_bmv2_pipeline",
-    srcs = ["dummy.json"],
-    mode = "0644",
-    package_dir = "/etc/stratum",
-    strip_prefix = "/stratum/hal/bin/bmv2",
 )
 
 pkg_tar(
@@ -75,7 +68,6 @@ pkg_tar(
     deps = [
         ":stratum_bmv2_bin",
         ":stratum_bmv2_config",
-        ":stratum_bmv2_pipeline",
         ":stratum_bmv2_service",
         "@local_bmv2_bin//:bmv2_library_files",
     ],
