@@ -319,9 +319,27 @@ BfChassisManager::~BfChassisManager() = default;
           << "Invalid ChassisConfig, unknown node id " << node_id
           << " for port " << port_id << ".";
     }
-    node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
-    node_id_to_port_id_to_time_last_changed[node_id][port_id] =
-        absl::UnixEpoch();
+    // If (node_id, port_id) already exists as a key in any of
+    // node_id_to_port_id_to_{port_state,time_last_changed}_, we keep the
+    // state as is. Otherwise, we assume this is the first time we are
+    // seeing this port and set the state to unknown.
+    const PortState* port_state =
+        gtl::FindOrNull(node_id_to_port_id_to_port_state_[node_id], port_id);
+    if (port_state != nullptr) {
+      node_id_to_port_id_to_port_state[node_id][port_id] = *port_state;
+    } else {
+      node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
+    }
+    const absl::Time* time_last_changed = gtl::FindOrNull(
+        node_id_to_port_id_to_time_last_changed_[node_id], port_id);
+    if (time_last_changed != nullptr) {
+      node_id_to_port_id_to_time_last_changed[node_id][port_id] =
+          *time_last_changed;
+    } else {
+      node_id_to_port_id_to_time_last_changed[node_id][port_id] =
+          absl::UnixEpoch();
+    }
+    // Create a new empty port config.
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
