@@ -94,6 +94,17 @@ template <typename T>
 
   return symbol;
 }
+
+::util::StatusOr<T> LoadSymbolIfPresent(void* handle, const char* name) {
+  dlerror();  // Clear last error.
+  auto* symbol = reinterpret_cast<T>(dlsym(handle, name));
+  char* dl_err = dlerror();
+  if (dl_err == nullptr) { // symbol is present
+    return symbol;
+  } else { // symbol is not present
+    return nullptr;
+  }
+}
 }  // namespace
 
 ::util::Status OnlpWrapper::Initialize() {
@@ -128,10 +139,17 @@ template <typename T>
   LOAD_SYMBOL(onlp_led_mode_set);
   LOAD_SYMBOL(onlp_led_char_set);
   LOAD_SYMBOL(onlp_psu_info_get);
-  LOAD_SYMBOL(onlp_i2c_mux_select);
   LOAD_SYMBOL(onlp_i2c_write);
   LOAD_SYMBOL(onlp_i2c_readb);
 #undef LOAD_SYMBOL
+
+#define LOAD_SYMBOL_IF_PRESENT(symbol)   \
+  ASSIGN_OR_RETURN(                      \
+      onlp_functions_.symbol,            \
+      LoadSymbolIfPresent<decltype(onlp_functions_.symbol)>(onlp_lib_handle_, #symbol))
+
+  LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping);
+#undef LOAD_SYMBOL_IF_PRESENT
 
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
       << "Failed to initialize ONLP.";
@@ -164,200 +182,52 @@ template <typename T>
 ::util::Status OnlpWrapper::SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const {
   // Default value of the SFP info
   onlp_sfp_info_t sfp_info = {{oid}};
-  // Retreive spf_info to check the type
+  // Retrieve spf_info to check the type
   CHECK_RETURN_IF_FALSE(
       ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
       << "Failed to get SFP info for OID " << oid << ".";
   // Check the transceiver's type. This code only allows you to set the frequency of an SFP/SFP+.
   if (sfp_info.type != ONLP_SFP_TYPE_SFP) {
-      fprintf(stderr, "Error: This is not an SFP\n");
-      exit(0);
+      fprintf(stderr, "Error: This is not an SFP or SFP+.\n");
+      return ::util::OkStatus();
   }
-  // Set the port where the SFP is plugged in
-  int channel_cpu; // cpu channel number from hardware specification
-  int channel_mb; // mb channel number from hardware specification
-  uint8_t res;
-  onlp_i2c_mux_device_t cpu_mux;
-  onlp_i2c_mux_device_t mb_mux;
-  cpu_mux.name = "CPU MUX";
-  cpu_mux.bus = 0;
-  cpu_mux.devaddr = 0x70; //CPU MUX address from hardware specification
-  cpu_mux.driver = onlp_i2c_mux_driver_pca9548; //Driver for BF6064X switch
-  mb_mux.name = "MB MUX";
-  mb_mux.bus = 0;
 
-  mb_mux.driver = onlp_i2c_mux_driver_pca9548; //For BF6064X switch
-  if (port_number > 0 && port_number <= 32) {
-      channel_cpu = 2;
-  } else if (port_number >= 33 && port_number <= 64) {
-      channel_cpu = 6;
-  } else {
-      fprintf(stderr, "Error: Ports limit exceeded\n"); //Port number has to be between 1 and 64 for BF6064X switch
-      exit(0);
-  }
+  //Check if the symbol is present
+  CHECK_RETURN_IF_FALSE(LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping) != nullptr)
+      << "Symbol onlp_i2c_mux_mapping does not exist.";
+  // Apply MUX mapping function for hardware
   CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_select(cpu_mux, channel_cpu)))
-      << "Failed to set CPU MUX.";
+        ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 0)))
+        << "Failed to set MUX for port number " << port_number << ".";
 
-  switch (port_number) {
-  case 1 || 33:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 0;
-      break;
-  case 2 || 34:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 1;
-      break;
-  case 3 || 35:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 2;
-      break;
-  case 4 || 36:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 3;
-      break;
-  case 5 || 37:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 4;
-      break;
-  case 6 || 38:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 5;
-      break;
-  case 7 || 39:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 6;
-      break;
-  case 8 || 40:
-      mb_mux.devaddr = 0x74;
-      channel_mb = 7;
-      break;
-  case 14 || 47:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 0;
-      break;
-  case 13 || 48:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 1;
-      break;
-  case 16 || 41:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 2;
-      break;
-  case 15 || 42:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 3;
-      break;
-  case 10 || 43:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 4;
-      break;
-  case 9 || 44:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 5;
-      break;
-  case 12 || 45:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 6;
-      break;
-  case 11 || 46:
-      mb_mux.devaddr = 0x75;
-      channel_mb = 7;
-      break;
-  case 17 || 55:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 0;
-      break;
-  case 18 || 56:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 1;
-      break;
-  case 26 || 53:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 2;
-      break;
-  case 25 || 54:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 3;
-      break;
-  case 22 || 58:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 4;
-      break;
-  case 21 || 57:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 5;
-      break;
-  case 24 || 49:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 6;
-      break;
-  case 23 || 50:
-      mb_mux.devaddr = 0x76;
-      channel_mb = 7;
-      break;
-  case 29 || 59:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 0;
-      break;
-  case 30 || 60:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 1;
-      break;
-  case 27 || 61:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 2;
-      break;
-  case 28 || 62:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 3;
-      break;
-  case 32 || 63:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 4;
-      break;
-  case 31 || 64:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 5;
-      break;
-  case 19 || 52:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 6;
-      break;
-  default: //or case 20 || 51:
-      mb_mux.devaddr = 0x77;
-      channel_mb = 7;
-      break;
-  }
-  CHECK_RETURN_IF_FALSE(
-       ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_select(mb_mux, channel_mb)))
-       << "Failed to set MB MUX.";
-  // Change the page on slave 0x51 to access page 2
+  // Change the page register on slave 0x51 to access page 2
+  uint8 res;
   CHECK_RETURN_IF_FALSE(
        ONLP_SUCCESS(onlp_functions_.onlp_i2c_write(0,0x51,0x7f,1,0x2,0)))
-       << "Failed to write the page.";
+       << "Failed to write the page.\n";
+
   // Check if page has been changed. If not, then the SFP is not tunable
   res = onlp_functions_.onlp_i2c_readb(0, 0x51, 0x7f);
   if (res != 2) {
       fprintf(stderr, "Error: Can not change the page, the SFP+ is not tunable.\n");
-      exit(0);
+      return ::util::OkStatus();
   }
   // Retrieve Grid spacing value
-  uint16_t grid_spacing_hexa; // Need 2 bytes.
+  uint16 grid_spacing_hexa; // Need 2 bytes.
   int grid_spacing;
   grid_spacing_hexa = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x8C) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x8D));
   grid_spacing = grid_spacing_hexa * 0.1 * 1000000000; //value in Hz
 
   // Retrieve First frequency
-  uint16_t first_frequency_THz;
-  uint16_t first_frequency_GHz;
+  uint16 first_frequency_THz;
+  uint16 first_frequency_GHz;
   int first_frequency;
   first_frequency_THz = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x84) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x85));
   first_frequency_GHz = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x86) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x87));
   first_frequency = (first_frequency_THz * 1000000000000) + (first_frequency_GHz * 0.1 * 1000000000); //value in Hz
 
   // Desired channel number
-  uint8_t channel_number;
+  uint8 channel_number;
   channel_number = 1 + ((frequency - first_frequency)/grid_spacing); // Formula from SFF-8690 document
 
   // Change the channel number of the SFP
@@ -367,18 +237,23 @@ template <typename T>
 
   // Check if it has been done correctly
   if (onlp_functions_.onlp_i2c_readb(0,0x51,0x91) != channel_number) {
-      fprintf(stderr, "Error: Can not write the desired frequency.\n");
-      exit(0);
+      fprintf(stderr, "Error: Cannot write the desired frequency.\n");
+      return ::util::OkStatus();
   }
 
   // Put the page register back to 1
   CHECK_RETURN_IF_FALSE(
        ONLP_SUCCESS(onlp_functions_.onlp_i2c_write(0,0x51,0x7f,1,0x01,0)))
        << "Failed to set CPU MUX.";
-  // Remove port selection from MUXs
+
+  //Check if the symbol is present
+  CHECK_RETURN_IF_FALSE(LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping) != nullptr)
+      << "Symbol onlp_i2c_mux_mapping does not exist.";
+  // Remove port selection from MUXs ie. reset = 1
   CHECK_RETURN_IF_FALSE(
-       ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_select(mb_mux.devaddr, -1))) //put 0x00 in mb_mux.devaddr i.e channel number = 0
-       << "Failed to set CPU MUX.";
+        ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 1)))
+        << "Failed to deselect MUXs for port number " << port_number << ".";
+
   return ::util::OkStatus();
 }
 

@@ -254,7 +254,7 @@ class OnlpWrapper : public OnlpInterface {
     int (*onlp_led_mode_set)(onlp_oid_t oid, onlp_led_mode_t mode);
     int (*onlp_led_char_set)(onlp_oid_t oid, char c);
     int (*onlp_psu_info_get)(onlp_oid_t oid, onlp_psu_info_t* rv);
-    int (*onlp_i2c_mux_select)((onlp_i2c_mux_device_t* dev, int channel);
+    int (*onlp_i2c_mux_mapping)(int port_number, int reset);
     int (*onlp_i2c_write)(int bus, uint8_t addr, uint8_t offset, int size, uint8_t* data, uint32_t flags);
     int (*onlp_i2c_readb)(int bus, uint8_t addr, uint8_t offset, uint32_t flags);
     OnlpFunctions()
@@ -277,7 +277,7 @@ class OnlpWrapper : public OnlpInterface {
           onlp_led_mode_set(nullptr),
           onlp_led_char_set(nullptr),
           onlp_psu_info_get(nullptr),
-          onlp_i2c_mux_select(nullptr),
+          oonlp_i2c_mux_mapping(nullptr),
           onlp_i2c_write(nullptr),
           onlp_i2c_readb(nullptr) {}
   };
