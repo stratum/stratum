@@ -453,6 +453,8 @@ TEST_F(BfChassisManagerTest, ReplayPorts) {
     }
   )PROTO";
 
+  constexpr int kCpuPort = 64;
+
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
 
@@ -483,6 +485,10 @@ TEST_F(BfChassisManagerTest, ReplayPorts) {
   EXPECT_CALL(*bf_sde_mock_,
               EnablePortShaping(kDevice, sdkPortId, TRI_STATE_TRUE))
       .Times(AtLeast(1));
+  EXPECT_CALL(*bf_sde_mock_, GetPcieCpuPort(kDevice))
+      .WillRepeatedly(Return(kCpuPort));
+  EXPECT_CALL(*bf_sde_mock_, SetTmCpuPort(kDevice, kCpuPort))
+      .WillRepeatedly(Return(::util::OkStatus()));
 
   EXPECT_OK(ReplayPortsConfig(kNodeId));
 
