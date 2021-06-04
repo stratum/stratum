@@ -69,7 +69,7 @@ class BfSwitch : public SwitchInterface {
   static std::unique_ptr<BfSwitch> CreateInstance(
       PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
       BfSdeInterface* bf_sde_interface,
-      const std::map<int, pi::PINode*>& unit_to_pi_node);
+      const std::map<int, pi::PINode*>& device_to_pi_node);
 
   // BfSwitch is neither copyable nor movable.
   BfSwitch(const BfSwitch&) = delete;
@@ -82,11 +82,11 @@ class BfSwitch : public SwitchInterface {
   // class.
   BfSwitch(PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
            BfSdeInterface* bf_sde_interface,
-           const std::map<int, pi::PINode*>& unit_to_pi_node);
+           const std::map<int, pi::PINode*>& device_to_pi_node);
 
-  // Helper to get PINode pointer from unit number or return error indicating
-  // invalid unit.
-  ::util::StatusOr<pi::PINode*> GetPINodeFromUnit(int unit) const;
+  // Helper to get PINode pointer from device number or return error indicating
+  // invalid device.
+  ::util::StatusOr<pi::PINode*> GetPINodeFromDevice(int device) const;
 
   // Helper to get PINode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
@@ -104,11 +104,11 @@ class BfSwitch : public SwitchInterface {
   // per chassis.
   BfChassisManager* bf_chassis_manager_;  // not owned by the class.
 
-  // Map from zero-based unit number corresponding to a node/ASIC to a pointer
+  // Map from zero-based device number corresponding to a node/ASIC to a pointer
   // to PINode which contain all the per-node managers for that node/ASIC. This
   // map is initialized in the constructor and will not change during the
   // lifetime of the class.
-  const std::map<int, pi::PINode*> unit_to_pi_node_;  // pointers not owned.
+  const std::map<int, pi::PINode*> device_to_pi_node_;  // pointers not owned.
 
   // Map from the node ids to to a pointer to PINode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.
