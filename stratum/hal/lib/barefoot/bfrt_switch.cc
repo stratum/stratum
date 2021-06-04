@@ -77,14 +77,6 @@ BfrtSwitch::~BfrtSwitch() {}
   LOG(INFO) << "P4-based forwarding pipeline config pushed successfully to "
             << "node with ID " << node_id << ".";
 
-  ASSIGN_OR_RETURN(const auto& node_id_to_device_id,
-                   bf_chassis_manager_->GetNodeIdToDeviceMap());
-
-  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_device_id, node_id))
-      << "Unable to find device_id number for node " << node_id;
-  int device_id = gtl::FindOrDie(node_id_to_device_id, node_id);
-  ASSIGN_OR_RETURN(auto cpu_port, bf_sde_interface_->GetPcieCpuPort(device_id));
-  RETURN_IF_ERROR(bf_sde_interface_->SetTmCpuPort(device_id, cpu_port));
   return ::util::OkStatus();
 }
 

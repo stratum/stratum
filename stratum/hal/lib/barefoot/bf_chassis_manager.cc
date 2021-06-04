@@ -1011,6 +1011,10 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
               << " in node " << node_id << ".";
   }
 
+  // Re-configure the CPU port in the traffic manager.
+  ASSIGN_OR_RETURN(auto cpu_port, bf_sde_interface_->GetPcieCpuPort(device));
+  RETURN_IF_ERROR(bf_sde_interface_->SetTmCpuPort(device, cpu_port));
+
   return status;
 }
 
