@@ -44,6 +44,7 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
+  RETURN_IF_ERROR(DoVerifyChassisConfig(config));
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
   ASSIGN_OR_RETURN(const auto& node_id_to_device_id,
@@ -63,8 +64,8 @@ BfrtSwitch::~BfrtSwitch() {}
 }
 
 ::util::Status BfrtSwitch::VerifyChassisConfig(const ChassisConfig& config) {
-  (void)config;
-  return ::util::OkStatus();
+  absl::ReaderMutexLock l(&chassis_lock);
+  return DoVerifyChassisConfig(config);
 }
 
 ::util::Status BfrtSwitch::PushForwardingPipelineConfig(
@@ -275,6 +276,49 @@ std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
   if (status.ok()) {
     LOG(INFO) << "P4-based forwarding pipeline config verified successfully"
               << " for node with ID " << node_id << ".";
+  }
+
+  return status;
+}
+
+::util::Status BfrtSwitch::DoVerifyChassisConfig(const ChassisConfig& config) {
+  // First make sure PHAL is happy with the config then continue with the rest
+  // of the managers and nodes.
+  ::util::Status status = ::util::OkStatus();
+  APPEND_STATUS_IF_ERROR(status, phal_interface_->VerifyChassisConfig(config));
+  APPEND_STATUS_IF_ERROR(status,
+                         bf_chassis_manager_->VerifyChassisConfig(config));
+  // Get the current copy of the node_id_to_device from chassis manager. If this
+  // fails with ERR_NOT_INITIALIZED, do not verify anything at the node level.
+  // Note that we do not expect any change in node_id_to_device. Any change in
+  // this map will be detected in bf_chassis_manager_->VerifyChassisConfig.
+  auto ret = bf_chassis_manager_->GetNodeIdToDeviceMap();
+  if (!ret.ok()) {
+    if (ret.status().error_code() != ERR_NOT_INITIALIZED) {
+      APPEND_STATUS_IF_ERROR(status, ret.status());
+    }
+  } else {
+    const auto& node_id_to_device_id = ret.ValueOrDie();
+    for (const auto& entry : node_id_to_device_id) {
+      uint64 node_id = entry.first;
+      int device_id = entry.second;
+      BfrtNode* bfrt_node =
+          gtl::FindPtrOrNull(device_id_to_bfrt_node_, device_id);
+      if (bfrt_node == nullptr) {
+        ::util::Status error = MAKE_ERROR(ERR_INVALID_PARAM)
+                               << "Node ID " << node_id
+                               << " mapped to unknown device " << device_id
+                               << ".";
+        APPEND_STATUS_IF_ERROR(status, error);
+        continue;
+      }
+      APPEND_STATUS_IF_ERROR(status,
+                             bfrt_node->VerifyChassisConfig(config, node_id));
+    }
+  }
+
+  if (status.ok()) {
+    LOG(INFO) << "Chassis config verified successfully.";
   }
 
   return status;
