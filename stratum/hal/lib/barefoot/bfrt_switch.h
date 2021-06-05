@@ -94,6 +94,11 @@ class BfrtSwitch : public SwitchInterface {
              BfSdeInterface* bf_sde_interface,
              const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
+  // Internal version of VerifyForwardingPipelineConfig() which takes no locks.
+  ::util::Status DoVerifyForwardingPipelineConfig(
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config)
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
   // Helper to get BfrtNode pointer from device_id number or return error
   // indicating invalid device_id.
   ::util::StatusOr<BfrtNode*> GetBfrtNodeFromDeviceId(int device_id) const;
