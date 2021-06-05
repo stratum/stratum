@@ -895,8 +895,10 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 ::util::StatusOr<std::map<uint64, int>> BfChassisManager::GetNodeIdToDeviceMap()
     const {
   if (!initialized_) {
-    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+    return MAKE_ERROR(ERR_NOT_INITIALIZED).without_logging()
+           << "Not initialized!";
   }
+
   return node_id_to_device_;
 }
 
