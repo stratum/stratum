@@ -70,6 +70,7 @@ BfrtSwitch::~BfrtSwitch() {}
 ::util::Status BfrtSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
+  RETURN_IF_ERROR(DoVerifyForwardingPipelineConfig(node_id, config));
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->PushForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
@@ -107,8 +108,7 @@ BfrtSwitch::~BfrtSwitch() {}
 ::util::Status BfrtSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
-  return bfrt_node->VerifyForwardingPipelineConfig(config);
+  return DoVerifyForwardingPipelineConfig(node_id, config);
 }
 
 ::util::Status BfrtSwitch::Shutdown() {
@@ -261,6 +261,23 @@ std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
   return absl::WrapUnique(new BfrtSwitch(phal_interface, bf_chassis_manager,
                                          bf_sde_interface,
                                          device_id_to_bfrt_node));
+}
+
+::util::Status BfrtSwitch::DoVerifyForwardingPipelineConfig(
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  // Get the BfrtNode pointer first. No need to continue if we cannot find one.
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
+  // Verify the forwarding config in all the managers and nodes.
+  auto status = ::util::OkStatus();
+  APPEND_STATUS_IF_ERROR(status,
+                         bfrt_node->VerifyForwardingPipelineConfig(config));
+
+  if (status.ok()) {
+    LOG(INFO) << "P4-based forwarding pipeline config verified successfully"
+              << " for node with ID " << node_id << ".";
+  }
+
+  return status;
 }
 
 ::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromDeviceId(
