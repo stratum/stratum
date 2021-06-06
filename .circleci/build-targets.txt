@@ -11,13 +11,10 @@
 //stratum/hal/lib/barefoot:bf_proto
 //stratum/hal/lib/barefoot:bf_sde_interface
 //stratum/hal/lib/barefoot:bf_sde_mock
-//stratum/hal/lib/barefoot:bf_sde_wrapper
-//stratum/hal/lib/barefoot:bf_switch
 //stratum/hal/lib/barefoot:bfrt_action_profile_manager
 //stratum/hal/lib/barefoot:bfrt_constants
 //stratum/hal/lib/barefoot:bfrt_counter_manager
 //stratum/hal/lib/barefoot:bfrt_counter_manager_test
-//stratum/hal/lib/barefoot:bfrt_id_mapper
 //stratum/hal/lib/barefoot:bfrt_node
 //stratum/hal/lib/barefoot:bfrt_packetio_manager
 //stratum/hal/lib/barefoot:bfrt_packetio_manager_test
@@ -27,7 +24,6 @@
 //stratum/hal/lib/barefoot:bfrt_switch_test
 //stratum/hal/lib/barefoot:bfrt_table_manager
 //stratum/hal/lib/barefoot:bfrt_table_manager_test
-//stratum/hal/lib/barefoot:macros
 //stratum/hal/lib/barefoot:test_main
 //stratum/hal/lib/barefoot:utils
 //stratum/hal/lib/barefoot:utils_test
