@@ -319,9 +319,26 @@ BfChassisManager::~BfChassisManager() = default;
           << "Invalid ChassisConfig, unknown node id " << node_id
           << " for port " << port_id << ".";
     }
+    // Reset port state to unknown, we'll update it on the first port status
+    // event or when requested.
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
-    node_id_to_port_id_to_time_last_changed[node_id][port_id] =
-        absl::UnixEpoch();
+    // If (node_id, port_id) already exists as a key in any of
+    // node_id_to_port_id_to_time_last_changed_, we keep the last known
+    // timestamp. Otherwise, we assume this is the first time we are seeing this
+    // port and set the timestamp to epoch.
+    // TODO(max): Check if we can retain more state. PushChassisConfig should
+    // not clear the entire state if not necessary. Only pipeline pushes reset
+    // the ASIC state, requiring a full replay.
+    const absl::Time* time_last_changed = gtl::FindOrNull(
+        node_id_to_port_id_to_time_last_changed_[node_id], port_id);
+    if (time_last_changed != nullptr) {
+      node_id_to_port_id_to_time_last_changed[node_id][port_id] =
+          *time_last_changed;
+    } else {
+      node_id_to_port_id_to_time_last_changed[node_id][port_id] =
+          absl::UnixEpoch();
+    }
+    // Create a new empty port config.
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
