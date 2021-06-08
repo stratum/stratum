@@ -1,6 +1,6 @@
 {
   "_comment": "Configuration file for bspless support on x86-64-delta-ag9064v1-r0",
-  "enable_debug_log": 1,
+  "enable_debug_log": 0,
   "board_lane_map_entry": [
     {
       "connector": 1,
