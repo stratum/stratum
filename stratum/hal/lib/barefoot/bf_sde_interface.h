@@ -193,6 +193,10 @@ class BfSdeInterface {
   // Init the global QoS configuration.
   virtual ::util::Status SetUpQos(int device) = 0;
 
+  // Configure QoS based on the given config.
+  virtual ::util::Status ConfigureQos(
+      int device, const TofinoConfig::TofinoQoSConfig& qos_config) = 0;
+
   // Set up the QoS config for a port.
   virtual ::util::Status SetUpPortQosConfig(int device, int port) = 0;
 

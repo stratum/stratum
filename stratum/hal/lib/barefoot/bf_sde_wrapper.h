@@ -25,6 +25,10 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 
+extern "C" {
+#include "traffic_mgr/traffic_mgr.h"
+}
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -163,6 +167,9 @@ class BfSdeWrapper : public BfSdeInterface {
                                     uint32 burst_size,
                                     uint64 rate_per_second) override;
   ::util::Status SetUpQos(int device) override;
+  ::util::Status ConfigureQos(int device,
+                              const TofinoConfig::TofinoQoSConfig& qos_config)
+      LOCKS_EXCLUDED(data_lock_) override;
   ::util::Status SetUpPortQosConfig(int device, int port) override;
   ::util::Status EnablePortShaping(int device, int port,
                                    TriState enable) override;
@@ -481,6 +488,10 @@ class BfSdeWrapper : public BfSdeInterface {
   // Map from device ID to packet receive writer.
   absl::flat_hash_map<int, std::unique_ptr<ChannelWriter<std::string>>>
       device_to_packet_rx_writer_ GUARDED_BY(packet_rx_callback_lock_);
+
+  // Map from device ID to vector of all allocated PPGs.
+  absl::flat_hash_map<int, std::vector<bf_tm_ppg_hdl>> device_to_ppg_handles_
+      GUARDED_BY(data_lock_);
 
   // TODO(max): make the following maps to handle multiple devices.
   // Pointer to the ID mapper. Not owned by this class.

@@ -692,10 +692,86 @@ message TofinoConfig {
     repeated DropTarget drop_targets = 1;
   }
 
+  // QoS configuration for the traffic manager.
+  message TofinoQoSConfig {
+    enum ApplicationPool {
+      UNKNOWN_APP_POOL = 0;
+      INGRESS_APP_POOL_0 = 1;
+      INGRESS_APP_POOL_1 = 2;
+      INGRESS_APP_POOL_2 = 3;
+      INGRESS_APP_POOL_3 = 4;
+      EGRESS_APP_POOL_0 = 5;
+      EGRESS_APP_POOL_1 = 6;
+      EGRESS_APP_POOL_2 = 7;
+      EGRESS_APP_POOL_3 = 8;
+    }
+    enum Baf {
+      UNKNOWN_BAF = 0;
+      BAF_1_POINT_5_PERCENT = 1;
+      BAF_3_PERCENT = 2;
+      BAF_6_PERCENT = 3;
+      BAF_11_PERCENT = 4;
+      BAF_20_PERCENT = 5;
+      BAF_33_PERCENT = 6;
+      BAF_50_PERCENT = 7;
+      BAF_66_PERCENT = 8;
+      BAF_80_PERCENT = 9;
+      DISABLE_BAF = 10;
+    }
+    enum SchedulingPriority {
+      UNKNOWN_PRIO = 0;
+      PRIO_0 = 1;
+      PRIO_1 = 2;
+      PRIO_2 = 3;
+      PRIO_3 = 4;
+      PRIO_4 = 5;
+      PRIO_5 = 6;
+      PRIO_6 = 7;
+      PRIO_7 = 8;
+    }
+    message PoolConfig {
+      ApplicationPool pool = 1;
+      uint32 pool_size = 2;
+      bool enable_color_drop = 3;
+    }
+    message PpgConfig {
+      uint32 sdk_port = 1;  // required
+      bool is_default_ppg = 9;
+      uint32 minimum_guaranteed_cells = 2;
+      ApplicationPool pool = 3;
+      uint32 base_use_limit = 4;
+      Baf baf = 5;
+      uint32 hysteresis = 6;
+      uint32 ingress_drop_limit = 7;
+      uint32 icos_bitmap = 8;
+    }
+    message QueueConfig {
+      message QueueMapping {
+        int32 queue_id = 1;
+        SchedulingPriority priority = 2;
+        uint32 weight = 3;
+        uint32 minimum_guaranteed_cells = 4;
+        ApplicationPool pool = 5;
+        uint32 base_use_limit = 6;
+        Baf baf = 7;
+        uint32 hysteresis = 8;
+        bool shaping_is_in_pps = 9;
+        uint64 max_rate = 10;
+        uint32 max_burst = 11;
+      }
+      uint32 sdk_port = 1;
+      repeated QueueMapping queue_mapping = 3;
+    }
+    repeated PoolConfig pool_configs = 1;
+    repeated PpgConfig ppg_configs = 2;
+    repeated QueueConfig queue_configs = 3;
+  }
+
   // Maps from the index of the nodes (1-based) to all the configs related to
   // that specific node.
   map<uint64, BfPortShapingConfig> node_id_to_port_shaping_config = 1;
   map<uint64, DeflectOnPacketDropConfig> node_id_to_deflect_on_drop_configs = 2;
+  map<uint64, TofinoQoSConfig> node_id_to_qos_config = 3;
 }
 
 message VendorConfig {

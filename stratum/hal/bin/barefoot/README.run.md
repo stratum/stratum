@@ -382,6 +382,167 @@ vendor_config {
 }
 ```
 
+##### Quality of Service (QoS)
+
+Example configuration:
+
+```protobuf
+vendor_config {
+  tofino_config {
+    node_id_to_port_shaping_config {
+      key: 1
+      value {
+        per_port_shaping_configs {
+          key: 1
+          value {
+            byte_shaping {
+              max_rate_bps: 100000000
+              max_burst_bytes: 9000
+            }
+          }
+        }
+        per_port_shaping_configs {
+          key: 2
+          value {
+            byte_shaping {
+              max_rate_bps: 100000000
+              max_burst_bytes: 9000
+            }
+          }
+        }
+      }
+    }
+    node_id_to_qos_config {
+      key: 1
+      value {
+        pool_configs {
+          pool: INGRESS_APP_POOL_0
+          pool_size: 30000
+          enable_color_drop: false
+        }
+        pool_configs {
+          pool: INGRESS_APP_POOL_1
+          pool_size: 30000
+          enable_color_drop: false
+        }
+        pool_configs {
+          pool: EGRESS_APP_POOL_0
+          pool_size: 30000
+          enable_color_drop: false
+        }
+        pool_configs {
+          pool: EGRESS_APP_POOL_1
+          pool_size: 30000
+          enable_color_drop: false
+        }
+        ppg_configs {
+          sdk_port: 260
+          is_default_ppg: true
+          minimum_guaranteed_cells: 200
+          pool: INGRESS_APP_POOL_0
+          base_use_limit: 400
+          baf: BAF_80_PERCENT
+          hysteresis: 50
+          ingress_drop_limit: 4000
+          icos_bitmap: 0xfd
+        }
+        ppg_configs {
+          sdk_port: 260
+          is_default_ppg: false
+          minimum_guaranteed_cells: 200
+          pool: INGRESS_APP_POOL_0
+          base_use_limit: 400
+          baf: BAF_80_PERCENT
+          hysteresis: 50
+          ingress_drop_limit: 4000
+          icos_bitmap: 0x02
+        }
+        ppg_configs {
+          sdk_port: 268
+          is_default_ppg: true
+          minimum_guaranteed_cells: 200
+          pool: INGRESS_APP_POOL_0
+          base_use_limit: 400
+          baf: BAF_80_PERCENT
+          hysteresis: 50
+          ingress_drop_limit: 4000
+          icos_bitmap: 0xfd
+        }
+        ppg_configs {
+          sdk_port: 268
+          is_default_ppg: false
+          minimum_guaranteed_cells: 200
+          pool: INGRESS_APP_POOL_0
+          base_use_limit: 400
+          baf: BAF_80_PERCENT
+          hysteresis: 50
+          ingress_drop_limit: 4000
+          icos_bitmap: 0x02
+        }
+        queue_configs {
+          sdk_port: 260
+          queue_mapping {
+            queue_id: 0
+            priority: PRIO_0
+            weight: 1
+            minimum_guaranteed_cells: 100
+            pool: EGRESS_APP_POOL_0
+            base_use_limit: 200
+            baf: BAF_80_PERCENT
+            hysteresis: 50
+            shaping_is_in_pps: false
+            max_rate: 100000000
+            max_burst: 9000
+          }
+          queue_mapping {
+            queue_id: 1
+            priority: PRIO_1
+            weight: 1
+            minimum_guaranteed_cells: 100
+            pool: EGRESS_APP_POOL_1
+            base_use_limit: 200
+            baf: BAF_80_PERCENT
+            hysteresis: 50
+            shaping_is_in_pps: false
+            max_rate: 100000000
+            max_burst: 9000
+          }
+        }
+        queue_configs {
+          sdk_port: 268
+          queue_mapping {
+            queue_id: 0
+            priority: PRIO_0
+            weight: 1
+            minimum_guaranteed_cells: 100
+            pool: EGRESS_APP_POOL_0
+            base_use_limit: 200
+            baf: BAF_80_PERCENT
+            hysteresis: 50
+            shaping_is_in_pps: false
+            max_rate: 100000000
+            max_burst: 9000
+          }
+          queue_mapping {
+            queue_id: 1
+            priority: PRIO_1
+            weight: 1
+            minimum_guaranteed_cells: 100
+            pool: EGRESS_APP_POOL_1
+            base_use_limit: 200
+            baf: BAF_80_PERCENT
+            hysteresis: 50
+            shaping_is_in_pps: false
+            max_rate: 100000000
+            max_burst: 9000
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ### Running with BSP or on Tofino model
 
 ```bash
