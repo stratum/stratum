@@ -36,6 +36,7 @@ extern "C" {
 #include "tofino/bf_pal/pltfm_intf.h"
 #include "tofino/pdfixed/pd_devport_mgr.h"
 #include "tofino/pdfixed/pd_tm.h"
+#include "traffic_mgr/traffic_mgr.h"
 // Flag to enable detailed logging in the SDE pipe manager.
 extern bool stat_mgr_enable_detail_trace;
 // Get the /sys fs file name of the first Tofino ASIC.
@@ -1125,6 +1126,8 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
   RETURN_IF_BFRT_ERROR(bf_pal_port_add(static_cast<bf_dev_id_t>(device),
                                        static_cast<bf_dev_port_t>(port),
                                        bf_speed, bf_fec_mode));
+  // RETURN_IF_ERROR(SetUpQos(device, port));
+
   return ::util::OkStatus();
 }
 
@@ -1167,6 +1170,118 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
   } else if (enable == TriState::TRI_STATE_FALSE) {
     RETURN_IF_BFRT_ERROR(p4_pd_tm_disable_port_shaping(device, port));
   }
+
+  return ::util::OkStatus();
+}
+
+namespace {
+::util::StatusOr<bf_tm_sched_prio_t> MapQueueToPriority(bf_tm_queue_t queue) {
+  switch (queue) {
+    case 0:
+      return BF_TM_SCH_PRIO_0;
+    case 1:
+      return BF_TM_SCH_PRIO_1;
+    case 2:
+      return BF_TM_SCH_PRIO_2;
+    case 3:
+      return BF_TM_SCH_PRIO_3;
+    case 4:
+      return BF_TM_SCH_PRIO_4;
+    case 5:
+      return BF_TM_SCH_PRIO_5;
+    case 6:
+      return BF_TM_SCH_PRIO_6;
+    case 7:
+      return BF_TM_SCH_PRIO_7;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid queue " << queue;
+  }
+}
+}  // namespace
+
+::util::Status BfSdeWrapper::SetUpQos(int device) {
+  bf_tm_app_pool_t ingress_pool = BF_TM_IG_APP_POOL_0;
+  bf_tm_app_pool_t egress_pool = BF_TM_EG_APP_POOL_0;
+  uint32 total_num_cells;
+  int total_num_unassigned_cells;
+  RETURN_IF_BFRT_ERROR(bf_tm_total_cell_count_get(device, &total_num_cells));
+  RETURN_IF_BFRT_ERROR(bf_tm_total_unassigned_cell_count_get(
+      device, &total_num_unassigned_cells));
+  LOG(WARNING) << "bf_tm_total_cell_count_get " << total_num_cells;
+  LOG(WARNING) << "bf_tm_total_unassigned_cell_count_get "
+               << total_num_unassigned_cells;
+  CHECK_RETURN_IF_FALSE(total_num_unassigned_cells > 0);
+  uint32 pool_size_cells = total_num_unassigned_cells;
+
+  RETURN_IF_BFRT_ERROR(
+      bf_tm_pool_size_set(device, ingress_pool, pool_size_cells));
+  RETURN_IF_BFRT_ERROR(
+      bf_tm_pool_size_set(device, egress_pool, pool_size_cells));
+
+  // Disable color drop to prevent RESOURCE_EXHAUSTED error when mapping queues
+  // later.
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_disable(device, ingress_pool));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::SetUpPortQosConfig(int device, int port) {
+  uint32 total_num_cells;
+  RETURN_IF_BFRT_ERROR(bf_tm_total_cell_count_get(device, &total_num_cells));
+
+  bf_tm_ppg_hdl default_ppg;
+  RETURN_IF_BFRT_ERROR(bf_tm_ppg_defaultppg_get(device, port, &default_ppg));
+
+  uint32 minimum_guaranteed_cells = 200;
+  RETURN_IF_BFRT_ERROR(bf_tm_ppg_guaranteed_min_limit_set(
+      device, default_ppg, minimum_guaranteed_cells));
+
+  bf_tm_app_pool_t ingress_pool = BF_TM_IG_APP_POOL_0;
+  uint32 base_use_limit = 100;
+  bf_tm_ppg_baf_t dynamic_baf = BF_TM_PPG_BAF_80_PERCENT;
+  uint32 hysteresis = 50;
+  RETURN_IF_BFRT_ERROR(
+      bf_tm_ppg_app_pool_usage_set(device, default_ppg, ingress_pool,
+                                   base_use_limit, dynamic_baf, hysteresis));
+
+  // Setting this to a low value (200) causes packet drops, but keeps latency
+  // low.
+  RETURN_IF_BFRT_ERROR(
+      bf_tm_port_ingress_drop_limit_set(device, port, total_num_cells));
+
+  constexpr uint8 num_queues = 8;
+  uint8 queue_mapping[num_queues] = {0, 1, 2, 3, 4, 5, 6, 7};
+  for (const bf_tm_queue_t queue : queue_mapping) {
+    uint32 min_cells_per_queue = 15;
+    RETURN_IF_BFRT_ERROR(bf_tm_q_guaranteed_min_limit_set(device, port, queue,
+                                                          min_cells_per_queue));
+
+    bf_tm_app_pool_t egress_pool = BF_TM_EG_APP_POOL_0;
+    bf_tm_queue_baf_t dynamic_queue_baf = BF_TM_Q_BAF_80_PERCENT;
+    RETURN_IF_BFRT_ERROR(bf_tm_q_app_pool_usage_set(
+        device, port, queue, egress_pool, base_use_limit, dynamic_queue_baf,
+        hysteresis));
+
+    ASSIGN_OR_RETURN(bf_tm_sched_prio_t priority, MapQueueToPriority(queue));
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_sched_q_priority_set(device, port, queue, priority));
+
+    // Queue shaping.
+    bool rate_in_pps = false;
+    uint32 burst_size_bytes = 2 * 9000;   // 2x MTU
+    uint32 rate_kbits = 1 * 1000 * 1000;  // 1 Gbit/s
+    RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
+        device, port, queue, rate_in_pps, burst_size_bytes, rate_kbits));
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_sched_q_max_shaping_rate_enable(device, port, queue));
+  }
+
+  LOG(WARNING) << "bf_tm_port_q_mapping_set " << device << ", " << port << ", "
+               << static_cast<uint16>(num_queues);
+  RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(device, port, num_queues,
+                                                /*queue_mapping*/ nullptr));
+
+  LOG(WARNING) << __PRETTY_FUNCTION__ << ", " << device << ", " << port;
 
   return ::util::OkStatus();
 }
@@ -1510,6 +1625,8 @@ std::string BfSdeWrapper::GetSdeVersion() const {
       bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   CHECK_RETURN_IF_FALSE(
       bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_TM, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   stat_mgr_enable_detail_trace = false;
   if (VLOG_IS_ON(2)) {
     CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,

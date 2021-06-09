@@ -1005,6 +1005,16 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     p.second = config_new;
   }
 
+  // Replay QoS configuration.
+  RETURN_IF_ERROR(bf_sde_interface_->SetUpQos(device));
+  // QoS must be set up in increasing port order.
+  for (const auto& p : node_id_to_sdk_port_id_to_port_id_[node_id]) {
+    uint32 sdk_port_id = p.first;
+    uint32 port_id = p.second;
+    LOG(WARNING) << "sdk_port_id " << sdk_port_id << ", port_id " << port_id;
+    RETURN_IF_ERROR(bf_sde_interface_->SetUpPortQosConfig(device, sdk_port_id));
+  }
+
   for (const auto& drop_target :
        node_id_to_deflect_on_drop_config_[node_id].drop_targets()) {
     uint32 sdk_port_id;

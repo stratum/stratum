@@ -162,6 +162,8 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status SetPortShapingRate(int device, int port, bool is_in_pps,
                                     uint32 burst_size,
                                     uint64 rate_per_second) override;
+  ::util::Status SetUpQos(int device) override;
+  ::util::Status SetUpPortQosConfig(int device, int port) override;
   ::util::Status EnablePortShaping(int device, int port,
                                    TriState enable) override;
   ::util::Status SetPortAutonegPolicy(int device, int port,
