@@ -384,34 +384,15 @@ vendor_config {
 
 ##### Quality of Service (QoS)
 
+Due to legal reasons we can't give a full description of the QoS model inside
+the Tofino traffic manager here. Refer to the Intel docs "10k-AS1-002EA" and
+"10k-UG8-002EA-FF-TM" available on the customer portal.
+
 Example configuration:
 
 ```protobuf
 vendor_config {
   tofino_config {
-    node_id_to_port_shaping_config {
-      key: 1
-      value {
-        per_port_shaping_configs {
-          key: 1
-          value {
-            byte_shaping {
-              max_rate_bps: 100000000
-              max_burst_bytes: 9000
-            }
-          }
-        }
-        per_port_shaping_configs {
-          key: 2
-          value {
-            byte_shaping {
-              max_rate_bps: 100000000
-              max_burst_bytes: 9000
-            }
-          }
-        }
-      }
-    }
     node_id_to_qos_config {
       key: 1
       value {
@@ -450,7 +431,7 @@ vendor_config {
           sdk_port: 260
           is_default_ppg: false
           minimum_guaranteed_cells: 200
-          pool: INGRESS_APP_POOL_0
+          pool: INGRESS_APP_POOL_1
           base_use_limit: 400
           baf: BAF_80_PERCENT
           hysteresis: 50
@@ -472,7 +453,7 @@ vendor_config {
           sdk_port: 268
           is_default_ppg: false
           minimum_guaranteed_cells: 200
-          pool: INGRESS_APP_POOL_0
+          pool: INGRESS_APP_POOL_1
           base_use_limit: 400
           baf: BAF_80_PERCENT
           hysteresis: 50
