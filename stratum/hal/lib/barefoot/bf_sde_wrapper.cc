@@ -1127,7 +1127,6 @@ BfSdeWrapper::BfSdeWrapper()
   RETURN_IF_BFRT_ERROR(bf_pal_port_add(static_cast<bf_dev_id_t>(device),
                                        static_cast<bf_dev_port_t>(port),
                                        bf_speed, bf_fec_mode));
-
   return ::util::OkStatus();
 }
 
@@ -1348,7 +1347,7 @@ namespace {
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
           device, queue_config.sdk_port(), queue_mapping.queue_id(),
           queue_mapping.weight()));
-      bool rate_in_pps = queue_mapping.shaping_is_in_pps();
+      bool rate_in_pps = queue_mapping.max_shaping_is_in_pps();
       uint32 burst_size;
       uint32 max_rate;
       if (rate_in_pps) {
@@ -1362,6 +1361,22 @@ namespace {
           device, queue_config.sdk_port(), queue_mapping.queue_id(),
           rate_in_pps, burst_size, max_rate));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
+          device, queue_config.sdk_port(), queue_mapping.queue_id()));
+      // Set guaranteed minimum rate.
+      bool min_rate_in_pps = queue_mapping.min_shaping_is_in_pps();
+      uint32 min_burst_size;
+      uint32 min_rate;
+      if (min_rate_in_pps) {
+        min_burst_size = queue_mapping.min_burst();
+        min_rate = queue_mapping.min_rate();
+      } else {
+        min_burst_size = queue_mapping.min_burst();
+        min_rate = queue_mapping.min_rate() / 1000;  // SDE expects kbits
+      }
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          min_rate_in_pps, min_burst_size, min_rate));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
           device, queue_config.sdk_port(), queue_mapping.queue_id()));
     }
     RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(

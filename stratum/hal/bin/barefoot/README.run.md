@@ -471,9 +471,12 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            shaping_is_in_pps: false
+            max_shaping_is_in_pps: false
             max_rate: 100000000
             max_burst: 9000
+            min_shaping_is_in_pps: false
+            min_rate: 1000000
+            min_burst: 4500
           }
           queue_mapping {
             queue_id: 1
@@ -484,9 +487,12 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            shaping_is_in_pps: false
+            max_shaping_is_in_pps: false
             max_rate: 100000000
             max_burst: 9000
+            min_shaping_is_in_pps: false
+            min_rate: 1000000
+            min_burst: 4500
           }
         }
         queue_configs {
@@ -500,9 +506,12 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            shaping_is_in_pps: false
+            max_shaping_is_in_pps: false
             max_rate: 100000000
             max_burst: 9000
+            min_shaping_is_in_pps: false
+            min_rate: 1000000
+            min_burst: 4500
           }
           queue_mapping {
             queue_id: 1
@@ -513,9 +522,12 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            shaping_is_in_pps: false
+            max_shaping_is_in_pps: false
             max_rate: 100000000
             max_burst: 9000
+            min_shaping_is_in_pps: false
+            min_rate: 1000000
+            min_burst: 4500
           }
         }
       }
