@@ -56,6 +56,7 @@ BfChassisManager::BfChassisManager(OperationMode mode,
       node_id_to_port_id_to_sdk_port_id_(),
       node_id_to_sdk_port_id_to_port_id_(),
       node_id_to_deflect_on_drop_config_(),
+      node_id_to_qos_config_(),
       xcvr_port_key_to_xcvr_state_(),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)) {}
@@ -76,6 +77,7 @@ BfChassisManager::BfChassisManager()
       node_id_to_port_id_to_sdk_port_id_(),
       node_id_to_sdk_port_id_to_port_id_(),
       node_id_to_deflect_on_drop_config_(),
+      node_id_to_qos_config_(),
       xcvr_port_key_to_xcvr_state_(),
       phal_interface_(nullptr),
       bf_sde_interface_(nullptr) {}
@@ -298,6 +300,7 @@ BfChassisManager::~BfChassisManager() = default;
   std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id;
   std::map<uint64, TofinoConfig::DeflectOnPacketDropConfig>
       node_id_to_deflect_on_drop_config;
+  std::map<uint64, TofinoConfig::TofinoQosConfig> node_id_to_qos_config;
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state;
 
   {
@@ -475,6 +478,18 @@ BfChassisManager::~BfChassisManager() = default;
       CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
           &node_id_to_deflect_on_drop_config, node_id, deflect_config));
     }
+
+    // Handle QoS configuration.
+    const auto node_id_to_qos_configs =
+        config.vendor_config().tofino_config().node_id_to_qos_config();
+    for (const auto& key : node_id_to_qos_configs) {
+      const uint64 node_id = key.first;
+      const auto& qos_config = key.second;
+      const int device = node_id_to_device[node_id];
+      RETURN_IF_ERROR(bf_sde_interface_->ConfigureQos(device, qos_config));
+      CHECK_RETURN_IF_FALSE(
+          gtl::InsertIfNotPresent(&node_id_to_qos_config, node_id, qos_config));
+    }
   }
 
   // Clean up from old config.
@@ -507,6 +522,7 @@ BfChassisManager::~BfChassisManager() = default;
   node_id_to_port_id_to_sdk_port_id_ = node_id_to_port_id_to_sdk_port_id;
   node_id_to_sdk_port_id_to_port_id_ = node_id_to_sdk_port_id_to_port_id;
   node_id_to_deflect_on_drop_config_ = node_id_to_deflect_on_drop_config;
+  node_id_to_qos_config_ = node_id_to_qos_config;
   xcvr_port_key_to_xcvr_state_ = xcvr_port_key_to_xcvr_state;
   initialized_ = true;
 
@@ -1005,6 +1021,10 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     p.second = config_new;
   }
 
+  // Replay QoS configuration.
+  RETURN_IF_ERROR(
+      bf_sde_interface_->ConfigureQos(device, node_id_to_qos_config_[node_id]));
+
   for (const auto& drop_target :
        node_id_to_deflect_on_drop_config_[node_id].drop_targets()) {
     uint32 sdk_port_id;
@@ -1375,6 +1395,7 @@ void BfChassisManager::CleanupInternalState() {
   node_id_to_port_id_to_sdk_port_id_.clear();
   node_id_to_sdk_port_id_to_port_id_.clear();
   node_id_to_deflect_on_drop_config_.clear();
+  node_id_to_qos_config_.clear();
   xcvr_port_key_to_xcvr_state_.clear();
 }
 

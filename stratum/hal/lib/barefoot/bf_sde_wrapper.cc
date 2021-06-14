@@ -36,6 +36,7 @@ extern "C" {
 #include "tofino/bf_pal/pltfm_intf.h"
 #include "tofino/pdfixed/pd_devport_mgr.h"
 #include "tofino/pdfixed/pd_tm.h"
+#include "traffic_mgr/traffic_mgr.h"
 // Flag to enable detailed logging in the SDE pipe manager.
 extern bool stat_mgr_enable_detail_trace;
 // Get the /sys fs file name of the first Tofino ASIC.
@@ -1049,7 +1050,8 @@ bf_status_t sde_port_status_callback(bf_dev_id_t device, bf_dev_port_t dev_port,
 BfSdeWrapper* BfSdeWrapper::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex BfSdeWrapper::init_lock_(absl::kConstInit);
 
-BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
+BfSdeWrapper::BfSdeWrapper()
+    : port_status_event_writer_(nullptr), device_to_ppg_handles_() {}
 
 ::util::StatusOr<PortState> BfSdeWrapper::GetPortState(int device, int port) {
   int state;
@@ -1166,6 +1168,220 @@ BfSdeWrapper::BfSdeWrapper() : port_status_event_writer_(nullptr) {}
     RETURN_IF_BFRT_ERROR(p4_pd_tm_enable_port_shaping(device, port));
   } else if (enable == TriState::TRI_STATE_FALSE) {
     RETURN_IF_BFRT_ERROR(p4_pd_tm_disable_port_shaping(device, port));
+  }
+
+  return ::util::OkStatus();
+}
+
+namespace {
+::util::StatusOr<bf_tm_app_pool_t> ApplicationPoolToTofinoPool(
+    TofinoConfig::TofinoQosConfig::ApplicationPool pool) {
+  switch (pool) {
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_0:
+      return BF_TM_IG_APP_POOL_0;
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_1:
+      return BF_TM_IG_APP_POOL_1;
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_2:
+      return BF_TM_IG_APP_POOL_2;
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_3:
+      return BF_TM_IG_APP_POOL_3;
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_0:
+      return BF_TM_EG_APP_POOL_0;
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_1:
+      return BF_TM_EG_APP_POOL_1;
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_2:
+      return BF_TM_EG_APP_POOL_2;
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_3:
+      return BF_TM_EG_APP_POOL_3;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid pool " << pool;
+  }
+}
+
+::util::StatusOr<bf_tm_ppg_baf_t> BafToTofinoPpgBaf(
+    TofinoConfig::TofinoQosConfig::Baf baf) {
+  switch (baf) {
+    case TofinoConfig::TofinoQosConfig::BAF_1_POINT_5_PERCENT:
+      return BF_TM_PPG_BAF_1_POINT_5_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_3_PERCENT:
+      return BF_TM_PPG_BAF_3_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_6_PERCENT:
+      return BF_TM_PPG_BAF_6_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_11_PERCENT:
+      return BF_TM_PPG_BAF_11_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_20_PERCENT:
+      return BF_TM_PPG_BAF_20_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_33_PERCENT:
+      return BF_TM_PPG_BAF_33_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_50_PERCENT:
+      return BF_TM_PPG_BAF_50_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_66_PERCENT:
+      return BF_TM_PPG_BAF_66_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_80_PERCENT:
+      return BF_TM_PPG_BAF_80_PERCENT;
+    case TofinoConfig::TofinoQosConfig::DISABLE_BAF:
+      return BF_TM_PPG_BAF_DISABLE;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid baf " << baf;
+  }
+}
+
+::util::StatusOr<bf_tm_queue_baf_t> BafToTofinoQueueBaf(
+    TofinoConfig::TofinoQosConfig::Baf baf) {
+  switch (baf) {
+    case TofinoConfig::TofinoQosConfig::BAF_1_POINT_5_PERCENT:
+      return BF_TM_Q_BAF_1_POINT_5_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_3_PERCENT:
+      return BF_TM_Q_BAF_3_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_6_PERCENT:
+      return BF_TM_Q_BAF_6_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_11_PERCENT:
+      return BF_TM_Q_BAF_11_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_20_PERCENT:
+      return BF_TM_Q_BAF_20_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_33_PERCENT:
+      return BF_TM_Q_BAF_33_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_50_PERCENT:
+      return BF_TM_Q_BAF_50_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_66_PERCENT:
+      return BF_TM_Q_BAF_66_PERCENT;
+    case TofinoConfig::TofinoQosConfig::BAF_80_PERCENT:
+      return BF_TM_Q_BAF_80_PERCENT;
+    case TofinoConfig::TofinoQosConfig::DISABLE_BAF:
+      return BF_TM_Q_BAF_DISABLE;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid baf " << baf;
+  }
+}
+
+::util::StatusOr<bf_tm_sched_prio_t> PriorityToTofinoSchedulingPriority(
+    TofinoConfig::TofinoQosConfig::SchedulingPriority priority) {
+  switch (priority) {
+    case TofinoConfig::TofinoQosConfig::PRIO_0:
+      return BF_TM_SCH_PRIO_0;
+    case TofinoConfig::TofinoQosConfig::PRIO_1:
+      return BF_TM_SCH_PRIO_1;
+    case TofinoConfig::TofinoQosConfig::PRIO_2:
+      return BF_TM_SCH_PRIO_2;
+    case TofinoConfig::TofinoQosConfig::PRIO_3:
+      return BF_TM_SCH_PRIO_3;
+    case TofinoConfig::TofinoQosConfig::PRIO_4:
+      return BF_TM_SCH_PRIO_4;
+    case TofinoConfig::TofinoQosConfig::PRIO_5:
+      return BF_TM_SCH_PRIO_5;
+    case TofinoConfig::TofinoQosConfig::PRIO_6:
+      return BF_TM_SCH_PRIO_6;
+    case TofinoConfig::TofinoQosConfig::PRIO_7:
+      return BF_TM_SCH_PRIO_7;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid priority " << priority;
+  }
+}
+
+}  // namespace
+
+::util::Status BfSdeWrapper::ConfigureQos(
+    int device, const TofinoConfig::TofinoQosConfig& qos_config) {
+  absl::WriterMutexLock l(&data_lock_);
+  // Configure the application buffer pools.
+  for (const auto& pool_config : qos_config.pool_configs()) {
+    ASSIGN_OR_RETURN(bf_tm_app_pool_t pool,
+                     ApplicationPoolToTofinoPool(pool_config.pool()));
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_pool_size_set(device, pool, pool_config.pool_size()));
+    if (pool_config.enable_color_drop()) {
+      RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_enable(device, pool));
+    } else {
+      RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_disable(device, pool));
+    }
+  }
+
+  // Configure the PPGs.
+  for (auto const& ppg : device_to_ppg_handles_[device]) {
+    RETURN_IF_BFRT_ERROR(bf_tm_ppg_free(device, ppg));
+  }
+  device_to_ppg_handles_[device].clear();
+  for (const auto& ppg_config : qos_config.ppg_configs()) {
+    device_to_ppg_handles_;
+    bf_tm_ppg_hdl ppg;
+    if (ppg_config.is_default_ppg()) {
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_defaultppg_get(device, ppg_config.sdk_port(), &ppg));
+    } else {
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_allocate(device, ppg_config.sdk_port(), &ppg));
+      device_to_ppg_handles_[device].push_back(ppg);
+    }
+    RETURN_IF_BFRT_ERROR(bf_tm_ppg_guaranteed_min_limit_set(
+        device, ppg, ppg_config.minimum_guaranteed_cells()));
+    ASSIGN_OR_RETURN(bf_tm_app_pool_t pool,
+                     ApplicationPoolToTofinoPool(ppg_config.pool()));
+    ASSIGN_OR_RETURN(bf_tm_ppg_baf_t baf, BafToTofinoPpgBaf(ppg_config.baf()));
+    RETURN_IF_BFRT_ERROR(bf_tm_ppg_app_pool_usage_set(
+        device, ppg, pool, ppg_config.base_use_limit(), baf,
+        ppg_config.hysteresis()));
+    RETURN_IF_BFRT_ERROR(bf_tm_port_ingress_drop_limit_set(
+        device, ppg_config.sdk_port(), ppg_config.ingress_drop_limit()));
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_ppg_icos_mapping_set(device, ppg, ppg_config.icos_bitmap()));
+  }
+
+  // Configure the queues.
+  for (const auto& queue_config : qos_config.queue_configs()) {
+    for (const auto& queue_mapping : queue_config.queue_mapping()) {
+      RETURN_IF_BFRT_ERROR(bf_tm_q_guaranteed_min_limit_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          queue_mapping.minimum_guaranteed_cells()));
+      ASSIGN_OR_RETURN(bf_tm_app_pool_t pool,
+                       ApplicationPoolToTofinoPool(queue_mapping.pool()));
+      ASSIGN_OR_RETURN(bf_tm_queue_baf_t baf,
+                       BafToTofinoQueueBaf(queue_mapping.baf()));
+      RETURN_IF_BFRT_ERROR(bf_tm_q_app_pool_usage_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(), pool,
+          queue_mapping.base_use_limit(), baf, queue_mapping.hysteresis()));
+      ASSIGN_OR_RETURN(
+          bf_tm_sched_prio_t priority,
+          PriorityToTofinoSchedulingPriority(queue_mapping.priority()));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_priority_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(), priority));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          queue_mapping.weight()));
+      bool rate_in_pps = queue_mapping.max_shaping_is_in_pps();
+      uint32 burst_size;
+      uint32 max_rate;
+      if (rate_in_pps) {
+        burst_size = queue_mapping.max_burst();
+        max_rate = queue_mapping.max_rate();
+      } else {
+        burst_size = queue_mapping.max_burst();
+        max_rate = queue_mapping.max_rate() / 1000;  // SDE expects kbits
+      }
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          rate_in_pps, burst_size, max_rate));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
+          device, queue_config.sdk_port(), queue_mapping.queue_id()));
+      // Set guaranteed minimum rate.
+      bool min_rate_in_pps = queue_mapping.min_shaping_is_in_pps();
+      uint32 min_burst_size;
+      uint32 min_rate;
+      if (min_rate_in_pps) {
+        min_burst_size = queue_mapping.min_burst();
+        min_rate = queue_mapping.min_rate();
+      } else {
+        min_burst_size = queue_mapping.min_burst();
+        min_rate = queue_mapping.min_rate() / 1000;  // SDE expects kbits
+      }
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          min_rate_in_pps, min_burst_size, min_rate));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
+          device, queue_config.sdk_port(), queue_mapping.queue_id()));
+    }
+    RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(
+        device, queue_config.sdk_port(), queue_config.queue_mapping_size(),
+        /*queue_mapping*/ nullptr));
   }
 
   return ::util::OkStatus();
@@ -1510,6 +1726,8 @@ std::string BfSdeWrapper::GetSdeVersion() const {
       bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   CHECK_RETURN_IF_FALSE(
       bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_TM, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   stat_mgr_enable_detail_trace = false;
   if (VLOG_IS_ON(2)) {
     CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
