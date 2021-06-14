@@ -1175,23 +1175,23 @@ BfSdeWrapper::BfSdeWrapper()
 
 namespace {
 ::util::StatusOr<bf_tm_app_pool_t> ApplicationPoolToTofinoPool(
-    TofinoConfig::TofinoQoSConfig::ApplicationPool pool) {
+    TofinoConfig::TofinoQosConfig::ApplicationPool pool) {
   switch (pool) {
-    case TofinoConfig::TofinoQoSConfig::INGRESS_APP_POOL_0:
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_0:
       return BF_TM_IG_APP_POOL_0;
-    case TofinoConfig::TofinoQoSConfig::INGRESS_APP_POOL_1:
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_1:
       return BF_TM_IG_APP_POOL_1;
-    case TofinoConfig::TofinoQoSConfig::INGRESS_APP_POOL_2:
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_2:
       return BF_TM_IG_APP_POOL_2;
-    case TofinoConfig::TofinoQoSConfig::INGRESS_APP_POOL_3:
+    case TofinoConfig::TofinoQosConfig::INGRESS_APP_POOL_3:
       return BF_TM_IG_APP_POOL_3;
-    case TofinoConfig::TofinoQoSConfig::EGRESS_APP_POOL_0:
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_0:
       return BF_TM_EG_APP_POOL_0;
-    case TofinoConfig::TofinoQoSConfig::EGRESS_APP_POOL_1:
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_1:
       return BF_TM_EG_APP_POOL_1;
-    case TofinoConfig::TofinoQoSConfig::EGRESS_APP_POOL_2:
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_2:
       return BF_TM_EG_APP_POOL_2;
-    case TofinoConfig::TofinoQoSConfig::EGRESS_APP_POOL_3:
+    case TofinoConfig::TofinoQosConfig::EGRESS_APP_POOL_3:
       return BF_TM_EG_APP_POOL_3;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid pool " << pool;
@@ -1199,27 +1199,27 @@ namespace {
 }
 
 ::util::StatusOr<bf_tm_ppg_baf_t> BafToTofinoPpgBaf(
-    TofinoConfig::TofinoQoSConfig::Baf baf) {
+    TofinoConfig::TofinoQosConfig::Baf baf) {
   switch (baf) {
-    case TofinoConfig::TofinoQoSConfig::BAF_1_POINT_5_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_1_POINT_5_PERCENT:
       return BF_TM_PPG_BAF_1_POINT_5_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_3_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_3_PERCENT:
       return BF_TM_PPG_BAF_3_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_6_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_6_PERCENT:
       return BF_TM_PPG_BAF_6_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_11_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_11_PERCENT:
       return BF_TM_PPG_BAF_11_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_20_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_20_PERCENT:
       return BF_TM_PPG_BAF_20_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_33_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_33_PERCENT:
       return BF_TM_PPG_BAF_33_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_50_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_50_PERCENT:
       return BF_TM_PPG_BAF_50_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_66_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_66_PERCENT:
       return BF_TM_PPG_BAF_66_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_80_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_80_PERCENT:
       return BF_TM_PPG_BAF_80_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::DISABLE_BAF:
+    case TofinoConfig::TofinoQosConfig::DISABLE_BAF:
       return BF_TM_PPG_BAF_DISABLE;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid baf " << baf;
@@ -1227,27 +1227,27 @@ namespace {
 }
 
 ::util::StatusOr<bf_tm_queue_baf_t> BafToTofinoQueueBaf(
-    TofinoConfig::TofinoQoSConfig::Baf baf) {
+    TofinoConfig::TofinoQosConfig::Baf baf) {
   switch (baf) {
-    case TofinoConfig::TofinoQoSConfig::BAF_1_POINT_5_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_1_POINT_5_PERCENT:
       return BF_TM_Q_BAF_1_POINT_5_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_3_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_3_PERCENT:
       return BF_TM_Q_BAF_3_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_6_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_6_PERCENT:
       return BF_TM_Q_BAF_6_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_11_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_11_PERCENT:
       return BF_TM_Q_BAF_11_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_20_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_20_PERCENT:
       return BF_TM_Q_BAF_20_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_33_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_33_PERCENT:
       return BF_TM_Q_BAF_33_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_50_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_50_PERCENT:
       return BF_TM_Q_BAF_50_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_66_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_66_PERCENT:
       return BF_TM_Q_BAF_66_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::BAF_80_PERCENT:
+    case TofinoConfig::TofinoQosConfig::BAF_80_PERCENT:
       return BF_TM_Q_BAF_80_PERCENT;
-    case TofinoConfig::TofinoQoSConfig::DISABLE_BAF:
+    case TofinoConfig::TofinoQosConfig::DISABLE_BAF:
       return BF_TM_Q_BAF_DISABLE;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid baf " << baf;
@@ -1255,23 +1255,23 @@ namespace {
 }
 
 ::util::StatusOr<bf_tm_sched_prio_t> PriorityToTofinoSchedulingPriority(
-    TofinoConfig::TofinoQoSConfig::SchedulingPriority priority) {
+    TofinoConfig::TofinoQosConfig::SchedulingPriority priority) {
   switch (priority) {
-    case TofinoConfig::TofinoQoSConfig::PRIO_0:
+    case TofinoConfig::TofinoQosConfig::PRIO_0:
       return BF_TM_SCH_PRIO_0;
-    case TofinoConfig::TofinoQoSConfig::PRIO_1:
+    case TofinoConfig::TofinoQosConfig::PRIO_1:
       return BF_TM_SCH_PRIO_1;
-    case TofinoConfig::TofinoQoSConfig::PRIO_2:
+    case TofinoConfig::TofinoQosConfig::PRIO_2:
       return BF_TM_SCH_PRIO_2;
-    case TofinoConfig::TofinoQoSConfig::PRIO_3:
+    case TofinoConfig::TofinoQosConfig::PRIO_3:
       return BF_TM_SCH_PRIO_3;
-    case TofinoConfig::TofinoQoSConfig::PRIO_4:
+    case TofinoConfig::TofinoQosConfig::PRIO_4:
       return BF_TM_SCH_PRIO_4;
-    case TofinoConfig::TofinoQoSConfig::PRIO_5:
+    case TofinoConfig::TofinoQosConfig::PRIO_5:
       return BF_TM_SCH_PRIO_5;
-    case TofinoConfig::TofinoQoSConfig::PRIO_6:
+    case TofinoConfig::TofinoQosConfig::PRIO_6:
       return BF_TM_SCH_PRIO_6;
-    case TofinoConfig::TofinoQoSConfig::PRIO_7:
+    case TofinoConfig::TofinoQosConfig::PRIO_7:
       return BF_TM_SCH_PRIO_7;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid priority " << priority;
@@ -1281,7 +1281,7 @@ namespace {
 }  // namespace
 
 ::util::Status BfSdeWrapper::ConfigureQos(
-    int device, const TofinoConfig::TofinoQoSConfig& qos_config) {
+    int device, const TofinoConfig::TofinoQosConfig& qos_config) {
   absl::WriterMutexLock l(&data_lock_);
   // Configure the application buffer pools.
   for (const auto& pool_config : qos_config.pool_configs()) {
@@ -1383,8 +1383,6 @@ namespace {
         device, queue_config.sdk_port(), queue_config.queue_mapping_size(),
         /*queue_mapping*/ nullptr));
   }
-
-  LOG(WARNING) << "Configured QoS:\n" << qos_config.DebugString();
 
   return ::util::OkStatus();
 }

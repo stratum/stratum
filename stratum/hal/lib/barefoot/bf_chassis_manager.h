@@ -281,7 +281,7 @@ class BfChassisManager {
       node_id_to_deflect_on_drop_config_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to QoS configuration.
-  std::map<uint64, TofinoConfig::TofinoQoSConfig> node_id_to_qos_config_
+  std::map<uint64, TofinoConfig::TofinoQosConfig> node_id_to_qos_config_
       GUARDED_BY(chassis_lock);
 
   // Map from PortKey representing (slot, port) of a transceiver port to the

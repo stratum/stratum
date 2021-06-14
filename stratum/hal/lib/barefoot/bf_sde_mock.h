@@ -93,7 +93,7 @@ class BfSdeMock : public BfSdeInterface {
                ::util::Status(int device, int port, TriState enable));
   MOCK_METHOD2(ConfigureQos,
                ::util::Status(int device,
-                              const TofinoConfig::TofinoQoSConfig& qos_config));
+                              const TofinoConfig::TofinoQosConfig& qos_config));
   MOCK_METHOD3(SetPortAutonegPolicy,
                ::util::Status(int device, int port, TriState autoneg));
   MOCK_METHOD3(SetPortMtu, ::util::Status(int device, int port, int32 mtu));

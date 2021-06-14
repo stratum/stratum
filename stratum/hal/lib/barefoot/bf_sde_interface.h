@@ -192,7 +192,7 @@ class BfSdeInterface {
 
   // Configure QoS based on the given config.
   virtual ::util::Status ConfigureQos(
-      int device, const TofinoConfig::TofinoQoSConfig& qos_config) = 0;
+      int device, const TofinoConfig::TofinoQosConfig& qos_config) = 0;
 
   // Get the operational state of a port.
   virtual ::util::StatusOr<PortState> GetPortState(int device, int port) = 0;

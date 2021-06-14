@@ -300,7 +300,7 @@ BfChassisManager::~BfChassisManager() = default;
   std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id;
   std::map<uint64, TofinoConfig::DeflectOnPacketDropConfig>
       node_id_to_deflect_on_drop_config;
-  std::map<uint64, TofinoConfig::TofinoQoSConfig> node_id_to_qos_config;
+  std::map<uint64, TofinoConfig::TofinoQosConfig> node_id_to_qos_config;
   std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state;
 
   {

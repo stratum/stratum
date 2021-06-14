@@ -420,6 +420,68 @@ TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
+  const std::string kVendorConfigText = R"PROTO(
+    tofino_config {
+      node_id_to_qos_config {
+        key: 1
+        value {
+          pool_configs {
+            pool: INGRESS_APP_POOL_0
+            pool_size: 30000
+            enable_color_drop: false
+          }
+          ppg_configs {
+            sdk_port: 260
+            is_default_ppg: true
+            minimum_guaranteed_cells: 200
+            pool: INGRESS_APP_POOL_0
+            base_use_limit: 400
+            baf: BAF_80_PERCENT
+            hysteresis: 50
+            ingress_drop_limit: 4000
+            icos_bitmap: 0xfd
+          }
+          queue_configs {
+            sdk_port: 260
+            queue_mapping {
+              queue_id: 0
+              priority: PRIO_0
+              weight: 1
+              minimum_guaranteed_cells: 100
+              pool: EGRESS_APP_POOL_0
+              base_use_limit: 200
+              baf: BAF_80_PERCENT
+              hysteresis: 50
+              max_shaping_is_in_pps: false
+              max_rate: 100000000
+              max_burst: 9000
+              min_shaping_is_in_pps: false
+              min_rate: 1000000
+              min_burst: 4500
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  VendorConfig vendor_config;
+  ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
+  const TofinoConfig::TofinoQosConfig& qos_config =
+      vendor_config.tofino_config().node_id_to_qos_config().at(1);
+
+  ChassisConfigBuilder builder;
+  builder.SetVendorConfig(vendor_config);
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  EXPECT_CALL(*bf_sde_mock_, ConfigureQos(kDevice, EqualsProto(qos_config)))
+      .Times(AtLeast(1));
+
+  ASSERT_OK(PushChassisConfig(builder));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
 TEST_F(BfChassisManagerTest, ReplayPorts) {
   const std::string kVendorConfigText = R"PROTO(
     tofino_config {

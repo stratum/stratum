@@ -693,7 +693,7 @@ message TofinoConfig {
   }
 
   // QoS configuration for the traffic manager.
-  message TofinoQoSConfig {
+  message TofinoQosConfig {
     enum ApplicationPool {
       UNKNOWN_APP_POOL = 0;
       INGRESS_APP_POOL_0 = 1;
@@ -774,7 +774,7 @@ message TofinoConfig {
   // that specific node.
   map<uint64, BfPortShapingConfig> node_id_to_port_shaping_config = 1;
   map<uint64, DeflectOnPacketDropConfig> node_id_to_deflect_on_drop_configs = 2;
-  map<uint64, TofinoQoSConfig> node_id_to_qos_config = 3;
+  map<uint64, TofinoQosConfig> node_id_to_qos_config = 3;
 }
 
 message VendorConfig {

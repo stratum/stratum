@@ -167,7 +167,7 @@ class BfSdeWrapper : public BfSdeInterface {
                                     uint32 burst_size,
                                     uint64 rate_per_second) override;
   ::util::Status ConfigureQos(int device,
-                              const TofinoConfig::TofinoQoSConfig& qos_config)
+                              const TofinoConfig::TofinoQosConfig& qos_config)
       LOCKS_EXCLUDED(data_lock_) override;
   ::util::Status EnablePortShaping(int device, int port,
                                    TriState enable) override;
