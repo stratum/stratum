@@ -31,6 +31,12 @@ SDE_DEFINES = select(
         "@local_barefoot_bin//:sde_version_9.5.0": ["SDE_9_5_0"],
     },
     no_match_error = "Unsupported SDE version",
+) + select(
+    {
+        "@local_barefoot_bin//:sde_with_bsp": ["SDE_WITH_BSP"],
+        "@local_barefoot_bin//:sde_without_bsp": ["SDE_WITHOUT_BSP"],
+    },
+    no_match_error = "Unsupported SDE BSP mode",
 )
 
 stratum_cc_library(

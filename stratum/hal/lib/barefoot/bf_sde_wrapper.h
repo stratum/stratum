@@ -163,7 +163,6 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status DeletePort(int device, int port) override;
   ::util::Status EnablePort(int device, int port) override;
   ::util::Status DisablePort(int device, int port) override;
-  ::util::Status SetLed(int device, int port) override;
   ::util::Status SetPortShapingRate(int device, int port, bool is_in_pps,
                                     uint32 burst_size,
                                     uint64 rate_per_second) override;

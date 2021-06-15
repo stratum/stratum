@@ -19,7 +19,7 @@ Options:
     -k, --kernel-headers-tar: Linux Kernel headers tarball
     -l, --build-local-kernel-mod: Build kernel module for local kernel (Default: false)
     -j, --jobs: Number of jobs for BF SDE build (Default: 4)
-    -b, --bsp-path: Path to optional BSP package (Default: <empty>)
+    -b, --bsp-path: Path to optional BSP package directory (Default: <empty>)
     -o, --bf-sde-install-tar: BF SDE install tarball (Default: <bf sde tar name>-install.tgz)
 
 Examples:

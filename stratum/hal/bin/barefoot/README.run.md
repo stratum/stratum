@@ -538,7 +538,7 @@ vendor_config {
 ### Running with BSP or on Tofino model
 
 ```bash
-start-stratum.sh -enable_onlp=false
+start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf -enable_onlp=false
 ```
 
 The `-enable_onlp=false` flag tells Stratum not to use the ONLP PHAL plugin. Use
