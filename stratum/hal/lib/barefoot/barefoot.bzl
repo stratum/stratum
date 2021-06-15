@@ -20,10 +20,15 @@ def _impl(repository_ctx):
         bf_sde_install_path = repository_ctx.os.environ["SDE_INSTALL"]
         repository_ctx.symlink(bf_sde_install_path, local_install_path)
     ver = repository_ctx.read(local_install_path + "/share/VERSION").strip("\n")
+    with_bsp = repository_ctx.path(local_install_path + "/include/bf_pltfm").exists
+    print("SDE with BSP: " + str(with_bsp) + ".")
     repository_ctx.template(
         "BUILD",
         Label("@//bazel:external/bfsde.BUILD"),
-        {"{SDE_VERSION}": ver},
+        {
+            "{SDE_VERSION}": ver,
+            "{SDE_WITH_BSP}": str(with_bsp),
+        },
         executable = False,
     )
     print("Detected SDE version: " + ver + ".")

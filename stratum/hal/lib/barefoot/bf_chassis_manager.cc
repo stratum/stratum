@@ -137,7 +137,6 @@ BfChassisManager::~BfChassisManager() = default;
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
     RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
-    RETURN_IF_ERROR(bf_sde_interface_->SetLed(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -276,7 +275,6 @@ BfChassisManager::~BfChassisManager() = default;
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
     RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
-    RETURN_IF_ERROR(bf_sde_interface_->SetLed(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -1001,7 +999,6 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       VLOG(1) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK port " << sdk_port_id << ").";
       RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
-      RETURN_IF_ERROR(bf_sde_interface_->SetLed(device, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;
     }
 
