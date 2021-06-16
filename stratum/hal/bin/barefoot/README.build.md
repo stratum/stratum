@@ -291,6 +291,7 @@ how it works for the Wedge reference switch. Either set the `BSP` environment
 variable before running the [`build-stratum-bf-container.sh`](#method-1-build-with-docker-in-one-shot) script:
 
 ```bash
+tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
 export BSP=`pwd`/bf-reference-bsp-<SDE_VERSION>
 stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh ...
 ```
