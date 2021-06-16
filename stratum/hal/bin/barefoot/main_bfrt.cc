@@ -15,7 +15,6 @@
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
-#include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
@@ -25,7 +24,6 @@ DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
-DEFINE_bool(bf_sim, false, "Run with the Tofino simulator");
 
 namespace stratum {
 namespace hal {
@@ -64,21 +62,14 @@ namespace barefoot {
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
       bfrt_packetio_manger.get(), bfrt_pre_manager.get(),
       bfrt_counter_manager.get(), bf_sde_wrapper, device_id);
-  PhalInterface* phal_impl;
-  if (FLAGS_bf_sim) {
-    phal_impl = PhalSim::CreateSingleton();
-  } else {
-    phal_impl = phal::Phal::CreateSingleton();
-  }
-
+  PhalInterface* phal = phal::Phal::CreateSingleton();
   std::map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},
   };
   auto bf_chassis_manager =
-      BfChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
-  auto bf_switch =
-      BfrtSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
-                                 bf_sde_wrapper, device_id_to_bfrt_node);
+      BfChassisManager::CreateInstance(mode, phal, bf_sde_wrapper);
+  auto bf_switch = BfrtSwitch::CreateInstance(
+      phal, bf_chassis_manager.get(), bf_sde_wrapper, device_id_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();

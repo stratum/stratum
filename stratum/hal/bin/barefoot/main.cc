@@ -12,7 +12,6 @@
 #include "stratum/hal/lib/barefoot/bf_switch.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
-#include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
@@ -22,7 +21,6 @@ DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
-DEFINE_bool(bf_sim, false, "Run with the Tofino simulator");
 
 namespace stratum {
 namespace hal {
@@ -91,12 +89,7 @@ void registerDeviceMgrLogger() {
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(device_id));
 
   auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), device_id);
-  PhalInterface* phal_impl;
-  if (FLAGS_bf_sim) {
-    phal_impl = PhalSim::CreateSingleton();
-  } else {
-    phal_impl = phal::Phal::CreateSingleton();
-  }
+  PhalInterface* phal = phal::Phal::CreateSingleton();
   std::map<int, pi::PINode*> device_id_to_pi_node = {
       {device_id, pi_node.get()},
   };
@@ -110,10 +103,9 @@ void registerDeviceMgrLogger() {
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
   auto bf_chassis_manager =
-      BfChassisManager::CreateInstance(mode, phal_impl, bf_sde_wrapper);
-  auto bf_switch =
-      BfSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
-                               bf_sde_wrapper, device_id_to_pi_node);
+      BfChassisManager::CreateInstance(mode, phal, bf_sde_wrapper);
+  auto bf_switch = BfSwitch::CreateInstance(
+      phal, bf_chassis_manager.get(), bf_sde_wrapper, device_id_to_pi_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();

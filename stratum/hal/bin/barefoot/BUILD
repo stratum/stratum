@@ -15,7 +15,6 @@ stratum_bf_common_deps = [
     "//stratum/glue:init_google",
     "//stratum/glue:logging",
     "//stratum/hal/lib/common:hal",
-    "//stratum/hal/lib/phal:phal_sim",
     "//stratum/hal/lib/phal",
     "//stratum/lib/security:auth_policy_checker",
     "//stratum/lib/security:credentials_manager",
