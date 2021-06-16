@@ -168,6 +168,7 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
   RETURN_IF_ERROR(bf_sde_interface_->GetMulticastGroups(
       device_, session, entry.multicast_group_id(), &group_ids,
       &mc_node_ids_per_group));
+  CHECK_RETURN_IF_FALSE(group_ids.size() == mc_node_ids_per_group.size());
 
   // Build response.
   ::p4::v1::ReadResponse resp;
@@ -290,6 +291,9 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
   RETURN_IF_ERROR(bf_sde_interface_->GetCloneSessions(
       device_, session, entry.session_id(), &session_ids, &egress_ports, &coss,
       &max_pkt_lens));
+  CHECK_RETURN_IF_FALSE(session_ids.size() == egress_ports.size());
+  CHECK_RETURN_IF_FALSE(session_ids.size() == coss.size());
+  CHECK_RETURN_IF_FALSE(session_ids.size() == max_pkt_lens.size());
 
   // Build response.
   ::p4::v1::ReadResponse resp;
