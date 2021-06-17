@@ -333,9 +333,9 @@ BfChassisManager::~BfChassisManager() = default;
     // event or when requested.
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
     // If (node_id, port_id) already exists as a key in any of
-    // node_id_to_port_id_to_time_last_changed_, we keep the last known
-    // timestamp. Otherwise, we assume this is the first time we are seeing this
-    // port and set the timestamp to epoch.
+    // node_id_to_port_id_to_{time_last_changed,port_state}_, we keep the last
+    // known value. Otherwise, we assume this is the first time we are
+    // seeing this port and set the state to unknown or zero.
     // TODO(max): Check if we can retain more state. PushChassisConfig should
     // not clear the entire state if not necessary. Only pipeline pushes reset
     // the ASIC state, requiring a full replay.
@@ -347,6 +347,13 @@ BfChassisManager::~BfChassisManager() = default;
     } else {
       node_id_to_port_id_to_time_last_changed[node_id][port_id] =
           absl::UnixEpoch();
+    }
+    const PortState* port_state =
+        gtl::FindOrNull(node_id_to_port_id_to_port_state_[node_id], port_id);
+    if (port_state != nullptr) {
+      node_id_to_port_id_to_port_state[node_id][port_id] = *port_state;
+    } else {
+      node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
     }
     // Create a new empty port config.
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
@@ -884,25 +891,26 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  ASSIGN_OR_RETURN(auto device, GetDeviceFromNodeId(node_id));
 
-  auto* port_id_to_port_state =
+  const std::map<uint32, PortState>* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
-  const PortState* port_state_ptr =
+  const PortState* port_state =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
-  // TODO(antonin): Once we implement PushChassisConfig, port_state_ptr should
-  // never be NULL
-  if (port_state_ptr != nullptr && *port_state_ptr != PORT_STATE_UNKNOWN) {
-    return *port_state_ptr;
+  CHECK_RETURN_IF_FALSE(port_state != nullptr)
+      << "Port " << port_id << " is not known on node " << node_id << ".";
+
+  if (*port_state == PORT_STATE_UNKNOWN) {
+    // If state is unknown, query the current state from the SDE.
+    ASSIGN_OR_RETURN(auto device, GetDeviceFromNodeId(node_id));
+    ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
+    ASSIGN_OR_RETURN(auto current_port_state,
+                     bf_sde_interface_->GetPortState(device, sdk_port_id));
+    return current_port_state;
   }
 
-  // If state is unknown, query the current state from the SDE.
-  ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-  ASSIGN_OR_RETURN(auto port_state,
-                   bf_sde_interface_->GetPortState(device, sdk_port_id));
-  return port_state;
+  return *port_state;
 }
 
 ::util::StatusOr<absl::Time> BfChassisManager::GetPortTimeLastChanged(
@@ -938,7 +946,7 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return node_id_to_device_;
 }
 
-::util::Status BfChassisManager::ReplayPortsConfig(uint64 node_id) {
+::util::Status BfChassisManager::ReplayChassisConfig(uint64 node_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
