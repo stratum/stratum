@@ -2,8 +2,6 @@
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
-
 # Find kernel module if KDRV_PATH is not set
 if [ -z "$KDRV_PATH" ]; then
     # First, look for kernel-specific module
@@ -60,7 +58,7 @@ fi
 # Set up port map for device
 PORT_MAP="/etc/stratum/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
-    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]]; then 
+    if [[ "$PLATFORM" != 'barefoot-tofino-model' ]]; then
         echo "Cannot find port map file $PORT_MAP for $PLATFORM"
         exit 255
     fi
@@ -89,5 +87,6 @@ mkdir -p /var/run/stratum /var/log/stratum
 exec /usr/bin/stratum_bf \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
     -log_dir=/var/log/stratum \
-    -flagfile=$FLAG_FILE \
+    -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf \
+    -bf_switchd_background=true \
     $@
