@@ -33,10 +33,6 @@ if [ -d "/etc/onl" ]; then
               -v /etc/onl:/etc/onl"
 fi
 
-# Mount user configuration.
-if [ -n "$FLAG_FILE" ]; then
-    FLAG_FILE_MOUNT="-v $FLAG_FILE:/etc/stratum/stratum.flags"
-fi
 if [ -n "$CHASSIS_CONFIG" ]; then
     CHASSIS_CONFIG_MOUNT="-v $CHASSIS_CONFIG:/etc/stratum/$PLATFORM/chassis_config.pb.txt"
 fi
@@ -49,7 +45,6 @@ docker run -it --rm --privileged \
     --env PLATFORM=$PLATFORM \
     $DOCKER_NET_OPTS \
     $ONLP_MOUNT \
-    $FLAG_FILE_MOUNT \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \

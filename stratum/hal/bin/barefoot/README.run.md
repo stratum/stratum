@@ -116,7 +116,6 @@ For more details on additional options that can be passed to
 
 ```bash
 CHASSIS_CONFIG    # Override the default chassis config file.
-FLAG_FILE         # Override the default flag file.
 LOG_DIR           # The directory for logging, default: `/var/log/`.
 SDE_VERSION       # The SDE version
 DOCKER_IMAGE      # The container image name, default: stratumproject/stratum-bf

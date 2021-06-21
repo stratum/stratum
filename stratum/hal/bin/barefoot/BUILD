@@ -127,8 +127,6 @@ pkg_tar(
 pkg_tar(
     name = "stratum_configs",
     srcs = [
-        "deb/stratum.flags",
-        "deb/stratum_bf.env",
         "//stratum/hal/lib/common:gnmi_caps.pb.txt",
     ],
     mode = "0644",
