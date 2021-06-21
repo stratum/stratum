@@ -25,10 +25,7 @@ def _impl(repository_ctx):
     repository_ctx.template(
         "BUILD",
         Label("@//bazel:external/bfsde.BUILD"),
-        {
-            "{SDE_VERSION}": ver,
-            "{SDE_WITH_BSP}": str(with_bsp),
-        },
+        {"{SDE_VERSION}": ver},
         executable = False,
     )
     print("Detected SDE version: " + ver + ".")

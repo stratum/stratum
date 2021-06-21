@@ -50,6 +50,15 @@ if ! grep hugetlbfs /etc/mtab | grep -q /mnt/huge; then
     fi
 fi
 
+# Use the BSP on Wedge switches by default.
+if [[ "$PLATFORM" == "x86-64-accton-wedge100bf-32x-r0" ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-32qs-r0" ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-65x-r0" ]]; then
+    BF_SWITCHD_CFG=/usr/share/stratum/tofino_skip_p4.conf
+else
+    BF_SWITCHD_CFG=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+fi
+
 # Set up port map for device
 PORT_MAP="/etc/stratum/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
@@ -82,6 +91,6 @@ mkdir -p /var/run/stratum /var/log/stratum
 exec /usr/bin/stratum_bf \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
     -log_dir=/var/log/stratum \
-    -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf \
+    -bf_switchd_cfg=$BF_SWITCHD_CFG \
     -bf_switchd_background=true \
     $@

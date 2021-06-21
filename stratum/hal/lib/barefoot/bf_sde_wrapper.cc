@@ -29,14 +29,6 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
 
-// BSP-only includes.
-#if defined(SDE_WITH_BSP)
-// BSP types must be defined first.
-#include "bf_pltfm_types/bf_pltfm_types.h"
-// Then include the other headers.
-#include "bf_led/bf_led.h"
-#endif
-
 extern "C" {
 #include "bf_switchd/bf_switchd.h"
 #include "tofino/bf_pal/bf_pal_port_intf.h"
