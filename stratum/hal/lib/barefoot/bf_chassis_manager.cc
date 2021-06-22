@@ -104,11 +104,11 @@ BfChassisManager::~BfChassisManager() = default;
         << node_id << " (SDK Port " << sdk_port_id << ").";
   }
 
-  LOG(INFO) << "Adding port " << port_id << " in node " << node_id
-            << " (SDK Port " << sdk_port_id << ").";
   RETURN_IF_ERROR(bf_sde_interface_->AddPort(device, sdk_port_id,
                                              singleton_port.speed_bps(),
                                              config_params.fec_mode()));
+  LOG(INFO) << "Added port " << port_id << " in node " << node_id
+            << " (SDK Port " << sdk_port_id << ").";
   config->speed_bps = singleton_port.speed_bps();
   config->admin_state = ADMIN_STATE_DISABLED;
   config->fec_mode = config_params.fec_mode();
@@ -116,28 +116,35 @@ BfChassisManager::~BfChassisManager() = default;
   if (config_params.mtu() != 0) {
     RETURN_IF_ERROR(bf_sde_interface_->SetPortMtu(device, sdk_port_id,
                                                   config_params.mtu()));
+    VLOG(1) << "Set MTU " << config_params.mtu() << " for port " << port_id
+            << " in node " << node_id << " (SDK Port " << sdk_port_id << ").";
   }
   config->mtu = config_params.mtu();
+
   if (config_params.autoneg() != TRI_STATE_UNKNOWN) {
     RETURN_IF_ERROR(bf_sde_interface_->SetPortAutonegPolicy(
         device, sdk_port_id, config_params.autoneg()));
+    VLOG(1) << "Set autoneg policy " << TriState_Name(config_params.autoneg())
+            << " for port " << port_id << " in node " << node_id
+            << " (SDK Port " << sdk_port_id << ").";
   }
   config->autoneg = config_params.autoneg();
 
   if (config_params.loopback_mode() != LOOPBACK_STATE_UNKNOWN) {
-    LOG(INFO) << "Setting port " << port_id << " to loopback mode "
-              << config_params.loopback_mode() << " (SDK Port " << sdk_port_id
-              << ").";
     RETURN_IF_ERROR(bf_sde_interface_->SetPortLoopbackMode(
         device, sdk_port_id, config_params.loopback_mode()));
+    VLOG(1) << "Set loopback mode "
+            << LoopbackState_Name(config_params.loopback_mode()) << " for port "
+            << port_id << " in node " << node_id << " (SDK Port " << sdk_port_id
+            << ").";
   }
   config->loopback_mode = config_params.loopback_mode();
 
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
-    LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
-              << " (SDK Port " << sdk_port_id << ").";
     RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
+    LOG(INFO) << "Enabled port " << port_id << " in node " << node_id
+              << " (SDK Port " << sdk_port_id << ").";
   }
 
   RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
@@ -216,31 +223,31 @@ BfChassisManager::~BfChassisManager() = default;
   bool config_changed = false;
 
   if (config_params.mtu() != config_old.mtu) {
-    VLOG(1) << "Mtu for port " << port_id << " in node " << node_id
-            << " changed"
-            << " (SDK Port " << sdk_port_id << ").";
-    config->mtu.reset();
     RETURN_IF_ERROR(bf_sde_interface_->SetPortMtu(device, sdk_port_id,
                                                   config_params.mtu()));
     config->mtu = config_params.mtu();
     config_changed = true;
+    VLOG(1) << "Set MTU " << config_params.mtu() << " for port " << port_id
+            << " in node " << node_id << " (SDK Port " << sdk_port_id << ").";
   }
   if (config_params.autoneg() != config_old.autoneg) {
-    VLOG(1) << "Autoneg policy for port " << port_id << " in node " << node_id
-            << " changed"
-            << " (SDK Port " << sdk_port_id << ").";
-    config->autoneg.reset();
     RETURN_IF_ERROR(bf_sde_interface_->SetPortAutonegPolicy(
         device, sdk_port_id, config_params.autoneg()));
     config->autoneg = config_params.autoneg();
     config_changed = true;
+    VLOG(1) << "Set autoneg policy " << TriState_Name(config_params.autoneg())
+            << " for port " << port_id << " in node " << node_id
+            << " (SDK Port " << sdk_port_id << ").";
   }
   if (config_params.loopback_mode() != config_old.loopback_mode) {
-    config->loopback_mode.reset();
     RETURN_IF_ERROR(bf_sde_interface_->SetPortLoopbackMode(
         device, sdk_port_id, config_params.loopback_mode()));
     config->loopback_mode = config_params.loopback_mode();
     config_changed = true;
+    VLOG(1) << "Set loopback mode "
+            << LoopbackState_Name(config_params.loopback_mode()) << " for port "
+            << port_id << " in node " << node_id << " (SDK Port " << sdk_port_id
+            << ").";
   }
   if (config_old.shaping_config) {
     RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, device, sdk_port_id,
@@ -266,16 +273,16 @@ BfChassisManager::~BfChassisManager() = default;
   }
 
   if (need_disable) {
-    LOG(INFO) << "Disabling port " << port_id << " in node " << node_id
-              << " (SDK Port " << sdk_port_id << ").";
     RETURN_IF_ERROR(bf_sde_interface_->DisablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_DISABLED;
+    LOG(INFO) << "Disabled port " << port_id << " in node " << node_id
+              << " (SDK Port " << sdk_port_id << ").";
   }
   if (need_enable) {
-    LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
-              << " (SDK Port " << sdk_port_id << ").";
     RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
+    LOG(INFO) << "Enabled port " << port_id << " in node " << node_id
+              << " (SDK Port " << sdk_port_id << ").";
   }
 
   return ::util::OkStatus();
@@ -492,7 +499,9 @@ BfChassisManager::~BfChassisManager() = default;
     }
   }
 
-  // Clean up from old config.
+  // Remove ports which are no longer present in the ChassisConfig.
+  // Currently this code path is never hit, as we do not allow changes to the
+  // port layout (adds or deletes) at runtime.
   for (const auto& node_ports_old : node_id_to_port_id_to_port_config_) {
     auto node_id = node_ports_old.first;
     for (const auto& port_old : node_ports_old.second) {
@@ -503,11 +512,10 @@ BfChassisManager::~BfChassisManager() = default;
       }
       auto device = node_id_to_device_[node_id];
       uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
-      // remove ports which are no longer present in the ChassisConfig
       // TODO(bocon): Collect these errors and keep trying to remove old ports
-      LOG(INFO) << "Deleting port " << port_id << " in node " << node_id
-                << " (SDK port " << sdk_port_id << ").";
       RETURN_IF_ERROR(bf_sde_interface_->DeletePort(device, sdk_port_id));
+      LOG(INFO) << "Deleted port " << port_id << " in node " << node_id
+                << " (SDK port " << sdk_port_id << ").";
     }
   }
 
@@ -890,15 +898,10 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     return *port_state_ptr;
   }
 
-  // If state is unknown, query the state
-  LOG(INFO) << "Querying state of port " << port_id << " in node " << node_id
-            << ".";
+  // If state is unknown, query the current state from the SDE.
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   ASSIGN_OR_RETURN(auto port_state,
                    bf_sde_interface_->GetPortState(device, sdk_port_id));
-  LOG(INFO) << "State of port " << port_id << " in node " << node_id
-            << " (SDK port " << sdk_port_id
-            << "): " << PrintPortState(port_state);
   return port_state;
 }
 
@@ -948,13 +951,9 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     p.second = absl::UnixEpoch();
   }
 
-  LOG(INFO) << "Replaying ports for node " << node_id << ".";
-
   auto replay_one_port = [node_id, device, this](
                              uint32 port_id, const PortConfig& config,
                              PortConfig* config_new) -> ::util::Status {
-    VLOG(1) << "Replaying port " << port_id << " in node " << node_id << ".";
-
     if (config.admin_state == ADMIN_STATE_UNKNOWN) {
       LOG(WARNING) << "Port " << port_id << " in node " << node_id
                    << " was not configured properly, so skipping replay.";
@@ -983,23 +982,32 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       RETURN_IF_ERROR(
           bf_sde_interface_->SetPortMtu(device, sdk_port_id, *config.mtu));
       config_new->mtu = *config.mtu;
+      VLOG(1) << "Set MTU " << *config.mtu << " for port " << port_id
+              << " in node " << node_id << " (SDK Port " << sdk_port_id << ").";
     }
     if (config.autoneg) {
       RETURN_IF_ERROR(bf_sde_interface_->SetPortAutonegPolicy(
           device, sdk_port_id, *config.autoneg));
       config_new->autoneg = *config.autoneg;
+      VLOG(1) << "Set autoneg policy " << TriState_Name(*config.autoneg)
+              << " for port " << port_id << " in node " << node_id
+              << " (SDK Port " << sdk_port_id << ").";
     }
     if (config.loopback_mode) {
       RETURN_IF_ERROR(bf_sde_interface_->SetPortLoopbackMode(
           device, sdk_port_id, *config.loopback_mode));
       config_new->loopback_mode = *config.loopback_mode;
+      VLOG(1) << "Set loopback mode "
+              << LoopbackState_Name(*config.loopback_mode) << " for port "
+              << port_id << " in node " << node_id << " (SDK Port "
+              << sdk_port_id << ").";
     }
 
     if (config.admin_state == ADMIN_STATE_ENABLED) {
-      VLOG(1) << "Enabling port " << port_id << " in node " << node_id
-              << " (SDK port " << sdk_port_id << ").";
       RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;
+      VLOG(1) << "Enabled port " << port_id << " in node " << node_id
+              << " (SDK Port " << sdk_port_id << ").";
     }
 
     if (config.shaping_config) {
@@ -1007,6 +1015,8 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
                                              *config.shaping_config));
       config_new->shaping_config = config.shaping_config;
     }
+
+    VLOG(1) << "Replayed port " << port_id << " in node " << node_id << ".";
 
     return ::util::OkStatus();
   };
@@ -1053,6 +1063,8 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   // Re-configure the CPU port in the traffic manager.
   ASSIGN_OR_RETURN(auto cpu_port, bf_sde_interface_->GetPcieCpuPort(device));
   RETURN_IF_ERROR(bf_sde_interface_->SetTmCpuPort(device, cpu_port));
+
+  LOG(INFO) << "Replayed chassis config for node " << node_id << ".";
 
   return status;
 }
@@ -1286,7 +1298,7 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
         ChannelWriter<PortStatusEvent>::Create(port_status_event_channel_);
     RETURN_IF_ERROR(
         bf_sde_interface_->RegisterPortStatusEventWriter(std::move(writer)));
-    LOG(INFO) << "Port status notification callback registered successfully";
+    LOG(INFO) << "Successfully registered port status notification callback.";
     // Create and hand-off Reader to new reader thread.
     auto reader =
         ChannelReader<PortStatusEvent>::Create(port_status_event_channel_);
