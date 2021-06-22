@@ -733,6 +733,9 @@ message TofinoConfig {
       ApplicationPool pool = 1;  // required
       uint32 pool_size = 2;
       bool enable_color_drop = 3;
+      uint32 color_drop_limit_green = 4;
+      uint32 color_drop_limit_yellow = 5;
+      uint32 color_drop_limit_red = 6;
     }
     message PpgConfig {
       uint32 sdk_port = 1;  // required
@@ -766,8 +769,11 @@ message TofinoConfig {
       repeated QueueMapping queue_mapping = 3;
     }
     repeated PoolConfig pool_configs = 1;
-    repeated PpgConfig ppg_configs = 2;
-    repeated QueueConfig queue_configs = 3;
+    uint32 pool_color_drop_hysteresis_green = 2;
+    uint32 pool_color_drop_hysteresis_yellow = 3;
+    uint32 pool_color_drop_hysteresis_red = 4;
+    repeated PpgConfig ppg_configs = 5;
+    repeated QueueConfig queue_configs = 6;
   }
 
   // Maps from the index of the nodes (1-based) to all the configs related to

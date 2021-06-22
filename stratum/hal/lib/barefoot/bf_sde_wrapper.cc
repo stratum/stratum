@@ -1294,7 +1294,22 @@ namespace {
     } else {
       RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_disable(device, pool));
     }
+    RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_set(
+        device, pool, BF_TM_COLOR_GREEN, pool_config.color_drop_limit_green()));
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_pool_color_drop_limit_set(device, pool, BF_TM_COLOR_YELLOW,
+                                        pool_config.color_drop_limit_yellow()));
+    RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_set(
+        device, pool, BF_TM_COLOR_RED, pool_config.color_drop_limit_red()));
   }
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_hysteresis_set(
+      device, BF_TM_COLOR_GREEN,
+      qos_config.pool_color_drop_hysteresis_green()));
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_hysteresis_set(
+      device, BF_TM_COLOR_YELLOW,
+      qos_config.pool_color_drop_hysteresis_yellow()));
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_hysteresis_set(
+      device, BF_TM_COLOR_RED, qos_config.pool_color_drop_hysteresis_red()));
 
   // Configure the PPGs.
   for (auto const& ppg : device_to_ppg_handles_[device]) {
@@ -1302,7 +1317,6 @@ namespace {
   }
   device_to_ppg_handles_[device].clear();
   for (const auto& ppg_config : qos_config.ppg_configs()) {
-    device_to_ppg_handles_;
     bf_tm_ppg_hdl ppg;
     if (ppg_config.is_default_ppg()) {
       RETURN_IF_BFRT_ERROR(

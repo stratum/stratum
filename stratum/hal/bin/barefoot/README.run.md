@@ -397,23 +397,38 @@ vendor_config {
         pool_configs {
           pool: INGRESS_APP_POOL_0
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
         pool_configs {
           pool: INGRESS_APP_POOL_1
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
         pool_configs {
           pool: EGRESS_APP_POOL_0
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
         pool_configs {
           pool: EGRESS_APP_POOL_1
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
+        pool_color_drop_hysteresis_green: 20000
+        pool_color_drop_hysteresis_yellow: 8000
+        pool_color_drop_hysteresis_red: 4000
         ppg_configs {
           sdk_port: 260
           is_default_ppg: true
