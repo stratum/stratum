@@ -553,15 +553,15 @@ BfChassisManager::~BfChassisManager() = default;
         kPacketShaping:
       RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
           device, sdk_port_id, true,
-          shaping_config.packet_shaping().max_burst_packets(),
-          shaping_config.packet_shaping().max_rate_pps()));
+          shaping_config.packet_shaping().burst_packets(),
+          shaping_config.packet_shaping().rate_pps()));
       break;
     case TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig::
         kByteShaping:
       RETURN_IF_ERROR(bf_sde_interface_->SetPortShapingRate(
           device, sdk_port_id, false,
-          shaping_config.byte_shaping().max_burst_bytes(),
-          shaping_config.byte_shaping().max_rate_bps()));
+          shaping_config.byte_shaping().burst_bytes(),
+          shaping_config.byte_shaping().rate_bps()));
       break;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM)
