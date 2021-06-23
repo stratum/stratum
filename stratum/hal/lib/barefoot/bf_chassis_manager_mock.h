@@ -33,7 +33,7 @@ class BfChassisManagerMock : public BfChassisManager {
                ::util::StatusOr<absl::Time>(uint64 node_id, uint32 port_id));
   MOCK_METHOD3(GetPortCounters, ::util::Status(uint64 node_id, uint32 port_id,
                                                PortCounters* counters));
-  MOCK_METHOD1(ReplayPortsConfig, ::util::Status(uint64 node_id));
+  MOCK_METHOD1(ReplayChassisConfig, ::util::Status(uint64 node_id));
   MOCK_METHOD3(GetFrontPanelPortInfo,
                ::util::Status(uint64 node_id, uint32 port_id,
                               FrontPanelPortInfo* fp_port_info));
