@@ -2641,7 +2641,7 @@ namespace {
       table->dataFieldSizeGet(field_id, &data_field_size_bits));
   // The SDE expects a string with the full width.
   std::string value = P4RuntimeByteStringToPaddedByteString(
-      register_data, data_field_size_bits);
+      register_data, NumBitsToNumBytes(data_field_size_bits));
   RETURN_IF_BFRT_ERROR(table_data->setValue(
       field_id, reinterpret_cast<const uint8*>(value.data()), value.size()));
 
