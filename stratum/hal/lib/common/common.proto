@@ -659,16 +659,16 @@ message GoogleConfig {
 
 // Config specific to Tofino chassis.
 message TofinoConfig {
+  message PacketShape {
+    uint64 rate_pps = 1;
+    uint32 burst_packets = 2;
+  }
+  message ByteShape {
+    uint64 rate_bps = 1;
+    uint32 burst_bytes = 2;
+  }
   message BfPortShapingConfig {
     message BfPerPortShapingConfig {
-      message PacketShape {
-        uint64 max_rate_pps = 1;
-        uint32 max_burst_packets = 2;
-      }
-      message ByteShape {
-        uint64 max_rate_bps = 1;
-        uint32 max_burst_bytes = 2;
-      }
       oneof shaping {
         PacketShape packet_shaping = 1;
         ByteShape byte_shaping = 2;
@@ -757,12 +757,14 @@ message TofinoConfig {
         uint32 base_use_limit = 6;
         Baf baf = 7;
         uint32 hysteresis = 8;
-        bool max_shaping_is_in_pps = 9;
-        uint64 max_rate = 10;
-        uint32 max_burst = 11;
-        bool min_shaping_is_in_pps = 12;
-        uint64 min_rate = 13;
-        uint32 min_burst = 14;
+        oneof max_rate {
+          PacketShape max_rate_packets = 9;
+          ByteShape max_rate_bytes = 10;
+        }
+        oneof min_rate {
+          PacketShape min_rate_packets = 11;
+          ByteShape min_rate_bytes = 12;
+        }
       }
       uint32 sdk_port = 1;  // required
       repeated QueueMapping queue_mapping = 3;
