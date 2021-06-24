@@ -91,6 +91,7 @@ stratum/hal/lib/bcm/sdklt/macros.h
 stratum/hal/lib/bcm/utils.cc
 stratum/hal/lib/common/certificate_management_service.h
 stratum/hal/lib/common/client_sync_reader_writer.h
+stratum/hal/lib/common/common.proto
 stratum/hal/lib/common/config_monitoring_service.cc
 stratum/hal/lib/common/config_monitoring_service.h
 stratum/hal/lib/common/diag_service.h
