@@ -762,8 +762,8 @@ format.
 Some switch models and ASIC chips are updated over time, but the old devices
 remain in circulation.
 The following commands allow you to check the revision of your device.
-For use with the `ucli` in a running Stratum instance:
 
+For use with the `ucli` in a running Stratum instance:
 ```bash
 # Check for part_revision_number and the codes A0 or B0.
 efuse 0
