@@ -895,7 +895,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     const ::p4::v1::Update::Type type,
     const ::p4::v1::MeterEntry& meter_entry) {
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update type of RegisterEntry " << meter_entry.ShortDebugString()
+      << "Update type of MeterEntry " << meter_entry.ShortDebugString()
       << " must be MODIFY.";
   CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
       << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
