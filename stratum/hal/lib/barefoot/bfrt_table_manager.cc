@@ -764,13 +764,13 @@ BfrtTableManager::ReadDirectCounterEntry(
     optional_register_index = register_entry.index().index();
   }
 
-  // TODO(max): we don't translate p4rt id to bfrt here?
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(register_entry.register_id()));
   std::vector<uint32> register_indices;
   std::vector<uint64> register_datas;
   RETURN_IF_ERROR(bf_sde_interface_->ReadRegisters(
-      device_, session, register_entry.register_id(), optional_register_index,
-      &register_indices, &register_datas,
-      absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms)));
+      device_, session, table_id, optional_register_index, &register_indices,
+      &register_datas, absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms)));
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < register_indices.size(); ++i) {
