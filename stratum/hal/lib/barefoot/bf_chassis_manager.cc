@@ -633,9 +633,8 @@ BfChassisManager::~BfChassisManager() = default;
   std::map<uint64, std::set<uint32>> node_id_to_port_ids;
   std::set<PortKey> singleton_port_keys;
   for (const auto& singleton_port : config.singleton_ports()) {
-    // TODO(max): enable once we decoupled port ids from sdk ports.
-    // CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
-    //     << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
+    CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
+        << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
         << "SingletonPort " << PrintSingletonPort(singleton_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
