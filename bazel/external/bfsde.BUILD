@@ -52,6 +52,11 @@ cc_library(
 
 pkg_tar_with_symlinks(
     name = "bf_library_files",
+    # Using a wildcard glob here to match the shared libraries makes this rule
+    # more generic than a normal source list, as it does not require that all
+    # targets are present, which is the case for non-BSP SDE builds. Extending
+    # this rule for additional BSP platforms is as easy as adding more matches
+    # to the list.
     srcs = glob([
         "barefoot-bin/lib/bfshell_plugin_*.so*",
         "barefoot-bin/lib/libavago.so*",
@@ -60,6 +65,12 @@ pkg_tar_with_symlinks(
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
+        # General BSP libraries.
+        "barefoot-bin/lib/libpltfm_driver.so*",
+        "barefoot-bin/lib/libpltfm_mgr.so*",
+        # BSP libraries for Edgecore Wedge100bf series.
+        "barefoot-bin/lib/libacctonbf_driver.so*",
+        "barefoot-bin/lib/libtcl_server.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",

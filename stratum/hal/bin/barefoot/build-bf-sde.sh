@@ -19,6 +19,7 @@ Options:
     -k, --kernel-headers-tar: Linux Kernel headers tarball
     -l, --build-local-kernel-mod: Build kernel module for local kernel (Default: false)
     -j, --jobs: Number of jobs for BF SDE build (Default: 4)
+    -b, --bsp-path: Path to optional BSP package directory (Default: <empty>)
     -o, --bf-sde-install-tar: BF SDE install tarball (Default: <bf sde tar name>-install.tgz)
 
 Examples:
@@ -63,6 +64,15 @@ while (( "$#" )); do
       BUILD_LOCAL_KERNEL=true
       shift
       ;;
+    -b|--bsp-path)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        BSP_CMD=" --bsp-path $2 "
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
     -j|--jobs)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
         JOBS=$2
@@ -99,6 +109,7 @@ echo "
 Build variables:
   BF SDE tar: $SDE_TAR
   Kernel headers directories: ${KERNEL_HEADERS_TARS:-none}
+  BSP package command: ${BSP_CMD:-none}
   Build kernel module for local kernel: ${BUILD_LOCAL_KERNEL:-false}
   Stratum scripts directory: $STRATUM_BF_DIR
   SDE build jobs: $JOBS
@@ -133,7 +144,7 @@ cp -f $STRATUM_BF_DIR/stratum_profile.yaml $SDE/p4studio_build/profiles/
 
 # Build BF SDE
 pushd $SDE/p4studio_build
-./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc
+./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
 popd
 echo "BF SDE build complete."
 
