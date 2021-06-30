@@ -30,6 +30,7 @@ using ::p4::v1::SetForwardingPipelineConfigResponse;
 using ::p4::v1::TableEntry;
 using ::p4::v1::ActionProfileMember;
 using ::p4::v1::ActionProfileGroup;
+using ::p4::v1::DigestEntry;
 using ::p4::v1::Update;
 using ::p4::v1::WriteRequest;
 using ::p4::v1::WriteResponse;
@@ -329,6 +330,28 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
   }
   return SendWriteRequest(session, batch_write_request);
 }
+
+::util::Status InstallDigestEntry(
+  P4RuntimeSession* session, const DigestEntry entry ){
+  return InstallDigestEntries(session, absl::MakeConstSpan(&entry, 1));
+}
+
+::util::Status InstallDigestEntries(
+  P4RuntimeSession* session, absl::Span<const DigestEntry> entries ){
+
+  WriteRequest batch_write_request;
+  batch_write_request.set_device_id(session->DeviceId());
+  *batch_write_request.mutable_election_id() = session->ElectionId();
+
+  for (const auto& entry : entries) {
+    Update* update = batch_write_request.add_updates();
+    // Update_Type_MODIFY
+    update->set_type(Update::INSERT);
+    *update->mutable_entity()->mutable_digest_entry() = entry;
+  }
+  return SendWriteRequest(session, batch_write_request);
+}
+
 
 ::util::Status SetForwardingPipelineConfig(
     P4RuntimeSession* session, const P4Info& p4info,

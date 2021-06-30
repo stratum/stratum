@@ -199,6 +199,14 @@ CreateTlsChannelCredentials(const std::string& pem_root_certs,
 ::util::Status InstallActionProfileGroupEntries(
     P4RuntimeSession* session, absl::Span<const p4::v1::ActionProfileGroup> entries);
 
+// Installs the given Digest config entry
+::util::Status InstallDigestEntry(
+    P4RuntimeSession* session, const p4::v1::DigestEntry entry);
+
+// Installs the given Digest config entries
+::util::Status InstallDigestEntries(
+    P4RuntimeSession* session, absl::Span<const p4::v1::DigestEntry> entries);
+
 // Sets the forwarding pipeline from the given p4 info.
 ::util::Status SetForwardingPipelineConfig(P4RuntimeSession* session,
                                            const p4::config::v1::P4Info& p4info,
