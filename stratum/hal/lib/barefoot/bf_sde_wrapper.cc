@@ -1398,8 +1398,8 @@ namespace {
             kMinRatePackets:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
               device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
-              queue_mapping.max_rate_packets().burst_packets(),
-              queue_mapping.max_rate_packets().rate_pps()));
+              queue_mapping.min_rate_packets().burst_packets(),
+              queue_mapping.min_rate_packets().rate_pps()));
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
               device, queue_config.sdk_port(), queue_mapping.queue_id()));
           break;
@@ -1407,8 +1407,8 @@ namespace {
             kMinRateBytes:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
               device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
-              queue_mapping.max_rate_bytes().burst_bytes(),
-              queue_mapping.max_rate_bytes().rate_bps() /
+              queue_mapping.min_rate_bytes().burst_bytes(),
+              queue_mapping.min_rate_bytes().rate_bps() /
                   1000));  // SDE expects kbits
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
               device, queue_config.sdk_port(), queue_mapping.queue_id()));
