@@ -54,7 +54,7 @@ pkg_tar_with_symlinks(
     name = "bf_library_files",
     # Using a wildcard glob here to match the shared libraries makes this rule
     # more generic than a normal source list, as it does not require that all
-    # targets are present, which is the case for non-BSP SDE builds. Extenting
+    # targets are present, which is the case for non-BSP SDE builds. Extending
     # this rule for additional BSP platforms is as easy as adding more matches
     # to the list.
     srcs = glob([

@@ -288,7 +288,8 @@ information. **This is the recommended mode. No changes to the SDE needed.**
 Otherwise, you need to build & install the BSP. You will not be able to use
 the Stratum ONLP support. The exact instructions vary by the BSP vendor, here is
 how it works for the Wedge reference switch. Either set the `BSP` environment
-variable before running the [`build-stratum-bf-container.sh`](#method-1-build-with-docker-in-one-shot) script:
+variable before running the
+[`build-stratum-bf-container.sh`](#method-1-build-with-docker-in-one-shot) script:
 
 ```bash
 tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
