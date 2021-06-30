@@ -13,6 +13,8 @@ const bit<8> PROTO_ICMP = 0x01;
 const bit<16> ARP_OPERATION_REQUEST = 1;
 const bit<16> ARP_OPERATION_REPLY = 2;
 const bit<32> DEFAULT_TBL_SIZE = 1024;
+const bit<32> DEFAULT_SELECTOR_GROUP_SIZE = 256;
+const bit<32> DEFAULT_SELECTOR_NUMBER_GROUP = 1024;
 
 @controller_header("packet_in")
 header packet_in_header_t {
@@ -66,14 +68,17 @@ header icmp_t {
     bit<64> timestamp;
 }
 
+@flexible
 header bridged_metadata_t {
-    @padding bit<7> pad0;
     PortId_t        ig_port;
 }
 
 @flexible
 struct stratum_ingress_metadata_t {
     bridged_metadata_t bridged;
+
+    // did we fail checksum on ingress parsing ?
+    bool cksum_err_parser;
 }
 
 @flexible
@@ -92,7 +97,6 @@ struct headers_t {
 }
 
 struct digest_macs_t {
-    // mac_addr_t dst_addr;
     PortId_t port;
     mac_addr_t src_addr;
 }
@@ -101,11 +105,11 @@ parser StratumIngressParser(packet_in pkt,
                             out headers_t hdr,
                             out stratum_ingress_metadata_t stratum_md,
                             out ingress_intrinsic_metadata_t ig_intr_md) {
-    // Checksum() ipv4_sum;
+    Checksum() ipv4_sum;
     state start {
         pkt.extract(ig_intr_md);
         pkt.advance(PORT_METADATA_SIZE);
-        stratum_md = {{0, 0}};
+        // stratum_md = {{0, 0}};
         stratum_md.bridged.setValid();
         stratum_md.bridged.ig_port = ig_intr_md.ingress_port;
         transition parse_ethernet;
@@ -130,7 +134,8 @@ parser StratumIngressParser(packet_in pkt,
 
     state parse_ipv4 {
         pkt.extract(hdr.ipv4);
-        // ipv4_sum.add(hdr.ipv4);
+        ipv4_sum.add(hdr.ipv4);
+        stratum_md.cksum_err_parser = ipv4_sum.verify();
         transition select (hdr.ipv4.protocol) {
             PROTO_ICMP: parse_icmp;
             default: accept;
@@ -150,12 +155,13 @@ control StratumIngress(
         in ingress_intrinsic_metadata_from_parser_t ig_prsr_md,
         inout ingress_intrinsic_metadata_for_deparser_t ig_intr_dprsr_md,
         inout ingress_intrinsic_metadata_for_tm_t ig_intr_tm_md) {
+
+    // Port
     Counter<bit<64>, PortId_t>(512, CounterType_t.PACKETS_AND_BYTES) rx_port_counter;
     Counter<bit<64>, PortId_t>(512, CounterType_t.PACKETS_AND_BYTES) tx_port_counter;
 
-    DirectCounter<bit<64>>(CounterType_t.PACKETS_AND_BYTES) ipv4_counter;
 
-    // Meter< bit<16> > (512, MeterType_t.BYTES) test_meter;
+    // Host
     DirectMeter(MeterType_t.BYTES) host_bytes;
 
     action color_source() {
@@ -180,29 +186,47 @@ control StratumIngress(
         default_action = missed_source;
     }
 
+    // IPv4
+    Hash<bit<64>>(HashAlgorithm_t.CRC64) ipv4_hash;
+    ActionProfile(1024) ipv4_ap;
+    ActionSelector(action_profile=ipv4_ap,
+                   hash=ipv4_hash,
+                   mode=SelectorMode_t.RESILIENT,
+                   max_group_size=DEFAULT_SELECTOR_GROUP_SIZE,
+                   num_groups=DEFAULT_SELECTOR_NUMBER_GROUP) ipv4_ecmp;
+
     action fwd_route(PortId_t port, mac_addr_t dmac) {
-	      ipv4_counter.count();
         ig_intr_tm_md.ucast_egress_port = port;
         ig_intr_dprsr_md.drop_ctl = 0x0;
         hdr.ethernet.dst_addr = dmac;
         hdr.ipv4.ttl = hdr.ipv4.ttl + 255;
     }
+    action drop() {
+        ig_intr_dprsr_md.drop_ctl = 0x1;
+    }
 
     table ipv4_route {
         key = {
             hdr.ipv4.dst_addr : lpm;
+            hdr.ipv4.dst_addr : selector;
+            hdr.ipv4.src_addr : selector;
+            hdr.ipv4.protocol : selector;
+            hdr.ethernet.src_addr : selector;
+            hdr.ethernet.dst_addr : selector;
         }
         actions = {
             fwd_route;
+            drop;
         }
         size = DEFAULT_TBL_SIZE;
-        counters = ipv4_counter;
+        implementation = ipv4_ecmp;
     }
 
+    // ARP
     DirectCounter<bit<64>>(CounterType_t.PACKETS) arp_counter;
 
     action reply_station_arp(mac_addr_t target_mac) {
-	      arp_counter.count();
+        arp_counter.count();
         hdr.arp.oper_code = ARP_OPERATION_REPLY;
         hdr.ethernet.src_addr = target_mac;
         hdr.ethernet.dst_addr = hdr.arp.hw_dst_addr;
@@ -214,7 +238,7 @@ control StratumIngress(
         hdr.arp.proto_dst_addr = tmpAddr;
 
         ig_intr_tm_md.ucast_egress_port = ig_intr_md.ingress_port;
-        // ig_intr_dprsr_md.drop_ctl = 0x0;
+        ig_intr_dprsr_md.drop_ctl = 0x0;
     }
 
     table arp_station {
@@ -224,9 +248,11 @@ control StratumIngress(
         }
         actions = {
             reply_station_arp;
+            @defaultonly NoAction;
         }
+        default_action = NoAction();
         counters = arp_counter;
-        size = 512;
+        size = DEFAULT_TBL_SIZE;
     }
 
     // table icmp {
@@ -241,8 +267,11 @@ control StratumIngress(
         rx_port_counter.count(ig_intr_md.ingress_port);
 
         if (hdr.arp.isValid()) {
-            arp_station.apply();
-            exit;
+            switch (arp_station.apply().action_run) {
+                // only exit if know replying to station arp
+                // further processing not needed
+                reply_station_arp: {exit;}
+            }
         }
         if (hdr.ipv4.isValid()) {
             ipv4_route.apply();
@@ -265,8 +294,33 @@ control StratumIngressDeparser(
         in stratum_ingress_metadata_t stratum_md,
         in ingress_intrinsic_metadata_for_deparser_t ig_dprsr_md) {
 
-    // Digest<digest_macs_t> () digest_macs;
+    Digest<digest_macs_t>() mac_learner;
+    Checksum() ipv4_sum;
+
     apply {
+        if (ig_dprsr_md.digest_type == 1) {
+            mac_learner.pack(
+                {
+                    stratum_md.bridged.ig_port,
+                    hdr.ethernet.src_addr
+                }
+            );
+        }
+
+        if (hdr.ipv4.isValid()) {
+            // update ip4 checksum 
+            hdr.ipv4.hdr_checksum = ipv4_sum.update({
+                hdr.ipv4.version_ihl,
+                hdr.ipv4.dscp_ecn,
+                hdr.ipv4.identification,
+                hdr.ipv4.flags,
+                hdr.ipv4.frag_offset,
+                hdr.ipv4.ttl,
+                hdr.ipv4.protocol,
+                hdr.ipv4.src_addr,
+                hdr.ipv4.dst_addr});
+        }
+
         pkt.emit(stratum_md.bridged);
         pkt.emit(hdr);
     }
@@ -277,7 +331,7 @@ parser StratumEgressParser(packet_in pkt,
                            out stratum_egress_metadata_t stratum_md,
                            out egress_intrinsic_metadata_t eg_intr_md) {
     state start {
-        stratum_md = {{0, 0}, 0};
+        // stratum_md = {{0, 0}, 0};
         pkt.extract(eg_intr_md);
         pkt.extract(stratum_md.bridged);
         transition accept;

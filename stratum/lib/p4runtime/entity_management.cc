@@ -40,6 +40,12 @@ using ::p4::config::v1::P4Info;
         absl::StrFormat("%u", reg.preamble().id())));
   }
 
+  for (const auto& ap : p4_info.action_profiles()) {
+    CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
+        replacements, absl::StrFormat("{%s}", ap.preamble().name()),
+        absl::StrFormat("%u", ap.preamble().id())));
+  }
+
   for (const auto& action : p4_info.actions()) {
     CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
         replacements, absl::StrFormat("{%s}", action.preamble().name()),

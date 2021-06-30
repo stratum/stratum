@@ -233,9 +233,14 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
             session, update.type(), update.entity().meter_entry());
         break;
       }
+      case ::p4::v1::Entity::kDigestEntry: 
+      // {
+      //   status = bfrt_digest_manager_->WriteDigestEntry(
+      //       session, update.type(), update.entity().digest_entry());
+      //   break;
+      // }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
-      case ::p4::v1::Entity::kDigestEntry:
       default:
         status = MAKE_ERROR(ERR_UNIMPLEMENTED)
                  << "Unsupported entity type: " << update.ShortDebugString();
@@ -338,9 +343,16 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
         details->push_back(status);
         break;
       }
+      case ::p4::v1::Entity::kDigestEntry:
+      // {
+      //   auto status = bfrt_digest_manager_->ReadDigestEntry(
+      //       session, entity.digest_entry(), writer);
+      //   success &= status.ok();
+      //   details->push_back(status);
+      //   break;
+      // }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
-      case ::p4::v1::Entity::kDigestEntry:
       default: {
         success = false;
         details->push_back(MAKE_ERROR(ERR_UNIMPLEMENTED)
