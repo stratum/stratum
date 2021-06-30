@@ -1278,6 +1278,33 @@ namespace {
   }
 }
 
+::util::StatusOr<bf_tm_queue_color_limit_t> ColorLimitToTofinoQueueColorLimit(
+    TofinoConfig::TofinoQosConfig::QueueColorLimit color_limit) {
+  switch (color_limit) {
+    case TofinoConfig::TofinoQosConfig::LIMIT_12_POINT_5_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_12_POINT_5_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_25_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_25_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_37_POINT_5_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_37_POINT_5_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_50_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_50_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_62_POINT_5_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_62_POINT_5_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_75_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_75_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_87_POINT_5_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_87_POINT_5_PERCENT;
+    case TofinoConfig::TofinoQosConfig::LIMIT_100_PERCENT:
+      return BF_TM_Q_COLOR_LIMIT_100_PERCENT;
+    // Default value when field unset.
+    case TofinoConfig::TofinoQosConfig::UNKNOWN_LIMIT:
+      return BF_TM_Q_COLOR_LIMIT_75_PERCENT;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid color limit " << color_limit;
+  }
+}
+
 }  // namespace
 
 ::util::Status BfSdeWrapper::ConfigureQos(
@@ -1423,6 +1450,25 @@ namespace {
               << "Invalid queue guaranteed minimum rate config in QueueMapping "
               << queue_mapping.ShortDebugString() << ".";
       }
+      if (queue_mapping.enable_color_drop()) {
+        RETURN_IF_BFRT_ERROR(
+            bf_tm_q_color_drop_enable(device, queue_mapping.queue_id(), pool));
+      } else {
+        RETURN_IF_BFRT_ERROR(
+            bf_tm_q_color_drop_disable(device, queue_mapping.queue_id(), pool));
+      }
+      ASSIGN_OR_RETURN(bf_tm_queue_color_limit_t yellow_limit,
+                       ColorLimitToTofinoQueueColorLimit(
+                           queue_mapping.color_drop_limit_yellow()));
+      ASSIGN_OR_RETURN(bf_tm_queue_color_limit_t red_limit,
+                       ColorLimitToTofinoQueueColorLimit(
+                           queue_mapping.color_drop_limit_red()));
+      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          BF_TM_COLOR_YELLOW, yellow_limit));
+      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(
+          device, queue_config.sdk_port(), queue_mapping.queue_id(),
+          BF_TM_COLOR_RED, red_limit));
     }
     RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(
         device, queue_config.sdk_port(), queue_config.queue_mapping_size(),
