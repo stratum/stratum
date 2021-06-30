@@ -1294,7 +1294,22 @@ namespace {
     } else {
       RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_disable(device, pool));
     }
+    RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_set(
+        device, pool, BF_TM_COLOR_GREEN, pool_config.color_drop_limit_green()));
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_pool_color_drop_limit_set(device, pool, BF_TM_COLOR_YELLOW,
+                                        pool_config.color_drop_limit_yellow()));
+    RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_set(
+        device, pool, BF_TM_COLOR_RED, pool_config.color_drop_limit_red()));
   }
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_hysteresis_set(
+      device, BF_TM_COLOR_GREEN,
+      qos_config.pool_color_drop_hysteresis_green()));
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_hysteresis_set(
+      device, BF_TM_COLOR_YELLOW,
+      qos_config.pool_color_drop_hysteresis_yellow()));
+  RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_hysteresis_set(
+      device, BF_TM_COLOR_RED, qos_config.pool_color_drop_hysteresis_red()));
 
   // Configure the PPGs.
   for (auto const& ppg : device_to_ppg_handles_[device]) {
@@ -1302,7 +1317,6 @@ namespace {
   }
   device_to_ppg_handles_[device].clear();
   for (const auto& ppg_config : qos_config.ppg_configs()) {
-    device_to_ppg_handles_;
     bf_tm_ppg_hdl ppg;
     if (ppg_config.is_default_ppg()) {
       RETURN_IF_BFRT_ERROR(
@@ -1347,37 +1361,68 @@ namespace {
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
           device, queue_config.sdk_port(), queue_mapping.queue_id(),
           queue_mapping.weight()));
-      bool rate_in_pps = queue_mapping.max_shaping_is_in_pps();
-      uint32 burst_size;
-      uint32 max_rate;
-      if (rate_in_pps) {
-        burst_size = queue_mapping.max_burst();
-        max_rate = queue_mapping.max_rate();
-      } else {
-        burst_size = queue_mapping.max_burst();
-        max_rate = queue_mapping.max_rate() / 1000;  // SDE expects kbits
+      // Set maximum shaping rate on queue, if requested.
+      switch (queue_mapping.max_rate_case()) {
+        case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
+            kMaxRatePackets:
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
+              device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
+              queue_mapping.max_rate_packets().burst_packets(),
+              queue_mapping.max_rate_packets().rate_pps()));
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
+              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+          break;
+        case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
+            kMaxRateBytes:
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
+              device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
+              queue_mapping.max_rate_bytes().burst_bytes(),
+              queue_mapping.max_rate_bytes().rate_bps() /
+                  1000));  // SDE expects kbits
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
+              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+          break;
+        case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
+            MAX_RATE_NOT_SET:
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_disable(
+              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+          break;
+        default:
+          RETURN_ERROR(ERR_INVALID_PARAM)
+              << "Invalid queue maximum rate config in QueueMapping "
+              << queue_mapping.ShortDebugString() << ".";
       }
-      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          rate_in_pps, burst_size, max_rate));
-      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
-          device, queue_config.sdk_port(), queue_mapping.queue_id()));
-      // Set guaranteed minimum rate.
-      bool min_rate_in_pps = queue_mapping.min_shaping_is_in_pps();
-      uint32 min_burst_size;
-      uint32 min_rate;
-      if (min_rate_in_pps) {
-        min_burst_size = queue_mapping.min_burst();
-        min_rate = queue_mapping.min_rate();
-      } else {
-        min_burst_size = queue_mapping.min_burst();
-        min_rate = queue_mapping.min_rate() / 1000;  // SDE expects kbits
+      // Set guaranteed minimum rate on queue, if requested.
+      switch (queue_mapping.min_rate_case()) {
+        case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
+            kMinRatePackets:
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
+              device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
+              queue_mapping.min_rate_packets().burst_packets(),
+              queue_mapping.min_rate_packets().rate_pps()));
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
+              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+          break;
+        case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
+            kMinRateBytes:
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
+              device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
+              queue_mapping.min_rate_bytes().burst_bytes(),
+              queue_mapping.min_rate_bytes().rate_bps() /
+                  1000));  // SDE expects kbits
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
+              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+          break;
+        case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
+            MIN_RATE_NOT_SET:
+          RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_disable(
+              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+          break;
+        default:
+          RETURN_ERROR(ERR_INVALID_PARAM)
+              << "Invalid queue guaranteed minimum rate config in QueueMapping "
+              << queue_mapping.ShortDebugString() << ".";
       }
-      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          min_rate_in_pps, min_burst_size, min_rate));
-      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
-          device, queue_config.sdk_port(), queue_mapping.queue_id()));
     }
     RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(
         device, queue_config.sdk_port(), queue_config.queue_mapping_size(),
@@ -2627,7 +2672,7 @@ namespace {
       table->dataFieldSizeGet(field_id, &data_field_size_bits));
   // The SDE expects a string with the full width.
   std::string value = P4RuntimeByteStringToPaddedByteString(
-      register_data, data_field_size_bits);
+      register_data, NumBitsToNumBytes(data_field_size_bits));
   RETURN_IF_BFRT_ERROR(table_data->setValue(
       field_id, reinterpret_cast<const uint8*>(value.data()), value.size()));
 

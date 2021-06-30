@@ -37,6 +37,8 @@ if [[ $nr_hugepages -lt 128 ]] || [[ $free_hugepages -lt 128 ]]; then
     else
         echo "ERROR: There are $free_hugepages free hugepages, and 128 are required."
         echo "       The system has $nr_hugepages hugepages allocated in total."
+        echo "       This could mean there is another Stratum instance running already,"
+        echo "       or some other application is using hugepages, too."
         exit 255
     fi
 fi

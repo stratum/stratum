@@ -27,10 +27,21 @@ namespace barefoot {
 // Lock which protects chassis state across the entire switch.
 extern absl::Mutex chassis_lock;
 
+// The "BfChassisManager" class encapsulates all the chassis-related
+// functionalities needed in BfSwitch/BfrtSwitch class. This class is in charge
+// of maintaining and updating all the port/node/chassis related datastructures.
+// NOTE: The maps in this class may be accessed in such a way where the order of
+// the keys are important. That is why we chose to use std::map as opposed to
+// std::unordered_map or absl::flat_hash_map and accept a little bit of
+// performance hit when doing lookup.
 class BfChassisManager {
  public:
   virtual ~BfChassisManager();
 
+  // Pushes the chassis config. If the class is not initialized, this function
+  // calls RegisterEventWriters() to register those with the SDE. Then it
+  // applies the ChassisConfig proto to the switch and stores internal copies of
+  // the configuration for later re-application with ReplayChassisConfig.
   virtual ::util::Status PushChassisConfig(const ChassisConfig& config)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
@@ -57,7 +68,10 @@ class BfChassisManager {
                                          PortCounters* counters)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  virtual ::util::Status ReplayPortsConfig(uint64 node_id)
+  // Replays the current configuration onto the ASIC. This function is called by
+  // the switch after a pipeline push (PushForwardingPipelineConfig), as the
+  // push resets most device state, including port configuration.
+  virtual ::util::Status ReplayChassisConfig(uint64 node_id)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   virtual ::util::Status GetFrontPanelPortInfo(uint64 node_id, uint32 port_id,

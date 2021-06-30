@@ -133,7 +133,7 @@ namespace {
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->PushForwardingPipelineConfig(config));
-  RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
+  RETURN_IF_ERROR(bf_chassis_manager_->ReplayChassisConfig(node_id));
 
   LOG(INFO) << "P4-based forwarding pipeline config pushed successfully to "
             << "node with ID " << node_id << ".";
@@ -150,7 +150,7 @@ namespace {
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->SaveForwardingPipelineConfig(config));
-  RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
+  RETURN_IF_ERROR(bf_chassis_manager_->ReplayChassisConfig(node_id));
 
   LOG(INFO) << "P4-based forwarding pipeline config saved successfully to "
             << "node with ID " << node_id << ".";

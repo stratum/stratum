@@ -226,9 +226,9 @@ class BfChassisManagerTest : public ::testing::Test {
     return ::util::OkStatus();
   }
 
-  ::util::Status ReplayPortsConfig(uint64 node_id) {
+  ::util::Status ReplayChassisConfig(uint64 node_id) {
     absl::WriterMutexLock l(&chassis_lock);
-    return bf_chassis_manager_->ReplayPortsConfig(node_id);
+    return bf_chassis_manager_->ReplayChassisConfig(node_id);
   }
 
   ::util::Status PushBaseChassisConfig() {
@@ -352,8 +352,8 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
             key: 12345
             value {
               byte_shaping {
-                max_rate_bps: 10000000000 # 10G
-                max_burst_bytes: 16384 # 2x jumbo frame
+                rate_bps: 10000000000 # 10G
+                burst_bytes: 16384 # 2x jumbo frame
               }
             }
           }
@@ -453,12 +453,14 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
               base_use_limit: 200
               baf: BAF_80_PERCENT
               hysteresis: 50
-              max_shaping_is_in_pps: false
-              max_rate: 100000000
-              max_burst: 9000
-              min_shaping_is_in_pps: false
-              min_rate: 1000000
-              min_burst: 4500
+              max_rate_bytes {
+                rate_bps: 100000000
+                burst_bytes: 9000
+              }
+              min_rate_bytes {
+                rate_bps: 1000000
+                burst_bytes: 4500
+              }
             }
           }
         }
@@ -505,8 +507,8 @@ TEST_F(BfChassisManagerTest, ReplayPorts) {
             key: 12345
             value {
               byte_shaping {
-                max_rate_bps: 10000000000
-                max_burst_bytes: 16384
+                rate_bps: 10000000000
+                burst_bytes: 16384
               }
             }
           }
@@ -552,7 +554,7 @@ TEST_F(BfChassisManagerTest, ReplayPorts) {
   EXPECT_CALL(*bf_sde_mock_, SetTmCpuPort(kDevice, kCpuPort))
       .WillRepeatedly(Return(::util::OkStatus()));
 
-  EXPECT_OK(ReplayPortsConfig(kNodeId));
+  EXPECT_OK(ReplayChassisConfig(kNodeId));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

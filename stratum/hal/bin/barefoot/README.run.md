@@ -369,8 +369,8 @@ vendor_config {
           key: 1  # singleton port id reference
           value {
             byte_shaping {
-              max_rate_bps: 1000000000 # 1G
-              max_burst_bytes: 16384 # 2x MTU
+              rate_bps: 1000000000 # 1G
+              burst_bytes: 16384 # 2x MTU
             }
           }
         }
@@ -397,23 +397,38 @@ vendor_config {
         pool_configs {
           pool: INGRESS_APP_POOL_0
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
         pool_configs {
           pool: INGRESS_APP_POOL_1
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
         pool_configs {
           pool: EGRESS_APP_POOL_0
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
         pool_configs {
           pool: EGRESS_APP_POOL_1
           pool_size: 30000
-          enable_color_drop: false
+          enable_color_drop: true
+          color_drop_limit_green: 30000
+          color_drop_limit_yellow: 10000
+          color_drop_limit_red: 5000
         }
+        pool_color_drop_hysteresis_green: 20000
+        pool_color_drop_hysteresis_yellow: 8000
+        pool_color_drop_hysteresis_red: 4000
         ppg_configs {
           sdk_port: 260
           is_default_ppg: true
@@ -469,12 +484,14 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            max_shaping_is_in_pps: false
-            max_rate: 100000000
-            max_burst: 9000
-            min_shaping_is_in_pps: false
-            min_rate: 1000000
-            min_burst: 4500
+            max_rate_bytes {
+              rate_bps: 100000000
+              burst_bytes: 9000
+            }
+            min_rate_bytes {
+              rate_bps: 1000000
+              burst_bytes: 4500
+            }
           }
           queue_mapping {
             queue_id: 1
@@ -485,12 +502,14 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            max_shaping_is_in_pps: false
-            max_rate: 100000000
-            max_burst: 9000
-            min_shaping_is_in_pps: false
-            min_rate: 1000000
-            min_burst: 4500
+            max_rate_bytes {
+              rate_bps: 100000000
+              burst_bytes: 9000
+            }
+            min_rate_bytes {
+              rate_bps: 1000000
+              burst_bytes: 4500
+            }
           }
         }
         queue_configs {
@@ -504,12 +523,14 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            max_shaping_is_in_pps: false
-            max_rate: 100000000
-            max_burst: 9000
-            min_shaping_is_in_pps: false
-            min_rate: 1000000
-            min_burst: 4500
+            max_rate_bytes {
+              rate_bps: 100000000
+              burst_bytes: 9000
+            }
+            min_rate_bytes {
+              rate_bps: 1000000
+              burst_bytes: 4500
+            }
           }
           queue_mapping {
             queue_id: 1
@@ -520,12 +541,14 @@ vendor_config {
             base_use_limit: 200
             baf: BAF_80_PERCENT
             hysteresis: 50
-            max_shaping_is_in_pps: false
-            max_rate: 100000000
-            max_burst: 9000
-            min_shaping_is_in_pps: false
-            min_rate: 1000000
-            min_burst: 4500
+            max_rate_bytes {
+              rate_bps: 100000000
+              burst_bytes: 9000
+            }
+            min_rate_bytes {
+              rate_bps: 1000000
+              burst_bytes: 4500
+            }
           }
         }
       }
@@ -736,3 +759,22 @@ You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
 Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline
 format.
+
+### Checking the Switch or ASIC revision number
+
+Some switch models and ASIC chips are updated over time, but the old devices
+remain in circulation.
+The following commands allow you to check the revision of your device.
+
+For use with the `ucli` in a running Stratum instance:
+```bash
+# Check for part_revision_number and the codes A0 or B0.
+efuse 0
+pm sku -d
+```
+
+In a bash shell on the switch:
+```bash
+lspci -d 1d1c:
+# 05:00.0 Unassigned class [ff00]: Device 1d1c:0010 (rev 10)
+```
