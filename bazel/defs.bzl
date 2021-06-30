@@ -63,6 +63,7 @@ STRATUM_COMPILER_ERRORS_COMMON = [
 STRATUM_COMPILER_ERRORS_GCC = [
     "-fdiagnostics-color=always",
     "-Werror=reorder",
+    "-Wno-error=maybe-uninitialized",  # GCC detects some false positives
 ]
 STRATUM_COMPILER_ERRORS_LLVM = [
     "-Werror=implicit-fallthrough",  # TODO(max): move to common after gcc 7
