@@ -112,14 +112,16 @@ function clean_up_after_build() {
 }
 
 # ---------- Build: BMv2 -------------
-# TODO(bocon): Investigate using a shared Bazel cache
 set -x
-docker build \
-  -t opennetworking/mn-stratum:latest \
-  -f tools/mininet/Dockerfile .
+RELEASE_BUILD=true \
+  JOBS=${JOBS} \
+  BAZEL_CACHE=${BAZEL_CACHE} \
+  DOCKER_IMG=${IMAGE_NAME} \
+  tools/mininet/build-stratum-bmv2-container.sh
 docker tag opennetworking/mn-stratum:latest opennetworking/mn-stratum:${VERSION}
 docker push opennetworking/mn-stratum:${VERSION}
 docker push opennetworking/mn-stratum:latest
+cp ./stratum_bmv2_deb.deb $RELEASE_DIR
 set +x
 
 # ---------- Build: Broadcom -------------
