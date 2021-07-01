@@ -6,7 +6,7 @@ set -e
 DOCKERFILE_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../.." >/dev/null 2>&1 && pwd )"}
 JOBS=${JOBS:-4}
-STRATUM_TARGET=stratum-bmv2
+STRATUM_TARGET=stratum_bmv2
 DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
 print_help() {
