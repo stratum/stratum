@@ -62,7 +62,7 @@ docker run --rm \
   -w /stratum \
   --entrypoint bash \
   $DOCKER_IMG -c \
-    "bazel build //stratum/hal/bin/bmv2:stratum_bmv2_deb \
+    "bazel build //stratum/hal/bin/bmv2:${STRATUM_TARGET}_deb \
        $BAZEL_OPTS \
        --jobs $JOBS && \
      cp -f /stratum/bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2_deb.deb /output/"
@@ -91,7 +91,7 @@ fi
 popd
 
 # Build Stratum BF runtime Docker image
-STRATUM_NAME=$STRATUM_TARGET
+STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=opennetworking/mn-stratum
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
@@ -101,7 +101,7 @@ docker build \
   -f "$DOCKERFILE_DIR/Dockerfile" \
   "$(pwd)"
 
-docker save $RUNTIME_IMAGE | gzip > ${STRATUM_NAME}-${SDE_VERSION}-docker.tar.gz
+docker save $RUNTIME_IMAGE | gzip > ${STRATUM_NAME}-docker.tar.gz
 
 set +x
 echo "
