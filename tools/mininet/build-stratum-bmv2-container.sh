@@ -6,6 +6,7 @@ set -e
 DOCKERFILE_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../.." >/dev/null 2>&1 && pwd )"}
 JOBS=${JOBS:-4}
+STRATUM_TARGET=stratum-bmv2
 DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
 print_help() {
@@ -61,7 +62,7 @@ docker run --rm \
   -w /stratum \
   --entrypoint bash \
   $DOCKER_IMG -c \
-    "bazel build //stratum/hal/bin/bmv2:stratum_bmv2_deb.deb \
+    "bazel build //stratum/hal/bin/bmv2:stratum_bmv2_deb \
        $BAZEL_OPTS \
        --jobs $JOBS && \
      cp -f /stratum/bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2_deb.deb /output/"
@@ -73,6 +74,7 @@ if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
   DOCKER_BUILD_OPTS+="--squash "
 fi
 
+DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
 DOCKER_BUILD_OPTS+="--label build-timestamp=$(date +%FT%T%z) "
 DOCKER_BUILD_OPTS+="--label build-machine=$(hostname) "
 
@@ -89,7 +91,7 @@ fi
 popd
 
 # Build Stratum BF runtime Docker image
-STRATUM_NAME=stratum-bmv2
+STRATUM_NAME=$STRATUM_TARGET
 RUNTIME_IMAGE=opennetworking/mn-stratum
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
