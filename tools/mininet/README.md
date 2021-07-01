@@ -13,7 +13,7 @@ We provide a Docker image that can execute a Mininet emulated network using
 
 To build this image, from the Stratum project root:
 
-     tools/mininet/build-stratum-bmv2-container.sh
+    tools/mininet/build-stratum-bmv2-container.sh
 
 ## Obtain image from Docker Hub
 
