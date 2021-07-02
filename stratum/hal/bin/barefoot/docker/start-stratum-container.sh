@@ -17,7 +17,12 @@ elif [[ -z "$PLATFORM" ]]; then
 fi
 
 # Set Docker network options.
-if [[ "$PLATFORM" == 'barefoot-tofino-model' ]]; then
+# On tofino-model and certain switches we run Stratum directly on the host
+# network. The BSP on Wedge devices needs access to the usb0 interface.
+if [[ "$PLATFORM" == 'barefoot-tofino-model' ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-32x-r0" ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-32qs-r0" ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-65x-r0" ]]; then
     DOCKER_NET_OPTS="--network host "
 else
     DOCKER_NET_OPTS="-p 9339:9339 "
