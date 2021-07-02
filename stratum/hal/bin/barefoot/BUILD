@@ -166,6 +166,14 @@ pkg_tar(
     ],
 )
 
+# Extra SDE runtime dependencies when using the BSP.
+# TODO(max): consider packaging these deps with the SDE itself somehow.
+sde_bsp_debian_deps = [
+    # Edgecore Wedge100bf BSP dependencies.
+    "libusb-1.0-0",
+    "libcurl4-gnutls-dev",
+]
+
 pkg_deb(
     name = "stratum_bf_deb",
     architecture = "amd64",
@@ -176,7 +184,7 @@ pkg_deb(
         "libedit2",
         "systemd",
         "telnet",
-    ],
+    ] + sde_bsp_debian_deps,
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
@@ -198,7 +206,7 @@ pkg_deb(
         "libssl1.1",
         "systemd",
         "telnet",
-    ],
+    ] + sde_bsp_debian_deps,
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
