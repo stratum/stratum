@@ -37,7 +37,7 @@ stratum_cc_library(
     name = "bcm_sdk_wrapper",
     srcs = ["bcm_sdk_wrapper.cc"],
     hdrs = ["bcm_sdk_wrapper.h"],
-    copts = ["-Wno-thread-safety-analysis"], # TODO(max)
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(max)
     defines = ["NDEBUG"],
     include_prefix = "stratum/hal/lib/bcm/",
     strip_include_prefix = "./",
@@ -45,7 +45,6 @@ stratum_cc_library(
         ":bcm_diag_shell",
         ":macros",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/net_util:ipaddress",
@@ -64,6 +63,7 @@ stratum_cc_library(
         "@com_github_opennetworkinglab_sdklt//:bcm_headers",
         "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/strings",

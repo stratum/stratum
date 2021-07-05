@@ -10,8 +10,6 @@ CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- '*.h' '*.cc'
 
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
-stratum/glue/gtl/cleanup_test.cc
-stratum/glue/gtl/cleanup.h
 stratum/glue/gtl/map_util_test.cc
 stratum/glue/gtl/map_util.h
 stratum/glue/gtl/source_location.h

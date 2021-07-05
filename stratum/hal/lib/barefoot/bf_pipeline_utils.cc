@@ -10,7 +10,6 @@
 #include "absl/strings/strip.h"
 #include "gflags/gflags.h"
 #include "nlohmann/json.hpp"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"

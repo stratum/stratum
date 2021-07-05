@@ -47,7 +47,6 @@ stratum_cc_library(
         ":macros",
         ":sdk_build_flags",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/net_util:ipaddress",

@@ -3,10 +3,6 @@ Upstream-Name: Stratum
 Upstream-Contact: Stratum dev <stratum-dev@lists.stratumproject.org>
 Source: https://github.com/stratum/stratum
 
-Files: stratum/glue/gtl/cleanup.h stratum/glue/gtl/cleanup_test.cc
-Copyright: 2016 The TensorFlow Authors
-License: Apache-2.0
-
 Files: stratum/glue/gtl/map_util.h stratum/glue/gtl/stl_util.h
 Copyright: 2015 The TensorFlow Authors
 License: Apache-2.0
