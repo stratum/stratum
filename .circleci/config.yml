@@ -447,9 +447,9 @@ workflows:
       - publish-docker-stratum-replay:
           requires:
             - publish-docker-build
-      - publish-docker-stratum-tools:
-          requires:
-            - publish-docker-build
+      - publish-docker-stratum-tools
+          # requires:
+          #   - publish-docker-build
       - publish-docker-chassis-config-migrator:
           requires:
             - publish-docker-build
