@@ -289,6 +289,35 @@ jobs:
       - *clean_bazel_cache
       - *save_bazel_cache
 
+  publish-docker-stratum-tools:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/tools
+      - DOCKER_FILE: Dockerfile.stratum_tools
+      - DOCKER_IMG: stratumproject/stratum-tools
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum tools package
+          command: |
+            bazel build --config=release //stratum/tools:stratum_tools_deb
+            cp bazel-bin/stratum/tools/stratum_tools_deb.deb $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - run:
+          name: Test stratum-tools Docker image
+          command: |
+            docker run $DOCKER_IMG
+      - *docker_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
   publish-docker-stratum-replay:
     docker:
       - image: stratumproject/build:build
@@ -416,6 +445,9 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-stratum-replay:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-tools:
           requires:
             - publish-docker-build
       - publish-docker-chassis-config-migrator:
