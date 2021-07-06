@@ -51,6 +51,9 @@ constexpr uint16 kMaxMulticastGroupId = 65535;
 constexpr uint32 kMaxMulticastNodeId = 0x1000000;
 constexpr uint64 kMaxPriority = (1u << 24) - 1;
 
+// Maximum number of queues per (non-channelized 100G) port on Tofino.
+constexpr int kMaxQueuesPerPort = 32;
+
 constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(1);
 
 }  // namespace barefoot
