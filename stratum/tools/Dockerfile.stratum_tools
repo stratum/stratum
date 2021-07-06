@@ -6,15 +6,9 @@ FROM bitnami/minideb:stretch as runtime
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="Docker-based distribution of the Stratum-tools package"
 
-ADD ./bf_pipeline_builder /usr/local/bin
-ADD ./chassis_config_migrator /usr/local/bin
-ADD ./gnmi_cli /usr/local/bin
-ADD ./onlp_cli /usr/local/bin
-ADD ./phal_cli /usr/local/bin
-ADD ./procmon_main /usr/local/bin
-ADD ./stratum_dummy /usr/local/bin
-ADD ./stratum_replay /usr/local/bin
-ADD ./stratum_stub /usr/local/bin
+ADD ./stratum_tools_deb.deb /
+RUN install_packages ./stratum_tools_deb.deb
+RUN rm ./stratum_tools_deb.deb
 
 ENTRYPOINT ["bash"]
 CMD ["ls -l /usr/local/bin"]
