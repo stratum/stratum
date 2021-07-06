@@ -104,6 +104,7 @@ stratum_cc_library(
     copts = ["-Wno-thread-safety-analysis"],  # TODO(antonin)
     deps = [
         ":bf_sde_interface",
+        ":bfrt_constants",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",

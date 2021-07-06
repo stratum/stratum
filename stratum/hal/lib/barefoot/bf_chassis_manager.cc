@@ -14,6 +14,7 @@
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
@@ -667,6 +668,8 @@ BfChassisManager::~BfChassisManager() = default;
 
   std::map<uint64, std::map<uint32, PortKey>>
       node_id_to_port_id_to_singleton_port_key;
+  std::map<uint64, std::map<uint32, uint32>> node_id_to_port_id_to_sdk_port_id;
+  std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id;
 
   for (const auto& singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
@@ -681,9 +684,40 @@ BfChassisManager::~BfChassisManager() = default;
     const int* device = gtl::FindOrNull(node_id_to_device, node_id);
     CHECK_RETURN_IF_FALSE(device != nullptr)
         << "Node " << node_id << " not found for port " << port_id << ".";
-    RETURN_IF_ERROR(
-        bf_sde_interface_->GetPortIdFromPortKey(*device, singleton_port_key)
-            .status());
+    ASSIGN_OR_RETURN(uint32 sdk_port, bf_sde_interface_->GetPortIdFromPortKey(
+                                          *device, singleton_port_key));
+    node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port;
+    node_id_to_sdk_port_id_to_port_id[node_id][sdk_port] = port_id;
+  }
+
+  // Verify the QoS configuration.
+  if (config.has_vendor_config() &&
+      config.vendor_config().has_tofino_config()) {
+    const auto& node_id_to_qos_config =
+        config.vendor_config().tofino_config().node_id_to_qos_config();
+    for (const auto& e : node_id_to_qos_config) {
+      const uint64 node_id = e.first;
+      const TofinoConfig::TofinoQosConfig& qos_config = e.second;
+      const int* device = gtl::FindOrNull(node_id_to_device, node_id);
+      CHECK_RETURN_IF_FALSE(device != nullptr)
+          << "Node " << node_id << " not found.";
+      for (const auto& queue_config : qos_config.queue_configs()) {
+        CHECK_RETURN_IF_FALSE(
+            gtl::FindOrNull(node_id_to_sdk_port_id_to_port_id[node_id],
+                            queue_config.sdk_port()) != nullptr)
+            << "Invalid port " << queue_config.sdk_port() << " in queue config "
+            << queue_config.ShortDebugString() << ".";
+        CHECK_RETURN_IF_FALSE(queue_config.queue_mapping_size() <=
+                              kMaxQueuesPerPort);
+        // Check that queue mappings are in ascending order starting from zero.
+        for (int i = 0; i < queue_config.queue_mapping_size(); ++i) {
+          CHECK_RETURN_IF_FALSE(i == queue_config.queue_mapping(i).queue_id())
+              << "Found out-of-order queue mapping for queue id "
+              << queue_config.queue_mapping(i).queue_id() << " in queue config "
+              << queue_config.ShortDebugString() << ".";
+        }
+      }
+    }
   }
 
   // If the class is initialized, we also need to check if the new config will
