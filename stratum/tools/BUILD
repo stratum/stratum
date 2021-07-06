@@ -10,7 +10,6 @@ pkg_tar(
         "//stratum/hal/bin/dummy:stratum_dummy",
         "//stratum/hal/config:chassis_config_migrator",
         "//stratum/hal/lib/phal:phal_cli",
-        "//stratum/hal/lib/phal/onlp:onlp_cli",
         "//stratum/hal/stub/embedded:stratum_stub",
         "//stratum/procmon:procmon_main",
         "//stratum/tools/gnmi:gnmi_cli",

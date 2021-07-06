@@ -10,5 +10,11 @@ ADD ./stratum_tools_deb.deb /
 RUN install_packages ./stratum_tools_deb.deb
 RUN rm ./stratum_tools_deb.deb
 
-ENTRYPOINT ["bash"]
-CMD ["ls -l /usr/local/bin"]
+CMD bf_pipeline_builder -version && \
+    stratum_dummy -version && \
+    chassis_config_migrator -version && \
+    phal_cli -version && \
+    stratum_stub -version && \
+    procmon_main -version && \
+    gnmi_cli -version && \
+    stratum_replay -version
