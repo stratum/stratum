@@ -259,6 +259,10 @@ BfrtActionProfileManager::CreateInstance(BfSdeInterface* bf_sde_interface,
   std::vector<uint32> member_ids;
   std::vector<bool> member_status;
   for (const auto& member : action_profile_group.members()) {
+    CHECK_RETURN_IF_FALSE(
+        member.watch_kind_case() ==
+        ::p4::v1::ActionProfileGroup::Member::WATCH_KIND_NOT_SET)
+        << "Watch ports are not supported.";
     member_ids.push_back(member.member_id());
     member_status.push_back(true);  // Activate the member.
   }
