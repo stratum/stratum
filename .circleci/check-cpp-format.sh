@@ -34,8 +34,6 @@ stratum/hal/lib/barefoot/bf_sde_wrapper.cc
 stratum/hal/lib/barefoot/bf_sde_wrapper.h
 stratum/hal/lib/barefoot/bf_switch.cc
 stratum/hal/lib/barefoot/bf_switch.h
-stratum/hal/lib/barefoot/bfrt_action_profile_manager.cc
-stratum/hal/lib/barefoot/bfrt_action_profile_manager.h
 stratum/hal/lib/barefoot/bfrt_constants.h
 stratum/hal/lib/barefoot/bfrt_counter_manager_test.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager.cc

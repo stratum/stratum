@@ -7,7 +7,6 @@
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_sde_wrapper.h"
-#include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
@@ -50,8 +49,6 @@ namespace barefoot {
 
   auto bfrt_table_manager =
       BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
-  auto bfrt_action_profile_manager =
-      BfrtActionProfileManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_packetio_manger =
       BfrtPacketioManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_pre_manager =
@@ -59,9 +56,9 @@ namespace barefoot {
   auto bfrt_counter_manager =
       BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_node = BfrtNode::CreateInstance(
-      bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
-      bfrt_packetio_manger.get(), bfrt_pre_manager.get(),
-      bfrt_counter_manager.get(), bf_sde_wrapper, device_id);
+      bfrt_table_manager.get(), bfrt_packetio_manger.get(),
+      bfrt_pre_manager.get(), bfrt_counter_manager.get(), bf_sde_wrapper,
+      device_id);
   PhalInterface* phal = phal::Phal::CreateSingleton();
   std::map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},
