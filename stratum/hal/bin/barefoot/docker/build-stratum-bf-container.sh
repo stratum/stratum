@@ -6,7 +6,7 @@ set -e
 DOCKERFILE_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 2>&1 && pwd )"}
 STRATUM_BF_DIR=$( cd "$DOCKERFILE_DIR/.." >/dev/null 2>&1 && pwd )
-STRATUM_TARGET=${STRATUM_TARGET:-stratum_bf}
+STRATUM_TARGET=${STRATUM_TARGET:-stratum_bfrt}
 JOBS=${JOBS:-4}
 DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
@@ -24,7 +24,7 @@ Example:
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
     SDE_INSTALL: Path to BF SDE install directory (set to skip SDE build)
-    STRATUM_TARGET: stratum_bf or stratum_bfrt (Default: stratum_bf)
+    STRATUM_TARGET: stratum_bf or stratum_bfrt (Default: stratum_bfrt)
     STRATUM_ROOT: The root directory of Stratum.
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
