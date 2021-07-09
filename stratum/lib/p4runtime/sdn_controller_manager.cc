@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "stratum/lib/p4runtime/sdn_controller_manager.h"
+
+#include <algorithm>
 
 #include "absl/numeric/int128.h"
 #include "absl/status/status.h"
@@ -89,7 +92,7 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
     const p4::v1::MasterArbitrationUpdate& update, SdnConnection* controller) {
   absl::MutexLock l(&lock_);
 
-  // TODO: arbitration should fail with invalid device id.
+  // TODO(unknown): arbitration should fail with invalid device id.
   device_id_ = update.device_id();
 
   // Verify the request's device ID is being sent to the correct device.

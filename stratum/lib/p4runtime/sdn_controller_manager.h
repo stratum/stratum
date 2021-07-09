@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _SDN_CONTROLLER_MANAGER_H_
-#define _SDN_CONTROLLER_MANAGER_H_
+#ifndef STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
+#define STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
+
+#include <vector>
+#include <string>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/numeric/int128.h"
@@ -71,7 +74,7 @@ class SdnConnection {
 
 class SdnControllerManager {
  public:
-  // TODO: Set device ID through gNMI.
+  // TODO(unknown): Set device ID through gNMI.
   SdnControllerManager() : device_id_(183807201) {}
 
   grpc::Status HandleArbitrationUpdate(
@@ -158,4 +161,4 @@ class SdnControllerManager {
 }  // namespace p4runtime
 }  // namespace stratum
 
-#endif  // _SDN_CONTROLLER_MANAGER_H_
+#endif  // STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
