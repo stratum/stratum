@@ -1370,9 +1370,12 @@ namespace {
   // Configure the queues.
   for (const auto& queue_config : qos_config.queue_configs()) {
     for (const auto& queue_mapping : queue_config.queue_mapping()) {
-      RETURN_IF_BFRT_ERROR(bf_tm_q_guaranteed_min_limit_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          queue_mapping.minimum_guaranteed_cells()));
+      // Set gmin only when > 0, as it would otherwise disable the queue.
+      if (queue_mapping.minimum_guaranteed_cells()) {
+        RETURN_IF_BFRT_ERROR(bf_tm_q_guaranteed_min_limit_set(
+            device, queue_config.sdk_port(), queue_mapping.queue_id(),
+            queue_mapping.minimum_guaranteed_cells()));
+      }
       ASSIGN_OR_RETURN(bf_tm_app_pool_t pool,
                        ApplicationPoolToTofinoPool(queue_mapping.pool()));
       ASSIGN_OR_RETURN(bf_tm_queue_baf_t baf,
