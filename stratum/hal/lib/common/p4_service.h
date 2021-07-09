@@ -27,6 +27,7 @@
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/p4/forwarding_pipeline_configs.pb.h"
+#include "stratum/lib/p4runtime/sdn_controller_manager.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 
 namespace stratum {
@@ -242,6 +243,15 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // List of threads which send received responses up to the controller.
   std::vector<pthread_t> stream_response_reader_tids_
       GUARDED_BY(stream_response_thread_lock_);
+
+  // P4RT can accept multiple connections to a single switch for redundancy.
+  // When there is >1 connection the switch chooses a primary which is used for
+  // PacketIO, and is the only connection allowed to write updates.
+  //
+  // It is possible for connections to be made for specific roles. In which case
+  // one primary connection is allowed for each distinct role.
+  std::unique_ptr<p4runtime::SdnControllerManager> controller_manager_
+      ABSL_GUARDED_BY(controller_lock_);
 
   // Map of per-node Channels which are used to forward received responses to
   // P4Service.

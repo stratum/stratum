@@ -560,6 +560,7 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
+        "//stratum/lib/p4runtime:sdn_controller_manager",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "@com_github_google_glog//:glog",
