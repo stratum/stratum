@@ -340,18 +340,16 @@ BfChassisManager::~BfChassisManager() = default;
     // TODO(max): Check if we can retain more state. PushChassisConfig should
     // not clear the entire state if not necessary. Only pipeline pushes reset
     // the ASIC state, requiring a full replay.
-    const absl::Time* time_last_changed = gtl::FindOrNull(
-        node_id_to_port_id_to_time_last_changed_[node_id], port_id);
-    if (time_last_changed != nullptr) {
+    if (const absl::Time* time_last_changed = gtl::FindOrNull(
+            node_id_to_port_id_to_time_last_changed_[node_id], port_id)) {
       node_id_to_port_id_to_time_last_changed[node_id][port_id] =
           *time_last_changed;
     } else {
       node_id_to_port_id_to_time_last_changed[node_id][port_id] =
           absl::UnixEpoch();
     }
-    const PortState* port_state =
-        gtl::FindOrNull(node_id_to_port_id_to_port_state_[node_id], port_id);
-    if (port_state != nullptr) {
+    if (const PortState* port_state = gtl::FindOrNull(
+            node_id_to_port_id_to_port_state_[node_id], port_id)) {
       node_id_to_port_id_to_port_state[node_id][port_id] = *port_state;
     } else {
       node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
@@ -384,9 +382,8 @@ BfChassisManager::~BfChassisManager() = default;
     // get Tofino device port (called SDK port ID).
 
     const PortConfig* config_old = nullptr;
-    const auto* port_id_to_port_config_old =
-        gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
-    if (port_id_to_port_config_old != nullptr) {
+    if (const auto* port_id_to_port_config_old =
+            gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id)) {
       config_old = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
     }
 
