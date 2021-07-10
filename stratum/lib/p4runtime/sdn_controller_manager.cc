@@ -23,6 +23,8 @@
 #include "glog/logging.h"
 #include "p4/v1/p4runtime.pb.h"
 
+#define P4RT_HAS_ROLES 0
+
 namespace stratum {
 namespace p4runtime {
 namespace {
@@ -108,9 +110,11 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
   // If the role name is not set then we assume the connection is a 'root'
   // connection.
   absl::optional<std::string> role_name;
+#if P4RT_HAS_ROLES
   if (update.has_role() && !update.role().name().empty()) {
     role_name = update.role().name();
   }
+#endif
 
   // If the election ID is not set then we assume the controller does not want
   // this connection to be the primary connection.
@@ -218,9 +222,11 @@ grpc::Status SdnControllerManager::AllowRequest(
 grpc::Status SdnControllerManager::AllowRequest(
     const p4::v1::WriteRequest& request) {
   absl::optional<std::string> role_name;
+#if P4RT_HAS_ROLES
   if (!request.role().empty()) {
     role_name = request.role();
   }
+#endif
 
   absl::optional<absl::uint128> election_id;
   if (request.has_election_id()) {
@@ -233,9 +239,11 @@ grpc::Status SdnControllerManager::AllowRequest(
 grpc::Status SdnControllerManager::AllowRequest(
     const p4::v1::SetForwardingPipelineConfigRequest& request) {
   absl::optional<std::string> role_name;
+#if P4RT_HAS_ROLES
   if (!request.role().empty()) {
     role_name = request.role();
   }
+#endif
 
   absl::optional<absl::uint128> election_id;
   if (request.has_election_id()) {
@@ -307,8 +315,10 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
 
   // Populate the role only if the connection has set one.
   if (connection->GetRoleName().has_value()) {
+#if P4RT_HAS_ROLES
     *arbitration->mutable_role()->mutable_name() =
         connection->GetRoleName().value();
+#endif
   }
 
   // Populate the election ID with the highest accepted value.

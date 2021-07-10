@@ -186,6 +186,10 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
                                        ServerStreamChannelReaderWriter* stream)
       LOCKS_EXCLUDED(controller_lock_);
 
+  ::util::Status SetupStreamMessageChannelForNode(uint64 node_id)
+      SHARED_LOCKS_REQUIRED(controller_lock_)
+          LOCKS_EXCLUDED(stream_response_thread_lock_);
+
   // Removes an existing controller from the controllers_ set given its stream.
   // To be called after stream from an existing controller is broken (e.g.
   // controller is disconnected).

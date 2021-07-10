@@ -562,18 +562,17 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   // 3- At any point of time, only the master stream is capable of sending
   //    and receiving packets.
 
+  // First thing to do is to find a new ID for this connection.
+  auto ret = FindNewConnectionId();
+  if (!ret.ok()) {
+    return ::grpc::Status(ToGrpcCode(ret.status().CanonicalCode()),
+                          ret.status().error_message());
+  }
+  uint64 connection_id = ret.ValueOrDie();
+
   // We create a unique SDN connection object for every active connection.
   auto sdn_connection =
       absl::make_unique<p4runtime::SdnConnection>(context, stream);
-
-  // // First thing to do is to find a new ID for this connection.
-  // auto ret = FindNewConnectionId();
-  // if (!ret.ok()) {
-  //   return ::grpc::Status(ToGrpcCode(ret.status().CanonicalCode()),
-  //                         ret.status().error_message());
-  // }
-  // uint64 connection_id = ret.ValueOrDie();
-  uint64 connection_id = 1;
 
   // The ID of the node this stream channel corresponds to. This is MUST NOT
   // change after it is set for the first time.
@@ -601,13 +600,17 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         }
         if (node_id == 0) {
           node_id = req.arbitration().device_id();
-        } else {
+        } else if (node_id != req.arbitration().device_id()) {
           std::stringstream ss;
           ss << "Node (aka device) ID for this stream has changed. Was "
              << node_id << ", now is " << req.arbitration().device_id() << ".";
           return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT, ss.str());
         }
-        // TODO: AddOrModifyController
+        auto ret = SetupStreamMessageChannelForNode(node_id);
+        if (!ret.ok()) {
+          return ::grpc::Status(ToGrpcCode(ret.CanonicalCode()),
+                                ret.error_message());
+        }
 #if 0
         if (req.arbitration().device_id() == 0) {
           return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
@@ -728,6 +731,45 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
     }
   }
   return MAKE_ERROR(ERR_NO_RESOURCE) << "No free connection id.";
+}
+
+::util::Status P4Service::SetupStreamMessageChannelForNode(uint64 node_id) {
+  // To be called by all the threads handling controller connections.
+  absl::WriterMutexLock l(&stream_response_thread_lock_);
+  auto it = stream_response_channels_.find(node_id);
+  if (it == stream_response_channels_.end()) {
+    // This is the first time we are hearing about this node. Lets try to add
+    // an RX response writer for it. If the node_id is invalid, registration
+    // will fail.
+    std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>> channel =
+        Channel<::p4::v1::StreamMessageResponse>::Create(128);
+    // Create the writer and register with the SwitchInterface.
+    auto writer =
+        std::make_shared<ChannelWriterWrapper<::p4::v1::StreamMessageResponse>>(
+            ChannelWriter<::p4::v1::StreamMessageResponse>::Create(channel));
+    RETURN_IF_ERROR(switch_interface_->RegisterStreamMessageResponseWriter(
+        node_id, writer));
+    // Create the reader and pass it to a new thread.
+    auto reader =
+        ChannelReader<::p4::v1::StreamMessageResponse>::Create(channel);
+    pthread_t tid = 0;
+    int ret = pthread_create(&tid, nullptr, StreamResponseReceiveThreadFunc,
+                             new ReaderArgs<::p4::v1::StreamMessageResponse>{
+                                 this, std::move(reader), node_id});
+    if (ret) {
+      // Clean up state and return error.
+      RETURN_IF_ERROR(
+          switch_interface_->UnregisterStreamMessageResponseWriter(node_id));
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to create packet-in receiver thread for node "
+             << node_id << " with error " << ret << ".";
+    }
+    // Store Channel and tid for Teardown().
+    stream_response_reader_tids_.push_back(tid);
+    stream_response_channels_[node_id] = channel;
+  }
+
+  return ::util::OkStatus();
 }
 
 ::util::Status P4Service::AddOrModifyController(
