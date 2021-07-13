@@ -10,11 +10,6 @@ load(
 
 licenses(["notice"])  # Apache v2
 
-load(
-    "//bazel:rules.bzl",
-    "stratum_cc_library",
-)
-
 package(
     default_visibility = STRATUM_INTERNAL,
 )
