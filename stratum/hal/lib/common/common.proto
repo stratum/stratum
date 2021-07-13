@@ -276,6 +276,8 @@ message PortConfigParams {
   MacAddress mac_address = 7;
   // The configured loopback state for this port.
   LoopbackState loopback_mode = 8;
+  // Tunable SFP+'s frequency in Hz
+  int64 frequency = 9;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
