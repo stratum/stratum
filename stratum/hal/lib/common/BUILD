@@ -585,6 +585,7 @@ stratum_cc_library(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
+        "//stratum/lib/p4runtime:sdn_controller_manager",
     ],
     defines = [
         "P4RUNTIME_VER=" + P4RUNTIME_VER,
@@ -615,6 +616,7 @@ stratum_cc_test(
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
+        "//stratum/lib/p4runtime:stream_message_reader_writer_mock",
         "//stratum/public/lib:error",
     ],
     defines = [
