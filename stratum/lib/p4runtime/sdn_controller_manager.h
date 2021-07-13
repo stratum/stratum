@@ -17,8 +17,8 @@
 #ifndef STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
 #define STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/numeric/int128.h"
@@ -31,9 +31,10 @@ namespace p4runtime {
 // A connection between a controller and p4rt server.
 class SdnConnection {
  public:
-  SdnConnection(grpc::ServerContext* context,
-                grpc::ServerReaderWriter<p4::v1::StreamMessageResponse,
-                                         p4::v1::StreamMessageRequest>* stream)
+  SdnConnection(
+      grpc::ServerContext* context,
+      grpc::ServerReaderWriterInterface<p4::v1::StreamMessageResponse,
+                                        p4::v1::StreamMessageRequest>* stream)
       : initialized_(false), grpc_context_(context), grpc_stream_(stream) {}
 
   void Initialize() { initialized_ = true; }
@@ -67,8 +68,8 @@ class SdnConnection {
   // While the gRPC connection is open we keep access to the context & the
   // read/write stream for communication.
   grpc::ServerContext* grpc_context_;  // not owned.
-  grpc::ServerReaderWriter<p4::v1::StreamMessageResponse,
-                           p4::v1::StreamMessageRequest>*
+  grpc::ServerReaderWriterInterface<p4::v1::StreamMessageResponse,
+                                    p4::v1::StreamMessageRequest>*
       grpc_stream_;  // not owned.
 };
 
@@ -87,11 +88,15 @@ class SdnControllerManager {
 
   grpc::Status AllowRequest(const absl::optional<std::string>& role_name,
                             const absl::optional<absl::uint128>& election_id)
+      const ABSL_LOCKS_EXCLUDED(lock_);
+  grpc::Status AllowRequest(const p4::v1::WriteRequest& request) const
+      ABSL_LOCKS_EXCLUDED(lock_);
+  grpc::Status AllowRequest(
+      const p4::v1::SetForwardingPipelineConfigRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
 
-  grpc::Status AllowRequest(const p4::v1::WriteRequest& request);
-  grpc::Status AllowRequest(
-      const p4::v1::SetForwardingPipelineConfigRequest& request);
+  // Returns the number of currently active connections for the given role.
+  int ActiveConnections(const absl::optional<std::string>& role_name) const;
 
   bool SendStreamMessageToPrimary(const absl::optional<std::string>& role_name,
                                   const p4::v1::StreamMessageResponse& response)
@@ -121,7 +126,7 @@ class SdnControllerManager {
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
   // Lock for protecting SdnControllerManager member fields.
-  absl::Mutex lock_;
+  mutable absl::Mutex lock_;
 
   // Device ID is used to ensure all requests are connecting to the intended
   // place.
@@ -147,7 +152,7 @@ class SdnControllerManager {
 
   // We maintain a map of the highest election IDs that have been selected for
   // the primary connection of a role. Once an election ID is set all new
-  // primary connections for that rolue must use an election ID that is >= in
+  // primary connections for that role must use an election ID that is >= in
   // value.
   //
   // key:   role_name   (no value indicaates the default/root role)
