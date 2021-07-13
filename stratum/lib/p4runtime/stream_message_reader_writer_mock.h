@@ -2,8 +2,8 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
-#define STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
+#ifndef STRATUM_LIB_P4RUNTIME_STREAM_MESSAGE_READER_WRITER_MOCK_H_
+#define STRATUM_LIB_P4RUNTIME_STREAM_MESSAGE_READER_WRITER_MOCK_H_
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -31,4 +31,4 @@ class StreamMessageReaderWriterMock
   MOCK_METHOD1(Read, bool(::p4::v1::StreamMessageRequest*));
 };
 
-#endif  // STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
+#endif  // STRATUM_LIB_P4RUNTIME_STREAM_MESSAGE_READER_WRITER_MOCK_H_

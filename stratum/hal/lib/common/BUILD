@@ -596,6 +596,7 @@ stratum_cc_test(
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "//stratum/lib/p4runtime:stream_message_reader_writer_mock",
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",

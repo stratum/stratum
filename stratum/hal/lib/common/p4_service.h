@@ -185,6 +185,9 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
                                        const std::string& uri,
                                        ServerStreamChannelReaderWriter* stream)
       LOCKS_EXCLUDED(controller_lock_);
+  ::util::Status AddOrModifyController(
+      uint64 node_id, const p4::v1::MasterArbitrationUpdate& update,
+      p4runtime::SdnConnection* controller) LOCKS_EXCLUDED(controller_lock_);
 
   ::util::Status SetupStreamMessageChannelForNode(uint64 node_id)
       SHARED_LOCKS_REQUIRED(controller_lock_)
@@ -195,16 +198,27 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // controller is disconnected).
   void RemoveController(uint64 node_id, uint64 connection_id)
       LOCKS_EXCLUDED(controller_lock_);
+  void RemoveController(uint64 node_id, p4runtime::SdnConnection* connection)
+      LOCKS_EXCLUDED(controller_lock_);
 
   // Returns true if given (election_id, uri) for a Write request belongs to the
   // master controller stream for a node given by its node ID.
   bool IsWritePermitted(uint64 node_id, absl::uint128 election_id,
                         const std::string& uri) const
       LOCKS_EXCLUDED(controller_lock_);
+  bool IsWritePermitted(uint64 node_id, const p4::v1::WriteRequest& req) const
+      LOCKS_EXCLUDED(controller_lock_);
+  bool IsWritePermitted(uint64 node_id,
+                        const p4::v1::SetForwardingPipelineConfigRequest& req)
+      const LOCKS_EXCLUDED(controller_lock_);
 
   // Returns true if the given connection_id belongs to the master controller
   // stream for a node given by its node ID.
   bool IsMasterController(uint64 node_id, uint64 connection_id) const
+      LOCKS_EXCLUDED(controller_lock_);
+  bool IsMasterController(
+      uint64 node_id, const absl::optional<std::string>& role_name,
+      const absl::optional<absl::uint128>& election_id) const
       LOCKS_EXCLUDED(controller_lock_);
 
   // Thread function for handling stream response RX.
@@ -254,8 +268,10 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   //
   // It is possible for connections to be made for specific roles. In which case
   // one primary connection is allowed for each distinct role.
-  std::unique_ptr<p4runtime::SdnControllerManager> controller_manager_
-      ABSL_GUARDED_BY(controller_lock_);
+  // std::unique_ptr<p4runtime::SdnControllerManager> controller_manager_
+  //     ABSL_GUARDED_BY(controller_lock_);
+  std::map<uint64, p4runtime::SdnControllerManager>
+      node_id_to_controller_manager_ ABSL_GUARDED_BY(controller_lock_);
 
   // Map of per-node Channels which are used to forward received responses to
   // P4Service.
