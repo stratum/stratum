@@ -466,6 +466,7 @@ control ingress(inout parsed_packet_t hdr,
     @switchstack("pipeline_stage: L2")
     table my_station_table {
         key = {
+            hdr.vlan_tag[0].vid: ternary;
             hdr.ethernet.dst_addr: ternary;
         }
         actions = {
