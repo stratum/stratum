@@ -5,6 +5,7 @@
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
 
 #include <set>
+#include <utility>
 
 #include "absl/memory/memory.h"
 #include "stratum/glue/integral_types.h"
@@ -119,6 +120,13 @@ BcmL2Manager::~BcmL2Manager() {}
   if (my_station_entry_to_station_id_.count(entry)) {
     return ::util::OkStatus();
   }
+  // if a vlan is specified, ports need to be configured to accept tagged
+  // traffic on this vlan
+  if (entry.vlan > 0) {
+    RETURN_IF_ERROR(
+        bcm_sdk_interface_->AddVlanIfNotFound(unit_, entry.vlan, false));
+  }
+
   ASSIGN_OR_RETURN(int station_id,
                    bcm_sdk_interface_->AddMyStationEntry(
                        unit_, entry.priority, entry.vlan, entry.vlan_mask,
@@ -141,6 +149,15 @@ BcmL2Manager::~BcmL2Manager() {}
   RETURN_IF_ERROR(bcm_sdk_interface_->DeleteMyStationEntry(unit_, it->second));
   my_station_entry_to_station_id_.erase(entry);
 
+  // check if vlan needs to be removed too
+  it = std::find_if(my_station_entry_to_station_id_.begin(),
+                    my_station_entry_to_station_id_.end(),
+                    [&entry](std::pair<const MyStationEntry, int>& entry_pair) {
+                      return (entry_pair.first.vlan == entry.vlan);
+                    });
+  if (it == my_station_entry_to_station_id_.end()) {
+    RETURN_IF_ERROR(bcm_sdk_interface_->DeleteVlanIfFound(unit_, entry.vlan));
+  }
   return ::util::OkStatus();
 }
 

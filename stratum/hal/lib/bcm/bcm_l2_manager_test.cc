@@ -170,7 +170,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForEmptyVlanConfig) {
   node->set_id(kNodeId);
   node->mutable_config_params()->add_vlan_configs();
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
@@ -211,7 +211,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
   //    try to remove the my station entry again.
 
   // 1st config push
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -232,7 +232,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
   vlan_config->set_block_unknown_unicast(true);
   vlan_config->set_disable_l2_learning(true);
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -246,7 +246,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
                         0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))
@@ -262,7 +262,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
   auto* l2_config = node->mutable_config_params()->mutable_l2_config();
   l2_config->set_l2_age_duration_sec(300);
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -271,7 +271,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))
@@ -290,7 +290,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
   node->mutable_config_params()->add_vlan_configs();
   node->mutable_config_params()->clear_l2_config();
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -307,7 +307,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // 5th config push
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -329,7 +329,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   auto vlan_config = node->mutable_config_params()->add_vlan_configs();
 
   // Failue when L2 is enabled -- scenario 1
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(DefaultError()));
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
@@ -338,7 +338,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is enabled -- scenario 2
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -350,7 +350,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is enabled -- scenario 3
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -364,7 +364,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is enabled -- scenario 4
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -388,7 +388,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   auto* l2_config = node->mutable_config_params()->mutable_l2_config();
   l2_config->set_l2_age_duration_sec(300);
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(DefaultError()));
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
@@ -397,7 +397,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 2
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -409,7 +409,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 3
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -423,7 +423,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 4
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -439,7 +439,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 5
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -460,7 +460,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 6
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -474,7 +474,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
                         0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(DefaultError()));
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
@@ -484,7 +484,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   // Failue when L2 is disabled -- scenario 7
   // AddMyStationEntry will not be called from now on
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -493,7 +493,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))
@@ -505,7 +505,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 8
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -514,7 +514,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))
@@ -528,7 +528,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 9
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -537,7 +537,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))
@@ -564,7 +564,7 @@ TEST_F(BcmL2ManagerTest, VerifyChassisConfigSuccess) {
   vlan_config->set_block_unknown_unicast(true);
   vlan_config->set_disable_l2_learning(true);
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -578,7 +578,7 @@ TEST_F(BcmL2ManagerTest, VerifyChassisConfigSuccess) {
       AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
                         0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))
@@ -603,7 +603,7 @@ TEST_F(BcmL2ManagerTest, VerifyChassisConfigFailure) {
   node->set_id(kNodeId);
   node->mutable_config_params()->add_vlan_configs();
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
                                                  false, false, false))
@@ -663,7 +663,7 @@ TEST_F(BcmL2ManagerTest, Shutdown) {
   vlan_config->set_block_unknown_unicast(true);
   vlan_config->set_disable_l2_learning(true);
 
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kDefaultVlan, false, false, true, true))
@@ -677,7 +677,7 @@ TEST_F(BcmL2ManagerTest, Shutdown) {
       AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
                         0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
-  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan, true))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               ConfigureVlanBlock(kUnit, kArpVlan, false, false, true, true))

@@ -2175,7 +2175,8 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::AddVlanIfNotFound(int unit, int vlan) {
+::util::Status BcmSdkWrapper::AddVlanIfNotFound(int unit, int vlan,
+                                                bool add_untagged_ports) {
   int retval = bcm_vlan_create(unit, vlan);
   if (retval == BCM_E_EXISTS) {
     VLOG(1) << "VLAN " << vlan << " already exists on unit " << unit << ".";
@@ -2188,8 +2189,16 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 
   bcm_port_config_t port_cfg;
   RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
+
+  // Add ports to vlan
+  bcm_pbmp_t untagged_pbmap;
+  if (add_untagged_ports) {
+    untagged_pbmap = port_cfg.all;
+  } else {
+    BCM_PBMP_CLEAR(untagged_pbmap);
+  }
   RETURN_IF_BCM_ERROR(
-      bcm_vlan_port_add(unit, vlan, port_cfg.all, port_cfg.all));
+      bcm_vlan_port_add(unit, vlan, port_cfg.all, untagged_pbmap));
 
   VLOG(1) << "Added VLAN " << vlan << " on unit " << unit << ".";
 
