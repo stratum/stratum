@@ -10,6 +10,11 @@ load(
 
 licenses(["notice"])  # Apache v2
 
+load(
+    "//bazel:rules.bzl",
+    "stratum_cc_library",
+)
+
 package(
     default_visibility = STRATUM_INTERNAL,
 )
@@ -37,7 +42,7 @@ stratum_cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "sdn_controller_manager",
     srcs = ["sdn_controller_manager.cc"],
     hdrs = ["sdn_controller_manager.h"],
@@ -51,5 +56,16 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+stratum_cc_library(
+    name = "stream_message_reader_writer_mock",
+    testonly = 1,
+    hdrs = ["stream_message_reader_writer_mock.h"],
+    deps = [
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_googletest//:gtest",
     ],
 )
