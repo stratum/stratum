@@ -176,7 +176,9 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                                 ::p4::config::v1::MatchField::EXACT)
               << "Found match field of type EXACT does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(
               table_key->SetExact(mk.field_id(), mk.exact().value()));
           break;
@@ -186,7 +188,9 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                                 ::p4::config::v1::MatchField::TERNARY)
               << "Found match field of type TERNARY does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetTernary(
               mk.field_id(), mk.ternary().value(), mk.ternary().mask()));
           break;
@@ -196,7 +200,9 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                                 ::p4::config::v1::MatchField::LPM)
               << "Found match field of type LPM does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetLpm(mk.field_id(), mk.lpm().value(),
                                             mk.lpm().prefix_len()));
           break;
@@ -206,14 +212,18 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                                 ::p4::config::v1::MatchField::RANGE)
               << "Found match field of type Range does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          // TODO(max): Do we need to check this for range matches?
-          // CHECK_RETURN_IF_FALSE(!IsDontCareMatch(match.range(), ));
+          CHECK_RETURN_IF_FALSE(
+              !IsDontCareMatch(mk.range(), expected_match_field.bitwidth()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetRange(mk.field_id(), mk.range().low(),
                                               mk.range().high()));
           break;
         }
         case ::p4::v1::FieldMatch::kOptional:
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()))
+              << "Don't care match field " << mk.ShortDebugString()
+              << " must be omitted.";
           ABSL_FALLTHROUGH_INTENDED;
         default:
           RETURN_ERROR(ERR_INVALID_PARAM)
