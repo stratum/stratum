@@ -67,6 +67,12 @@ class BfrtTableManagerTest : public ::testing::Test {
               bitwidth: 12
               match_type: TERNARY
             }
+            match_fields {
+              id: 3
+              name: "field3"
+              bitwidth: 15
+              match_type: RANGE
+            }
             action_refs {
               id: 16794911
             }
@@ -171,7 +177,7 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
       }
       match {
         field_id: 2
-        ternary { value: "\x000" mask: "\xfff" }
+        ternary { value: "\x00\x00" mask: "\x0f\xff" }
       }
       priority: 10
     }
@@ -359,6 +365,43 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutId) {
 
   ::util::Status ret =
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+}
+
+TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kBfRtTableId = 20;
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+              std::move(table_key_mock)))));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+
+  const std::string kTableEntryText = R"PROTO(
+    table_id: 33583783
+    match {
+      field_id: 3
+      range { low: "\000\000" high: "\x7f\xff" }
+    }
+    priority: 10
+  )PROTO";
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+
+  ::util::Status ret =
+      bfrt_table_manager_->ReadTableEntry(session_mock, entry, &writer_mock);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
 }
