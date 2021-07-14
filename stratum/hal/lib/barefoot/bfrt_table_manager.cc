@@ -944,6 +944,218 @@ BfrtTableManager::ReadDirectCounterEntry(
   return ::util::OkStatus();
 }
 
+::util::Status BfrtTableManager::WriteActionProfileMember(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::ActionProfileMember& action_profile_member) {
+  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+      << "Invalid update type " << type;
+
+  absl::WriterMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
+
+  // Action data
+  ASSIGN_OR_RETURN(
+      auto table_data,
+      bf_sde_interface_->CreateTableData(
+          bfrt_table_id, action_profile_member.action().action_id()));
+  for (const auto& param : action_profile_member.action().params()) {
+    RETURN_IF_ERROR(table_data->SetParam(param.param_id(), param.value()));
+  }
+
+  switch (type) {
+    case ::p4::v1::Update::INSERT: {
+      RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileMember(
+          device_, session, bfrt_table_id, action_profile_member.member_id(),
+          table_data.get()));
+      break;
+    }
+    case ::p4::v1::Update::MODIFY: {
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileMember(
+          device_, session, bfrt_table_id, action_profile_member.member_id(),
+          table_data.get()));
+      break;
+    }
+    case ::p4::v1::Update::DELETE: {
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileMember(
+          device_, session, bfrt_table_id, action_profile_member.member_id()));
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported update type: " << type;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadActionProfileMember(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::ActionProfileMember& action_profile_member,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(action_profile_member.action_profile_id() != 0)
+      << "Reading all action profiles is not supported yet.";
+
+  absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
+
+  std::vector<int> member_ids;
+  std::vector<std::unique_ptr<BfSdeInterface::TableDataInterface>> table_datas;
+  RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileMembers(
+      device_, session, bfrt_table_id, action_profile_member.member_id(),
+      &member_ids, &table_datas));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < member_ids.size(); ++i) {
+    const int member_id = member_ids[i];
+    const std::unique_ptr<BfSdeInterface::TableDataInterface>& table_data =
+        table_datas[i];
+
+    ::p4::v1::ActionProfileMember result;
+    ASSIGN_OR_RETURN(auto action_profile_id,
+                     bf_sde_interface_->GetP4InfoId(bfrt_table_id));
+    result.set_action_profile_id(action_profile_id);
+    result.set_member_id(member_id);
+
+    // Action id
+    int action_id;
+    RETURN_IF_ERROR(table_data->GetActionId(&action_id));
+    result.mutable_action()->set_action_id(action_id);
+
+    // Action data
+    // TODO(max): perform check if action id is valid for this table.
+    ASSIGN_OR_RETURN(auto action, p4_info_manager_->FindActionByID(action_id));
+    for (const auto& expected_param : action.params()) {
+      std::string value;
+      RETURN_IF_ERROR(table_data->GetParam(expected_param.id(), &value));
+      auto* param = result.mutable_action()->add_params();
+      param->set_param_id(expected_param.id());
+      param->set_value(value);
+    }
+
+    *resp.add_entities()->mutable_action_profile_member() = result;
+  }
+
+  if (!writer->Write(resp)) {
+    RETURN_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteActionProfileGroup(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+      << "Invalid update type " << type;
+
+  absl::WriterMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_prof_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_sel_table_id,
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+
+  std::vector<uint32> member_ids;
+  std::vector<bool> member_status;
+  for (const auto& member : action_profile_group.members()) {
+    CHECK_RETURN_IF_FALSE(
+        member.watch_kind_case() ==
+        ::p4::v1::ActionProfileGroup::Member::WATCH_KIND_NOT_SET)
+        << "Watch ports are not supported.";
+    member_ids.push_back(member.member_id());
+    member_status.push_back(true);  // Activate the member.
+  }
+
+  switch (type) {
+    case ::p4::v1::Update::INSERT: {
+      RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id,
+          action_profile_group.group_id(), action_profile_group.max_size(),
+          member_ids, member_status));
+      break;
+    }
+    case ::p4::v1::Update::MODIFY: {
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id,
+          action_profile_group.group_id(), action_profile_group.max_size(),
+          member_ids, member_status));
+      break;
+    }
+    case ::p4::v1::Update::DELETE: {
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id,
+          action_profile_group.group_id()));
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported update type: " << type;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadActionProfileGroup(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::ActionProfileGroup& action_profile_group,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_prof_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_sel_table_id,
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+  CHECK_RETURN_IF_FALSE(action_profile_group.action_profile_id() != 0)
+      << "Reading all action profiles is not supported yet.";
+
+  std::vector<int> group_ids;
+  std::vector<int> max_group_sizes;
+  std::vector<std::vector<uint32>> member_ids;
+  std::vector<std::vector<bool>> member_statuses;
+  RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileGroups(
+      device_, session, bfrt_act_sel_table_id, action_profile_group.group_id(),
+      &group_ids, &max_group_sizes, &member_ids, &member_statuses));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < group_ids.size(); ++i) {
+    const int group_id = group_ids[i];
+    const int max_group_size = max_group_sizes[i];
+    const std::vector<uint32>& members = member_ids[i];
+    const std::vector<bool>& member_status = member_statuses[i];
+    ::p4::v1::ActionProfileGroup result;
+    // Action profile id
+    ASSIGN_OR_RETURN(
+        auto action_profile_id,
+        bf_sde_interface_->GetActionProfileBfRtId(bfrt_act_sel_table_id));
+    ASSIGN_OR_RETURN(auto p4_action_profile_id,
+                     bf_sde_interface_->GetP4InfoId(action_profile_id));
+    result.set_action_profile_id(p4_action_profile_id);
+    // Group id
+    result.set_group_id(group_id);
+    // Maximum group size
+    result.set_max_size(max_group_size);
+    // Members
+    for (const auto& member_id : members) {
+      auto* member = result.add_members();
+      member->set_member_id(member_id);
+      member->set_weight(1);
+    }
+    *resp.add_entities()->mutable_action_profile_group() = result;
+  }
+
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

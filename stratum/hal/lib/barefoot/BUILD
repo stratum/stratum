@@ -288,7 +288,6 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_pipeline_utils",
-        ":bfrt_action_profile_manager",
         ":bfrt_counter_manager",
         ":bfrt_packetio_manager",
         ":bfrt_pre_manager",
@@ -412,33 +411,6 @@ stratum_cc_library(
     deps = [
         "//stratum/glue:integral_types",
         "@com_google_absl//absl/time",
-    ],
-)
-
-stratum_cc_library(
-    name = "bfrt_action_profile_manager",
-    srcs = ["bfrt_action_profile_manager.cc"],
-    hdrs = ["bfrt_action_profile_manager.h"],
-    deps = [
-        ":bf_cc_proto",
-        ":bf_sde_interface",
-        ":bfrt_constants",
-        "//stratum/glue:integral_types",
-        "//stratum/glue:logging",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/common:common_cc_proto",
-        "//stratum/hal/lib/common:writer_interface",
-        "//stratum/hal/lib/p4:p4_info_manager",
-        "//stratum/lib:constants",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:error_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/strings",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
     ],
 )
 

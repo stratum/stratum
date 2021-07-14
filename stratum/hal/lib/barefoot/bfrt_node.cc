@@ -25,7 +25,6 @@ namespace hal {
 namespace barefoot {
 
 BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
-                   BfrtActionProfileManager* bfrt_action_profile_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
@@ -35,8 +34,6 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_config_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
-      bfrt_action_profile_manager_(
-          ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
@@ -49,7 +46,6 @@ BfrtNode::BfrtNode()
       bfrt_config_(),
       bf_sde_interface_(nullptr),
       bfrt_table_manager_(nullptr),
-      bfrt_action_profile_manager_(nullptr),
       bfrt_packetio_manager_(nullptr),
       bfrt_pre_manager_(nullptr),
       bfrt_counter_manager_(nullptr),
@@ -61,13 +57,12 @@ BfrtNode::~BfrtNode() = default;
 // Factory function for creating the instance of the class.
 std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtTableManager* bfrt_table_manager,
-    BfrtActionProfileManager* bfrt_action_profile_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
     BfSdeInterface* bf_sde_interface, int device_id) {
-  return absl::WrapUnique(new BfrtNode(
-      bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_pre_manager, bfrt_counter_manager, bf_sde_interface, device_id));
+  return absl::WrapUnique(
+      new BfrtNode(bfrt_table_manager, bfrt_packetio_manager, bfrt_pre_manager,
+                   bfrt_counter_manager, bf_sde_interface, device_id));
 }
 
 ::util::Status BfrtNode::PushChassisConfig(const ChassisConfig& config,
@@ -75,8 +70,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
   // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
-  // RETURN_IF_ERROR(
-  //     bfrt_action_profile_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
@@ -86,8 +79,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
 ::util::Status BfrtNode::VerifyChassisConfig(const ChassisConfig& config,
                                              uint64 node_id) {
   // RETURN_IF_ERROR(bfrt_table_manager_->VerifyChassisConfig(config, node_id));
-  // RETURN_IF_ERROR(
-  //     bfrt_action_profile_manager_->VerifyChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->VerifyChassisConfig(config, node_id));
   return ::util::OkStatus();
 }
@@ -145,8 +136,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   RETURN_IF_ERROR(
       bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
-      bfrt_action_profile_manager_->PushForwardingPipelineConfig(bfrt_config_));
-  RETURN_IF_ERROR(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
@@ -172,7 +161,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   // TODO(max): Check if we need to de-init the ASIC or SDE
   // TODO(max): Enable other Shutdown calls once implemented.
   // APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
-  // APPEND_STATUS_IF_ERROR(status, bfrt_action_profile_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, bfrt_packetio_manager_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bfrt_pre_manager_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bfrt_counter_manager_->Shutdown());
@@ -216,11 +204,11 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
                                   update.entity().extern_entry());
         break;
       case ::p4::v1::Entity::kActionProfileMember:
-        status = bfrt_action_profile_manager_->WriteActionProfileMember(
+        status = bfrt_table_manager_->WriteActionProfileMember(
             session, update.type(), update.entity().action_profile_member());
         break;
       case ::p4::v1::Entity::kActionProfileGroup:
-        status = bfrt_action_profile_manager_->WriteActionProfileGroup(
+        status = bfrt_table_manager_->WriteActionProfileGroup(
             session, update.type(), update.entity().action_profile_group());
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
@@ -301,14 +289,14 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
-        auto status = bfrt_action_profile_manager_->ReadActionProfileMember(
+        auto status = bfrt_table_manager_->ReadActionProfileMember(
             session, entity.action_profile_member(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileGroup: {
-        auto status = bfrt_action_profile_manager_->ReadActionProfileGroup(
+        auto status = bfrt_table_manager_->ReadActionProfileGroup(
             session, entity.action_profile_group(), writer);
         success &= status.ok();
         details->push_back(status);
@@ -420,13 +408,25 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry) {
   switch (entry.extern_type_id()) {
-    case kTnaExternActionProfileId:
-    case kTnaExternActionSelectorId:
-      return bfrt_action_profile_manager_->WriteActionProfileEntry(session,
-                                                                   type, entry);
+    case kTnaExternActionProfileId: {
+      ::p4::v1::ActionProfileMember act_prof_member;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile member.";
+      return bfrt_table_manager_->WriteActionProfileMember(session, type,
+                                                           act_prof_member);
+    }
+    case kTnaExternActionSelectorId: {
+      ::p4::v1::ActionProfileGroup act_prof_group;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile group.";
+      return bfrt_table_manager_->WriteActionProfileGroup(session, type,
+                                                          act_prof_group);
+    }
     default:
-      RETURN_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
-                     << ".";
+      RETURN_ERROR(ERR_UNIMPLEMENTED)
+          << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
   }
 }
 
@@ -435,10 +435,22 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     const ::p4::v1::ExternEntry& entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   switch (entry.extern_type_id()) {
-    case kTnaExternActionProfileId:
-    case kTnaExternActionSelectorId:
-      return bfrt_action_profile_manager_->ReadActionProfileEntry(
-          session, entry, writer);
+    case kTnaExternActionProfileId: {
+      ::p4::v1::ActionProfileMember act_prof_member;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile member";
+      return bfrt_table_manager_->ReadActionProfileMember(
+          session, act_prof_member, writer);
+    }
+    case kTnaExternActionSelectorId: {
+      ::p4::v1::ActionProfileGroup act_prof_group;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile group";
+      return bfrt_table_manager_->ReadActionProfileGroup(
+          session, act_prof_group, writer);
+    }
     default:
       RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
           << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
