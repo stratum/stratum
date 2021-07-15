@@ -260,13 +260,13 @@ jobs:
       - *docker_push
       - *save_bazel_cache
 
-  publish-docker-bf-pipeline-builder:
+  publish-docker-stratum-tools:
     docker:
       - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
-      - DOCKER_FILE: Dockerfile.bf_pipeline_builder
-      - DOCKER_IMG: stratumproject/stratum-bf-pipeline-builder
+      - DOCKER_SCOPE: stratum/tools
+      - DOCKER_FILE: Dockerfile.stratum_tools
+      - DOCKER_IMG: stratumproject/stratum-tools
       - CC: clang
       - CXX: clang++
     steps:
@@ -275,74 +275,16 @@ jobs:
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
-          name: Build pipeline builder
+          name: Build stratum tools package
           command: |
-            bazel build --config=release //stratum/hal/bin/barefoot:bf_pipeline_builder
-            cp bazel-bin/stratum/hal/bin/barefoot/bf_pipeline_builder $DOCKER_SCOPE
+            bazel build --config=release //stratum/tools:stratum_tools_deb
+            cp bazel-bin/stratum/tools/stratum_tools_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - run:
-          name: Test stratum-bf-pipeline-builder Docker image
+          name: Test stratum-tools Docker image
           command: |
-            docker run $DOCKER_IMG -version
-      - *docker_push
-      - *clean_bazel_cache
-      - *save_bazel_cache
-
-  publish-docker-stratum-replay:
-    docker:
-      - image: stratumproject/build:build
-    environment:
-      - DOCKER_SCOPE: stratum/tools/stratum_replay
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-replay
-      - CC: clang
-      - CXX: clang++
-    steps:
-      - setup_remote_docker
-      - checkout
-      - *restore_bazel_cache
-      - *set_bazelrc
-      - run:
-          name: Build stratum_replay
-          command: |
-            bazel build --config=release //stratum/tools/stratum_replay:stratum_replay
-            cp bazel-bin/stratum/tools/stratum_replay/stratum_replay $DOCKER_SCOPE
-      - *docker_login
-      - *docker_build
-      - run:
-          name: Test stratum_replay Docker image
-          command: |
-            docker run $DOCKER_IMG -version
-      - *docker_push
-      - *clean_bazel_cache
-      - *save_bazel_cache
-
-  publish-docker-chassis-config-migrator:
-    docker:
-      - image: stratumproject/build:build
-    environment:
-      - DOCKER_SCOPE: stratum/hal/config
-      - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/chassis-config-migrator
-      - CC: clang
-      - CXX: clang++
-    steps:
-      - setup_remote_docker
-      - checkout
-      - *restore_bazel_cache
-      - *set_bazelrc
-      - run:
-          name: Build chassis-config-migrator
-          command: |
-            bazel build --config=release //stratum/hal/config:chassis_config_migrator
-            cp bazel-bin/stratum/hal/config/chassis_config_migrator $DOCKER_SCOPE
-      - *docker_login
-      - *docker_build
-      - run:
-          name: Test chassis-config-migrator Docker image
-          command: |
-            docker run $DOCKER_IMG -version
+            docker run $DOCKER_IMG
       - *docker_push
       - *clean_bazel_cache
       - *save_bazel_cache
@@ -412,12 +354,6 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
-      - publish-docker-bf-pipeline-builder:
-          requires:
-            - publish-docker-build
-      - publish-docker-stratum-replay:
-          requires:
-            - publish-docker-build
-      - publish-docker-chassis-config-migrator:
+      - publish-docker-stratum-tools:
           requires:
             - publish-docker-build

@@ -83,7 +83,6 @@ pkg_tar(
     srcs = [
         "deb/attach-bf-shell.sh",
         "deb/start-stratum.sh",
-        ":bf_pipeline_builder",
         ":stratum_bf",
     ],
     mode = "0755",
@@ -96,7 +95,6 @@ pkg_tar(
     srcs = [
         "deb/attach-bf-shell.sh",
         "deb/start-stratum.sh",
-        ":bf_pipeline_builder",
         ":stratum_bfrt",
     ],
     mode = "0755",

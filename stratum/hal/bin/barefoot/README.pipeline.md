@@ -24,11 +24,12 @@ bazel run //stratum/hal/bin/barefoot:bf_pipeline_builder -- \
     -bf_pipeline_config_binary_file=$PWD/device_config.pb.bin
 ```
 
-The tool is also available as a [Docker image](https://hub.docker.com/repository/docker/stratumproject/stratum-bf-pipeline-builder):
+The tool is also available as part of the Stratum-tools [Docker image](https://hub.docker.com/repository/docker/stratumproject/stratum-tools):
 
 ```bash
 cd </path/to/bf-p4c/compiler/output>
-docker run --rm -v $PWD:$PWD stratumproject/stratum-bf-pipeline-builder:latest \
+docker run --rm -v $PWD:$PWD -w $PWD stratumproject/stratum-tools:latest \
+    bf_pipeline_builder \
     -p4c_conf_file=./<output.conf> \
     -bf_pipeline_config_binary_file=./device_config.pb.bin
 ```
