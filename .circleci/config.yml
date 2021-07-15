@@ -354,6 +354,6 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
-      - publish-docker-stratum-tools
-          # requires:
-          #   - publish-docker-build
+      - publish-docker-stratum-tools:
+          requires:
+            - publish-docker-build
