@@ -25,6 +25,10 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
 
+extern "C" {
+#include "traffic_mgr/traffic_mgr.h"
+}
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -76,7 +80,6 @@ class TableData : public BfSdeInterface::TableDataInterface {
   ::util::Status SetSelectorGroupId(uint64 selector_group_id) override;
   ::util::Status GetSelectorGroupId(uint64* selector_group_id) const override;
   ::util::Status SetCounterData(uint64 bytes, uint64 packets) override;
-  ::util::Status SetOnlyCounterData(uint64 bytes, uint64 packets) override;
   ::util::Status GetCounterData(uint64* bytes, uint64* packets) const override;
   ::util::Status GetActionId(int* action_id) const override;
   ::util::Status Reset(int action_id) override;
@@ -136,6 +139,9 @@ class BfSdeWrapper : public BfSdeInterface {
   };
 
   // BfSdeInterface public methods.
+  ::util::Status InitializeSde(const std::string& sde_install_path,
+                               const std::string& sde_config_file,
+                               bool run_in_background) override;
   ::util::Status AddDevice(int device,
                            const BfrtDeviceConfig& device_config) override;
   ::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
@@ -160,6 +166,9 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status SetPortShapingRate(int device, int port, bool is_in_pps,
                                     uint32 burst_size,
                                     uint64 rate_per_second) override;
+  ::util::Status ConfigureQos(int device,
+                              const TofinoConfig::TofinoQosConfig& qos_config)
+      LOCKS_EXCLUDED(data_lock_) override;
   ::util::Status EnablePortShaping(int device, int port,
                                    TriState enable) override;
   ::util::Status SetPortAutonegPolicy(int device, int port,
@@ -172,8 +181,11 @@ class BfSdeWrapper : public BfSdeInterface {
       int device, const PortKey& port_key) override;
   ::util::StatusOr<int> GetPcieCpuPort(int device) override;
   ::util::Status SetTmCpuPort(int device, int port) override;
+  ::util::Status SetDeflectOnDropDestination(int device, int port,
+                                             int queue) override;
   ::util::StatusOr<bool> IsSoftwareModel(int device) override;
   std::string GetBfChipType(int device) const override;
+  std::string GetSdeVersion() const override;
   ::util::Status TxPacket(int device, const std::string& packet) override;
   ::util::Status StartPacketIo(int device) override;
   ::util::Status StopPacketIo(int device) override;
@@ -233,9 +245,11 @@ class BfSdeWrapper : public BfSdeInterface {
       absl::optional<uint64> packet_count) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status ReadIndirectCounter(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 counter_id, int counter_index, absl::optional<uint64>* byte_count,
-      absl::optional<uint64>* packet_count, absl::Duration timeout) override
-      LOCKS_EXCLUDED(data_lock_);
+      uint32 counter_id, absl::optional<uint32> counter_index,
+      std::vector<uint32>* counter_indices,
+      std::vector<absl::optional<uint64>>* byte_counts,
+      std::vector<absl::optional<uint64>>* packet_counts,
+      absl::Duration timeout) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status WriteRegister(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, absl::optional<uint32> register_index,
@@ -245,6 +259,18 @@ class BfSdeWrapper : public BfSdeInterface {
       uint32 table_id, absl::optional<uint32> register_index,
       std::vector<uint32>* register_indices,
       std::vector<uint64>* register_datas, absl::Duration timeout) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status WriteIndirectMeter(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> meter_index, bool in_pps,
+      uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status ReadIndirectMeters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::optional<uint32> meter_index,
+      std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
+      std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
+      std::vector<uint64>* pbursts, std::vector<bool>* in_pps) override
       LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertActionProfileMember(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
@@ -355,7 +381,8 @@ class BfSdeWrapper : public BfSdeInterface {
   // Called whenever a port status event is received from SDK. It forwards the
   // port status event to the module who registered a callback by calling
   // RegisterPortStatusEventWriter().
-  ::util::Status OnPortStatusEvent(int device, int dev_port, bool up)
+  ::util::Status OnPortStatusEvent(int device, int dev_port, bool up,
+                                   absl::Time timestamp)
       LOCKS_EXCLUDED(port_status_event_writer_lock_);
 
   // BfSdeWrapper is neither copyable nor movable.
@@ -459,6 +486,10 @@ class BfSdeWrapper : public BfSdeInterface {
   // Map from device ID to packet receive writer.
   absl::flat_hash_map<int, std::unique_ptr<ChannelWriter<std::string>>>
       device_to_packet_rx_writer_ GUARDED_BY(packet_rx_callback_lock_);
+
+  // Map from device ID to vector of all allocated PPGs.
+  absl::flat_hash_map<int, std::vector<bf_tm_ppg_hdl>> device_to_ppg_handles_
+      GUARDED_BY(data_lock_);
 
   // TODO(max): make the following maps to handle multiple devices.
   // Pointer to the ID mapper. Not owned by this class.

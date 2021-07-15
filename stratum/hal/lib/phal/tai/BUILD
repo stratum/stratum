@@ -109,6 +109,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "tai_optics_datasource_test",
     srcs = ["tai_optics_datasource_test.cc"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(max)
     deps = [
         ":tai_interface",
         ":tai_interface_mock",
@@ -146,15 +147,15 @@ stratum_cc_test(
     name = "tai_phal_test",
     srcs = ["tai_phal_test.cc"],
     deps = [
-        ":tai_phal",
         ":tai_interface",
         ":tai_interface_mock",
-        "//stratum/hal/lib/common:common_cc_proto",
+        ":tai_phal",
         "//stratum/glue/status",
         "//stratum/glue/status:status_test_util",
         "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
         "@com_google_googletest//:gtest_main",
-    ]
+    ],
 )

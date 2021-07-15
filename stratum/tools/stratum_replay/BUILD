@@ -15,7 +15,7 @@ package(
 )
 
 stratum_cc_binary(
-    name = "stratum-replay",
+    name = "stratum_replay",
     srcs = ["stratum_replay.cc"],
     arches = HOST_ARCHES,
     deps = [

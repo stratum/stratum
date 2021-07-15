@@ -5,14 +5,19 @@ Copyright 2018-present Open Networking Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-![stratum logo](stratum/docs/images/stratum-logo.png)
+<p align="center">
+  <img alt="Stratum Logo" src="stratum/docs/images/stratum-logo.png">
+</p>
 
 # Stratum - Enabling the era of next-generation SDN
 
-Copyright 2018 Google LLC <br/>
-Copyright 2018-present Open Networking Foundation
-
-Stratum is an open source silicon-independent switch operating system for software defined networks. It is building an open, minimal production-ready distribution for white box switches. Stratum exposes a set of next-generation SDN interfaces including P4Runtime and OpenConfig, enabling interchangeability of forwarding devices and programmability of forwarding behaviors. Current support includes Barefoot Tofino and Broadcom Tomahawk devices, as well as the bmv2 software switch.
+Stratum is an open source silicon-independent switch operating system for
+software defined networks. It is building an open, minimal production-ready
+distribution for white box switches. Stratum exposes a set of next-generation
+SDN interfaces including P4Runtime and OpenConfig, enabling interchangeability
+of forwarding devices and programmability of forwarding behaviors. Current
+support includes Barefoot Tofino and Broadcom Tomahawk devices, as well as the
+bmv2 software switch.
 
 Build status (main): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree/main.svg?style=svg)](https://circleci.com/gh/stratum/stratum/tree/main)
 [![codecov](https://codecov.io/gh/stratum/stratum/branch/main/graph/badge.svg)](https://codecov.io/gh/stratum/stratum)
@@ -21,7 +26,15 @@ Build status (main): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree/m
 
 ## Getting Started with SDN / P4 / Stratum
 
-If you're completly new to the world of P4 and are looking for step-by-step instructions with batteries included, the [NG-SDN](https://github.com/opennetworkinglab/ngsdn-tutorial) tutorial is a good starting point. For material more focused on P4 as a language, have a look at the [p4lang](https://github.com/p4lang/tutorials) tutorials. Finally, there is the "Software-Defined Networks: A Systems Approach" book ([HTML](https://sdn.systemsapproach.org/)) for comprehensive coverage of SDN. Also see the chapter about [Stratum](https://sdn.systemsapproach.org/stratum.html#thin-switch-os) in it.
+If you're completly new to the world of P4 and are looking for step-by-step
+instructions with batteries included, the
+[NG-SDN](https://github.com/opennetworkinglab/ngsdn-tutorial) tutorial is a good
+starting point. For material more focused on P4 as a language, have a look at
+the [p4lang](https://github.com/p4lang/tutorials) tutorials. Finally, there is
+the "Software-Defined Networks: A Systems Approach" book
+([HTML](https://sdn.systemsapproach.org/)) for comprehensive coverage of SDN.
+Also see the chapter about
+[Stratum](https://sdn.systemsapproach.org/stratum.html#thin-switch-os) in it.
 
 ## Table of Contents
 ### Development
@@ -29,7 +42,8 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 - [Code of Conduct](/CODE_OF_CONDUCT.md)
 - [Contribution Guidelines](/CONTRIBUTING.md)
 - [IDE Setup](https://github.com/stratum/stratum/wiki/IDE-setup-for-development)
-- [Release Plan](stratum/stratum/docs/release_plan.md)
+- [Release Plan](/stratum/docs/release_plan.md)
+- [Logging Guide](/stratum/docs/logging_guide.md)
 - [PHAL Development Tutorial](/stratum/docs/phal_development_tutorial.md)
 - [Stratum Configurators Design Document](/stratum/docs/configurators.md)
 - [Stratum PHAL Overview (Physical Hardware Access Layer)](/stratum/docs/phal.md)
@@ -37,10 +51,10 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 ### Platforms
 
 - [Tofino](/stratum/hal/bin/barefoot/README.md)
+  - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
   - [Running Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.run.md)
   - [Testing Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.test.md)
   - [P4Runtime p4_device_config formats](/stratum/hal/bin/barefoot/README.pipeline.md)
-  - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
 - [Broadcom](/stratum/hal/bin/bcm/standalone/README.md)
   - [How to Add a Dataplane Feature to Stratum (BCM)](/stratum/docs/extenting_stratum_bcm.md)
 - [Intel NP4](/stratum/hal/bin/np4intel/docker/README.md)
@@ -52,7 +66,7 @@ If you're completly new to the world of P4 and are looking for step-by-step inst
 - [gNMI CLI Tool](/stratum/tools/gnmi/README.md)
 - [Tofino Pipeline Builder](/stratum/hal/bin/barefoot/README.pipeline.md#stratum-bfpipelineconfig-format-and-the-bfpipelinebuilder)
 - [Stratum-Enabled Mininet](/tools/mininet/README.md)
-- [P4Runtime write request replay tool](/stratum/tools/stratum-replay/README.md)
+- [P4Runtime write request replay tool](/stratum/tools/stratum_replay/README.md)
 - [ChassisConfig Migrator](/stratum/hal/config/chassis_config_migrator.cc)
 - [PHAL CLI Tool](/stratum/hal/lib/phal/phal_cli.cc)
 - [ONLP CLI Tool](/stratum/hal/lib/phal/onlp/onlp_cli.cc)
@@ -109,22 +123,35 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 - Netberg Aurora 710
 - Netberg Aurora 750
 
+*Note: Pre-built Stratum binaries for Tofino are available for recent Barefoot
+SDE releases in the [Releases](https://github.com/stratum/stratum/releases/latest)
+page. Vendors, customers, and researchers with access to the Barefoot SDE can
+build Stratum themselves. For access to the SDE, please contact an Intel
+representative.*
+
 ## Broadcom
 
-- Tomahawk
+- Tomahawk (SDKLT, OpenNSA, SDK6)
     - Edgecore AS7712-32X
     - Edgecore AS7716-24XC Cassini
     - Dell Z9100
     - Inventec D7032
     - QCT QuantaMesh T7032-IX1
-- Tomahawk+
+- Tomahawk+ (SDK6)
     - Edgecore AS7716-24SC Cassini
     - Inventec D7054
-- Tomahawk2
-- Tomahawk3
-- Trident2
+- Tomahawk2 (OpenNSA, SDK6)
+- Tomahawk3 (SDK6)
+- Trident2 (OpenNSA, SDK6)
     - Edgecore AS6712
     - Inventec D6254
+
+*Note: Pre-built Stratum binaries for SDKLT and OpenNSA are available in the
+[Releases](https://github.com/stratum/stratum/releases/latest) page. Vendors and
+customers with a Broadcom SLA can build Stratum themselves using the Broadcom
+Switch SDK (SDK6); versions 6.5.17 and 6.5.19 are tested. If you would like to
+use Stratum with SDK6 and you do not have an SLA with Broadcom, contact a
+Broadcom representative or your switch vendor.*
 
 ## Smart NIC
 

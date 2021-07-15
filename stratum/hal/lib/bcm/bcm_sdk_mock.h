@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_MOCK_H_
 
@@ -10,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -44,7 +43,6 @@ class BcmSdkMock : public BcmSdkInterface {
   MOCK_METHOD0(StartDiagShellServer, ::util::Status());
   MOCK_METHOD1(StartLinkscan, ::util::Status(int unit));
   MOCK_METHOD1(StopLinkscan, ::util::Status(int unit));
-  MOCK_METHOD3(OnLinkscanEvent, void(int unit, int port, PortState linkstatus));
   MOCK_METHOD2(
       RegisterLinkscanEventWriter,
       ::util::StatusOr<int>(std::unique_ptr<ChannelWriter<LinkscanEvent>>,

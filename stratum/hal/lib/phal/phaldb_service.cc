@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/memory/memory.h"
 #include "gflags/gflags.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -206,7 +206,7 @@ namespace {
     // Save channel to subscriber channel map
     subscriber_channels_[pthread_self()] = channel;
   }
-  auto _ = gtl::MakeCleanup([this, &channel] {
+  auto _ = absl::MakeCleanup([this, &channel] {
     absl::MutexLock l(&subscriber_thread_lock_);
     // Close the channel which will then cause the PhalDB writer
     // to close and exit

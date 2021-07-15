@@ -2,8 +2,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 # This BUILD file provides common test support for the Stratum p4c backend.
 # It also creates a simple p4c test binary with limited backend
 # functionality, then uses it to test p4c with the comprehensive set of
@@ -11,13 +9,14 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
-    "stratum_cc_library",
     "STRATUM_INTERNAL",
 )
 load(
     "//stratum/p4c_backends/test:build_defs.bzl",
     "p4c_save_ir",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     # default_copts = [
@@ -41,16 +40,16 @@ cc_library(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//stratum/glue:logging",
-        "@com_google_absl//absl/memory",
-        "@com_github_p4lang_p4c//:control_plane_h",
-        "@com_github_p4lang_p4c//:p4c_toolkit",
-        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "//stratum/p4c_backends/common:backend_extension_interface",
         "//stratum/p4c_backends/common:backend_pass_manager",
         "//stratum/p4c_backends/common:p4c_front_mid_real",
         "//stratum/p4c_backends/common:program_inspector",
         "//stratum/p4c_backends/fpm:hit_assign_mapper",
         "//stratum/p4c_backends/fpm:meter_color_mapper",
+        "@com_github_p4lang_p4c//:control_plane_h",
+        "@com_github_p4lang_p4c//:p4c_toolkit",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_google_absl//absl/memory",
     ],
 )
 
@@ -99,6 +98,7 @@ cc_library(
 
 cc_test(
     name = "test_inspectors_test",
+    size = "small",
     srcs = [
         "test_inspectors_test.cc",
     ],
@@ -108,20 +108,19 @@ cc_test(
     data = [
         "//stratum/p4c_backends/fpm:testdata/pipeline_opt_block.ir.json",
     ],
+    features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     linkopts = [
         "-lgmp",
         "-lgmpxx",
     ],
-    size = "small",
-    features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":ir_test_helpers",
         ":test_inspectors",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
-        "@com_github_p4lang_p4c//:p4c_toolkit",
         "//stratum/p4c_backends/fpm:p4c_switch_utils",
         "//stratum/public/proto:p4_annotation_cc_proto",
+        "@com_github_p4lang_p4c//:p4c_toolkit",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -144,10 +143,10 @@ cc_library(
 
 cc_test(
     name = "test_target_info_test",
+    size = "small",
     srcs = [
         "test_target_info_test.cc",
     ],
-    size = "small",
     copts = [
         "-fexceptions",
     ],
@@ -157,8 +156,8 @@ cc_test(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":test_target_info",
-        "@com_google_googletest//:gtest_main",
         "//stratum/public/proto:p4_annotation_cc_proto",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

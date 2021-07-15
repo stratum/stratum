@@ -5,20 +5,20 @@
 #ifndef STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 #define STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 
-#include <unordered_map>
-#include <utility>
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
+#include <unordered_map>
+#include <utility>
 
-#include "stratum/lib/macros.h"
-#include "stratum/glue/status/status.h"
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -332,25 +332,23 @@ class TreeNode {
         subscription->set_suppress_redundant(false);
         return ::util::OkStatus();
       };
-  TreeNodeSetHandler on_update_handler_ = [](const ::gnmi::Path& path,
-                                             const ::google::protobuf::Message&,
-                                             CopyOnWriteChassisConfig*)
-      -> ::util::Status {
+  TreeNodeSetHandler on_update_handler_ =
+      [](const ::gnmi::Path& path, const ::google::protobuf::Message&,
+         CopyOnWriteChassisConfig*) -> ::util::Status {
     return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
            << "Unsupported mode: UPDATE for: '" << path.ShortDebugString()
            << "'";
   };
   TreeNodeSetHandler on_replace_handler_ =
       [](const ::gnmi::Path& path, const ::google::protobuf::Message&,
-         CopyOnWriteChassisConfig*)
-      -> ::util::Status {
-        return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
-               << "Unsupported mode: REPLACE for: '" << path.ShortDebugString()
-               << "'";
-      };
-  TreeNodeDeleteHandler on_delete_handler_ = [](const ::gnmi::Path& path,
-                                                CopyOnWriteChassisConfig*)
-      -> ::util::Status {
+         CopyOnWriteChassisConfig*) -> ::util::Status {
+    return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
+           << "Unsupported mode: REPLACE for: '" << path.ShortDebugString()
+           << "'";
+  };
+  TreeNodeDeleteHandler on_delete_handler_ =
+      [](const ::gnmi::Path& path,
+         CopyOnWriteChassisConfig*) -> ::util::Status {
     return MAKE_ERROR() << "unsupported mode: DELETE for: '"
                         << path.ShortDebugString() << "'";
   };
@@ -375,8 +373,8 @@ class TreeNode {
 // work with the tree.
 class YangParseTree {
  public:
-  explicit YangParseTree(SwitchInterface*)  // NOLINT
-              LOCKS_EXCLUDED(root_access_lock_);
+  explicit YangParseTree(SwitchInterface* switch_interface)
+      LOCKS_EXCLUDED(root_access_lock_);
   virtual ~YangParseTree() {}
 
   // Registers a writer for sending gNMI events.
@@ -425,6 +423,9 @@ class YangParseTree {
   // Add supported leaf handles for the chassis.
   void AddSubtreeChassis(const Chassis& chassis)
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+
+  // Add supported leaf handles for the system.
+  void AddSubtreeSystem() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
   // Configure the root element.
   void AddRoot() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);

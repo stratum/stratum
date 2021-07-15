@@ -2,14 +2,14 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -29,13 +29,13 @@ stratum_cc_library(
         "status.h",
     ],
     deps = [
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/glue/gtl:source_location",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
-        "//stratum/glue/gtl:source_location",
     ],
 )
 
@@ -64,12 +64,12 @@ stratum_cc_library(
     deps = [
         ":status",
         ":statusor",
-        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
+        "@com_google_absl//absl/strings",
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "status_test_util",
     testonly = 1,
     srcs = [
@@ -81,8 +81,8 @@ cc_library(
     deps = [
         ":status",
         ":statusor",
-        "@com_google_googletest//:gtest",
         "//stratum/public/proto:error_cc_proto",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -99,9 +99,9 @@ stratum_cc_test(
         ":status",
         ":status_test_util",
         ":statusor",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/strings",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )

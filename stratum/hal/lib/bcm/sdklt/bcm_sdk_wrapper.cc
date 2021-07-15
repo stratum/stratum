@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "absl/base/macros.h"
+#include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_cat.h"
@@ -31,7 +32,6 @@
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
@@ -214,26 +214,20 @@ extern "C" void sdk_linkscan_callback(bcmlt_table_notif_info_t* notify_info,
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
     return;
   }
-
-  bcmlt_entry_handle_t eh;
-  int unit;
-  PortState linkstatus;
-  uint64_t port, link = 0;
-  unit = notify_info->unit;
-  eh = notify_info->entry_hdl;
-  bcmlt_entry_field_get(eh, "PORT_ID", &port);
-  bcmlt_entry_field_get(eh, "LINK_STATE", &link);
-  LOG(INFO) << "Unit: " << unit << " Port: " << port << " Link: "
-            << (link ? "UP" : "DOWN") << ".";
-  linkstatus = link ? PORT_STATE_UP : PORT_STATE_DOWN;
-
+  int unit = notify_info->unit;
+  uint64_t port = 0, link = 0;
+  bcmlt_entry_field_get(notify_info->entry_hdl, "PORT_ID", &port);
+  bcmlt_entry_field_get(notify_info->entry_hdl, "LINK_STATE", &link);
+  PortState linkstatus = link ? PORT_STATE_UP : PORT_STATE_DOWN;
+  VLOG(1) << "Link on unit: " << unit << " Port: " << port << "changed to "
+          << (link ? "UP" : "DOWN") << ".";
   // Forward the event.
   bcm_sdk_wrapper->OnLinkscanEvent(unit, port, linkstatus);
 }
 
 ::util::StatusOr<std::string> dump_rxpmd_header(int unit, int netif_id, bcmpkt_packet_t *packet) {
   auto pb = shr_pb_create();
-  auto _ = gtl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
+  auto _ = absl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
   bcmdrd_dev_type_t dev_type;
 
   RETURN_IF_BCM_ERROR(bcmpkt_dev_type_get(unit, &dev_type));
@@ -277,7 +271,7 @@ int bcmpkt_data_dump(shr_pb_t *pb, const uint8_t *data, int size) {
 
 std::string bcmpkt_data_buf_dump(const bcmpkt_data_buf_t *dbuf) {
   auto pb = shr_pb_create();
-  auto _ = gtl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
+  auto _ = absl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
   shr_pb_printf(pb, "head - %p\n", dbuf->head);
   shr_pb_printf(pb, "data - %p\n", dbuf->data);
   shr_pb_printf(pb, "len - %" PRIu32 "\n", dbuf->len);
@@ -1469,7 +1463,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Enable packet counters on all ports
   // TODO(max): only add configured ports to bitmap, reduces polling CPU load
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_CONTROLs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_add(entry_hdl, PORTSs, 0,
                                                   all_ports_no_cpu_bitmap, 3));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, INTERVALs,
@@ -1483,17 +1477,17 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                                 BCMLT_PRIORITY_NORMAL));
   for (auto const& p : configured_ports) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MACs, &entry_hdl));
-    auto cl1 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    auto cl1 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                   BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MAC_ERRs, &entry_hdl));
-    auto cl2 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    auto cl2 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                   BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_L3s, &entry_hdl));
-    auto cl3 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    auto cl3 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                   BCMLT_PRIORITY_NORMAL));
@@ -1823,11 +1817,11 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_get(entry_hdl, LINKSCAN_MODEs,
                                                      &linkscan_mode));
     std::string linkscan(linkscan_mode);
-    if (linkscan.compare("SOFTWARE") == 0) {
+    if (linkscan == "SOFTWARE") {
       options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_SW);
-    } else if (linkscan.compare("HARDWARE") == 0) {
+    } else if (linkscan == "HARDWARE") {
       options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_HW);
-    } else if (linkscan.compare("NO_SCAN") == 0) {
+    } else if (linkscan == "NO_SCAN") {
       options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_NONE);
     }
   }
@@ -1853,7 +1847,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_get(entry_hdl, OPMODEs, &op_mode));
     std::string opmode(op_mode);
-    if (opmode.compare(PC_PORT_OPMODE_AUTONEGs) == 0) {
+    if (opmode == PC_PORT_OPMODE_AUTONEGs) {
       options->set_autoneg(TRI_STATE_TRUE);
     } else {
       options->set_autoneg(TRI_STATE_FALSE);
@@ -1921,7 +1915,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       bcmlt_entry_field_array_symbol_get(entry_hdl, STATEs, 0, sym_res, 140,
                                          &actual_count));
   std::string blocked(sym_res[port + 1]);
-  if (blocked.compare(BLOCKs) == 0) {
+  if (blocked == BLOCKs) {
     options->set_blocked(TRI_STATE_TRUE);
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
@@ -1942,7 +1936,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Read good counters
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MACs, &entry_hdl));
-  auto cl1 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto cl1 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
@@ -1965,7 +1959,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // Read error counters
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MAC_ERRs, &entry_hdl));
-  auto cl2 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto cl2 = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
@@ -2217,11 +2211,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_get(entry_hdl, LINKSCAN_MODEs, &linkscan_str));
     std::string linkscan(linkscan_str);
-    if (linkscan.compare("SOFTWARE") == 0) {
+    if (linkscan == "SOFTWARE") {
       linkscan_mode = BcmPortOptions::LINKSCAN_MODE_SW;
-    } else if (linkscan.compare("HARDWARE") == 0) {
+    } else if (linkscan == "HARDWARE") {
       linkscan_mode = BcmPortOptions::LINKSCAN_MODE_HW;
-    } else if (linkscan.compare("NO_SCAN") == 0) {
+    } else if (linkscan == "NO_SCAN") {
       linkscan_mode = BcmPortOptions::LINKSCAN_MODE_NONE;
     }
   }
@@ -4086,7 +4080,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_FDB_VLANs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, DEST_TYPEs,
@@ -4108,7 +4102,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_FDB_VLANs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
@@ -5670,7 +5664,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     }
     std::string bcm_qual_field = HalAclFieldToBcm(table.stage(), field.type());
     std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if ((unknown_qual.compare(bcm_qual_field)) == 0) {
+    if (unknown_qual == bcm_qual_field) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Attempted to create ACL table with invalid predefined "
              << " qualifier: " << field.ShortDebugString() << ".";
@@ -5693,7 +5687,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
 
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_allocate(unit, FP_ING_GRP_TEMPLATEs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, FP_ING_GRP_TEMPLATE_IDs, stage_id));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODE_AUTOs, 1));
@@ -5746,7 +5740,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     }
     std::string bcm_qual_field = HalAclFieldToBcm(table.stage(), field.type());
     std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if ((unknown_qual.compare(bcm_qual_field)) == 0) {
+    if (unknown_qual == bcm_qual_field) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Attempted to create ACL table with invalid predefined "
              << "qualifier: " << field.ShortDebugString() << ".";
@@ -6672,7 +6666,7 @@ namespace {
                               int rule_id, int policy_id, int meter_id) {
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, FP_ING_ENTRYs, &entry_hdl));
-  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, FP_ING_ENTRY_IDs, acl_id));
   RETURN_IF_BCM_ERROR(
@@ -7477,7 +7471,7 @@ namespace {
     for (int i = BcmField::UNKNOWN + 1; i <= BcmField::Type_MAX; ++i) {
       auto field = static_cast<BcmField::Type>(i);
       std::string bcm_qual_field = HalAclFieldToBcm(stage, field);
-      if((unknown_qual.compare(bcm_qual_field)) == 0) {
+      if (unknown_qual == bcm_qual_field) {
          continue;
       }
       RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, bcm_qual_field.c_str(), &value));
@@ -7756,18 +7750,9 @@ pthread_t BcmSdkWrapper::GetDiagShellThreadId() const {
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported.";
 }
 
-void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
-  /* Create LinkscanEvent message. */
-  PortState state;
-  if (linkstatus == PORT_STATE_UP) {
-    state = PORT_STATE_UP;
-  } else if (linkstatus == PORT_STATE_DOWN) {
-    state = PORT_STATE_DOWN;
-  } else {
-    state = PORT_STATE_UNKNOWN;
-  }
-  LinkscanEvent event = {unit, port, state};
-
+void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState port_state) {
+  // Create LinkscanEvent message.
+  LinkscanEvent event = {unit, port, port_state};
   {
     absl::ReaderMutexLock l(&linkscan_writers_lock_);
     // Invoke the Writers based on priority.

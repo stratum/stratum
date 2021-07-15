@@ -3,10 +3,6 @@ Upstream-Name: Stratum
 Upstream-Contact: Stratum dev <stratum-dev@lists.stratumproject.org>
 Source: https://github.com/stratum/stratum
 
-Files: stratum/glue/gtl/cleanup.h stratum/glue/gtl/cleanup_test.cc
-Copyright: 2016 The TensorFlow Authors
-License: Apache-2.0
-
 Files: stratum/glue/gtl/map_util.h stratum/glue/gtl/stl_util.h
 Copyright: 2015 The TensorFlow Authors
 License: Apache-2.0
@@ -57,14 +53,6 @@ Files: stratum/hal/bin/barefoot/*.pb.txt
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
-Files: stratum/hal/config/*.pb.tx
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
-Files: stratum/hal/bin/bmv2/sample_config.proto.txt
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
 Files: stratum/hal/lib/common/gnmi_caps.pb.txt
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
@@ -77,15 +65,11 @@ Files: .clang-format
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
-Files: .github/ISSUE_TEMPLATE/bug_report.md
+Files: .github/ISSUE_TEMPLATE/*.md
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
 Files: bazel/patches/ygot.patch
-Copyright: 2019-present Open Networking Foundation
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/docker/stratum.flags
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
@@ -107,10 +91,6 @@ License: Apache-2.0
 
 Files: stratum/hal/bin/np4intel/dummy.json
 Copyright: 2020 Dell EMC
-License: Apache-2.0
-
-Files: stratum/hal/bin/barefoot/deb/stratum.flags
-Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
 Files: stratum/docs/tai/img/* stratum/docs/tai/imgsrc/*

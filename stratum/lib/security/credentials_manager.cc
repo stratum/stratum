@@ -11,7 +11,6 @@
 #include "absl/memory/memory.h"
 #include "gflags/gflags.h"
 #include "grpcpp/security/server_credentials.h"
-#include "grpcpp/security/server_credentials_impl.h"
 #include "grpcpp/security/tls_credentials_options.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
@@ -57,16 +56,15 @@ CredentialsManager::CreateInstance() {
       RETURN_ERROR().without_logging()
           << "Unable to load credentials: " << status.error_message();
     }
-    auto credentials_reload_interface_ =
+    credentials_reload_interface_ =
         std::make_shared<CredentialsReloadInterface>(
             pem_root_certs_, server_private_key_, server_cert_);
-    auto credential_reload_config_ =
-        std::make_shared<TlsCredentialReloadConfig>(
-            credentials_reload_interface_);
+    auto credential_reload_config = std::make_shared<TlsCredentialReloadConfig>(
+        credentials_reload_interface_);
 
     tls_opts_ = std::make_shared<TlsCredentialsOptions>(
         GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
-        nullptr, credential_reload_config_, nullptr);
+        nullptr, credential_reload_config, nullptr);
     server_credentials_ = TlsServerCredentials(*tls_opts_);
   }
   return ::util::OkStatus();

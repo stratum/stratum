@@ -2,18 +2,18 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <algorithm>
-
 #include "stratum/lib/utils.h"
 
+#include <algorithm>
+
 #include "gflags/gflags.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/public/lib/error.h"
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/public/lib/error.h"
 
 DECLARE_string(test_tmpdir);
 
@@ -146,7 +146,7 @@ TEST(CommonUtilsTest, CreateDirWhichAlreadyExistsAndNotADir) {
   ASSERT_OK(WriteStringToFile(some_string, filename));
 
   EXPECT_THAT(RecursivelyCreateDir(filename),
-    StatusIs(_, ERR_INVALID_PARAM, HasSubstr("is not a dir")));
+              StatusIs(_, ERR_INVALID_PARAM, HasSubstr("is not a dir")));
 }
 
 TEST(CommonUtilsTest, ProtoSerialize) {
@@ -206,7 +206,6 @@ TEST(CommonUtilsTest, ProtoSerialize) {
             });
   EXPECT_EQ(ProtoSerialize(e1), ProtoSerialize(e2));
 }
-
 
 TEST(CommonUtilsTest, ProtoEqual) {
   ::p4::v1::TableEntry e1, e2;
@@ -315,6 +314,20 @@ TEST(CommonUtilsTest, ByteStreamTruncate) {
   bytes_too_long = {0xf, 1, 2, 3, 4, 5, 6, 7, 8};
   uint64 value64 = ByteStreamToUint<uint64>(bytes_too_long);
   EXPECT_EQ(0x0f01020304050607ULL, value64);
+}
+
+TEST(CommonUtilsTest, Demangle) {
+  EXPECT_EQ("foo(int)", Demangle("_Z3fooi"));
+  EXPECT_EQ("invalid", Demangle("invalid"));
+}
+
+TEST(CommonUtilsTest, CreatePipeForSignalHandling) {
+  int read_fd, write_fd = -1;
+  EXPECT_OK(CreatePipeForSignalHandling(&read_fd, &write_fd));
+  EXPECT_NE(-1, read_fd);
+  EXPECT_NE(-1, write_fd);
+  close(read_fd);
+  close(write_fd);
 }
 
 }  // namespace stratum

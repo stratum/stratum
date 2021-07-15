@@ -6,7 +6,6 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_library",
 )
-load(":bf_pi.bzl", "barefoot_pi_deps")
 
 licenses(["notice"])  # Apache v2
 
@@ -38,7 +37,21 @@ stratum_cc_library(
 )
 
 # PI Node for Barefoot targets
-barefoot_pi_deps()
+alias(
+    name = "pi_bf",
+    actual = select(
+        {
+            "@local_barefoot_bin//:sde_version_9.2.0": "@com_github_p4lang_PI_bf_9_2_0//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.3.0": "@com_github_p4lang_PI_bf_9_3_0//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.3.1": "@com_github_p4lang_PI_bf_9_3_1//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.3.2": "@com_github_p4lang_PI_bf_9_3_2//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.4.0": "@com_github_p4lang_PI_bf_9_4_0//proto/frontend:pifeproto",
+            "@local_barefoot_bin//:sde_version_9.5.0": "@com_github_p4lang_PI_bf_9_5_0//proto/frontend:pifeproto",
+        },
+        no_match_error = "Unsupported SDE version",
+    ),
+    visibility = ["//visibility:public"],
+)
 
 stratum_cc_library(
     name = "pi_node_bf",

@@ -10,8 +10,9 @@
 #include <string>
 #include <vector>
 
-#include "google/protobuf/map.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "google/protobuf/map.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -76,8 +77,7 @@ class FieldNameInspector : public Inspector {
   void AppendStackedHeaderPathNames();
 
   // Injected prefixes to ignore.
-  ::google::protobuf::Map<::std::string, ::google::protobuf::int32>
-      ignored_path_prefixes_;
+  ::google::protobuf::Map<::std::string, int32> ignored_path_prefixes_;
 
   // This member is the extracted name.
   std::string field_name_;

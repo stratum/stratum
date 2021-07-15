@@ -1,6 +1,6 @@
 {
   "_comment": "Configuration file for bspless support on x86-64-netberg-aurora-750-r0",
-  "enable_debug_log": 1,
+  "enable_debug_log": 0,
   "board_lane_map_entry": [
     {
       "connector": 1,
@@ -117,7 +117,7 @@
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3
+        "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
         "rx_pn_swap": 0,
@@ -240,7 +240,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": ,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 8,
             "tx_eq_post": 0,

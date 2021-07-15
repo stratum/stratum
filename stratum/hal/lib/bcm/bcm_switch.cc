@@ -306,7 +306,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.lacp_router_mac().node_id()
         // - port_id: req.lacp_router_mac().port_id()
         // and then write it into the response.
-        resp.mutable_lacp_router_mac()->set_mac_address(0x112233445566ull);
+        resp.mutable_lacp_router_mac()->set_mac_address(kDummyMacAddress);
         break;
       case DataRequest::Request::kLacpSystemPriority:
         // Find LACP System priority of port located at:
@@ -328,7 +328,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.mac_address().node_id()
         // - port_id: req.mac_address().port_id()
         // and then write it into the response.
-        resp.mutable_mac_address()->set_mac_address(0x112233445566ull);
+        resp.mutable_mac_address()->set_mac_address(kDummyMacAddress);
         break;
       case DataRequest::Request::kPortCounters: {
         // Find current port counters for port located at:
@@ -345,7 +345,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.health_indicator().node_id()
         // - port_id: req.health_indicator().port_id()
         // and then write it into the response.
-        resp.mutable_health_indicator()->set_state(HEALTH_STATE_GOOD);
+        resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
         break;
       case DataRequest::Request::kForwardingViability:
         // Find current port forwarding viable state for port located at:
@@ -353,7 +353,7 @@ BcmSwitch::~BcmSwitch() {}
         // - port_id: req.forwarding_viable().port_id()
         // and then write it into the response.
         resp.mutable_forwarding_viability()->set_state(
-            TRUNK_MEMBER_BLOCK_STATE_FORWARDING);
+            TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
         break;
       case DataRequest::Request::kMemoryErrorAlarm: {
         // Find current state of memory-error alarm

@@ -61,6 +61,38 @@ class BfrtTableManager {
       const ::p4::v1::Update::Type type,
       const ::p4::v1::RegisterEntry& register_entry) LOCKS_EXCLUDED(lock_);
 
+  // Modify the data of a meter entry.
+  ::util::Status WriteMeterEntry(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::MeterEntry& meter_entry) LOCKS_EXCLUDED(lock_);
+
+  // Writes an action profile member.
+  ::util::Status WriteActionProfileMember(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::ActionProfileMember& action_profile_member)
+      LOCKS_EXCLUDED(lock_);
+
+  // Reads the P4 ActionProfileMember(s) matched by the given entry.
+  ::util::Status ReadActionProfileMember(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::ActionProfileMember& action_profile_member,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
+  // Writes an action profile group.
+  ::util::Status WriteActionProfileGroup(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::ActionProfileGroup& action_profile_group)
+      LOCKS_EXCLUDED(lock_);
+
+  // Reads the P4 ActionProfileGroup(s) matched by the given entry.
+  ::util::Status ReadActionProfileGroup(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::ActionProfileGroup& action_profile_group,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
   // Read the counter data of a table entry.
   ::util::StatusOr<::p4::v1::DirectCounterEntry> ReadDirectCounterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
@@ -71,6 +103,12 @@ class BfrtTableManager {
   ::util::Status ReadRegisterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::RegisterEntry& register_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
+  // Read the data of a meter entry.
+  ::util::Status ReadMeterEntry(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::MeterEntry& meter_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance.
@@ -141,13 +179,13 @@ class BfrtTableManager {
   std::vector<TimerDaemon::DescriptorPtr> register_timer_descriptors_
       GUARDED_BY(lock_);
 
+  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
+  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
+
   // Helper class to validate the P4Info and requests against it.
   // TODO(max): Maybe this manager should be created in the node and passed down
   // to all feature managers.
   std::unique_ptr<P4InfoManager> p4_info_manager_ GUARDED_BY(lock_);
-
-  // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
-  BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.

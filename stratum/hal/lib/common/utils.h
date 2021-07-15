@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_UTILS_H_
 #define STRATUM_HAL_LIB_COMMON_UTILS_H_
 
@@ -11,13 +10,13 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/glue/integral_types.h"
-#include "stratum/glue/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "gnmi/gnmi.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
 
 namespace stratum {
 namespace hal {
@@ -174,12 +173,10 @@ std::string ConvertPortStateToString(const PortState& state);
 std::string ConvertAdminStateToString(const AdminState& state);
 
 // A helper function that convert speed number to string format.
-std::string ConvertSpeedBpsToString(
-    const ::google::protobuf::uint64& speed_bps);
+std::string ConvertSpeedBpsToString(const uint64& speed_bps);
 
 // A helper function that convert OpenConfig speed string to speed number.
-::google::protobuf::uint64 ConvertStringToSpeedBps(
-    const std::string& speed_string);
+uint64 ConvertStringToSpeedBps(const std::string& speed_string);
 
 // A helper function that convert gRPC alarm severity enum to string.
 std::string ConvertAlarmSeverityToString(const Alarm::Severity& severity);
@@ -193,14 +190,12 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
 // A helper function that convert data received from the HAL into a format
 // expected by the gNMI interface (MAC addresses are expected to be
 // std::strings in the following format: "XX:XX:XX:XX:XX:XX").
-std::string MacAddressToYangString(
-    const ::google::protobuf::uint64& mac_address);
+std::string MacAddressToYangString(const uint64& mac_address);
 
 // A helper function that convert data received from the gNMI interface into a
 // format expected by the HAL (MAC addresses are expected to be
-// ::google::protobuf::uint64).
-::google::protobuf::uint64 YangStringToMacAddress(
-    const std::string& yang_string);
+// uint64).
+uint64 YangStringToMacAddress(const std::string& yang_string);
 
 // A helper function that check if string of mac_address is valid.
 bool IsMacAddressValid(const std::string& mac_address);
@@ -236,13 +231,23 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state);
 // A helper method that do nothing to the value which pass to it.
 // This is useful if we have a process functor in a helper function but we
 // don't want to do anything to the value.
-template<typename T> T DontProcess(const T& val) { return val; }
+template <typename T>
+T DontProcess(const T& val) {
+  return val;
+}
 
 // A helper method that converts frequency from Hz to MHz.
 uint64 ConvertHzToMHz(const uint64& val);
 
 // A helper method that converts frequency from MHz to Hz.
 uint64 ConvertMHzToHz(const uint64& val);
+
+// A helper method that converts glog log level to Openconfig severity string.
+std::string ConvertLogSeverityToString(const LoggingConfig& logging_config);
+
+// A helper method that converts Openconfig severity to glog log level.
+::util::Status ConvertStringToLogSeverity(const std::string& severity_string,
+                                          LoggingConfig* logging_config);
 
 }  // namespace hal
 }  // namespace stratum

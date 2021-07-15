@@ -111,7 +111,6 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status StartDiagShellServer() override;
   ::util::Status StartLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status StopLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
-  void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
       int priority) override LOCKS_EXCLUDED(linkscan_writers_lock_);
@@ -281,6 +280,12 @@ class BcmSdkWrapper : public BcmSdkInterface {
 
   // Thread id for the currently running diag shell thread.
   pthread_t GetDiagShellThreadId() const;
+
+  // Called whenever a linkscan event is received from SDK. It forwards the
+  // linkscan event to the module who registered a callback by calling
+  // RegisterLinkscanEventWriter().
+  void OnLinkscanEvent(int unit, int port, PortState port_state)
+      LOCKS_EXCLUDED(linkscan_writers_lock_);
 
   // BcmSdkWrapper is neither copyable nor movable.
   BcmSdkWrapper(const BcmSdkWrapper&) = delete;

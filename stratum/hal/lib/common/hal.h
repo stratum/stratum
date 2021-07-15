@@ -7,6 +7,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_HAL_H_
 #define STRATUM_HAL_LIB_COMMON_HAL_H_
 
+#include <pthread.h>
 #include <signal.h>
 
 #include <memory>
@@ -91,6 +92,10 @@ class Hal final {
   Hal(const Hal&) = delete;
   Hal& operator=(const Hal&) = delete;
 
+  // Pipe file descriptors used to deliver signals from the handler to Hal.
+  static int pipe_read_fd_;
+  static int pipe_write_fd_;
+
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
@@ -109,6 +114,10 @@ class Hal final {
   // Sends an RPC to procmon gRPC service to checkin. To be called before
   // ::grpc::Server::Wait().
   ::util::Status ProcmonCheckin();
+
+  // Thread function waiting for a signal in the pipe and then initialting the
+  // HAL shutdown.
+  static void* SignalWaiterThreadFunc(void*);
 
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
@@ -150,6 +159,9 @@ class Hal final {
   // This map is used to restore the signal handlers to their previous state
   // in the class destructor.
   absl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
+
+  // Thread id for the signal waiter thread.
+  pthread_t signal_waiter_tid_;
 
   // The lock used for initialization of the singleton.
   static absl::Mutex init_lock_;

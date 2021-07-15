@@ -160,6 +160,12 @@ TEST(IsDontCareMatchTest, ClassifyRangeMatch) {
     m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
     EXPECT_FALSE(IsDontCareMatch(m, 81)) << m.DebugString();
   }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00\x40\x00", 3);
+    m.set_high("\x03\xFF\xFF", 3);
+    EXPECT_FALSE(IsDontCareMatch(m, 18)) << m.DebugString();
+  }
 }
 
 TEST(IsDontCareMatchTest, RejectAllOptionalMatch) {

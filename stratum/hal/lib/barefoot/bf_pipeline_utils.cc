@@ -10,7 +10,6 @@
 #include "absl/strings/strip.h"
 #include "gflags/gflags.h"
 #include "nlohmann/json.hpp"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -23,7 +22,7 @@ namespace barefoot {
 namespace {
 // Helper function to convert a uint32 to a little-endian byte string.
 std::string Uint32ToLeByteStream(uint32 val) {
-  uint32 tmp = (htonl(1) == 1) ? __builtin_bswap32(val) : val;
+  uint32 tmp = (htonl(1) == (1)) ? __builtin_bswap32(val) : val;
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
   return bytes;

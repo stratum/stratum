@@ -93,7 +93,7 @@ class SwitchInterface {
   // PushForwardingPipelineConfig() calls VerifyForwardingPipelineConfig() to
   // verify the forwarding config before pushing anything to the hardware. Also,
   // this funcation can be called at any point before/after the switch is
-  // initialize or the chassis config is pushed.
+  // initialized or the chassis config is pushed.
   virtual ::util::Status VerifyForwardingPipelineConfig(
       uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) = 0;
 

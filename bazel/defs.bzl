@@ -43,6 +43,7 @@ STRATUM_DISABLED_COMPILER_WARNINGS_LLVM = [
     "-Wno-unused-lambda-capture",
     "-Wno-unused-template",
 ]
+
 # TODO(max): Bazel currently does not detect GCC, therefore we have to match on
 # the default conditions. See: https://github.com/bazelbuild/bazel/issues/12707
 STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON + select({
@@ -52,12 +53,18 @@ STRATUM_DISABLED_COMPILER_WARNINGS = STRATUM_DISABLED_COMPILER_WARNINGS_COMMON +
 
 # Compiler warnings that are threated as errors.
 STRATUM_COMPILER_ERRORS_COMMON = [
+    "-Werror=delete-non-virtual-dtor",
     "-Werror=ignored-attributes",
+    "-Werror=ignored-qualifiers",
+    "-Werror=parentheses",
+    "-Werror=shift-negative-value",
+    "-Werror=uninitialized",
     "-Werror=unreachable-code",
 ]
 STRATUM_COMPILER_ERRORS_GCC = [
     "-fdiagnostics-color=always",
     "-Werror=reorder",
+    "-Wno-error=maybe-uninitialized",  # GCC detects some false positives
 ]
 STRATUM_COMPILER_ERRORS_LLVM = [
     "-Werror=implicit-fallthrough",  # TODO(max): move to common after gcc 7
@@ -81,10 +88,10 @@ STRATUM_DEFAULT_COPTS = select({
                         STRATUM_DISABLED_COMPILER_WARNINGS + \
                         STRATUM_COMPILER_ERRORS
 
-STRATUM_TEST_COPTS = STRATUM_DEFAULT_COPTS + select({
+STRATUM_TEST_COPTS = select({
     "//stratum:llvm_compiler": ABSL_LLVM_TEST_FLAGS,
     "//conditions:default": ABSL_GCC_TEST_FLAGS,
-})
+}) + STRATUM_DEFAULT_COPTS
 
 STRATUM_DEFAULT_LINKOPTS = select({
     "//conditions:default": [],

@@ -76,7 +76,7 @@ class BfrtSwitch : public SwitchInterface {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtSwitch> CreateInstance(
-      PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
+      PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
       BfSdeInterface* bf_sde_interface,
       const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
@@ -90,9 +90,18 @@ class BfrtSwitch : public SwitchInterface {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   BfrtSwitch(PhalInterface* phal_interface,
-             BFChassisManager* bf_chassis_manager,
+             BfChassisManager* bf_chassis_manager,
              BfSdeInterface* bf_sde_interface,
              const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
+
+  // Internal version of VerifyForwardingPipelineConfig() which takes no locks.
+  ::util::Status DoVerifyForwardingPipelineConfig(
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config)
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  // Internal version of VerifyChassisConfig() which takes no locks.
+  ::util::Status DoVerifyChassisConfig(const ChassisConfig& config)
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Helper to get BfrtNode pointer from device_id number or return error
   // indicating invalid device_id.
@@ -107,12 +116,12 @@ class BfrtSwitch : public SwitchInterface {
   // instance of this class per chassis.
   PhalInterface* phal_interface_;  // not owned by this class.
 
-  // Per chassis Managers. Note that there is only one instance of this class
-  // per chassis.
-  BFChassisManager* bf_chassis_manager_;  // not owned by the class.
-
   // Pointer to a BfSdeInterface implementation that wraps PD API calls.
   BfSdeInterface* bf_sde_interface_;  // not owned by this class.
+
+  // Per chassis Managers. Note that there is only one instance of this class
+  // per chassis.
+  BfChassisManager* bf_chassis_manager_;  // not owned by the class.
 
   // Map from zero-based device_id number corresponding to a node/ASIC to a
   // pointer to BfrtNode which contain all the per-node managers for that

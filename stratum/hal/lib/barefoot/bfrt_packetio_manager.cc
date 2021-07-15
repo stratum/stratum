@@ -12,22 +12,26 @@
 #include <deque>
 #include <string>
 
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/constants.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
+
+DECLARE_bool(incompatible_enable_bfrt_legacy_bytestring_responses);
 
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPacketioManager::BfrtPacketioManager(int device,
-                                         BfSdeInterface* bf_sde_interface)
+BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
+                                         int device)
     : initialized_(false),
+      rx_writer_(nullptr),
       packetin_header_(),
       packetout_header_(),
       packetin_header_size_(),
       packetout_header_size_(),
+      packet_receive_channel_(nullptr),
       sde_rx_thread_id_(0),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       device_(device) {}
@@ -35,8 +39,8 @@ BfrtPacketioManager::BfrtPacketioManager(int device,
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
 std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
-    int device, BfSdeInterface* bf_sde_interface_) {
-  return absl::WrapUnique(new BfrtPacketioManager(device, bf_sde_interface_));
+    BfSdeInterface* bf_sde_interface_, int device) {
+  return absl::WrapUnique(new BfrtPacketioManager(bf_sde_interface_, device));
 }
 
 ::util::Status BfrtPacketioManager::PushChassisConfig(
@@ -82,26 +86,32 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 
 ::util::Status BfrtPacketioManager::Shutdown() {
   ::util::Status status;
-  RETURN_IF_ERROR(bf_sde_interface_->StopPacketIo(device_));
-  RETURN_IF_ERROR(bf_sde_interface_->UnregisterPacketReceiveWriter(device_));
   {
     absl::WriterMutexLock l(&rx_writer_lock_);
     rx_writer_ = nullptr;
   }
   {
     absl::WriterMutexLock l(&data_lock_);
+    if (initialized_) {
+      APPEND_STATUS_IF_ERROR(status, bf_sde_interface_->StopPacketIo(device_));
+      APPEND_STATUS_IF_ERROR(
+          status, bf_sde_interface_->UnregisterPacketReceiveWriter(device_));
+      if (!packet_receive_channel_ || !packet_receive_channel_->Close()) {
+        ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                               << "Packet Rx channel is already closed.";
+        APPEND_STATUS_IF_ERROR(status, error);
+      }
+    }
     packetin_header_.clear();
     packetout_header_.clear();
     packetin_header_size_ = 0;
     packetout_header_size_ = 0;
-    if (!packet_receive_channel_ || !packet_receive_channel_->Close()) {
-      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
-                             << "Packet Rx channel is already closed.";
-      APPEND_STATUS_IF_ERROR(status, error);
-    }
     packet_receive_channel_.reset();
     initialized_ = false;
   }
+  // TODO(max): we release the locks between closing the channel and joining the
+  // thread to prevent deadlocks with the RX handler. But there might still be a
+  // bug hiding here.
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (sde_rx_thread_id_ != 0 &&
@@ -252,6 +262,13 @@ class BitBuffer {
     auto metadata = packet->add_metadata();
     metadata->set_metadata_id(p.first);
     metadata->set_value(bit_buf.PopField(p.second));
+    if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
+      *metadata->mutable_value() =
+          ByteStringToP4RuntimeByteString(metadata->value());
+    }
+    VLOG(1) << "Encoded PacketIn metadata field with id " << p.first
+            << " bitwidth " << p.second << " value 0x"
+            << StringToHex(metadata->value());
   }
   packet->set_payload(buffer.data() + packetin_header_size_,
                       buffer.size() - packetin_header_size_);
@@ -292,6 +309,8 @@ class BitBuffer {
     }
 
     ::p4::v1::PacketIn packet_in;
+    // FIXME: returning here in case of parsing errors might not be the best
+    // solution.
     RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
     {
       absl::WriterMutexLock l(&rx_writer_lock_);

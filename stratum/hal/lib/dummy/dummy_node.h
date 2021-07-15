@@ -120,8 +120,10 @@ class DummyNode {
   // Factory function for creating the instance of the class.
   // The DummyNode instance created by ChassisManager when the
   // ChassisConfig pushed.
-  static DummyNode* CreateInstance(const uint64 id, const std::string& name,
-                                   const int32 slot, const int32 index);
+  static std::unique_ptr<DummyNode> CreateInstance(const uint64 id,
+                                                   const std::string& name,
+                                                   const int32 slot,
+                                                   const int32 index);
 
   // Register event notify writer for gNMI events which comes from the node.
   ::util::Status RegisterEventNotifyWriter(

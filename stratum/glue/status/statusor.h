@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_GLUE_STATUS_STATUSOR_H_
 #define STRATUM_GLUE_STATUS_STATUSOR_H_
 
@@ -169,6 +168,22 @@ class ABSL_MUST_USE_RESULT StatusOr {
   // in an arbitrary valid state.
   T ConsumeValueOrDie();
 
+  // Returns the current value if `this->ok() == true`. Otherwise constructs a
+  // value using the provided `default_value`.
+  //
+  // Unlike `ValueOrDie`, this function returns by value, copying the current
+  // value if necessary. If the value type supports an efficient move, it can be
+  // used as follows:
+  //
+  //   T value = std::move(statusor).ValueOr(def);
+  //
+  // Unlike with `ValueOrDie`, calling `std::move()` on the result of `ValueOr`
+  // will still trigger a copy.
+  template <typename U>
+  T ValueOr(U&& default_value) const&;
+  template <typename U>
+  T ValueOr(U&& default_value) &&;
+
   void EnsureOk() const;
 
   void EnsureNotOk();
@@ -209,8 +224,7 @@ struct StatusOrHelper::Specialize<T*> {
 }  // namespace internal
 
 template <typename T>
-inline StatusOr<T>::StatusOr()
-    : status_(::util::Status::UNKNOWN), value_() {}
+inline StatusOr<T>::StatusOr() : status_(::util::Status::UNKNOWN), value_() {}
 
 template <typename T>
 inline StatusOr<T>::StatusOr(const ::util::Status& status)
@@ -253,8 +267,7 @@ inline StatusOr<T>::StatusOr(T&& value)
 template <typename T>
 template <typename U>
 inline StatusOr<T>::StatusOr(StatusOr<U>&& other)  // NOLINT
-    : status_(other.status_),
-      value_(std::move(other.value_)) {}
+    : status_(other.status_), value_(std::move(other.value_)) {}
 
 template <typename T>
 template <typename U>
@@ -293,6 +306,24 @@ inline T StatusOr<T>::ConsumeValueOrDie() {
 }
 
 template <typename T>
+template <typename U>
+inline T StatusOr<T>::ValueOr(U&& default_value) const& {
+  if (ok()) {
+    return value_;
+  }
+  return std::forward<U>(default_value);
+}
+
+template <typename T>
+template <typename U>
+inline T StatusOr<T>::ValueOr(U&& default_value) && {
+  if (ok()) {
+    return std::move(value_);
+  }
+  return std::forward<U>(default_value);
+}
+
+template <typename T>
 inline void StatusOr<T>::EnsureOk() const {
   if (!ok()) internal::StatusOrHelper::Crash(status_);
 }
@@ -304,7 +335,7 @@ inline void StatusOr<T>::EnsureNotOk() {
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os,
-  const ::util::StatusOr<T>& x) {
+                                const ::util::StatusOr<T>& x) {
   os << x.status().ToString();
   return os;
 }

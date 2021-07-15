@@ -9,6 +9,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "bf_rt/bf_rt_info.hpp"
 #include "bf_rt/bf_rt_init.hpp"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/integral_types.h"
@@ -70,13 +71,14 @@ class BfrtIdMapper {
   // Reader-writer lock used to protect access to mapping.
   mutable absl::Mutex lock_;
 
-  // Mappings
+  // Maps from bfrt ID to P4Runtime ID and viceversa.
   absl::flat_hash_map<bf_rt_id_t, uint32> bfrt_to_p4info_id_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, bf_rt_id_t> p4info_to_bfrt_id_ GUARDED_BY(lock_);
 
   // Map for getting an ActionSelector BfRt ID from an ActionProfile BfRt ID.
   absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_profile_to_selector_mapping_
       GUARDED_BY(lock_);
+
   // Map for getting an ActionProfile BfRt ID from an ActionSelector BfRt ID.
   absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_selector_to_profile_mapping_
       GUARDED_BY(lock_);

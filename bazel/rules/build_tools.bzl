@@ -1,7 +1,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("//bazel:workspace_rule.bzl", "remote_workspace")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def build_tools_deps():

@@ -20,9 +20,12 @@ TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
 TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
 BF_SDE_PI_VER = {
-    "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
     "9_2_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
     "9_3_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_3_1": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_3_2": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_4_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+    "9_5_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
 }
 GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
@@ -36,17 +39,18 @@ def stratum_deps():
         http_archive(
             name = "com_github_grpc_grpc",
             urls = [
-                "https://github.com/grpc/grpc/archive/v1.30.0.tar.gz",
+                "https://github.com/grpc/grpc/archive/v1.33.2.tar.gz",
             ],
-            strip_prefix = "grpc-1.30.0",
-            sha256 = "419dba362eaf8f1d36849ceee17c3e2ff8ff12ac666b42d3ff02a164ebe090e9",
+            strip_prefix = "grpc-1.33.2",
+            sha256 = "2060769f2d4b0d3535ba594b2ab614d7f68a492f786ab94b4318788d45e3278a",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_googleapis",
-            remote = "https://github.com/googleapis/googleapis",
-            commit = "84c8ad4e52f8eec8f08a60636cfa597b86969b5c",
+            urls = ["https://github.com/googleapis/googleapis/archive/a8cd11e2c420a194348839c6490a8a1bef2835d3.zip"],
+            strip_prefix = "googleapis-a8cd11e2c420a194348839c6490a8a1bef2835d3",
+            sha256 = "bb2b4aa6558e5125a357d829530f2bad932c6f091f0d2faaacfeec185d031ec2",
         )
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
@@ -88,7 +92,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "0fbdac256151eb1537cd5ebf19101d5df60767fa",
+            commit = "b2760a818e0b8ade5864604d29b3008a684c6d5f",
         )
 
     for sde_ver in BF_SDE_PI_VER:
@@ -154,7 +158,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_openconfig_public",
             remote = "https://github.com/openconfig/public",
-            commit = "5897507ecdb54453d4457e7dbb0a3d4b7ead4314",
+            commit = "624655d053ad1fdda62901c7e2055c22cd5d6a05",
             build_file = "@//bazel:external/ocpublic.BUILD",
         )
 
@@ -162,7 +166,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_openconfig_hercules",
             remote = "https://github.com/openconfig/hercules",
-            commit = "cd48feeaaa54426df561d8c961d18d344365998b",
+            commit = "ca3575e85500fa089dfe0b8cd3ea71943267102e",
             build_file = "@//bazel:external/hercules.BUILD",
         )
 
@@ -170,15 +174,15 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_yang_models_yang",
             remote = "https://github.com/YangModels/yang",
-            commit = "31daa2507ae507776c23b4d4176b6cdcef2a308c",
+            commit = "ed2ce1028ff57d667764dbdbe3c37328820f0e50",
             build_file = "@//bazel:external/yang.BUILD",
         )
 
     if "com_github_nlohmann_json" not in native.existing_rules():
         http_archive(
             name = "com_github_nlohmann_json",
-            url = "https://github.com/nlohmann/json/releases/download/v3.7.3/include.zip",
-            sha256 = "87b5884741427220d3a33df1363ae0e8b898099fbc59f1c451113f6732891014",
+            url = "https://github.com/nlohmann/json/releases/download/v3.9.1/include.zip",
+            sha256 = "6bea5877b1541d353bd77bdfbdb2696333ae5ed8f9e8cc22df657192218cad91",
             build_file = "@//bazel:external/json.BUILD",
         )
 
@@ -198,31 +202,35 @@ def stratum_deps():
     #        Third party C++ libraries for common
     # -----------------------------------------------------------------------------
     if "com_google_absl" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_absl",
-            remote = "https://github.com/abseil/abseil-cpp",
-            branch = "lts_2020_09_23",
+            urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.tar.gz"],
+            strip_prefix = "abseil-cpp-20210324.2",
+            sha256 = "59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f",
         )
 
     if "com_github_google_glog" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_google_glog",
-            remote = "https://github.com/google/glog",
-            commit = "5b4fb63d277795eea3400e3e6af542f3b765f2d2",
+            sha256 = "9826ccc86e70f1f1710fc1bb5ba1dc807afa6d3eac1cd694b9dd374761bccf59",
+            strip_prefix = "glog-7bba6030c2a0e78c2f169a8a1cf37d899196f053",
+            urls = ["https://github.com/google/glog/archive/7bba6030c2a0e78c2f169a8a1cf37d899196f053.zip"],
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_gflags_gflags",
-            remote = "https://github.com/gflags/gflags",
-            commit = "28f50e0fed19872e0fd50dd23ce2ee8cd759338e",
+            sha256 = "cfdba0f2f17e8b1ff75c98113d5080d8ec016148426abcc19130864e2952d7bd",
+            strip_prefix = "gflags-827c769e5fc98e0f2a34c47cef953cc6328abced",
+            urls = ["https://github.com/gflags/gflags/archive/827c769e5fc98e0f2a34c47cef953cc6328abced.zip"],
         )
 
     if "com_google_googletest" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_google_googletest",
-            remote = "https://github.com/google/googletest",
-            branch = "3525e3984282c827c7207245b1d4a47f4eaf3c91",
+            sha256 = "d3d307a240e129bb57da8aae64f3b0099bf1b8efff7249df993b619b8641ec77",
+            strip_prefix = "googletest-a3460d1aeeaa43fdf137a6adefef10ba0b59fe4b",
+            urls = ["https://github.com/google/googletest/archive/a3460d1aeeaa43fdf137a6adefef10ba0b59fe4b.zip"],
         )
 
     if "com_googlesource_code_re2" not in native.existing_rules():
@@ -252,7 +260,8 @@ def stratum_deps():
         git_repository(
             name = "com_github_jbeder_yaml_cpp",
             remote = "https://github.com/jbeder/yaml-cpp.git",
-            commit = "de8253fcb075c049c4ad1c466c504bf3cf022f45",
+            commit = "a6bbe0e50ac4074f0b9b44188c28cf00caf1a723",
+            shallow_since = "1609854028 -0600",
         )
 
     # -----------------------------------------------------------------------------
@@ -309,6 +318,9 @@ def stratum_deps():
     if "rules_pkg" not in native.existing_rules():
         http_archive(
             name = "rules_pkg",
-            url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.5/rules_pkg-0.2.5.tar.gz",
-            sha256 = "352c090cc3d3f9a6b4e676cf42a6047c16824959b438895a76c2989c6d7c246a",
+            urls = [
+                "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+                "https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+            ],
+            sha256 = "038f1caa773a7e35b3663865ffb003169c6a71dc995e39bf4815792f385d837d",
         )

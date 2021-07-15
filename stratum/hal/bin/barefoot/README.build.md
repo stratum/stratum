@@ -19,9 +19,12 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.1.0 (Previous LTS release; to be removed after 9.4+ is released)
- - 9.2.0 (Recommended)
- - 9.3.0 (Experimental; Latest & LTS release)
+ - 9.2.0
+ - 9.3.0
+ - 9.3.1
+ - 9.3.2 (Recommended; LTS release)
+ - 9.4.0
+ - 9.5.0 (Experimental; LTS release; Latest)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -81,6 +84,9 @@ kernel module; for example, if you only plan to use the Tofino model simulator.
 
 **This method is recommended for most users as well as automated builds.**
 
+**The SDE must be built inside the Stratum development Docker container, else
+there will be linking errors!**
+
 #### Step 1: Generate the SDE install tarball
 The first step is to build the SDE:
 
@@ -139,12 +145,12 @@ then you can use Bazel to build the Stratum.
 
 #### To build `stratum_bf`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=9.2.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
 ```
 
 #### To build `stratum_bfrt`:
 ```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb [--define sde_ver=9.2.0]
+bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb
 ```
 
 These Bazel targets build the Stratum binary and package all
@@ -167,8 +173,8 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.2.0
-export STRATUM_TARGET=stratum_bf
+export SDE_VERSION=9.3.2
+export STRATUM_TARGET=stratum_bfrt
 docker build -t stratumproject/stratum-bf:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f stratum/hal/bin/barefoot/docker/Dockerfile \
@@ -190,7 +196,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bf:9.2.0 -o stratum-bf-9.2.0-docker.tar
+docker save stratumproject/stratum-bf:9.3.2 -o stratum-bf-9.3.2-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally
@@ -254,11 +260,8 @@ container as in Method 3.
 
 ### Building for a different SDE version
 
-Stratum is designed for the latest Barefoot SDE. You can specify a version by
-using the `--define sde_ver=<SDE version>` flag if you need to build Stratum
-against an older version (e.g. 9.1.0).
-
-This is automatically set to match the BF SDE in Method 1 and Method 2.
+Stratum is designed for the latest Barefoot SDE. The SDE version is detected
+automatically by reading the `$SDE_INSTALL_TAR/share/VERSION` file.
 
 -----
 
@@ -284,8 +287,17 @@ information. **This is the recommended mode. No changes to the SDE needed.**
 
 Otherwise, you need to build & install the BSP. You will not be able to use
 the Stratum ONLP support. The exact instructions vary by the BSP vendor, here is
-how it works for the Wedge reference switch. Pass the BSP sources to the p4studio_build
-script with the `--bsp-path` flag.
+how it works for the Wedge reference switch. Either set the `BSP` environment
+variable before running the
+[`build-stratum-bf-container.sh`](#method-1-build-with-docker-in-one-shot) script:
+
+```bash
+tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
+export BSP=`pwd`/bf-reference-bsp-<SDE_VERSION>
+stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh ...
+```
+
+Or pass the BSP sources to the p4studio_build script with the `--bsp-path` flag.
 
 ```bash
 tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz

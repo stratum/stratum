@@ -12,6 +12,7 @@
 #include "absl/strings/match.h"
 #include "absl/synchronization/notification.h"
 #include "gflags/gflags.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/utils.h"
@@ -33,23 +34,14 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
                                    BfSdeInterface* bf_sde_interface, int device)
     : mode_(mode),
       register_timer_descriptors_(),
-      p4_info_manager_(nullptr),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      p4_info_manager_(nullptr),
       device_(device) {}
 
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     OperationMode mode, BfSdeInterface* bf_sde_interface, int device) {
   return absl::WrapUnique(new BfrtTableManager(mode, bf_sde_interface, device));
 }
-namespace {
-struct RegisterClearThreadData {
-  std::vector<p4::config::v1::Register> registers;
-  BfrtTableManager* mgr;
-
-  explicit RegisterClearThreadData(BfrtTableManager* _mgr)
-      : registers(), mgr(_mgr) {}
-};
-}  // namespace
 
 ::util::Status BfrtTableManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
@@ -184,7 +176,9 @@ struct RegisterClearThreadData {
                                 ::p4::config::v1::MatchField::EXACT)
               << "Found match field of type EXACT does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(
               table_key->SetExact(mk.field_id(), mk.exact().value()));
           break;
@@ -194,7 +188,9 @@ struct RegisterClearThreadData {
                                 ::p4::config::v1::MatchField::TERNARY)
               << "Found match field of type TERNARY does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetTernary(
               mk.field_id(), mk.ternary().value(), mk.ternary().mask()));
           break;
@@ -204,7 +200,9 @@ struct RegisterClearThreadData {
                                 ::p4::config::v1::MatchField::LPM)
               << "Found match field of type LPM does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetLpm(mk.field_id(), mk.lpm().value(),
                                             mk.lpm().prefix_len()));
           break;
@@ -214,14 +212,18 @@ struct RegisterClearThreadData {
                                 ::p4::config::v1::MatchField::RANGE)
               << "Found match field of type Range does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          // TODO(max): Do we need to check this for range matches?
-          // CHECK_RETURN_IF_FALSE(!IsDontCareMatch(match.range(), ));
+          CHECK_RETURN_IF_FALSE(
+              !IsDontCareMatch(mk.range(), expected_match_field.bitwidth()))
+              << "Don't care match " << mk.ShortDebugString()
+              << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetRange(mk.field_id(), mk.range().low(),
                                               mk.range().high()));
           break;
         }
         case ::p4::v1::FieldMatch::kOptional:
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()));
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()))
+              << "Don't care match field " << mk.ShortDebugString()
+              << " must be omitted.";
           ABSL_FALLTHROUGH_INTENDED;
         default:
           RETURN_ERROR(ERR_INVALID_PARAM)
@@ -253,8 +255,7 @@ struct RegisterClearThreadData {
 
   // Priority handling.
   if (!needs_priority && table_entry.priority()) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Non-zero priority for ternary/range/optional match.";
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Non-zero priority for exact/LPM match.";
   } else if (needs_priority && table_entry.priority() == 0) {
     RETURN_ERROR(ERR_INVALID_PARAM)
         << "Zero priority for ternary/range/optional match.";
@@ -316,10 +317,17 @@ struct RegisterClearThreadData {
       << "Invalid update type " << type;
 
   absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(auto table,
+                   p4_info_manager_->FindTableByID(table_entry.table_id()));
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(table_entry.table_id()));
 
   if (!table_entry.is_default_action()) {
+    if (table.is_const_table()) {
+      RETURN_ERROR(ERR_PERMISSION_DENIED)
+          << "Can't write to table " << table.preamble().name()
+          << " because it has const entries.";
+    }
     ASSIGN_OR_RETURN(auto table_key,
                      bf_sde_interface_->CreateTableKey(table_id));
     RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
@@ -488,13 +496,12 @@ struct RegisterClearThreadData {
     result.mutable_action()->set_action_profile_group_id(selector_group_id);
   }
 
-  // Counter data
+  // Counter data, if applicable.
   uint64 bytes, packets;
-  if (table_data->GetCounterData(&bytes, &packets).ok()) {
-    if (request.has_counter_data()) {
-      result.mutable_counter_data()->set_byte_count(bytes);
-      result.mutable_counter_data()->set_packet_count(packets);
-    }
+  if (request.has_counter_data() &&
+      table_data->GetCounterData(&bytes, &packets).ok()) {
+    result.mutable_counter_data()->set_byte_count(bytes);
+    result.mutable_counter_data()->set_packet_count(packets);
   }
 
   return result;
@@ -687,8 +694,9 @@ struct RegisterClearThreadData {
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
 
   // Fetch existing entry with action data. This is needed since the P4RT
-  // request does not provide the action (id), but the SDE requires it in the
-  // later modify call.
+  // request does not provide the action ID and data, but we have to provide the
+  // current values in the later modify call to the SDE, else we would modify
+  // the table entry.
   RETURN_IF_ERROR(bf_sde_interface_->GetTableEntry(
       device_, session, table_id, table_key.get(), table_data.get()));
 
@@ -699,9 +707,9 @@ struct RegisterClearThreadData {
     return ::util::OkStatus();
   }
 
-  RETURN_IF_ERROR(table_data->SetOnlyCounterData(
-      direct_counter_entry.data().byte_count(),
-      direct_counter_entry.data().packet_count()));
+  RETURN_IF_ERROR(
+      table_data->SetCounterData(direct_counter_entry.data().byte_count(),
+                                 direct_counter_entry.data().packet_count()));
 
   RETURN_IF_ERROR(bf_sde_interface_->ModifyTableEntry(
       device_, session, table_id, table_key.get(), table_data.get()));
@@ -766,12 +774,13 @@ BfrtTableManager::ReadDirectCounterEntry(
     optional_register_index = register_entry.index().index();
   }
 
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(register_entry.register_id()));
   std::vector<uint32> register_indices;
   std::vector<uint64> register_datas;
   RETURN_IF_ERROR(bf_sde_interface_->ReadRegisters(
-      device_, session, register_entry.register_id(), optional_register_index,
-      &register_indices, &register_datas,
-      absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms)));
+      device_, session, table_id, optional_register_index, &register_indices,
+      &register_datas, absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms)));
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < register_indices.size(); ++i) {
@@ -825,6 +834,324 @@ BfrtTableManager::ReadDirectCounterEntry(
   RETURN_IF_ERROR(bf_sde_interface_->WriteRegister(
       device_, session, table_id, register_index,
       register_entry.data().bitstring()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadMeterEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::MeterEntry& meter_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+      << "Wildcard MeterEntry reads are not supported.";
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
+  bool meter_units_in_bits;  // or packets
+  {
+    absl::ReaderMutexLock l(&lock_);
+    ASSIGN_OR_RETURN(auto meter,
+                     p4_info_manager_->FindMeterByID(meter_entry.meter_id()));
+    switch (meter.spec().unit()) {
+      case ::p4::config::v1::MeterSpec::BYTES:
+        meter_units_in_bits = true;
+        break;
+      case ::p4::config::v1::MeterSpec::PACKETS:
+        meter_units_in_bits = false;
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
+                                        << meter.ShortDebugString() << ".";
+    }
+  }
+  // Index 0 is a valid value and not a wildcard.
+  absl::optional<uint32> optional_meter_index;
+  if (meter_entry.has_index()) {
+    optional_meter_index = meter_entry.index().index();
+  }
+
+  std::vector<uint32> meter_indices;
+  std::vector<uint64> cirs;
+  std::vector<uint64> cbursts;
+  std::vector<uint64> pirs;
+  std::vector<uint64> pbursts;
+  std::vector<bool> in_pps;
+  RETURN_IF_ERROR(bf_sde_interface_->ReadIndirectMeters(
+      device_, session, table_id, optional_meter_index, &meter_indices, &cirs,
+      &cbursts, &pirs, &pbursts, &in_pps));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < meter_indices.size(); ++i) {
+    ::p4::v1::MeterEntry result;
+    result.set_meter_id(meter_entry.meter_id());
+    result.mutable_index()->set_index(meter_indices[i]);
+    result.mutable_config()->set_cir(cirs[i]);
+    result.mutable_config()->set_cburst(cbursts[i]);
+    result.mutable_config()->set_pir(pirs[i]);
+    result.mutable_config()->set_pburst(pbursts[i]);
+
+    *resp.add_entities()->mutable_meter_entry() = result;
+  }
+
+  VLOG(1) << "ReadMeterEntry resp " << resp.DebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteMeterEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::MeterEntry& meter_entry) {
+  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+      << "Update type of MeterEntry " << meter_entry.ShortDebugString()
+      << " must be MODIFY.";
+  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+      << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
+      << ".";
+
+  bool meter_units_in_packets;  // or bytes
+  {
+    absl::ReaderMutexLock l(&lock_);
+    ASSIGN_OR_RETURN(auto meter,
+                     p4_info_manager_->FindMeterByID(meter_entry.meter_id()));
+    switch (meter.spec().unit()) {
+      case ::p4::config::v1::MeterSpec::BYTES:
+        meter_units_in_packets = false;
+        break;
+      case ::p4::config::v1::MeterSpec::PACKETS:
+        meter_units_in_packets = true;
+        break;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
+                                        << meter.ShortDebugString() << ".";
+    }
+  }
+
+  ASSIGN_OR_RETURN(uint32 meter_id,
+                   bf_sde_interface_->GetBfRtId(meter_entry.meter_id()));
+
+  absl::optional<uint32> meter_index;
+  if (meter_entry.has_index()) {
+    meter_index = meter_entry.index().index();
+  }
+  RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
+      device_, session, meter_id, meter_index, meter_units_in_packets,
+      meter_entry.config().cir(), meter_entry.config().cburst(),
+      meter_entry.config().pir(), meter_entry.config().pburst()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteActionProfileMember(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::ActionProfileMember& action_profile_member) {
+  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+      << "Invalid update type " << type;
+
+  absl::WriterMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
+
+  // Action data
+  ASSIGN_OR_RETURN(
+      auto table_data,
+      bf_sde_interface_->CreateTableData(
+          bfrt_table_id, action_profile_member.action().action_id()));
+  for (const auto& param : action_profile_member.action().params()) {
+    RETURN_IF_ERROR(table_data->SetParam(param.param_id(), param.value()));
+  }
+
+  switch (type) {
+    case ::p4::v1::Update::INSERT: {
+      RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileMember(
+          device_, session, bfrt_table_id, action_profile_member.member_id(),
+          table_data.get()));
+      break;
+    }
+    case ::p4::v1::Update::MODIFY: {
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileMember(
+          device_, session, bfrt_table_id, action_profile_member.member_id(),
+          table_data.get()));
+      break;
+    }
+    case ::p4::v1::Update::DELETE: {
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileMember(
+          device_, session, bfrt_table_id, action_profile_member.member_id()));
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported update type: " << type;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadActionProfileMember(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::ActionProfileMember& action_profile_member,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(action_profile_member.action_profile_id() != 0)
+      << "Reading all action profiles is not supported yet.";
+
+  absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
+
+  std::vector<int> member_ids;
+  std::vector<std::unique_ptr<BfSdeInterface::TableDataInterface>> table_datas;
+  RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileMembers(
+      device_, session, bfrt_table_id, action_profile_member.member_id(),
+      &member_ids, &table_datas));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < member_ids.size(); ++i) {
+    const int member_id = member_ids[i];
+    const std::unique_ptr<BfSdeInterface::TableDataInterface>& table_data =
+        table_datas[i];
+
+    ::p4::v1::ActionProfileMember result;
+    ASSIGN_OR_RETURN(auto action_profile_id,
+                     bf_sde_interface_->GetP4InfoId(bfrt_table_id));
+    result.set_action_profile_id(action_profile_id);
+    result.set_member_id(member_id);
+
+    // Action id
+    int action_id;
+    RETURN_IF_ERROR(table_data->GetActionId(&action_id));
+    result.mutable_action()->set_action_id(action_id);
+
+    // Action data
+    // TODO(max): perform check if action id is valid for this table.
+    ASSIGN_OR_RETURN(auto action, p4_info_manager_->FindActionByID(action_id));
+    for (const auto& expected_param : action.params()) {
+      std::string value;
+      RETURN_IF_ERROR(table_data->GetParam(expected_param.id(), &value));
+      auto* param = result.mutable_action()->add_params();
+      param->set_param_id(expected_param.id());
+      param->set_value(value);
+    }
+
+    *resp.add_entities()->mutable_action_profile_member() = result;
+  }
+
+  if (!writer->Write(resp)) {
+    RETURN_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteActionProfileGroup(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+      << "Invalid update type " << type;
+
+  absl::WriterMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_prof_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_sel_table_id,
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+
+  std::vector<uint32> member_ids;
+  std::vector<bool> member_status;
+  for (const auto& member : action_profile_group.members()) {
+    CHECK_RETURN_IF_FALSE(
+        member.watch_kind_case() ==
+        ::p4::v1::ActionProfileGroup::Member::WATCH_KIND_NOT_SET)
+        << "Watch ports are not supported.";
+    member_ids.push_back(member.member_id());
+    member_status.push_back(true);  // Activate the member.
+  }
+
+  switch (type) {
+    case ::p4::v1::Update::INSERT: {
+      RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id,
+          action_profile_group.group_id(), action_profile_group.max_size(),
+          member_ids, member_status));
+      break;
+    }
+    case ::p4::v1::Update::MODIFY: {
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id,
+          action_profile_group.group_id(), action_profile_group.max_size(),
+          member_ids, member_status));
+      break;
+    }
+    case ::p4::v1::Update::DELETE: {
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id,
+          action_profile_group.group_id()));
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported update type: " << type;
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadActionProfileGroup(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::ActionProfileGroup& action_profile_group,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_prof_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_sel_table_id,
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+  CHECK_RETURN_IF_FALSE(action_profile_group.action_profile_id() != 0)
+      << "Reading all action profiles is not supported yet.";
+
+  std::vector<int> group_ids;
+  std::vector<int> max_group_sizes;
+  std::vector<std::vector<uint32>> member_ids;
+  std::vector<std::vector<bool>> member_statuses;
+  RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileGroups(
+      device_, session, bfrt_act_sel_table_id, action_profile_group.group_id(),
+      &group_ids, &max_group_sizes, &member_ids, &member_statuses));
+
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < group_ids.size(); ++i) {
+    const int group_id = group_ids[i];
+    const int max_group_size = max_group_sizes[i];
+    const std::vector<uint32>& members = member_ids[i];
+    const std::vector<bool>& member_status = member_statuses[i];
+    ::p4::v1::ActionProfileGroup result;
+    // Action profile id
+    ASSIGN_OR_RETURN(
+        auto action_profile_id,
+        bf_sde_interface_->GetActionProfileBfRtId(bfrt_act_sel_table_id));
+    ASSIGN_OR_RETURN(auto p4_action_profile_id,
+                     bf_sde_interface_->GetP4InfoId(action_profile_id));
+    result.set_action_profile_id(p4_action_profile_id);
+    // Group id
+    result.set_group_id(group_id);
+    // Maximum group size
+    result.set_max_size(max_group_size);
+    // Members
+    for (const auto& member_id : members) {
+      auto* member = result.add_members();
+      member->set_member_id(member_id);
+      member->set_weight(1);
+    }
+    *resp.add_entities()->mutable_action_profile_group() = result;
+  }
+
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
 
   return ::util::OkStatus();
 }

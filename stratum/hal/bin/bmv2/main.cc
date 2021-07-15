@@ -1,29 +1,26 @@
 // Copyright 2018-present Barefoot Networks, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-#include "bm/bm_sim/options_parse.h"
-#include "bm/simple_switch/runner.h"
-#include "bm/bm_sim/logger.h"
-
-#include "gflags/gflags.h"
 #include "PI/frontends/proto/device_mgr.h"
 #include "PI/frontends/proto/logging.h"
+#include "bm/bm_sim/logger.h"
+#include "bm/bm_sim/options_parse.h"
+#include "bm/simple_switch/runner.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
+#include "stratum/hal/lib/bmv2/bmv2_switch.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
-#include "stratum/hal/lib/bmv2/bmv2_switch.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
-DEFINE_string(initial_pipeline, "stratum/hal/bin/bmv2/dummy.json",
+DEFINE_string(initial_pipeline, "/etc/stratum/dummy.json",
               "Path to initial pipeline for BMv2 (required for starting BMv2)");
-DEFINE_uint32(device_id, 1,
-              "BMv2 device/node id");
+DEFINE_uint32(device_id, 1, "BMv2 device/node id");
 DEFINE_uint32(cpu_port, 64,
               "BMv2 port number for CPU port (used for packet I/O)");
-DEFINE_bool(console_logging, true,
-              "Log BMv2 message to console.");
+DEFINE_bool(console_logging, true, "Log BMv2 message to console.");
 DEFINE_string(bmv2_log_level, "info",
               "Log level of Bmv2(trace, debug, info, warn, error, off)");
 
@@ -49,8 +46,8 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
       // Found an interface
       int intf_num = strtol(argv[i], &intf, 10);
       intf += 1;  // Point to the start of the interface name
-      LOG(INFO) << "Parsed intf from command line: port " << intf_num
-                << " -> " << intf;
+      LOG(INFO) << "Parsed intf from command line: port " << intf_num << " -> "
+                << intf;
       parser.ifaces.add(intf_num, intf);
       LOG(WARNING) << "Providing interfaces on the command-line is deprecated, "
                    << "and you will not be able to perform gNMI RPCs to "
@@ -82,8 +79,8 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   auto log_level_it = log_level_map.find(FLAGS_bmv2_log_level);
   if (log_level_it == log_level_map.end()) {
     LOG(WARNING) << "Invalid value " << FLAGS_bmv2_log_level
-              << " for -bmv2_log_level\n"
-              << "Run with -help to see possible values\n";
+                 << " for -bmv2_log_level\n"
+                 << "Run with -help to see possible values\n";
     parser.log_level = bm::Logger::LogLevel::INFO;
   } else {
     parser.log_level = log_level_it->second;
@@ -93,22 +90,28 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   // (e.g. it can be done with OptionsParser::parse)
   ParseInterfaces(argc, argv, parser);
 
-  SimpleSwitchRunner *runner = new SimpleSwitchRunner(FLAGS_cpu_port);
+  SimpleSwitchRunner* runner = new SimpleSwitchRunner(FLAGS_cpu_port);
   {
-    using ::pi::fe::proto::LogWriterIface;
     using ::pi::fe::proto::LoggerConfig;
+    using ::pi::fe::proto::LogWriterIface;
 
     class P4RuntimeLogger : public LogWriterIface {
-      void write(Severity severity, const char *msg) override {
+      void write(Severity severity, const char* msg) override {
         auto severity_map = [&severity]() {
           namespace spdL = spdlog::level;
           switch (severity) {
-            case Severity::TRACE : return spdL::trace;
-            case Severity::DEBUG: return spdL::debug;
-            case Severity::INFO: return spdL::info;
-            case Severity::WARN: return spdL::warn;
-            case Severity::ERROR: return spdL::err;
-            case Severity::CRITICAL: return spdL::critical;
+            case Severity::TRACE:
+              return spdL::trace;
+            case Severity::DEBUG:
+              return spdL::debug;
+            case Severity::INFO:
+              return spdL::info;
+            case Severity::WARN:
+              return spdL::warn;
+            case Severity::ERROR:
+              return spdL::err;
+            case Severity::CRITICAL:
+              return spdL::critical;
           }
           return spdL::off;
         };
@@ -135,12 +138,12 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
   auto* phal_sim = PhalSim::CreateSingleton();
   std::map<uint64, SimpleSwitchRunner*> node_id_to_bmv2_runner = {
-    {node_id, runner},
+      {node_id, runner},
   };
-  auto bmv2_chassis_manager = Bmv2ChassisManager::CreateInstance(
-      phal_sim, node_id_to_bmv2_runner);
+  auto bmv2_chassis_manager =
+      Bmv2ChassisManager::CreateInstance(phal_sim, node_id_to_bmv2_runner);
   std::map<uint64, pi::PINode*> node_id_to_pi_node = {
-    {node_id, pi_node.get()},
+      {node_id, pi_node.get()},
   };
   auto pi_switch = Bmv2Switch::CreateInstance(
       phal_sim, bmv2_chassis_manager.get(), node_id_to_pi_node);
@@ -150,8 +153,7 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   ASSIGN_OR_RETURN(auto credentials_manager,
                    CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_SIM,
-                                   pi_switch.get(),
-                                   auth_policy_checker.get(),
+                                   pi_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
 
   CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
@@ -176,7 +178,6 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
 }  // namespace hal
 }  // namespace stratum
 
-int
-main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
   return stratum::hal::bmv2::Main(argc, argv).error_code();
 }

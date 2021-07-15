@@ -2,15 +2,14 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
-    "stratum_cc_test",
-    "HOST_ARCHES",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -125,14 +124,14 @@ stratum_cc_library(
     srcs = ["credentials_manager.cc"],
     hdrs = ["credentials_manager.h"],
     deps = [
+        "//stratum/glue:logging",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
         "@com_github_google_glog//:glog",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//stratum/glue:logging",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:utils",
-        "//stratum/lib:macros",
     ],
 )
 
@@ -147,14 +146,14 @@ stratum_cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "@com_github_google_glog//:glog",
-        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
     ],
 )

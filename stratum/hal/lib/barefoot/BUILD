@@ -6,6 +6,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load(
     "//bazel:rules.bzl",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
@@ -15,6 +16,21 @@ licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = STRATUM_INTERNAL,
+)
+
+# These defines depend on the SDE version and can be used to implement
+# version-dependent features or fixes. There is no default condition to ensure
+# a that version upgrade re-visits these.
+SDE_DEFINES = select(
+    {
+        "@local_barefoot_bin//:sde_version_9.2.0": ["SDE_9_2_0"],
+        "@local_barefoot_bin//:sde_version_9.3.0": ["SDE_9_3_0"],
+        "@local_barefoot_bin//:sde_version_9.3.1": ["SDE_9_3_1"],
+        "@local_barefoot_bin//:sde_version_9.3.2": ["SDE_9_3_2"],
+        "@local_barefoot_bin//:sde_version_9.4.0": ["SDE_9_4_0"],
+        "@local_barefoot_bin//:sde_version_9.5.0": ["SDE_9_5_0"],
+    },
+    no_match_error = "Unsupported SDE version",
 )
 
 stratum_cc_library(
@@ -61,6 +77,26 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "bfrt_switch_test",
+    srcs = ["bfrt_switch_test.cc"],
+    deps = [
+        ":bf_chassis_manager_mock",
+        ":bf_sde_mock",
+        ":bfrt_node_mock",
+        ":bfrt_switch",
+        ":test_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:phal_mock",
+        "//stratum/hal/lib/common:switch_interface",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
 stratum_cc_library(
     name = "bf_chassis_manager",
     srcs = ["bf_chassis_manager.cc"],
@@ -68,6 +104,7 @@ stratum_cc_library(
     copts = ["-Wno-thread-safety-analysis"],  # TODO(antonin)
     deps = [
         ":bf_sde_interface",
+        ":bfrt_constants",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -95,6 +132,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "bf_chassis_manager_test",
     srcs = ["bf_chassis_manager_test.cc"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(antonin)
     deps = [
         ":bf_chassis_manager",
         ":bf_sde_mock",
@@ -109,9 +147,23 @@ stratum_cc_test(
         "//stratum/hal/lib/common:phal_mock",
         "//stratum/hal/lib/common:utils",
         "//stratum/hal/lib/common:writer_interface",
+        "//stratum/hal/lib/common:writer_mock",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
+    name = "bf_chassis_manager_mock",
+    testonly = 1,
+    hdrs = ["bf_chassis_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bf_chassis_manager",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -145,6 +197,7 @@ stratum_cc_library(
     name = "bf_sde_wrapper",
     srcs = ["bf_sde_wrapper.cc"],
     hdrs = ["bf_sde_wrapper.h"],
+    defines = SDE_DEFINES,
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
@@ -153,16 +206,17 @@ stratum_cc_library(
         ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@local_barefoot_bin//:bfsde",
     ],
@@ -176,7 +230,6 @@ stratum_cc_library(
         ":bf_cc_proto",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:macros",
@@ -235,7 +288,6 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_pipeline_utils",
-        ":bfrt_action_profile_manager",
         ":bfrt_counter_manager",
         ":bfrt_packetio_manager",
         ":bfrt_pre_manager",
@@ -252,6 +304,17 @@ stratum_cc_library(
         "//stratum/public/proto:error_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_googleapis//google/rpc:status_cc_proto",
+    ],
+)
+
+stratum_cc_library(
+    name = "bfrt_node_mock",
+    testonly = 1,
+    hdrs = ["bfrt_node_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_node",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -352,33 +415,6 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "bfrt_action_profile_manager",
-    srcs = ["bfrt_action_profile_manager.cc"],
-    hdrs = ["bfrt_action_profile_manager.h"],
-    deps = [
-        ":bf_cc_proto",
-        ":bf_sde_interface",
-        ":bfrt_constants",
-        "//stratum/glue:integral_types",
-        "//stratum/glue:logging",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/common:common_cc_proto",
-        "//stratum/hal/lib/common:writer_interface",
-        "//stratum/hal/lib/p4:p4_info_manager",
-        "//stratum/lib:constants",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:error_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/strings",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
-    ],
-)
-
-stratum_cc_library(
     name = "bfrt_packetio_manager",
     srcs = ["bfrt_packetio_manager.cc"],
     hdrs = ["bfrt_packetio_manager.h"],
@@ -387,7 +423,6 @@ stratum_cc_library(
         ":bf_sde_interface",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -395,6 +430,7 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:writer_interface",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:utils",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_absl//absl/container:flat_hash_map",

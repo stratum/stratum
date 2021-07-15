@@ -2,13 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/utils.h"
 
 #include <cfenv>  // NOLINT
 #include <cmath>
+#include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
-#include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -248,8 +247,7 @@ std::string ConvertAdminStateToString(const AdminState& state) {
   }
 }
 
-std::string ConvertSpeedBpsToString(
-    const ::google::protobuf::uint64& speed_bps) {
+std::string ConvertSpeedBpsToString(const uint64& speed_bps) {
   switch (speed_bps) {
     case kTenGigBps:
       return "SPEED_10GB";
@@ -268,19 +266,18 @@ std::string ConvertSpeedBpsToString(
   }
 }
 
-::google::protobuf::uint64 ConvertStringToSpeedBps(
-    const std::string& speed_string) {
-  if (speed_string.compare("SPEED_10GB") == 0) {
+uint64 ConvertStringToSpeedBps(const std::string& speed_string) {
+  if (speed_string == "SPEED_10GB") {
     return kTenGigBps;
-  } else if (speed_string.compare("SPEED_20GB") == 0) {
+  } else if (speed_string == "SPEED_20GB") {
     return kTwentyGigBps;
-  } else if (speed_string.compare("SPEED_25GB") == 0) {
+  } else if (speed_string == "SPEED_25GB") {
     return kTwentyFiveGigBps;
-  } else if (speed_string.compare("SPEED_40GB") == 0) {
+  } else if (speed_string == "SPEED_40GB") {
     return kFortyGigBps;
-  } else if (speed_string.compare("SPEED_50GB") == 0) {
+  } else if (speed_string == "SPEED_50GB") {
     return kFiftyGigBps;
-  } else if (speed_string.compare("SPEED_100GB") == 0) {
+  } else if (speed_string == "SPEED_100GB") {
     return kHundredGigBps;
   } else {
     return 0LL;
@@ -318,16 +315,14 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
   return state == TRUNK_MEMBER_BLOCK_STATE_FORWARDING;
 }
 
-std::string MacAddressToYangString(
-    const ::google::protobuf::uint64& mac_address) {
+std::string MacAddressToYangString(const uint64& mac_address) {
   return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
                          (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
                          (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
                          mac_address & 0xFF);
 }
 
-::google::protobuf::uint64 YangStringToMacAddress(
-    const std::string& yang_string) {
+uint64 YangStringToMacAddress(const std::string& yang_string) {
   std::string tmp_str = yang_string;
   // Remove colons
   tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
@@ -341,11 +336,11 @@ bool IsMacAddressValid(const std::string& mac_address) {
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
-    return state == TriState::TRI_STATE_TRUE;
+  return state == TriState::TRI_STATE_TRUE;
 }
 
 bool IsAdminStateEnabled(const AdminState& admin_state) {
-    return admin_state == AdminState::ADMIN_STATE_ENABLED;
+  return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
 bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
@@ -431,12 +426,56 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   return status.ConsumeValueOrDie();
 }
 
-uint64 ConvertHzToMHz(const uint64& val) {
-  return val / 1000000;
+uint64 ConvertHzToMHz(const uint64& val) { return val / 1000000; }
+
+uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
+
+::util::Status ConvertStringToLogSeverity(const std::string& severity_string,
+                                          LoggingConfig* logging_config) {
+  if (severity_string == "CRITICAL") {
+    logging_config->first = "3";
+    logging_config->second = "0";
+  } else if (severity_string == "ERROR") {
+    logging_config->first = "2";
+    logging_config->second = "0";
+  } else if (severity_string == "WARNING") {
+    logging_config->first = "1";
+    logging_config->second = "0";
+  } else if (severity_string == "NOTICE") {
+    logging_config->first = "0";
+    logging_config->second = "0";
+  } else if (severity_string == "INFORMATIONAL") {
+    logging_config->first = "0";
+    logging_config->second = "1";
+  } else if (severity_string == "DEBUG") {
+    logging_config->first = "0";
+    logging_config->second = "2";
+  } else {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Invalid severity string \"" << severity_string << "\".";
+  }
+
+  return ::util::OkStatus();
 }
 
-uint64 ConvertMHzToHz(const uint64& val) {
-  return val * 1000000;
+std::string ConvertLogSeverityToString(const LoggingConfig& logging_config) {
+  const std::string& glog_severity = logging_config.first;
+  const std::string& glog_verbosity = logging_config.second;
+  if (glog_severity == "0" && glog_verbosity >= "2") {
+    return "DEBUG";
+  } else if (glog_severity == "0" && glog_verbosity == "1") {
+    return "INFORMATIONAL";
+  } else if (glog_severity == "0") {
+    return "NOTICE";
+  } else if (glog_severity == "1") {
+    return "WARNING";
+  } else if (glog_severity == "2") {
+    return "ERROR";
+  } else if (glog_severity == "3") {
+    return "CRITICAL";
+  } else {
+    return "UNKNOWN";
+  }
 }
 
 }  // namespace hal

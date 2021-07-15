@@ -13,7 +13,6 @@ Restart=on-failure
 WorkingDirectory=/var/run/stratum
 SyslogIdentifier=stratum-bf
 RuntimeDirectory=stratum
-EnvironmentFile=/etc/stratum/stratum_bf.env
 StandardOutput=syslog
 StandardError=syslog
 

@@ -22,7 +22,7 @@ the pipeline config.
 
 ```
 -write_req_log_file=/var/log/stratum/p4_writes.pb.txt
--forwarding_pipeline_configs_file=/var/run/stratum/pipeline_cfg.pb.txt
+-forwarding_pipeline_configs_file=/etc/stratum/pipeline_cfg.pb.txt
 ```
 
 If you override any flags above, make sure to use a non-empty and valid path.
@@ -40,7 +40,7 @@ container we should access.
 
 ```
 $ docker ps | grep stratum-bf
-4c615277261d  stratumproject/stratum-bf:9.2.0-4.14.49-OpenNetworkLinux  "/usr/bin/stratum-st…"  5 days ago  Up 5 days
+4c615277261d  stratumproject/stratum-bf:9.3.2-4.14.49-OpenNetworkLinux  "/usr/bin/stratum-st…"  5 days ago  Up 5 days
 ```
 
 The `4c615277261d` is the container ID we need.
@@ -49,7 +49,7 @@ Next, we can use `docker cp` command to copy files we need
 
 ```
 $ docker cp 4c615277261d:/var/log/stratum/p4_writes.pb.txt .
-$ docker cp 4c615277261d:/var/run/stratum/pipeline_cfg.pb.txt .
+$ docker cp 4c615277261d:/etc/stratum/pipeline_cfg.pb.txt .
 ```
 
 You should be able to see those files in the current working directory.
@@ -59,11 +59,11 @@ $ ls
 p4_writes.pb.txt  pipeline_cfg.pb.txt
 ```
 
-Copy those files to your laptop or the place you are going to run stratum-replay tool.
+Copy those files to your laptop or the place you are going to run stratum_replay tool.
 
 ## Step 2 - Replay the pipeline, and P4Runtime writes
 
-We provide a container image that includes a prebuilt stratum-replay binary.
+We provide a container image that includes a prebuilt stratum_replay binary.
 
 To use it, you can run the following commands:
 
@@ -71,7 +71,7 @@ To use it, you can run the following commands:
 docker run \
   -v $PWD:$PWD \
   -w $PWD \
-  stratumproject/stratum-replay \
+  stratumproject/stratum_replay \
   -grpc-addr="ip-of-switch-to-replay-on:9339" \
   -pipeline-cfg pipeline_cfg.pb.txt \
   p4_writes.pb.txt
@@ -122,7 +122,7 @@ for a given pipeline config file.
 
 # Usage and available options:
 
-`stratum-replay [options] [p4runtime write log file]`
+`stratum_replay [options] [p4runtime write log file]`
 
 ```
 -device_id: The device ID (default: 1)

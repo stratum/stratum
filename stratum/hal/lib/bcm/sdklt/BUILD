@@ -4,10 +4,10 @@
 
 # We use some strip_prefix magic to make the SDKs look the same externally.
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
+    "stratum_cc_library",
 )
 
 licenses(["notice"])  # Apache v2
@@ -16,7 +16,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-cc_library(
+stratum_cc_library(
     name = "bcm_diag_shell",
     srcs = ["bcm_diag_shell.cc"],
     defines = ["NDEBUG"],
@@ -33,10 +33,11 @@ cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "bcm_sdk_wrapper",
     srcs = ["bcm_sdk_wrapper.cc"],
     hdrs = ["bcm_sdk_wrapper.h"],
+    copts = ["-Wno-thread-safety-analysis"],  # TODO(max)
     defines = ["NDEBUG"],
     include_prefix = "stratum/hal/lib/bcm/",
     strip_include_prefix = "./",
@@ -44,7 +45,6 @@ cc_library(
         ":bcm_diag_shell",
         ":macros",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/net_util:ipaddress",
@@ -63,6 +63,7 @@ cc_library(
         "@com_github_opennetworkinglab_sdklt//:bcm_headers",
         "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/strings",
@@ -72,7 +73,7 @@ cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     include_prefix = "stratum/hal/lib/bcm",

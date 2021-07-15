@@ -2,11 +2,11 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 licenses(["notice"])  # Apache v2
@@ -31,7 +31,7 @@ stratum_cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
@@ -41,7 +41,7 @@ cc_library(
     ],
 )
 
-cc_test(
+stratum_cc_test(
     name = "error_test",
     srcs = ["error_test.cc"],
     deps = [

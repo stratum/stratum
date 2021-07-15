@@ -8,6 +8,7 @@
 #include <sstream>  // IWYU pragma: keep
 #include <utility>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/str_cat.h"
@@ -17,7 +18,6 @@
 #include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
@@ -28,7 +28,7 @@
 #include "stratum/public/lib/error.h"
 
 DEFINE_string(forwarding_pipeline_configs_file,
-              "/var/run/stratum/pipeline_cfg.pb.txt",
+              "/etc/stratum/pipeline_cfg.pb.txt",
               "The latest set of verified ForwardingPipelineConfig protos "
               "pushed to the switch. This file is updated whenever "
               "ForwardingPipelineConfig proto for switching node is added or "
@@ -241,6 +241,11 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                     const std::vector<::util::Status>& results,
                     const absl::Time timestamp) {
   if (FLAGS_read_req_log_file.empty()) {
+    return;
+  }
+  if (results.size() != req.entities_size()) {
+    LOG(ERROR) << "Size mismatch: " << results.size()
+               << " != " << req.entities_size() << ". Did not log anything!";
     return;
   }
   std::string msg = "";
@@ -541,7 +546,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   uint64 node_id = 0;
 
   // The cleanup object. Will call RemoveController() upon exit.
-  auto cleaner = gtl::MakeCleanup([this, &node_id, &connection_id]() {
+  auto cleaner = absl::MakeCleanup([this, &node_id, &connection_id]() {
     this->RemoveController(node_id, connection_id);
   });
 
@@ -582,7 +587,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, connection_id)) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED)
                    << "Controller with connection ID " << connection_id
-                   << "is not a master";
+                   << " is not a master";
         } else {
           // If master, try to transmit the packet.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
@@ -602,7 +607,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, connection_id)) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED)
                    << "Controller with connection ID " << connection_id
-                   << "is not a master";
+                   << " is not a master";
         } else {
           // If master, try to ack the digest.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
@@ -620,8 +625,10 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         break;
       }
       case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
-        return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                              "Need to specify either arbitration or packet.");
+      case ::p4::v1::StreamMessageRequest::kOther:
+        return ::grpc::Status(
+            ::grpc::StatusCode::INVALID_ARGUMENT,
+            "Need to specify either arbitration, packet or digest ack.");
     }
   }
 
@@ -893,7 +900,12 @@ void P4Service::StreamResponseReceiveHandler(
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  it->second.begin()->stream()->Write(resp);
+  if (!it->second.begin()->stream()->Write(resp)) {
+    LOG_EVERY_N(ERROR, 500)
+        << "Can't send StreamMessageResponse " << resp.ShortDebugString()
+        << " to controller " << it->second.begin()->Name()
+        << " because stream channel is closed.";
+  }
 }
 
 }  // namespace hal

@@ -4,7 +4,7 @@
 set -e
 
 LOG_DIR=${LOG_DIR:-/var/log}
-SDE_VERSION=${SDE_VERSION:-9.2.0}
+SDE_VERSION=${SDE_VERSION:-9.3.2}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bf}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION}
 
@@ -17,11 +17,15 @@ elif [[ -z "$PLATFORM" ]]; then
 fi
 
 # Set Docker network options.
-if [[ "$PLATFORM" == 'barefoot-tofino-model' ]]; then
+# On tofino-model and certain switches we run Stratum directly on the host
+# network. The BSP on Wedge devices needs access to the usb0 interface.
+if [[ "$PLATFORM" == 'barefoot-tofino-model' ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-32x-r0" ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-32qs-r0" ]] || \
+   [[ "$PLATFORM" == "x86-64-accton-wedge100bf-65x-r0" ]]; then
     DOCKER_NET_OPTS="--network host "
 else
-    DOCKER_NET_OPTS="-p 28000:28000 "
-    DOCKER_NET_OPTS+="-p 9339:9339 "
+    DOCKER_NET_OPTS="-p 9339:9339 "
     DOCKER_NET_OPTS+="-p 9559:9559 "
 fi
 
@@ -34,10 +38,6 @@ if [ -d "/etc/onl" ]; then
               -v /etc/onl:/etc/onl"
 fi
 
-# Mount user configuration.
-if [ -n "$FLAG_FILE" ]; then
-    FLAG_FILE_MOUNT="-v $FLAG_FILE:/etc/stratum/stratum.flags"
-fi
 if [ -n "$CHASSIS_CONFIG" ]; then
     CHASSIS_CONFIG_MOUNT="-v $CHASSIS_CONFIG:/etc/stratum/$PLATFORM/chassis_config.pb.txt"
 fi
@@ -50,7 +50,6 @@ docker run -it --rm --privileged \
     --env PLATFORM=$PLATFORM \
     $DOCKER_NET_OPTS \
     $ONLP_MOUNT \
-    $FLAG_FILE_MOUNT \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \

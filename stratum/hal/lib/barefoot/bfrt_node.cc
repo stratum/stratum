@@ -23,15 +23,53 @@
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
+                   BfrtPacketioManager* bfrt_packetio_manager,
+                   BfrtPreManager* bfrt_pre_manager,
+                   BfrtCounterManager* bfrt_counter_manager,
+                   BfSdeInterface* bf_sde_interface, int device_id)
+    : pipeline_initialized_(false),
+      initialized_(false),
+      bfrt_config_(),
+      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
+      bfrt_packetio_manager_(bfrt_packetio_manager),
+      bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
+      bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
+      node_id_(0),
+      device_id_(device_id) {}
+
+BfrtNode::BfrtNode()
+    : pipeline_initialized_(false),
+      initialized_(false),
+      bfrt_config_(),
+      bf_sde_interface_(nullptr),
+      bfrt_table_manager_(nullptr),
+      bfrt_packetio_manager_(nullptr),
+      bfrt_pre_manager_(nullptr),
+      bfrt_counter_manager_(nullptr),
+      node_id_(0),
+      device_id_(-1) {}
+
 BfrtNode::~BfrtNode() = default;
+
+// Factory function for creating the instance of the class.
+std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
+    BfrtTableManager* bfrt_table_manager,
+    BfrtPacketioManager* bfrt_packetio_manager,
+    BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
+    BfSdeInterface* bf_sde_interface, int device_id) {
+  return absl::WrapUnique(
+      new BfrtNode(bfrt_table_manager, bfrt_packetio_manager, bfrt_pre_manager,
+                   bfrt_counter_manager, bf_sde_interface, device_id));
+}
 
 ::util::Status BfrtNode::PushChassisConfig(const ChassisConfig& config,
                                            uint64 node_id) {
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
   // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
-  // RETURN_IF_ERROR(
-  //     bfrt_action_profile_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
@@ -41,8 +79,6 @@ BfrtNode::~BfrtNode() = default;
 ::util::Status BfrtNode::VerifyChassisConfig(const ChassisConfig& config,
                                              uint64 node_id) {
   // RETURN_IF_ERROR(bfrt_table_manager_->VerifyChassisConfig(config, node_id));
-  // RETURN_IF_ERROR(
-  //     bfrt_action_profile_manager_->VerifyChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->VerifyChassisConfig(config, node_id));
   return ::util::OkStatus();
 }
@@ -57,6 +93,9 @@ BfrtNode::~BfrtNode() = default;
 ::util::Status BfrtNode::SaveForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   RETURN_IF_ERROR(VerifyForwardingPipelineConfig(config));
   BfPipelineConfig bf_config;
   RETURN_IF_ERROR(ExtractBfPipelineConfig(config, &bf_config));
@@ -83,13 +122,12 @@ BfrtNode::~BfrtNode() = default;
 
 ::util::Status BfrtNode::CommitForwardingPipelineConfig() {
   absl::WriterMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(initialized_) << "Not initialized";
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
 
-  if (pipeline_initialized_) {
-    // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
-  }
-
+  // Calling AddDevice() overwrites any previous pipeline.
   RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
 
   // Push pipeline config to the managers.
@@ -97,8 +135,6 @@ BfrtNode::~BfrtNode() = default;
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config_));
-  RETURN_IF_ERROR(
-      bfrt_action_profile_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
@@ -120,8 +156,19 @@ BfrtNode::~BfrtNode() = default;
 }
 
 ::util::Status BfrtNode::Shutdown() {
-  // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
-  return ::util::OkStatus();
+  absl::WriterMutexLock l(&lock_);
+  auto status = ::util::OkStatus();
+  // TODO(max): Check if we need to de-init the ASIC or SDE
+  // TODO(max): Enable other Shutdown calls once implemented.
+  // APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, bfrt_packetio_manager_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bfrt_pre_manager_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bfrt_counter_manager_->Shutdown());
+
+  pipeline_initialized_ = false;
+  initialized_ = false;  // Set to false even if there is an error
+
+  return status;
 }
 
 ::util::Status BfrtNode::Freeze() { return ::util::OkStatus(); }
@@ -138,6 +185,9 @@ BfrtNode::~BfrtNode() = default;
       << "Request atomicity "
       << ::p4::v1::WriteRequest::Atomicity_Name(req.atomicity())
       << " is not supported.";
+  if (!initialized_ || !pipeline_initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
 
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
@@ -154,11 +204,11 @@ BfrtNode::~BfrtNode() = default;
                                   update.entity().extern_entry());
         break;
       case ::p4::v1::Entity::kActionProfileMember:
-        status = bfrt_action_profile_manager_->WriteActionProfileMember(
+        status = bfrt_table_manager_->WriteActionProfileMember(
             session, update.type(), update.entity().action_profile_member());
         break;
       case ::p4::v1::Entity::kActionProfileGroup:
-        status = bfrt_action_profile_manager_->WriteActionProfileGroup(
+        status = bfrt_table_manager_->WriteActionProfileGroup(
             session, update.type(), update.entity().action_profile_group());
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
@@ -179,12 +229,16 @@ BfrtNode::~BfrtNode() = default;
             session, update.type(), update.entity().register_entry());
         break;
       }
-      case ::p4::v1::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kMeterEntry: {
+        status = bfrt_table_manager_->WriteMeterEntry(
+            session, update.type(), update.entity().meter_entry());
+        break;
+      }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kDigestEntry:
       default:
-        status = MAKE_ERROR()
+        status = MAKE_ERROR(ERR_UNIMPLEMENTED)
                  << "Unsupported entity type: " << update.ShortDebugString();
         break;
     }
@@ -207,9 +261,15 @@ BfrtNode::~BfrtNode() = default;
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  absl::WriterMutexLock l(&lock_);
+  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
+  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+
+  absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
       << "Request device id must be same as id of this BfrtNode.";
+  if (!initialized_ || !pipeline_initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   ::p4::v1::ReadResponse resp;
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
@@ -229,14 +289,14 @@ BfrtNode::~BfrtNode() = default;
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
-        auto status = bfrt_action_profile_manager_->ReadActionProfileMember(
+        auto status = bfrt_table_manager_->ReadActionProfileMember(
             session, entity.action_profile_member(), writer);
         success &= status.ok();
         details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileGroup: {
-        auto status = bfrt_action_profile_manager_->ReadActionProfileGroup(
+        auto status = bfrt_table_manager_->ReadActionProfileGroup(
             session, entity.action_profile_group(), writer);
         success &= status.ok();
         details->push_back(status);
@@ -263,14 +323,9 @@ BfrtNode::~BfrtNode() = default;
       }
       case ::p4::v1::Entity::kCounterEntry: {
         auto status = bfrt_counter_manager_->ReadIndirectCounterEntry(
-            session, entity.counter_entry());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()->mutable_counter_entry()->CopyFrom(
-            status.ValueOrDie());
+            session, entity.counter_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kRegisterEntry: {
@@ -280,7 +335,13 @@ BfrtNode::~BfrtNode() = default;
         details->push_back(status);
         break;
       }
-      case ::p4::v1::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kMeterEntry: {
+        auto status = bfrt_table_manager_->ReadMeterEntry(
+            session, entity.meter_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
+        break;
+      }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kDigestEntry:
@@ -328,7 +389,7 @@ BfrtNode::~BfrtNode() = default;
 
 ::util::Status BfrtNode::HandleStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& req) {
-  absl::WriterMutexLock l(&lock_);
+  absl::ReaderMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -347,13 +408,25 @@ BfrtNode::~BfrtNode() = default;
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry) {
   switch (entry.extern_type_id()) {
-    case kTnaExternActionProfileId:
-    case kTnaExternActionSelectorId:
-      return bfrt_action_profile_manager_->WriteActionProfileEntry(session,
-                                                                   type, entry);
+    case kTnaExternActionProfileId: {
+      ::p4::v1::ActionProfileMember act_prof_member;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile member.";
+      return bfrt_table_manager_->WriteActionProfileMember(session, type,
+                                                           act_prof_member);
+    }
+    case kTnaExternActionSelectorId: {
+      ::p4::v1::ActionProfileGroup act_prof_group;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile group.";
+      return bfrt_table_manager_->WriteActionProfileGroup(session, type,
+                                                          act_prof_group);
+    }
     default:
-      RETURN_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
-                     << ".";
+      RETURN_ERROR(ERR_UNIMPLEMENTED)
+          << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
   }
 }
 
@@ -362,45 +435,27 @@ BfrtNode::~BfrtNode() = default;
     const ::p4::v1::ExternEntry& entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   switch (entry.extern_type_id()) {
-    case kTnaExternActionProfileId:
-    case kTnaExternActionSelectorId:
-      return bfrt_action_profile_manager_->ReadActionProfileEntry(
-          session, entry, writer);
+    case kTnaExternActionProfileId: {
+      ::p4::v1::ActionProfileMember act_prof_member;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile member";
+      return bfrt_table_manager_->ReadActionProfileMember(
+          session, act_prof_member, writer);
+    }
+    case kTnaExternActionSelectorId: {
+      ::p4::v1::ActionProfileGroup act_prof_group;
+      CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
+          << "Entry " << entry.ShortDebugString()
+          << " is not an action profile group";
+      return bfrt_table_manager_->ReadActionProfileGroup(
+          session, act_prof_group, writer);
+    }
     default:
       RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
           << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
   }
 }
-
-// Factory function for creating the instance of the class.
-std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
-    BfrtTableManager* bfrt_table_manager,
-    BfrtActionProfileManager* bfrt_action_profile_manager,
-    BfrtPacketioManager* bfrt_packetio_manager,
-    BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
-    BfSdeInterface* bf_sde_interface, int device_id) {
-  return absl::WrapUnique(new BfrtNode(
-      bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_pre_manager, bfrt_counter_manager, bf_sde_interface, device_id));
-}
-
-BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
-                   BfrtActionProfileManager* bfrt_action_profile_manager,
-                   BfrtPacketioManager* bfrt_packetio_manager,
-                   BfrtPreManager* bfrt_pre_manager,
-                   BfrtCounterManager* bfrt_counter_manager,
-                   BfSdeInterface* bf_sde_interface, int device_id)
-    : pipeline_initialized_(false),
-      initialized_(false),
-      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
-      bfrt_action_profile_manager_(
-          ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
-      bfrt_packetio_manager_(bfrt_packetio_manager),
-      bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
-      bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
-      bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
-      node_id_(0),
-      device_id_(device_id) {}
 
 }  // namespace barefoot
 }  // namespace hal

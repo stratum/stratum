@@ -84,6 +84,10 @@ class P4InfoManager {
       uint32 counter_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Counter> FindCounterByName(
       const std::string& counter_name) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::DirectCounter>
+  FindDirectCounterByID(uint32 counter_id) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::DirectCounter>
+  FindDirectCounterByName(const std::string& counter_name) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Meter> FindMeterByID(
       uint32 meter_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Meter> FindMeterByName(
@@ -265,6 +269,7 @@ class P4InfoManager {
   P4ResourceMap<::p4::config::v1::Action> action_map_;
   P4ResourceMap<::p4::config::v1::ActionProfile> action_profile_map_;
   P4ResourceMap<::p4::config::v1::Counter> counter_map_;
+  P4ResourceMap<::p4::config::v1::DirectCounter> direct_counter_map_;
   P4ResourceMap<::p4::config::v1::Meter> meter_map_;
   P4ResourceMap<::p4::config::v1::ValueSet> value_set_map_;
   P4ResourceMap<::p4::config::v1::Register> register_map_;

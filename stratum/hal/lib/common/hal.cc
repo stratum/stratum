@@ -4,7 +4,8 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include <chrono>  // NOLINT
+#include <limits.h>
+
 #include <utility>
 
 #include "absl/base/macros.h"
@@ -49,9 +50,15 @@ namespace {
 // Signal received callback which is registered as the handler for SIGINT and
 // SIGTERM signals using signal() system call.
 void SignalRcvCallback(int value) {
-  Hal* hal = Hal::GetSingleton();
-  if (hal == nullptr) return;
-  hal->HandleSignal(value);
+  static_assert(sizeof(value) <= PIPE_BUF,
+                "PIPE_BUF is smaller than the number of bytes that can be "
+                "written atomically to a pipe.");
+  // We must restore any changes made to errno at the end of the handler:
+  // https://www.gnu.org/software/libc/manual/html_node/POSIX-Safety-Concepts.html
+  int saved_errno = errno;
+  // No reasonable error handling possible.
+  write(Hal::pipe_write_fd_, &value, sizeof(value));
+  errno = saved_errno;
 }
 
 // Set the channel arguments to match the defualt keep-alive parameters set by
@@ -72,6 +79,8 @@ void SetGrpcServerKeepAliveArgs(::grpc::ServerBuilder* builder) {
 
 Hal* Hal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex Hal::init_lock_(absl::kConstInit);
+int Hal::pipe_read_fd_ = -1;
+int Hal::pipe_write_fd_ = -1;
 
 Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
          AuthPolicyChecker* auth_policy_checker,
@@ -88,7 +97,8 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       diag_service_(nullptr),
       file_service_(nullptr),
       external_server_(nullptr),
-      old_signal_handlers_() {}
+      old_signal_handlers_(),
+      signal_waiter_tid_(0) {}
 
 Hal::~Hal() {
   // TODO(unknown): Handle this error?
@@ -245,7 +255,7 @@ void Hal::HandleSignal(int value) {
   // with no deadline will block forever, as it waits for all the active RPCs
   // to finish. To fix this, we give a deadline set to "now" so the call returns
   // immediately.
-  external_server_->Shutdown(std::chrono::system_clock::now());
+  external_server_->Shutdown(absl::ToChronoTime(absl::Now()));
 }
 
 Hal* Hal::CreateSingleton(OperationMode mode, SwitchInterface* switch_interface,
@@ -330,6 +340,12 @@ Hal* Hal::GetSingleton() {
     }
     old_signal_handlers_[s] = h;
   }
+  // Create the pipe to transfer signals.
+  RETURN_IF_ERROR(CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
+  // Start the signal waiter thread that initiates shutdown.
+  CHECK_RETURN_IF_FALSE(pthread_create(&signal_waiter_tid_, nullptr,
+                                       SignalWaiterThreadFunc, nullptr) == 0)
+      << "Could not start the signal waiter thread.";
 
   return ::util::OkStatus();
 }
@@ -340,6 +356,13 @@ Hal* Hal::GetSingleton() {
     signal(e.first, e.second);
   }
   old_signal_handlers_.clear();
+  // Close pipe to unblock the waiter thread.
+  if (pipe_write_fd_ != -1) close(pipe_write_fd_);
+  if (pipe_read_fd_ != -1) close(pipe_read_fd_);
+  // Join thread.
+  if (signal_waiter_tid_ && pthread_join(signal_waiter_tid_, nullptr) != 0) {
+    LOG(ERROR) << "Failed to join signal waiter thread.";
+  }
 
   return ::util::OkStatus();
 }
@@ -365,6 +388,23 @@ Hal* Hal::GetSingleton() {
   }
 
   return ::util::OkStatus();
+}
+
+void* Hal::SignalWaiterThreadFunc(void*) {
+  int signal_value;
+  int ret = read(Hal::pipe_read_fd_, &signal_value, sizeof(signal_value));
+  if (ret == 0) {  // Pipe has been closed.
+    return nullptr;
+  } else if (ret != sizeof(signal_value)) {
+    LOG(ERROR) << "Error reading complete signal from pipe: " << ret << ": "
+               << strerror(errno);
+    return nullptr;
+  }
+  Hal* hal = Hal::GetSingleton();
+  if (hal == nullptr) return nullptr;
+  hal->HandleSignal(signal_value);
+
+  return nullptr;
 }
 
 }  // namespace hal

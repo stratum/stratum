@@ -1,5 +1,6 @@
 {
   "_comment": "Auto-generated configuration file for bspless support (pltfm_bd_map_mavericks_P0C.h) on x86-64-stordis-bf2556x-1t-r0",
+  "enable_debug_log": 0,
   "board_lane_map_entry": [
     {
       "connector": 1,
@@ -1351,6 +1352,5 @@
       "mac_block": 32,
       "media_type": "optical"
     }
-  ],
-  "enable_debug_log": 1
+  ]
 }

@@ -11,6 +11,11 @@
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 
+DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, true,
+            "Enables the legacy padded byte string format in P4Runtime "
+            "responses for Stratum-bfrt. The strings are left unchanged from "
+            "the underlying SDE.");
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -52,8 +57,6 @@ class TableDataMock : public BfSdeInterface::TableDataInterface {
   MOCK_CONST_METHOD1(GetSelectorGroupId,
                      ::util::Status(uint64* selector_group_id));
   MOCK_METHOD2(SetCounterData, ::util::Status(uint64 bytes, uint64 packets));
-  MOCK_METHOD2(SetOnlyCounterData,
-               ::util::Status(uint64 bytes, uint64 packets));
   MOCK_CONST_METHOD2(GetCounterData,
                      ::util::Status(uint64* bytes, uint64* packets));
   MOCK_CONST_METHOD1(GetActionId, ::util::Status(int* action_id));
@@ -62,6 +65,10 @@ class TableDataMock : public BfSdeInterface::TableDataInterface {
 
 class BfSdeMock : public BfSdeInterface {
  public:
+  MOCK_METHOD3(InitializeSde,
+               ::util::Status(const std::string& sde_install_path,
+                              const std::string& sde_config_file,
+                              bool run_in_background));
   MOCK_METHOD2(AddDevice,
                ::util::Status(int device,
                               const BfrtDeviceConfig& device_config));
@@ -84,6 +91,9 @@ class BfSdeMock : public BfSdeInterface {
                               uint32 burst_size, uint64 rate_per_second));
   MOCK_METHOD3(EnablePortShaping,
                ::util::Status(int device, int port, TriState enable));
+  MOCK_METHOD2(ConfigureQos,
+               ::util::Status(int device,
+                              const TofinoConfig::TofinoQosConfig& qos_config));
   MOCK_METHOD3(SetPortAutonegPolicy,
                ::util::Status(int device, int port, TriState autoneg));
   MOCK_METHOD3(SetPortMtu, ::util::Status(int device, int port, int32 mtu));
@@ -95,8 +105,11 @@ class BfSdeMock : public BfSdeInterface {
                ::util::StatusOr<uint32>(int device, const PortKey& port_key));
   MOCK_METHOD1(GetPcieCpuPort, ::util::StatusOr<int>(int device));
   MOCK_METHOD2(SetTmCpuPort, ::util::Status(int device, int port));
+  MOCK_METHOD3(SetDeflectOnDropDestination,
+               ::util::Status(int device, int port, int queue));
   MOCK_METHOD1(IsSoftwareModel, ::util::StatusOr<bool>(int device));
   MOCK_CONST_METHOD1(GetBfChipType, std::string(int device));
+  MOCK_CONST_METHOD0(GetSdeVersion, std::string());
   MOCK_METHOD2(TxPacket, ::util::Status(int device, const std::string& packet));
   MOCK_METHOD1(StartPacketIo, ::util::Status(int device));
   MOCK_METHOD1(StopPacketIo, ::util::Status(int device));
@@ -178,13 +191,14 @@ class BfSdeMock : public BfSdeInterface {
                      uint32 counter_id, int counter_index,
                      absl::optional<uint64> byte_count,
                      absl::optional<uint64> packet_count));
-  MOCK_METHOD7(
+  MOCK_METHOD8(
       ReadIndirectCounter,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
-                     uint32 counter_id, int counter_index,
-                     absl::optional<uint64>* byte_count,
-                     absl::optional<uint64>* packet_count,
+                     uint32 counter_id, absl::optional<uint32> counter_index,
+                     std::vector<uint32>* counter_indices,
+                     std::vector<absl::optional<uint64>>* byte_counts,
+                     std::vector<absl::optional<uint64>>* packet_counts,
                      absl::Duration timeout));
   MOCK_METHOD5(
       WriteRegister,
@@ -200,6 +214,22 @@ class BfSdeMock : public BfSdeInterface {
                      std::vector<uint32>* register_indices,
                      std::vector<uint64>* register_datas,
                      absl::Duration timeout));
+  MOCK_METHOD9(
+      WriteIndirectMeter,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::optional<uint32> meter_index,
+                     bool in_pps, uint64 cir, uint64 cburst, uint64 pir,
+                     uint64 pburst));
+  MOCK_METHOD10(
+      ReadIndirectMeters,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::optional<uint32> meter_index,
+                     std::vector<uint32>* meter_indices,
+                     std::vector<uint64>* cirs, std::vector<uint64>* cbursts,
+                     std::vector<uint64>* pirs, std::vector<uint64>* pbursts,
+                     std::vector<bool>* in_pps));
   MOCK_METHOD5(
       InsertActionProfileMember,
       ::util::Status(int device,

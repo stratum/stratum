@@ -2,8 +2,8 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/lib/timer_daemon.h"
+
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
@@ -96,6 +96,10 @@ bool TimerDaemon::Execute() {
 ::util::Status TimerDaemon::Stop() {
   {
     absl::WriterMutexLock l(&GetInstance()->access_lock_);
+    if (GetInstance()->started_ == false) {
+      return ::util::OkStatus();
+    }
+
     GetInstance()->started_ = false;
   }
 
@@ -112,23 +116,23 @@ bool TimerDaemon::Execute() {
 }
 
 ::util::Status TimerDaemon::RequestOneShotTimer(uint64 delay_ms,
-                                                 const Action& action,
-                                                 DescriptorPtr* desc) {
+                                                const Action& action,
+                                                DescriptorPtr* desc) {
   return GetInstance()->RequestTimer(false, delay_ms,
                                      /* period_ms (ignored)= */ 0, action,
                                      desc);
 }
 
 ::util::Status TimerDaemon::RequestPeriodicTimer(uint64 delay_ms,
-                                                  uint64 period_ms,
-                                                  const Action& action,
-                                                  DescriptorPtr* desc) {
+                                                 uint64 period_ms,
+                                                 const Action& action,
+                                                 DescriptorPtr* desc) {
   return GetInstance()->RequestTimer(true, delay_ms, period_ms, action, desc);
 }
 
 ::util::Status TimerDaemon::RequestTimer(bool repeat, uint64 delay_ms,
-                                          uint64 period_ms, Action action,
-                                          DescriptorPtr* desc) {
+                                         uint64 period_ms, Action action,
+                                         DescriptorPtr* desc) {
   absl::WriterMutexLock l(&access_lock_);
 
   VLOG(1) << "Registered timer.";

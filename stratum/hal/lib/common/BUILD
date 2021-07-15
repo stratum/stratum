@@ -562,6 +562,7 @@ stratum_cc_library(
         ":switch_interface",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
@@ -583,7 +584,6 @@ stratum_cc_library(
         "//stratum/lib/channel",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
     ],
     defines = [
@@ -741,6 +741,7 @@ stratum_cc_library(
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
+        "//stratum/glue/status:statusor",
         "//stratum/public/lib:error",
     ],
 )
@@ -756,6 +757,7 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
         "//stratum/lib:constants",
+        "//stratum/glue/status:status_test_util",
     ],
 )
 
