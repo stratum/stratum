@@ -6,6 +6,9 @@ build --conlyopt='-std=gnu11'
 build --cxxopt='-std=gnu++11'
 build --workspace_status_command=.circleci/workspace_status.sh
 
+# General test options
+test --test_output=errors
+
 # LTO on clang
 build:lto --copt -Wno-unused-command-line-argument
 build:lto --copt -flto
