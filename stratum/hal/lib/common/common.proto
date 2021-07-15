@@ -728,6 +728,17 @@ message TofinoConfig {
       PRIO_6 = 7;
       PRIO_7 = 8;
     }
+    enum QueueColorLimit {
+      UNKNOWN_LIMIT = 0;
+      LIMIT_12_POINT_5_PERCENT = 1;
+      LIMIT_25_PERCENT = 2;
+      LIMIT_37_POINT_5_PERCENT = 3;
+      LIMIT_50_PERCENT = 4;
+      LIMIT_62_POINT_5_PERCENT = 5;
+      LIMIT_75_PERCENT = 6;
+      LIMIT_87_POINT_5_PERCENT = 7;
+      LIMIT_100_PERCENT = 8;
+    }
     message PoolConfig {
       ApplicationPool pool = 1;  // required
       uint32 pool_size = 2;
@@ -765,6 +776,9 @@ message TofinoConfig {
           PacketShape min_rate_packets = 11;
           ByteShape min_rate_bytes = 12;
         }
+        bool enable_color_drop = 13;
+        QueueColorLimit color_drop_limit_yellow = 14;
+        QueueColorLimit color_drop_limit_red = 15;
       }
       uint32 sdk_port = 1;  // required
       repeated QueueMapping queue_mapping = 3;
