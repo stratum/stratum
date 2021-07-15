@@ -139,11 +139,11 @@ Install the package using the followign command on the switch:
 
 ```bash
 [sudo] apt-get update
-[sudo] apt-get install -y --reinstall ./stratum_bf_deb.deb
+[sudo] apt-get install -y --reinstall ./stratum_bfrt_deb.deb
 ```
 
 You can safely ignore warnings like this:
-`N: Download is performed unsandboxed as root as file '/root/stratum_bf_deb.deb' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)`
+`N: Download is performed unsandboxed as root as file '/root/stratum_bfrt_deb.deb' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)`
 
 ### Running Stratum
 ```bash

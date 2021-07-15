@@ -174,7 +174,7 @@ If you want to create a Docker image from the Debian package,
 
 ```bash
 export SDE_VERSION=9.3.2
-export STRATUM_TARGET=stratum_bf
+export STRATUM_TARGET=stratum_bfrt
 docker build -t stratumproject/stratum-bf:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f stratum/hal/bin/barefoot/docker/Dockerfile \
