@@ -60,12 +60,17 @@ void InitStratumLogging() {
     LogToStderr();
   }
 
-  LOG(INFO) << "Stratum version "
-            << kBuildScmRevision
-            // TODO(max): enable once CI does not modify the source tree anymore
-            // << " (" << kBuildScmStatus << ")"
-            << " built at " << absl::FromTimeT(kBuildTimestamp) << " on host "
-            << kBuildHost << " by user " << kBuildUser << ".";
+  if (kBuildTimestamp > 0) {
+    LOG(INFO)
+        << "Stratum version: "
+        << kBuildScmRevision
+        // TODO(max): enable once CI does not modify the source tree anymore
+        // << " (" << kBuildScmStatus << ")"
+        << " built at " << absl::FromTimeT(kBuildTimestamp) << " on host "
+        << kBuildHost << " by user " << kBuildUser << ".";
+  } else {
+    LOG(INFO) << "Stratum version: not stamped.";
+  }
 }
 
 LoggingConfig GetCurrentLogLevel() {
