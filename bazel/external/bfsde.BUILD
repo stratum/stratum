@@ -18,7 +18,8 @@ cc_library(
         "barefoot-bin/lib/libbfutils.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
-    ]) + ["barefoot-bin/lib/libbf_switchd_lib.a"],
+    ]),  # + ["barefoot-bin/lib/libbf_switchd_lib.a"],
+    # FIXME not in 9.6.0
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
         "barefoot-bin/include/bf_rt/*.hpp",
@@ -65,6 +66,8 @@ pkg_tar_with_symlinks(
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
         "barefoot-bin/lib/libpython3.4m.so*",
+        "barefoot-bin/lib/libclish.so*",
+        "barefoot-bin/lib/libpiall.so*",
         # General BSP libraries.
         "barefoot-bin/lib/libpltfm_driver.so*",
         "barefoot-bin/lib/libpltfm_mgr.so*",
@@ -146,5 +149,12 @@ config_setting(
     name = "sde_version_9.5.0",
     flag_values = {
         ":sde_version_setting": "9.5.0",
+    },
+)
+
+config_setting(
+    name = "sde_version_9.6.0",
+    flag_values = {
+        ":sde_version_setting": "9.6.0",
     },
 )
