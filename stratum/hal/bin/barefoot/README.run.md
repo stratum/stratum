@@ -22,11 +22,11 @@ You can pull a nightly version of this container image from
 [Dockerhub](https://hub.docker.com/repository/docker/stratumproject/stratum-bf/tags)
 
 ```bash
-$ docker pull stratumproject/stratum-bf:[SDE version]
+$ docker pull stratumproject/stratum-bfrt:[SDE version]
 ```
 
 For example, the container with BF SDE 9.3.2: <br/>
-`stratumproject/stratum-bf:9.3.2`
+`stratumproject/stratum-bfrt:9.3.2`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bf:9.3.2
-docker save stratumproject/stratum-bf:9.3.2 -o stratum-bf-9.3.2-docker.tar
+docker pull stratumproject/stratum-bfrt:9.3.2
+docker save stratumproject/stratum-bfrt:9.3.2 -o stratum-bfrt-9.3.2-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bf-9.3.2-docker.tar
+docker load -i stratum-bfrt-9.3.2-docker.tar
 ```
 
 ### Set up huge pages
@@ -118,7 +118,7 @@ For more details on additional options that can be passed to
 CHASSIS_CONFIG    # Override the default chassis config file.
 LOG_DIR           # The directory for logging, default: `/var/log/`.
 SDE_VERSION       # The SDE version
-DOCKER_IMAGE      # The container image name, default: stratumproject/stratum-bf
+DOCKER_IMAGE      # The container image name, default: stratumproject/stratum-bfrt
 DOCKER_IMAGE_TAG  # The container image tag, default: $SDE_VERSION
 PLATFORM          # Use specific platform port map
 ```

@@ -5,7 +5,7 @@ set -e
 
 LOG_DIR=${LOG_DIR:-/var/log}
 SDE_VERSION=${SDE_VERSION:-9.3.2}
-DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bf}
+DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bfrt}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION}
 
 # Try to load the platform string if not already set.
