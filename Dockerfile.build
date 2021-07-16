@@ -1,7 +1,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BAZELISK_VERSION=1.8.0
+ARG BAZELISK_VERSION=1.10.1
 ARG PI_COMMIT=74f4a82610b3f0b62453ac510277ab7347975813
 ARG BMV2_COMMIT=6dfd5b41426310eb081fedc8fee05b675f780e31
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
