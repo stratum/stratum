@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // This file contains variables that will be populated by Bazel via the
-// linkstamping feature. It must be keep as simple as possible to compile
+// linkstamping feature. It must be kept as simple as possible to compile
 // without external headers, compiler flags or build variables.
 // https://docs.bazel.build/versions/master/be/c-cpp.html#cc_library.linkstamp
 // For a full list of supported variables, see getVolatileKeys():
