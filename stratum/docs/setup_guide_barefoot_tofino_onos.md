@@ -224,5 +224,6 @@ In case of problems with these instructions, feel free to create an issue or PR.
 - ["Trellis+Stratum example" (Untested)](/tools/mininet/examples/trellis)
 - [ONL building](https://opennetlinux.org/doc-building.html)
 - [stratum-bf Docker](https://registry.hub.docker.com/r/stratumproject/stratum-bf)
+- [stratum-bfrt Docker](https://registry.hub.docker.com/r/stratumproject/stratum-bfrt)
 - [ONOS CLI](https://wiki.onosproject.org/display/ONOS/Appendix+A+%3A+CLI+commands)
 - ["Using ONOS to control Stratum-enabled Intel/Barefoot Tofino-based switches"](https://wiki.onosproject.org/pages/viewpage.action?pageId=16122978)
