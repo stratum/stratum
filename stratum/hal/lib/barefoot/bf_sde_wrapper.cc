@@ -1938,9 +1938,9 @@ BfSdeWrapper::CreateTableData(int table_id, int action_id) {
 
   std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
                      bf_pkt_get_pkt_size(pkt));
-  if (!(*rx_writer)->TryWrite(buffer).ok()) {
-    LOG_EVERY_N(INFO, 500) << "Dropped packet received from CPU.";
-  }
+  ::util::Status status = (*rx_writer)->TryWrite(buffer);
+  LOG_IF_EVERY_N(INFO, !status.ok(), 500)
+      << "Dropped packet received from CPU: " << status;
   VLOG(1) << "Received " << buffer.size() << " byte packet from CPU "
           << StringToHex(buffer);
 
