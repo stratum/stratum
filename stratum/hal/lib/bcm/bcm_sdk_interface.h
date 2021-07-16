@@ -505,11 +505,12 @@ class BcmSdkInterface {
 
   // Adds a VLAN with a given ID if it does not exist (NOOP if the VLAN
   // already exists). If a new VLAN is created  all the ports including CPU
-  // will be added to the regular member ports and all the ports excluding CPU
-  // will be added to untagged member ports. Untagged member ports are referring
-  // to the ports where VLAN tags for all egress packets are stripped before
-  // sending the packet out.
-  virtual ::util::Status AddVlanIfNotFound(int unit, int vlan) = 0;
+  // will be added to the regular member ports and, if add_untagged_ports
+  // is true, all the ports excluding CPU will be added to untagged member
+  // ports. Untagged member ports are referring to the ports where VLAN
+  // tags for all egress packets are stripped before sending the packet out.
+  virtual ::util::Status AddVlanIfNotFound(int unit, int vlan,
+                                           bool add_untagged_ports = true) = 0;
 
   // Delete a VLAN given its ID if it exists (NOOP if the VLAN is already
   // deleted).

@@ -4265,10 +4265,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::AddVlanIfNotFound(int unit, int vlan) {
+::util::Status BcmSdkWrapper::AddVlanIfNotFound(int unit, int vlan,
+                                                bool add_untagged_ports) {
   bcmlt_entry_handle_t entry_hdl;
   bcmlt_entry_info_t entry_info;
-  uint64_t untagged_members[3] = {0};
   uint64_t members[3] = {0};
   uint64_t max;
   uint64_t min;
@@ -4303,15 +4303,20 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Include CPU to the member ports
   members[0] = 0xFFFFFFFFFFFFFFFFULL;  // all ports
   members[1] = kuint64max;
-  untagged_members[0] = 0xFFFFFFFFFFFFFFFeULL; // exclude cpu port
-  untagged_members[1] = kuint64max;
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_array_add(entry_hdl, EGR_MEMBER_PORTSs, 0, members, 3));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_array_add(entry_hdl, ING_MEMBER_PORTSs, 0, members, 3));
-  RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_array_add(entry_hdl, UNTAGGED_MEMBER_PORTSs, 0,
-                                  untagged_members, 3));
+
+  if (add_untagged_ports) {
+    uint64_t untagged_members[3] = {0};
+    untagged_members[0] = 0xFFFFFFFFFFFFFFFeULL;  // exclude cpu port
+    untagged_members[1] = kuint64max;
+
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_add(
+        entry_hdl, UNTAGGED_MEMBER_PORTSs, 0, untagged_members, 3));
+  }
+
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L3_IIF_IDs, 1));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));

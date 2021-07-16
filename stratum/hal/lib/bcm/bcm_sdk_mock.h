@@ -145,7 +145,8 @@ class BcmSdkMock : public BcmSdkInterface {
   MOCK_METHOD1(DeletePacketReplicationEntry,
                ::util::Status(const BcmPacketReplicationEntry& entry));
   MOCK_METHOD2(DeleteL2EntriesByVlan, ::util::Status(int unit, int vlan));
-  MOCK_METHOD2(AddVlanIfNotFound, ::util::Status(int unit, int vlan));
+  MOCK_METHOD3(AddVlanIfNotFound,
+               ::util::Status(int unit, int vlan, bool add_untagged_ports));
   MOCK_METHOD2(DeleteVlanIfFound, ::util::Status(int unit, int vlan));
   MOCK_METHOD6(ConfigureVlanBlock,
                ::util::Status(int unit, int vlan, bool block_broadcast,

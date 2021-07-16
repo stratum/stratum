@@ -196,7 +196,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                         uint64 dst_mac,
                                         uint64 dst_mac_mask) override;
   ::util::Status DeleteL2EntriesByVlan(int unit, int vlan) override;
-  ::util::Status AddVlanIfNotFound(int unit, int vlan) override;
+  ::util::Status AddVlanIfNotFound(int unit, int vlan,
+                                   bool add_untagged_ports = true) override;
   ::util::Status DeleteVlanIfFound(int unit, int vlan) override;
   ::util::Status ConfigureVlanBlock(int unit, int vlan, bool block_broadcast,
                                     bool block_known_multicast,
