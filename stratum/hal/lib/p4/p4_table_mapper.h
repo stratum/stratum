@@ -467,6 +467,11 @@ class P4TableMapper {
       const ::p4::config::v1::ActionProfile& profile_p4_info,
       const ::p4::v1::Action& action, MappedAction* mapped_action) const;
 
+  // Processes the action redirects specified by the action for the table.
+  ::util::Status ProcessTableActionRedirects(
+      const ::p4::config::v1::Table& table_p4_info,
+      const ::p4::v1::Action& action, MappedAction* mapped_action) const;
+
   // Handles action function processing that is common to either a table entry
   // or an action profile update.  If successful, the output mapped_action will
   // be filled.

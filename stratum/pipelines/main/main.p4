@@ -18,7 +18,7 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<2> METER_GREEN = 0;
+enum MeterColor_t { COLOR_GREEN, COLOR_YELLOW, COLOR_RED }
 
 const bit<16> ETHERTYPE_VLAN1 = 0x8100;
 const bit<16> ETHERTYPE_VLAN2 = 0x9100;
@@ -146,7 +146,7 @@ struct local_metadata_t {
     bit<1>  skip_egress;
     bit<9>  egress_spec_at_punt_match;
     @switchstack("field_type: P4_FIELD_TYPE_COLOR")
-    bit<2>  color;
+    MeterColor_t color;
     bit<16> l4_src_port;
     bit<16> l4_dst_port;
     bit<8>  icmp_code;
@@ -320,7 +320,7 @@ control punt(inout parsed_packet_t hdr,
              inout local_metadata_t local_metadata,
              inout standard_metadata_t standard_metadata) {
 
-    direct_meter<bit<2>>(MeterType.bytes) ingress_port_meter;
+    direct_meter<MeterColor_t>(MeterType.bytes) ingress_port_meter;
     direct_counter(CounterType.packets) punt_packet_counter;
 
     action set_queue_and_clone_to_cpu(bit<5> queue_id) {
@@ -382,7 +382,11 @@ control punt(inout parsed_packet_t hdr,
     }
 
     apply {
-        punt_table.apply();
+        if (punt_table.apply().hit) {
+            if (local_metadata.color != MeterColor_t.COLOR_GREEN) {
+                mark_to_drop(standard_metadata);
+            }
+        }
     }
 }
 

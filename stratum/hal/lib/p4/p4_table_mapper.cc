@@ -477,6 +477,34 @@ namespace {
   return ::util::OkStatus();
 }
 
+// Helper method to evaluate all of the P4MeterColorAction operations
+// and fill the mapped_action with all the primitives defined
+// in each operation
+void FindAndAddMeterColors(
+    const P4ActionDescriptor::P4MeterColorAction& color_action,
+    MappedAction* mapped_action) {
+  for (const auto& color_op : color_action.ops()) {
+    for (int p = 0; p < color_op.primitives_size(); ++p) {
+      P4ActionOp primitive = color_op.primitives(p);
+      P4ActionFunction::P4ActionPrimitive* mapped_primitive =
+          mapped_action->mutable_function()->add_primitives();
+      mapped_primitive->set_op_code(primitive);
+      for (int c = 0; c < color_action.colors_size(); ++c) {
+        mapped_primitive->add_meter_colors(color_action.colors(c));
+      }
+    }
+
+    // TODO(unknown): Complete deprecation of destination_field_names.
+    if (color_op.destination_field_names_size() != 0 ||
+        !color_op.destination_field_name().empty()) {
+      // TODO(unknown): All of the existing P4 roles have color-qualified
+      // action primitives only. Add support here if this changes.
+      LOG(WARNING) << "Meter color action has unexpected destination field "
+                   << "assignments: " << color_op.ShortDebugString();
+    }
+  }
+}
+
 }  // namespace
 
 ::util::Status P4TableMapper::DeparsePacketInMetadata(
@@ -782,6 +810,60 @@ std::string P4TableMapper::GetMapperNameKey(
       table_p4_info.preamble().id(), action.action_id()));
 
   ::util::Status status = ProcessActionFunction(action, mapped_action);
+
+  APPEND_STATUS_IF_ERROR(status, ProcessTableActionRedirects(
+                                     table_p4_info, action, mapped_action));
+  return status;
+}
+
+::util::Status P4TableMapper::ProcessTableActionRedirects(
+    const ::p4::config::v1::Table& table_p4_info,
+    const ::p4::v1::Action& action, MappedAction* mapped_action) const {
+  if (action.action_id() == 0) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "P4 TableEntry action has no action_id.";
+  }
+
+  ::util::Status status = ::util::OkStatus();
+  auto desc_iter = global_id_table_map_.find(action.action_id());
+  if (desc_iter == global_id_table_map_.end()) {
+    ::util::Status action_error = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+                                  << "P4 action ID in "
+                                  << action.ShortDebugString()
+                                  << " is unknown or invalid.";
+    APPEND_STATUS_IF_ERROR(status, action_error);
+    return status;
+  }
+  const auto& action_descriptor = desc_iter->second->action_descriptor();
+
+  // Action redirects migth also link to internal actions
+  // that contain instructions to define meter color conditions
+  for (const auto& redirect : action_descriptor.action_redirects()) {
+    for (const auto& link : redirect.internal_links()) {
+      // check if the table we are applying the internal action is in
+      // the applied_tables for the action
+      const auto applied_tables = link.applied_tables();
+      auto it =
+          std::find_if(applied_tables.begin(), applied_tables.end(),
+                       [&table_p4_info](const std::string& table_name) {
+                         return (table_name == table_p4_info.preamble().name());
+                       });
+      if (it != applied_tables.end()) {
+        auto* map_value = gtl::FindOrNull(p4_pipeline_config_.table_map(),
+                                          link.internal_action_name());
+        if (map_value) {
+          VLOG(1) << "Processing internal link " << link.internal_action_name()
+                  << " redirected from action " << action.action_id()
+                  << " valid for table " << table_p4_info.preamble().name();
+
+          for (const auto& color_action :
+               map_value->internal_action().color_actions()) {
+            FindAndAddMeterColors(color_action, mapped_action);
+          }
+        }
+      }
+    }
+  }
   return status;
 }
 
@@ -843,28 +925,8 @@ std::string P4TableMapper::GetMapperNameKey(
   // The action descriptor's color_actions contain instructions that are
   // conditional based on meter color.
   for (const auto& color_action : action_descriptor.color_actions()) {
-    for (const auto& color_op : color_action.ops()) {
-      for (int p = 0; p < color_op.primitives_size(); ++p) {
-        P4ActionOp primitive = color_op.primitives(p);
-        P4ActionFunction::P4ActionPrimitive* mapped_primitive =
-            mapped_action->mutable_function()->add_primitives();
-        mapped_primitive->set_op_code(primitive);
-        for (int c = 0; c < color_action.colors_size(); ++c) {
-          mapped_primitive->add_meter_colors(color_action.colors(c));
-        }
-      }
-
-      // TODO(unknown): Complete deprecation of destination_field_names.
-      if (color_op.destination_field_names_size() != 0 ||
-          !color_op.destination_field_name().empty()) {
-        // TODO(unknown): All of the existing P4 roles have color-qualified
-        // action primitives only. Add support here if this changes.
-        LOG(WARNING) << "Meter color action has unexpected destination field "
-                     << "assignments: " << color_op.ShortDebugString();
-      }
-    }
+    FindAndAddMeterColors(color_action, mapped_action);
   }
-
   return status;
 }
 
