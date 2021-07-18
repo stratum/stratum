@@ -467,11 +467,22 @@ class P4TableMapper {
       const ::p4::config::v1::ActionProfile& profile_p4_info,
       const ::p4::v1::Action& action, MappedAction* mapped_action) const;
 
+  // Processes the action redirects specified by the action for the table.
+  ::util::Status ProcessTableActionRedirects(
+      const ::p4::config::v1::Table& table_p4_info,
+      const ::p4::v1::Action& action, MappedAction* mapped_action) const;
+
   // Handles action function processing that is common to either a table entry
   // or an action profile update.  If successful, the output mapped_action will
   // be filled.
   ::util::Status ProcessActionFunction(const ::p4::v1::Action& action,
                                        MappedAction* mapped_action) const;
+
+  // Evaluates all of the P4MeterColorAction operations and fills
+  // the mapped_action with all the primitives defined in each operation
+  void FindAndAddMeterColors(
+      const P4ActionDescriptor::P4MeterColorAction& color_action,
+      MappedAction* mapped_action) const;
 
   // Evaluates the attributes in the table descriptor along with the current
   // state of static_table_updates_enabled_ to see if a mapping request is
