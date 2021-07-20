@@ -54,19 +54,17 @@ the binary, you may be able to add the capability to the binary with `setcap`
 and run it as an unprivileged user. You can also simply run the `stratum_bmv2`
 as root.
 
-As a basic test, you can run the following commands. It will start a P4Runtime
-client in a Docker image and perform a `SetForwardingPipelineConfig` RPC (which
-pushes a new P4 data plane to bmv2). You will need a bmv2 JSON file and a P4Info
+As a basic test, you can use [P4Runtime shell](https://github.com/p4lang/p4runtime-shell)
+to push the pipeline and install table entries.
+
+Be for pushing the pipeline, you will need a bmv2 JSON file and a P4Info
 Protobuf text file, which you can obtain by compiling your P4 program with the
 [p4c](https://github.com/p4lang/p4c) compiler.
-```
+
+```bash
 # compile P4 program (skip if you already have the bmv2 JSON file and the P4Info
 # text file)
 p4c -b bmv2 -a v1model -o /tmp/ --p4runtime-format text --p4runtime-file /tmp/<prog>.proto.txt <prog>.p4
-# run P4Runtime client
-cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
-[sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
-    --grpc-addr <YOUR_HOST_IP_ADDRESS>:9559 --json <prog>.json --p4info <prog>.proto.txt
 ```
 
 You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2`

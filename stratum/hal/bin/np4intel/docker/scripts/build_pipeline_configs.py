@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2019-present Dell EMC
 # Copyright 2019-present Open Networking Foundation
@@ -22,13 +22,13 @@ from google.protobuf import text_format
 
 parser = argparse.ArgumentParser(description='Build Fwd Pipeline Configs')
 parser.add_argument('--device-config-dir', help='Device donfig directory',
-                    type=str, action="store", 
+                    type=str, action="store",
                     default="device_configs")
 parser.add_argument('--p4info', help='P4 Info file name',
                     type=str, action="store", default="p4info.txt")
 parser.add_argument('--pipeline-config',
                     help='Forwarding Pipeline Config file name',
-                    type=str, action="store", 
+                    type=str, action="store",
                     default="pipeline_config.pb.txt")
 
 args = parser.parse_args()
@@ -54,7 +54,7 @@ def build_p4info():
 
 
 def build_fwd_pipeline_config(fp_configs, filename):
-    # 
+    #
     # Grab P4 config
     dev_config = build_device_config(filename)
 

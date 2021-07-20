@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+# Copyright 2019-present Open Networking Foundation
 # Copyright 2019 NoviFlow Inc.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -9,15 +10,17 @@ import ptf.testutils as testutils
 
 from base_test import P4RuntimeTest, autocleanup, stringify, ipv4_to_binary
 
+
 class LoopbackTest(P4RuntimeTest):
     pass
+
 
 class LoopbackAllPortsTest(LoopbackTest):
     @autocleanup
     def runTest(self):
-        port_list = [0, 1, 2, 3, 4, 5 ,6 ,7]
-        dst_addr = '00:11:22:33:44:55'
-        src_addr = '00:aa:bb:cc:dd:ee'
+        port_list = [0, 1, 2, 3, 4, 5, 6, 7]
+        dst_addr = "00:11:22:33:44:55"
+        src_addr = "00:aa:bb:cc:dd:ee"
 
         # Create test packet.
         pkt = testutils.simple_tcp_packet(eth_dst=dst_addr, eth_src=src_addr)
@@ -36,5 +39,3 @@ class LoopbackAllPortsTest(LoopbackTest):
             # check that the entry is hit and that no other packets are received
             testutils.send_packet(self, ig_port, pkt)
             testutils.verify_packets(self, pkt_check, [eg_port])
-
-

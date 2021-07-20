@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # Copyright 2019-present Dell EMC
 # Copyright 2019-present Open Networking Foundation
@@ -40,17 +40,17 @@ def tr_p4info(platform, p4info_path, p4info_out_path):
     Translate to NP4 compatible p4info
     """
     p4info = p4info_pb2.P4Info()
-    with open(p4info_path, 'r') as p4info_f:
+    with open(p4info_path, "r") as p4info_f:
         text_format.Merge(p4info_f.read(), p4info)
 
     # Spin through tables
     for table in p4info.tables:
-         # Look for "standard_metadata" match fields
-         for mf in table.match_fields:
+        # Look for "standard_metadata" match fields
+        for mf in table.match_fields:
             if platform == "np4":
                 if mf.name.startswith("standard_metadata"):
-                    mf.name = mf.name.replace("standard", "intrinsic");
-                    mf.bitwidth = 8;
+                    mf.name = mf.name.replace("standard", "intrinsic")
+                    mf.bitwidth = 8
                 elif mf.name == "vlan_tag.$valid$":
                     mf.name = "vlan_tag"
 
@@ -91,7 +91,7 @@ def tr_p4info(platform, p4info_path, p4info_out_path):
     metadata.bitwidth = 7
 
     # Write out new p4info
-    with open(p4info_out_path, 'w') as f:
+    with open(p4info_out_path, "w") as f:
         f.write(text_format.MessageToString(p4info))
 
     print("P4Info successfully translated to {}".format(p4info_out_path))
@@ -99,20 +99,31 @@ def tr_p4info(platform, p4info_path, p4info_out_path):
 
 # noinspection PyTypeChecker
 def main():
-    parser = argparse.ArgumentParser(
-        description="translate P4Info for NP4 Intel")
-    parser.add_argument('--p4info',
-                        help='p4info protobuf in text format',
-                        type=str, action="store", required=False,
-                        default="p4info.txt")
-    parser.add_argument('--p4info-out',
-                        help='translated p4info protobuf in text format',
-                        type=str, action="store", required=False,
-                        default=None)
-    parser.add_argument('--platform',
-                        help='platform to transform (bmv2/np4)',
-                        type=str, action="store", required=False,
-                        default="np4")
+    parser = argparse.ArgumentParser(description="translate P4Info for NP4 Intel")
+    parser.add_argument(
+        "--p4info",
+        help="p4info protobuf in text format",
+        type=str,
+        action="store",
+        required=False,
+        default="p4info.txt",
+    )
+    parser.add_argument(
+        "--p4info-out",
+        help="translated p4info protobuf in text format",
+        type=str,
+        action="store",
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--platform",
+        help="platform to transform (bmv2/np4)",
+        type=str,
+        action="store",
+        required=False,
+        default="np4",
+    )
     args, unknown_args = parser.parse_known_args()
 
     if not os.path.exists(args.p4info):
@@ -132,8 +143,10 @@ def main():
     if args.p4info_out is not None:
         p4info_out = args.p4info_out
 
-    tr_p4info(platform=args.platform, p4info_path=args.p4info,
-              p4info_out_path=p4info_out)
+    tr_p4info(
+        platform=args.platform, p4info_path=args.p4info, p4info_out_path=p4info_out
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
