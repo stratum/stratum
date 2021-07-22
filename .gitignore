@@ -44,9 +44,6 @@ __pycache__/
 # Thumbnails
 ._*
 
-# VS Code
-/.vscode/
-
 # CLion
 /.idea/
 /.project/

@@ -1,0 +1,6 @@
+{
+    "coverage-gutters.coverageFileNames": [
+        "_coverage_report.dat"
+    ],
+    "coverage-gutters.coverageBaseDir": "bazel-out/_coverage"
+}
