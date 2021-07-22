@@ -23,18 +23,20 @@ namespace barefoot {
 
 class BfrtCounterManager {
  public:
+  virtual ~BfrtCounterManager();
+
   // Pushes the forwarding pipeline config
-  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config)
-      LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status PushForwardingPipelineConfig(
+      const BfrtDeviceConfig& config) LOCKS_EXCLUDED(lock_);
 
   // Writes an indrect counter entry.
-  ::util::Status WriteIndirectCounterEntry(
+  virtual ::util::Status WriteIndirectCounterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::CounterEntry& counter_entry) LOCKS_EXCLUDED(lock_);
 
   // Reads an indirect counter entry.
-  ::util::Status ReadIndirectCounterEntry(
+  virtual ::util::Status ReadIndirectCounterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::CounterEntry& counter_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
@@ -43,8 +45,12 @@ class BfrtCounterManager {
   static std::unique_ptr<BfrtCounterManager> CreateInstance(
       BfSdeInterface* bf_sde_interface_, int device);
 
+ protected:
+  // Default constructor. To be called by the Mock class instance only.
+  BfrtCounterManager();
+
  private:
-  // Private constructure, we can create the instance by using `CreateInstance`
+  // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   explicit BfrtCounterManager(BfSdeInterface* bf_sde_interface_, int device);
 
