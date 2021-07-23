@@ -25,6 +25,11 @@ BfrtCounterManager::BfrtCounterManager(BfSdeInterface* bf_sde_interface,
                                        int device)
     : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
 
+BfrtCounterManager::BfrtCounterManager()
+    : bf_sde_interface_(nullptr), device_(-1) {}
+
+BfrtCounterManager::~BfrtCounterManager() = default;
+
 ::util::Status BfrtCounterManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);

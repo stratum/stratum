@@ -136,6 +136,8 @@ class BfrtNode {
   // Fixed zero-based BFRT device_id number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.
   const int device_id_;
+
+  friend class BfrtNodeTest;
 };
 
 }  // namespace barefoot

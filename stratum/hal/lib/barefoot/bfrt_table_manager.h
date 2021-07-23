@@ -26,87 +26,89 @@ namespace barefoot {
 
 class BfrtTableManager {
  public:
+  virtual ~BfrtTableManager();
+
   // Pushes the pipline info.
-  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config)
-      LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status PushForwardingPipelineConfig(
+      const BfrtDeviceConfig& config) LOCKS_EXCLUDED(lock_);
 
   // Verifies a P4-based forwarding pipeline configuration intended for this
   // manager.
-  ::util::Status VerifyForwardingPipelineConfig(
+  virtual ::util::Status VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) const
       LOCKS_EXCLUDED(lock_);
 
   // Writes a table entry.
-  ::util::Status WriteTableEntry(
+  virtual ::util::Status WriteTableEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
   // Reads the P4 TableEntry(s) matched by the given table entry.
-  ::util::Status ReadTableEntry(
+  virtual ::util::Status ReadTableEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::TableEntry& table_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Modify the counter data of a table entry.
-  ::util::Status WriteDirectCounterEntry(
+  virtual ::util::Status WriteDirectCounterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::DirectCounterEntry& direct_counter_entry)
       LOCKS_EXCLUDED(lock_);
 
   // Modify the data of a register entry.
-  ::util::Status WriteRegisterEntry(
+  virtual ::util::Status WriteRegisterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::RegisterEntry& register_entry) LOCKS_EXCLUDED(lock_);
 
   // Modify the data of a meter entry.
-  ::util::Status WriteMeterEntry(
+  virtual ::util::Status WriteMeterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::MeterEntry& meter_entry) LOCKS_EXCLUDED(lock_);
 
   // Writes an action profile member.
-  ::util::Status WriteActionProfileMember(
+  virtual ::util::Status WriteActionProfileMember(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileMember& action_profile_member)
       LOCKS_EXCLUDED(lock_);
 
   // Reads the P4 ActionProfileMember(s) matched by the given entry.
-  ::util::Status ReadActionProfileMember(
+  virtual ::util::Status ReadActionProfileMember(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::ActionProfileMember& action_profile_member,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Writes an action profile group.
-  ::util::Status WriteActionProfileGroup(
+  virtual ::util::Status WriteActionProfileGroup(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileGroup& action_profile_group)
       LOCKS_EXCLUDED(lock_);
 
   // Reads the P4 ActionProfileGroup(s) matched by the given entry.
-  ::util::Status ReadActionProfileGroup(
+  virtual ::util::Status ReadActionProfileGroup(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::ActionProfileGroup& action_profile_group,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Read the counter data of a table entry.
-  ::util::StatusOr<::p4::v1::DirectCounterEntry> ReadDirectCounterEntry(
+  virtual ::util::StatusOr<::p4::v1::DirectCounterEntry> ReadDirectCounterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::DirectCounterEntry& direct_counter_entry)
       LOCKS_EXCLUDED(lock_);
 
   // Read the data of a register entry.
-  ::util::Status ReadRegisterEntry(
+  virtual ::util::Status ReadRegisterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::RegisterEntry& register_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Read the data of a meter entry.
-  ::util::Status ReadMeterEntry(
+  virtual ::util::Status ReadMeterEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::MeterEntry& meter_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
@@ -114,6 +116,10 @@ class BfrtTableManager {
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
       OperationMode mode, BfSdeInterface* bf_sde_interface, int device);
+
+ protected:
+  // Default constructor. To be called by the Mock class instance only.
+  BfrtTableManager();
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
