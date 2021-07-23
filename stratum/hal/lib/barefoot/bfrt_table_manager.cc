@@ -38,6 +38,15 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
       p4_info_manager_(nullptr),
       device_(device) {}
 
+BfrtTableManager::BfrtTableManager()
+    : mode_(OPERATION_MODE_STANDALONE),
+      register_timer_descriptors_(),
+      bf_sde_interface_(nullptr),
+      p4_info_manager_(nullptr),
+      device_(-1) {}
+
+BfrtTableManager::~BfrtTableManager() = default;
+
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     OperationMode mode, BfSdeInterface* bf_sde_interface, int device) {
   return absl::WrapUnique(new BfrtTableManager(mode, bf_sde_interface, device));

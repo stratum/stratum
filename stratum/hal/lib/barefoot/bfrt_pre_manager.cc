@@ -20,11 +20,15 @@ namespace barefoot {
 BfrtPreManager::BfrtPreManager(BfSdeInterface* bf_sde_interface, int device)
     : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
 
+BfrtPreManager::BfrtPreManager() : bf_sde_interface_(nullptr), device_(-1) {}
+
 ::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
   return ::util::OkStatus();
 }
+
+BfrtPreManager::~BfrtPreManager() = default;
 
 ::util::Status BfrtPreManager::WritePreEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
