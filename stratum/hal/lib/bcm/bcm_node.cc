@@ -239,13 +239,18 @@ BcmNode::~BcmNode() {}
                  << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
         break;
-      case ::p4::v1::Entity::kDirectMeterEntry:
-        // TODO(unknown): Implement this.
-        status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-                 << "Direct meter entries are not currently supported: "
-                 << entity.ShortDebugString() << ".";
-        if (details != nullptr) details->push_back(status);
+      case ::p4::v1::Entity::kDirectMeterEntry: {
+        ::p4::v1::ReadResponse resp;
+        std::vector<::p4::v1::DirectMeterEntry*> acl_directmeterentries;
+        RETURN_IF_ERROR(bcm_table_manager_->ReadDirectMeterTableEntries(
+            entity.direct_meter_entry().table_entry().table_id(), &resp));
+
+        if (!writer->Write(resp)) {
+          return MAKE_ERROR(ERR_INTERNAL)
+                 << "Write to stream for failed for node " << node_id_ << ".";
+        }
         break;
+      }
       case ::p4::v1::Entity::kCounterEntry:
         // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
