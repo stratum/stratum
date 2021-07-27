@@ -73,7 +73,11 @@ docker_build: &docker_build
         --label build-timestamp=$(date +%FT%T%z) \
         --label build-machine=circle-ci \
         .
-      docker tag $DOCKER_IMG registry.aetherproject.org/$HARBOR_IMG
+
+harbor_tag: &harbor_tag
+  run:
+    name: Tag image for Harbor
+    command: docker tag $DOCKER_IMG registry.aetherproject.org/$HARBOR_IMG
 
 docker_push: &docker_push
   run:
@@ -296,6 +300,7 @@ jobs:
       - *docker_login
       - *harbor_login
       - *docker_build
+      - *harbor_tag
       - run:
           name: Test stratum-tools Docker image
           command: |
