@@ -1604,6 +1604,44 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   return ::util::OkStatus();
 }
 
+::util::Status BcmTableManager::ReadDirectMeterTableEntries(
+    const uint32 table_id, ::p4::v1::ReadResponse* resp) const {
+  // Lookup from the ACL tables.
+  const AclTable* acl_lookup = gtl::FindOrNull(acl_tables_, table_id);
+  if (acl_lookup) {
+    // We shouldn't continue if static flows are detected.
+    if (acl_lookup->IsConst()) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Static flows detected";
+    }
+
+    for (auto& table_entry : *acl_lookup) {
+      auto entry_ptr = resp->add_entities()->mutable_direct_meter_entry();
+      *entry_ptr->mutable_table_entry() = table_entry;
+      // clear the action from the table entry
+      entry_ptr->mutable_table_entry()->clear_action();
+      if (entry_ptr->mutable_table_entry()->has_meter_config()) {
+        // fill direct meter config with the info available on the entry
+        // meter_config
+        entry_ptr->mutable_config()->set_cir(
+            entry_ptr->mutable_table_entry()->meter_config().cir());
+        entry_ptr->mutable_config()->set_cburst(
+            entry_ptr->mutable_table_entry()->meter_config().cburst());
+        entry_ptr->mutable_config()->set_pir(
+            entry_ptr->mutable_table_entry()->meter_config().pir());
+        entry_ptr->mutable_config()->set_pburst(
+            entry_ptr->mutable_table_entry()->meter_config().pburst());
+        // clear meter_config from the table entry
+        entry_ptr->mutable_table_entry()->clear_meter_config();
+      } else {
+        // return empty meter config
+        entry_ptr->clear_config();
+      }
+    }
+  }
+
+  return ::util::OkStatus();
+}
+
 ::util::StatusOr<::p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
     const ::p4::v1::TableEntry& entry) const {
   ASSIGN_OR_RETURN(

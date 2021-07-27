@@ -320,6 +320,11 @@ class BcmTableManager {
       const std::set<uint32>& table_ids, ::p4::v1::ReadResponse* resp,
       std::vector<::p4::v1::TableEntry*>* acl_flows) const;
 
+  // Reads the P4 DirectMeterEntries programmed in a given table
+  // (given by the table_id) on the node.
+  virtual ::util::Status ReadDirectMeterTableEntries(
+      const uint32 table_id, ::p4::v1::ReadResponse* resp) const;
+
   // Finds the and returns the stored P4 TableEntry that matches the
   // given entry.
   virtual ::util::StatusOr<::p4::v1::TableEntry> LookupTableEntry(
