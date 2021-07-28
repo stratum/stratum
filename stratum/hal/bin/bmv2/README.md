@@ -43,7 +43,8 @@ The `stratum_bmv2` binary can be run directly after installing the
 Debian package:
 
 ```bash
-dpkg -i stratum_bmv2_deb.deb
+[sudo] apt-get update
+[sudo] apt-get install -y --reinstall ./stratum_bmv2_deb.deb
 stratum_bmv2 \
     -chassis_config_file=/etc/stratum/chassis_config.pb.txt \
     -bmv2_log_level=debug
