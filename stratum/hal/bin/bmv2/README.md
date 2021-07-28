@@ -45,8 +45,8 @@ Debian package:
 ```bash
 dpkg -i stratum_bmv2_deb.deb
 stratum_bmv2 \
-  --chassis_config_file=/etc/stratum/chassis_config.pb.txt \
-  --bmv2_log_level=debug
+    -chassis_config_file=/etc/stratum/chassis_config.pb.txt \
+    -bmv2_log_level=debug
 ```
 
 You can ignore the following error, we are working on fixing it:
@@ -80,6 +80,10 @@ cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
 [sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
     --grpc-addr <YOUR_HOST_IP_ADDRESS>:9559 --json <prog>.json --p4info <prog>.proto.txt
 ```
+
+<!--
+FIXME(bocon): Update to use the P4RT shell
+-->
 
 You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2`
 if you do not have your own P4 program.
@@ -144,7 +148,7 @@ sudo bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 \
     -persistent_config_dir=/tmp/ \
     -chassis_config_file=${BMV2_DIR}/chassis_config.pb.txt \
     -initial_pipeline=${BMV2_DIR}/dummy.json \
-    -forwarding_pipeline_configs_file=/tmp/dummy_pipeline_cfg \
+    -forwarding_pipeline_configs_file=/tmp/bmv2_pipeline_cfg \
     -bmv2_log_level=debug
 ```
 
