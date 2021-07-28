@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG BAZELISK_VERSION=1.8.0
-ARG PI_COMMIT=74f4a82610b3f0b62453ac510277ab7347975813
-ARG BMV2_COMMIT=6dfd5b41426310eb081fedc8fee05b675f780e31
+ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
+ARG BMV2_COMMIT=760183c17ab3de714cf818db45038f9f9f088b1d
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
 ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-11 main"
 
@@ -79,6 +79,7 @@ RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
     make -j${JOBS} && make install && ldconfig && \
     cd targets/simple_switch && \
     make -j${JOBS} && make install && ldconfig && \
+    cp /tmp/bmv2/tools/veth* ${BMV2_INSTALL}/bin/ && \
     rm -rf /tmp/bmv2
 
 # Bazelisk and Bazel
