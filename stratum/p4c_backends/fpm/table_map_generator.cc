@@ -79,6 +79,18 @@ void TableMapGenerator::SetFieldAttributes(
   }
 }
 
+void TableMapGenerator::SetFieldHeaderLink(
+    const std::string& field_name, const std::string& parent_header_key) {
+  hal::P4FieldDescriptor* field_descriptor =
+      FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
+  if (field_descriptor == nullptr) {
+    // TODO(unknown): Treat as internal compiler BUG exception?
+    LOG(ERROR) << "Unable to find field " << field_name << " to set attributes";
+    return;
+  }
+  field_descriptor->mutable_header_link()->set_header_key(parent_header_key);
+}
+
 void TableMapGenerator::SetFieldLocalMetadataFlag(
     const std::string& field_name) {
   hal::P4FieldDescriptor* field_descriptor =

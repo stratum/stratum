@@ -314,6 +314,7 @@ message BcmField {
   // Type field is irrelevant to programming and verification but can be used
   // for bookkeeping.
   uint32 udf_chunk_id = 4;  // optional
+  uint32 header_depth = 5;  // optional
 }
 
 // BcmAction, as part of a flow entry, refers to the action that we take upon a

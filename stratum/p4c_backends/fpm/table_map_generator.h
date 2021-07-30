@@ -76,6 +76,8 @@ class TableMapGenerator {
                                   P4FieldType field_type,
                                   P4HeaderType header_type,
                                   uint32_t bit_offset, uint32_t bit_width);
+  virtual void SetFieldHeaderLink(const std::string& field_name,
+                                  const std::string& parent_header_key);
   virtual void SetFieldLocalMetadataFlag(const std::string& field_name);
   virtual void SetFieldValueSet(const std::string& field_name,
                                 const std::string& value_set_name,

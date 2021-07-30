@@ -104,10 +104,11 @@ class FieldDecoder {
   // bit_offset and bit_width describe the field's position with its
   // surrounding header.
   void UpdateFieldMapData(const std::string& fq_field_name,
-                             const std::string& header_type_name,
-                             const std::string& field_name,
-                             const AnnotatedFieldTypeMap& annotated_types,
-                             uint32_t bit_offset, uint32_t bit_width);
+                          const std::string& header_type_name,
+                          const std::string& field_name,
+                          const AnnotatedFieldTypeMap& annotated_types,
+                          uint32_t bit_offset, uint32_t bit_width,
+                          const std::string& parent_header_key);
 
   // Determines whether the input field has an annotated field type.  If the
   // annotation exists, StoreFieldTypeAnnotation parses the field type and
