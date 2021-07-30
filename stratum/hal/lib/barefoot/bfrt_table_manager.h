@@ -122,6 +122,11 @@ class BfrtTableManager {
   BfrtTableManager();
 
  private:
+  struct OneShotActionProfile {
+    bool uses_one_shot_action;
+    OneShotActionProfile() : uses_one_shot_action(false) {}
+  };
+
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   explicit BfrtTableManager(OperationMode mode,
@@ -158,6 +163,23 @@ class BfrtTableManager {
       WriterInterface<::p4::v1::ReadResponse>* writer)
       SHARED_LOCKS_REQUIRED(lock_);
 
+  ::util::Status ReadOneShotActionProfile(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::TableEntry& table_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer)
+      SHARED_LOCKS_REQUIRED(lock_);
+
+  ::util::Status WriteOneShotActionProfile(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::TableEntry& table_entry) SHARED_LOCKS_REQUIRED(lock_);
+
+  // Internal version of WriteTableEntry without locking.
+  virtual ::util::Status DoWriteTableEntry(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::TableEntry& table_entry) SHARED_LOCKS_REQUIRED(lock_);
+
   // Construct a P4RT table entry from a table entry request, table key and
   // table data.
   ::util::StatusOr<::p4::v1::TableEntry> BuildP4TableEntry(
@@ -183,6 +205,13 @@ class BfrtTableManager {
   mutable absl::Mutex lock_;
 
   std::vector<TimerDaemon::DescriptorPtr> register_timer_descriptors_
+      GUARDED_BY(lock_);
+
+  // Map from P4Runtime entity ID to bool to indicate whether this table or
+  // action profile uses one-shot style programming or separate members +
+  // groups. Upon first use of a table with a particular style, it is fixed and
+  // cannot be changed, until a new pipeline is pushed.
+  absl::flat_hash_map<uint32, bool> p4_entity_uses_one_shot_action_map_
       GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
