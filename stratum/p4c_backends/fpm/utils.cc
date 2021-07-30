@@ -280,6 +280,13 @@ std::string AddHeaderArrayLast(const std::string& header_name) {
       "$0.$1", header_name.c_str(), IR::Type_Stack::last.c_str());
 }
 
+bool IsHeaderArrayLast(const std::string& header_name) {
+  const std::string last = "last";
+  return header_name.size() >= last.size() &&
+         0 == header_name.compare(header_name.size() - last.size(), last.size(),
+                                  last);
+}
+
 bool IsParserEndState(const ParserState& state) {
   if (state.transition().next_state() == IR::ParserState::accept)
     return true;

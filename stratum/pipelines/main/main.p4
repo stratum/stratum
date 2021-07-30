@@ -366,6 +366,8 @@ control punt(inout parsed_packet_t hdr,
             local_metadata.icmp_code      : ternary;
             hdr.vlan_tag[0].vid           : ternary;
             hdr.vlan_tag[0].pcp           : ternary;
+            //hdr.vlan_tag[1].vid           : ternary;
+            //hdr.vlan_tag[1].pcp           : ternary;
             local_metadata.class_id       : ternary;
             local_metadata.vrf_id         : ternary;
         }

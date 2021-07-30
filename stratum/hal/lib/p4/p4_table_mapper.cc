@@ -129,6 +129,17 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
       if (field_desc_iter != p4_pipeline_config_.table_map().end()) {
         const auto& field_descriptor =
             field_desc_iter->second.field_descriptor();
+
+        // look for the depth of the header holding this match field
+        int32 header_depth = 0;
+        if (field_descriptor.has_header_link()) {
+          auto header_desc_iter = p4_pipeline_config_.table_map().find(
+              field_descriptor.header_link().header_key());
+          if (header_desc_iter != p4_pipeline_config_.table_map().end()) {
+            header_depth = header_desc_iter->second.header_descriptor().depth();
+          }
+        }
+
         auto match_type = match_field.match_type();
         bool conversion_found = false;
         for (const auto& conversion : field_descriptor.valid_conversions()) {
@@ -141,6 +152,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
             value.mapped_field.set_bit_offset(field_descriptor.bit_offset());
             value.mapped_field.set_bit_width(field_descriptor.bit_width());
             value.mapped_field.set_header_type(field_descriptor.header_type());
+            value.mapped_field.set_header_depth(header_depth);
             field_convert_by_table_[key] = value;
             conversion_found = true;
             break;
@@ -712,6 +724,7 @@ std::string P4TableMapper::GetMapperNameKey(
     mapped_field->set_bit_width(conversion_field.bit_width());
     mapped_field->set_bit_offset(conversion_field.bit_offset());
     mapped_field->set_header_type(conversion_field.header_type());
+    mapped_field->set_header_depth(conversion_field.header_depth());
   } else {
     mapped_field->set_type(P4_FIELD_TYPE_UNKNOWN);
     status = APPEND_ERROR(status)

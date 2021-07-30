@@ -109,6 +109,9 @@ std::string AddHeaderArrayIndex(const std::string& header_name, int64 index);
 // output is "hdr.name.last".
 std::string AddHeaderArrayLast(const std::string& header_name);
 
+// Checks if the header name ends with the P4 parser "last" operator
+bool IsHeaderArrayLast(const std::string& header_name);
+
 // Returns true if the input ParserState specifies a transition to one of
 // P4's built-in terminating states, i.e. "accept" or "reject".
 bool IsParserEndState(const ParserState& state);

@@ -422,9 +422,16 @@ int ParserFieldMapper::MatchTargetAndP4Fields(
   // outer header.  Non-extracted fields move to the pass3_fields_map_ map
   // for processing in Pass3 if they are still unresolved.
   int32 header_depth = 0;
-  if (in_tunnel) header_depth = 1;
   if (!mapped_fields.empty() || header_visited) {
-    for (const auto& header : p4_header.header_paths()) {
+    for (int i = 0; i < p4_header.header_paths().size(); ++i) {
+      const auto& header = p4_header.header_paths().Get(i);
+      if (in_tunnel) {
+        header_depth = 1;
+      } else if (IsHeaderArrayLast(header)) {
+        header_depth = i - 1;
+      } else {
+        header_depth = i;
+      }
       table_mapper_->SetHeaderAttributes(
           header, target_header.header_type(), header_depth);
     }

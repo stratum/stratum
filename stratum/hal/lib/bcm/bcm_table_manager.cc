@@ -95,6 +95,7 @@ void FillBcmTableEntryValue(const P4ActionFunction::P4ActionFields& source,
 void FillBcmField(BcmField::Type type, const MappedField& source,
                   BcmField* bcm_field) {
   bcm_field->set_type(type);
+  bcm_field->set_header_depth(source.header_depth());
   if (source.has_value()) {
     FillBcmTableEntryValue(source.value(), bcm_field->mutable_value());
   }

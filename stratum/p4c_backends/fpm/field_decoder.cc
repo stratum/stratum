@@ -120,9 +120,10 @@ void FieldDecoder::ConvertHeaderFields(
         const std::string header_field_name =
             iter.first + "." + field_in_type.name();
         table_mapper_->AddField(header_field_name);
+
         UpdateFieldMapData(header_field_name, iter.second, field_in_type.name(),
                            annotated_types, field_in_type.bit_offset(),
-                           field_in_type.bit_width());
+                           field_in_type.bit_width(), iter.first);
         field_in_type.add_full_field_names(header_field_name);
         VLOG(1) << "Mapped header field name: " << header_field_name;
       }
@@ -247,7 +248,8 @@ bool FieldDecoder::DecodePathEndField(
 void FieldDecoder::UpdateFieldMapData(
     const std::string& fq_field_name, const std::string& header_type_name,
     const std::string& field_name, const AnnotatedFieldTypeMap& annotated_types,
-    uint32_t bit_offset, uint32_t bit_width) {
+    uint32_t bit_offset, uint32_t bit_width,
+    const std::string& parent_header_key) {
   AnnotatedFieldTypeMapKey key = std::make_pair(header_type_name, field_name);
   const auto& iter = annotated_types.find(key);
 
@@ -259,6 +261,8 @@ void FieldDecoder::UpdateFieldMapData(
   }
   table_mapper_->SetFieldAttributes(
       fq_field_name, field_type, P4_HEADER_UNKNOWN, bit_offset, bit_width);
+  // Add reference / link to the parent header
+  table_mapper_->SetFieldHeaderLink(fq_field_name, parent_header_key);
   if (header_type_name == GetP4ModelNames().local_metadata_type_name()) {
     table_mapper_->SetFieldLocalMetadataFlag(fq_field_name);
   }

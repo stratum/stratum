@@ -151,6 +151,10 @@ message P4FieldDescriptor {
     string table_name = 1;
   }
 
+  message P4HeaderLink {
+    string header_key = 1;
+  }
+
   // Mapping fields for match fields are:
   //  type - Identifies the field in an output flow entry.
   //  valid_conversions - Indicates how to derive the flow entry field value
@@ -179,6 +183,7 @@ message P4FieldDescriptor {
   P4HeaderType header_type = 7;
   repeated P4MetadataKey metadata_keys = 8;
   string value_set = 9;
+  P4HeaderLink header_link = 10;
 }
 
 // A P4ActionDescriptor defines how to map a P4 runtime action into a common

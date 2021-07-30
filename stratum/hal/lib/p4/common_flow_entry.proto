@@ -72,6 +72,7 @@ message MappedField {
   int32 bit_offset = 4;
   int32 bit_width = 5;
   P4HeaderType header_type = 6;
+  int32 header_depth = 7;
 }
 
 // This message supports action function mapping.  It applies to actions in

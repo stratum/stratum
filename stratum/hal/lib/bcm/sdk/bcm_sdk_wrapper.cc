@@ -3028,47 +3028,50 @@ bcm_field_qualify_t HalAclStageToBcm(BcmAclStage stage) {
   return gtl::FindWithDefault(*bcm_stage_map, stage, bcmFieldQualifyCount);
 }
 
-// Returns the BCM type for given field or else enum count.
-bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
+// Returns the BCM types for given field or else enum count.
+std::list<bcm_field_qualify_t> HalAclFieldToBcm(BcmAclStage stage,
+                                                BcmField::Type field) {
   // Default mappings for most ACL stages.
   static auto* default_field_map =
-      new absl::flat_hash_map<BcmField::Type, bcm_field_qualify_t,
+      new absl::flat_hash_map<BcmField::Type, std::list<bcm_field_qualify_t>,
                               EnumHash<BcmField::Type>>({
-          {BcmField::ETH_TYPE, bcmFieldQualifyEtherType},
-          {BcmField::IP_TYPE, bcmFieldQualifyIpType},
-          {BcmField::ETH_SRC, bcmFieldQualifySrcMac},
-          {BcmField::ETH_DST, bcmFieldQualifyDstMac},
-          {BcmField::VRF, bcmFieldQualifyVrf},
-          {BcmField::IN_PORT, bcmFieldQualifyInPort},
-          {BcmField::IN_PORT_BITMAP, bcmFieldQualifyInPorts},
-          {BcmField::OUT_PORT, bcmFieldQualifyDstPort},
-          {BcmField::VLAN_VID, bcmFieldQualifyOuterVlanId},
-          {BcmField::VLAN_PCP, bcmFieldQualifyOuterVlanPri},
-          {BcmField::IPV4_SRC, bcmFieldQualifySrcIp},
-          {BcmField::IPV4_DST, bcmFieldQualifyDstIp},
-          {BcmField::IPV6_SRC, bcmFieldQualifySrcIp6},
-          {BcmField::IPV6_DST, bcmFieldQualifyDstIp6},
-          {BcmField::IPV6_SRC_UPPER_64, bcmFieldQualifySrcIp6High},
-          {BcmField::IPV6_DST_UPPER_64, bcmFieldQualifyDstIp6High},
-          {BcmField::IP_PROTO_NEXT_HDR, bcmFieldQualifyIpProtocol},
-          {BcmField::IP_DSCP_TRAF_CLASS, bcmFieldQualifyDSCP},
-          {BcmField::IP_TTL_HOP_LIMIT, bcmFieldQualifyTtl},
-          {BcmField::VFP_DST_CLASS_ID, bcmFieldQualifyDstClassField},
-          {BcmField::L3_DST_CLASS_ID, bcmFieldQualifyDstClassL3},
-          {BcmField::L4_SRC, bcmFieldQualifyL4SrcPort},
-          {BcmField::L4_DST, bcmFieldQualifyL4DstPort},
-          {BcmField::TCP_FLAGS, bcmFieldQualifyTcpControl},
-          {BcmField::ICMP_TYPE_CODE, bcmFieldQualifyIcmpTypeCode},
+          {BcmField::ETH_TYPE, {bcmFieldQualifyEtherType}},
+          {BcmField::IP_TYPE, {bcmFieldQualifyIpType}},
+          {BcmField::ETH_SRC, {bcmFieldQualifySrcMac}},
+          {BcmField::ETH_DST, {bcmFieldQualifyDstMac}},
+          {BcmField::VRF, {bcmFieldQualifyVrf}},
+          {BcmField::IN_PORT, {bcmFieldQualifyInPort}},
+          {BcmField::IN_PORT_BITMAP, {bcmFieldQualifyInPorts}},
+          {BcmField::OUT_PORT, {bcmFieldQualifyDstPort}},
+          {BcmField::VLAN_VID,
+           {bcmFieldQualifyOuterVlanId, bcmFieldQualifyInnerVlanId}},
+          {BcmField::VLAN_PCP,
+           {bcmFieldQualifyOuterVlanPri, bcmFieldQualifyInnerVlanPri}},
+          {BcmField::IPV4_SRC, {bcmFieldQualifySrcIp}},
+          {BcmField::IPV4_DST, {bcmFieldQualifyDstIp}},
+          {BcmField::IPV6_SRC, {bcmFieldQualifySrcIp6}},
+          {BcmField::IPV6_DST, {bcmFieldQualifyDstIp6}},
+          {BcmField::IPV6_SRC_UPPER_64, {bcmFieldQualifySrcIp6High}},
+          {BcmField::IPV6_DST_UPPER_64, {bcmFieldQualifyDstIp6High}},
+          {BcmField::IP_PROTO_NEXT_HDR, {bcmFieldQualifyIpProtocol}},
+          {BcmField::IP_DSCP_TRAF_CLASS, {bcmFieldQualifyDSCP}},
+          {BcmField::IP_TTL_HOP_LIMIT, {bcmFieldQualifyTtl}},
+          {BcmField::VFP_DST_CLASS_ID, {bcmFieldQualifyDstClassField}},
+          {BcmField::L3_DST_CLASS_ID, {bcmFieldQualifyDstClassL3}},
+          {BcmField::L4_SRC, {bcmFieldQualifyL4SrcPort}},
+          {BcmField::L4_DST, {bcmFieldQualifyL4DstPort}},
+          {BcmField::TCP_FLAGS, {bcmFieldQualifyTcpControl}},
+          {BcmField::ICMP_TYPE_CODE, {bcmFieldQualifyIcmpTypeCode}},
       });
   // Stage specific field mappings.
   static auto* efp_field_map =
-      new absl::flat_hash_map<BcmField::Type, bcm_field_qualify_t,
+      new absl::flat_hash_map<BcmField::Type, std::list<bcm_field_qualify_t>,
                               EnumHash<BcmField::Type>>({
-          {BcmField::OUT_PORT, bcmFieldQualifyOutPort},
+          {BcmField::OUT_PORT, {bcmFieldQualifyOutPort}},
       });
   auto* stage_map = (stage == BCM_ACL_STAGE_EFP) ? efp_field_map : nullptr;
   auto default_qual =
-      gtl::FindWithDefault(*default_field_map, field, bcmFieldQualifyCount);
+      gtl::FindWithDefault(*default_field_map, field, {bcmFieldQualifyCount});
   if (stage_map) return gtl::FindWithDefault(*stage_map, field, default_qual);
   return default_qual;
 }
@@ -3097,14 +3100,16 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
           unit, &group_config.qset, field.udf_chunk_id()));
       continue;
     }
-    bcm_field_qualify_t bcm_field =
+    std::list<bcm_field_qualify_t> bcm_fields =
         HalAclFieldToBcm(table.stage(), field.type());
-    if (bcm_field == bcmFieldQualifyCount) {
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "Attempted to create ACL table with invalid predefined qualifier: "
-          << field.ShortDebugString() << ".";
+    for (const auto& bcm_field : bcm_fields) {
+      if (bcm_field == bcmFieldQualifyCount) {
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Attempted to create ACL table with "
+                                           "invalid predefined qualifier: "
+                                        << field.ShortDebugString() << ".";
+      }
+      BCM_FIELD_QSET_ADD(group_config.qset, bcm_field);
     }
-    BCM_FIELD_QSET_ADD(group_config.qset, bcm_field);
   }
   // Allow SDK to find smallest possible table width for bank.
   group_config.mode = bcmFieldGroupModeAuto;
@@ -3394,12 +3399,30 @@ inline int bcm_add_field_u32(F func, int unit, int flow_id,
                                                        unit, entry, field));
       break;
     case BcmField::VLAN_VID:
-      RETURN_IF_BCM_ERROR(bcm_add_field_u32<bcm_vlan_t>(
-          bcm_field_qualify_OuterVlanId, unit, entry, field));
+      if (field.header_depth() == 0) {
+        RETURN_IF_BCM_ERROR(bcm_add_field_u32<bcm_vlan_t>(
+            bcm_field_qualify_OuterVlanId, unit, entry, field));
+      } else if (field.header_depth() == 1) {
+        RETURN_IF_BCM_ERROR(bcm_add_field_u32<bcm_vlan_t>(
+            bcm_field_qualify_InnerVlanId, unit, entry, field));
+      } else {
+        LOG(ERROR) << "Attempted to translate unsupported BcmField::Type: "
+                   << BcmField::Type_Name(field.type()) << " with header_depth "
+                   << field.header_depth() << ".";
+      }
       break;
     case BcmField::VLAN_PCP:
-      RETURN_IF_BCM_ERROR(bcm_add_field_u32<uint8>(
-          bcm_field_qualify_OuterVlanPri, unit, entry, field));
+      if (field.header_depth() == 0) {
+        RETURN_IF_BCM_ERROR(bcm_add_field_u32<uint8>(
+            bcm_field_qualify_OuterVlanPri, unit, entry, field));
+      } else if (field.header_depth() == 1) {
+        RETURN_IF_BCM_ERROR(bcm_add_field_u32<uint8>(
+            bcm_field_qualify_InnerVlanPri, unit, entry, field));
+      } else {
+        LOG(ERROR) << "Attempted to translate unsupported BcmField::Type: "
+                   << BcmField::Type_Name(field.type()) << " with header_depth "
+                   << field.header_depth() << ".";
+      }
       break;
     case BcmField::IPV4_SRC:
       RETURN_IF_BCM_ERROR(bcm_add_field_u32<bcm_ip_t>(bcm_field_qualify_SrcIp,
@@ -3848,7 +3871,12 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
   table->clear_fields();
   for (int i = BcmField::UNKNOWN + 1; i <= BcmField::Type_MAX; ++i) {
     auto field = static_cast<BcmField::Type>(i);
-    if (BCM_FIELD_QSET_TEST(qset, HalAclFieldToBcm(table->stage(), field))) {
+    const std::list<bcm_field_qualify_t> bcm_acl_fields =
+        HalAclFieldToBcm(table->stage(), field);
+    if (std::all_of(bcm_acl_fields.cbegin(), bcm_acl_fields.cend(),
+                    [qset](bcm_field_qualify_t bcm_field) {
+                      return BCM_FIELD_QSET_TEST(qset, bcm_field);
+                    })) {
       table->add_fields()->set_type(field);
     }
   }
@@ -4116,12 +4144,32 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
                                          &value, &mask);
       break;
     case BcmField::VLAN_VID:
-      retval = bcm_get_field_u32<bcm_vlan_t>(bcm_field_qualify_OuterVlanId_get,
-                                             unit, entry, &value, &mask);
+      if (field->header_depth() == 0) {
+        retval = bcm_get_field_u32<bcm_vlan_t>(
+            bcm_field_qualify_OuterVlanId_get, unit, entry, &value, &mask);
+      } else if (field->header_depth() == 1) {
+        retval = bcm_get_field_u32<bcm_vlan_t>(
+            bcm_field_qualify_InnerVlanId_get, unit, entry, &value, &mask);
+      } else {
+        LOG(ERROR) << "Could not retrieve BcmField::Type "
+                   << BcmField::Type_Name(field->type())
+                   << " with header depth " << field->header_depth();
+        return false;
+      }
       break;
     case BcmField::VLAN_PCP:
-      retval = bcm_get_field_u32<uint8>(bcm_field_qualify_OuterVlanPri_get,
-                                        unit, entry, &value, &mask);
+      if (field->header_depth() == 0) {
+        retval = bcm_get_field_u32<uint8>(bcm_field_qualify_OuterVlanPri_get,
+                                          unit, entry, &value, &mask);
+      } else if (field->header_depth() == 1) {
+        retval = bcm_get_field_u32<uint8>(bcm_field_qualify_InnerVlanPri_get,
+                                          unit, entry, &value, &mask);
+      } else {
+        LOG(ERROR) << "Could not retrieve BcmField::Type "
+                   << BcmField::Type_Name(field->type())
+                   << " with header depth " << field->header_depth();
+        return false;
+      }
       break;
     case BcmField::IPV4_SRC:
       retval = bcm_get_field_u32<bcm_ip_t>(bcm_field_qualify_SrcIp_get, unit,
