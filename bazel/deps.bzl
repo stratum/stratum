@@ -92,7 +92,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "b2760a818e0b8ade5864604d29b3008a684c6d5f",
+            commit = "a5fd855d4b3293e23816ef6154e83dc6621aed6a",
         )
 
     for sde_ver in BF_SDE_PI_VER:
