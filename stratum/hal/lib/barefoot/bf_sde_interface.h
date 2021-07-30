@@ -429,7 +429,7 @@ class BfSdeInterface {
       uint32 table_id, int group_id) = 0;
 
   // Returns the action profile group from the given table, or all
-  // groups if member ID is 0.
+  // groups if group ID is 0.
   virtual ::util::Status GetActionProfileGroups(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, int group_id, std::vector<int>* group_ids,
