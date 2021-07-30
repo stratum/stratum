@@ -575,7 +575,7 @@ template <typename T>
       value, NumBitsToNumBytes(field_size_bits));
   std::string m = P4RuntimeByteStringToPaddedByteString(
       mask, NumBitsToNumBytes(field_size_bits));
-  DCHECK_EQ(v.size(), m.size());
+  CHECK_EQ(v.size(), m.size());
   RETURN_IF_BFRT_ERROR(table_key_->setValueandMask(
       id, reinterpret_cast<const uint8*>(v.data()),
       reinterpret_cast<const uint8*>(m.data()), v.size()));
@@ -607,7 +607,7 @@ template <typename T>
       low, NumBitsToNumBytes(field_size_bits));
   std::string h = P4RuntimeByteStringToPaddedByteString(
       high, NumBitsToNumBytes(field_size_bits));
-  DCHECK_EQ(l.size(), h.size());
+  CHECK_EQ(l.size(), h.size());
   RETURN_IF_BFRT_ERROR(table_key_->setValueRange(
       id, reinterpret_cast<const uint8*>(l.data()),
       reinterpret_cast<const uint8*>(h.data()), l.size()));
