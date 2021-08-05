@@ -988,7 +988,8 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     }
     default:
       RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
-          << "Modifying one-shot action profile groups is not supported.";
+          << "Unsupported update type: " << type << " in table entry "
+          << table_entry.ShortDebugString() << ".";
   }
 
   return ::util::OkStatus();
