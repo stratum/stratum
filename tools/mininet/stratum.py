@@ -102,7 +102,7 @@ class StratumBmv2Switch(Switch):
 
     def __init__(self, name, json=STRATUM_INIT_PIPELINE, loglevel="warn",
                  cpuport=DEFAULT_CPU_PORT, pipeconf=DEFAULT_PIPECONF,
-                 onosdevid=None,
+                 onosdevid=None, adminstate="ENABLED",
                  **kwargs):
         Switch.__init__(self, name, **kwargs)
         self.grpcPort = StratumBmv2Switch.nextGrpcPort
@@ -129,6 +129,7 @@ class StratumBmv2Switch(Switch):
         # In case of exceptions, mininet removes *.out files from /tmp. We use
         # this as a signal to terminate the switch instance (if active).
         self.keepaliveFile = '/tmp/%s-watchdog.out' % self.name
+        self.adminState = adminstate
 
         # Remove files from previous executions
         self.cleanupTmpFiles()
@@ -181,10 +182,10 @@ nodes {{
   channel: 1
   speed_bps: 10000000000
   config_params {{
-    admin_state: ADMIN_STATE_ENABLED
+    admin_state: ADMIN_STATE_{adminState}
   }}
   node: {nodeId}
-}}\n""".format(intfName=intf_name, intfNumber=intf_number, nodeId=self.nodeId)
+}}\n""".format(intfName=intf_name, intfNumber=intf_number, nodeId=self.nodeId, adminState=self.adminState)
             intf_number += 1
 
         return config
