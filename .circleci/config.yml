@@ -177,6 +177,8 @@ jobs:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
       - DOCKER_IMG: opennetworking/mn-stratum
+      - CC: clang
+      - CXX: clang++
     steps:
       - setup_remote_docker
       - checkout
