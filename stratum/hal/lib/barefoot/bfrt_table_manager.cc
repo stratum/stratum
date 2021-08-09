@@ -315,6 +315,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                                    table_entry.counter_data().packet_count()));
   }
 
+  if (table_entry.has_meter_config()) {
+    RETURN_ERROR(ERR_UNIMPLEMENTED)
+        << "Meter configs on TablesEntries are not supported.";
+  }
+
   return ::util::OkStatus();
 }
 
@@ -893,10 +898,18 @@ BfrtTableManager::ReadDirectCounterEntry(
     ::p4::v1::MeterEntry result;
     result.set_meter_id(meter_entry.meter_id());
     result.mutable_index()->set_index(meter_indices[i]);
-    result.mutable_config()->set_cir(cirs[i]);
-    result.mutable_config()->set_cburst(cbursts[i]);
-    result.mutable_config()->set_pir(pirs[i]);
-    result.mutable_config()->set_pburst(pbursts[i]);
+    if (cirs[i] >= kUnsetMeterThresholdRead) {
+      // The high value returned from the SDE indicates that this meter is
+      // unset, i.e., in "all green" configuration. According to the P4Rtuntime
+      // spec, this means we have to leave the MeterConfig field unset. Since it
+      // is not possible to just configure a subset of the four fields, we just
+      // have to check the cir value.
+    } else {
+      result.mutable_config()->set_cir(cirs[i]);
+      result.mutable_config()->set_cburst(cbursts[i]);
+      result.mutable_config()->set_pir(pirs[i]);
+      result.mutable_config()->set_pburst(pbursts[i]);
+    }
 
     *resp.add_entities()->mutable_meter_entry() = result;
   }
@@ -945,10 +958,17 @@ BfrtTableManager::ReadDirectCounterEntry(
   if (meter_entry.has_index()) {
     meter_index = meter_entry.index().index();
   }
-  RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
-      device_, session, meter_id, meter_index, meter_units_in_packets,
-      meter_entry.config().cir(), meter_entry.config().cburst(),
-      meter_entry.config().pir(), meter_entry.config().pburst()));
+  if (meter_entry.has_config()) {
+    RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
+        device_, session, meter_id, meter_index, meter_units_in_packets,
+        meter_entry.config().cir(), meter_entry.config().cburst(),
+        meter_entry.config().pir(), meter_entry.config().pburst()));
+  } else {
+    RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
+        device_, session, meter_id, meter_index, meter_units_in_packets,
+        kUnsetMeterThresholdReset, kUnsetMeterThresholdReset,
+        kUnsetMeterThresholdReset, kUnsetMeterThresholdReset));
+  }
 
   return ::util::OkStatus();
 }
