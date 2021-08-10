@@ -13,6 +13,7 @@
 #include "absl/synchronization/notification.h"
 #include "gflags/gflags.h"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/utils.h"
@@ -34,6 +35,7 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
                                    BfSdeInterface* bf_sde_interface, int device)
     : mode_(mode),
       register_timer_descriptors_(),
+      p4_entity_uses_one_shot_action_map_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       p4_info_manager_(nullptr),
       device_(device) {}
@@ -41,6 +43,7 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
 BfrtTableManager::BfrtTableManager()
     : mode_(OPERATION_MODE_STANDALONE),
       register_timer_descriptors_(),
+      p4_entity_uses_one_shot_action_map_(),
       bf_sde_interface_(nullptr),
       p4_info_manager_(nullptr),
       device_(-1) {}
@@ -57,13 +60,14 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
       << "Only one P4 program is supported.";
-  register_timer_descriptors_.clear();
   const auto& program = config.programs(0);
   const auto& p4_info = program.p4info();
   std::unique_ptr<P4InfoManager> p4_info_manager =
       absl::make_unique<P4InfoManager>(p4_info);
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
   p4_info_manager_ = std::move(p4_info_manager);
+  register_timer_descriptors_.clear();
+  p4_entity_uses_one_shot_action_map_.clear();
   RETURN_IF_ERROR(SetupRegisterReset(p4_info));
 
   return ::util::OkStatus();
@@ -322,14 +326,28 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
+  absl::ReaderMutexLock l(&lock_);
+  return DoWriteTableEntry(session, type, table_entry);
+}
+
+::util::Status BfrtTableManager::DoWriteTableEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::TableEntry& table_entry) {
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
-  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(auto table,
                    p4_info_manager_->FindTableByID(table_entry.table_id()));
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(table_entry.table_id()));
+
+  // One-shot action profiles require special handling.
+  if (table_entry.has_action() &&
+      table_entry.action().type_case() ==
+          ::p4::v1::TableAction::kActionProfileActionSet) {
+    return WriteOneShotActionProfile(session, type, table_entry);
+  }
 
   if (!table_entry.is_default_action()) {
     if (table.is_const_table()) {
@@ -623,6 +641,14 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
   absl::ReaderMutexLock l(&lock_);
 
+  // One-shot action profile responses need to be synthesized and require
+  // special handling.
+  bool uses_one_shot_action = gtl::FindWithDefault(
+      p4_entity_uses_one_shot_action_map_, table_entry.table_id(), false);
+  if (uses_one_shot_action) {
+    return ReadOneShotActionProfile(session, table_entry, writer);
+  }
+
   // We have four cases to handle:
   // 1. table id not set: return all table entries from all tables
   // 2. table id set, no match key: return all table entries of that table
@@ -676,6 +702,297 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   }
 
   CHECK(false) << "This should never happen.";
+}
+
+::util::Status BfrtTableManager::ReadOneShotActionProfile(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::TableEntry& table_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  ASSIGN_OR_RETURN(auto table,
+                   p4_info_manager_->FindTableByID(table_entry.table_id()));
+  ASSIGN_OR_RETURN(auto action_profile, p4_info_manager_->FindActionProfileByID(
+                                            table.implementation_id()));
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_prof_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile.preamble().id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_sel_table_id,
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+  ASSIGN_OR_RETURN(auto table_key, bf_sde_interface_->CreateTableKey(table_id));
+  ASSIGN_OR_RETURN(auto table_data,
+                   bf_sde_interface_->CreateTableData(
+                       table_id, table_entry.action().action().action_id()));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
+  RETURN_IF_ERROR(bf_sde_interface_->GetTableEntry(
+      device_, session, table_id, table_key.get(), table_data.get()));
+  ASSIGN_OR_RETURN(
+      ::p4::v1::TableEntry result,
+      BuildP4TableEntry(table_entry, table_key.get(), table_data.get()));
+  // Build sugared version of action profile.
+  ::p4::v1::ActionProfileActionSet* action_profile_set =
+      result.mutable_action()->mutable_action_profile_action_set();
+  uint64 action_profile_group_id;
+  RETURN_IF_ERROR(table_data->GetSelectorGroupId(&action_profile_group_id));
+  std::vector<int> member_ids;
+  std::vector<std::unique_ptr<BfSdeInterface::TableDataInterface>> action_datas;
+  RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileMembers(
+      device_, session, bfrt_act_prof_table_id, action_profile_group_id,
+      &member_ids, &action_datas));
+  for (const auto& action_data : action_datas) {
+    auto action = action_profile_set->add_action_profile_actions();
+    ASSIGN_OR_RETURN(
+        ::p4::v1::TableEntry member_action,
+        BuildP4TableEntry(table_entry, table_key.get(), action_data.get()));
+    *action->mutable_action() = member_action.action().action();
+    action->set_weight(1);
+  }
+  ::p4::v1::ReadResponse resp;
+  *resp.add_entities()->mutable_table_entry() = result;
+  VLOG(1) << "ReadOneShotActionProfile resp " << resp.DebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteOneShotActionProfile(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::TableEntry& table_entry) {
+  ASSIGN_OR_RETURN(auto table,
+                   p4_info_manager_->FindTableByID(table_entry.table_id()));
+  ASSIGN_OR_RETURN(auto action_profile, p4_info_manager_->FindActionProfileByID(
+                                            table.implementation_id()));
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(table_entry.table_id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_prof_table_id,
+      bf_sde_interface_->GetBfRtId(action_profile.preamble().id()));
+  ASSIGN_OR_RETURN(
+      uint32 bfrt_act_sel_table_id,
+      bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
+
+  // Ensure that one-shot and traditional programming style are not mixed on the
+  // same action selector or table.
+  bool uses_one_shot_action =
+      gtl::LookupOrInsert(&p4_entity_uses_one_shot_action_map_,
+                          action_profile.preamble().id(), true) &&
+      gtl::LookupOrInsert(&p4_entity_uses_one_shot_action_map_,
+                          table_entry.table_id(), true);
+  if (!uses_one_shot_action) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "One-shot and traditional action profile programming styles "
+           "cannot be mixed on the same action profile "
+        << action_profile.preamble().name() << " or table "
+        << table_entry.table_id() << ".";
+  }
+
+  switch (type) {
+    case ::p4::v1::Update::INSERT: {
+      // 1. Find free member and group IDs.
+      // TODO(max): improve ID search from linear extension to hole finding.
+      uint32 next_free_member_id = 1;
+      uint32 next_free_group_id = 1;
+      {
+        std::vector<int> all_group_ids;
+        std::vector<int> max_group_sizes;
+        std::vector<std::vector<uint32>> member_ids;
+        std::vector<std::vector<bool>> member_statuses;
+        RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileGroups(
+            device_, session, bfrt_act_sel_table_id, 0, &all_group_ids,
+            &max_group_sizes, &member_ids, &member_statuses));
+        std::sort(all_group_ids.begin(), all_group_ids.end());
+        if (!all_group_ids.empty()) {
+          next_free_group_id = *(all_group_ids.rbegin()) + 1;
+        }
+        std::vector<uint32> all_member_ids;
+        for (const auto& member_group : member_ids) {
+          all_member_ids.insert(all_member_ids.end(), member_group.begin(),
+                                member_group.end());
+        }
+        std::sort(all_member_ids.begin(), all_member_ids.end());
+        if (!all_member_ids.empty()) {
+          next_free_member_id = *(all_member_ids.rbegin()) + 1;
+        }
+      }
+      // 2. Create the members.
+      std::vector<uint32> member_ids;
+      std::vector<bool> member_status;
+      for (const auto& action : table_entry.action()
+                                    .action_profile_action_set()
+                                    .action_profile_actions()) {
+        CHECK_RETURN_IF_FALSE(action.weight() == 1)
+            << "Invalid or unsupported action weight.";
+        CHECK_RETURN_IF_FALSE(action.watch_kind_case() ==
+                              ::p4::v1::ActionProfileAction::WATCH_KIND_NOT_SET)
+            << "Watch ports are not supported.";
+        ::p4::v1::ActionProfileMember member;
+        member.set_action_profile_id(action_profile.preamble().id());
+        member.set_member_id(next_free_member_id++);
+        *member.mutable_action() = action.action();
+        ASSIGN_OR_RETURN(auto table_data, bf_sde_interface_->CreateTableData(
+                                              bfrt_act_prof_table_id,
+                                              member.action().action_id()));
+        for (const auto& param : member.action().params()) {
+          RETURN_IF_ERROR(
+              table_data->SetParam(param.param_id(), param.value()));
+        }
+        RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileMember(
+            device_, session, bfrt_act_prof_table_id, member.member_id(),
+            table_data.get()));
+        member_ids.push_back(member.member_id());
+        member_status.push_back(true);
+      }
+      // 3. Create the group containing the new members.
+      uint64 group_id = next_free_group_id++;
+      RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id, group_id, member_ids.size(),
+          member_ids, member_status));
+      // 4. Create the table entry pointing to the new group.
+      ::p4::v1::TableEntry real_table_entry = table_entry;
+      real_table_entry.mutable_action()->set_action_profile_group_id(group_id);
+      RETURN_IF_ERROR(DoWriteTableEntry(session, ::p4::v1::Update::INSERT,
+                                        real_table_entry));
+      break;
+    }
+    case ::p4::v1::Update::MODIFY: {
+      // 1. Fetch the table entry pointing to the action profile group ID.
+      uint64 action_profile_group_id;
+      {
+        ASSIGN_OR_RETURN(auto table_key,
+                         bf_sde_interface_->CreateTableKey(table_id));
+        RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
+        ASSIGN_OR_RETURN(
+            auto table_data,
+            bf_sde_interface_->CreateTableData(
+                table_id, table_entry.action().action().action_id()));
+        RETURN_IF_ERROR(bf_sde_interface_->GetTableEntry(
+            device_, session, table_id, table_key.get(), table_data.get()));
+        RETURN_IF_ERROR(
+            table_data->GetSelectorGroupId(&action_profile_group_id));
+      }
+      // 2. Fetch and store the old members from the action profile group.
+      std::vector<uint32> old_member_ids;
+      {
+        std::vector<int> group_ids;
+        std::vector<int> max_group_sizes;
+        std::vector<std::vector<uint32>> nested_member_ids;
+        std::vector<std::vector<bool>> old_member_statuses;
+        RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileGroups(
+            device_, session, bfrt_act_sel_table_id, action_profile_group_id,
+            &group_ids, &max_group_sizes, &nested_member_ids,
+            &old_member_statuses));
+        CHECK_EQ(1, group_ids.size());
+        CHECK_EQ(1, nested_member_ids.size());
+        CHECK_EQ(action_profile_group_id, group_ids[0]);
+        old_member_ids = nested_member_ids[0];
+      }
+      // 3. Find free member IDs.
+      // TODO(max): improve ID search from linear extension to hole finding.
+      uint32 next_free_member_id = 1;
+      {
+        std::vector<int> all_group_ids;
+        std::vector<int> max_group_sizes;
+        std::vector<std::vector<uint32>> member_ids;
+        std::vector<std::vector<bool>> member_statuses;
+        RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileGroups(
+            device_, session, bfrt_act_sel_table_id, 0, &all_group_ids,
+            &max_group_sizes, &member_ids, &member_statuses));
+        std::vector<uint32> all_member_ids;
+        for (const auto& member_group : member_ids) {
+          all_member_ids.insert(all_member_ids.end(), member_group.begin(),
+                                member_group.end());
+        }
+        std::sort(all_member_ids.begin(), all_member_ids.end());
+        if (!all_member_ids.empty()) {
+          next_free_member_id = *(all_member_ids.rbegin()) + 1;
+        }
+      }
+      // 4. Insert new members.
+      std::vector<uint32> new_member_ids;
+      std::vector<bool> new_member_status;
+      for (const auto& action : table_entry.action()
+                                    .action_profile_action_set()
+                                    .action_profile_actions()) {
+        CHECK_RETURN_IF_FALSE(action.weight() == 1)
+            << "Invalid or unsupported action weight.";
+        CHECK_RETURN_IF_FALSE(action.watch_kind_case() ==
+                              ::p4::v1::ActionProfileAction::WATCH_KIND_NOT_SET)
+            << "Watch ports are not supported.";
+        ::p4::v1::ActionProfileMember member;
+        member.set_action_profile_id(action_profile.preamble().id());
+        member.set_member_id(next_free_member_id++);
+        *member.mutable_action() = action.action();
+        ASSIGN_OR_RETURN(auto table_data, bf_sde_interface_->CreateTableData(
+                                              bfrt_act_prof_table_id,
+                                              member.action().action_id()));
+        for (const auto& param : member.action().params()) {
+          RETURN_IF_ERROR(
+              table_data->SetParam(param.param_id(), param.value()));
+        }
+        RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileMember(
+            device_, session, bfrt_act_prof_table_id, member.member_id(),
+            table_data.get()));
+        new_member_ids.push_back(member.member_id());
+        new_member_status.push_back(true);
+      }
+      // 5. Point group to new members.
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id, action_profile_group_id,
+          new_member_ids.size(), new_member_ids, new_member_status));
+      // 6. Delete the old members.
+      for (const auto& member_id : old_member_ids) {
+        RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileMember(
+            device_, session, bfrt_act_prof_table_id, member_id));
+      }
+      break;
+    }
+    case ::p4::v1::Update::DELETE: {
+      // Fetch and delete the table entry pointing to the action profile group
+      // ID.
+      ASSIGN_OR_RETURN(auto table_key,
+                       bf_sde_interface_->CreateTableKey(table_id));
+      RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
+      ASSIGN_OR_RETURN(
+          auto table_data,
+          bf_sde_interface_->CreateTableData(
+              table_id, table_entry.action().action().action_id()));
+      RETURN_IF_ERROR(bf_sde_interface_->GetTableEntry(
+          device_, session, table_id, table_key.get(), table_data.get()));
+      uint64 action_profile_group_id;
+      RETURN_IF_ERROR(table_data->GetSelectorGroupId(&action_profile_group_id));
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteTableEntry(
+          device_, session, table_id, table_key.get()));
+      // Fetch and delete the action profile group containing the members.
+      std::vector<int> group_ids;
+      std::vector<int> max_group_sizes;
+      std::vector<std::vector<uint32>> member_ids;
+      std::vector<std::vector<bool>> member_statuses;
+      RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileGroups(
+          device_, session, bfrt_act_sel_table_id, action_profile_group_id,
+          &group_ids, &max_group_sizes, &member_ids, &member_statuses));
+      CHECK_EQ(1, group_ids.size());
+      CHECK_EQ(1, member_ids.size());
+      CHECK_EQ(action_profile_group_id, group_ids[0]);
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileGroup(
+          device_, session, bfrt_act_sel_table_id, action_profile_group_id));
+      // Delete the members.
+      for (const auto& member_id : member_ids[0]) {
+        RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileMember(
+            device_, session, bfrt_act_prof_table_id, member_id));
+      }
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
+          << "Unsupported update type: " << type << " in table entry "
+          << table_entry.ShortDebugString() << ".";
+  }
+
+  return ::util::OkStatus();
 }
 
 // Modify the counter data of a table entry.
@@ -957,10 +1274,18 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
+  absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
-
-  absl::WriterMutexLock l(&lock_);
+  bool uses_one_shot_action =
+      gtl::LookupOrInsert(&p4_entity_uses_one_shot_action_map_,
+                          action_profile_member.action_profile_id(), false);
+  if (uses_one_shot_action) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "One-shot and traditional action profile programming styles "
+           "cannot be mixed on the same action profile with ID "
+        << action_profile_member.action_profile_id() << ".";
+  }
   ASSIGN_OR_RETURN(
       uint32 bfrt_table_id,
       bf_sde_interface_->GetBfRtId(action_profile_member.action_profile_id()));
@@ -1059,10 +1384,19 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
+  bool uses_one_shot_action =
+      gtl::LookupOrInsert(&p4_entity_uses_one_shot_action_map_,
+                          action_profile_group.action_profile_id(), false);
+  if (uses_one_shot_action) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "One-shot and traditional action profile programming styles "
+           "cannot be mixed on the same action profile with ID "
+        << action_profile_group.action_profile_id() << ".";
+  }
 
-  absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       uint32 bfrt_act_prof_table_id,
       bf_sde_interface_->GetBfRtId(action_profile_group.action_profile_id()));
@@ -1073,10 +1407,16 @@ BfrtTableManager::ReadDirectCounterEntry(
   std::vector<uint32> member_ids;
   std::vector<bool> member_status;
   for (const auto& member : action_profile_group.members()) {
+    CHECK_RETURN_IF_FALSE(member.weight() != 0)
+        << "Zero member weights are not allowed.";
     CHECK_RETURN_IF_FALSE(
         member.watch_kind_case() ==
         ::p4::v1::ActionProfileGroup::Member::WATCH_KIND_NOT_SET)
         << "Watch ports are not supported.";
+    if (member.weight() != 1) {
+      RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
+          << "Member weights greater than 1 are not supported.";
+    }
     member_ids.push_back(member.member_id());
     member_status.push_back(true);  // Activate the member.
   }
