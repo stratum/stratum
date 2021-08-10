@@ -748,7 +748,10 @@ message TofinoConfig {
       uint32 color_drop_limit_red = 6;
     }
     message PpgConfig {
-      uint32 sdk_port = 1;  // required
+      oneof port_type {
+        uint32 port = 1;
+        uint32 sdk_port = 10;
+      }
       bool is_default_ppg = 9;
       uint32 minimum_guaranteed_cells = 2;
       ApplicationPool pool = 3;
@@ -780,7 +783,10 @@ message TofinoConfig {
         QueueColorLimit color_drop_limit_yellow = 14;
         QueueColorLimit color_drop_limit_red = 15;
       }
-      uint32 sdk_port = 1;  // required
+      oneof port_type {
+        uint32 port = 1;
+        uint32 sdk_port = 2;
+      }
       repeated QueueMapping queue_mapping = 3;
     }
     repeated PoolConfig pool_configs = 1;

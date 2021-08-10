@@ -1344,13 +1344,26 @@ namespace {
   }
   device_to_ppg_handles_[device].clear();
   for (const auto& ppg_config : qos_config.ppg_configs()) {
+    uint32 sdk_port;
+    switch (ppg_config.port_type_case()) {
+      case TofinoConfig::TofinoQosConfig::PpgConfig::PortTypeCase::kSdkPort:
+        sdk_port = ppg_config.sdk_port();
+        break;
+      case TofinoConfig::TofinoQosConfig::PpgConfig::PortTypeCase::kPort: {
+        ASSIGN_OR_RETURN(
+            sdk_port,
+            GetPortIdFromPortKey(device, PortKey(0, ppg_config.port(), 0)));
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Invalid port type " << ppg_config.port_type_case() << ".";
+    }
     bf_tm_ppg_hdl ppg;
     if (ppg_config.is_default_ppg()) {
-      RETURN_IF_BFRT_ERROR(
-          bf_tm_ppg_defaultppg_get(device, ppg_config.sdk_port(), &ppg));
+      RETURN_IF_BFRT_ERROR(bf_tm_ppg_defaultppg_get(device, sdk_port, &ppg));
     } else {
-      RETURN_IF_BFRT_ERROR(
-          bf_tm_ppg_allocate(device, ppg_config.sdk_port(), &ppg));
+      RETURN_IF_BFRT_ERROR(bf_tm_ppg_allocate(device, sdk_port, &ppg));
       device_to_ppg_handles_[device].push_back(ppg);
     }
     RETURN_IF_BFRT_ERROR(bf_tm_ppg_guaranteed_min_limit_set(
@@ -1362,18 +1375,33 @@ namespace {
         device, ppg, pool, ppg_config.base_use_limit(), baf,
         ppg_config.hysteresis()));
     RETURN_IF_BFRT_ERROR(bf_tm_port_ingress_drop_limit_set(
-        device, ppg_config.sdk_port(), ppg_config.ingress_drop_limit()));
+        device, sdk_port, ppg_config.ingress_drop_limit()));
     RETURN_IF_BFRT_ERROR(
         bf_tm_ppg_icos_mapping_set(device, ppg, ppg_config.icos_bitmap()));
   }
 
   // Configure the queues.
   for (const auto& queue_config : qos_config.queue_configs()) {
+    uint32 sdk_port;
+    switch (queue_config.port_type_case()) {
+      case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::kSdkPort:
+        sdk_port = queue_config.sdk_port();
+        break;
+      case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::kPort: {
+        ASSIGN_OR_RETURN(
+            sdk_port,
+            GetPortIdFromPortKey(device, PortKey(0, queue_config.port(), 0)));
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Invalid port type " << queue_config.port_type_case() << ".";
+    }
     for (const auto& queue_mapping : queue_config.queue_mapping()) {
       // Set gmin only when > 0, as it would otherwise disable the queue.
       if (queue_mapping.minimum_guaranteed_cells()) {
         RETURN_IF_BFRT_ERROR(bf_tm_q_guaranteed_min_limit_set(
-            device, queue_config.sdk_port(), queue_mapping.queue_id(),
+            device, sdk_port, queue_mapping.queue_id(),
             queue_mapping.minimum_guaranteed_cells()));
       }
       ASSIGN_OR_RETURN(bf_tm_app_pool_t pool,
@@ -1381,41 +1409,40 @@ namespace {
       ASSIGN_OR_RETURN(bf_tm_queue_baf_t baf,
                        BafToTofinoQueueBaf(queue_mapping.baf()));
       RETURN_IF_BFRT_ERROR(bf_tm_q_app_pool_usage_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(), pool,
+          device, sdk_port, queue_mapping.queue_id(), pool,
           queue_mapping.base_use_limit(), baf, queue_mapping.hysteresis()));
       ASSIGN_OR_RETURN(
           bf_tm_sched_prio_t priority,
           PriorityToTofinoSchedulingPriority(queue_mapping.priority()));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_priority_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(), priority));
+          device, sdk_port, queue_mapping.queue_id(), priority));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          queue_mapping.weight()));
+          device, sdk_port, queue_mapping.queue_id(), queue_mapping.weight()));
       // Set maximum shaping rate on queue, if requested.
       switch (queue_mapping.max_rate_case()) {
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMaxRatePackets:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
+              device, sdk_port, queue_mapping.queue_id(), true,
               queue_mapping.max_rate_packets().burst_packets(),
               queue_mapping.max_rate_packets().rate_pps()));
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMaxRateBytes:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
+              device, sdk_port, queue_mapping.queue_id(), false,
               queue_mapping.max_rate_bytes().burst_bytes(),
               queue_mapping.max_rate_bytes().rate_bps() /
                   1000));  // SDE expects kbits
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             MAX_RATE_NOT_SET:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_disable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         default:
           RETURN_ERROR(ERR_INVALID_PARAM)
@@ -1427,26 +1454,26 @@ namespace {
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMinRatePackets:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
+              device, sdk_port, queue_mapping.queue_id(), true,
               queue_mapping.min_rate_packets().burst_packets(),
               queue_mapping.min_rate_packets().rate_pps()));
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMinRateBytes:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
+              device, sdk_port, queue_mapping.queue_id(), false,
               queue_mapping.min_rate_bytes().burst_bytes(),
               queue_mapping.min_rate_bytes().rate_bps() /
                   1000));  // SDE expects kbits
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             MIN_RATE_NOT_SET:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_disable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         default:
           RETURN_ERROR(ERR_INVALID_PARAM)
@@ -1466,15 +1493,15 @@ namespace {
       ASSIGN_OR_RETURN(bf_tm_queue_color_limit_t red_limit,
                        ColorLimitToTofinoQueueColorLimit(
                            queue_mapping.color_drop_limit_red()));
-      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          BF_TM_COLOR_YELLOW, yellow_limit));
-      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          BF_TM_COLOR_RED, red_limit));
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_q_color_limit_set(device, sdk_port, queue_mapping.queue_id(),
+                                  BF_TM_COLOR_YELLOW, yellow_limit));
+      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(device, sdk_port,
+                                                   queue_mapping.queue_id(),
+                                                   BF_TM_COLOR_RED, red_limit));
     }
     RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(
-        device, queue_config.sdk_port(), queue_config.queue_mapping_size(),
+        device, sdk_port, queue_config.queue_mapping_size(),
         /*queue_mapping*/ nullptr));
   }
 
