@@ -659,6 +659,12 @@ message GoogleConfig {
 
 // Config specific to Tofino chassis.
 message TofinoConfig {
+  message TofinoPort {
+    oneof port_type {
+      uint32 port = 1;      // Singleton port ID
+      uint32 sdk_port = 2;  // dev port
+    }
+  }
   message PacketShape {
     uint64 rate_pps = 1;
     uint32 burst_packets = 2;
@@ -682,10 +688,7 @@ message TofinoConfig {
   // packets will be deflected to.
   message DeflectOnPacketDropConfig {
     message DropTarget {
-      oneof port_type {
-        uint32 port = 1;
-        uint32 sdk_port = 2;
-      }
+      TofinoPort port = 1;
       uint32 queue = 3;
     }
     repeated DropTarget drop_targets = 1;
@@ -748,10 +751,7 @@ message TofinoConfig {
       uint32 color_drop_limit_red = 6;
     }
     message PpgConfig {
-      oneof port_type {
-        uint32 port = 1;
-        uint32 sdk_port = 10;
-      }
+      TofinoPort port = 1;
       bool is_default_ppg = 9;
       uint32 minimum_guaranteed_cells = 2;
       ApplicationPool pool = 3;
@@ -783,10 +783,7 @@ message TofinoConfig {
         QueueColorLimit color_drop_limit_yellow = 14;
         QueueColorLimit color_drop_limit_red = 15;
       }
-      oneof port_type {
-        uint32 port = 1;
-        uint32 sdk_port = 2;
-      }
+      TofinoPort port = 1;
       repeated QueueMapping queue_mapping = 3;
     }
     repeated PoolConfig pool_configs = 1;
