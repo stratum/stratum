@@ -1356,8 +1356,8 @@ namespace {
         break;
       }
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM)
-            << "Invalid port type " << ppg_config.port_type_case() << ".";
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported port type in PpgConfig "
+                                        << ppg_config.ShortDebugString() << ".";
     }
     bf_tm_ppg_hdl ppg;
     if (ppg_config.is_default_ppg()) {
@@ -1395,7 +1395,8 @@ namespace {
       }
       default:
         RETURN_ERROR(ERR_INVALID_PARAM)
-            << "Invalid port type " << queue_config.port_type_case() << ".";
+            << "Unsupported port type in QueueConfig "
+            << queue_config.ShortDebugString() << ".";
     }
     for (const auto& queue_mapping : queue_config.queue_mapping()) {
       // Set gmin only when > 0, as it would otherwise disable the queue.

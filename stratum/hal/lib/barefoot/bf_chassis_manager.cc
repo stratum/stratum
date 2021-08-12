@@ -717,7 +717,8 @@ BfChassisManager::~BfChassisManager() = default;
           }
           default:
             RETURN_ERROR(ERR_INVALID_PARAM)
-                << "Invalid port type " << queue_config.port_type_case() << ".";
+                << "Unsupported port type in QueueConfig "
+                << queue_config.ShortDebugString() << ".";
         }
         CHECK_RETURN_IF_FALSE(
             gtl::FindOrNull(node_id_to_sdk_port_id_to_port_id[node_id],
