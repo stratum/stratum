@@ -2,10 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/attribute_group_mock.h"
 
 #include <memory>
+
 #include "absl/memory/memory.h"
 
 namespace stratum {
