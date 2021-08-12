@@ -682,7 +682,7 @@ message TofinoConfig {
   // packets will be deflected to.
   message DeflectOnPacketDropConfig {
     message DropTarget {
-      oneof port_type {
+      oneof port_type {  // required
         uint32 port = 1;
         uint32 sdk_port = 2;
       }
@@ -748,7 +748,7 @@ message TofinoConfig {
       uint32 color_drop_limit_red = 6;
     }
     message PpgConfig {
-      oneof port_type {
+      oneof port_type {  // required
         uint32 port = 1;
         uint32 sdk_port = 10;
       }
@@ -783,7 +783,7 @@ message TofinoConfig {
         QueueColorLimit color_drop_limit_yellow = 14;
         QueueColorLimit color_drop_limit_red = 15;
       }
-      oneof port_type {
+      oneof port_type {  // required
         uint32 port = 1;
         uint32 sdk_port = 2;
       }
