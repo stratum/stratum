@@ -431,6 +431,8 @@ vendor_config {
         pool_color_drop_hysteresis_red: 4000
         ppg_configs {
           sdk_port: 260
+          # Or SingletonPort ID
+          # port: 1
           is_default_ppg: true
           minimum_guaranteed_cells: 200
           pool: INGRESS_APP_POOL_0
@@ -514,6 +516,8 @@ vendor_config {
         }
         queue_configs {
           sdk_port: 268
+          # Or SingletonPort ID
+          # port: 1
           queue_mapping {
             queue_id: 0
             priority: PRIO_0
