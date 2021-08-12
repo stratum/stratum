@@ -1346,10 +1346,10 @@ namespace {
   for (const auto& ppg_config : qos_config.ppg_configs()) {
     uint32 sdk_port;
     switch (ppg_config.port_type_case()) {
-      case TofinoConfig::TofinoQosConfig::PpgConfig::PortTypeCase::kSdkPort:
+      case TofinoConfig::TofinoQosConfig::PpgConfig::kSdkPort:
         sdk_port = ppg_config.sdk_port();
         break;
-      case TofinoConfig::TofinoQosConfig::PpgConfig::PortTypeCase::kPort: {
+      case TofinoConfig::TofinoQosConfig::PpgConfig::kPort: {
         ASSIGN_OR_RETURN(
             sdk_port,
             GetPortIdFromPortKey(device, PortKey(0, ppg_config.port(), 0)));
@@ -1384,10 +1384,10 @@ namespace {
   for (const auto& queue_config : qos_config.queue_configs()) {
     uint32 sdk_port;
     switch (queue_config.port_type_case()) {
-      case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::kSdkPort:
+      case TofinoConfig::TofinoQosConfig::QueueConfig::kSdkPort:
         sdk_port = queue_config.sdk_port();
         break;
-      case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::kPort: {
+      case TofinoConfig::TofinoQosConfig::QueueConfig::kPort: {
         ASSIGN_OR_RETURN(
             sdk_port,
             GetPortIdFromPortKey(device, PortKey(0, queue_config.port(), 0)));

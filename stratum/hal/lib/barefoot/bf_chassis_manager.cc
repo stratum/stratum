@@ -701,12 +701,10 @@ BfChassisManager::~BfChassisManager() = default;
       for (const auto& queue_config : qos_config.queue_configs()) {
         uint32 sdk_port_id;
         switch (queue_config.port_type_case()) {
-          case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::
-              kSdkPort:
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kSdkPort:
             sdk_port_id = queue_config.sdk_port();
             break;
-          case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::
-              kPort: {
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kPort: {
             CHECK_RETURN_IF_FALSE(
                 node_id_to_port_id_to_sdk_port_id[node_id].count(
                     queue_config.port()))
