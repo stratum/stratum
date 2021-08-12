@@ -465,16 +465,16 @@ BfChassisManager::~BfChassisManager() = default;
         CHECK_RETURN_IF_FALSE(node_id_to_device.count(node_id));
         const int device = node_id_to_device[node_id];
         uint32 sdk_port_id;
-        switch (drop_target.port().port_type_case()) {
-          case TofinoConfig::TofinoPort::PortTypeCase::kPort: {
-            const uint32 port_id = drop_target.port().port();
+        switch (drop_target.port_type_case()) {
+          case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kPort: {
+            const uint32 port_id = drop_target.port();
             CHECK_RETURN_IF_FALSE(
                 node_id_to_port_id_to_sdk_port_id[node_id].count(port_id));
             sdk_port_id = node_id_to_port_id_to_sdk_port_id[node_id][port_id];
             break;
           }
-          case TofinoConfig::TofinoPort::PortTypeCase::kSdkPort: {
-            sdk_port_id = drop_target.port().sdk_port();
+          case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kSdkPort: {
+            sdk_port_id = drop_target.sdk_port();
             break;
           }
           default:
@@ -700,26 +700,26 @@ BfChassisManager::~BfChassisManager() = default;
           << "Node " << node_id << " not found.";
       for (const auto& queue_config : qos_config.queue_configs()) {
         uint32 sdk_port_id;
-        switch (queue_config.port().port_type_case()) {
-          case TofinoConfig::TofinoPort::PortTypeCase::kSdkPort:
-            sdk_port_id = queue_config.port().sdk_port();
+        switch (queue_config.port_type_case()) {
+          case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::
+              kSdkPort:
+            sdk_port_id = queue_config.sdk_port();
             break;
-          case TofinoConfig::TofinoPort::PortTypeCase::kPort: {
+          case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::
+              kPort: {
             CHECK_RETURN_IF_FALSE(
                 node_id_to_port_id_to_sdk_port_id[node_id].count(
-                    queue_config.port().port()))
-                << "Invalid singleton port " << queue_config.port().port()
+                    queue_config.port()))
+                << "Invalid singleton port " << queue_config.port()
                 << " in queue config " << queue_config.ShortDebugString()
                 << ".";
             sdk_port_id =
-                node_id_to_port_id_to_sdk_port_id[node_id]
-                                                 [queue_config.port().port()];
+                node_id_to_port_id_to_sdk_port_id[node_id][queue_config.port()];
             break;
           }
           default:
             RETURN_ERROR(ERR_INVALID_PARAM)
-                << "Unsupported port type in QueueConfig "
-                << queue_config.ShortDebugString() << ".";
+                << "Invalid port type " << queue_config.port_type_case() << ".";
         }
         CHECK_RETURN_IF_FALSE(
             gtl::FindOrNull(node_id_to_sdk_port_id_to_port_id[node_id],
@@ -1098,14 +1098,14 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   for (const auto& drop_target :
        node_id_to_deflect_on_drop_config_[node_id].drop_targets()) {
     uint32 sdk_port_id;
-    switch (drop_target.port().port_type_case()) {
-      case TofinoConfig::TofinoPort::PortTypeCase::kPort: {
+    switch (drop_target.port_type_case()) {
+      case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kPort: {
         ASSIGN_OR_RETURN(sdk_port_id,
-                         GetSdkPortId(node_id, drop_target.port().port()));
+                         GetSdkPortId(node_id, drop_target.port()));
         break;
       }
-      case TofinoConfig::TofinoPort::PortTypeCase::kSdkPort: {
-        sdk_port_id = drop_target.port().sdk_port();
+      case TofinoConfig::DeflectOnPacketDropConfig::DropTarget::kSdkPort: {
+        sdk_port_id = drop_target.sdk_port();
         break;
       }
       default:

@@ -1345,19 +1345,19 @@ namespace {
   device_to_ppg_handles_[device].clear();
   for (const auto& ppg_config : qos_config.ppg_configs()) {
     uint32 sdk_port;
-    switch (ppg_config.port().port_type_case()) {
-      case TofinoConfig::TofinoPort::PortTypeCase::kSdkPort:
-        sdk_port = ppg_config.port().sdk_port();
+    switch (ppg_config.port_type_case()) {
+      case TofinoConfig::TofinoQosConfig::PpgConfig::PortTypeCase::kSdkPort:
+        sdk_port = ppg_config.sdk_port();
         break;
-      case TofinoConfig::TofinoPort::PortTypeCase::kPort: {
-        ASSIGN_OR_RETURN(sdk_port,
-                         GetPortIdFromPortKey(
-                             device, PortKey(0, ppg_config.port().port(), 0)));
+      case TofinoConfig::TofinoQosConfig::PpgConfig::PortTypeCase::kPort: {
+        ASSIGN_OR_RETURN(
+            sdk_port,
+            GetPortIdFromPortKey(device, PortKey(0, ppg_config.port(), 0)));
         break;
       }
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported port type in PpgConfig "
-                                        << ppg_config.ShortDebugString() << ".";
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Invalid port type " << ppg_config.port_type_case() << ".";
     }
     bf_tm_ppg_hdl ppg;
     if (ppg_config.is_default_ppg()) {
@@ -1383,20 +1383,19 @@ namespace {
   // Configure the queues.
   for (const auto& queue_config : qos_config.queue_configs()) {
     uint32 sdk_port;
-    switch (queue_config.port().port_type_case()) {
-      case TofinoConfig::TofinoPort::PortTypeCase::kSdkPort:
-        sdk_port = queue_config.port().sdk_port();
+    switch (queue_config.port_type_case()) {
+      case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::kSdkPort:
+        sdk_port = queue_config.sdk_port();
         break;
-      case TofinoConfig::TofinoPort::PortTypeCase::kPort: {
+      case TofinoConfig::TofinoQosConfig::QueueConfig::PortTypeCase::kPort: {
         ASSIGN_OR_RETURN(
-            sdk_port, GetPortIdFromPortKey(
-                          device, PortKey(0, queue_config.port().port(), 0)));
+            sdk_port,
+            GetPortIdFromPortKey(device, PortKey(0, queue_config.port(), 0)));
         break;
       }
       default:
         RETURN_ERROR(ERR_INVALID_PARAM)
-            << "Unsupported port type in QueueConfig "
-            << queue_config.ShortDebugString() << ".";
+            << "Invalid port type " << queue_config.port_type_case() << ".";
     }
     for (const auto& queue_mapping : queue_config.queue_mapping()) {
       // Set gmin only when > 0, as it would otherwise disable the queue.
