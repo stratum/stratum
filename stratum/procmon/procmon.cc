@@ -14,11 +14,11 @@
 #include <set>
 #include <vector>
 
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 
@@ -26,17 +26,13 @@ namespace procmon {
 
 static const int32 kManagedProcessPollingIntervalMs = 100;
 
-pid_t ProcessHandler::Fork() {
-  return fork();
-}
+pid_t ProcessHandler::Fork() { return fork(); }
 
 pid_t ProcessHandler::Waitpid(pid_t pid, int* status, int options) {
   return waitpid(pid, status, options);
 }
 
-int ProcessHandler::Kill(pid_t pid, int sig) {
-  return kill(pid, sig);
-}
+int ProcessHandler::Kill(pid_t pid, int sig) { return kill(pid, sig); }
 
 Procmon::Procmon(std::shared_ptr<ProcessHandler> process_interface)
     : process_interface_(std::move(process_interface)) {}
@@ -49,8 +45,7 @@ Procmon::~Procmon() {
     join_monitor_thread = monitor_thread_running_;
     monitor_thread_running_ = false;
   }
-  if (join_monitor_thread)
-    pthread_join(monitor_thread_id_, nullptr);
+  if (join_monitor_thread) pthread_join(monitor_thread_id_, nullptr);
   // Now terminate all monitored processes that are still running
   LOG(INFO) << "Stopping all remaining processes before deleting Procmon.";
   KillAll(true).IgnoreError();
@@ -84,11 +79,11 @@ Procmon::~Procmon() {
   int startup_sequence = event.affected_startup_sequence;
   switch (type) {
     case START_PROCESS:
-      CHECK_RETURN_IF_FALSE(
-          startup_sequence < config_.client_processes_size() &&
-          startup_sequence >= 0)
-          << "Received START_PROCESS for invalid process #"
-          << startup_sequence << ".";
+      CHECK_RETURN_IF_FALSE(startup_sequence <
+                                config_.client_processes_size() &&
+                            startup_sequence >= 0)
+          << "Received START_PROCESS for invalid process #" << startup_sequence
+          << ".";
       RETURN_IF_ERROR(StartProcess(config_.client_processes(startup_sequence)));
       // If available, schedule the next process to start.
       if (startup_sequence < config_.client_processes_size() - 1)
@@ -112,8 +107,8 @@ Procmon::~Procmon() {
     CHECK_RETURN_IF_FALSE(new_pid != -1)
         << "Failed to fork child process " << process.label() << ".";
     // We are the parent. Mark this process for monitoring.
-    LOG(INFO) << "Starting process " << process.label()
-              << " (pid " << new_pid << ").";
+    LOG(INFO) << "Starting process " << process.label() << " (pid " << new_pid
+              << ").";
     ProcessInfo process_info;
     process_info.configuration = process;
     process_info.running = true;
@@ -136,11 +131,11 @@ Procmon::~Procmon() {
   }
   // Close/redirect file descriptors.
   close(STDIN_FILENO);
-  CHECK_RETURN_IF_FALSE(
-      dup2(open("/dev/null", O_WRONLY), STDOUT_FILENO) == STDOUT_FILENO)
+  CHECK_RETURN_IF_FALSE(dup2(open("/dev/null", O_WRONLY), STDOUT_FILENO) ==
+                        STDOUT_FILENO)
       << "Failed to redirect stdout to /dev/null.";
-  CHECK_RETURN_IF_FALSE(
-      dup2(open("/dev/null", O_WRONLY), STDERR_FILENO) == STDERR_FILENO)
+  CHECK_RETURN_IF_FALSE(dup2(open("/dev/null", O_WRONLY), STDERR_FILENO) ==
+                        STDERR_FILENO)
       << "Failed to redirect stderr to /dev/null.";
   // Set the process priority.
   CHECK_RETURN_IF_FALSE(setpriority(PRIO_PROCESS, 0, process.priority()) == 0)
@@ -176,8 +171,8 @@ Procmon::~Procmon() {
   // The process is still active.
   ClientProcess::OnKillBehavior action = process_info.configuration.on_kill();
   if (action == ClientProcess::CONTINUE && !force_kill) {
-    LOG(INFO) << "Process " << process_info.configuration.label()
-              << " (pid " << pid << ") ignores KILL_ALL.";
+    LOG(INFO) << "Process " << process_info.configuration.label() << " (pid "
+              << pid << ") ignores KILL_ALL.";
     // This process continues to run, and we continue to monitor it.
     AddMonitoredPid(pid, process_info);
     return ::util::OkStatus();
@@ -195,8 +190,7 @@ Procmon::~Procmon() {
   }
   CHECK_RETURN_IF_FALSE(kill_ret == 0 || errno == ESRCH)
       // The process is still running, but we didn't send a signal.
-      << "Failed to send a signal to pid " << pid
-      << ". Unable to kill.";
+      << "Failed to send a signal to pid " << pid << ". Unable to kill.";
   pid_t waitpid_ret = process_interface_->Waitpid(pid, nullptr, 0);
   CHECK_RETURN_IF_FALSE(waitpid_ret != -1)
       << "Error in waitpid for process " << process_info.configuration.label()
@@ -208,8 +202,7 @@ Procmon::~Procmon() {
   std::set<pid_t> pids;
   {
     absl::MutexLock lock(&monitored_process_lock_);
-    for (const auto& pid_and_info : processes_)
-      pids.insert(pid_and_info.first);
+    for (const auto& pid_and_info : processes_) pids.insert(pid_and_info.first);
   }
   LOG(INFO) << "Attempting to kill " << pids.size() << " processes.";
   for (auto pid : pids)
@@ -223,18 +216,18 @@ Procmon::~Procmon() {
   switch (process_info.configuration.on_death()) {
     case ClientProcess::KILL_ALL:
       LOG(ERROR) << "Process " << process_info.configuration.label() << " (pid "
-             << pid << ") has stopped with status " << process_info.exit_status
-                 << ". Killing all processes.";
+                 << pid << ") has stopped with status "
+                 << process_info.exit_status << ". Killing all processes.";
       RETURN_IF_ERROR(KillAll(false));
       break;
     case ClientProcess::LOG:
       LOG(ERROR) << "Process " << process_info.configuration.label() << " (pid "
-             << pid << ") has stopped with status "
-             << process_info.exit_status << ".";
+                 << pid << ") has stopped with status "
+                 << process_info.exit_status << ".";
       break;
     case ClientProcess::IGNORE:
       LOG(INFO) << "Process " << process_info.configuration.label() << " (pid "
-             << pid << ") has stopped.";
+                << pid << ") has stopped.";
       break;
     default:
       return MAKE_ERROR() << "Encountered invalid on_death behavior.";
@@ -266,8 +259,7 @@ void Procmon::AddMonitoredPid(pid_t pid, const ProcessInfo& process_info) {
 bool Procmon::RemoveMonitoredPid(pid_t pid, ProcessInfo* process_info) {
   absl::MutexLock lock(&monitored_process_lock_);
   auto pid_and_info = processes_.find(pid);
-  if (pid_and_info == processes_.end())
-    return false;
+  if (pid_and_info == processes_.end()) return false;
   *process_info = pid_and_info->second;
   processes_.erase(pid);
   return true;

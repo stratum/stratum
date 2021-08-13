@@ -2,24 +2,23 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_INTERFACE_H_
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_INTERFACE_H_
 
 #include <functional>
 #include <memory>
-#include <tuple>
-#include <vector>
-#include <utility>
 #include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-#include "stratum/hal/lib/phal/db.pb.h"
-#include "stratum/lib/channel/channel.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/types/variant.h"
-#include "stratum/glue/status/statusor.h"
 #include "google/protobuf/descriptor.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/lib/channel/channel.h"
 
 namespace stratum {
 namespace hal {
@@ -50,7 +49,7 @@ struct PathEntry {
       : PathEntry(name, index, true, false, false) {}
 
   std::string name;
-  int index = -1;  // This field is only significant if indexed == true.
+  int index = -1;        // This field is only significant if indexed == true.
   bool indexed = false;  // If true, this is a repeated attribute group.
   bool all = false;  // If true, this is a repeated group, but ignore index and
                      // fetch all indices.
@@ -73,8 +72,8 @@ struct PathEntry {
 
 // This method makes PathEntry hashable by Abseil's default hash function.
 template <typename H>
-H AbslHashValue(H h, const PathEntry &p) {
-    return H::combine(std::move(h), p.name);
+H AbslHashValue(H h, const PathEntry& p) {
+  return H::combine(std::move(h), p.name);
 }
 
 typedef std::vector<PathEntry> Path;
