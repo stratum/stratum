@@ -5,7 +5,6 @@
 #define STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
 
 #include "grpcpp/grpcpp.h"
-
 #include "stratum/procmon/procmon.grpc.pb.h"
 
 namespace stratum {
