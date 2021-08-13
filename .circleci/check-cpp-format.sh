@@ -126,8 +126,16 @@ stratum/hal/lib/p4/p4_match_key.h
 stratum/hal/lib/p4/p4_write_request_differ.h
 stratum/hal/lib/phal/adapter.cc
 stratum/hal/lib/phal/adapter.h
+stratum/hal/lib/phal/attribute_database_interface.h
 stratum/hal/lib/phal/attribute_database_mock.h
+stratum/hal/lib/phal/attribute_database_test.cc
+stratum/hal/lib/phal/attribute_database.cc
+stratum/hal/lib/phal/attribute_database.h
+stratum/hal/lib/phal/attribute_group_mock.cc
+stratum/hal/lib/phal/attribute_group_mock.h
+stratum/hal/lib/phal/attribute_group_test.cc
 stratum/hal/lib/phal/attribute_group.cc
+stratum/hal/lib/phal/attribute_group.h
 stratum/hal/lib/phal/datasource_mock.cc
 stratum/hal/lib/phal/onlp/onlp_event_handler_test.cc
 stratum/hal/lib/phal/onlp/onlp_fan_datasource_test.cc
