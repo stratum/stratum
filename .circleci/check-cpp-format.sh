@@ -210,6 +210,13 @@ stratum/p4c_backends/fpm/tunnel_type_mapper.h
 stratum/p4c_backends/test/test_p4c_main.cc
 stratum/p4c_backends/test/test_target_info.cc
 stratum/p4c_backends/test/test_target_info.h
+stratum/procmon/procmon_main.cc
+stratum/procmon/procmon_service_impl.cc
+stratum/procmon/procmon_service_impl.h
+stratum/procmon/procmon_test.cc
+stratum/procmon/procmon.cc
+stratum/procmon/procmon.h
+stratum/procmon/procmon.proto
 stratum/testing/tests/bcm_sim_test_fixture.cc
 stratum/testing/tests/bcm_sim_test_fixture.h
 stratum/testing/tests/bcm_sim_test.cc
