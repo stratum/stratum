@@ -5,20 +5,20 @@
 #include "stratum/hal/lib/phal/onlp/onlp_led_datasource.h"
 
 #include <cmath>
+
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
-
 
 ::util::StatusOr<std::shared_ptr<OnlpLedDataSource>> OnlpLedDataSource::Make(
     int led_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
@@ -36,8 +36,7 @@ namespace onlp {
   return led_data_source;
 }
 
-OnlpLedDataSource::OnlpLedDataSource(int led_id,
-                                     OnlpInterface* onlp_interface,
+OnlpLedDataSource::OnlpLedDataSource(int led_id, OnlpInterface* onlp_interface,
                                      CachePolicy* cache_policy,
                                      const LedInfo& led_info)
     : DataSource(cache_policy), onlp_stub_(onlp_interface) {
@@ -75,13 +74,13 @@ OnlpLedDataSource::OnlpLedDataSource(int led_id,
   led_cap_purple_blinking_.AssignValue(caps.purple_blinking());
 
   // Add setters here
-  led_mode_.AddSetter(
-          [&](const google::protobuf::EnumValueDescriptor* value)
-      -> ::util::Status {
-      return this->SetLedMode(static_cast<LedMode>(value->index())); });
-  led_char_.AddSetter(
-          [this](int32 val)
-      -> ::util::Status { return this->SetLedCharacter(val); });
+  led_mode_.AddSetter([&](const google::protobuf::EnumValueDescriptor* value)
+                          -> ::util::Status {
+    return this->SetLedMode(static_cast<LedMode>(value->index()));
+  });
+  led_char_.AddSetter([this](int32 val) -> ::util::Status {
+    return this->SetLedCharacter(val);
+  });
 }
 
 ::util::Status OnlpLedDataSource::UpdateValues() {

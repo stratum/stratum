@@ -8,12 +8,12 @@
 #include <memory>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {
@@ -93,8 +93,7 @@ class OnlpEventHandler {
       GUARDED_BY(monitor_lock_);
   std::function<void(::util::Status)> update_callback_
       GUARDED_BY(monitor_lock_);
-  OnlpPortNumber max_front_port_num_
-      GUARDED_BY(monitor_lock_);
+  OnlpPortNumber max_front_port_num_ GUARDED_BY(monitor_lock_);
   // This pointer is set whenever we are currently executing a callback. This
   // lets us freely call UnregisterEventCallback for any callback except the one
   // that is currently executing.
@@ -107,6 +106,5 @@ class OnlpEventHandler {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-
 
 #endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_

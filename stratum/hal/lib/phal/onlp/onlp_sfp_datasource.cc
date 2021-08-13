@@ -5,14 +5,15 @@
 #include "stratum/hal/lib/phal/onlp/onlp_sfp_datasource.h"
 
 #include <cmath>
+
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -32,7 +33,7 @@ double ConvertMicrowattsTodBm(double microwatts) {
     int sfp_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
   OnlpOid sfp_oid = ONLP_SFP_ID_CREATE(sfp_id);
   RETURN_IF_ERROR_WITH_APPEND(ValidateOnlpSfpInfo(sfp_oid, onlp_interface))
-        << "Failed to create SFP datasource for ID: " << sfp_id;
+      << "Failed to create SFP datasource for ID: " << sfp_id;
   ASSIGN_OR_RETURN(SfpInfo sfp_info, onlp_interface->GetSfpInfo(sfp_oid));
   std::shared_ptr<OnlpSfpDataSource> sfp_data_source(
       new OnlpSfpDataSource(sfp_id, onlp_interface, cache_policy, sfp_info));
@@ -44,12 +45,10 @@ double ConvertMicrowattsTodBm(double microwatts) {
   return sfp_data_source;
 }
 
-OnlpSfpDataSource::OnlpSfpDataSource(int sfp_id,
-                                     OnlpInterface* onlp_interface,
+OnlpSfpDataSource::OnlpSfpDataSource(int sfp_id, OnlpInterface* onlp_interface,
                                      CachePolicy* cache_policy,
                                      const SfpInfo& sfp_info)
     : DataSource(cache_policy), onlp_stub_(onlp_interface) {
-
   sfp_oid_ = ONLP_SFP_ID_CREATE(sfp_id);
 
   // NOTE: Following attributes aren't going to change through the lifetime
