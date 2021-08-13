@@ -7,15 +7,15 @@
 #include <algorithm>
 #include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/lib/macros.h"
 
 // Note: We want to keep this polling interval relatively short. Unlike with
 // with udev, it's possible for us to miss state changes entirely if they occur
@@ -128,10 +128,9 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
   absl::Time last_polling_time = absl::InfinitePast();
   while (true) {
     // We keep the polling time as consistent as possible.
-    absl::SleepFor(
-        last_polling_time +
-        absl::Milliseconds(FLAGS_onlp_polling_interval_ms) -
-        absl::Now());
+    absl::SleepFor(last_polling_time +
+                   absl::Milliseconds(FLAGS_onlp_polling_interval_ms) -
+                   absl::Now());
     last_polling_time = absl::Now();
     {
       absl::MutexLock lock(&handler->monitor_lock_);

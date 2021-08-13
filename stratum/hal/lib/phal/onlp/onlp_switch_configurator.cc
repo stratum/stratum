@@ -304,9 +304,9 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
                        OnlpSfpDataSource::Make(port, onlp_interface_, cache));
 
       // Create an SFP Configurator
-      ASSIGN_OR_RETURN(auto configurator,
-                       OnlpSfpConfigurator::Make(datasource, sfp,
-                                                ONLP_SFP_ID_CREATE(port)));
+      ASSIGN_OR_RETURN(
+          auto configurator,
+          OnlpSfpConfigurator::Make(datasource, sfp, ONLP_SFP_ID_CREATE(port)));
 
       // Register configurator as callback to ONLP
       RETURN_IF_ERROR(

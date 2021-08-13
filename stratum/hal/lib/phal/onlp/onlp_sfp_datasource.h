@@ -5,19 +5,19 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SFP_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SFP_DATASOURCE_H_
 
-#include <vector>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -32,7 +32,6 @@ class OnlpSfpDataSource : public DataSource {
   // onlp_interface remains valid during OnlpSfpDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> Make(
       int sfp_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
-
 
   // Accessors for managed attributes.
   ManagedAttribute* GetSfpId() { return &sfp_id_; }
