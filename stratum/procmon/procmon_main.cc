@@ -24,7 +24,7 @@ namespace stratum {
 
 namespace procmon {
 
-::util::Status Main(int argc, char**argv) {
+::util::Status Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
