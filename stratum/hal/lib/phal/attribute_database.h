@@ -65,7 +65,9 @@ class AttributeDatabase : public AttributeDatabaseInterface {
 
   AttributeDatabase(std::unique_ptr<AttributeGroup> root,
                     std::unique_ptr<ThreadpoolInterface> threadpool)
-      : root_(std::move(root)), threadpool_(std::move(threadpool)) {}
+      : root_(std::move(root)),
+        threadpool_(std::move(threadpool)),
+        polling_thread_id_() {}
 
   // Creates a new attribute database that uses the given group as its root node
   // and executes queries on the given threadpool. MakeGoogle or MakePhalDB

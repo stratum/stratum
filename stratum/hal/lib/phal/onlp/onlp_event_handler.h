@@ -71,7 +71,8 @@ class OnlpEventHandler {
   virtual void AddUpdateCallback(std::function<void(::util::Status)> callback);
 
  protected:
-  explicit OnlpEventHandler(const OnlpInterface* onlp) : onlp_(onlp) {}
+  explicit OnlpEventHandler(const OnlpInterface* onlp)
+      : onlp_(onlp), monitor_loop_thread_id_() {}
 
  private:
   friend class OnlpEventHandlerTest;

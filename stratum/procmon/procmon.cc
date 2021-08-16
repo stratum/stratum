@@ -35,7 +35,7 @@ pid_t ProcessHandler::Waitpid(pid_t pid, int* status, int options) {
 int ProcessHandler::Kill(pid_t pid, int sig) { return kill(pid, sig); }
 
 Procmon::Procmon(std::shared_ptr<ProcessHandler> process_interface)
-    : process_interface_(std::move(process_interface)) {}
+    : process_interface_(std::move(process_interface)), monitor_thread_id_() {}
 
 Procmon::~Procmon() {
   // First stop the monitor thread.
@@ -303,5 +303,4 @@ void Procmon::MonitorThreadFunc() {
 }
 
 }  // namespace procmon
-
 }  // namespace stratum

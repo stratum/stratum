@@ -89,7 +89,7 @@ class UdevEventHandler {
 
  protected:
   explicit UdevEventHandler(const SystemInterface* system_interface)
-      : system_interface_(system_interface) {}
+      : system_interface_(system_interface), udev_monitor_loop_thread_id_() {}
 
  private:
   friend class UdevEventHandlerTest;

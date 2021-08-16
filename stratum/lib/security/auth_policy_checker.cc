@@ -133,7 +133,7 @@ void PrintFileEvent(const std::string& path, uint32 mask) {
 }  // namespace
 
 AuthPolicyChecker::AuthPolicyChecker()
-    : watcher_thread_id_(0),
+    : watcher_thread_id_(),
       shutdown_(false),
       per_service_per_rpc_authorized_users_() {}
 
