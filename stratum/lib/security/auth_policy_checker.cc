@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/lib/security/auth_policy_checker.h"
 
 #include <errno.h>
@@ -11,18 +10,18 @@
 #include <sys/inotify.h>
 #include <sys/types.h>
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/message.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
 
 // TODO(unknown): Set the default to true when feature is fully available.
 DEFINE_bool(enable_authorization, false,
@@ -32,8 +31,7 @@ DEFINE_string(membership_info_file_path,
               ::stratum::kDefaultMembershipInfoFilePath,
               "Path to MembershipInfo proto. Used only if "
               "FLAGS_enable_authorization is true.");
-DEFINE_string(auth_policy_file_path,
-              ::stratum::kDefaultAuthPolicyFilePath,
+DEFINE_string(auth_policy_file_path, ::stratum::kDefaultAuthPolicyFilePath,
               "Path to AuthorizationPolicy proto. Used only if "
               "FLAGS_enable_authorization is true.");
 DEFINE_int32(file_change_poll_timeout_ms, 100,
@@ -155,9 +153,7 @@ AuthPolicyChecker::~AuthPolicyChecker() {}
   return ::util::OkStatus();
 }
 
-::util::Status AuthPolicyChecker::Shutdown() {
-  return ::util::OkStatus();
-}
+::util::Status AuthPolicyChecker::Shutdown() { return ::util::OkStatus(); }
 
 std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
   auto instance = absl::WrapUnique(new AuthPolicyChecker());
@@ -171,9 +167,7 @@ std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
   return instance;
 }
 
-::util::Status AuthPolicyChecker::Initialize() {
-  return ::util::OkStatus();
-}
+::util::Status AuthPolicyChecker::Initialize() { return ::util::OkStatus(); }
 
 ::util::Status AuthPolicyChecker::AuthorizeUser(
     const std::string& service_name, const std::string& rpc_name,
@@ -182,11 +176,9 @@ std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
 }
 
 ::util::Status AuthPolicyChecker::WatchForFileChange() {
-  return ::util::OkStatus();;
+  return ::util::OkStatus();
 }
 
-void* AuthPolicyChecker::WatcherThreadFunc(void* arg) {
-  return nullptr;
-}
+void* AuthPolicyChecker::WatcherThreadFunc(void* arg) { return nullptr; }
 
 }  // namespace stratum
