@@ -26,8 +26,11 @@
 #include <string>
 
 extern "C" {
+// The include order here is significant. First, we undefine symbols clashing
+// with the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-#include "sdk_build_flags.h"                      // NOLINT
+// Then we add the defines from the SDK.
+#include "sdk_build_flags.h"  // NOLINT
 // TODO(bocon) we might be able to prune some of these includes
 #include "appl/diag/bslmgmt.h"
 #include "appl/diag/opennsa_diag.h"
