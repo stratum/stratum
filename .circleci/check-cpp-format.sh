@@ -213,6 +213,14 @@ stratum/lib/libcproxy/libcwrapper.cc
 stratum/lib/libcproxy/libcwrapper.h
 stratum/lib/libcproxy/passthrough_proxy.cc
 stratum/lib/libcproxy/passthrough_proxy.h
+stratum/lib/security/auth_policy_checker_mock.h
+stratum/lib/security/auth_policy_checker_test.cc
+stratum/lib/security/auth_policy_checker.cc
+stratum/lib/security/auth_policy_checker.h
+stratum/lib/security/credentials_manager_mock.h
+stratum/lib/security/credentials_manager.cc
+stratum/lib/security/credentials_manager.h
+stratum/lib/security/test_main.cc
 stratum/lib/test_utils/p4_proto_builders.cc
 stratum/lib/utils.cc
 stratum/lib/utils.h

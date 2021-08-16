@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_LIB_SECURITY_AUTH_POLICY_CHECKER_H_
 #define STRATUM_LIB_SECURITY_AUTH_POLICY_CHECKER_H_
 
@@ -12,11 +11,10 @@
 #include <unordered_map>
 #include <utility>
 
-#include "grpcpp/grpcpp.h"
-
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "grpcpp/grpcpp.h"
 #include "stratum/glue/status/status.h"
 
 namespace stratum {
