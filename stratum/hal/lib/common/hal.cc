@@ -98,7 +98,7 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       file_service_(nullptr),
       external_server_(nullptr),
       old_signal_handlers_(),
-      signal_waiter_tid_(0) {}
+      signal_waiter_tid_() {}
 
 Hal::~Hal() {
   // TODO(unknown): Handle this error?

@@ -30,7 +30,7 @@ namespace hal {
 namespace bcm {
 
 BcmDiagShell::BcmDiagShell()
-    : server_started_(false), server_thread_id_(0), shell_thread_id_(0) {}
+    : server_started_(false), server_thread_id_(), shell_thread_id_() {}
 
 BcmDiagShell::~BcmDiagShell() {}
 

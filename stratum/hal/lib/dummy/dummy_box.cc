@@ -45,8 +45,6 @@ void* ExternalServerWaitingFunc(void* arg) {
 ::grpc::Status DummyBox::DeviceStatusUpdate(
     ::grpc::ServerContext* context, const DeviceStatusUpdateRequest* request,
     DeviceStatusUpdateResponse* response) {
-  // The response is always an empty message
-  response = new DeviceStatusUpdateResponse();
   switch (request->source().source_case()) {
     case DeviceStatusUpdateRequest::Source::kPort:
       return HandlePortStatusUpdate(request->source().port().node_id(),
@@ -65,7 +63,6 @@ void* ExternalServerWaitingFunc(void* arg) {
     ::grpc::ServerContext* context, const TransceiverEventRequest* request,
     TransceiverEventResponse* response) {
   absl::ReaderMutexLock l(&sdk_lock_);
-  response = new TransceiverEventResponse();
   for (auto& writer_elem : xcvr_event_writers_) {
     PhalInterface::TransceiverEvent event;
     event.slot = request->slot();
@@ -220,7 +217,7 @@ DummyBox* DummyBox::GetSingleton() {
 
 DummyBox::~DummyBox() {}
 DummyBox::DummyBox()
-    : initialized_(false), xcvr_writer_id_(0), external_server_tid_(0) {}
+    : initialized_(false), xcvr_writer_id_(0), external_server_tid_() {}
 
 }  // namespace dummy_switch
 }  // namespace hal

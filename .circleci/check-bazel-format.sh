@@ -51,6 +51,7 @@ stratum/hal/lib/pi/BUILD
 stratum/hal/stub/embedded/BUILD
 stratum/lib/BUILD
 stratum/lib/channel/BUILD
+stratum/lib/security/BUILD
 stratum/lib/test_utils/BUILD
 stratum/p4c_backends/common/BUILD
 stratum/p4c_backends/common/build_defs.bzl
