@@ -94,7 +94,10 @@ template <typename T>
 
   return symbol;
 }
+}  // namespace
 
+namespace {
+template <typename T>
 ::util::StatusOr<T> LoadSymbolIfPresent(void* handle, const char* name) {
   dlerror();  // Clear last error.
   auto* symbol = reinterpret_cast<T>(dlsym(handle, name));
@@ -105,7 +108,7 @@ template <typename T>
     return nullptr;
   }
 }
-}  // namespace
+}
 
 ::util::Status OnlpWrapper::Initialize() {
   LOG(INFO) << "Initializing ONLP.";
@@ -139,7 +142,7 @@ template <typename T>
   LOAD_SYMBOL(onlp_led_mode_set);
   LOAD_SYMBOL(onlp_led_char_set);
   LOAD_SYMBOL(onlp_psu_info_get);
-  LOAD_SYMBOL(onlp_i2c_write);
+  LOAD_SYMBOL(onlp_i2c_writeb);
   LOAD_SYMBOL(onlp_i2c_readb);
 #undef LOAD_SYMBOL
 
@@ -193,62 +196,64 @@ template <typename T>
   }
 
   //Check if the symbol is present
-  CHECK_RETURN_IF_FALSE(LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping) != nullptr)
-      << "Symbol onlp_i2c_mux_mapping does not exist.";
+// TODO: check the unit of those two
+//  CHECK_RETURN_IF_FALSE(onlp_functions_.onlp_i2c_mux_mapping(port_number, 0) != nullptr)
+//      << "Symbol onlp_i2c_mux_mapping does not exist.";
   // Apply MUX mapping function for hardware
   CHECK_RETURN_IF_FALSE(
         ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 0)))
         << "Failed to set MUX for port number " << port_number << ".";
 
   // Change the page register on slave 0x51 to access page 2
-  uint8 res;
+  uint8_t res;
   CHECK_RETURN_IF_FALSE(
-       ONLP_SUCCESS(onlp_functions_.onlp_i2c_write(0,0x51,0x7f,1,0x2,0)))
+       ONLP_SUCCESS(onlp_functions_.onlp_i2c_writeb(0,0x51,0x7f,0x2,0)))
        << "Failed to write the page.\n";
 
   // Check if page has been changed. If not, then the SFP is not tunable
-  res = onlp_functions_.onlp_i2c_readb(0, 0x51, 0x7f);
+  res = onlp_functions_.onlp_i2c_readb(0, 0x51, 0x7f,0);
   if (res != 2) {
       fprintf(stderr, "Error: Can not change the page, the SFP+ is not tunable.\n");
       return ::util::OkStatus();
   }
   // Retrieve Grid spacing value
-  uint16 grid_spacing_hexa; // Need 2 bytes.
+  uint16_t grid_spacing_hexa; // Need 2 bytes.
   int grid_spacing;
-  grid_spacing_hexa = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x8C) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x8D));
+  grid_spacing_hexa = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x8C,0) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x8D,0));
   grid_spacing = grid_spacing_hexa * 0.1 * 1000000000; //value in Hz
 
   // Retrieve First frequency
-  uint16 first_frequency_THz;
-  uint16 first_frequency_GHz;
+  uint16_t first_frequency_THz;
+  uint16_t first_frequency_GHz;
   int first_frequency;
-  first_frequency_THz = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x84) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x85));
-  first_frequency_GHz = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x86) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x87));
+  first_frequency_THz = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x84,0) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x85,0));
+  first_frequency_GHz = ((onlp_functions_.onlp_i2c_readb(0,0x51,0x86,0) << 8) | onlp_functions_.onlp_i2c_readb(0,0x51,0x87,0));
   first_frequency = (first_frequency_THz * 1000000000000) + (first_frequency_GHz * 0.1 * 1000000000); //value in Hz
 
   // Desired channel number
-  uint8 channel_number;
+  uint8_t channel_number;
   channel_number = 1 + ((frequency - first_frequency)/grid_spacing); // Formula from SFF-8690 document
 
   // Change the channel number of the SFP
   CHECK_RETURN_IF_FALSE(
-       ONLP_SUCCESS(onlp_functions_.onlp_i2c_write(0,0x51,0x91,1,channel_number,0)))
+       ONLP_SUCCESS(onlp_functions_.onlp_i2c_writeb(0,0x51,0x91,channel_number,0)))
        << "Failed to set CPU MUX.";
 
   // Check if it has been done correctly
-  if (onlp_functions_.onlp_i2c_readb(0,0x51,0x91) != channel_number) {
+  if (onlp_functions_.onlp_i2c_readb(0,0x51,0x91,0) != channel_number) {
       fprintf(stderr, "Error: Cannot write the desired frequency.\n");
       return ::util::OkStatus();
   }
 
   // Put the page register back to 1
   CHECK_RETURN_IF_FALSE(
-       ONLP_SUCCESS(onlp_functions_.onlp_i2c_write(0,0x51,0x7f,1,0x01,0)))
+       ONLP_SUCCESS(onlp_functions_.onlp_i2c_writeb(0,0x51,0x7f,0x01,0)))
        << "Failed to set CPU MUX.";
 
   //Check if the symbol is present
-  CHECK_RETURN_IF_FALSE(LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping) != nullptr)
-      << "Symbol onlp_i2c_mux_mapping does not exist.";
+// TODO: do I need this again? Copy&past error
+//  CHECK_RETURN_IF_FALSE(LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping) != nullptr)
+//      << "Symbol onlp_i2c_mux_mapping does not exist.";
   // Remove port selection from MUXs ie. reset = 1
   CHECK_RETURN_IF_FALSE(
         ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 1)))

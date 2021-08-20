@@ -70,7 +70,7 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   //if (initialized_) RETURN_IF_ERROR(Initialize());
   // Store the old function
   //*config = config_old;
-  for (const auto& singleton_port = config.singleton_ports()) { // or const SingletonPort&?
+  for (const auto& singleton_port : config.singleton_ports()) { // or const SingletonPort&?
     uint32 port_id = singleton_port.id();
     uint32 port_number = singleton_port.port();
     OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number); // Is it correct? Or port_id? (sfp_id)

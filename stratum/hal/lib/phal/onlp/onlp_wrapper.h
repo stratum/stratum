@@ -13,7 +13,7 @@ extern "C" {
 #include <onlp/psu.h>
 #include <onlp/sfp.h>
 #include <onlp/thermal.h>
-#include <onlp/i2c.h>
+#include <onlplib/i2c.h>
 }
 
 #include <bitset>
@@ -255,7 +255,7 @@ class OnlpWrapper : public OnlpInterface {
     int (*onlp_led_char_set)(onlp_oid_t oid, char c);
     int (*onlp_psu_info_get)(onlp_oid_t oid, onlp_psu_info_t* rv);
     int (*onlp_i2c_mux_mapping)(int port_number, int reset);
-    int (*onlp_i2c_write)(int bus, uint8_t addr, uint8_t offset, int size, uint8_t* data, uint32_t flags);
+    int (*onlp_i2c_writeb)(int bus, uint8_t addr, uint8_t offset, uint8_t byte, uint32_t flags);
     int (*onlp_i2c_readb)(int bus, uint8_t addr, uint8_t offset, uint32_t flags);
     OnlpFunctions()
         : onlp_sw_init(nullptr),
@@ -277,8 +277,8 @@ class OnlpWrapper : public OnlpInterface {
           onlp_led_mode_set(nullptr),
           onlp_led_char_set(nullptr),
           onlp_psu_info_get(nullptr),
-          oonlp_i2c_mux_mapping(nullptr),
-          onlp_i2c_write(nullptr),
+          onlp_i2c_mux_mapping(nullptr),
+          onlp_i2c_writeb(nullptr),
           onlp_i2c_readb(nullptr) {}
   };
   // Private constructor. Use CreateInstance instead.
