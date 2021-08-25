@@ -23,10 +23,13 @@ using ::p4::v1::CounterEntry;
 using ::p4::v1::GetForwardingPipelineConfigRequest;
 using ::p4::v1::GetForwardingPipelineConfigResponse;
 using ::p4::v1::P4Runtime;
+using ::p4::v1::PacketIn;
+using ::p4::v1::PacketOut;
 using ::p4::v1::ReadRequest;
 using ::p4::v1::ReadResponse;
 using ::p4::v1::SetForwardingPipelineConfigRequest;
 using ::p4::v1::SetForwardingPipelineConfigResponse;
+using ::p4::v1::StreamMessageResponse;
 using ::p4::v1::TableEntry;
 using ::p4::v1::Update;
 using ::p4::v1::WriteRequest;
@@ -94,9 +97,33 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
         << response.ShortDebugString();
   }
 
+  // Start thread to handle StreamMessageResponses.
+  session->stream_response_channel_ =
+      Channel<StreamMessageResponse>::Create(128);
+  // Create the writer and register with the SwitchInterface.
+  // auto writer = ChannelWriter<StreamMessageResponse>::Create(channel);
+  // // Create the reader and pass it to a new thread.
+  // auto reader = ChannelReader<StreamMessageResponse>::Create(channel);
+  int ret = pthread_create(&session->stream_response_handler_tid_, nullptr,
+                           StreamResponseHandlerThreadFunc, session.get());
+  if (ret) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Failed to create stream response handler thread with error "
+           << ret << ".";
+  }
+
   // Move is needed to make the older compiler happy.
   // See: go/totw/labs/should-i-return-std-move.
   return std::move(session);
+}
+
+P4RuntimeSession::~P4RuntimeSession() {
+  if (stream_channel_) {
+    TryCancel();
+  }
+  if (stream_response_handler_tid_) {
+    pthread_join(stream_response_handler_tid_, nullptr);
+  }
 }
 
 // Creates a session with the switch, which lasts until the session object is
@@ -115,6 +142,23 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
   // Using `new` to access a private constructor.
   return absl::WrapUnique(
       new P4RuntimeSession(device_id, std::move(stub), device_id));
+}
+
+void P4RuntimeSession::ReadStreamResponses() {
+  StreamMessageResponse resp;
+  LOG(INFO) << "P4RuntimeSession::ReadStreamResponses";
+  while (stream_channel_->Read(&resp)) {
+    LOG(INFO) << "Read stream response: " << resp.ShortDebugString();
+    // switch(resp.case)
+  }
+
+  LOG(INFO) << "Stream channel closed.";
+}
+
+void* P4RuntimeSession::StreamResponseHandlerThreadFunc(void* arg) {
+  auto* session = reinterpret_cast<P4RuntimeSession*>(arg);
+  session->ReadStreamResponses();
+  return nullptr;
 }
 
 ::util::StatusOr<ReadResponse> SendReadRequest(
@@ -285,6 +329,18 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
     *update->mutable_entity()->mutable_counter_entry() = entry;
   }
   return SendWriteRequest(session, batch_write_request);
+}
+
+::util::Status SendPacketOut(P4RuntimeSession* session,
+                             const PacketOut& packet) {
+  p4::v1::StreamMessageRequest request;
+  *request.mutable_packet() = packet;
+  CHECK_RETURN_IF_FALSE(session->StreamChannelWrite(request))
+      << "Failed to send packet.";
+
+  // TODO(max): check for stream response errors
+
+  return ::util::OkStatus();
 }
 
 ::util::Status SetForwardingPipelineConfig(

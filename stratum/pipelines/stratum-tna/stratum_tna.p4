@@ -13,6 +13,7 @@ const bit<8> PROTO_ICMP = 0x01;
 const bit<16> ARP_OPERATION_REQUEST = 1;
 const bit<16> ARP_OPERATION_REPLY = 2;
 const bit<32> DEFAULT_TBL_SIZE = 1024;
+const bit<16> ETHERTYPE_PACKET_OUT = 0xBF01;
 
 @controller_header("packet_in")
 header packet_in_header_t {
@@ -20,10 +21,13 @@ header packet_in_header_t {
     PortId_t        ingress_port;
 }
 
+// This header must have a pseudo ethertype at offset 12, to be parseable as an
+// Ethernet frame in the ingress parser when comming from the CPU port.
 @controller_header("packet_out")
 header packet_out_header_t {
-    @padding bit<7> pad0;
-    PortId_t        egress_port;
+    PortId_t         egress_port;
+    @padding bit<87> pad0;
+    bit<16>          ether_type;
 }
 
 header ethernet_t {
@@ -108,7 +112,23 @@ parser StratumIngressParser(packet_in pkt,
         stratum_md = {{0, 0}};
         stratum_md.bridged.setValid();
         stratum_md.bridged.ig_port = ig_intr_md.ingress_port;
-        transition parse_ethernet;
+        transition check_ethernet;
+    }
+
+    state check_ethernet {
+        // We use ethernet-like headers to signal the presence of PacketOut
+        // metadata before the actual ethernet frame.
+        ethernet_t tmp = pkt.lookahead<ethernet_t>();
+        transition select(tmp.eth_type) {
+            ETHERTYPE_PACKET_OUT: parse_packet_out;
+            default: parse_ethernet;
+        }
+    }
+
+    state parse_packet_out {
+        pkt.extract(hdr.packet_out);
+        // Will send to requested egress port as-is. No need to parse further.
+        transition accept;
     }
 
     state parse_ethernet {
@@ -240,6 +260,14 @@ control StratumIngress(
     apply {
         rx_port_counter.count(ig_intr_md.ingress_port);
 
+        if (hdr.packet_out.isValid()) {
+            ig_intr_tm_md.ucast_egress_port = hdr.packet_out.egress_port[8:0];
+            hdr.packet_out.setInvalid();
+            ig_intr_tm_md.bypass_egress = 1;
+            stratum_md.bridged.setInvalid();
+            // No need for further ingress processing, straight to egress.
+            exit;
+        }
         if (hdr.arp.isValid()) {
             arp_station.apply();
             exit;
