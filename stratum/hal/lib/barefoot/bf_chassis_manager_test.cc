@@ -424,7 +424,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
   const std::string kVendorConfigText = R"PROTO(
     tofino_config {
       node_id_to_qos_config {
-        key: 1
+        key: 7654321  # kNodeId
         value {
           pool_configs {
             pool: INGRESS_APP_POOL_0
@@ -432,7 +432,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
             enable_color_drop: false
           }
           ppg_configs {
-            sdk_port: 260
+            sdk_port: 912345
             is_default_ppg: true
             minimum_guaranteed_cells: 200
             pool: INGRESS_APP_POOL_0
@@ -443,7 +443,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
             icos_bitmap: 0xfd
           }
           queue_configs {
-            sdk_port: 260
+            sdk_port: 912345
             queue_mapping {
               queue_id: 0
               priority: PRIO_0
@@ -471,7 +471,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
   const TofinoConfig::TofinoQosConfig& qos_config =
-      vendor_config.tofino_config().node_id_to_qos_config().at(1);
+      vendor_config.tofino_config().node_id_to_qos_config().at(kNodeId);
 
   ChassisConfigBuilder builder;
   builder.SetVendorConfig(vendor_config);
@@ -479,6 +479,74 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
 
   EXPECT_CALL(*bf_sde_mock_, ConfigureQos(kDevice, EqualsProto(qos_config)))
       .Times(AtLeast(1));
+
+  ASSERT_OK(PushChassisConfig(builder));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
+  const std::string kVendorConfigText = R"PROTO(
+    tofino_config {
+      node_id_to_qos_config {
+        key: 7654321  # kNodeId
+        value {
+          ppg_configs {
+            port: 12345  # kPortId
+            is_default_ppg: true
+            minimum_guaranteed_cells: 200
+            pool: INGRESS_APP_POOL_0
+            base_use_limit: 400
+            baf: BAF_80_PERCENT
+            hysteresis: 50
+            ingress_drop_limit: 4000
+            icos_bitmap: 0xfd
+          }
+          queue_configs {
+            port: 12345  # kPortId
+            queue_mapping {
+              queue_id: 0
+              priority: PRIO_0
+              weight: 1
+              minimum_guaranteed_cells: 100
+              pool: EGRESS_APP_POOL_0
+              base_use_limit: 200
+              baf: BAF_80_PERCENT
+              hysteresis: 50
+              max_rate_bytes {
+                rate_bps: 100000000
+                burst_bytes: 9000
+              }
+              min_rate_bytes {
+                rate_bps: 1000000
+                burst_bytes: 4500
+              }
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  VendorConfig vendor_config;
+  ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
+  const TofinoConfig::TofinoQosConfig& qos_config =
+      vendor_config.tofino_config().node_id_to_qos_config().at(kNodeId);
+
+  ChassisConfigBuilder builder;
+  builder.SetVendorConfig(vendor_config);
+
+  TofinoConfig::TofinoQosConfig applied_qos_config;
+  EXPECT_CALL(*bf_sde_mock_, ConfigureQos(kDevice, _))
+      .Times(AtLeast(1))
+      .WillRepeatedly(
+          DoAll(SaveArg<1>(&applied_qos_config), Return(util::OkStatus())));
+
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+  ASSERT_EQ(1, applied_qos_config.ppg_configs_size());
+  EXPECT_EQ(kPortId + kSdkPortOffset,
+            applied_qos_config.ppg_configs(0).sdk_port());
+  EXPECT_EQ(kPortId + kSdkPortOffset,
+            applied_qos_config.queue_configs(0).sdk_port());
 
   ASSERT_OK(PushChassisConfig(builder));
   ASSERT_OK(ShutdownAndTestCleanState());
