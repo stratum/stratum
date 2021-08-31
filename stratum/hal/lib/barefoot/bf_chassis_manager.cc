@@ -496,7 +496,54 @@ BfChassisManager::~BfChassisManager() = default;
         config.vendor_config().tofino_config().node_id_to_qos_config();
     for (const auto& key : node_id_to_qos_configs) {
       const uint64 node_id = key.first;
-      const auto& qos_config = key.second;
+      // As the SDK Wrapper does not know anything about singleton ports, we
+      // need to convert all such port IDs to sdk ports here.
+      auto qos_config = key.second;
+      for (auto& ppg_config : *qos_config.mutable_ppg_configs()) {
+        switch (ppg_config.port_type_case()) {
+          case TofinoConfig::TofinoQosConfig::PpgConfig::kSdkPort:
+            break;
+          case TofinoConfig::TofinoQosConfig::PpgConfig::kPort: {
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id.count(node_id));
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id[node_id].count(
+                    ppg_config.port()))
+                << "Invalid singleton port " << ppg_config.port()
+                << " in PpgConfig " << ppg_config.ShortDebugString() << ".";
+            ppg_config.set_sdk_port(
+                node_id_to_port_id_to_sdk_port_id[node_id][ppg_config.port()]);
+            break;
+          }
+          default:
+            RETURN_ERROR(ERR_INVALID_PARAM)
+                << "Unsupported port type in PpgConfig "
+                << ppg_config.ShortDebugString() << ".";
+        }
+      }
+      for (auto& queue_config : *qos_config.mutable_queue_configs()) {
+        switch (queue_config.port_type_case()) {
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kSdkPort:
+            break;
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kPort: {
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id.count(node_id));
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id[node_id].count(
+                    queue_config.port()))
+                << "Invalid singleton port " << queue_config.port()
+                << " in QueueConfig " << queue_config.ShortDebugString() << ".";
+            queue_config.set_sdk_port(
+                node_id_to_port_id_to_sdk_port_id[node_id]
+                                                 [queue_config.port()]);
+            break;
+          }
+          default:
+            RETURN_ERROR(ERR_INVALID_PARAM)
+                << "Unsupported port type in QueueConfig "
+                << queue_config.ShortDebugString() << ".";
+        }
+      }
       const int device = node_id_to_device[node_id];
       RETURN_IF_ERROR(bf_sde_interface_->ConfigureQos(device, qos_config));
       CHECK_RETURN_IF_FALSE(
