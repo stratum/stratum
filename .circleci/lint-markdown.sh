@@ -15,5 +15,5 @@ KNOWN_FILES=(
 # https://github.com/markdownlint/markdownlint/blob/master/docs/RULES.md
 
 docker run --rm -v $(pwd):$(pwd) -w $(pwd) markdownlint/markdownlint \
-  -v --rules MD013 \
+  -v --rules MD009,MD010,MD011,MD013,MD018,MD019,MD047 \
   ${KNOWN_FILES[*]}
