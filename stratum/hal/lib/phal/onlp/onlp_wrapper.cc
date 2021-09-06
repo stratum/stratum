@@ -178,20 +178,28 @@ template <typename T>
     CHECK_RETURN_IF_FALSE(
         ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
         << "Failed to get SFP info for OID " << oid << ".";
+  } else {
+    fprintf(stderr, "onlp sfp is NOT present for oid ", oid);
   }
   return SfpInfo(sfp_info);
 }
 
 ::util::Status OnlpWrapper::SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const {
   // Default value of the SFP info
-  onlp_sfp_info_t sfp_info = {{oid}};
+  onlp_sfp_info_t sfp_info = {};
+  sfp_info.hdr.id = oid;
+  //onlp_sfp_info_t sfp_info = {{oid}};
   // Retrieve spf_info to check the type
   CHECK_RETURN_IF_FALSE(
       ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
       << "Failed to get SFP info for OID " << oid << ".";
   // Check the transceiver's type. This code only allows you to set the frequency of an SFP/SFP+.
-  if (sfp_info.type != ONLP_SFP_TYPE_SFP) {
-      fprintf(stderr, "Error: This is not an SFP or SFP+.\n");
+  fprintf(stderr, "oid= ", oid);
+  fprintf(stderr, "sfp_info= ", sfp_info);
+  fprintf(stderr, "sfp_info.type= ", sfp_info.type);
+  fprintf(stderr, "sfp_info.GetSfpType()= ", sfp_info.GetSfpType());
+  if (sfp_info.GetSfpType() != SFF_SFP_TYPE_SFP) {
+      fprintf(stderr, "Error: This is not an SFP or SFP+!!\n");
       return ::util::OkStatus();
   }
 
