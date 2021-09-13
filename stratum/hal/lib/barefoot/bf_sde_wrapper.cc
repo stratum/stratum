@@ -2399,7 +2399,8 @@ namespace {
 
 ::util::Status BfSdeWrapper::WriteCloneSession(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert) {
+    uint32 session_id, int egress_port, int egress_queue, int cos,
+    int max_pkt_len, bool insert) {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
 
@@ -2425,6 +2426,9 @@ namespace {
   // Data: $ucast_egress_port_valid
   RETURN_IF_ERROR(
       SetFieldBool(table_data.get(), "$ucast_egress_port_valid", true));
+  // Data: $egress_port_queue
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), "$egress_port_queue", egress_queue));
   // Data: $ingress_cos
   RETURN_IF_ERROR(SetField(table_data.get(), "$ingress_cos", cos));
   // Data: $max_pkt_len
@@ -2444,18 +2448,20 @@ namespace {
 
 ::util::Status BfSdeWrapper::InsertCloneSession(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 session_id, int egress_port, int cos, int max_pkt_len) {
+    uint32 session_id, int egress_port, int egress_queue, int cos,
+    int max_pkt_len) {
   ::absl::ReaderMutexLock l(&data_lock_);
-  return WriteCloneSession(device, session, session_id, egress_port, cos,
-                           max_pkt_len, true);
+  return WriteCloneSession(device, session, session_id, egress_port,
+                           egress_queue, cos, max_pkt_len, true);
 }
 
 ::util::Status BfSdeWrapper::ModifyCloneSession(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 session_id, int egress_port, int cos, int max_pkt_len) {
+    uint32 session_id, int egress_port, int egress_queue, int cos,
+    int max_pkt_len) {
   ::absl::ReaderMutexLock l(&data_lock_);
-  return WriteCloneSession(device, session, session_id, egress_port, cos,
-                           max_pkt_len, false);
+  return WriteCloneSession(device, session, session_id, egress_port,
+                           egress_queue, cos, max_pkt_len, false);
 }
 
 ::util::Status BfSdeWrapper::DeleteCloneSession(
