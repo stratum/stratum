@@ -155,18 +155,18 @@ class BfSdeMock : public BfSdeInterface {
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 group_id, std::vector<uint32>* group_ids,
                      std::vector<std::vector<uint32>>* mc_node_ids));
-  MOCK_METHOD6(
+  MOCK_METHOD7(
       InsertCloneSession,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
-                     uint32 session_id, int egress_port, int cos,
-                     int max_pkt_len));
-  MOCK_METHOD6(
+                     uint32 session_id, int egress_port, int egress_queue,
+                     int cos, int max_pkt_len));
+  MOCK_METHOD7(
       ModifyCloneSession,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
-                     uint32 session_id, int egress_port, int cos,
-                     int max_pkt_len));
+                     uint32 session_id, int egress_port, int egress_queue,
+                     int cos, int max_pkt_len));
   MOCK_METHOD3(GetNodesInMulticastGroup,
                ::util::StatusOr<std::vector<uint32>>(
                    int device,
