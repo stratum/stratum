@@ -9,6 +9,9 @@
 #include <string>
 #include <stdint.h>
 
+#include<iostream>
+using namespace std;
+
 #include "absl/memory/memory.h"
 #include "absl/strings/strip.h"
 #include "stratum/glue/status/status.h"
@@ -179,38 +182,63 @@ template <typename T>
         ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
         << "Failed to get SFP info for OID " << oid << ".";
   } else {
-    fprintf(stderr, "onlp sfp is NOT present for oid ", oid);
+    cout << "onlp sfp is NOT present for oid " << oid << ".\n";
   }
   return SfpInfo(sfp_info);
 }
 
 ::util::Status OnlpWrapper::SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const {
   // Default value of the SFP info
-  onlp_sfp_info_t sfp_info = {};
-  sfp_info.hdr.id = oid;
+//  onlp_sfp_info_t sfp_info = {};
+//  sfp_info.hdr.id = oid;
   //onlp_sfp_info_t sfp_info = {{oid}};
   // Retrieve spf_info to check the type
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
-      << "Failed to get SFP info for OID " << oid << ".";
+//  CHECK_RETURN_IF_FALSE(
+//      ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
+//      << "Failed to get SFP info for OID " << oid << ".";
   // Check the transceiver's type. This code only allows you to set the frequency of an SFP/SFP+.
-  fprintf(stderr, "oid= ", oid);
-  fprintf(stderr, "sfp_info= ", sfp_info);
-  fprintf(stderr, "sfp_info.type= ", sfp_info.type);
-  fprintf(stderr, "sfp_info.GetSfpType()= ", sfp_info.GetSfpType());
-  if (sfp_info.GetSfpType() != SFF_SFP_TYPE_SFP) {
-      fprintf(stderr, "Error: This is not an SFP or SFP+!!\n");
-      return ::util::OkStatus();
-  }
+  cout << "oid= " << oid << ".\n";
+  cout << "port number= " << port_number << ".\n";
+  cout << "frequency= " << frequency << ".\n";
+  //cout << "sfp_info= " << sfp_info << ".\n";
+//  cout << "sfp_info.type= " << sfp_info.type << ".\n";
+//  cout << "Address sfp_info.type= " << &sfp_info.type << ".\n";
+//  cout << "Address sfp_info->type= " << &sfp_info->type << ".\n";
+//  cout << "sfp_info->type= " << sfp_info->type << ".\n";
+  //fprintf(stderr, "sfp_info.GetSfpType()= ", sfp_info.GetSfpType());
+//  if (sfp_info.type != ONLP_SFP_TYPE_SFP) {
+//      fprintf(stderr, "Error: This is not an SFP or SFP+!!\n");
+//      return ::util::OkStatus();
+//  }
 
   //Check if the symbol is present
 // TODO: check the unit of those two
 //  CHECK_RETURN_IF_FALSE(onlp_functions_.onlp_i2c_mux_mapping(port_number, 0) != nullptr)
 //      << "Symbol onlp_i2c_mux_mapping does not exist.";
-  // Apply MUX mapping function for hardware
+
+
+// Reset port selection from MUXs ie. reset = 1
+//  CHECK_RETURN_IF_FALSE(
+//        ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 1)))
+//        << "Failed to deselect MUXs for port number " << port_number << ".";
+
+
+// Apply MUX mapping function for hardware
   CHECK_RETURN_IF_FALSE(
         ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 0)))
         << "Failed to set MUX for port number " << port_number << ".";
+
+  // Check if it is an SFP or SFP+
+  uint8_t result;
+  result = onlp_functions_.onlp_i2c_readb(0, 0x50, 0x00, 0);
+  cout << "SFP type register: " << result << ".\n";
+  if (result != 0x03) {
+       fprintf( stderr, "Error: This is not an SFP or SFP+! Or not present\n");
+       CHECK_RETURN_IF_FALSE(
+             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 1)))
+             << "Failed to deselect MUXs for port number " << port_number << ".";
+       return ::util::OkStatus();
+  }
 
   // Change the page register on slave 0x51 to access page 2
   uint8_t res;
@@ -222,6 +250,9 @@ template <typename T>
   res = onlp_functions_.onlp_i2c_readb(0, 0x51, 0x7f,0);
   if (res != 2) {
       fprintf(stderr, "Error: Can not change the page, the SFP+ is not tunable.\n");
+      CHECK_RETURN_IF_FALSE(
+             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 1)))
+             << "Failed to deselect MUXs for port number " << port_number << ".";
       return ::util::OkStatus();
   }
   // Retrieve Grid spacing value
@@ -250,6 +281,9 @@ template <typename T>
   // Check if it has been done correctly
   if (onlp_functions_.onlp_i2c_readb(0,0x51,0x91,0) != channel_number) {
       fprintf(stderr, "Error: Cannot write the desired frequency.\n");
+      CHECK_RETURN_IF_FALSE(
+             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(port_number, 1)))
+             << "Failed to deselect MUXs for port number " << port_number << ".";
       return ::util::OkStatus();
   }
 
