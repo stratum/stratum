@@ -89,6 +89,51 @@ TEST(ByteStringTest, ByteStringToP4RuntimeByteStringCorrect) {
                                         "\x00\x00\x00\x00\xab", 5)));
 }
 
+TEST(ValidMeterConfigTest, RejectsInvalidMeterConfigs) {
+  EXPECT_FALSE(IsValidMeterConfig({}).ok());
+  ::p4::v1::MeterConfig config;
+  constexpr char kInvalidMeterConfig1[] = R"PROTO(
+    cir: 0
+    pir: 0
+    cburst: 0
+    pburst: 0
+  )PROTO";
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig1, &config));
+  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+  constexpr char kInvalidMeterConfig2[] = R"PROTO(
+    cir: 100
+    pir: 200
+    cburst: 0
+    pburst: 0
+  )PROTO";
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig2, &config));
+  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+  constexpr char kInvalidMeterConfig3[] = R"PROTO(
+    cir: 500
+    pir: 400
+    cburst: 100
+    pburst: 100
+  )PROTO";
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig3, &config));
+  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+  constexpr char kInvalidMeterConfig4[] = R"PROTO(
+    cir: 300
+    pir: 400
+    cburst: 200
+    pburst: 100
+  )PROTO";
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig4, &config));
+  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+  constexpr char kValidMeterConfig[] = R"PROTO(
+    cir: 1000
+    pir: 2000
+    cburst: 4000
+    pburst: 8000
+  )PROTO";
+  CHECK_OK(ParseProtoFromString(kValidMeterConfig, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
 // This test fixture provides a common P4PipelineConfig for these tests.
 class TableMapValueTest : public testing::Test {
  protected:

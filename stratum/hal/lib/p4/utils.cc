@@ -117,6 +117,32 @@ std::string ByteStringToP4RuntimeByteString(std::string bytes) {
   return bytes;
 }
 
+::util::Status IsValidMeterConfig(const ::p4::v1::MeterConfig& meter_config) {
+  if (meter_config.cir() > meter_config.pir()) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Meter configuration " << meter_config.ShortDebugString()
+        << " is invalid: committed rate cannot be greater than peak rate.";
+  }
+  if (meter_config.cburst() > meter_config.pburst()) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Meter configuration " << meter_config.ShortDebugString()
+        << " is invalid: committed burst size cannot be greater than peak burst"
+        << " size.";
+  }
+  if (meter_config.cburst() == 0) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Meter configuration " << meter_config.ShortDebugString()
+        << " is invalid: committed burst size cannot be zero.";
+  }
+  if (meter_config.pburst() == 0) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Meter configuration " << meter_config.ShortDebugString()
+        << " is invalid: peak burst size cannot be zero.";
+  }
+
+  return ::util::OkStatus();
+}
+
 std::string P4RuntimeGrpcStatusToString(const ::grpc::Status& status) {
   std::stringstream ss;
   if (!status.error_details().empty()) {

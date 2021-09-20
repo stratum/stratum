@@ -932,6 +932,7 @@ BfrtTableManager::ReadDirectCounterEntry(
   CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
       << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
       << ".";
+  RETURN_IF_ERROR(IsValidMeterConfig(meter_entry.config()));
 
   bool meter_units_in_packets;  // or bytes
   {
