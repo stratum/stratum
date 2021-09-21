@@ -116,14 +116,6 @@ TEST(ValidMeterConfigTest, RejectsInvalidMeterConfigs) {
   )PROTO";
   CHECK_OK(ParseProtoFromString(kInvalidMeterConfig3, &config));
   EXPECT_FALSE(IsValidMeterConfig(config).ok());
-  constexpr char kInvalidMeterConfig4[] = R"PROTO(
-    cir: 300
-    pir: 400
-    cburst: 200
-    pburst: 100
-  )PROTO";
-  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig4, &config));
-  EXPECT_FALSE(IsValidMeterConfig(config).ok());
   constexpr char kValidMeterConfig[] = R"PROTO(
     cir: 1000
     pir: 2000

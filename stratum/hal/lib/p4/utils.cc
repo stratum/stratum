@@ -123,12 +123,6 @@ std::string ByteStringToP4RuntimeByteString(std::string bytes) {
         << "Meter configuration " << meter_config.ShortDebugString()
         << " is invalid: committed rate cannot be greater than peak rate.";
   }
-  if (meter_config.cburst() > meter_config.pburst()) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Meter configuration " << meter_config.ShortDebugString()
-        << " is invalid: committed burst size cannot be greater than peak burst"
-        << " size.";
-  }
   if (meter_config.cburst() == 0) {
     RETURN_ERROR(ERR_INVALID_PARAM)
         << "Meter configuration " << meter_config.ShortDebugString()
