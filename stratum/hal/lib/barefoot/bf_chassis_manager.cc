@@ -381,21 +381,21 @@ BfChassisManager::~BfChassisManager() = default;
     // Stratum requires slot and port to be set. We use port and channel to
     // get Tofino device port (called SDK port ID).
 
-    const PortConfig* config_old = nullptr;
+    const PortConfig* old_port_config = nullptr;
     if (const auto* port_id_to_port_config_old =
             gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id)) {
-      config_old = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
+      old_port_config = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
     }
 
-    auto& config = node_id_to_port_id_to_port_config[node_id][port_id];
+    auto& port_config = node_id_to_port_id_to_port_config[node_id][port_id];
     uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id[node_id][port_id];
-    if (config_old == nullptr) {  // new port
-      // if anything fails, config.admin_state will be set to
+    if (old_port_config == nullptr) {  // new port
+      // if anything fails, port_config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      RETURN_IF_ERROR(
-          AddPortHelper(node_id, device, sdk_port_id, singleton_port, &config));
+      RETURN_IF_ERROR(AddPortHelper(node_id, device, sdk_port_id,
+                                    singleton_port, &port_config));
     } else {  // port already exists, config may have changed
-      if (config_old->admin_state == ADMIN_STATE_UNKNOWN) {
+      if (old_port_config->admin_state == ADMIN_STATE_UNKNOWN) {
         // something is wrong with the port, we make sure the port is deleted
         // first (and ignore the error status if there is one), then add the
         // port again.
@@ -403,7 +403,7 @@ BfChassisManager::~BfChassisManager() = default;
           bf_sde_interface_->DeletePort(device, sdk_port_id);
         }
         RETURN_IF_ERROR(AddPortHelper(node_id, device, sdk_port_id,
-                                      singleton_port, &config));
+                                      singleton_port, &port_config));
         continue;
       }
 
@@ -411,16 +411,17 @@ BfChassisManager::~BfChassisManager() = default;
 
       // sanity-check: if admin_state is not ADMIN_STATE_UNKNOWN, then the port
       // was added and the speed_bps was set.
-      if (!config_old->speed_bps) {
+      if (!old_port_config->speed_bps) {
         RETURN_ERROR(ERR_INTERNAL)
             << "Invalid internal state in BfChassisManager, "
             << "speed_bps field should contain a value";
       }
 
-      // if anything fails, config.admin_state will be set to
+      // if anything fails, port_config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
       RETURN_IF_ERROR(UpdatePortHelper(node_id, device, sdk_port_id,
-                                       singleton_port, *config_old, &config));
+                                       singleton_port, *old_port_config,
+                                       &port_config));
     }
   }
 
