@@ -150,6 +150,7 @@ BfChassisManager::~BfChassisManager() = default;
 
   RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
                                                        TRI_STATE_FALSE));
+  config->shaping_config.reset();
 
   return ::util::OkStatus();
 }
@@ -250,14 +251,11 @@ BfChassisManager::~BfChassisManager() = default;
             << port_id << " in node " << node_id << " (SDK Port " << sdk_port_id
             << ").";
   }
-  if (config_old.shaping_config) {
-    RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, device, sdk_port_id,
-                                           *config_old.shaping_config));
-    config_changed = true;
-  } else {
-    RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
-                                                         TRI_STATE_FALSE));
-  }
+  // Due to lack of information about the new shaping config here, we always
+  // disable it. If required, it will be configured later.
+  config->shaping_config.reset();
+  RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
+                                                       TRI_STATE_FALSE));
 
   bool need_disable = false, need_enable = false;
   if (config_params.admin_state() == ADMIN_STATE_DISABLED) {
@@ -455,29 +453,6 @@ BfChassisManager::~BfChassisManager() = default;
             shaping_config;
       }
     }
-    // Clean up old the port shaping config.
-    // for (const auto& e : node_id_to_port_id_to_port_config_) {
-    //   const uint64 node_id = e.first;
-    //   const auto& port_id_to_port_config = e.second;
-    //   for (const auto& f : port_id_to_port_config) {
-    //     const uint32 port_id = f.first;
-    //     const PortConfig& port_config = f.second;
-    //     if (node_id_to_port_id_to_port_config.count(node_id) &&
-    //         node_id_to_port_id_to_port_config[node_id].count(port_id)) {
-    //       // Nothing to do, the new config overwrites any old values.
-    //     } else {
-    //       // The new config does not specify any shaping for this port, disable
-    //       // it.
-    //       int device = node_id_to_device_[node_id];
-    //       const uint32 sdk_port_id =
-    //           node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
-    //       RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(
-    //           device, sdk_port_id, TRI_STATE_FALSE));
-    //       // const PortConfig& new_port_config =
-    //       //     node_id_to_port_id_to_port_config[node_id][port_id];
-    //     }
-    //   }
-    // }
 
     // Handle deflect-on-drop config.
     const auto& node_id_to_deflect_on_drop_configs =
