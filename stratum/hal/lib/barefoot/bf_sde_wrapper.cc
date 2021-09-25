@@ -1158,8 +1158,6 @@ BfSdeWrapper::BfSdeWrapper()
 
   RETURN_IF_BFRT_ERROR(p4_pd_tm_set_port_shaping_rate(
       device, port, is_in_pps, burst_size, rate_per_second));
-  LOG(WARNING) << "Set port shaping on port " << port << " to burst "
-               << burst_size << ", rate " << rate_per_second;
 
   return ::util::OkStatus();
 }
@@ -1168,10 +1166,8 @@ BfSdeWrapper::BfSdeWrapper()
                                                TriState enable) {
   if (enable == TriState::TRI_STATE_TRUE) {
     RETURN_IF_BFRT_ERROR(p4_pd_tm_enable_port_shaping(device, port));
-    LOG(WARNING) << "Enabled port shaping on port " << port;
   } else if (enable == TriState::TRI_STATE_FALSE) {
     RETURN_IF_BFRT_ERROR(p4_pd_tm_disable_port_shaping(device, port));
-    LOG(WARNING) << "Disabled port shaping on port " << port;
   }
 
   return ::util::OkStatus();
