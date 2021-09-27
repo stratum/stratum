@@ -40,6 +40,7 @@ using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SaveArg;
+using ::testing::Sequence;
 using ::testing::SetArgPointee;
 using ::testing::WithArg;
 
@@ -373,12 +374,20 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
               SetPortShapingRate(kDevice, kPortId + kSdkPortOffset, false,
                                  16384, kTenGigBps))
       .Times(AtLeast(1));
-  EXPECT_CALL(
-      *bf_sde_mock_,
-      EnablePortShaping(kDevice, kPortId + kSdkPortOffset, TRI_STATE_TRUE))
-      .Times(AtLeast(1));
-  EXPECT_CALL(*bf_sde_mock_, EnablePort(kDevice, kPortId + kSdkPortOffset))
-      .Times(AtLeast(1));
+  // Port shaping is first disabled, then enabled again on applicable ports.
+  {
+    Sequence s;
+    EXPECT_CALL(
+        *bf_sde_mock_,
+        EnablePortShaping(kDevice, kPortId + kSdkPortOffset, TRI_STATE_FALSE))
+        .Times(1)
+        .InSequence(s);
+    EXPECT_CALL(
+        *bf_sde_mock_,
+        EnablePortShaping(kDevice, kPortId + kSdkPortOffset, TRI_STATE_TRUE))
+        .Times(AtLeast(1))
+        .InSequence(s);
+  }
 
   ASSERT_OK(PushChassisConfig(builder));
   ASSERT_OK(ShutdownAndTestCleanState());
