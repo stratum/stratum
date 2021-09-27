@@ -200,6 +200,10 @@ template <typename T>
   cout << "oid= " << oid << ".\n";
   cout << "port number= " << port_number << ".\n";
   cout << "frequency= " << frequency << ".\n";
+
+  if (frequency == 0) {
+       return ::util::OkStatus();
+  }
   //cout << "sfp_info= " << sfp_info << ".\n";
 //  cout << "sfp_info.type= " << sfp_info.type << ".\n";
 //  cout << "Address sfp_info.type= " << &sfp_info.type << ".\n";
