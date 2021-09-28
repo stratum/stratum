@@ -150,6 +150,7 @@ BfChassisManager::~BfChassisManager() = default;
 
   RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
                                                        TRI_STATE_FALSE));
+  config->shaping_config.reset();
 
   return ::util::OkStatus();
 }
@@ -250,11 +251,11 @@ BfChassisManager::~BfChassisManager() = default;
             << port_id << " in node " << node_id << " (SDK Port " << sdk_port_id
             << ").";
   }
-  if (config_old.shaping_config) {
-    RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, device, sdk_port_id,
-                                           *config_old.shaping_config));
-    config_changed = true;
-  }
+  // Due to lack of information about the new shaping config here, we always
+  // disable it. If required, it will be configured later.
+  config->shaping_config.reset();
+  RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
+                                                       TRI_STATE_FALSE));
 
   bool need_disable = false, need_enable = false;
   if (config_params.admin_state() == ADMIN_STATE_DISABLED) {
@@ -400,7 +401,7 @@ BfChassisManager::~BfChassisManager() = default;
         // first (and ignore the error status if there is one), then add the
         // port again.
         if (bf_sde_interface_->IsValidPort(device, sdk_port_id)) {
-          bf_sde_interface_->DeletePort(device, sdk_port_id);
+          bf_sde_interface_->DeletePort(device, sdk_port_id).IgnoreError();
         }
         RETURN_IF_ERROR(AddPortHelper(node_id, device, sdk_port_id,
                                       singleton_port, &port_config));
@@ -559,12 +560,18 @@ BfChassisManager::~BfChassisManager() = default;
     auto node_id = node_ports_old.first;
     for (const auto& port_old : node_ports_old.second) {
       auto port_id = port_old.first;
-      if (node_id_to_port_id_to_port_config.count(node_id) > 0 &&
-          node_id_to_port_id_to_port_config[node_id].count(port_id) > 0) {
-        continue;
-      }
       auto device = node_id_to_device_[node_id];
       uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
+      if (node_id_to_port_id_to_port_config.count(node_id) > 0 &&
+          node_id_to_port_id_to_port_config[node_id].count(port_id) > 0) {
+        // Disable port shaping if not specified anymore.
+        if (!node_id_to_port_id_to_port_config[node_id][port_id]
+                 .shaping_config) {
+          RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(
+              device, sdk_port_id, TRI_STATE_FALSE));
+        }
+        continue;
+      }
       // TODO(bocon): Collect these errors and keep trying to remove old ports
       RETURN_IF_ERROR(bf_sde_interface_->DeletePort(device, sdk_port_id));
       LOG(INFO) << "Deleted port " << port_id << " in node " << node_id
