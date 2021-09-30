@@ -56,10 +56,7 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
     PhalCardConfig::Port port;
     port.set_port(ONLP_OID_ID_GET(oid));
     // See if we've got an sfp type and set the physical port type
-    cout << "oid: " << oid << ".\n";
-    //cout << "sfp_info: " << sfp_info << ".\n";
-    cout << "sfp_info.GetSfpType(): " << sfp_info.GetSfpType() << ".\n";
-    cout << "address sfp_info: " << &sfp_info << ".\n";
+    cout << "onlp_switch_configurator --- oid: " << oid << ".\n";
     switch (sfp_info.GetSfpType()) {
       case SFP_TYPE_SFP28:
       case SFP_TYPE_SFP:
