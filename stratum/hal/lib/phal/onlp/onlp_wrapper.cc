@@ -191,7 +191,8 @@ template <typename T>
   sfp_info.hdr.id = oid;
   //onlp_sfp_info_t sfp_info = {{oid}};
   // Retrieve sfp_info to check the type
-  if (onlp_functions_.onlp_sfp_is_present(oid)) {
+  // TODO: fix port limit issue.
+  if (onlp_functions_.onlp_sfp_is_present(oid) && (port_number<65)) {
       CHECK_RETURN_IF_FALSE(
           ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
           << "Failed to get SFP info for OID " << oid << ".";
@@ -235,7 +236,7 @@ template <typename T>
   // Check if it is an SFP or SFP+
   uint8_t result;
   result = onlp_functions_.onlp_sfp_dev_readb(oid, 0x50, 0x00);
-  cout << "SFP type register: " << &result << ".\n";
+  cout << "mapping OK";
   if (result != 0x03) {
        fprintf( stderr, "Error: This is not an SFP or SFP+.\n");
        CHECK_RETURN_IF_FALSE(
@@ -252,7 +253,7 @@ template <typename T>
 
   // Check if page has been changed. If not, then the SFP is not tunable
   res = onlp_functions_.onlp_sfp_dev_readb(oid, 0x51, 0x7f);
-  if (res != 2) {
+  if (res != 0x02) {
       fprintf(stderr, "Error: Can not change the page, the SFP+ is not tunable.\n");
       CHECK_RETURN_IF_FALSE(
              ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
@@ -260,20 +261,12 @@ template <typename T>
       return ::util::OkStatus();
   }
 
-
-  // better to put that before but I want to see how far it goes with the i2c bus       
-  if (frequency == 0) {
-       CHECK_RETURN_IF_FALSE(
-             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
-             << "Failed to deselect MUXs for port number " << port_number << ".";
-       return ::util::OkStatus();
-  }
-
   // Retrieve Grid spacing value
   uint16_t grid_spacing_hexa; // Need 2 bytes.
   int grid_spacing;
   grid_spacing_hexa = ((onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x8C) << 8) | onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x8D));
   grid_spacing = grid_spacing_hexa * 0.1 * 1000000000; //value in Hz
+  cout << "grid_spacing: " << grid_spacing;
 
   // Retrieve First frequency
   uint16_t first_frequency_THz;
@@ -282,6 +275,15 @@ template <typename T>
   first_frequency_THz = ((onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x84) << 8) | onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x85));
   first_frequency_GHz = ((onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x86) << 8) | onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x87));
   first_frequency = (first_frequency_THz * 1000000000000) + (first_frequency_GHz * 0.1 * 1000000000); //value in Hz
+  cout << "first_frequency: " << first_frequency;
+
+  // better to put that before but I want to see how far it goes with the i2c bus       
+  if (frequency == 0) {
+       CHECK_RETURN_IF_FALSE(
+             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
+             << "Failed to deselect MUXs for port number " << port_number << ".";
+       return ::util::OkStatus();
+  }
 
   // Desired channel number
   uint8_t channel_number;
