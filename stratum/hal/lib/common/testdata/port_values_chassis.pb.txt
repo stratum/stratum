@@ -1,0 +1,30 @@
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+chassis {
+  name: "dummy switch 1"
+}
+nodes {
+  id: 1
+  name: ":lc-1"
+  slot: 1
+  config_params {
+    vlan_configs {
+      block_unknown_multicast: true
+      block_unknown_unicast: true
+      disable_l2_learning: true
+    }
+  }
+}
+singleton_ports {
+  id: 99
+  name: "1/2/1"
+  slot: 1
+  port: 2
+  channel: 1
+  speed_bps: 10000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+    autoneg: TRI_STATE_FALSE
+  }
+  node: 1
+}

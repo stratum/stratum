@@ -837,7 +837,7 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig& in) {
   // Handle 'port_groups' repeated field.
   // Nothing to do here.
 
-  VLOG(1) << "The convetred openconfig::Device proto:\n"
+  VLOG(1) << "The converted openconfig::Device proto:\n"
           << to.ShortDebugString();
 
   return to;
