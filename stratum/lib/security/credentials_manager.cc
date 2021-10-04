@@ -56,6 +56,12 @@ CredentialsManager::CreateInstance() {
       RETURN_ERROR().without_logging()
           << "Unable to load credentials: " << status.error_message();
     }
+    ::grpc::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
+        pem_key_cert_pair = {server_private_key_, server_cert_};
+    auto key_materials_config =
+        std::make_shared<::grpc::experimental::TlsKeyMaterialsConfig>();
+    key_materials_config->set_pem_root_certs(pem_root_certs_);
+    key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
     credentials_reload_interface_ =
         std::make_shared<CredentialsReloadInterface>(
             pem_root_certs_, server_private_key_, server_cert_);
@@ -64,7 +70,7 @@ CredentialsManager::CreateInstance() {
 
     tls_opts_ = std::make_shared<TlsCredentialsOptions>(
         GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
-        nullptr, credential_reload_config, nullptr);
+        key_materials_config, credential_reload_config, nullptr);
     server_credentials_ = TlsServerCredentials(*tls_opts_);
   }
   return ::util::OkStatus();
