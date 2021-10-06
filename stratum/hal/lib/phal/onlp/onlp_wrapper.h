@@ -254,9 +254,10 @@ class OnlpWrapper : public OnlpInterface {
     int (*onlp_led_mode_set)(onlp_oid_t oid, onlp_led_mode_t mode);
     int (*onlp_led_char_set)(onlp_oid_t oid, char c);
     int (*onlp_psu_info_get)(onlp_oid_t oid, onlp_psu_info_t* rv);
-    int (*onlp_i2c_mux_mapping)(onlp_oid_t oid, int port_number, int reset);
-    int (*onlp_sfp_dev_writeb)(onlp_oid_t oid, int devaddr, int addr, uint8_t value);
-    int (*onlp_sfp_dev_readb)(onlp_oid_t oid, int devaddr, int addr);
+    int (*onlp_i2c_mux_mapping)(int port_number, int reset);
+    int (*onlp_i2c_writeb)(int bus, uint8_t addr, uint8_t offset, uint8_t byte, uint32_t flags);
+    int (*onlp_i2c_readb)(int bus, uint8_t addr, uint8_t offset, uint32_t flags);
+    int (*set_sfp_frequency)(int port_number, int frequency);
     OnlpFunctions()
         : onlp_sw_init(nullptr),
           onlp_sw_denit(nullptr),
@@ -278,8 +279,9 @@ class OnlpWrapper : public OnlpInterface {
           onlp_led_char_set(nullptr),
           onlp_psu_info_get(nullptr),
           onlp_i2c_mux_mapping(nullptr),
-          onlp_sfp_dev_writeb(nullptr),
-          onlp_sfp_dev_readb(nullptr) {}
+          onlp_i2c_writeb(nullptr),
+          onlp_i2c_readb(nullptr),
+	  set_sfp_frequency(nullptr) {}
   };
   // Private constructor. Use CreateInstance instead.
   OnlpWrapper();

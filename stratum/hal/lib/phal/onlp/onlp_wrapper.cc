@@ -145,8 +145,8 @@ template <typename T>
   LOAD_SYMBOL(onlp_led_mode_set);
   LOAD_SYMBOL(onlp_led_char_set);
   LOAD_SYMBOL(onlp_psu_info_get);
-  LOAD_SYMBOL(onlp_sfp_dev_writeb);
-  LOAD_SYMBOL(onlp_sfp_dev_readb);
+  LOAD_SYMBOL(onlp_i2c_writeb);
+  LOAD_SYMBOL(onlp_i2c_readb);
 #undef LOAD_SYMBOL
 
 #define LOAD_SYMBOL_IF_PRESENT(symbol)   \
@@ -155,6 +155,7 @@ template <typename T>
       LoadSymbolIfPresent<decltype(onlp_functions_.symbol)>(onlp_lib_handle_, #symbol))
 
   LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping);
+  LOAD_SYMBOL_IF_PRESENT(set_sfp_frequency);
 #undef LOAD_SYMBOL_IF_PRESENT
 
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
