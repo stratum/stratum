@@ -229,14 +229,16 @@ template <typename T>
 
 
 // Apply MUX mapping function for hardware
-  CHECK_RETURN_IF_FALSE(
-        ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 0)))
-        << "Failed to set MUX for port number " << port_number << ".";
+  //CHECK_RETURN_IF_FALSE(
+  //      ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 0)))
+  //      << "Failed to set MUX for port number " << port_number << ".";
 
-  // Check if it is an SFP or SFP+
+/************************ OLD FUNCTION ***********************/
+
+/* 
+  //Check if it is an SFP or SFP+
   uint8_t result;
   result = onlp_functions_.onlp_sfp_dev_readb(oid, 0x50, 0x00);
-  cout << "mapping OK";
   if (result != 0x03) {
        fprintf( stderr, "Error: This is not an SFP or SFP+.\n");
        CHECK_RETURN_IF_FALSE(
@@ -248,17 +250,17 @@ template <typename T>
   // Change the page register on slave 0x51 to access page 2
   uint8_t res;
   CHECK_RETURN_IF_FALSE(
-       ONLP_SUCCESS(onlp_functions_.onlp_sfp_dev_writeb(oid,0x51,0x7f,0x2)))
+       ONLP_SUCCESS(onlp_functions_.onlp_sfp_dev_writeb(oid, 0x51, 0x7f, 0x02)))
        << "Failed to write the page.\n";
 
   // Check if page has been changed. If not, then the SFP is not tunable
   res = onlp_functions_.onlp_sfp_dev_readb(oid, 0x51, 0x7f);
   if (res != 0x02) {
-      fprintf(stderr, "Error: Can not change the page, the SFP+ is not tunable.\n");
-      CHECK_RETURN_IF_FALSE(
-             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
-             << "Failed to deselect MUXs for port number " << port_number << ".";
-      return ::util::OkStatus();
+      fprintf(stderr, "Error: Can not change the page, the SFP+ is not tunable. Continuing.\n");
+      //CHECK_RETURN_IF_FALSE(
+      //       ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
+      //       << "Failed to deselect MUXs for port number " << port_number << ".";
+      //return ::util::OkStatus();
   }
 
   // Retrieve Grid spacing value
@@ -267,6 +269,13 @@ template <typename T>
   grid_spacing_hexa = ((onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x8C) << 8) | onlp_functions_.onlp_sfp_dev_readb(oid,0x51,0x8D));
   grid_spacing = grid_spacing_hexa * 0.1 * 1000000000; //value in Hz
   cout << "grid_spacing: " << grid_spacing;
+  if (grid_spacing == 0) {
+      fprintf(stderr, "grid_spacing = 0. Page not done.\n");
+      CHECK_RETURN_IF_FALSE(
+             ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
+             << "Failed to deselect MUXs for port number " << port_number << ".";
+      return ::util::OkStatus();
+  }
 
   // Retrieve First frequency
   uint16_t first_frequency_THz;
@@ -279,6 +288,7 @@ template <typename T>
 
   // better to put that before but I want to see how far it goes with the i2c bus       
   if (frequency == 0) {
+       fprintf(stderr, "condition freq = 0.\n");
        CHECK_RETURN_IF_FALSE(
              ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
              << "Failed to deselect MUXs for port number " << port_number << ".";
@@ -316,6 +326,12 @@ template <typename T>
   CHECK_RETURN_IF_FALSE(
         ONLP_SUCCESS(onlp_functions_.onlp_i2c_mux_mapping(oid, port_number, 1)))
         << "Failed to deselect MUXs for port number " << port_number << ".";
+*/
+
+  /********************** NEW FUNCTION *********************/
+  CHECK_RETURN_IF_FALSE(
+       ONLP_SUCCESS(onlp_functions_.set_sfp_frequency(port_number, frequency)))
+       << "Failed to set SFP frequency.";
 
   return ::util::OkStatus();
 }
