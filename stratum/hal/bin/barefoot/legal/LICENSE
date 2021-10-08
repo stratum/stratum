@@ -1,0 +1,64 @@
+Copyright 2019-present Open Networking Foundation
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+--------------------------------------------------------------------------------
+
+The Work contains Intel copyrighted materials, and Your use of them is governed
+by the following "Additional Terms and Conditions". These terms and conditions
+supersede any permission granted by the License and establish additional
+limitations. Your use of the Work is conditioned on Your acceptance of and
+compliance with the License and the Additional Terms and Conditions.
+
+1. USE ON INTEL-BASED PRODUCTS. The Work and Derivative Works must be used
+   solely on an Intel-based product. You may distribute (or otherwise make
+   available), on a royalty-free basis, the Work or Derivative Works only as
+   integrated or embedded in operating system software (and not on a stand-alone
+   basis) solely for use on an Intel-based product.
+
+2. NO REVERSE ENGINEERING. You may not, and you agree not to or enable others
+   to, disassemble or reverse engineer any part of the Work that is provided in
+   Object form.
+
+3. EXPORT REGULATIONS / EXPORT CONTROL. You agree that You will not export or
+   re-export the Work or Derivative Works, directly or indirectly, to any
+   country for which the U.S. Department of Commerce or any other agency or
+   department of the U.S. Government or the foreign government from where it is
+   shipping requires an export license, or other governmental approval, without
+   first obtaining any such required license or approval. In the event the Work
+   or Derivative Works are exported from the U.S.A. or re-exported from a
+   foreign destination, You will ensure that the distribution and
+   export/re-export or import of the Work or Derivative Works complies with all
+   laws, regulations, orders, or other restrictions of the U.S. Export
+   Administration Regulations and the appropriate foreign government.
+
+4. REDISTRIBUTION. Redistribution of the Work and Derivative Works is also
+   subject to the following conditions. You shall: (i) be solely responsible to
+   Your customers and end users for any update or support obligation or other
+   liability which may arise from the distribution, (ii) not make any statement
+   that the Work and Derivative Works is "certified", or that its performance is
+   guaranteed, by Intel, (iii) not use Intel's or Intel's name or trademarks to
+   promote the Work and Derivative Works without prior written permission, (iv)
+   use a license agreement that contains provisions that are at least as
+   restrictive as this license and which prohibits disassembly and reverse
+   engineering of the Work and Derivative Works provided in object code form,
+   and (v) indemnify, hold harmless, and defend Intel, Intel's Affiliates, and
+   its licensors from and against any claims or lawsuits, including attorney's
+   fees, that arise or result from the Work, Your Derivative Works, or Your
+   distribution of Your software.
+
+5. LIMITATION OF USE. THE MATERIALS LICENSED HEREUNDER ARE NOT DESIGNED OR
+   INTENDED FOR USE IN ANY MEDICAL, LIFE SAVING OR LIFE SUSTAINING SYSTEMS,
+   TRANSPORTATION SYSTEMS, NUCLEAR SYSTEMS, OR FOR ANY OTHER MISSION CRITICAL
+   APPLICATION IN WHICH THE FAILURE OF THE WORK COULD LEAD TO PERSONAL INJURY OR
+   DEATH.
