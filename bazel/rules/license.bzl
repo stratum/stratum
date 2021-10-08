@@ -9,7 +9,6 @@ def stratum_license_tar(
         dep_notices = ["//legal:NOTICE.common.txt"],
         extra_licenses = [],
         **kwargs):
-
     native.genrule(
         name = "notice_file_" + name,
         cmd_bash = "awk 1 $(SRCS) > $@",

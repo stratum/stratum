@@ -4,4 +4,7 @@
 
 licenses(["notice"])  # Apache v2
 
-exports_files(["LICENSE", "NOTICE"])
+exports_files([
+    "LICENSE",
+    "NOTICE",
+])

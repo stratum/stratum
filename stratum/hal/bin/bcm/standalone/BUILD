@@ -9,8 +9,8 @@ load(
     "EMBEDDED_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
-    "stratum_package",
     "stratum_license_tar",
+    "stratum_package",
 )
 
 licenses(["notice"])  # Apache v2
@@ -168,8 +168,8 @@ pkg_tar(
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_sdklt_bin",
-        ":stratum_bcm_sdklt_lib",
         ":stratum_bcm_sdklt_legal",
+        ":stratum_bcm_sdklt_lib",
     ],
 )
 
@@ -179,8 +179,8 @@ pkg_tar(
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_opennsa_bin",
-        ":stratum_bcm_opennsa_lib",
         ":stratum_bcm_opennsa_legal",
+        ":stratum_bcm_opennsa_lib",
     ],
 )
 

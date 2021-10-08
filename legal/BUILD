@@ -1,4 +1,3 @@
-
 # Copyright 2021-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,4 +7,7 @@ package(
 
 # TODO explain this
 
-exports_files(glob(["LICENSE*", "NOTICE*"]))
+exports_files(glob([
+    "LICENSE*",
+    "NOTICE*",
+]))
