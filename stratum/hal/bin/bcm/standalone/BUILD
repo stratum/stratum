@@ -10,6 +10,7 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
     "stratum_package",
+    "stratum_license_tar",
 )
 
 licenses(["notice"])  # Apache v2
@@ -134,6 +135,33 @@ pkg_tar(
     ],
 )
 
+stratum_license_tar(
+    name = "stratum_bcm_sdklt_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.yaml.txt",
+        "//legal:NOTICE.sdklt.txt",
+    ],
+    extra_licenses = [
+        "//legal:NOTICE.bcm-sdklt.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bcm-sdklt/",
+)
+
+stratum_license_tar(
+    name = "stratum_bcm_opennsa_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.opennsa.txt",
+    ],
+    extra_licenses = [
+        "//legal:NOTICE.bcm-opennsa.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bcm-opennsa/",
+)
+
 pkg_tar(
     name = "stratum_bcm_sdklt_all",
     extension = "tar.bz2",
@@ -141,6 +169,7 @@ pkg_tar(
         ":stratum_bcm_etc",
         ":stratum_bcm_sdklt_bin",
         ":stratum_bcm_sdklt_lib",
+        ":stratum_bcm_sdklt_legal",
     ],
 )
 
@@ -151,6 +180,7 @@ pkg_tar(
         ":stratum_bcm_etc",
         ":stratum_bcm_opennsa_bin",
         ":stratum_bcm_opennsa_lib",
+        ":stratum_bcm_opennsa_legal",
     ],
 )
 

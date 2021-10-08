@@ -1,0 +1,180 @@
+===============================================================================
+
+License for Broadcom OpenNSA
+
+@com_github_broadcom_opennsa
+
+-------------------------------------------------------------------------------
+
+Copyright 2007-2020 Broadcom Inc. All rights reserved.
+
+This software is governed by the Broadcom Switch APIs license.
+This license is set out in https://raw.githubusercontent.com/Broadcom-Network-Switching-Software/OpenNSA/master/Legal/LICENSE file.
+
+Broadcom Switch APIs license
+
+SDK Externally Licensed Software Components
+===========================================
+The SDK contains the following externally licensed software components. 
+
+EDITLINE /afs/athena.mit.edu/contrib/sipb/src/editline
+LIBXML2 http://xmlsoft.org/downloads.html
+CINT http://www.gnu.org/software/bison/
+BIGDIGITS David Ireland, copyright (c) 2001-11 by D.I. Management Services Pty Limited <www.di-mgt.com.au>
+APIMODE http://www.gnu.org/software/bison/
+SFlow http://www.inmon.com/technology/ sflowlicense.txt
+
+EDITLINE License terms and conditions
+=====================================
+------------------------------------------------------------------------------
+
+This package was obtained in 1999 and modified to fit the Broadcom
+SDK. In 2015 is was modified further to perform terminal I/O through
+call-backs, and several unused FSF compatibility functions were
+removed. For SDK purposes, the library can still be replaced by the
+FSF readline library.
+
+The original library is maintained at GitHub:
+https://github.com/troglobit/editline
+
+------------------------------------------------------------------------------
+
+ORIGINAL DESCRIPTION
+
+This is a line-editing library.  It can be linked into almost any
+program to provide command-line editing and recall.
+
+It is call-compatible with the FSF readline library, but it is a
+fraction of the size (and offers fewer features).  It does not use
+standard I/O.  It is distributed under a "C News-like" copyright.
+
+------------------------------------------------------------------------------
+
+ORIGINAL COPYRIGHT
+
+ Copyright 1992,1993 Simmule Turner and Rich Salz.  All rights reserved.
+
+ This software is not subject to any license of the American Telephone
+ and Telegraph Company or of the Regents of the University of California.
+
+ Permission is granted to anyone to use this software for any purpose on
+ any computer system, and to alter it and redistribute it freely, subject
+ to the following restrictions:
+ 1. The authors are not responsible for the consequences of use of this
+    software, no matter how awful, even if they arise from flaws in it.
+ 2. The origin of this software must not be misrepresented, either by
+    explicit claim or by omission.  Since few users ever read sources,
+    credits must appear in the documentation.
+ 3. Altered versions must be plainly marked as such, and must not be
+    misrepresented as being the original software.  Since few users
+    ever read sources, credits must appear in the documentation.
+ 4. This notice may not be removed or altered.
+
+------------------------------------------------------------------------------
+
+LIBXML2 - XML C parser terms and conditions
+===========================================
+
+This package was obtained from http://xmlsoft.org/downloads.html
+(ftp://xmlsoft.org/libxml2/libxml2-2.7.2.tar.gz)
+and was modified for purposes of inclusion into the SOC diagnostics shell.
+
+Copyright
+
+Except where otherwise noted in the source code (e.g. the files hash.c,
+list.c and the trio files, which are covered by a similar licence but
+with different Copyright notices) all the files are:
+
+ Copyright (C) 1998-2003 Daniel Veillard.  All Rights Reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is fur-
+nished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FIT-
+NESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+DANIEL VEILLARD BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CON-
+NECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of Daniel Veillard shall not
+be used in advertising or otherwise to promote the sale, use or other deal-
+ings in this Software without prior written authorization from him.
+
+CINT parser license terms and conditions
+========================================
+
+The C code for the CINT parser was generated by using GNU Bison parser
+generator.  
+------------------------------------------------------------------------------
+/* A Bison parser, made by GNU Bison 2.4.1.  */
+
+/* Skeleton implementation for Bison's Yacc-like parsers in C
+
+      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   Free Software Foundation, Inc.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+/* C LALR(1) parser skeleton written by Richard Stallman, by
+   simplifying the original so-called "semantic" parser.  */
+
+
+BIGDIGITS license terms and conditions
+=====================================
+Contains BIGDIGITS multiple-precision arithmetic code originally
+written by David Ireland, copyright (c) 2001-11 by D.I. Management
+Services Pty Limited <www.di-mgt.com.au>, and is used with
+permission.
+
+David Ireland and DI Management Services Pty Limited make no
+representations concerning either the merchantability of this software
+or the suitability of this software for any particular purpose. It is
+provided "as is" without express or implied warranty of any kind. Our
+liability will be limited exclusively to the refund of the money you
+paid us for the software, namely nothing. By using the software you
+expressly agree to such a waiver. If you do not agree to the terms, do
+not use the software.
+
+
+APIMODE parser license terms and conditions
+===========================================
+The C code for the APIMODE parser was generated by using GNU Bison parser
+generator from the file api_grammar.  See “CINT parser license terms and conditions” for the Bison licence.
+SFlow license terms and conditions
+Broadcom provides several API modules that refer to SFlow by name, specifically Field, Mirror, Port, and Switch. 
+All are implemented as per IETF RFC-3176. 
+Please review the separate sflowlicense.txt (http://www.inmon.com/technology/sflowlicense.txt) file for terms of the agreement 
+used by Broadcom in our implementation.
+

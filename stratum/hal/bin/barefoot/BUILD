@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
-load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary", "stratum_license_tar")
 
 licenses(["notice"])  # Apache v2
 
@@ -133,6 +133,35 @@ pkg_tar(
     ],
 )
 
+stratum_license_tar(
+    name = "stratum_legal_bf",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.pi.txt",
+        "//legal:NOTICE.json.txt",
+        "//legal:NOTICE.intel-sde.txt",
+    ],
+    extra_licenses = [
+        "//legal:LICENSE.intel-sde.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bf/",
+)
+
+stratum_license_tar(
+    name = "stratum_legal_bfrt",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.json.txt",
+        "//legal:NOTICE.intel-sde.txt",
+    ],
+    extra_licenses = [
+        "//legal:LICENSE.intel-sde.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bfrt/",
+)
+
 pkg_tar(
     name = "stratum_common_data",
     deps = [
@@ -151,6 +180,7 @@ pkg_tar(
     deps = [
         ":stratum_binaries",
         ":stratum_common_data",
+        ":stratum_legal_bf",
     ],
 )
 
@@ -160,6 +190,7 @@ pkg_tar(
     deps = [
         ":stratum_bfrt_binaries",
         ":stratum_common_data",
+        ":stratum_legal_bfrt",
     ],
 )
 
