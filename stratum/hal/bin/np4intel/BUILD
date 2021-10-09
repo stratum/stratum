@@ -72,6 +72,8 @@ pkg_tar(
     strip_prefix = "/stratum/hal/bin/np4intel",
 )
 
+# TODO: add stratum_license_tar before distributing Debian package
+
 pkg_tar(
     name = "stratum_np4intel_data",
     extension = "tar.gz",
