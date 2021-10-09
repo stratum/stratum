@@ -9,6 +9,7 @@ load(
     "//bazel:rules.bzl",
     "stratum_cc_library",
     "STRATUM_INTERNAL",
+    "stratum_license_tar",
 )
 load(
     "//stratum/p4c_backends/test:build_defs.bzl",
@@ -1924,12 +1925,23 @@ pkg_tar(
     mode = "0644",
 )
 
+stratum_license_tar(
+    name = "fpm_p4c_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.p4c.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/p4-fpm/",
+)
+
 pkg_tar(
     name = "fpm_p4c_data",
     extension = "tar.xz",
     deps = [
         ":fpm_p4c_bin",
         ":fpm_p4c_includes",
+        ":fpm_p4c_legal",
     ],
 )
 

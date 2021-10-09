@@ -21,6 +21,7 @@
 # NOTICE.common.txt contains the baseline Stratum dependencies
 #
 #   bazel cquery "filter(@, kind(cc_.*, deps(//stratum/hal/bin/dummy:stratum_dummy) except deps(@local_config_cc//:*)))" | cut -d/ -f1 | sort -u
+#   bazel cquery "filter(@, kind(cc_.*, deps(//stratum/tools:stratum_tools_deb) except deps(@local_config_cc//:*)))" | cut -d/ -f1 | sort -u
 #
 #   @boringssl
 #   @com_github_cares_cares
@@ -75,6 +76,15 @@
 #   @com_github_opennetworkinglab_sdklt
 #   @com_google_absl
 #
+# NOTICE.p4c.txt contains the dependencies for the P4 compiler
+#
+#   bazel cquery "filter(@, kind(cc_.*, deps(//stratum/p4c_backends/fpm:p4c_fpm_deb) except deps(//stratum/hal/bin/dummy:stratum_dummy)))" | cut -d/ -f1 | sort -u
+#
+#   @boost
+#   @com_github_facebook_zstd
+#   @com_github_p4lang_p4c
+#   @org_bzip_bzip2
+#   @org_lzma_lzma
 
 package(
     default_visibility = ["//visibility:public"],
