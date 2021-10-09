@@ -8,10 +8,13 @@ limitations. Your use of the Work is conditioned on Your acceptance of and
 compliance with the License and the Additional Terms and Conditions.
 
 1. USE ON INTEL-BASED PRODUCTS. The Work and Derivative Works must be used
-   solely on an Intel-based product. You may distribute (or otherwise make
+   solely on an Intel-based Product. You may distribute (or otherwise make
    available), on a royalty-free basis, the Work or Derivative Works only as
    integrated or embedded in operating system software (and not on a stand-alone
-   basis) solely for use on an Intel-based product.
+   basis) solely for use on an Intel-based Product. "Intel-based Product" means
+   Intel ASIC or other Intel device designed, manufactured, or configured by You
+   that includes, incorporates, or implements Intel ASIC, for use in networking
+   equipment and other Intel product(s), software or service(s).
 
 2. NO REVERSE ENGINEERING. You may not, and you agree not to or enable others
    to, disassemble or reverse engineer any part of the Work that is provided in
