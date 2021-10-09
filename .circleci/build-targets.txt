@@ -23,8 +23,8 @@
 //stratum/hal/lib/barefoot:bfrt_switch_test
 //stratum/hal/lib/barefoot:bfrt_table_manager
 //stratum/hal/lib/barefoot:bfrt_table_manager_test
-//stratum/hal/lib/barefoot:stratum_legal_bf
-//stratum/hal/lib/barefoot:stratum_legal_bfrt
+//stratum/hal/lib/barefoot:stratum_bf_legal
+//stratum/hal/lib/barefoot:stratum_bfrt_legal
 //stratum/hal/lib/barefoot:test_main
 //stratum/hal/lib/barefoot:utils
 //stratum/hal/lib/barefoot:utils_test

@@ -134,7 +134,7 @@ pkg_tar(
 )
 
 stratum_license_tar(
-    name = "stratum_legal_bf",
+    name = "stratum_bf_legal",
     dep_notices = [
         "//legal:NOTICE.common.txt",
         "//legal:NOTICE.pi.txt",
@@ -149,7 +149,7 @@ stratum_license_tar(
 )
 
 stratum_license_tar(
-    name = "stratum_legal_bfrt",
+    name = "stratum_bfrt_legal",
     dep_notices = [
         "//legal:NOTICE.common.txt",
         "//legal:NOTICE.json.txt",
@@ -178,9 +178,9 @@ pkg_tar(
     name = "stratum_bf_data",
     extension = "tar.bz2",
     deps = [
+        ":stratum_bf_legal",
         ":stratum_binaries",
         ":stratum_common_data",
-        ":stratum_legal_bf",
     ],
 )
 
@@ -189,8 +189,8 @@ pkg_tar(
     extension = "tar.bz2",
     deps = [
         ":stratum_bfrt_binaries",
+        ":stratum_bfrt_legal",
         ":stratum_common_data",
-        ":stratum_legal_bfrt",
     ],
 )
 
