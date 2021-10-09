@@ -143,7 +143,7 @@ stratum_license_tar(
         "//legal:NOTICE.sdklt.txt",
     ],
     extra_licenses = [
-        "//legal:NOTICE.bcm-sdklt.txt",
+        "//legal:LICENSE.bcm-sdklt.txt",
     ],
     mode = "0644",
     package_dir = "/usr/share/doc/stratum-bcm-sdklt/",
@@ -156,7 +156,7 @@ stratum_license_tar(
         "//legal:NOTICE.opennsa.txt",
     ],
     extra_licenses = [
-        "//legal:NOTICE.bcm-opennsa.txt",
+        "//legal:LICENSE.bcm-opennsa.txt",
     ],
     mode = "0644",
     package_dir = "/usr/share/doc/stratum-bcm-opennsa/",
