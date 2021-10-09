@@ -55,11 +55,14 @@ def stratum_deps():
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
         # ----- p4c -----
-        remote_workspace(
+        git_repository(
             name = "com_github_p4lang_p4c",
             remote = "https://github.com/p4lang/p4c",
-            commit = "43568b75796d68a6424ad22eebeee62f46ccd3fe",
-            build_file = "@//bazel:external/p4c.BUILD",
+            commit = "17d1d55c8fa647eb6dd15141048c70d96def34a9",
+            repo_mapping = {
+                # Tells p4c where to look for `:ir_extensions` target: in this project.
+                "@com_github_p4lang_p4c_extension" : "@com_github_stratum_stratum",
+            },
         )
 
     if "judy" not in native.existing_rules():
