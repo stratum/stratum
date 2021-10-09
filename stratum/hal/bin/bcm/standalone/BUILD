@@ -9,6 +9,7 @@ load(
     "EMBEDDED_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
+    "stratum_license_tar",
     "stratum_package",
 )
 
@@ -134,12 +135,40 @@ pkg_tar(
     ],
 )
 
+stratum_license_tar(
+    name = "stratum_bcm_sdklt_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.yaml.txt",
+        "//legal:NOTICE.sdklt.txt",
+    ],
+    extra_licenses = [
+        "//legal:LICENSE.bcm-sdklt.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bcm-sdklt/",
+)
+
+stratum_license_tar(
+    name = "stratum_bcm_opennsa_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.opennsa.txt",
+    ],
+    extra_licenses = [
+        "//legal:LICENSE.bcm-opennsa.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bcm-opennsa/",
+)
+
 pkg_tar(
     name = "stratum_bcm_sdklt_all",
     extension = "tar.bz2",
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_sdklt_bin",
+        ":stratum_bcm_sdklt_legal",
         ":stratum_bcm_sdklt_lib",
     ],
 )
@@ -150,6 +179,7 @@ pkg_tar(
     deps = [
         ":stratum_bcm_etc",
         ":stratum_bcm_opennsa_bin",
+        ":stratum_bcm_opennsa_legal",
         ":stratum_bcm_opennsa_lib",
     ],
 )
