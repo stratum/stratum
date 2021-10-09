@@ -100,3 +100,7 @@ License: Apache-2.0
 Files: .bazelversion
 Copyright: 2020-present Open Networking Foundation
 License: Apache-2.0
+
+Files: legal/NOTICE* legal/LICENSE*
+Copyright: No Copyright
+License: CC0-1.0
