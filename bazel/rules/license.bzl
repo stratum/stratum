@@ -3,6 +3,8 @@
 
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
+# Creates a tarball containing an amalgamated NOTICE and LICENSE file from the given files.
+# See pkg_tar for all arguments.
 def stratum_license_tar(
         name,
         stratum_notice = "//:NOTICE",
