@@ -1641,13 +1641,7 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
 }
 
 std::string BfSdeWrapper::GetSdeVersion() const {
-#if defined(SDE_9_1_0)
-  return "9.1.0";
-#elif defined(SDE_9_2_0)
-  return "9.2.0";
-#elif defined(SDE_9_3_0)
-  return "9.3.0";
-#elif defined(SDE_9_3_1)
+#if defined(SDE_9_3_1)
   return "9.3.1";
 #elif defined(SDE_9_3_2)
   return "9.3.2";
