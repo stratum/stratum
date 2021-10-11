@@ -111,10 +111,6 @@ class Hal final {
   ::util::Status RegisterSignalHandlers();
   ::util::Status UnregisterSignalHandlers();
 
-  // Sends an RPC to procmon gRPC service to checkin. To be called before
-  // ::grpc::Server::Wait().
-  ::util::Status ProcmonCheckin();
-
   // Thread function waiting for a signal in the pipe and then initialting the
   // HAL shutdown.
   static void* SignalWaiterThreadFunc(void*);
