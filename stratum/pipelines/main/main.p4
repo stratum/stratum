@@ -476,6 +476,7 @@ control ingress(inout parsed_packet_t hdr,
         key = {
             hdr.vlan_tag[0].vid: ternary;
             hdr.ethernet.dst_addr: ternary;
+            standard_metadata.ingress_port: ternary;
         }
         actions = {
             set_l3_admit;
