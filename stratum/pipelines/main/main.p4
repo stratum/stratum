@@ -448,6 +448,8 @@ control l2_fwd(inout parsed_packet_t hdr,
     table l2_unicast_table {
         key = {
             hdr.ethernet.dst_addr: exact;
+            hdr.vlan_tag[0].vid: ternary;
+            standard_metadata.ingress_port: ternary;
         }
         actions = {
             set_egress_port;
