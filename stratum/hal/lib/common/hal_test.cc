@@ -494,7 +494,7 @@ void* TestShutdownThread(void* arg) {
 
 }  // namespace
 
-TEST_F(HalTest, StartAndShutdownServer) {
+TEST_F(HalTest, StartAndShutdownServerSucceeds) {
   EXPECT_CALL(*switch_mock_, Shutdown()).WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
       .WillOnce(Return(::util::OkStatus()));
