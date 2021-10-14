@@ -72,7 +72,6 @@ class HalTest : public ::testing::Test {
     FLAGS_external_stratum_urls =
         absl::StrJoin({RandomURL(), RandomURL()}, ",");
     FLAGS_local_stratum_url = RandomURL();
-    // FLAGS_cmal_service_url = RandomURL();  // google only
     ASSERT_OK(hal_->SanityCheck());
     hal_->ClearErrors();
   }

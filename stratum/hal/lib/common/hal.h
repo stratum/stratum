@@ -20,7 +20,6 @@
 #include "grpcpp/grpcpp.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
-// #include "stratum/hal/lib/common/cmal_service.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "stratum/hal/lib/common/diag_service.h"

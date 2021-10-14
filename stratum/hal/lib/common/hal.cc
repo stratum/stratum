@@ -108,19 +108,12 @@ Hal::~Hal() {
   CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
 
-  auto it =
-      std::find_if(external_stratum_urls.begin(), external_stratum_urls.end(),
-                   [](const std::string& url) {
-                     return (url == FLAGS_local_stratum_url
-                             // FIXME(boc) google only
-                             /* || url == FLAGS_cmal_service_url*/);
-                   });
+  auto it = std::find_if(
+      external_stratum_urls.begin(), external_stratum_urls.end(),
+      [](const std::string& url) { return url == FLAGS_local_stratum_url; });
   CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_stratum_url
-      << ", "
-      /*FIXME(boc) google only << FLAGS_cmal_service_url */
-      << ".";
+      << FLAGS_local_stratum_url << ".";
 
   CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
       << "persistent_config_dir flag needs to be explicitly given.";
