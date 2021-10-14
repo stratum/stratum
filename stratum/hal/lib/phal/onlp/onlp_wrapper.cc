@@ -187,6 +187,8 @@ template <typename T>
 }
 
 ::util::Status OnlpWrapper::SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const {
+  // Mutex try
+  absl::WriterMutexLock l(&init_lock_);
   // Default value of the SFP info
   onlp_sfp_info_t sfp_info = {};
   sfp_info.hdr.id = oid;
