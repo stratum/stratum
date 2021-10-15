@@ -189,7 +189,7 @@ template <typename T>
 ::util::Status OnlpWrapper::SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const {
   // Check if SFP is present
   if (!onlp_functions_.onlp_sfp_is_present(oid)) {
-      AIM_LOG_ERROR("Optical module not present for OID %d.\n", oid);
+      LOG(INFO) << "Optical module not present for OID " << oid << ".\n";
       return ::util::OkStatus();
   }
 
