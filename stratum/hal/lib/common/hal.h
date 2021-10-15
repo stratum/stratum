@@ -20,7 +20,6 @@
 #include "grpcpp/grpcpp.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
-// #include "stratum/hal/lib/common/cmal_service.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "stratum/hal/lib/common/diag_service.h"
@@ -110,10 +109,6 @@ class Hal final {
   // Helpers to register/unregister SIGINT or SIGTERM signal handlers.
   ::util::Status RegisterSignalHandlers();
   ::util::Status UnregisterSignalHandlers();
-
-  // Sends an RPC to procmon gRPC service to checkin. To be called before
-  // ::grpc::Server::Wait().
-  ::util::Status ProcmonCheckin();
 
   // Thread function waiting for a signal in the pipe and then initialting the
   // HAL shutdown.
