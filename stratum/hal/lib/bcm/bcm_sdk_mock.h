@@ -56,19 +56,26 @@ class BcmSdkMock : public BcmSdkInterface {
                ::util::StatusOr<int>(int unit, uint64 router_mac, int vlan));
   MOCK_METHOD2(DeleteL3RouterIntf,
                ::util::Status(int unit, int router_intf_id));
+  MOCK_METHOD3(AttachMplsEncapTunnel,
+               ::util::Status(int unit, int router_intf_id,
+                              const BcmTunnelInit& tunnel_init));
+  MOCK_METHOD2(DetachMplsEncapTunnel,
+               ::util::Status(int unit, int router_intf_id));
   MOCK_METHOD1(FindOrCreateL3CpuEgressIntf, ::util::StatusOr<int>(int unit));
-  MOCK_METHOD5(FindOrCreateL3PortEgressIntf,
+  MOCK_METHOD6(FindOrCreateL3PortEgressIntf,
                ::util::StatusOr<int>(int unit, uint64 nexthop_mac, int port,
-                                     int vlan, int router_intf_id));
+                                     int vlan, int router_intf_id,
+                                     int mpls_label));
   MOCK_METHOD5(FindOrCreateL3TrunkEgressIntf,
                ::util::StatusOr<int>(int unit, uint64 nexthop_mac, int trunk,
                                      int vlan, int router_intf_id));
   MOCK_METHOD1(FindOrCreateL3DropIntf, ::util::StatusOr<int>(int unit));
   MOCK_METHOD2(ModifyL3CpuEgressIntf,
                ::util::Status(int unit, int egress_intf_id));
-  MOCK_METHOD6(ModifyL3PortEgressIntf,
+  MOCK_METHOD7(ModifyL3PortEgressIntf,
                ::util::Status(int unit, int egress_intf_id, uint64 nexthop_mac,
-                              int port, int vlan, int router_intf_id));
+                              int port, int vlan, int mpls_label,
+                              int router_intf_id));
   MOCK_METHOD6(ModifyL3TrunkEgressIntf,
                ::util::Status(int unit, int egress_intf_id, uint64 nexthop_mac,
                               int trunk, int vlan, int router_intf_id));
@@ -98,6 +105,9 @@ class BcmSdkMock : public BcmSdkInterface {
   MOCK_METHOD5(AddL3HostIpv6,
                ::util::Status(int unit, int vrf, const std::string& ipv6,
                               int class_id, int egress_intf_id));
+  MOCK_METHOD4(AddMplsRoute,
+               ::util::Status(int unit_, uint32 mpls_label, int egress_intf_id,
+                              bool is_intf_multipath));
   MOCK_METHOD7(ModifyL3RouteIpv4,
                ::util::Status(int unit, int vrf, uint32 subnet, uint32 mask,
                               int class_id, int egress_intf_id,
@@ -112,6 +122,9 @@ class BcmSdkMock : public BcmSdkInterface {
   MOCK_METHOD5(ModifyL3HostIpv6,
                ::util::Status(int unit, int vrf, const std::string& ipv6,
                               int class_id, int egress_intf_id));
+  MOCK_METHOD4(ModifyMplsRoute,
+               ::util::Status(int unit_, uint32 mpls_label, int egress_intf_id,
+                              bool is_intf_multipath));
   MOCK_METHOD4(DeleteL3RouteIpv4,
                ::util::Status(int unit, int vrf, uint32 subnet, uint32 mask));
   MOCK_METHOD4(DeleteL3RouteIpv6,
@@ -121,6 +134,7 @@ class BcmSdkMock : public BcmSdkInterface {
                ::util::Status(int unit, int vrf, uint32 ipv4));
   MOCK_METHOD3(DeleteL3HostIpv6,
                ::util::Status(int unit, int vrf, const std::string& ipv6));
+  MOCK_METHOD2(DeleteMplsRoute, ::util::Status(int unit_, uint32 mpls_label));
   MOCK_METHOD6(AddMyStationEntry,
                ::util::StatusOr<int>(int unit, int priority, int vlan,
                                      int vlan_mask, uint64 dst_mac,

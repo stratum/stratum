@@ -264,6 +264,14 @@ class BcmSdkInterface {
                                                          uint64 router_mac,
                                                          int vlan) = 0;
 
+   // TODO(max): add comment
+   virtual ::util::Status AttachMplsEncapTunnel(
+       int unit, int router_intf_id, const BcmTunnelInit& tunnel_init) = 0;
+
+   // TODO(max): add comment
+   virtual ::util::Status DetachMplsEncapTunnel(int unit,
+                                                int router_intf_id) = 0;
+
   // Deletes an L3 router intf given its ID from a given unit.
   virtual ::util::Status DeleteL3RouterIntf(int unit, int router_intf_id) = 0;
 
@@ -282,7 +290,28 @@ class BcmSdkInterface {
   // VLAN will be used.
   virtual ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(
       int unit, stratum::uint64 nexthop_mac, int port, int vlan,
-      int router_intf_id) = 0;
+      int router_intf_id, int mpls_label) = 0;
+
+  // TODO(max): update comment
+  // Finds an L3 mpls egress intf defining the nexthop, given its (nexthop_mac,
+  // port, router_intf_id). If it does not exist, tries to create it. In either
+  // case, returns the ID of the egress intf. Packets sent to the intf
+  // will be sent through the given port. DA will be the given nexthop_mac, and
+  // SA will be found using the given router_intf_id, created previously using
+  // FindOrCreateL3RouterIntf().
+  // virtual ::util::StatusOr<int> FindOrCreateL3MplsEgressIntf(
+  //     int unit, uint64 nexthop_mac, int port, int vlan, int router_intf_id,
+  //     int mpls_label) = 0;
+
+  // Finds an L3 mpls transit egress intf defining the nexthop, given its
+  // (nexthop_mac, port, router_intf_id). If it does not exist, tries to create
+  // it. In either case, returns the ID of the egress intf. Packets sent to the
+  // intf will be sent through the given port. DA will be the given nexthop_mac,
+  // and SA will be found using the given router_intf_id, created previously
+  // using FindOrCreateL3RouterIntf(). virtual ::util::StatusOr<int>
+  // FindOrCreateL3MplsTransitEgressIntf(int unit,
+  //     uint64 nexthop_mac, int port, int router_intf_id, uint32 mpls_label) =
+  //     0;
 
   // Finds an L3 trunk/lag egress intf defining the nexthop, given its
   // (nexthop_mac, trunk, vlan, router_intf_id). If it does not exist, tries to
@@ -310,6 +339,7 @@ class BcmSdkInterface {
   virtual ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
                                                 stratum::uint64 nexthop_mac,
                                                 int port, int vlan,
+                                                int mpls_label,
                                                 int router_intf_id) = 0;
 
   // Modifies an already existing L3 intf on a unit given its ID to become an
@@ -384,6 +414,14 @@ class BcmSdkInterface {
                                        const std::string& ipv6, int class_id,
                                        int egress_intf_id) = 0;
 
+  // Add a MPLS LSR (transit) route for the given MPLS label and all ports.
+  // The egress intf used is given by egress_intf_id and is assumed to be
+  // already created. The function will return error if a route with the same
+  // mpls_label exists.
+  virtual ::util::Status AddMplsRoute(int unit, uint32 mpls_label,
+                                      int egress_intf_id,
+                                      bool is_intf_multipath) = 0;
+
   // Modifies class_id and/or egress_intf_id of an existing IPv4 L3 LPM route
   // with key (vrf, subnet, mask). If vrf == 0, default VRF is used. If
   // class_id == 0, class ID will not be modified. The new egress intf to use is
@@ -426,6 +464,14 @@ class BcmSdkInterface {
                                           const std::string& ipv6, int class_id,
                                           int egress_intf_id) = 0;
 
+  // Modifies egress_intf_id of a existing MPLS LSR (transit) route with key
+  // mpls_label. The new egress intf to use is given by egress_intf_id and is
+  // assumed to be already created. The function will return error if a route
+  // with key mpls_label does not exist.
+  virtual ::util::Status ModifyMplsRoute(int unit_, uint32 mpls_label,
+                                           int egress_intf_id,
+                                           bool is_intf_multipath) = 0;
+
   // Deletes an IPv4 L3 LPM route given its (vrf, subnet, mask) key. Returns
   // error if the route with the given key does not exist.
   virtual ::util::Status DeleteL3RouteIpv4(int unit, int vrf, uint32 subnet,
@@ -445,6 +491,10 @@ class BcmSdkInterface {
   // the host with the given key does not exist.
   virtual ::util::Status DeleteL3HostIpv6(int unit, int vrf,
                                           const std::string& ipv6) = 0;
+
+  // Deletes a MPLS LSR (transit) route given its mpls_label key.
+  // Returns error if the given key does not exist.
+  virtual ::util::Status DeleteMplsRoute(int unit_, uint32 mpls_label) = 0;
 
   // Adds an entry to match the given (vlan, vlan_mask, dst_mac, dst_mac_mask)
   // to the my station TCAM, with the given priority. NOOP if the entry already

@@ -340,6 +340,7 @@ message P4ActionDescriptor {
     TunnelFieldValue ecn_value = 4;
     TunnelFieldValue dscp_value = 5;
     TunnelFieldValue ttl_value = 6;
+    bool is_mpls_tunnel = 7;
 
     oneof encap_or_decap {
       EncapProperties encap = 10;

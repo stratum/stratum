@@ -2145,6 +2145,10 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
                        << PrintBcmPort(*bcm_port) << ".";
         }
       }
+    } else {
+              LOG(ERROR) << "Could not get FrontPanelPortInfo for slot "
+                         << port_group_key.slot << " port " << port_group_key.port
+                         << ".";
     }
   }
   // The option applies to all the ports.

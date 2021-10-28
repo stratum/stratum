@@ -45,6 +45,7 @@ enum P4TableType {
   P4_TABLE_L2_MY_STATION = 4;  // The table that identifies whether a packet
                                // can be L3 routed based on (MAC, VLAN).
   P4_TABLE_L2_UNICAST = 5;     // The unicast logical table in L2 stage.
+  P4_TABLE_MPLS = 6;           // The MPLS transit table in L3 stage.
 }
 
 // This enum defines values to identify the table mapping output for match
@@ -141,6 +142,11 @@ enum P4FieldType {
   P4_FIELD_TYPE_DNS_AUTHORITY_RRS = 84;   // Number of NS RRs pointing towards authorities
   P4_FIELD_TYPE_DNS_ADDITIONAL_RRS = 85;  // Number of additional RRs
 
+  P4_FIELD_TYPE_MPLS_LABEL = 90;          // MPLS label
+  P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS = 91;  // MPLS traffic class
+  P4_FIELD_TYPE_MPLS_BOS = 92;            // MPLS bottom of stack bit
+  P4_FIELD_TYPE_MPLS_TTL = 93;            // MPLS TTL
+
   // Field IDs over 1000 are reserved for adding more fields to existing
   // headers without renumbering.  Example: P4_FIELD_TYPE_GRE_SEQUENCE.
 }
@@ -164,6 +170,7 @@ enum P4HeaderType {
   P4_HEADER_ERSPAN = 13;
   P4_HEADER_DNS = 14;
   P4_HEADER_L4_PAYLOAD = 15;
+  P4_HEADER_MPLS = 16;
 }
 
 // This enum defines values to identify the mapping output for P4 actions.
