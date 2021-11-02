@@ -312,7 +312,11 @@ Hal* Hal::GetSingleton() {
   // Register the signal handlers and save the old handlers as well.
   std::vector<int> sig = {SIGINT, SIGTERM, SIGUSR2};
   for (const int s : sig) {
-    sighandler_t h = signal(s, SignalRcvCallback);
+    #ifdef __APPLE__
+    	sig_t h = signal(s, SignalRcvCallback);
+    #else
+    	sighandler_t h = signal(s, SignalRcvCallback);
+    #endif
     if (h == SIG_ERR) {
       return MAKE_ERROR(ERR_INTERNAL)
              << "Failed to register signal " << strsignal(s);

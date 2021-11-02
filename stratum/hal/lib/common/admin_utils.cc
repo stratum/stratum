@@ -2,7 +2,9 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <linux/reboot.h>
+#ifdef __linux__
+  #include <linux/reboot.h>
+#endif
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 #include <sys/reboot.h>

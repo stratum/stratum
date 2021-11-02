@@ -8,7 +8,10 @@
 #define STRATUM_HAL_LIB_COMMON_HAL_H_
 
 #include <pthread.h>
+
+#define __USE_GNU
 #include <signal.h>
+#undef __USE_GNU
 
 #include <memory>
 #include <string>
@@ -153,7 +156,11 @@ class Hal final {
   // Map from signals for which we registered handlers to their old handlers.
   // This map is used to restore the signal handlers to their previous state
   // in the class destructor.
-  absl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
+  #ifdef __APPLE__
+	absl::flat_hash_map<int, sig_t> old_signal_handlers_;
+  #else
+        absl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
+  #endif
 
   // Thread id for the signal waiter thread.
   pthread_t signal_waiter_tid_;
