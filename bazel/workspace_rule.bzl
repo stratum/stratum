@@ -16,6 +16,7 @@ def _build_http_archive(
     patches = [],
     patch_args = [],
     patch_cmds = [],
+    sha256 = None,
     ):
   if not remote.startswith("https://github.com"):
     # This is only currently support for github repos
@@ -39,22 +40,43 @@ def _build_http_archive(
 
   # Generate http_archive rule
   if build_file:
-    http_archive(
-      name = name,
-      urls = urls,
-      strip_prefix = prefix,
-      build_file = build_file,
-      patches = patches,
-      patch_args = patch_args,
-    )
+    if sha256:
+      http_archive(
+        name = name,
+        urls = urls,
+        strip_prefix = prefix,
+        build_file = build_file,
+        patches = patches,
+        patch_args = patch_args,
+        sha256 = sha256,
+      )
+    else:
+      http_archive(
+        name = name,
+        urls = urls,
+        strip_prefix = prefix,
+        build_file = build_file,
+        patches = patches,
+        patch_args = patch_args,
+    )      
   else:
-    http_archive(
-      name = name,
-      urls = urls,
-      strip_prefix = prefix,
-      patches = patches,
-      patch_args = patch_args,
-    )
+    if sha256:
+      http_archive(
+        name = name,
+        urls = urls,
+        strip_prefix = prefix,
+        patches = patches,
+        patch_args = patch_args,
+        sha256 = sha256,
+      )
+    else:
+      http_archive(
+        name = name,
+        urls = urls,
+        strip_prefix = prefix,
+        patches = patches,
+        patch_args = patch_args,
+      )
   return True
 
 def _build_git_repository(
@@ -110,6 +132,7 @@ def remote_workspace(
     patches = [],
     patch_args = [],
     patch_cmds = [],
+    sha256 = None,
     ):
   ref_count = 0
   if branch:
@@ -135,7 +158,7 @@ def remote_workspace(
 
   # Prefer http_archive
   if not use_git and _build_http_archive(
-      name, remote, branch, commit, tag, build_file, patches, patch_args, patch_cmds):
+      name, remote, branch, commit, tag, build_file, patches, patch_args, patch_cmds, sha256):
     return
 
   # Fall back to git_repository
