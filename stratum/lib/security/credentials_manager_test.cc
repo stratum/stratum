@@ -14,8 +14,8 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/security/test.grpc.pb.h"
+#include "stratum/lib/utils.h"
 
 DECLARE_string(ca_cert);
 DECLARE_string(server_key);
@@ -25,14 +25,13 @@ DECLARE_string(test_tmpdir);
 namespace stratum {
 namespace {
 
-// Ken's contribution to ONF
 class TestServiceImpl final : public ::testing::TestService::Service {
  public:
-    ::grpc::Status Test(::grpc::ServerContext* /*context*/,
-                        const ::testing::Empty* /*request*/,
-                        ::testing::Empty* /*response*/) override {
-      return ::grpc::Status::OK;
-    }
+  ::grpc::Status Test(::grpc::ServerContext* /*context*/,
+                      const ::testing::Empty* /*request*/,
+                      ::testing::Empty* /*response*/) override {
+    return ::grpc::Status::OK;
+  }
 };
 
 enum class CertFile {
@@ -48,7 +47,7 @@ constexpr char kServerKeyFile[] = "stratum.key";
 
 std::string GetFilename(CertFile f, int i) {
   const char* file;
-  switch(f) {
+  switch (f) {
     case CertFile::kCaCert:
       file = kCaCertFile;
       break;
@@ -80,10 +79,13 @@ class CredentialsManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     FLAGS_ca_cert = absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kCaCertFile);
-    FLAGS_server_cert = absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerCertFile);
-    FLAGS_server_key = absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
+    FLAGS_server_cert =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerCertFile);
+    FLAGS_server_key =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
     SetCerts(1);  // Set certs 1 as the default
-    credentials_manager_ = CredentialsManager::CreateInstance().ConsumeValueOrDie();
+    credentials_manager_ =
+        CredentialsManager::CreateInstance().ConsumeValueOrDie();
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
 
@@ -100,8 +102,11 @@ class CredentialsManagerTest : public ::testing::Test {
     std::string root_certs;
     ASSERT_OK(ReadFileToString(GetFilename(CertFile::kCaCert, i), &root_certs));
 
-    auto cert_provider = std::make_shared<::grpc::experimental::StaticDataCertificateProvider>(root_certs);
-    auto tls_opts = std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>();
+    auto cert_provider =
+        std::make_shared<::grpc::experimental::StaticDataCertificateProvider>(
+            root_certs);
+    auto tls_opts =
+        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>();
     tls_opts->watch_root_certs();
     tls_opts->set_certificate_provider(cert_provider);
     auto channel_creds = ::grpc::experimental::TlsCredentials(*tls_opts);
@@ -110,7 +115,7 @@ class CredentialsManagerTest : public ::testing::Test {
     args.SetSslTargetNameOverride("stratum.local");
     auto channel = ::grpc::CreateCustomChannel(url_, channel_creds, args);
     auto stub = ::testing::TestService::NewStub(channel);
-    
+
     ::grpc::ClientContext context;
     ::testing::Empty request;
     ::testing::Empty response;
@@ -126,22 +131,18 @@ class CredentialsManagerTest : public ::testing::Test {
   std::unique_ptr<TestServiceImpl> test_service_;
 };
 
-TEST_F(CredentialsManagerTest, ConnectSuccess) {
-  Connect(1);
-}
+TEST_F(CredentialsManagerTest, ConnectSuccess) { Connect(1); }
 
-TEST_F(CredentialsManagerTest, ConnectFailWrongCert) {
-  Connect(2, false);
-}
+TEST_F(CredentialsManagerTest, ConnectFailWrongCert) { Connect(2, false); }
 
-TEST_F(CredentialsManagerTest, ConnectAfterUpdate) {
+TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
   SetCerts(2);
   sleep(2);  // Wait for file watcher to update certs...
   Connect(2);
   Connect(1, false);
 }
 
-TEST_F(CredentialsManagerTest, ChangeCertFileCheck) {
+TEST_F(CredentialsManagerTest, LoadNewCredentials) {
   std::string ca_cert;
   std::string cert;
   std::string key;
@@ -160,7 +161,7 @@ TEST_F(CredentialsManagerTest, ChangeCertFileCheck) {
   EXPECT_EQ(ca_cert_actual, ca_cert);
   EXPECT_EQ(cert_actual, cert);
   EXPECT_EQ(key_actual, key);
-  
+
   // Make sure connections work
   sleep(2);  // Wait for file watcher to update certs...
   Connect(2);
