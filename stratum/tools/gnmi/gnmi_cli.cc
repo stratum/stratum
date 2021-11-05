@@ -4,6 +4,7 @@
 #include <csignal>
 #include <iostream>
 #include <memory>
+#include <signal.h>
 #include <string>
 #include <vector>
 
