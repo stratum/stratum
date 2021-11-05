@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <net/ethernet.h>
 #include <net/if.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
