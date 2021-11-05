@@ -4,6 +4,8 @@
 
 #include "stratum/hal/lib/common/admin_service.h"
 
+#include <signal.h>
+
 #include <string>
 
 #include "absl/memory/memory.h"
