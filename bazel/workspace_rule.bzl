@@ -39,44 +39,15 @@ def _build_http_archive(
     prefix = repo_name + "-" + ref
 
   # Generate http_archive rule
-  if build_file:
-    if sha256:
-      http_archive(
-        name = name,
-        urls = urls,
-        strip_prefix = prefix,
-        build_file = build_file,
-        patches = patches,
-        patch_args = patch_args,
-        sha256 = sha256,
-      )
-    else:
-      http_archive(
-        name = name,
-        urls = urls,
-        strip_prefix = prefix,
-        build_file = build_file,
-        patches = patches,
-        patch_args = patch_args,
-    )      
-  else:
-    if sha256:
-      http_archive(
-        name = name,
-        urls = urls,
-        strip_prefix = prefix,
-        patches = patches,
-        patch_args = patch_args,
-        sha256 = sha256,
-      )
-    else:
-      http_archive(
-        name = name,
-        urls = urls,
-        strip_prefix = prefix,
-        patches = patches,
-        patch_args = patch_args,
-      )
+  http_archive(
+    name = name,
+    urls = urls,
+    strip_prefix = prefix,
+    build_file = build_file,
+    patches = patches,
+    patch_args = patch_args,
+    sha256 = sha256,
+  )
   return True
 
 def _build_git_repository(
