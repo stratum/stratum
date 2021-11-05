@@ -58,6 +58,7 @@ def stratum_deps():
             remote = "https://github.com/p4lang/p4c",
             commit = "43568b75796d68a6424ad22eebeee62f46ccd3fe",
             build_file = "@//bazel:external/p4c.BUILD",
+            sha256 = "6f0c38ccc82a3876403843c67d2994bd66115c569d1ef11cbf8e23a0281266da",
         )
 
     if "judy" not in native.existing_rules():
@@ -91,6 +92,7 @@ def stratum_deps():
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
             commit = "a5fd855d4b3293e23816ef6154e83dc6621aed6a",
+            sha256 = "7df38438f94d64c5005b890210d3f1b40e2402870295e21d44cceac67ebd1a1b",
         )
 
     for sde_ver in BF_SDE_PI_VER:
@@ -110,6 +112,7 @@ def stratum_deps():
             name = "com_github_p4lang_PI_np4",
             remote = "https://github.com/craigsdell/PI.git",
             commit = "12be7a96f3d903afdd6cc3095f7d4003242af60b",
+            sha256 = "696bd1f01133e85cc83125ac747f53f67a519208cab3c7ddaa1d131ee0cea65c",
         )
 
     if "com_github_openconfig_gnmi_proto" not in native.existing_rules():
@@ -158,6 +161,7 @@ def stratum_deps():
             remote = "https://github.com/openconfig/public",
             commit = "624655d053ad1fdda62901c7e2055c22cd5d6a05",
             build_file = "@//bazel:external/ocpublic.BUILD",
+            sha256 = "d9529e43065491b61ce5fdeaf38c0db10a8407cb9f1c4cd23563e5bbe28871f5",
         )
 
     if "com_github_openconfig_hercules" not in native.existing_rules():
@@ -166,6 +170,7 @@ def stratum_deps():
             remote = "https://github.com/openconfig/hercules",
             commit = "ca3575e85500fa089dfe0b8cd3ea71943267102e",
             build_file = "@//bazel:external/hercules.BUILD",
+            sha256 = "48cc536bc95f363f54aa32ececc24d03e0ab7d97972ab33cf67e63e430883bf8",
         )
 
     if "com_github_yang_models_yang" not in native.existing_rules():
@@ -174,6 +179,7 @@ def stratum_deps():
             remote = "https://github.com/YangModels/yang",
             commit = "ed2ce1028ff57d667764dbdbe3c37328820f0e50",
             build_file = "@//bazel:external/yang.BUILD",
+            sha256 = "53ba8dd265bff6d3cff108ea44493b3e7cf52c62bc089839e96d4329d2874d95",
         )
 
     if "com_github_nlohmann_json" not in native.existing_rules():
@@ -236,6 +242,7 @@ def stratum_deps():
             name = "com_googlesource_code_re2",
             remote = "https://github.com/google/re2",
             commit = "be0e1305d264b2cbe1d35db66b8c5107fc2a727e",
+            sha256 = "4f94f422c14aea5419970f4399ac15b2148bc2e90c8566b9de45c6cf3ff6ce53",
         )
 
     if "com_github_systemd_systemd" not in native.existing_rules():
@@ -244,6 +251,7 @@ def stratum_deps():
             remote = "https://github.com/systemd/systemd",
             commit = "06e93130b4045db1c75f8de506d2447642de74cf",
             build_file = "@//bazel:external/systemd.BUILD",
+            sha256 = "1a02064429ca3995558abd118d3dda06571169b7a6d5e2f3289935967c929a45",
         )
 
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
