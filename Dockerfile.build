@@ -5,14 +5,15 @@ ARG BAZELISK_VERSION=1.8.0
 ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
 ARG BMV2_COMMIT=b0fb01ecacbf3a7d7f0c01e2f149b0c6a957f779
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
-ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-11 main"
+ARG LLVM_REPO_NAME="deb http://apt.llvm.org/buster/ llvm-toolchain-buster main"
 
 # Reasonable for CI
 ARG JOBS=2
 
-FROM debian:9@sha256:75f7d0590b45561bfa443abad0b3e0f86e2811b1fc176f786cd30eb078d1846f
+FROM debian:buster
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum"
+ENV DEBIAN_FRONTEND=noninteractive
 
 ARG JOBS
 
@@ -26,12 +27,12 @@ ARG JOBS
 # + libelf-dev to build the kernel modules
 # BF SDE dependecies
 # + libelf-dev to build the kernel modules
-ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
+ENV PKG_DEPS pkg-config zip zlib1g-dev unzip wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
-    libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
+    libfl-dev libgmp-dev libi2c-dev libyaml-dev build-essential \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
-    gnupg2 software-properties-common python-pip python-dev python3-dev \
+    gnupg2 software-properties-common python3-dev python3-pip \
     apt-transport-https libelf-dev
 
 RUN apt-get update && \
@@ -42,12 +43,7 @@ ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang-format-11 clang-11
-# Versioned LLVM releases don't come with the meta packages for the
-# clang -> clang-12 symlinks. We create them manually here.
-RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
-RUN ln -s ../lib/llvm-11/bin/clang++ /usr/bin/clang++
-RUN ln -s ../lib/llvm-11/bin/clang-format /usr/bin/clang-format
+    apt-get install -y --no-install-recommends clang-format clang
 
 # Install java and lcov for Bazel coverage
 ARG JDK_URL
@@ -91,15 +87,14 @@ RUN wget --quiet https://github.com/bazelbuild/bazelisk/releases/download/v${BAZ
     bazel version
 
 # Tools for style and license checking
-RUN pip install setuptools wheel && \
-    pip install 'cpplint==1.*'
+RUN pip3 install setuptools wheel && \
+    pip3 install 'cpplint==1.*'
 RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
 RUN chmod +x /usr/local/bin/buildifier
 
 # Docker CLI for CI builds
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-RUN add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/debian \
-   $(lsb_release -cs) \
-   stable"
-RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+RUN echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN sudo apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
