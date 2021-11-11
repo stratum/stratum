@@ -79,13 +79,6 @@ def stratum_deps():
             sha256 = P4RUNTIME_SHA,
         )
 
-    if "build_stack_rules_proto" not in native.existing_rules():
-        remote_workspace(
-            name = "build_stack_rules_proto",
-            remote = "https://github.com/stackb/rules_proto",
-            commit = "2f4e4f62a3d7a43654d69533faa0652e1c4f5082",
-        )
-
     if "com_github_p4lang_PI" not in native.existing_rules():
         # ----- PI -----
         remote_workspace(
@@ -141,8 +134,8 @@ def stratum_deps():
     if "rules_python" not in native.existing_rules():
         http_archive(
             name = "rules_python",
-            url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
-            sha256 = "aa96a691d3a8177f3215b14b0edc9641787abaaa30363a080165d06ab65e1161",
+            url = "https://github.com/bazelbuild/rules_python/releases/download/0.5.0/rules_python-0.5.0.tar.gz",
+            sha256 = "cd6730ed53a002c56ce4e2f396ba3b3be262fd7cb68339f0377a45e8227fe332",
         )
 
     if "cython" not in native.existing_rules():

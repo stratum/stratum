@@ -2,7 +2,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 load(":scapy_exec.bzl", "scapy_exec")
 
 licenses(["notice"])  # Apache v2
@@ -25,10 +24,6 @@ filegroup(
     srcs = ["scapy_exec.py"],
 )
 
-python_grpc_library(
-    name = "ptf_py_lib",
-    deps = ["@com_google_googleapis//google/rpc:code_proto"],
-)
 
 scapy_exec(
     name = "scapy",
