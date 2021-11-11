@@ -38,6 +38,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
 
 # Install Python3.8, required by newer Bazel python rule
+# Note that this part will be removed after moving to newer Debian version
 RUN wget --quiet -O /tmp/Python-3.8.12.tgz https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz && \
     tar xf /tmp/Python-3.8.12.tgz -C /tmp && \
     cd /tmp/Python-3.8.12 && \
