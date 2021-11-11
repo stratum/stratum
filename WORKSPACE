@@ -66,12 +66,6 @@ np4_configure(name = "local_np4_bin")
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
 
-load("@rules_python//python:repositories.bzl", "py_repositories")
-py_repositories()
-
-load("@rules_python//python:pip.bzl", "pip_repositories")
-pip_repositories()
-
 load("//stratum/hal/lib/phal/onlp:onlp.bzl", "onlp_configure")
 onlp_configure(name = "local_onlp_bin")
 
