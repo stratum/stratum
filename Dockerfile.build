@@ -38,6 +38,9 @@ ENV PKG_DEPS pkg-config zip zlib1g-dev unzip wget ca-certificates \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
 
+# Some bazel tool still tries to use python instead of python3
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 # LLVM toolchain
 ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
