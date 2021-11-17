@@ -37,13 +37,6 @@ class TestServiceImpl final : public ::testing::TestService::Service {
   }
 };
 
-// enum class CertFile {
-//   kCaCert = 0,
-//   kServerCert = 1,
-//   kServerKey = 2,
-// };
-
-// constexpr char kCertDirPrefix[] = "stratum/lib/security/testdata/certs";
 constexpr char kCaCertFile[] = "ca.crt";
 constexpr char kServerCertFile[] = "stratum.crt";
 constexpr char kServerKeyFile[] = "stratum.key";
@@ -79,28 +72,6 @@ void generateCerts(std::string& ca_crt, std::string& server_crt,
   server_crt = stratum_crt_string_result.ConsumeValueOrDie();
   server_key = stratum_key_string_result.ConsumeValueOrDie();
 }
-
-// std::string GetFilename(CertFile f, int i) {
-//   const char* file;
-//   switch (f) {
-//     case CertFile::kCaCert:
-//       file = kCaCertFile;
-//       break;
-//     case CertFile::kServerCert:
-//       file = kServerCertFile;
-//       break;
-//     case CertFile::kServerKey:
-//       file = kServerKeyFile;
-//       break;
-//   }
-//   return absl::StrFormat("%s%d/%s", kCertDirPrefix, i, file);
-// }
-
-// void CopyFile(std::string from, std::string to) {
-//   std::string buffer;
-//   ASSERT_OK(ReadFileToString(from, buffer));
-//   ASSERT_OK(WriteStringToFile(buffer, to));
-// }
 
 void SetCerts(const std::string& ca_crt, const std::string& server_crt,
               const std::string& server_key) {
