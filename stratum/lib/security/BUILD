@@ -157,6 +157,7 @@ stratum_cc_test(
         ":credentials_manager",
         ":test_cc_grpc",
         ":test_main",
+        ":cert_utils",
         "//stratum/glue:logging",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status",
@@ -197,5 +198,30 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
+    name = "cert_utils",
+    srcs = ["cert_utils.cc"],
+    hdrs = ["cert_utils.h"],
+    deps = [
+        "//stratum/lib:utils",
+        "@boringssl//:crypto",
+        "@boringssl//:ssl",
+    ],
+)
+
+stratum_cc_test(
+    name = "cert_utils_test",
+    srcs = [
+        "cert_utils_test.cc",
+    ],
+    deps = [
+        ":cert_utils",
+        ":test_main",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
+        "//stratum/glue/status:status_test_util",
     ],
 )
