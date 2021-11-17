@@ -73,28 +73,6 @@ void generateCerts(std::string& ca_crt, std::string& server_crt,
   server_key = stratum_key_string_result.ConsumeValueOrDie();
 }
 
-// std::string GetFilename(CertFile f, int i) {
-//   const char* file;
-//   switch (f) {
-//     case CertFile::kCaCert:
-//       file = kCaCertFile;
-//       break;
-//     case CertFile::kServerCert:
-//       file = kServerCertFile;
-//       break;
-//     case CertFile::kServerKey:
-//       file = kServerKeyFile;
-//       break;
-//   }
-//   return absl::StrFormat("%s%d/%s", kCertDirPrefix, i, file);
-// }
-
-// void CopyFile(std::string from, std::string to) {
-//   std::string buffer;
-//   ASSERT_OK(ReadFileToString(from, buffer));
-//   ASSERT_OK(WriteStringToFile(buffer, to));
-// }
-
 void SetCerts(const std::string& ca_crt, const std::string& server_crt,
               const std::string& server_key) {
   ASSERT_OK(WriteStringToFile(ca_crt, FLAGS_ca_cert));
