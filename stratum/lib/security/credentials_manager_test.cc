@@ -37,13 +37,6 @@ class TestServiceImpl final : public ::testing::TestService::Service {
   }
 };
 
-// enum class CertFile {
-//   kCaCert = 0,
-//   kServerCert = 1,
-//   kServerKey = 2,
-// };
-
-// constexpr char kCertDirPrefix[] = "stratum/lib/security/testdata/certs";
 constexpr char kCaCertFile[] = "ca.crt";
 constexpr char kServerCertFile[] = "stratum.crt";
 constexpr char kServerKeyFile[] = "stratum.key";
