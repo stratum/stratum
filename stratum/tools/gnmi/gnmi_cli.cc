@@ -1,6 +1,8 @@
 // Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <signal.h>
+
 #include <csignal>
 #include <iostream>
 #include <memory>
