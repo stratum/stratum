@@ -5941,8 +5941,8 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
           // need to be configured, however this map returns only
           // one qualifier, need to address this
           //{BcmField::IPV6_SRC, ??}, // QUAL_DST_IP6_BITMAP_UPPER,
-          //QUAL_DST_IP6_BITMAP_LOWER {BcmField::IPV6_DST, ??}, //
-          //QUAL_DST_IP6_BITMAP_UPPER, QUAL_DST_IP6_BITMAP_LOWER
+          // QUAL_DST_IP6_BITMAP_LOWER {BcmField::IPV6_DST, ??}, //
+          // QUAL_DST_IP6_BITMAP_UPPER, QUAL_DST_IP6_BITMAP_LOWER
           {BcmField::IPV6_SRC_UPPER_64, QUAL_SRC_IP6_BITMAP_UPPERs},
           {BcmField::IPV6_DST_UPPER_64, QUAL_DST_IP6_BITMAP_UPPERs},
           {BcmField::VRF, QUAL_VRF_BITMAPs},
