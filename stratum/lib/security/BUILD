@@ -154,10 +154,10 @@ stratum_cc_test(
     ],
     data = glob(["testdata/certs*/**"]),
     deps = [
+        ":cert_utils",
         ":credentials_manager",
         ":test_cc_grpc",
         ":test_main",
-        ":cert_utils",
         "//stratum/glue:logging",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status",
@@ -220,8 +220,8 @@ stratum_cc_test(
     deps = [
         ":cert_utils",
         ":test_main",
+        "//stratum/glue/status:status_test_util",
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
-        "//stratum/glue/status:status_test_util",
     ],
 )
