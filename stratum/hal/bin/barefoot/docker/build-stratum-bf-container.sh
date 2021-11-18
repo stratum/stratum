@@ -61,9 +61,12 @@ if [ -n "$1" ]; then
       ((i+=1))
   done
   # Mount BSP folder and pass it to the build script, if requested.
-  if [ -n "$BSP" ]; then
+  if [[ -n "$BSP" && -d "$BSP" ]]; then
     DOCKER_OPTS+="-v $BSP:/bsp-directory "
     CMD_OPTS+="--bsp-path /bsp-directory "
+  elif [[ $BSP =~ ^.*.tgz$ ]]; then
+    DOCKER_OPTS+="--mount type=bind,source=$BSP,target=/bsp.tgz "
+    CMD_OPTS+="--bsp-path /bsp.tgz "
   fi
 
   echo "Building BF SDE"
