@@ -20,6 +20,7 @@ cc_library(
         "barefoot-bin/lib/libpython3*",
         "barefoot-bin/lib/bfshell_plugin*",
         "barefoot-bin/lib/libclish.so*",
+        "barefoot-bin/lib/libbf_switchd_lib.a*",
     ]),
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",

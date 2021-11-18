@@ -1,0 +1,16 @@
+# SDE_VERSION : 9.7.0
+#
+# Copyright 2018 Barefoot Networks, Inc.
+# Copyright 2021-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+global-options: {}
+features:
+  drivers:
+    bfrt: true
+    grpc: false
+    thrift-driver: false
+    p4rt: false
+    pi: false
+architectures:
+  - tofino

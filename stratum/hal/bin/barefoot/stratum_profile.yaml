@@ -1,10 +1,23 @@
-global-options: {}
-features:
-  drivers:
-    bfrt: true
-    grpc: false
-    thrift-driver: false
-    p4rt: false
-    pi: false
-architectures:
-  - tofino
+# SDE_VERSION : 9.3.2
+#
+# Copyright 2018 Barefoot Networks, Inc.
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+stratum_profile:
+  # Global flags to configure
+  global_configure_options: ''
+
+  # SDE components to be installed
+  packages:
+    - bf-syslibs:
+      - bf_syslibs_configure_options: ''
+    - bf-utils:
+      - bf_utils_configure_options: ''
+    - bf-drivers:
+      - bf_drivers_configure_options: ''
+      - pi
+      - bf-runtime
+
+  # Tofino architecture
+  tofino_architecture: all

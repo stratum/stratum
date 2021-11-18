@@ -124,6 +124,13 @@ if [[ $EUID -ne 0 ]]; then
    sudo="sudo"
 fi
 
+# Install an older version of pyresistent before running the P4 studio
+# since the pip will try to install newer version of it when pip install
+# the jsonschema library. And the new version of pyresistent(0.17.x) requires
+# Python >= 3.5
+# TODO: Remove this once we move to Python3
+$sudo pip install pyrsistent==0.14.0
+
 # Set up SDE build directory in /tmp
 tmpdir="$(mktemp -d /tmp/bf_sde.XXXXXX)"
 export SDE=$tmpdir
@@ -143,14 +150,14 @@ fi
 
 # Patch stratum_profile.yaml in SDE
 if [[ $SDE_VERSION == "9.7.0" ]]; then
-    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio/profiles/"
+    cp -f "$STRATUM_BF_DIR/stratum_profile_9.7.0.yaml" "$SDE/p4studio/profiles/stratum_profile.yaml"
     # Build BF SDE
     pushd "$SDE/p4studio"
     $sudo ./install-p4studio-dependencies.sh
     ./p4studio profile apply --jobs $JOBS $BSP_CMD profiles/stratum_profile.yaml
     popd
 else
-    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/"
+    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
     # Build BF SDE
     pushd "$SDE/p4studio_build"
     ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD

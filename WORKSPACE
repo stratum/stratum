@@ -115,12 +115,12 @@ latex_repositories()
 # ---------------------------------------------------------------------------
 #       Load dependencies for pipeline PTF rules
 # ---------------------------------------------------------------------------
-# load("@rules_python//python:pip.bzl", "pip_import")
-# pip_import(
-#     name = "ptf_deps",
-#     requirements = "//stratum/pipelines/ptf:requirements.txt",
-# )
+load("@rules_python//python:pip.bzl", "pip_import")
+pip_import(
+    name = "ptf_deps",
+    requirements = "//stratum/pipelines/ptf:requirements.txt",
+)
 
-# load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
+load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
 
-# ptf_pip_install()
+ptf_pip_install()
