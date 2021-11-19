@@ -140,7 +140,9 @@ export SDE_INSTALL=$SDE/install
 tar xf $SDE_TAR -C $SDE --strip-components 1
 
 # Get SDE version from bf-sde-[version].manifest
-SDE_VERSION=$(find "$SDE" -name 'bf-sde-*.manifest' | head -n 1 | grep -E -e '([0-9]+)\.([0-9]+)\.([0-9]+)' -o)
+SDE_VERSION=$(find "$SDE" -name 'bf-sde-*.manifest' -printf '%f')
+SDE_VERSION=${SDE_VERSION#bf-sde-} # Remove "bf-sde-"
+SDE_VERSION=${SDE_VERSION%.manifest} # Remove ".manifest"
 if [ -z "${SDE_VERSION}" ]; then
     echo "Unknown SDE version, cannot find SDE manifest file"
     exit 1

@@ -13,14 +13,14 @@ package(
 cc_library(
     name = "bfsde",
     srcs = glob([
+        "barefoot-bin/lib/bfshell_plugin*",
         "barefoot-bin/lib/libavago.so*",
+        "barefoot-bin/lib/libbf_switchd_lib.a*",
         "barefoot-bin/lib/libbfsys.so*",
         "barefoot-bin/lib/libbfutils.so*",
+        "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3*",
-        "barefoot-bin/lib/bfshell_plugin*",
-        "barefoot-bin/lib/libclish.so*",
-        "barefoot-bin/lib/libbf_switchd_lib.a*",
     ]),
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
@@ -65,10 +65,10 @@ pkg_tar_with_symlinks(
         "barefoot-bin/lib/libavago.so*",
         "barefoot-bin/lib/libbfsys.so*",
         "barefoot-bin/lib/libbfutils.so*",
+        "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
         "barefoot-bin/lib/libpython3*",
-        "barefoot-bin/lib/libclish.so*",
         # General BSP libraries.
         "barefoot-bin/lib/libpltfm_driver.so*",
         "barefoot-bin/lib/libpltfm_mgr.so*",
