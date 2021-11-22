@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <csignal>
 #include <iomanip>
 #include <sstream>  // IWYU pragma: keep
 #include <string>
