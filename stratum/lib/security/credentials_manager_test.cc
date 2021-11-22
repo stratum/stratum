@@ -61,9 +61,9 @@ void generateCerts(std::string& ca_crt, std::string& server_crt,
   EXPECT_OK(generateSignedCert(stratum_crt, stratum_evp, x509, evp_ca,
                                cert_common_name, 1, 60));
 
-  auto ca_crt_string_result = getCertAsString(x509);
-  auto stratum_crt_string_result = getCertAsString(stratum_crt);
-  auto stratum_key_string_result = getRSAPrivateKeyAsString(stratum_evp);
+  auto ca_crt_string_result = GetCertAsString(x509);
+  auto stratum_crt_string_result = GetCertAsString(stratum_crt);
+  auto stratum_key_string_result = GetRSAPrivateKeyAsString(stratum_evp);
   EXPECT_OK(ca_crt_string_result);
   EXPECT_OK(stratum_crt_string_result);
   EXPECT_OK(stratum_key_string_result);

@@ -18,7 +18,7 @@ using BIO_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
 using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
 using X509_ptr = std::unique_ptr<X509, decltype(&::X509_free)>;
 
-util::StatusOr<std::string> getRSAPrivateKeyAsString(EVP_PKEY* pkey) {
+util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
   // Returns a reference to the underlying key; no need to free.
   RSA* rsa = EVP_PKEY_get0_RSA(pkey);
   CHECK_RETURN_IF_FALSE(rsa) << "Key is not an RSA key.";
@@ -37,7 +37,7 @@ util::StatusOr<std::string> getRSAPrivateKeyAsString(EVP_PKEY* pkey) {
   RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to write private key in PEM format.";
 }
 
-util::StatusOr<std::string> getCertAsString(X509* x509) {
+util::StatusOr<std::string> GetCertAsString(X509* x509) {
   BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
   CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
   CHECK_RETURN_IF_FALSE(PEM_write_bio_X509(bio.get(), x509)) << "Failed to write certificate to buffer.";
@@ -94,7 +94,7 @@ util::Status generateUnsignedCert(X509* unsigned_cert,
   X509_NAME* name = X509_get_subject_name(unsigned_cert);
 
   CHECK_RETURN_IF_FALSE(X509_NAME_add_entry_by_txt(
-      name, "CN", MBSTRING_ASC,
+      name, "CN", MBSTRING_UTF8,
       reinterpret_cast<const unsigned char*>(common_name.c_str()), -1, -1, 0));
   return util::OkStatus();
 }
@@ -114,16 +114,6 @@ util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
   CHECK_RETURN_IF_FALSE(X509_set_issuer_name(unsigned_cert, issuer_name));
   CHECK_RETURN_IF_FALSE(X509_sign(unsigned_cert, issuer_key, EVP_sha256()));
   return util::OkStatus();
-}
-
-Certificate::Certificate(const std::string& common_name, int serial_number) :
-    common_name_(common_name),
-    serial_number_(serial_number) {}
-
-Certificate::Certificate(const std::string& certificate, const std::string& private_key) :
-    private_key_(private_key),
-    certificate_(certificate) {
-  //TODO(bocon): extract certificate??
 }
 
 namespace {
@@ -147,18 +137,62 @@ public:
   //   // OPENSSL_PTR(BN, bn,);
   //   // OPENSSL_PTR(BIO_MEM, bio, BIO_s_mem());
   // }
+  RsaCertificate(const std::string& common_name, int serial_number, int bits = 1024);
 
   util::StatusOr<std::string> GetPrivateKey() override;
-  util::StatusOr<std::string> GetX509Certificate() override;
+  util::StatusOr<std::string> GetCertificate() override;
 
 private:
-
   EVP_PKEY_ptr key_;
   X509_ptr certificate_;
+  std::string common_name_;
+  int serial_number_;
 
 };
 
+RsaCertificate::RsaCertificate(const std::string& common_name, int serial_number, int bits) :
+    key_(EVP_PKEY_ptr(EVP_PKEY_new(), EVP_PKEY_free)),
+    certificate_(X509_ptr(X509_new(), X509_free)),    
+    common_name_(common_name),
+    serial_number_(serial_number) {}
+
+util::StatusOr<std::string> RsaCertificate::GetPrivateKey() {
+  if (!private_key_string_.empty()) return private_key_string_;
+  CHECK_RETURN_IF_FALSE(key_.get()) << "Failed to key.";
+  auto result = GetRSAPrivateKeyAsString(key_.get());
+  if (result.ok()) private_key_string_ = result.ValueOrDie();
+  return result;
+}
+
+util::StatusOr<std::string> RsaCertificate::GetCertificate() {
+  if (!certificate_string_.empty()) return certificate_string_;
+  CHECK_RETURN_IF_FALSE(certificate_.get()) << "Failed to certificate.";
+  auto result = GetCertAsString(certificate_.get());
+  if (result.ok()) certificate_string_ = result.ValueOrDie();
+  return result;
+}
+
+
 }  // namespace
 
+Certificate Certificate::GenerateCertificate(const std::string& common_name, int serial_number, int bits) {
+  return RsaCertificate(common_name, serial_number, bits);
+}
+
+Certificate::Certificate() {}
+
+Certificate::Certificate(const std::string& certificate, const std::string& private_key) :
+    private_key_string_(private_key),
+    certificate_string_(certificate) {
+  //TODO(bocon): extract certificate??
+}
+
+util::StatusOr<std::string> Certificate::GetPrivateKey() {
+  return private_key_string_;
+}
+
+util::StatusOr<std::string> Certificate::GetCertificate(){
+  return certificate_string_;
+}
 
 }  // namespace stratum

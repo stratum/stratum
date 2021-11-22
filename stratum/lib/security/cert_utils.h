@@ -12,8 +12,8 @@
 
 namespace stratum {
 
-util::StatusOr<std::string> getRSAPrivateKeyAsString(EVP_PKEY* pkey);
-util::StatusOr<std::string> getCertAsString(X509* x509);
+util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey);
+util::StatusOr<std::string> GetCertAsString(X509* x509);
 
 util::Status generateRSAKeyPair(EVP_PKEY* pkey, int bits = 1024);
 util::Status generateSignedCert(X509* unsigned_cert,
@@ -32,27 +32,26 @@ util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
 
 class Certificate {
 public:
+  Certificate(const std::string& certificate, const std::string& private_key);
 
-  virtual util::StatusOr<std::string> GetPrivateKey() = 0;
-  virtual util::StatusOr<std::string> GetX509Certificate() = 0;
+  // Returns PEM-encoded representation of the private key
+  virtual util::StatusOr<std::string> GetPrivateKey();
+  // Returns PEM-encoded representation of the X509 certificate
+  virtual util::StatusOr<std::string> GetCertificate();
+
+
   // virtual util::Status SignCertificate(Certificate& certificate) = 0;
   // virtual util::Status IsSelfSigned() = 0;
   // virtual util::Status Verify(const Certificate& root_certificate) = 0;
 
-  static util::StatusOr<Certificate> GenerateCertificate(const std::string& common_name, int serial_number);
-  static util::StatusOr<Certificate> GetCertificate(const std::string& certificate, const std::string& private_key = "");
-
+  static Certificate GenerateCertificate(const std::string& common_name, int serial_number, int bits);
 
 protected:
-  Certificate() = delete;
-  Certificate(const std::string& common_name, int serial_number);
-  Certificate(const std::string& certificate, const std::string& private_key = "");
 
-  std::string private_key_;
-  std::string certificate_;
-  std::string common_name_;
-  int serial_number_;
-  bool initialized_;
+  Certificate();
+
+  std::string private_key_string_;
+  std::string certificate_string_;
 };
 
 }  // namespace stratum
