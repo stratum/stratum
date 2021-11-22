@@ -13,55 +13,58 @@
 
 namespace stratum {
 
+using BIGNUM_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
+using BIO_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
+using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
+using X509_ptr = std::unique_ptr<X509, decltype(&::X509_free)>;
+
 util::StatusOr<std::string> getRSAPrivateKeyAsString(EVP_PKEY* pkey) {
+  // Returns a reference to the underlying key; no need to free.
   RSA* rsa = EVP_PKEY_get0_RSA(pkey);
-  CHECK_RETURN_IF_FALSE(rsa) << "not an rsa key";
+  CHECK_RETURN_IF_FALSE(rsa) << "Key is not an RSA key.";
 
-  BIO* privateKeyBio = BIO_new(BIO_s_mem());
+  BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
+  CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
+  CHECK_RETURN_IF_FALSE(PEM_write_bio_RSAPrivateKey(bio.get(), rsa, NULL,
+                                                    NULL, 0, NULL, NULL)) << "Failed to write private key to buffer.";
 
-  CHECK_RETURN_IF_FALSE(PEM_write_bio_RSAPrivateKey(privateKeyBio, rsa, NULL,
-                                                    NULL, 0, NULL, NULL));
-
-  BUF_MEM* mem = BUF_MEM_new();
-  CHECK_RETURN_IF_FALSE(BIO_get_mem_ptr(privateKeyBio, &mem));
-  if (mem->data && mem->length) {
-    std::string private_key(mem->data, mem->length);
-    BIO_free(privateKeyBio);
-    return private_key;
+  BUF_MEM* mem = nullptr;
+  // Returns a reference to the underlying bio; no need to free.
+  BIO_get_mem_ptr(bio.get(), &mem);
+  if (mem != nullptr && mem->data && mem->length) {
+    return std::string(mem->data, mem->length);
   }
-
-  BIO_free(privateKeyBio);
-  RETURN_ERROR(ERR_INVALID_PARAM) << "could not read private key";
+  RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to write private key in PEM format.";
 }
 
 util::StatusOr<std::string> getCertAsString(X509* x509) {
-  BIO* bio = BIO_new(BIO_s_mem());
+  BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
+  CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
+  CHECK_RETURN_IF_FALSE(PEM_write_bio_X509(bio.get(), x509)) << "Failed to write certificate to buffer.";
 
-  CHECK_RETURN_IF_FALSE(PEM_write_bio_X509(bio, x509));
-
-  BUF_MEM* mem = BUF_MEM_new();
-  CHECK_RETURN_IF_FALSE(BIO_get_mem_ptr(bio, &mem));
-  if (mem->data && mem->length) {
-    std::string s(mem->data, mem->length);
-    BIO_free(bio);
-    return s;
+  BUF_MEM* mem = nullptr;
+  // Returns a reference to the underlying bio; no need to free.
+  BIO_get_mem_ptr(bio.get(), &mem);
+  if (mem != nullptr && mem->data && mem->length) {
+    return std::string(mem->data, mem->length);
   }
-
-  BIO_free(bio);
-  RETURN_ERROR(ERR_INVALID_PARAM) << "could not print cert object";
+  RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to write certificate in PEM format.";
 }
 
 util::Status generateRSAKeyPair(EVP_PKEY* evp, int bits) {
   // Generate an RSA keypair.
-  BIGNUM* exp = BN_new();
-  BN_set_word(exp, RSA_F4);
+  BIGNUM_ptr exp(BN_new(), BN_free);
+  BN_set_word(exp.get(), RSA_F4);
   RSA* rsa = RSA_new();
-  CHECK_RETURN_IF_FALSE(RSA_generate_key_ex(rsa, bits, exp, NULL))
-      << "Failed to generate RSA key";
+  CHECK_RETURN_IF_FALSE(RSA_generate_key_ex(rsa, bits, exp.get(), NULL))
+      << "Failed to generate RSA key.";
 
-  // Store this keypair in evp.
-  CHECK_RETURN_IF_FALSE(EVP_PKEY_assign_RSA(evp, rsa));
-  BN_free(exp);
+  // Store this keypair in evp
+  // It will be freed when EVP is freed, so only free on failure.
+  if (!EVP_PKEY_assign_RSA(evp, rsa)) {
+    RSA_free(rsa);
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to assign key.";
+  }
   return util::OkStatus();
 }
 
@@ -112,5 +115,50 @@ util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
   CHECK_RETURN_IF_FALSE(X509_sign(unsigned_cert, issuer_key, EVP_sha256()));
   return util::OkStatus();
 }
+
+Certificate::Certificate(const std::string& common_name, int serial_number) :
+    common_name_(common_name),
+    serial_number_(serial_number) {}
+
+Certificate::Certificate(const std::string& certificate, const std::string& private_key) :
+    private_key_(private_key),
+    certificate_(certificate) {
+  //TODO(bocon): extract certificate??
+}
+
+namespace {
+
+// using BN_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
+// using RSA_ptr = std::unique_ptr<RSA, decltype(&::RSA_free)>;
+// using BIO_MEM_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
+// using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
+#define OPENSSL_PTR_DEFINITION1(type) OPENSSL_PTR_DEFINITION2(type, type)
+#define OPENSSL_PTR_DEFINITION2(type, fn) using type##_ptr = std::unique_ptr<type, decltype(&::fn##_free)>
+#define OPENSSL_PTR(type, name, ...) type##_ptr name(type##_new(__VA_ARGS__), ::type##_free)
+
+// OPENSSL_PTR_DEFINITION2(BIGNUM, BN);
+// OPENSSL_PTR_DEFINITION1(RSA);
+// OPENSSL_PTR_DEFINITION1(BIO_MEM);
+// OPENSSL_PTR_DEFINITION1(EVP_PKEY);
+
+class RsaCertificate : public Certificate {
+public:
+  // RsaCertificate() {
+  //   // OPENSSL_PTR(BN, bn,);
+  //   // OPENSSL_PTR(BIO_MEM, bio, BIO_s_mem());
+  // }
+
+  util::StatusOr<std::string> GetPrivateKey() override;
+  util::StatusOr<std::string> GetX509Certificate() override;
+
+private:
+
+  EVP_PKEY_ptr key_;
+  X509_ptr certificate_;
+
+};
+
+}  // namespace
+
 
 }  // namespace stratum

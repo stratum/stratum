@@ -28,6 +28,34 @@ util::Status generateUnsignedCert(X509* unsigned_cert,
 util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
                       X509* issuer, EVP_PKEY* issuer_key,
                       const std::string& common_name, int serial, int days);
+
+
+class Certificate {
+public:
+
+  virtual util::StatusOr<std::string> GetPrivateKey() = 0;
+  virtual util::StatusOr<std::string> GetX509Certificate() = 0;
+  // virtual util::Status SignCertificate(Certificate& certificate) = 0;
+  // virtual util::Status IsSelfSigned() = 0;
+  // virtual util::Status Verify(const Certificate& root_certificate) = 0;
+
+  static util::StatusOr<Certificate> GenerateCertificate(const std::string& common_name, int serial_number);
+  static util::StatusOr<Certificate> GetCertificate(const std::string& certificate, const std::string& private_key = "");
+
+
+protected:
+  Certificate() = delete;
+  Certificate(const std::string& common_name, int serial_number);
+  Certificate(const std::string& certificate, const std::string& private_key = "");
+
+  std::string private_key_;
+  std::string certificate_;
+  std::string common_name_;
+  int serial_number_;
+  bool initialized_;
+};
+
 }  // namespace stratum
 
 // todo: seed random number generator before using this in production code
+// todo: set CA attribute in X509v3
