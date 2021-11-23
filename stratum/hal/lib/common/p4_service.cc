@@ -585,7 +585,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         // If this stream is not the master stream generate a stream error.
         ::util::Status status;
         if (!IsMasterController(node_id, connection_id)) {
-          status = MAKE_ERROR(ERR_PERMISSION_DENIED)
+          status = MAKE_ERROR(ERR_PERMISSION_DENIED).without_logging()
                    << "Controller with connection ID " << connection_id
                    << " is not a master";
         } else {
@@ -605,7 +605,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         // If this stream is not the master stream generate a stream error.
         ::util::Status status;
         if (!IsMasterController(node_id, connection_id)) {
-          status = MAKE_ERROR(ERR_PERMISSION_DENIED)
+          status = MAKE_ERROR(ERR_PERMISSION_DENIED).without_logging()
                    << "Controller with connection ID " << connection_id
                    << " is not a master";
         } else {
