@@ -29,9 +29,8 @@ util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
                       X509* issuer, EVP_PKEY* issuer_key,
                       const std::string& common_name, int serial, int days);
 
-
 class Certificate {
-public:
+ public:
   Certificate(const std::string& certificate, const std::string& private_key);
 
   // Returns PEM-encoded representation of the private key
@@ -39,15 +38,14 @@ public:
   // Returns PEM-encoded representation of the X509 certificate
   virtual util::StatusOr<std::string> GetCertificate();
 
-
   // virtual util::Status SignCertificate(Certificate& certificate) = 0;
   // virtual util::Status IsSelfSigned() = 0;
   // virtual util::Status Verify(const Certificate& root_certificate) = 0;
 
-  static Certificate GenerateCertificate(const std::string& common_name, int serial_number, int bits);
+  static Certificate GenerateCertificate(const std::string& common_name,
+                                         int serial_number, int bits);
 
-protected:
-
+ protected:
   Certificate();
 
   std::string private_key_string_;

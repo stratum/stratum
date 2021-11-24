@@ -25,8 +25,9 @@ util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
 
   BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
   CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
-  CHECK_RETURN_IF_FALSE(PEM_write_bio_RSAPrivateKey(bio.get(), rsa, NULL,
-                                                    NULL, 0, NULL, NULL)) << "Failed to write private key to buffer.";
+  CHECK_RETURN_IF_FALSE(
+      PEM_write_bio_RSAPrivateKey(bio.get(), rsa, NULL, NULL, 0, NULL, NULL))
+      << "Failed to write private key to buffer.";
 
   BUF_MEM* mem = nullptr;
   // Returns a reference to the underlying bio; no need to free.
@@ -34,13 +35,15 @@ util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
   if (mem != nullptr && mem->data && mem->length) {
     return std::string(mem->data, mem->length);
   }
-  RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to write private key in PEM format.";
+  RETURN_ERROR(ERR_INVALID_PARAM)
+      << "Failed to write private key in PEM format.";
 }
 
 util::StatusOr<std::string> GetCertAsString(X509* x509) {
   BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
   CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
-  CHECK_RETURN_IF_FALSE(PEM_write_bio_X509(bio.get(), x509)) << "Failed to write certificate to buffer.";
+  CHECK_RETURN_IF_FALSE(PEM_write_bio_X509(bio.get(), x509))
+      << "Failed to write certificate to buffer.";
 
   BUF_MEM* mem = nullptr;
   // Returns a reference to the underlying bio; no need to free.
@@ -48,7 +51,8 @@ util::StatusOr<std::string> GetCertAsString(X509* x509) {
   if (mem != nullptr && mem->data && mem->length) {
     return std::string(mem->data, mem->length);
   }
-  RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to write certificate in PEM format.";
+  RETURN_ERROR(ERR_INVALID_PARAM)
+      << "Failed to write certificate in PEM format.";
 }
 
 util::Status generateRSAKeyPair(EVP_PKEY* evp, int bits) {
@@ -123,8 +127,10 @@ namespace {
 // using BIO_MEM_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
 // using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
 #define OPENSSL_PTR_DEFINITION1(type) OPENSSL_PTR_DEFINITION2(type, type)
-#define OPENSSL_PTR_DEFINITION2(type, fn) using type##_ptr = std::unique_ptr<type, decltype(&::fn##_free)>
-#define OPENSSL_PTR(type, name, ...) type##_ptr name(type##_new(__VA_ARGS__), ::type##_free)
+#define OPENSSL_PTR_DEFINITION2(type, fn) \
+  using type##_ptr = std::unique_ptr<type, decltype(&::fn##_free)>
+#define OPENSSL_PTR(type, name, ...) \
+  type##_ptr name(type##_new(__VA_ARGS__), ::type##_free)
 
 // OPENSSL_PTR_DEFINITION2(BIGNUM, BN);
 // OPENSSL_PTR_DEFINITION1(RSA);
@@ -132,29 +138,30 @@ namespace {
 // OPENSSL_PTR_DEFINITION1(EVP_PKEY);
 
 class RsaCertificate : public Certificate {
-public:
+ public:
   // RsaCertificate() {
   //   // OPENSSL_PTR(BN, bn,);
   //   // OPENSSL_PTR(BIO_MEM, bio, BIO_s_mem());
   // }
-  RsaCertificate(const std::string& common_name, int serial_number, int bits = 1024);
+  RsaCertificate(const std::string& common_name, int serial_number,
+                 int bits = 1024);
 
   util::StatusOr<std::string> GetPrivateKey() override;
   util::StatusOr<std::string> GetCertificate() override;
 
-private:
+ private:
   EVP_PKEY_ptr key_;
   X509_ptr certificate_;
   std::string common_name_;
   int serial_number_;
-
 };
 
-RsaCertificate::RsaCertificate(const std::string& common_name, int serial_number, int bits) :
-    key_(EVP_PKEY_ptr(EVP_PKEY_new(), EVP_PKEY_free)),
-    certificate_(X509_ptr(X509_new(), X509_free)),    
-    common_name_(common_name),
-    serial_number_(serial_number) {}
+RsaCertificate::RsaCertificate(const std::string& common_name,
+                               int serial_number, int bits)
+    : key_(EVP_PKEY_ptr(EVP_PKEY_new(), EVP_PKEY_free)),
+      certificate_(X509_ptr(X509_new(), X509_free)),
+      common_name_(common_name),
+      serial_number_(serial_number) {}
 
 util::StatusOr<std::string> RsaCertificate::GetPrivateKey() {
   if (!private_key_string_.empty()) return private_key_string_;
@@ -172,26 +179,26 @@ util::StatusOr<std::string> RsaCertificate::GetCertificate() {
   return result;
 }
 
-
 }  // namespace
 
-Certificate Certificate::GenerateCertificate(const std::string& common_name, int serial_number, int bits) {
+Certificate Certificate::GenerateCertificate(const std::string& common_name,
+                                             int serial_number, int bits) {
   return RsaCertificate(common_name, serial_number, bits);
 }
 
 Certificate::Certificate() {}
 
-Certificate::Certificate(const std::string& certificate, const std::string& private_key) :
-    private_key_string_(private_key),
-    certificate_string_(certificate) {
-  //TODO(bocon): extract certificate??
+Certificate::Certificate(const std::string& certificate,
+                         const std::string& private_key)
+    : private_key_string_(private_key), certificate_string_(certificate) {
+  // TODO(bocon): extract certificate??
 }
 
 util::StatusOr<std::string> Certificate::GetPrivateKey() {
   return private_key_string_;
 }
 
-util::StatusOr<std::string> Certificate::GetCertificate(){
+util::StatusOr<std::string> Certificate::GetCertificate() {
   return certificate_string_;
 }
 

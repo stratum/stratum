@@ -20,7 +20,8 @@ TEST(cert_test, Generate_Cert) {
 
   // Generate self-signed CA cert
   X509_ptr ca_cert(X509_new(), X509_free);
-  EXPECT_OK(generateSignedCert(ca_cert.get(), ca_key.get(), NULL, NULL, "stratum ca", 1, 365));
+  EXPECT_OK(generateSignedCert(ca_cert.get(), ca_key.get(), NULL, NULL,
+                               "stratum ca", 1, 365));
 
   // Generate keypair for stratum cert
   EVP_PKEY_ptr stratum_key(EVP_PKEY_new(), EVP_PKEY_free);
@@ -28,13 +29,13 @@ TEST(cert_test, Generate_Cert) {
 
   // Generate stratum cert (signed by CA)
   X509_ptr stratum_cert(X509_new(), X509_free);
-  EXPECT_OK(generateSignedCert(stratum_cert.get(), stratum_key.get(), ca_cert.get(), ca_key.get(),
-                               "stratum", 1, 60));
+  EXPECT_OK(generateSignedCert(stratum_cert.get(), stratum_key.get(),
+                               ca_cert.get(), ca_key.get(), "stratum", 1, 60));
 }
 
-
 TEST(cert_test, Generate_Cert2) {
-  Certificate cert = std::move(Certificate::GenerateCertificate("stratum ca", 1, 1024));
+  Certificate cert =
+      std::move(Certificate::GenerateCertificate("stratum ca", 1, 1024));
   cert.GetPrivateKey();
   cert.GetCertificate();
 }
