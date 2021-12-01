@@ -152,11 +152,14 @@ fi
 
 # Patch stratum_profile.yaml in SDE
 if [[ $SDE_VERSION == "9.7.0" ]]; then
-    cp -f "$STRATUM_BF_DIR/stratum_profile_9.7.0.yaml" "$SDE/p4studio/profiles/stratum_profile.yaml"
+    # Patch SDE to build BSP without kernel driver
+    sed -i 's/ASIC AND BSP/BSP/g' $SDE/CMakeLists.txt
     # Build BF SDE
     pushd "$SDE/p4studio"
     $sudo ./install-p4studio-dependencies.sh
-    ./p4studio profile apply --jobs $JOBS $BSP_CMD profiles/stratum_profile.yaml
+    ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs 30
+    ./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino '^tofino2m' '^tofino2' '^grpc' bsp --bsp-path /bsp.tgz
+    ./p4studio build -j $JOBS
     popd
 else
     cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
