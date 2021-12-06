@@ -66,7 +66,7 @@ if [ -n "$1" ]; then
     DOCKER_OPTS+="-v $BSP:/bsp-directory "
     CMD_OPTS+="--bsp-path /bsp-directory "
   elif [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
-    DOCKER_OPTS+="--mount type=bind,source=$BSP,target=/bsp.tgz "
+    DOCKER_OPTS+="-v $BSP:/bsp.tgz "
     CMD_OPTS+="--bsp-path /bsp.tgz "
   fi
 
