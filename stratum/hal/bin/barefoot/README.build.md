@@ -23,6 +23,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - 9.3.2 (Previous LTS release)
  - 9.4.0
  - 9.5.0 (Recommended; LTS release)
+ - 9.7.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
