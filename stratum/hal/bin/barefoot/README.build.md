@@ -23,6 +23,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - 9.3.2 (Previous LTS release)
  - 9.4.0
  - 9.5.0 (Recommended; LTS release)
+ - 9.7.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -313,6 +314,20 @@ Or pass the BSP sources to the p4studio_build script with the `--bsp-path` flag.
 tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
 export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
 ./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
+```
+
+Starting with SDE 9.7.0 the BSP does not have to be extracted anymore:
+
+```bash
+export BSP=`pwd`/bf-reference-bsp-<SDE_VERSION>.tgz
+stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh ...
+```
+
+Or directly with `p4studio`:
+
+```bash
+export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>.tgz
+./p4studio configure ... --bsp-path $BSP_PATH
 ```
 
 [onl-linux-headers]: https://github.com/opennetworkinglab/OpenNetworkLinux/releases/tag/onlpv2-dev-1.0.1
