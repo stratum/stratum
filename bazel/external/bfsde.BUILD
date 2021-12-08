@@ -13,7 +13,7 @@ package(
 cc_library(
     name = "bfsde",
     srcs = glob([
-        "barefoot-bin/lib/bfshell_plugin*",
+        "barefoot-bin/lib/bfshell_plugin*.so*",
         "barefoot-bin/lib/libavago.so*",
         "barefoot-bin/lib/libbf_switchd_lib.a*",
         "barefoot-bin/lib/libbfsys.so*",
