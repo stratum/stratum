@@ -16,6 +16,7 @@
 
 namespace stratum {
 namespace hal {
+namespace {
 
 using ::testing::HasSubstr;
 
@@ -89,40 +90,76 @@ TEST(ByteStringTest, ByteStringToP4RuntimeByteStringCorrect) {
                                         "\x00\x00\x00\x00\xab", 5)));
 }
 
-TEST(ValidMeterConfigTest, RejectsInvalidMeterConfigs) {
-  EXPECT_FALSE(IsValidMeterConfig({}).ok());
-  ::p4::v1::MeterConfig config;
-  constexpr char kInvalidMeterConfig1[] = R"PROTO(
-    cir: 0
-    pir: 0
-    cburst: 0
-    pburst: 0
+TEST(ValidMeterConfigTest, IsValidMeterConfigEmptyInvalid) {
+  constexpr char kInvalidMeterConfigText[] = R"PROTO(
+    # Empty MeterConfig, all fields zero.
   )PROTO";
-  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig1, &config));
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
   EXPECT_FALSE(IsValidMeterConfig(config).ok());
-  constexpr char kInvalidMeterConfig2[] = R"PROTO(
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigZeroBurstInvalid) {
+  constexpr char kInvalidMeterConfigText[] = R"PROTO(
+    # Invalid, empty burst sizes.
     cir: 100
     pir: 200
     cburst: 0
     pburst: 0
   )PROTO";
-  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig2, &config));
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
   EXPECT_FALSE(IsValidMeterConfig(config).ok());
-  constexpr char kInvalidMeterConfig3[] = R"PROTO(
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigRatesInvalid) {
+  constexpr char kInvalidMeterConfigText[] = R"PROTO(
+    # Commited rate greater peak rate.
     cir: 500
     pir: 400
     cburst: 100
     pburst: 100
   )PROTO";
-  CHECK_OK(ParseProtoFromString(kInvalidMeterConfig3, &config));
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
   EXPECT_FALSE(IsValidMeterConfig(config).ok());
-  constexpr char kValidMeterConfig[] = R"PROTO(
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigValid) {
+  constexpr char kValidMeterConfigText[] = R"PROTO(
+    cir: 50
+    pir: 100
+    cburst: 400
+    pburst: 800
+  )PROTO";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigBurstsValid) {
+  constexpr char kValidMeterConfigText[] = R"PROTO(
+    # Commited burst size is allowed to be greater than peak burst size.
     cir: 1000
     pir: 2000
-    cburst: 4000
-    pburst: 8000
+    cburst: 800
+    pburst: 400
   )PROTO";
-  CHECK_OK(ParseProtoFromString(kValidMeterConfig, &config));
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigZeroRateValid) {
+  constexpr char kValidMeterConfigText[] = R"PROTO(
+    # Zero rates are allowed.
+    cir: 0
+    pir: 0
+    cburst: 400
+    pburst: 800
+  )PROTO";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
   EXPECT_OK(IsValidMeterConfig(config));
 }
 
@@ -236,5 +273,6 @@ TEST_F(TableMapValueTest, FindFailValueWithWrongDescriptorCaseWithLogObject) {
   EXPECT_THAT(status.status().error_message(), HasSubstr("p4-object"));
 }
 
+}  // namespace
 }  // namespace hal
 }  // namespace stratum
