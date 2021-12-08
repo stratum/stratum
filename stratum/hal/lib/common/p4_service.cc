@@ -659,7 +659,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
       return i;
     }
   }
-  return 0;
+  return MAKE_ERROR(ERR_NO_RESOURCE) << "No free connection id.";
 }
 
 ::util::Status P4Service::AddOrModifyController(
@@ -725,10 +725,14 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
     it->second.erase(cont);
   }
 
-  // Now add the controller to the set of controllers for this node. The add
-  // will possibly lead to a new master.
+  // Now add the controller to the set of controllers for this node, if its
+  // election ID is unique. The add will possibly lead to a new master.
   Controller controller(connection_id, election_id, uri, stream);
-  it->second.insert(controller);
+  if (!gtl::InsertIfNotPresent(&it->second, controller)) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Duplicate election ID " << election_id << " for node " << node_id
+           << ".";
+  }
 
   // Find the most updated master. Also find out if this controller is master
   // after this new Controller instance was inserted.
