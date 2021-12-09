@@ -20,9 +20,8 @@ access P4 Studio SDE. Contact Intel for more details.*
 #### Supported SDE versions
 
  - 9.3.1 (Extended support for legacy switches)
- - 9.3.2 (Previous LTS release)
- - 9.4.0
  - 9.5.0 (Recommended; LTS release)
+ - ~~9.6.0~~ (skipped)
  - 9.7.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
@@ -184,7 +183,7 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.3.2
+export SDE_VERSION=9.5.0
 export STRATUM_TARGET=stratum_bfrt
 docker build -t stratumproject/stratum-bfrt:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
@@ -207,7 +206,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bfrt:9.3.2 -o stratum-bfrt-9.3.2-docker.tar
+docker save stratumproject/stratum-bfrt:9.5.0 -o stratum-bfrt-9.5.0-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally

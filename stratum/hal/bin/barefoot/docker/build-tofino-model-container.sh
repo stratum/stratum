@@ -12,7 +12,7 @@ The script builds containerized version of the Barefoot Tofino model.
 Usage: $0 <SDE_TAR>
 
 Example:
-    $0 ~/bf-sde-9.3.2.tgz
+    $0 ~/bf-sde-9.7.0.tgz
 "
 }
 

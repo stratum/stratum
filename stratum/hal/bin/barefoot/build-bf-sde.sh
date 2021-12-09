@@ -24,9 +24,9 @@ Options:
 
 Examples:
 
-    $0 -t ~/bf-sde-9.3.2.tgz
-    $0 -t ~/bf-sde-9.3.2.tgz -j 4
-    $0 -t ~/bf-sde-9.3.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
+    $0 -t ~/bf-sde-9.5.0.tgz
+    $0 -t ~/bf-sde-9.5.0.tgz -j 4
+    $0 -t ~/bf-sde-9.5.0.tgz -k ~/linux-4.14.49-ONL.tar.xz
 "
 }
 
