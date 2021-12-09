@@ -262,7 +262,7 @@ SingletonPortToComponents(const SingletonPort& in) {
   auto subcomponent_key = component->add_subcomponent();
   subcomponent_key->set_name(in.name());
   auto port = component->mutable_port();
-  port->mutable_port_id()->set_value(in.id());
+  port->mutable_port_id()->set_value(in.port());
 
   // No slot-id from component.port or interface,
   // here we could store the linecard of this port
@@ -837,7 +837,7 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig& in) {
   // Handle 'port_groups' repeated field.
   // Nothing to do here.
 
-  VLOG(1) << "The convetred openconfig::Device proto:\n"
+  VLOG(1) << "The converted openconfig::Device proto:\n"
           << to.ShortDebugString();
 
   return to;
