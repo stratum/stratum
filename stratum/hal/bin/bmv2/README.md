@@ -115,7 +115,7 @@ When you are finished, you can remove the interfaces.
 sudo veth_teardown.sh
 ```
 
-If you don't have the `veth_setup.sh` command installed, you can
+If you don't have the [`veth_setup.sh`](https://github.com/p4lang/behavioral-model/blob/main/tools/veth_setup.sh) command installed, you can
 add interfaces manually:
 ```bash
 sudo ip link add name veth0 type veth peer name veth1
