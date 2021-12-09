@@ -148,6 +148,10 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
+    if [ "$sde_version" == "9.7.0" -a "$target" == "stratum_bf" ]; then
+      echo "Skipping $target with BF SDE $sde_version."
+      continue
+    fi
     target_dash=${target/_/-}
     echo "Building $target ($target_dash) with BF SDE $sde_version..."
     set -x
