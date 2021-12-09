@@ -24,8 +24,6 @@ package(
 SDE_DEFINES = select(
     {
         "@local_barefoot_bin//:sde_version_9.3.1": ["SDE_9_3_1"],
-        "@local_barefoot_bin//:sde_version_9.3.2": ["SDE_9_3_2"],
-        "@local_barefoot_bin//:sde_version_9.4.0": ["SDE_9_4_0"],
         "@local_barefoot_bin//:sde_version_9.5.0": ["SDE_9_5_0"],
         "@local_barefoot_bin//:sde_version_9.7.0": ["SDE_9_7_0"],
     },
