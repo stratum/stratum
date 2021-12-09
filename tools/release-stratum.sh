@@ -56,7 +56,9 @@ if ! which gh >/dev/null; then
   sudo apt install ./gh_1.4.0_linux_amd64.deb
   rm gh_1.4.0_linux_amd64.deb
 fi
-echo "$GITHUB_TOKEN" | gh auth login -h github.com --with-token
+
+# gh will use GITHUB_TOKEN to login automatically
+gh auth status
 
 # Verify that all BF SDE install packages exist
 missing=0
@@ -292,5 +294,3 @@ gh issue create -R stratum/stratum \
 
 # ---------- Cleanup -------------
 docker logout
-unset GITHUB_TOKEN
-gh auth logout -h github.com
