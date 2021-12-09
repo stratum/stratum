@@ -18,7 +18,6 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/procmon/procmon.grpc.pb.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
 DEFINE_string(external_stratum_urls, stratum::kExternalStratumUrls,
@@ -27,8 +26,6 @@ DEFINE_string(external_stratum_urls, stratum::kExternalStratumUrls,
 DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,
               "URL for listening to local calls from stratum stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
-DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
-              "URL of the procmon service to connect to.");
 DEFINE_string(persistent_config_dir, "/etc/stratum/",
               "The persistent dir where all the config files will be stored.");
 DEFINE_int32(grpc_keepalive_time_ms, 600000, "grpc keep alive time");
@@ -111,20 +108,12 @@ Hal::~Hal() {
   CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
 
-  auto it =
-      std::find_if(external_stratum_urls.begin(), external_stratum_urls.end(),
-                   [](const std::string& url) {
-                     return (url == FLAGS_local_stratum_url ||
-                             // FIXME(boc) google only url ==
-                             // FLAGS_cmal_service_url ||
-                             url == FLAGS_procmon_service_addr);
-                   });
+  auto it = std::find_if(
+      external_stratum_urls.begin(), external_stratum_urls.end(),
+      [](const std::string& url) { return url == FLAGS_local_stratum_url; });
   CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_stratum_url
-      << ", "
-      /*FIXME(boc) google only << FLAGS_cmal_service_url */
-      << ", " << FLAGS_procmon_service_addr << ".";
+      << FLAGS_local_stratum_url << ".";
 
   CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
       << "persistent_config_dir flag needs to be explicitly given.";
@@ -231,16 +220,6 @@ Hal::~Hal() {
     LOG(ERROR) << "Stratum external facing services are listening to "
                << absl::StrJoin(external_stratum_urls, ", ") << ", "
                << FLAGS_local_stratum_url << "...";
-  }
-
-  if (mode_ != OPERATION_MODE_SIM) {
-    // Try checking in with Procmon if we are not running in sim mode. Continue
-    // if checkin fails.
-    ::util::Status status = ProcmonCheckin();
-    if (!status.ok()) {
-      LOG(ERROR) << "Error when checking in with procmon: "
-                 << status.error_message() << ".";
-    }
   }
 
   external_server_->Wait();  // blocking until external_server_->Shutdown()
@@ -362,29 +341,6 @@ Hal* Hal::GetSingleton() {
   // Join thread.
   if (signal_waiter_tid_ && pthread_join(signal_waiter_tid_, nullptr) != 0) {
     LOG(ERROR) << "Failed to join signal waiter thread.";
-  }
-
-  return ::util::OkStatus();
-}
-
-::util::Status Hal::ProcmonCheckin() {
-  // FIXME replace Procmon with gNOI
-  std::unique_ptr<procmon::ProcmonService::Stub> stub =
-      procmon::ProcmonService::NewStub(::grpc::CreateChannel(
-          FLAGS_procmon_service_addr, ::grpc::InsecureChannelCredentials()));
-  if (stub == nullptr) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Could not create stub for procmon gRPC service.";
-  }
-
-  procmon::CheckinRequest req;
-  procmon::CheckinResponse resp;
-  ::grpc::ClientContext context;
-  req.set_checkin_key(getpid());
-  ::grpc::Status status = stub->Checkin(&context, req, &resp);
-  if (!status.ok()) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Failed to check in with procmon: " << status.error_message();
   }
 
   return ::util::OkStatus();

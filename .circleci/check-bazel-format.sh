@@ -18,10 +18,12 @@ bazel/patches/BUILD
 bazel/rules/BUILD
 bazel/rules/build_tools.bzl
 bazel/rules/lexyacc.bzl
+bazel/rules/license.bzl
 bazel/rules/proto_gen.bzl
 bazel/rules/proto_rule.bzl
 bazel/rules/test_rule.bzl
 bazel/rules/yang_to_proto_rule.bzl
+legal/BUILD
 stratum/BUILD
 stratum/glue/BUILD
 stratum/glue/gtl/BUILD
