@@ -13,12 +13,15 @@ package(
 cc_library(
     name = "bfsde",
     srcs = glob([
+        "barefoot-bin/lib/bfshell_plugin*.so*",
         "barefoot-bin/lib/libavago.so*",
+        "barefoot-bin/lib/libbf_switchd_lib.a*",
         "barefoot-bin/lib/libbfsys.so*",
         "barefoot-bin/lib/libbfutils.so*",
+        "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
-        "barefoot-bin/lib/libpython3.4m.so*",
-    ]) + ["barefoot-bin/lib/libbf_switchd_lib.a"],
+        "barefoot-bin/lib/libpython3*",
+    ]),
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
         "barefoot-bin/include/bf_rt/*.hpp",
@@ -62,9 +65,10 @@ pkg_tar_with_symlinks(
         "barefoot-bin/lib/libavago.so*",
         "barefoot-bin/lib/libbfsys.so*",
         "barefoot-bin/lib/libbfutils.so*",
+        "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libdru_sim.so*",
-        "barefoot-bin/lib/libpython3.4m.so*",
+        "barefoot-bin/lib/libpython3*",
         # General BSP libraries.
         "barefoot-bin/lib/libpltfm_driver.so*",
         "barefoot-bin/lib/libpltfm_mgr.so*",
@@ -108,20 +112,6 @@ string_setting(
 )
 
 config_setting(
-    name = "sde_version_9.2.0",
-    flag_values = {
-        ":sde_version_setting": "9.2.0",
-    },
-)
-
-config_setting(
-    name = "sde_version_9.3.0",
-    flag_values = {
-        ":sde_version_setting": "9.3.0",
-    },
-)
-
-config_setting(
     name = "sde_version_9.3.1",
     flag_values = {
         ":sde_version_setting": "9.3.1",
@@ -146,5 +136,12 @@ config_setting(
     name = "sde_version_9.5.0",
     flag_values = {
         ":sde_version_setting": "9.5.0",
+    },
+)
+
+config_setting(
+    name = "sde_version_9.7.0",
+    flag_values = {
+        ":sde_version_setting": "9.7.0",
     },
 )

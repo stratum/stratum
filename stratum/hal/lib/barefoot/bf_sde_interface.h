@@ -305,12 +305,14 @@ class BfSdeInterface {
   // Inserts a clone session ($mirror.cfg table).
   virtual ::util::Status InsertCloneSession(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 session_id, int egress_port, int cos, int max_pkt_len) = 0;
+      uint32 session_id, int egress_port, int egress_queue, int cos,
+      int max_pkt_len) = 0;
 
   // Modifies a clone session ($mirror.cfg table).
   virtual ::util::Status ModifyCloneSession(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 session_id, int egress_port, int cos, int max_pkt_len) = 0;
+      uint32 session_id, int egress_port, int egress_queue, int cos,
+      int max_pkt_len) = 0;
 
   // Deletes a clone session ($mirror.cfg table).
   virtual ::util::Status DeleteCloneSession(

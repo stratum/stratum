@@ -6,14 +6,14 @@
 #include <map>
 #include <queue>
 
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/procmon/procmon.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/procmon/procmon.pb.h"
 
 namespace stratum {
 
@@ -142,12 +142,12 @@ class FakeProcessHandler : public ProcessHandler {
   }
   void VerifyCleanState() {
     absl::MutexLock lock(&proc_lock_);
-    EXPECT_TRUE(to_fork_.empty());  // All procs started.
+    EXPECT_TRUE(to_fork_.empty());        // All procs started.
     EXPECT_TRUE(procs_running_.empty());  // No zombie procs.
   }
   void VerifyRunningProcsRemain() {
     absl::MutexLock lock(&proc_lock_);
-    EXPECT_TRUE(to_fork_.empty());  // All procs started.
+    EXPECT_TRUE(to_fork_.empty());         // All procs started.
     EXPECT_FALSE(procs_running_.empty());  // Procs running.
   }
 
@@ -176,9 +176,7 @@ class ProcmonTest : public ::testing::Test {
     procmon_ = absl::make_unique<Procmon>(std::move(interface));
     return procmon_->Initialize(config);
   }
-  ::util::Status HandleEvent() {
-    return procmon_->HandleEvent();
-  }
+  ::util::Status HandleEvent() { return procmon_->HandleEvent(); }
 
   // These functions let us access procmon's internal state.
   std::queue<ProcmonEvent> GetEventQueue() {
@@ -197,8 +195,7 @@ class ProcmonTest : public ::testing::Test {
     for (int i = 0; i < 200; i++) {
       usleep(50000);
       auto event_queue = GetEventQueue();
-      if (event_queue.size() == 1)
-        return;
+      if (event_queue.size() == 1) return;
     }
     FAIL();  // Timeout!
   }
@@ -213,8 +210,8 @@ TEST_F(ProcmonTest, CanConfigureProcmon) {
 }
 
 TEST_F(ProcmonTest, CantConfigureNoProcesses) {
-  EXPECT_FALSE(Initialize(std::make_shared<ProcessHandler>(),
-                          ProcmonConfig()).ok());
+  EXPECT_FALSE(
+      Initialize(std::make_shared<ProcessHandler>(), ProcmonConfig()).ok());
 }
 
 TEST_F(ProcmonTest, NewProcmonSchedulesFirstProcess) {
@@ -252,14 +249,14 @@ TEST_F(ProcmonTest, ProcmonDeletesStoppedProcess) {
   auto process_interface = std::make_shared<FakeProcessHandler>();
   process_interface->WillFork(1234);
   ASSERT_OK(Initialize(process_interface, MakeConfig(kShortProcessConfig)));
-  EXPECT_OK(HandleEvent());  // Handle a START_PROCESS event.
+  EXPECT_OK(HandleEvent());             // Handle a START_PROCESS event.
   EXPECT_EQ(GetProcesses().size(), 1);  // Now there's one process.
   process_interface->Kill(1234, SIGTERM);
   WaitForEvent();
   auto event_queue = GetEventQueue();
   EXPECT_EQ(event_queue.front().event_type, PROCESS_EXIT_OK);
   EXPECT_EQ(event_queue.front().affected_pid, 1234);
-  EXPECT_OK(HandleEvent());  // Handle a PROCESS_EXIT_OK event.
+  EXPECT_OK(HandleEvent());             // Handle a PROCESS_EXIT_OK event.
   EXPECT_EQ(GetProcesses().size(), 0);  // Now there are no processes.
   process_interface->VerifyCleanState();
 }
@@ -275,12 +272,12 @@ TEST_F(ProcmonTest, ProcmonCanStartRealProcess) {
 TEST_F(ProcmonTest, ProcmonDeletesRealFailedProcess) {
   ASSERT_OK(Initialize(std::make_shared<ProcessHandler>(),
                        MakeConfig(kBrokenProcessConfig)));
-  EXPECT_OK(HandleEvent());  // Handle a START_PROCESS event.
+  EXPECT_OK(HandleEvent());             // Handle a START_PROCESS event.
   EXPECT_EQ(GetProcesses().size(), 1);  // Now there's one process.
   WaitForEvent();
   auto event_queue = GetEventQueue();
   EXPECT_EQ(event_queue.front().event_type, PROCESS_EXIT_ERR);
-  EXPECT_OK(HandleEvent());  // Handle a PROCESS_EXIT_ERR event.
+  EXPECT_OK(HandleEvent());             // Handle a PROCESS_EXIT_ERR event.
   EXPECT_EQ(GetProcesses().size(), 0);  // Now there are no processes.
 }
 
@@ -315,8 +312,8 @@ TEST_F(ProcmonTest, ProcessCanKillAll) {
   process_interface->WillFork(1111);
   EXPECT_OK(HandleEvent());  // Handle a START_PROCESS event.
   process_interface->WillFork(2222);
-  EXPECT_OK(HandleEvent());  // Handle a START_PROCESS event.
-  EXPECT_EQ(GetProcesses().size(), 2);  // Now there are TWO processes.
+  EXPECT_OK(HandleEvent());                // Handle a START_PROCESS event.
+  EXPECT_EQ(GetProcesses().size(), 2);     // Now there are TWO processes.
   process_interface->Kill(1111, SIGTERM);  // Short process stops. KILL_ALL!
   WaitForEvent();
   auto event_queue = GetEventQueue();
@@ -329,18 +326,18 @@ TEST_F(ProcmonTest, ProcessCanKillAll) {
 
 TEST_F(ProcmonTest, ProcessCanIgnoreKillAll) {
   auto process_interface = std::make_shared<FakeProcessHandler>();
-  ASSERT_OK(Initialize(process_interface,
-                       MakeConfig(kIgnoreKillAllProcessesConfig)));
+  ASSERT_OK(
+      Initialize(process_interface, MakeConfig(kIgnoreKillAllProcessesConfig)));
   process_interface->WillFork(1111);
   EXPECT_OK(HandleEvent());  // Handle a START_PROCESS event.
   process_interface->WillFork(2222);
-  EXPECT_OK(HandleEvent());  // Handle a START_PROCESS event.
-  EXPECT_EQ(GetProcesses().size(), 2);  // Now there are TWO processes.
+  EXPECT_OK(HandleEvent());                // Handle a START_PROCESS event.
+  EXPECT_EQ(GetProcesses().size(), 2);     // Now there are TWO processes.
   process_interface->Kill(1111, SIGTERM);  // Short process stops. KILL_ALL!
   WaitForEvent();
   auto event_queue = GetEventQueue();
   EXPECT_EQ(event_queue.front().event_type, PROCESS_EXIT_OK);
-  EXPECT_OK(HandleEvent());  // Handle a PROCESS_EXIT_OK event.
+  EXPECT_OK(HandleEvent());             // Handle a PROCESS_EXIT_OK event.
   EXPECT_EQ(GetProcesses().size(), 1);  // Our other process isn't killed.
   process_interface->VerifyRunningProcsRemain();
 }

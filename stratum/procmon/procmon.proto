@@ -21,15 +21,15 @@ message ClientProcess {
   // How to handle unexpected death of this process.
   enum OnDeathBehavior {
     KILL_ALL = 0;  // Kill all other processes (default).
-    LOG = 1;  // Log a message.
-    IGNORE = 2;  // Do nothing.
+    LOG = 1;       // Log a message.
+    IGNORE = 2;    // Do nothing.
   }
   OnDeathBehavior on_death = 5;
   // How to handle KILL_ALL (i.e. death of another process).
   enum OnKillBehavior {
     TERMINATE = 0;  // Shutdown properly (default).
-    ABORT = 1;  // Dump core and exit immediately.
-    CONTINUE = 2;  // Ignore and continue execution.
+    ABORT = 1;      // Dump core and exit immediately.
+    CONTINUE = 2;   // Ignore and continue execution.
   }
   OnKillBehavior on_kill = 6;
   // Whether this process is nsf-capable (accepts '--warmboot')
@@ -49,8 +49,7 @@ message CheckinRequest {
   int32 checkin_key = 1;
 }
 
-message CheckinResponse {
-}
+message CheckinResponse {}
 
 // This service is in charge of handling Checkin, etc requests from all the
 // processes managed by procmon.

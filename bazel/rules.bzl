@@ -20,10 +20,12 @@ load(
     _stratum_platform_select = "stratum_platform_select",
 )
 load("//bazel/rules:test_rule.bzl", _stratum_cc_test = "stratum_cc_test")
+load("//bazel/rules:license.bzl", _stratum_license_tar = "stratum_license_tar")
 
 stratum_cc_library = _stratum_cc_library
 stratum_cc_binary = _stratum_cc_binary
 stratum_cc_test = _stratum_cc_test
+stratum_license_tar = _stratum_license_tar
 stratum_platform_select = _stratum_platform_select
 stratum_platform_filter = _stratum_platform_filter
 stratum_platform_alias = _stratum_platform_alias

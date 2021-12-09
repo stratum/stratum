@@ -250,7 +250,7 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
           << "Instances on Replicas are not supported: "
           << replica.ShortDebugString() << ".";
       RETURN_IF_ERROR(bf_sde_interface_->InsertCloneSession(
-          device_, session, entry.session_id(), replica.egress_port(),
+          device_, session, entry.session_id(), replica.egress_port(), 0,
           entry.class_of_service(), entry.packet_length_bytes()));
       break;
     }
@@ -266,7 +266,7 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
           << "Instances on Replicas are not supported: "
           << replica.ShortDebugString() << ".";
       RETURN_IF_ERROR(bf_sde_interface_->ModifyCloneSession(
-          device_, session, entry.session_id(), replica.egress_port(),
+          device_, session, entry.session_id(), replica.egress_port(), 0,
           entry.class_of_service(), entry.packet_length_bytes()));
       break;
     }

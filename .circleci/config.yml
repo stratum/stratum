@@ -177,6 +177,8 @@ jobs:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
       - DOCKER_IMG: opennetworking/mn-stratum
+      - CC: clang
+      - CXX: clang++
     steps:
       - setup_remote_docker
       - checkout
@@ -339,6 +341,17 @@ jobs:
           name: Run reuse
           command: reuse lint
 
+  markdown-lint-check:
+    # We use the machine executor because mounting folders is not possible with
+    # CircleCi remote docker:
+    # https://circleci.com/docs/2.0/building-docker-images/#separation-of-environmentss
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Lint markdown files
+          command: .circleci/lint-markdown.sh
+
 workflows:
   version: 2
   build_and_test:
@@ -348,6 +361,7 @@ workflows:
       - coverage
       - lint-and-style-check
       - license-check
+      - markdown-lint-check
   docker-publish:
     jobs:
       - publish-docker-build:
