@@ -158,7 +158,7 @@ if [[ $SDE_VERSION == "9.7.0" ]]; then
     sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
     # Build BF SDE
     ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
-    ./p4studio configure bfrt pi '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
+    ./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
     ./p4studio build --jobs $JOBS
     popd
 else

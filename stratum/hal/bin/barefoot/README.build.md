@@ -22,7 +22,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - 9.3.1 (Extended support for legacy switches)
  - 9.5.0 (Recommended; LTS release)
  - ~~9.6.0~~ (skipped)
- - 9.7.0 (experimental)
+ - 9.7.0 (experimental; stratum_bfrt only)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
