@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -219,6 +220,36 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
       cburst: 100
       pir: 2
       pburst: 200
+    }
+  )PROTO";
+  ::p4::v1::MeterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+
+  EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ResetIndirectMeterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4MeterId = 55555;
+  constexpr int kBfRtTableId = 11111;
+  constexpr int kMeterIndex = 12345;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4MeterId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              WriteIndirectMeter(
+                  kDevice1, _, kBfRtTableId, Optional(kMeterIndex), false,
+                  kUnsetMeterThresholdReset, kUnsetMeterThresholdReset,
+                  kUnsetMeterThresholdReset, kUnsetMeterThresholdReset))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kMeterEntryText = R"PROTO(
+    meter_id: 55555
+    index {
+      index: 12345
     }
   )PROTO";
   ::p4::v1::MeterEntry entry;
