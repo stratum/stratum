@@ -10,7 +10,7 @@
 
 namespace stratum {
 
-TEST(cert_test, Generate_Cert2) {
+TEST(cert_test, Generate_Cert) {
   Certificate ca("Stratum CA", 1);
   EXPECT_OK(ca.GenerateKeyPair(1024));
   EXPECT_OK(ca.SignCertificate(ca, 30));
