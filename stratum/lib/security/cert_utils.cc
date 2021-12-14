@@ -73,8 +73,8 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
   CHECK_RETURN_IF_FALSE(
       ASN1_INTEGER_set(X509_get_serialNumber(unsigned_cert), serial));
   CHECK_RETURN_IF_FALSE(X509_gmtime_adj(X509_get_notBefore(unsigned_cert), 0));
-  CHECK_RETURN_IF_FALSE(X509_gmtime_adj(X509_get_notAfter(unsigned_cert),
-                                        (long)60 * 60 * 24 * days));
+  CHECK_RETURN_IF_FALSE(
+      X509_gmtime_adj(X509_get_notAfter(unsigned_cert), 60 * 60 * 24 * days));
   CHECK_RETURN_IF_FALSE(X509_set_pubkey(unsigned_cert, unsigned_cert_key));
 
   X509_NAME* name = X509_get_subject_name(unsigned_cert);
@@ -132,7 +132,8 @@ util::Status Certificate::GenerateKeyPair(int bits) {
   return GenerateRSAKeyPair(this->key_.get(), bits);
 }
 
-util::Status Certificate::SignCertificate(Certificate& issuer, int days_valid) {
+util::Status Certificate::SignCertificate(const Certificate& issuer,
+                                          int days_valid) {
   X509* unsigned_cert = this->certificate_.get();
   EVP_PKEY* unsigned_key = this->key_.get();
   X509* issuer_cert;

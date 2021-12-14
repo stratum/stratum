@@ -43,8 +43,8 @@ constexpr char kServerCertFile[] = "stratum.crt";
 constexpr char kServerKeyFile[] = "stratum.key";
 constexpr char cert_common_name[] = "stratum.local";
 
-util::Status GenerateCerts(std::string& ca_crt, std::string& server_crt,
-                           std::string& server_key) {
+util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
+                           std::string* server_key) {
   Certificate ca("Stratum CA", 1);
   EXPECT_OK(ca.GenerateKeyPair(1024));
   EXPECT_OK(ca.SignCertificate(ca, 30));
@@ -53,9 +53,9 @@ util::Status GenerateCerts(std::string& ca_crt, std::string& server_crt,
   EXPECT_OK(stratum.GenerateKeyPair(1024));
   EXPECT_OK(stratum.SignCertificate(ca, 30));
 
-  ASSIGN_OR_RETURN(ca_crt, ca.GetCertificate());
-  ASSIGN_OR_RETURN(server_crt, stratum.GetCertificate());
-  ASSIGN_OR_RETURN(server_key, stratum.GetPrivateKey());
+  ASSIGN_OR_RETURN(*ca_crt, ca.GetCertificate());
+  ASSIGN_OR_RETURN(*server_crt, stratum.GetCertificate());
+  ASSIGN_OR_RETURN(*server_key, stratum.GetPrivateKey());
   return util::OkStatus();
 }
 
@@ -76,7 +76,7 @@ class CredentialsManagerTest : public ::testing::Test {
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
 
     std::string server_crt, server_key;
-    EXPECT_OK(GenerateCerts(ca_crt_, server_crt, server_key));
+    EXPECT_OK(GenerateCerts(&ca_crt_, &server_crt, &server_key));
     SetCerts(ca_crt_, server_crt, server_key);
     credentials_manager_ =
         CredentialsManager::CreateInstance().ConsumeValueOrDie();
@@ -129,13 +129,13 @@ TEST_F(CredentialsManagerTest, ConnectSuccess) { Connect(GetOriginalCaCert()); }
 
 TEST_F(CredentialsManagerTest, ConnectFailWrongCert) {
   std::string ca_crt, server_crt, server_key;
-  EXPECT_OK(GenerateCerts(ca_crt, server_crt, server_key));
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
   Connect(ca_crt, false);
 }
 
 TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
   std::string ca_crt, server_crt, server_key;
-  EXPECT_OK(GenerateCerts(ca_crt, server_crt, server_key));
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
   SetCerts(ca_crt, server_crt, server_key);
   absl::SleepFor(absl::Seconds(2));  // Wait for file watcher to update certs...
   Connect(ca_crt);
@@ -144,7 +144,7 @@ TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
 
 TEST_F(CredentialsManagerTest, LoadNewCredentials) {
   std::string ca_crt, server_crt, server_key;
-  EXPECT_OK(GenerateCerts(ca_crt, server_crt, server_key));
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
   EXPECT_OK(
       credentials_manager_->LoadNewCredential(ca_crt, server_crt, server_key));
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "openssl/bio.h"
@@ -49,7 +50,7 @@ class Certificate {
   util::Status GenerateKeyPair(int bits);
 
   // Signs a certificate using the provided certificate
-  util::Status SignCertificate(Certificate& issuer, int days_valid);
+  util::Status SignCertificate(const Certificate& issuer, int days_valid);
 
  private:
   EVP_PKEY_ptr key_;
@@ -61,5 +62,6 @@ class Certificate {
 
 }  // namespace stratum
 
-// TODO(bocon): seed random number generator before using this in production code
+// TODO(bocon): seed random number generator before using this in production
+// code
 // TODO(bocon): set CA attribute in X509v3
