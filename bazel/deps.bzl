@@ -78,13 +78,6 @@ def stratum_deps():
             sha256 = P4RUNTIME_SHA,
         )
 
-    if "build_stack_rules_proto" not in native.existing_rules():
-        remote_workspace(
-            name = "build_stack_rules_proto",
-            remote = "https://github.com/stackb/rules_proto",
-            commit = "2f4e4f62a3d7a43654d69533faa0652e1c4f5082",
-        )
-
     if "com_github_p4lang_PI" not in native.existing_rules():
         # ----- PI -----
         remote_workspace(
