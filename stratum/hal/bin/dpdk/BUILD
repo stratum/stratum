@@ -6,6 +6,7 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
 )
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 
 licenses(["notice"])  # Apache v2
 
@@ -73,4 +74,59 @@ stratum_cc_binary(
         # "@local_dpdk_bin//:dpdk",
         "@local_dpdk_bin//:dpdk_shared",
     ],
+)
+
+pkg_tar(
+    name = "stratum_dpdk_bin",
+    srcs = [
+        "start-stratum.sh",
+        ":dpdk_pipeline",
+    ],
+    mode = "0755",
+    package_dir = "/usr/bin",
+)
+
+pkg_tar(
+    name = "stratum_dpdk_etc",
+    srcs = [
+        "l2fwd.cli",
+        "l2fwd.spec",
+        "//stratum/hal/lib/common:gnmi_caps.pb.txt",
+    ],
+    package_dir = "/etc/stratum",
+    deps = [
+        "//stratum/hal/config:platform_configs_tar",
+    ],
+)
+
+pkg_tar(
+    name = "stratum_dpdk_data",
+    extension = "tar.bz2",
+    deps = [
+        ":stratum_dpdk_bin",
+        # ":stratum_dpdk_legal",
+        ":stratum_dpdk_etc",
+        "@local_dpdk_bin//:dpdk_shared_library_files",
+    ],
+)
+
+pkg_deb(
+    name = "stratum_dpdk_deb",
+    architecture = "amd64",
+    conflicts = ["stratum-dpdk"],
+    data = ":stratum_dpdk_data",
+    depends = [
+        # "kmod",
+        # "libedit2",
+        # "libssl1.1",
+        # "systemd",
+        # "telnet",
+    ],
+    description = "The Stratum package for DPDK SWX platform",
+    homepage = "https://stratumproject.org/",
+    maintainer = "The Stratum Project",
+    package = "stratum-dpdk",
+    # postinst = "deb/postinst",
+    # prerm = "deb/prerm",
+    version = "0.0.1",
 )
