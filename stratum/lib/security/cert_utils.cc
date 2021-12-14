@@ -13,11 +13,6 @@
 
 namespace stratum {
 
-using BIGNUM_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
-using BIO_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
-using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
-using X509_ptr = std::unique_ptr<X509, decltype(&::X509_free)>;
-
 util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
   // Returns a reference to the underlying key; no need to free.
   RSA* rsa = EVP_PKEY_get0_RSA(pkey);
@@ -55,8 +50,7 @@ util::StatusOr<std::string> GetCertAsString(X509* x509) {
       << "Failed to write certificate in PEM format.";
 }
 
-util::Status generateRSAKeyPair(EVP_PKEY* evp, int bits) {
-  // Generate an RSA keypair.
+util::Status GenerateRSAKeyPair(EVP_PKEY* evp, int bits) {
   BIGNUM_ptr exp(BN_new(), BN_free);
   BN_set_word(exp.get(), RSA_F4);
   RSA* rsa = RSA_new();
@@ -72,19 +66,7 @@ util::Status generateRSAKeyPair(EVP_PKEY* evp, int bits) {
   return util::OkStatus();
 }
 
-util::Status generateSignedCert(X509* unsigned_cert,
-                                EVP_PKEY* unsigned_cert_key, X509* issuer,
-                                EVP_PKEY* issuer_key,
-                                const std::string& common_name, int serial,
-                                int days) {
-  RETURN_IF_ERROR(generateUnsignedCert(unsigned_cert, unsigned_cert_key,
-                                       common_name, serial, days));
-  RETURN_IF_ERROR(signCert(unsigned_cert, unsigned_cert_key, issuer, issuer_key,
-                           common_name, serial, days));
-  return util::OkStatus();
-}
-
-util::Status generateUnsignedCert(X509* unsigned_cert,
+util::Status GenerateUnsignedCert(X509* unsigned_cert,
                                   EVP_PKEY* unsigned_cert_key,
                                   const std::string& common_name, int serial,
                                   int days) {
@@ -103,7 +85,7 @@ util::Status generateUnsignedCert(X509* unsigned_cert,
   return util::OkStatus();
 }
 
-util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
+util::Status SignCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
                       X509* issuer, EVP_PKEY* issuer_key,
                       const std::string& common_name, int serial, int days) {
   X509_NAME* name = X509_get_subject_name(unsigned_cert);
@@ -120,86 +102,51 @@ util::Status signCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
   return util::OkStatus();
 }
 
-namespace {
+util::Status GenerateSignedCert(X509* unsigned_cert,
+                                EVP_PKEY* unsigned_cert_key, X509* issuer,
+                                EVP_PKEY* issuer_key,
+                                const std::string& common_name, int serial,
+                                int days) {
+  RETURN_IF_ERROR(GenerateUnsignedCert(unsigned_cert, unsigned_cert_key,
+                                       common_name, serial, days));
+  RETURN_IF_ERROR(SignCert(unsigned_cert, unsigned_cert_key, issuer, issuer_key,
+                           common_name, serial, days));
+  return util::OkStatus();
+}
 
-// using BN_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
-// using RSA_ptr = std::unique_ptr<RSA, decltype(&::RSA_free)>;
-// using BIO_MEM_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
-// using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
-#define OPENSSL_PTR_DEFINITION1(type) OPENSSL_PTR_DEFINITION2(type, type)
-#define OPENSSL_PTR_DEFINITION2(type, fn) \
-  using type##_ptr = std::unique_ptr<type, decltype(&::fn##_free)>
-#define OPENSSL_PTR(type, name, ...) \
-  type##_ptr name(type##_new(__VA_ARGS__), ::type##_free)
-
-// OPENSSL_PTR_DEFINITION2(BIGNUM, BN);
-// OPENSSL_PTR_DEFINITION1(RSA);
-// OPENSSL_PTR_DEFINITION1(BIO_MEM);
-// OPENSSL_PTR_DEFINITION1(EVP_PKEY);
-
-class RsaCertificate : public Certificate {
- public:
-  // RsaCertificate() {
-  //   // OPENSSL_PTR(BN, bn,);
-  //   // OPENSSL_PTR(BIO_MEM, bio, BIO_s_mem());
-  // }
-  RsaCertificate(const std::string& common_name, int serial_number,
-                 int bits = 1024);
-
-  util::StatusOr<std::string> GetPrivateKey() override;
-  util::StatusOr<std::string> GetCertificate() override;
-
- private:
-  EVP_PKEY_ptr key_;
-  X509_ptr certificate_;
-  std::string common_name_;
-  int serial_number_;
-};
-
-RsaCertificate::RsaCertificate(const std::string& common_name,
-                               int serial_number, int bits)
+Certificate::Certificate(const std::string& common_name, int serial_number)
     : key_(EVP_PKEY_ptr(EVP_PKEY_new(), EVP_PKEY_free)),
       certificate_(X509_ptr(X509_new(), X509_free)),
       common_name_(common_name),
       serial_number_(serial_number) {}
 
-util::StatusOr<std::string> RsaCertificate::GetPrivateKey() {
-  if (!private_key_string_.empty()) return private_key_string_;
-  CHECK_RETURN_IF_FALSE(key_.get()) << "Failed to key.";
-  auto result = GetRSAPrivateKeyAsString(key_.get());
-  if (result.ok()) private_key_string_ = result.ValueOrDie();
-  return result;
-}
-
-util::StatusOr<std::string> RsaCertificate::GetCertificate() {
-  if (!certificate_string_.empty()) return certificate_string_;
-  CHECK_RETURN_IF_FALSE(certificate_.get()) << "Failed to certificate.";
-  auto result = GetCertAsString(certificate_.get());
-  if (result.ok()) certificate_string_ = result.ValueOrDie();
-  return result;
-}
-
-}  // namespace
-
-Certificate Certificate::GenerateCertificate(const std::string& common_name,
-                                             int serial_number, int bits) {
-  return RsaCertificate(common_name, serial_number, bits);
-}
-
-Certificate::Certificate() {}
-
-Certificate::Certificate(const std::string& certificate,
-                         const std::string& private_key)
-    : private_key_string_(private_key), certificate_string_(certificate) {
-  // TODO(bocon): extract certificate??
-}
-
 util::StatusOr<std::string> Certificate::GetPrivateKey() {
-  return private_key_string_;
+  return GetRSAPrivateKeyAsString(key_.get());
 }
 
 util::StatusOr<std::string> Certificate::GetCertificate() {
-  return certificate_string_;
+  return GetCertAsString(certificate_.get());
+}
+
+util::Status Certificate::GenerateKeyPair(int bits) {
+  return GenerateRSAKeyPair(this->key_.get(), bits);
+}
+
+util::Status Certificate::SignCertificate(Certificate& issuer, int days_valid) {
+  X509* unsigned_cert = this->certificate_.get();
+  EVP_PKEY* unsigned_key = this->key_.get();
+  X509* issuer_cert;
+  EVP_PKEY* issuer_key;
+  if (this == &issuer) {  // self sign
+    issuer_cert = NULL;
+    issuer_key = NULL;
+  } else {
+    issuer_cert = issuer.certificate_.get();
+    issuer_key = issuer.key_.get();
+  }
+  return GenerateSignedCert(unsigned_cert, unsigned_key, issuer_cert,
+                            issuer_key, this->common_name_,
+                            this->serial_number_, days_valid);
 }
 
 }  // namespace stratum

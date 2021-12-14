@@ -15,6 +15,7 @@
 #include "grpcpp/grpcpp.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/security/cert_utils.h"
 #include "stratum/lib/security/test.grpc.pb.h"
@@ -42,35 +43,20 @@ constexpr char kServerCertFile[] = "stratum.crt";
 constexpr char kServerKeyFile[] = "stratum.key";
 constexpr char cert_common_name[] = "stratum.local";
 
-void generateCerts(std::string& ca_crt, std::string& server_crt,
-                   std::string& server_key) {
-  // Generate keypair for CA
-  EVP_PKEY* evp_ca = EVP_PKEY_new();
-  EXPECT_OK(generateRSAKeyPair(evp_ca));
+util::Status GenerateCerts(std::string& ca_crt, std::string& server_crt,
+                           std::string& server_key) {
+  Certificate ca("Stratum CA", 1);
+  EXPECT_OK(ca.GenerateKeyPair(1024));
+  EXPECT_OK(ca.SignCertificate(ca, 30));
 
-  // Generate self-signed CA cert
-  X509* x509 = X509_new();
-  EXPECT_OK(generateSignedCert(x509, evp_ca, NULL, NULL, "stratum ca", 1, 365));
+  Certificate stratum(cert_common_name, 1);
+  EXPECT_OK(stratum.GenerateKeyPair(1024));
+  EXPECT_OK(stratum.SignCertificate(ca, 30));
 
-  // Generate keypair for stratum cert
-  EVP_PKEY* stratum_evp = EVP_PKEY_new();
-  EXPECT_OK(generateRSAKeyPair(stratum_evp));
-
-  // Generate stratum cert (signed by CA)
-  X509* stratum_crt = X509_new();
-  EXPECT_OK(generateSignedCert(stratum_crt, stratum_evp, x509, evp_ca,
-                               cert_common_name, 1, 60));
-
-  auto ca_crt_string_result = GetCertAsString(x509);
-  auto stratum_crt_string_result = GetCertAsString(stratum_crt);
-  auto stratum_key_string_result = GetRSAPrivateKeyAsString(stratum_evp);
-  EXPECT_OK(ca_crt_string_result);
-  EXPECT_OK(stratum_crt_string_result);
-  EXPECT_OK(stratum_key_string_result);
-
-  ca_crt = ca_crt_string_result.ConsumeValueOrDie();
-  server_crt = stratum_crt_string_result.ConsumeValueOrDie();
-  server_key = stratum_key_string_result.ConsumeValueOrDie();
+  ASSIGN_OR_RETURN(ca_crt, ca.GetCertificate());
+  ASSIGN_OR_RETURN(server_crt, stratum.GetCertificate());
+  ASSIGN_OR_RETURN(server_key, stratum.GetPrivateKey());
+  return util::OkStatus();
 }
 
 void SetCerts(const std::string& ca_crt, const std::string& server_crt,
@@ -90,7 +76,7 @@ class CredentialsManagerTest : public ::testing::Test {
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
 
     std::string server_crt, server_key;
-    generateCerts(ca_crt_, server_crt, server_key);
+    EXPECT_OK(GenerateCerts(ca_crt_, server_crt, server_key));
     SetCerts(ca_crt_, server_crt, server_key);
     credentials_manager_ =
         CredentialsManager::CreateInstance().ConsumeValueOrDie();
@@ -143,13 +129,13 @@ TEST_F(CredentialsManagerTest, ConnectSuccess) { Connect(GetOriginalCaCert()); }
 
 TEST_F(CredentialsManagerTest, ConnectFailWrongCert) {
   std::string ca_crt, server_crt, server_key;
-  generateCerts(ca_crt, server_crt, server_key);
+  EXPECT_OK(GenerateCerts(ca_crt, server_crt, server_key));
   Connect(ca_crt, false);
 }
 
 TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
   std::string ca_crt, server_crt, server_key;
-  generateCerts(ca_crt, server_crt, server_key);
+  EXPECT_OK(GenerateCerts(ca_crt, server_crt, server_key));
   SetCerts(ca_crt, server_crt, server_key);
   absl::SleepFor(absl::Seconds(2));  // Wait for file watcher to update certs...
   Connect(ca_crt);
@@ -158,7 +144,7 @@ TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
 
 TEST_F(CredentialsManagerTest, LoadNewCredentials) {
   std::string ca_crt, server_crt, server_key;
-  generateCerts(ca_crt, server_crt, server_key);
+  EXPECT_OK(GenerateCerts(ca_crt, server_crt, server_key));
   EXPECT_OK(
       credentials_manager_->LoadNewCredential(ca_crt, server_crt, server_key));
 

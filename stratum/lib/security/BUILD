@@ -161,6 +161,7 @@ stratum_cc_test(
         "//stratum/glue:logging",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
         "@com_github_grpc_grpc//:grpc++",
@@ -203,6 +204,7 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "cert_utils",
+    testonly = True,
     srcs = ["cert_utils.cc"],
     hdrs = ["cert_utils.h"],
     deps = [
