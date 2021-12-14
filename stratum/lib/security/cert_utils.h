@@ -61,5 +61,5 @@ class Certificate {
 
 }  // namespace stratum
 
-// todo: seed random number generator before using this in production code
-// todo: set CA attribute in X509v3
+// TODO(bocon): seed random number generator before using this in production code
+// TODO(bocon): set CA attribute in X509v3
