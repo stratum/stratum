@@ -41,6 +41,9 @@ WORKDIR /dpdk-21.11
 # Build DPDK install tarball.
 RUN meson --prefix /dpdk-install build
 WORKDIR /dpdk-21.11/build
+# Depending on the build machine, newer CPU instruction sets might be used. To
+# ensure greater compatability we compile for an older arch.
+RUN meson configure -D cpu_instruction_set=corei7
 RUN ninja
 RUN ninja install
 RUN ldconfig
