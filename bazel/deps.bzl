@@ -184,8 +184,8 @@ def stratum_deps():
     if "com_github_nlohmann_json" not in native.existing_rules():
         http_archive(
             name = "com_github_nlohmann_json",
-            url = "https://github.com/nlohmann/json/releases/download/v3.9.1/include.zip",
-            sha256 = "6bea5877b1541d353bd77bdfbdb2696333ae5ed8f9e8cc22df657192218cad91",
+            url = "https://github.com/nlohmann/json/releases/download/v3.10.4/include.zip",
+            sha256 = "62c585468054e2d8e7c2759c0d990fd339d13be988577699366fe195162d16cb",
             build_file = "@//bazel:external/json.BUILD",
         )
 
