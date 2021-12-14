@@ -52,6 +52,10 @@ std::string P4RuntimeByteStringToPaddedByteString(std::string byte_string,
 // Converts a byte string to a canonical P4Runtime byte string.
 std::string ByteStringToP4RuntimeByteString(std::string bytes);
 
+// Validates that the P4 MeterConfig is a valid trTCM according to RFC 2698.
+// See: https://datatracker.ietf.org/doc/html/rfc2698
+::util::Status IsValidMeterConfig(const ::p4::v1::MeterConfig& meter_config);
+
 // Helper to convert a gRPC status with error details to a string. Assumes
 // ::grpc::Status includes a binary error detail which is encoding a serialized
 // version of ::google::rpc::Status proto in which the details are captured

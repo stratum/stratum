@@ -19,7 +19,7 @@ VERSION_LONG=${VERSION_LONG:-$(date +%Y-%m-%d)}  # 2021-03-31
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
-BF_SDE_VERSIONS=(9.3.1 9.3.2 9.4.0 9.5.0)
+BF_SDE_VERSIONS=(9.3.1 9.5.0 9.7.0)
 
 # ---------- Build Variables -------------
 JOBS=30
@@ -56,7 +56,9 @@ if ! which gh >/dev/null; then
   sudo apt install ./gh_1.4.0_linux_amd64.deb
   rm gh_1.4.0_linux_amd64.deb
 fi
-echo "$GITHUB_TOKEN" | gh auth login -h github.com --with-token
+
+# gh will use GITHUB_TOKEN to login automatically
+gh auth status
 
 # Verify that all BF SDE install packages exist
 missing=0
@@ -148,6 +150,10 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
+    if [ "$sde_version" == "9.7.0" -a "$target" == "stratum_bf" ]; then
+      echo "Skipping $target with BF SDE $sde_version."
+      continue
+    fi
     target_dash=${target/_/-}
     echo "Building $target ($target_dash) with BF SDE $sde_version..."
     set -x
@@ -292,5 +298,3 @@ gh issue create -R stratum/stratum \
 
 # ---------- Cleanup -------------
 docker logout
-unset GITHUB_TOKEN
-gh auth logout -h github.com

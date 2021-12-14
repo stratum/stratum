@@ -959,6 +959,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     meter_index = meter_entry.index().index();
   }
   if (meter_entry.has_config()) {
+    RETURN_IF_ERROR(IsValidMeterConfig(meter_entry.config()));
     RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
         device_, session, meter_id, meter_index, meter_units_in_packets,
         meter_entry.config().cir(), meter_entry.config().cburst(),
