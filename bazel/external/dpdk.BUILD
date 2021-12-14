@@ -3,6 +3,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@//bazel/rules:package_rule.bzl", "pkg_tar_with_symlinks")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -62,6 +63,16 @@ cc_library(
     ],
     strip_include_prefix = "dpdk-install/include",
     alwayslink = 1,
+)
+
+pkg_tar(
+    name = "dpdk_tools",
+    srcs = [
+        "dpdk-install/bin/dpdk-devbind.py",
+        "dpdk-install/bin/dpdk-hugepages.py",
+    ],
+    package_dir = "/usr/",
+    strip_prefix = "dpdk-install",
 )
 
 pkg_tar_with_symlinks(

@@ -107,6 +107,7 @@ pkg_tar(
         # ":stratum_dpdk_legal",
         ":stratum_dpdk_etc",
         "@local_dpdk_bin//:dpdk_shared_library_files",
+        "@local_dpdk_bin//:dpdk_tools",
     ],
 )
 

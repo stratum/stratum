@@ -1,7 +1,7 @@
 # Copyright 2021-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-# This Starlark rule imports the DPDK static libraries and headers. The
+# This Starlark rule imports the DPDK libraries, headers and tools. The
 # DPDK_INSTALL or DPDK_INSTALL_TAR environment variable needs to be set,
 # otherwise the Stratum rules for DPDK targets cannot be built.
 
