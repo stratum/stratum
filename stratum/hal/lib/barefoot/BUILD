@@ -23,12 +23,9 @@ package(
 # a that version upgrade re-visits these.
 SDE_DEFINES = select(
     {
-        "@local_barefoot_bin//:sde_version_9.2.0": ["SDE_9_2_0"],
-        "@local_barefoot_bin//:sde_version_9.3.0": ["SDE_9_3_0"],
         "@local_barefoot_bin//:sde_version_9.3.1": ["SDE_9_3_1"],
-        "@local_barefoot_bin//:sde_version_9.3.2": ["SDE_9_3_2"],
-        "@local_barefoot_bin//:sde_version_9.4.0": ["SDE_9_4_0"],
         "@local_barefoot_bin//:sde_version_9.5.0": ["SDE_9_5_0"],
+        "@local_barefoot_bin//:sde_version_9.7.0": ["SDE_9_7_0"],
     },
     no_match_error = "Unsupported SDE version",
 )
@@ -307,6 +304,37 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "bfrt_node_test",
+    srcs = ["bfrt_node_test.cc"],
+    deps = [
+        ":bf_sde_mock",
+        ":bfrt_counter_manager_mock",
+        ":bfrt_node",
+        ":bfrt_packetio_manager_mock",
+        ":bfrt_pre_manager_mock",
+        ":bfrt_table_manager_mock",
+        ":test_main",
+        "//stratum/glue:integral_types",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:phal_mock",
+        "//stratum/hal/lib/common:utils",
+        "//stratum/hal/lib/common:writer_interface",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
 stratum_cc_library(
     name = "bfrt_node_mock",
     testonly = 1,
@@ -364,6 +392,17 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
+    name = "bfrt_table_manager_mock",
+    testonly = 1,
+    hdrs = ["bfrt_table_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_table_manager",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -457,6 +496,17 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
+    name = "bfrt_packetio_manager_mock",
+    testonly = 1,
+    hdrs = ["bfrt_packetio_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_packetio_manager",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
     name = "bfrt_pre_manager",
     srcs = ["bfrt_pre_manager.cc"],
     hdrs = ["bfrt_pre_manager.h"],
@@ -504,6 +554,17 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
+    name = "bfrt_pre_manager_mock",
+    testonly = 1,
+    hdrs = ["bfrt_pre_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_pre_manager",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
     name = "bfrt_counter_manager",
     srcs = ["bfrt_counter_manager.cc"],
     hdrs = ["bfrt_counter_manager.h"],
@@ -546,6 +607,17 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
+    name = "bfrt_counter_manager_mock",
+    testonly = 1,
+    hdrs = ["bfrt_counter_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bfrt_counter_manager",
         "@com_google_googletest//:gtest",
     ],
 )

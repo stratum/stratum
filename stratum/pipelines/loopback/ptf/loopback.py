@@ -15,7 +15,7 @@ class LoopbackTest(P4RuntimeTest):
 class LoopbackAllPortsTest(LoopbackTest):
     @autocleanup
     def runTest(self):
-        port_list = [0, 1, 2, 3, 4, 5 ,6 ,7]
+        port_list = [0, 1, 2, 3, 4, 5, 6, 7]
         dst_addr = '00:11:22:33:44:55'
         src_addr = '00:aa:bb:cc:dd:ee'
 

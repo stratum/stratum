@@ -51,6 +51,17 @@ constexpr uint16 kMaxMulticastGroupId = 65535;
 constexpr uint32 kMaxMulticastNodeId = 0x1000000;
 constexpr uint64 kMaxPriority = (1u << 24) - 1;
 
+// Tofino meters require delicate handling to implement the behavior mandated by
+// the P4Runtime spec. Inside the ASIC all meter entries always "exist" and are
+// set to a high, but variable and unspecified default value. To differentiate
+// between these and user-given values, we use the canaries below. These values
+// close to the SDE limits and well above port speed, thus should never conflict
+// with user given values. Due to the internal floating point representation
+// inside the SDE, any programmed value will get rounded to the nearest
+// representation. Therefore we put the reset limit higher than the read limit.
+constexpr uint64 kUnsetMeterThresholdRead = 1ull << 38;  // ~270 GB/s
+constexpr uint64 kUnsetMeterThresholdReset = kUnsetMeterThresholdRead << 1;
+
 // Maximum number of queues per (non-channelized 100G) port on Tofino.
 constexpr int kMaxQueuesPerPort = 32;
 

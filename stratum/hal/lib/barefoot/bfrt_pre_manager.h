@@ -26,24 +26,30 @@ using PreEntry = ::p4::v1::PacketReplicationEngineEntry;
 
 class BfrtPreManager {
  public:
+  virtual ~BfrtPreManager();
+
   // Pushes a ForwardingPipelineConfig.
-  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config)
-      LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status PushForwardingPipelineConfig(
+      const BfrtDeviceConfig& config) LOCKS_EXCLUDED(lock_);
 
   // Writes a PRE entry.
-  ::util::Status WritePreEntry(
+  virtual ::util::Status WritePreEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const ::p4::v1::Update::Type& type, const PreEntry& entry)
       LOCKS_EXCLUDED(lock_);
 
   // Reads a PRE entry.
-  ::util::Status ReadPreEntry(
+  virtual ::util::Status ReadPreEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
       const PreEntry& entry, WriterInterface<::p4::v1::ReadResponse>* writer)
       LOCKS_EXCLUDED(lock_);
 
   static std::unique_ptr<BfrtPreManager> CreateInstance(
       BfSdeInterface* bf_sde_interface, int device);
+
+ protected:
+  // Default constructor. To be called by the Mock class instance only.
+  BfrtPreManager();
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`

@@ -17,9 +17,9 @@ It also builds the kernel module if kernel header tarball is given.
 Usage: $0 [SDE_TAR [KERNEL_HEADERS_TAR]...]
 
 Example:
-    $0 ~/bf-sde-9.3.2.tgz
-    $0 ~/bf-sde-9.3.2.tgz ~/linux-4.14.49-ONL.tar.xz
-    SDE_INSTALL_TAR=~/bf-sde-9.3.2-install.tgz $0
+    $0 ~/bf-sde-9.7.0.tgz
+    $0 ~/bf-sde-9.7.0.tgz ~/linux-4.14.49-ONL.tar.xz
+    SDE_INSTALL_TAR=~/bf-sde-9.7.0-install.tgz $0
 
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
@@ -60,10 +60,14 @@ if [ -n "$1" ]; then
       CMD_OPTS+="-k /kernel-tar$i/$KERNEL_HEADERS_TAR_NAME "
       ((i+=1))
   done
-  # Mount BSP folder and pass it to the build script, if requested.
-  if [ -n "$BSP" ]; then
+  # Mount BSP folder and pass it to the build script, if requested, for SDE 9.6.0 and before.
+  # Pass in the BSP tarball directly, starting with SDE 9.7.0.
+  if [[ -n "$BSP" && -d "$BSP" ]]; then
     DOCKER_OPTS+="-v $BSP:/bsp-directory "
     CMD_OPTS+="--bsp-path /bsp-directory "
+  elif [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
+    DOCKER_OPTS+="-v $BSP:/bsp.tgz "
+    CMD_OPTS+="--bsp-path /bsp.tgz "
   fi
 
   echo "Building BF SDE"

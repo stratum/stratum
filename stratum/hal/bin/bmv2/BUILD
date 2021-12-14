@@ -2,7 +2,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary", "stratum_license_tar")
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 
 licenses(["notice"])  # Apache v2
@@ -62,12 +62,24 @@ pkg_tar(
     package_dir = "/etc/stratum",
 )
 
+stratum_license_tar(
+    name = "stratum_bmv2_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.pi.txt",
+        "//legal:NOTICE.bmv2.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bmv2/",
+)
+
 pkg_tar(
     name = "stratum_bmv2_data",
     extension = "tar.gz",
     deps = [
         ":stratum_bmv2_bin",
         ":stratum_bmv2_config",
+        ":stratum_bmv2_legal",
         ":stratum_bmv2_service",
         "@local_bmv2_bin//:bmv2_library_files",
     ],

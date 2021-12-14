@@ -225,12 +225,12 @@ class BfSdeWrapper : public BfSdeInterface {
       LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertCloneSession(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 session_id, int egress_port, int cos, int max_pkt_len) override
-      LOCKS_EXCLUDED(data_lock_);
+      uint32 session_id, int egress_port, int egress_queue, int cos,
+      int max_pkt_len) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status ModifyCloneSession(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 session_id, int egress_port, int cos, int max_pkt_len) override
-      LOCKS_EXCLUDED(data_lock_);
+      uint32 session_id, int egress_port, int egress_queue, int cos,
+      int max_pkt_len) override LOCKS_EXCLUDED(data_lock_);
   ::util::Status DeleteCloneSession(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 session_id) override LOCKS_EXCLUDED(data_lock_);
@@ -435,8 +435,8 @@ class BfSdeWrapper : public BfSdeInterface {
   // Common code for clone session handling.
   ::util::Status WriteCloneSession(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert)
-      SHARED_LOCKS_REQUIRED(data_lock_);
+      uint32 session_id, int egress_port, int egress_queue, int cos,
+      int max_pkt_len, bool insert) SHARED_LOCKS_REQUIRED(data_lock_);
 
   // Common code for action profile member handling.
   ::util::Status WriteActionProfileMember(

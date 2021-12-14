@@ -32,9 +32,21 @@ BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
       packetin_header_size_(),
       packetout_header_size_(),
       packet_receive_channel_(nullptr),
-      sde_rx_thread_id_(0),
+      sde_rx_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       device_(device) {}
+
+BfrtPacketioManager::BfrtPacketioManager()
+    : initialized_(false),
+      rx_writer_(nullptr),
+      packetin_header_(),
+      packetout_header_(),
+      packetin_header_size_(),
+      packetout_header_size_(),
+      packet_receive_channel_(nullptr),
+      sde_rx_thread_id_(),
+      bf_sde_interface_(nullptr),
+      device_(-1) {}
 
 BfrtPacketioManager::~BfrtPacketioManager() {}
 

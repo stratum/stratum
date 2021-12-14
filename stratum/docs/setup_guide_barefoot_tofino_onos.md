@@ -184,7 +184,7 @@ Device|Type |#pipe|#stg|#prsr|#macblk
 ------|-----|-----|----|-----|-------
 0     |T32D |2    |12  |18   |-1
 ```
-In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_3_2`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_3_2`, `org.opencord.fabric-spgw.tofino.montara_sde_9_3_2`, or `org.opencord.fabric-int.tofino.montara_sde_9_3_2` as the pipeconf for your device.
+In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_5_0`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_5_0`, `org.opencord.fabric-spgw.tofino.montara_sde_9_5_0`, or `org.opencord.fabric-int.tofino.montara_sde_9_5_0` as the pipeconf for your device.
 
 ### Apply netcfg to ONOS
 Register the switch in ONOS by executing:
@@ -224,5 +224,6 @@ In case of problems with these instructions, feel free to create an issue or PR.
 - ["Trellis+Stratum example" (Untested)](/tools/mininet/examples/trellis)
 - [ONL building](https://opennetlinux.org/doc-building.html)
 - [stratum-bf Docker](https://registry.hub.docker.com/r/stratumproject/stratum-bf)
+- [stratum-bfrt Docker](https://registry.hub.docker.com/r/stratumproject/stratum-bfrt)
 - [ONOS CLI](https://wiki.onosproject.org/display/ONOS/Appendix+A+%3A+CLI+commands)
 - ["Using ONOS to control Stratum-enabled Intel/Barefoot Tofino-based switches"](https://wiki.onosproject.org/pages/viewpage.action?pageId=16122978)

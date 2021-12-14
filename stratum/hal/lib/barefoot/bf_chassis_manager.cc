@@ -150,6 +150,7 @@ BfChassisManager::~BfChassisManager() = default;
 
   RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
                                                        TRI_STATE_FALSE));
+  config->shaping_config.reset();
 
   return ::util::OkStatus();
 }
@@ -250,11 +251,11 @@ BfChassisManager::~BfChassisManager() = default;
             << port_id << " in node " << node_id << " (SDK Port " << sdk_port_id
             << ").";
   }
-  if (config_old.shaping_config) {
-    RETURN_IF_ERROR(ApplyPortShapingConfig(node_id, device, sdk_port_id,
-                                           *config_old.shaping_config));
-    config_changed = true;
-  }
+  // Due to lack of information about the new shaping config here, we always
+  // disable it. If required, it will be configured later.
+  config->shaping_config.reset();
+  RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(device, sdk_port_id,
+                                                       TRI_STATE_FALSE));
 
   bool need_disable = false, need_enable = false;
   if (config_params.admin_state() == ADMIN_STATE_DISABLED) {
@@ -381,29 +382,29 @@ BfChassisManager::~BfChassisManager() = default;
     // Stratum requires slot and port to be set. We use port and channel to
     // get Tofino device port (called SDK port ID).
 
-    const PortConfig* config_old = nullptr;
+    const PortConfig* old_port_config = nullptr;
     if (const auto* port_id_to_port_config_old =
             gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id)) {
-      config_old = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
+      old_port_config = gtl::FindOrNull(*port_id_to_port_config_old, port_id);
     }
 
-    auto& config = node_id_to_port_id_to_port_config[node_id][port_id];
+    auto& port_config = node_id_to_port_id_to_port_config[node_id][port_id];
     uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id[node_id][port_id];
-    if (config_old == nullptr) {  // new port
-      // if anything fails, config.admin_state will be set to
+    if (old_port_config == nullptr) {  // new port
+      // if anything fails, port_config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      RETURN_IF_ERROR(
-          AddPortHelper(node_id, device, sdk_port_id, singleton_port, &config));
+      RETURN_IF_ERROR(AddPortHelper(node_id, device, sdk_port_id,
+                                    singleton_port, &port_config));
     } else {  // port already exists, config may have changed
-      if (config_old->admin_state == ADMIN_STATE_UNKNOWN) {
+      if (old_port_config->admin_state == ADMIN_STATE_UNKNOWN) {
         // something is wrong with the port, we make sure the port is deleted
         // first (and ignore the error status if there is one), then add the
         // port again.
         if (bf_sde_interface_->IsValidPort(device, sdk_port_id)) {
-          bf_sde_interface_->DeletePort(device, sdk_port_id);
+          bf_sde_interface_->DeletePort(device, sdk_port_id).IgnoreError();
         }
         RETURN_IF_ERROR(AddPortHelper(node_id, device, sdk_port_id,
-                                      singleton_port, &config));
+                                      singleton_port, &port_config));
         continue;
       }
 
@@ -411,16 +412,17 @@ BfChassisManager::~BfChassisManager() = default;
 
       // sanity-check: if admin_state is not ADMIN_STATE_UNKNOWN, then the port
       // was added and the speed_bps was set.
-      if (!config_old->speed_bps) {
+      if (!old_port_config->speed_bps) {
         RETURN_ERROR(ERR_INTERNAL)
             << "Invalid internal state in BfChassisManager, "
             << "speed_bps field should contain a value";
       }
 
-      // if anything fails, config.admin_state will be set to
+      // if anything fails, port_config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
       RETURN_IF_ERROR(UpdatePortHelper(node_id, device, sdk_port_id,
-                                       singleton_port, *config_old, &config));
+                                       singleton_port, *old_port_config,
+                                       &port_config));
     }
   }
 
@@ -496,7 +498,54 @@ BfChassisManager::~BfChassisManager() = default;
         config.vendor_config().tofino_config().node_id_to_qos_config();
     for (const auto& key : node_id_to_qos_configs) {
       const uint64 node_id = key.first;
-      const auto& qos_config = key.second;
+      // As the SDK Wrapper does not know anything about singleton ports, we
+      // need to convert all such port IDs to sdk ports here.
+      auto qos_config = key.second;
+      for (auto& ppg_config : *qos_config.mutable_ppg_configs()) {
+        switch (ppg_config.port_type_case()) {
+          case TofinoConfig::TofinoQosConfig::PpgConfig::kSdkPort:
+            break;
+          case TofinoConfig::TofinoQosConfig::PpgConfig::kPort: {
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id.count(node_id));
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id[node_id].count(
+                    ppg_config.port()))
+                << "Invalid singleton port " << ppg_config.port()
+                << " in PpgConfig " << ppg_config.ShortDebugString() << ".";
+            ppg_config.set_sdk_port(
+                node_id_to_port_id_to_sdk_port_id[node_id][ppg_config.port()]);
+            break;
+          }
+          default:
+            RETURN_ERROR(ERR_INVALID_PARAM)
+                << "Unsupported port type in PpgConfig "
+                << ppg_config.ShortDebugString() << ".";
+        }
+      }
+      for (auto& queue_config : *qos_config.mutable_queue_configs()) {
+        switch (queue_config.port_type_case()) {
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kSdkPort:
+            break;
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kPort: {
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id.count(node_id));
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id[node_id].count(
+                    queue_config.port()))
+                << "Invalid singleton port " << queue_config.port()
+                << " in QueueConfig " << queue_config.ShortDebugString() << ".";
+            queue_config.set_sdk_port(
+                node_id_to_port_id_to_sdk_port_id[node_id]
+                                                 [queue_config.port()]);
+            break;
+          }
+          default:
+            RETURN_ERROR(ERR_INVALID_PARAM)
+                << "Unsupported port type in QueueConfig "
+                << queue_config.ShortDebugString() << ".";
+        }
+      }
       const int device = node_id_to_device[node_id];
       RETURN_IF_ERROR(bf_sde_interface_->ConfigureQos(device, qos_config));
       CHECK_RETURN_IF_FALSE(
@@ -511,12 +560,18 @@ BfChassisManager::~BfChassisManager() = default;
     auto node_id = node_ports_old.first;
     for (const auto& port_old : node_ports_old.second) {
       auto port_id = port_old.first;
-      if (node_id_to_port_id_to_port_config.count(node_id) > 0 &&
-          node_id_to_port_id_to_port_config[node_id].count(port_id) > 0) {
-        continue;
-      }
       auto device = node_id_to_device_[node_id];
       uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
+      if (node_id_to_port_id_to_port_config.count(node_id) > 0 &&
+          node_id_to_port_id_to_port_config[node_id].count(port_id) > 0) {
+        // Disable port shaping if not specified anymore.
+        if (!node_id_to_port_id_to_port_config[node_id][port_id]
+                 .shaping_config) {
+          RETURN_IF_ERROR(bf_sde_interface_->EnablePortShaping(
+              device, sdk_port_id, TRI_STATE_FALSE));
+        }
+        continue;
+      }
       // TODO(bocon): Collect these errors and keep trying to remove old ports
       RETURN_IF_ERROR(bf_sde_interface_->DeletePort(device, sdk_port_id));
       LOG(INFO) << "Deleted port " << port_id << " in node " << node_id
@@ -699,10 +754,31 @@ BfChassisManager::~BfChassisManager() = default;
       CHECK_RETURN_IF_FALSE(device != nullptr)
           << "Node " << node_id << " not found.";
       for (const auto& queue_config : qos_config.queue_configs()) {
+        uint32 sdk_port_id;
+        switch (queue_config.port_type_case()) {
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kSdkPort:
+            sdk_port_id = queue_config.sdk_port();
+            break;
+          case TofinoConfig::TofinoQosConfig::QueueConfig::kPort: {
+            CHECK_RETURN_IF_FALSE(
+                node_id_to_port_id_to_sdk_port_id[node_id].count(
+                    queue_config.port()))
+                << "Invalid singleton port " << queue_config.port()
+                << " in queue config " << queue_config.ShortDebugString()
+                << ".";
+            sdk_port_id =
+                node_id_to_port_id_to_sdk_port_id[node_id][queue_config.port()];
+            break;
+          }
+          default:
+            RETURN_ERROR(ERR_INVALID_PARAM)
+                << "Unsupported port type in QueueConfig "
+                << queue_config.ShortDebugString() << ".";
+        }
         CHECK_RETURN_IF_FALSE(
             gtl::FindOrNull(node_id_to_sdk_port_id_to_port_id[node_id],
-                            queue_config.sdk_port()) != nullptr)
-            << "Invalid port " << queue_config.sdk_port() << " in queue config "
+                            sdk_port_id) != nullptr)
+            << "Invalid port " << sdk_port_id << " in queue config "
             << queue_config.ShortDebugString() << ".";
         CHECK_RETURN_IF_FALSE(queue_config.queue_mapping_size() <=
                               kMaxQueuesPerPort);

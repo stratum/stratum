@@ -19,7 +19,7 @@ VERSION_LONG=${VERSION_LONG:-$(date +%Y-%m-%d)}  # 2021-03-31
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
-BF_SDE_VERSIONS=(9.2.0 9.3.1 9.3.2 9.4.0 9.5.0)
+BF_SDE_VERSIONS=(9.3.1 9.5.0 9.7.0)
 
 # ---------- Build Variables -------------
 JOBS=30
@@ -56,7 +56,9 @@ if ! which gh >/dev/null; then
   sudo apt install ./gh_1.4.0_linux_amd64.deb
   rm gh_1.4.0_linux_amd64.deb
 fi
-echo "$GITHUB_TOKEN" | gh auth login -h github.com --with-token
+
+# gh will use GITHUB_TOKEN to login automatically
+gh auth status
 
 # Verify that all BF SDE install packages exist
 missing=0
@@ -82,7 +84,6 @@ cd $STRATUM_DIR
 git tag $VERSION_LONG
 
 # ---------- Build release builder container -------------
-# This container is currently only used for the BF and BCM builds
 set -x
 docker build \
   -t stratumproject/build:build \
@@ -121,7 +122,7 @@ RELEASE_BUILD=true \
 docker tag opennetworking/mn-stratum:latest opennetworking/mn-stratum:${VERSION}
 docker push opennetworking/mn-stratum:${VERSION}
 docker push opennetworking/mn-stratum:latest
-cp ./stratum_bmv2_deb.deb $RELEASE_DIR
+mv -f ./stratum_bmv2_deb.deb $RELEASE_DIR/stratum-bmv2-${VERSION}-amd64.deb
 set +x
 
 # ---------- Build: Broadcom -------------
@@ -136,8 +137,11 @@ for target in ${BCM_TARGETS[@]}; do
     DOCKER_IMG=${IMAGE_NAME} \
     stratum/hal/bin/bcm/standalone/docker/build-stratum-bcm-container.sh
   mv -f stratum_bcm_${target_short}_deb.deb $RELEASE_DIR/stratum-bcm-${VERSION}-$target_short-amd64.deb
-  docker tag stratumproject/stratum-bcm:$target_short stratumproject/stratum-bcm:${VERSION}-$target_short
+  docker tag stratumproject/stratum-bcm_$target_short:latest stratumproject/stratum-bcm:${VERSION}-$target_short
+  docker tag stratumproject/stratum-bcm_$target_short:latest stratumproject/stratum-bcm:latest-$target_short
+  docker tag stratumproject/stratum-bcm_$target_short:latest stratumproject/stratum-bcm:$target_short
   docker push stratumproject/stratum-bcm:${VERSION}-$target_short
+  docker push stratumproject/stratum-bcm:latest-$target_short
   docker push stratumproject/stratum-bcm:$target_short
   clean_up_after_build
   set +x
@@ -146,6 +150,10 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
+    if [ "$sde_version" == "9.7.0" -a "$target" == "stratum_bf" ]; then
+      echo "Skipping $target with BF SDE $sde_version."
+      continue
+    fi
     target_dash=${target/_/-}
     echo "Building $target ($target_dash) with BF SDE $sde_version..."
     set -x
@@ -164,6 +172,100 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
     set +x
   done
 done
+
+# ---------- Build p4c-fpm and stratum-tools -------------
+
+DOCKER_EXTRA_RUN_OPTS=""
+if [ -t 0 ]; then
+  # Running in a TTY, so run interactively (i.e. make Ctrl-C work)
+  DOCKER_EXTRA_RUN_OPTS+="-it "
+fi
+
+# Set build options for Stratum build
+DOCKER_OPTS=""
+
+# Build optimized and stripped binaries
+BAZEL_OPTS="--config release "
+
+# Build with Bazel cache
+if [ -n "$BAZEL_CACHE" ]; then
+  DOCKER_OPTS+="-v $BAZEL_CACHE:/home/$USER/.cache "
+  DOCKER_OPTS+="--user $USER "
+fi
+
+set -x
+# Build p4c-fpm in Docker
+docker run --rm \
+  $DOCKER_OPTS \
+  $DOCKER_EXTRA_RUN_OPTS \
+  -v $STRATUM_DIR:/stratum \
+  -v $RELEASE_DIR:/output \
+  -w /stratum \
+  --entrypoint bash \
+  $IMAGE_NAME -c \
+    "bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb \
+       $BAZEL_OPTS \
+       --jobs $JOBS && \
+     cp -f /stratum/bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb /output/"
+
+# Build stratum-tools in Docker
+docker run --rm \
+  $DOCKER_OPTS \
+  $DOCKER_EXTRA_RUN_OPTS \
+  -v $STRATUM_DIR:/stratum \
+  -v $RELEASE_DIR:/output \
+  -w /stratum \
+  --entrypoint bash \
+  $IMAGE_NAME -c \
+    "bazel build //stratum/tools:stratum_tools_deb \
+       $BAZEL_OPTS \
+       --jobs $JOBS && \
+     cp -f /stratum/bazel-bin/stratum/tools/stratum_tools_deb.deb /output/"
+set +x
+
+# Compute labels for Docker containers
+DOCKER_BUILD_OPTS=""
+if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
+  DOCKER_BUILD_OPTS+="--squash "
+fi
+DOCKER_BUILD_OPTS+="--label build-timestamp=$(date +%FT%T%z) "
+DOCKER_BUILD_OPTS+="--label build-machine=$(hostname) "
+
+GIT_URL=${GIT_URL:-$(git config --get remote.origin.url)}
+GIT_REF=$(git describe --tags --no-match --always --abbrev=40 --dirty | sed -E 's/^.*-g([0-9a-f]{40}-?.*)$/\1/')
+GIT_SHA=$(git describe --tags --match XXXXXXX --always --abbrev=40 --dirty)
+DOCKER_BUILD_OPTS+="--label org.opencontainers.image.source=$GIT_URL "
+DOCKER_BUILD_OPTS+="--label org.opencontainers.image.version=$GIT_REF "
+DOCKER_BUILD_OPTS+="--label org.opencontainers.image.revision=$GIT_SHA "
+
+set -x
+# Build stratum-tools Docker image
+docker build \
+  -f stratum/tools/Dockerfile.stratum_tools \
+  -t stratumproject/stratum-tools \
+  $DOCKER_BUILD_OPTS \
+  --label stratum-target=stratum-tools \
+  $RELEASE_DIR
+docker tag stratumproject/stratum-tools stratumproject/stratum-tools:${VERSION}
+docker push stratumproject/stratum-tools:${VERSION}
+docker push stratumproject/stratum-tools
+
+# Build p4c-fpm Docker image
+docker build \
+  -f stratum/p4c_backends/fpm/Dockerfile \
+  -t stratumproject/p4c-fpm \
+  $DOCKER_BUILD_OPTS \
+  $RELEASE_DIR
+docker tag stratumproject/p4c-fpm stratumproject/p4c-fpm:${VERSION}
+docker push stratumproject/p4c-fpm:${VERSION}
+docker push stratumproject/p4c-fpm
+set +x
+
+# Rename p4c-fpm and stratum-tools packages
+pushd $RELEASE_DIR
+mv -f p4c_fpm_deb.deb p4c-fpm-${VERSION}-amd64.deb
+mv -f stratum_tools_deb.deb stratum-tools-${VERSION}-amd64.deb
+popd
 
 # ---------- Push tag to Github -------------
 set -x
@@ -196,4 +298,3 @@ gh issue create -R stratum/stratum \
 
 # ---------- Cleanup -------------
 docker logout
-gh auth logout -h github.com

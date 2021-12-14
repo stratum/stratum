@@ -194,7 +194,7 @@ struct BcmKnetIntf {
         filter_ids(),
         tx_sock(-1),
         rx_sock(-1),
-        rx_thread_id(0) {}
+        rx_thread_id() {}
 };
 
 // Metadata we need to parse from each packet received from controller to

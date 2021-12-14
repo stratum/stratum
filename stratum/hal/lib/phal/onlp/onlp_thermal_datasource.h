@@ -9,15 +9,15 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -50,15 +50,17 @@ class OnlpThermalDataSource : public DataSource {
   ManagedAttribute* GetCapTemp() { return &thermal_cap_temp_; }
   ManagedAttribute* GetCapWarnThresh() { return &thermal_cap_warn_thresh_; }
   ManagedAttribute* GetCapErrThresh() { return &thermal_cap_err_thresh_; }
-  ManagedAttribute* GetCapShutdownThresh()
-    { return &thermal_cap_shutdown_thresh_; }
+  ManagedAttribute* GetCapShutdownThresh() {
+    return &thermal_cap_shutdown_thresh_;
+  }
 
  private:
   OnlpThermalDataSource(int thermal_id, OnlpInterface* onlp_interface,
-                    CachePolicy* cache_policy, const ThermalInfo& thermal_info);
+                        CachePolicy* cache_policy,
+                        const ThermalInfo& thermal_info);
 
   static ::util::Status ValidateOnlpThermalInfo(OnlpOid thermal_oid,
-                                            OnlpInterface* onlp_interface) {
+                                                OnlpInterface* onlp_interface) {
     return onlp_interface->GetOidInfo(thermal_oid).status();
   }
 

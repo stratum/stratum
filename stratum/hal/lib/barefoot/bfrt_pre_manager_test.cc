@@ -349,7 +349,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
 
   EXPECT_CALL(*bf_sde_wrapper_mock_,
-              InsertCloneSession(kDevice1, _, kSessionId, kEgressPort, kCos,
+              InsertCloneSession(kDevice1, _, kSessionId, kEgressPort, 0, kCos,
                                  kPacketLength))
       .WillOnce(Return(::util::OkStatus()));
 
@@ -515,7 +515,7 @@ TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
 
   EXPECT_CALL(*bf_sde_wrapper_mock_,
-              ModifyCloneSession(kDevice1, _, kSessionId, kEgressPort, kCos,
+              ModifyCloneSession(kDevice1, _, kSessionId, kEgressPort, 0, kCos,
                                  kPacketLength))
       .WillOnce(Return(::util::OkStatus()));
 

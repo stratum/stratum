@@ -19,18 +19,28 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.2.0
- - 9.3.0
- - 9.3.1
- - 9.3.2 (Recommended; LTS release)
- - 9.4.0
- - 9.5.0 (Experimental; LTS release; Latest)
+ - 9.3.1 (Extended support for legacy switches)
+ - 9.5.0 (Recommended; LTS release)
+ - ~~9.6.0~~ (skipped)
+ - 9.7.0 (experimental; stratum_bfrt only)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
 
 ```bash
 export SDE_TAR=<path to tar>/bf-sde-<SDE_VERSION>.tgz
+```
+
+__Extended support for 9.3.1__: SDE versions 9.3.2+ drop support for some
+pre-production Tofino switches that are used by the community. Tofino A0 is no
+longer support by Intel, but we plan to keep `9.3.1` for awhile for users who
+want to continue to use these devices.
+
+If you see error regarding the CPU port when starting Stratum, you should try
+downgrading to `9.3.1`.
+
+```
+2021-05-05 01:33:43 BF_PIPE ERROR - Error: Port <CPU port number> is stuck
 ```
 
 *__SDE Deprecation Policy:__ We support the latest SDE released by the Intel
@@ -173,9 +183,9 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.3.2
+export SDE_VERSION=9.5.0
 export STRATUM_TARGET=stratum_bfrt
-docker build -t stratumproject/stratum-bf:$SDE_VERSION \
+docker build -t stratumproject/stratum-bfrt:$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f stratum/hal/bin/barefoot/docker/Dockerfile \
   bazel-bin/stratum/hal/bin/barefoot
@@ -196,7 +206,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bf:9.3.2 -o stratum-bf-9.3.2-docker.tar
+docker save stratumproject/stratum-bfrt:9.5.0 -o stratum-bfrt-9.5.0-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally
@@ -303,6 +313,20 @@ Or pass the BSP sources to the p4studio_build script with the `--bsp-path` flag.
 tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
 export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
 ./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
+```
+
+Starting with SDE 9.7.0 the BSP does not have to be extracted anymore:
+
+```bash
+export BSP=`pwd`/bf-reference-bsp-<SDE_VERSION>.tgz
+stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh ...
+```
+
+Or directly with `p4studio`:
+
+```bash
+export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>.tgz
+./p4studio configure ... --bsp-path $BSP_PATH
 ```
 
 [onl-linux-headers]: https://github.com/opennetworkinglab/OpenNetworkLinux/releases/tag/onlpv2-dev-1.0.1

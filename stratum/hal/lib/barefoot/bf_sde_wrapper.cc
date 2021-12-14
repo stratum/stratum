@@ -489,7 +489,7 @@ template <typename T>
   if (table_type == bfrt::BfRtTable::TableType::METER ||
       table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
     RETURN_IF_BFRT_ERROR(
         table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
 #else
@@ -575,7 +575,7 @@ template <typename T>
       value, NumBitsToNumBytes(field_size_bits));
   std::string m = P4RuntimeByteStringToPaddedByteString(
       mask, NumBitsToNumBytes(field_size_bits));
-  DCHECK_EQ(v.size(), m.size());
+  CHECK_EQ(v.size(), m.size());
   RETURN_IF_BFRT_ERROR(table_key_->setValueandMask(
       id, reinterpret_cast<const uint8*>(v.data()),
       reinterpret_cast<const uint8*>(m.data()), v.size()));
@@ -607,7 +607,7 @@ template <typename T>
       low, NumBitsToNumBytes(field_size_bits));
   std::string h = P4RuntimeByteStringToPaddedByteString(
       high, NumBitsToNumBytes(field_size_bits));
-  DCHECK_EQ(l.size(), h.size());
+  CHECK_EQ(l.size(), h.size());
   RETURN_IF_BFRT_ERROR(table_key_->setValueRange(
       id, reinterpret_cast<const uint8*>(l.data()),
       reinterpret_cast<const uint8*>(h.data()), l.size()));
@@ -1344,13 +1344,21 @@ namespace {
   }
   device_to_ppg_handles_[device].clear();
   for (const auto& ppg_config : qos_config.ppg_configs()) {
+    uint32 sdk_port;
+    switch (ppg_config.port_type_case()) {
+      case TofinoConfig::TofinoQosConfig::PpgConfig::kSdkPort:
+        sdk_port = ppg_config.sdk_port();
+        break;
+      case TofinoConfig::TofinoQosConfig::PpgConfig::kPort:
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported port type in PpgConfig "
+                                        << ppg_config.ShortDebugString() << ".";
+    }
     bf_tm_ppg_hdl ppg;
     if (ppg_config.is_default_ppg()) {
-      RETURN_IF_BFRT_ERROR(
-          bf_tm_ppg_defaultppg_get(device, ppg_config.sdk_port(), &ppg));
+      RETURN_IF_BFRT_ERROR(bf_tm_ppg_defaultppg_get(device, sdk_port, &ppg));
     } else {
-      RETURN_IF_BFRT_ERROR(
-          bf_tm_ppg_allocate(device, ppg_config.sdk_port(), &ppg));
+      RETURN_IF_BFRT_ERROR(bf_tm_ppg_allocate(device, sdk_port, &ppg));
       device_to_ppg_handles_[device].push_back(ppg);
     }
     RETURN_IF_BFRT_ERROR(bf_tm_ppg_guaranteed_min_limit_set(
@@ -1362,18 +1370,29 @@ namespace {
         device, ppg, pool, ppg_config.base_use_limit(), baf,
         ppg_config.hysteresis()));
     RETURN_IF_BFRT_ERROR(bf_tm_port_ingress_drop_limit_set(
-        device, ppg_config.sdk_port(), ppg_config.ingress_drop_limit()));
+        device, sdk_port, ppg_config.ingress_drop_limit()));
     RETURN_IF_BFRT_ERROR(
         bf_tm_ppg_icos_mapping_set(device, ppg, ppg_config.icos_bitmap()));
   }
 
   // Configure the queues.
   for (const auto& queue_config : qos_config.queue_configs()) {
+    uint32 sdk_port;
+    switch (queue_config.port_type_case()) {
+      case TofinoConfig::TofinoQosConfig::QueueConfig::kSdkPort:
+        sdk_port = queue_config.sdk_port();
+        break;
+      case TofinoConfig::TofinoQosConfig::QueueConfig::kPort:
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Unsupported port type in QueueConfig "
+            << queue_config.ShortDebugString() << ".";
+    }
     for (const auto& queue_mapping : queue_config.queue_mapping()) {
       // Set gmin only when > 0, as it would otherwise disable the queue.
       if (queue_mapping.minimum_guaranteed_cells()) {
         RETURN_IF_BFRT_ERROR(bf_tm_q_guaranteed_min_limit_set(
-            device, queue_config.sdk_port(), queue_mapping.queue_id(),
+            device, sdk_port, queue_mapping.queue_id(),
             queue_mapping.minimum_guaranteed_cells()));
       }
       ASSIGN_OR_RETURN(bf_tm_app_pool_t pool,
@@ -1381,41 +1400,40 @@ namespace {
       ASSIGN_OR_RETURN(bf_tm_queue_baf_t baf,
                        BafToTofinoQueueBaf(queue_mapping.baf()));
       RETURN_IF_BFRT_ERROR(bf_tm_q_app_pool_usage_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(), pool,
+          device, sdk_port, queue_mapping.queue_id(), pool,
           queue_mapping.base_use_limit(), baf, queue_mapping.hysteresis()));
       ASSIGN_OR_RETURN(
           bf_tm_sched_prio_t priority,
           PriorityToTofinoSchedulingPriority(queue_mapping.priority()));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_priority_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(), priority));
+          device, sdk_port, queue_mapping.queue_id(), priority));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          queue_mapping.weight()));
+          device, sdk_port, queue_mapping.queue_id(), queue_mapping.weight()));
       // Set maximum shaping rate on queue, if requested.
       switch (queue_mapping.max_rate_case()) {
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMaxRatePackets:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
+              device, sdk_port, queue_mapping.queue_id(), true,
               queue_mapping.max_rate_packets().burst_packets(),
               queue_mapping.max_rate_packets().rate_pps()));
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMaxRateBytes:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_shaping_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
+              device, sdk_port, queue_mapping.queue_id(), false,
               queue_mapping.max_rate_bytes().burst_bytes(),
               queue_mapping.max_rate_bytes().rate_bps() /
                   1000));  // SDE expects kbits
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             MAX_RATE_NOT_SET:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_max_shaping_rate_disable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         default:
           RETURN_ERROR(ERR_INVALID_PARAM)
@@ -1427,26 +1445,26 @@ namespace {
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMinRatePackets:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), true,
+              device, sdk_port, queue_mapping.queue_id(), true,
               queue_mapping.min_rate_packets().burst_packets(),
               queue_mapping.min_rate_packets().rate_pps()));
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             kMinRateBytes:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_set(
-              device, queue_config.sdk_port(), queue_mapping.queue_id(), false,
+              device, sdk_port, queue_mapping.queue_id(), false,
               queue_mapping.min_rate_bytes().burst_bytes(),
               queue_mapping.min_rate_bytes().rate_bps() /
                   1000));  // SDE expects kbits
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_enable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         case TofinoConfig::TofinoQosConfig::QueueConfig::QueueMapping::
             MIN_RATE_NOT_SET:
           RETURN_IF_BFRT_ERROR(bf_tm_sched_q_guaranteed_rate_disable(
-              device, queue_config.sdk_port(), queue_mapping.queue_id()));
+              device, sdk_port, queue_mapping.queue_id()));
           break;
         default:
           RETURN_ERROR(ERR_INVALID_PARAM)
@@ -1466,15 +1484,15 @@ namespace {
       ASSIGN_OR_RETURN(bf_tm_queue_color_limit_t red_limit,
                        ColorLimitToTofinoQueueColorLimit(
                            queue_mapping.color_drop_limit_red()));
-      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          BF_TM_COLOR_YELLOW, yellow_limit));
-      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(
-          device, queue_config.sdk_port(), queue_mapping.queue_id(),
-          BF_TM_COLOR_RED, red_limit));
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_q_color_limit_set(device, sdk_port, queue_mapping.queue_id(),
+                                  BF_TM_COLOR_YELLOW, yellow_limit));
+      RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_set(device, sdk_port,
+                                                   queue_mapping.queue_id(),
+                                                   BF_TM_COLOR_RED, red_limit));
     }
     RETURN_IF_BFRT_ERROR(bf_tm_port_q_mapping_set(
-        device, queue_config.sdk_port(), queue_config.queue_mapping_size(),
+        device, sdk_port, queue_config.queue_mapping_size(),
         /*queue_mapping*/ nullptr));
   }
 
@@ -1577,8 +1595,10 @@ std::string GetBfChipFamilyAndType(int device) {
     case BF_DEV_BFNT20032S:  // removed in 9.3.0
       return "TOFINO2_32S";
 #endif  // BF_DEV_BFNT20032S
+#ifdef BF_DEV_BFNT20048D
     case BF_DEV_BFNT20048D:
       return "TOFINO2_48D";
+#endif  // BF_DEV_BFNT20048D
 #ifdef BF_DEV_BFNT20036D
     case BF_DEV_BFNT20036D:  // removed in 9.3.0
       return "TOFINO2_36D";
@@ -1623,20 +1643,12 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
 }
 
 std::string BfSdeWrapper::GetSdeVersion() const {
-#if defined(SDE_9_1_0)
-  return "9.1.0";
-#elif defined(SDE_9_2_0)
-  return "9.2.0";
-#elif defined(SDE_9_3_0)
-  return "9.3.0";
-#elif defined(SDE_9_3_1)
+#if defined(SDE_9_3_1)
   return "9.3.1";
-#elif defined(SDE_9_3_2)
-  return "9.3.2";
-#elif defined(SDE_9_4_0)
-  return "9.4.0";
 #elif defined(SDE_9_5_0)
   return "9.5.0";
+#elif defined(SDE_9_7_0)
+  return "9.7.0";
 #else
 #error Unsupported SDE version
 #endif
@@ -1938,9 +1950,9 @@ BfSdeWrapper::CreateTableData(int table_id, int action_id) {
 
   std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
                      bf_pkt_get_pkt_size(pkt));
-  if (!(*rx_writer)->TryWrite(buffer).ok()) {
-    LOG_EVERY_N(INFO, 500) << "Dropped packet received from CPU.";
-  }
+  ::util::Status status = (*rx_writer)->TryWrite(buffer);
+  LOG_IF_EVERY_N(INFO, !status.ok(), 500)
+      << "Dropped packet received from CPU: " << status;
   VLOG(1) << "Received " << buffer.size() << " byte packet from CPU "
           << StringToHex(buffer);
 
@@ -2078,7 +2090,7 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
 #else
@@ -2381,7 +2393,8 @@ namespace {
 
 ::util::Status BfSdeWrapper::WriteCloneSession(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert) {
+    uint32 session_id, int egress_port, int egress_queue, int cos,
+    int max_pkt_len, bool insert) {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   CHECK_RETURN_IF_FALSE(real_session);
 
@@ -2407,6 +2420,9 @@ namespace {
   // Data: $ucast_egress_port_valid
   RETURN_IF_ERROR(
       SetFieldBool(table_data.get(), "$ucast_egress_port_valid", true));
+  // Data: $egress_port_queue
+  RETURN_IF_ERROR(
+      SetField(table_data.get(), "$egress_port_queue", egress_queue));
   // Data: $ingress_cos
   RETURN_IF_ERROR(SetField(table_data.get(), "$ingress_cos", cos));
   // Data: $max_pkt_len
@@ -2426,18 +2442,20 @@ namespace {
 
 ::util::Status BfSdeWrapper::InsertCloneSession(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 session_id, int egress_port, int cos, int max_pkt_len) {
+    uint32 session_id, int egress_port, int egress_queue, int cos,
+    int max_pkt_len) {
   ::absl::ReaderMutexLock l(&data_lock_);
-  return WriteCloneSession(device, session, session_id, egress_port, cos,
-                           max_pkt_len, true);
+  return WriteCloneSession(device, session, session_id, egress_port,
+                           egress_queue, cos, max_pkt_len, true);
 }
 
 ::util::Status BfSdeWrapper::ModifyCloneSession(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 session_id, int egress_port, int cos, int max_pkt_len) {
+    uint32 session_id, int egress_port, int egress_queue, int cos,
+    int max_pkt_len) {
   ::absl::ReaderMutexLock l(&data_lock_);
-  return WriteCloneSession(device, session, session_id, egress_port, cos,
-                           max_pkt_len, false);
+  return WriteCloneSession(device, session, session_id, egress_port,
+                           egress_queue, cos, max_pkt_len, false);
 }
 
 ::util::Status BfSdeWrapper::DeleteCloneSession(
@@ -2736,7 +2754,7 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
@@ -2872,7 +2890,7 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else

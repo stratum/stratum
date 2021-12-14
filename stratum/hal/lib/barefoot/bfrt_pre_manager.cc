@@ -20,11 +20,15 @@ namespace barefoot {
 BfrtPreManager::BfrtPreManager(BfSdeInterface* bf_sde_interface, int device)
     : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
 
+BfrtPreManager::BfrtPreManager() : bf_sde_interface_(nullptr), device_(-1) {}
+
 ::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
   return ::util::OkStatus();
 }
+
+BfrtPreManager::~BfrtPreManager() = default;
 
 ::util::Status BfrtPreManager::WritePreEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
@@ -246,7 +250,7 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
           << "Instances on Replicas are not supported: "
           << replica.ShortDebugString() << ".";
       RETURN_IF_ERROR(bf_sde_interface_->InsertCloneSession(
-          device_, session, entry.session_id(), replica.egress_port(),
+          device_, session, entry.session_id(), replica.egress_port(), 0,
           entry.class_of_service(), entry.packet_length_bytes()));
       break;
     }
@@ -262,7 +266,7 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
           << "Instances on Replicas are not supported: "
           << replica.ShortDebugString() << ".";
       RETURN_IF_ERROR(bf_sde_interface_->ModifyCloneSession(
-          device_, session, entry.session_id(), replica.egress_port(),
+          device_, session, entry.session_id(), replica.egress_port(), 0,
           entry.class_of_service(), entry.packet_length_bytes()));
       break;
     }

@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+load("//bazel:rules.bzl", "stratum_license_tar")
 
 pkg_tar(
-    name = "stratum_tools_data",
+    name = "stratum_tools_bin",
     srcs = [
         "//stratum/hal/bin/barefoot:bf_pipeline_builder",
         "//stratum/hal/bin/dummy:stratum_dummy",
@@ -15,9 +16,23 @@ pkg_tar(
         "//stratum/tools/gnmi:gnmi_cli",
         "//stratum/tools/stratum_replay",
     ],
-    extension = "tar.xz",
     mode = "0755",
     package_dir = "/usr/bin",
+)
+
+stratum_license_tar(
+    name = "stratum_tools_legal",
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-tools/",
+)
+
+pkg_tar(
+    name = "stratum_tools_data",
+    extension = "tar.xz",
+    deps = [
+        ":stratum_tools_bin",
+        ":stratum_tools_legal",
+    ],
 )
 
 pkg_deb(

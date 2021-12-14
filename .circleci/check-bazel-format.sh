@@ -18,10 +18,12 @@ bazel/patches/BUILD
 bazel/rules/BUILD
 bazel/rules/build_tools.bzl
 bazel/rules/lexyacc.bzl
+bazel/rules/license.bzl
 bazel/rules/proto_gen.bzl
 bazel/rules/proto_rule.bzl
 bazel/rules/test_rule.bzl
 bazel/rules/yang_to_proto_rule.bzl
+legal/BUILD
 stratum/BUILD
 stratum/glue/BUILD
 stratum/glue/gtl/BUILD
@@ -40,6 +42,7 @@ stratum/hal/bin/bmv2/bmv2.bzl
 stratum/hal/bin/np4intel/BUILD
 stratum/hal/bin/np4intel/np4intel.bzl
 stratum/hal/config/platform_config_test.bzl
+stratum/hal/lib/barefoot/BUILD
 stratum/hal/lib/dummy/BUILD
 stratum/hal/lib/np4intel/BUILD
 stratum/hal/lib/phal/BUILD
@@ -50,6 +53,7 @@ stratum/hal/lib/pi/BUILD
 stratum/hal/stub/embedded/BUILD
 stratum/lib/BUILD
 stratum/lib/channel/BUILD
+stratum/lib/security/BUILD
 stratum/lib/test_utils/BUILD
 stratum/p4c_backends/common/BUILD
 stratum/p4c_backends/common/build_defs.bzl

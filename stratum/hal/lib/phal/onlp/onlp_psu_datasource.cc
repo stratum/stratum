@@ -5,14 +5,15 @@
 #include "stratum/hal/lib/phal/onlp/onlp_psu_datasource.h"
 
 #include <cmath>
+
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -35,12 +36,10 @@ namespace onlp {
   return psu_data_source;
 }
 
-OnlpPsuDataSource::OnlpPsuDataSource(int psu_id,
-                                     OnlpInterface* onlp_interface,
+OnlpPsuDataSource::OnlpPsuDataSource(int psu_id, OnlpInterface* onlp_interface,
                                      CachePolicy* cache_policy,
                                      const PsuInfo& psu_info)
     : DataSource(cache_policy), onlp_stub_(onlp_interface) {
-
   psu_oid_ = ONLP_PSU_ID_CREATE(psu_id);
 
   // NOTE: Following attributes aren't going to change through the lifetime
@@ -76,19 +75,19 @@ OnlpPsuDataSource::OnlpPsuDataSource(int psu_id,
   // present.
   if (!psu_info.Present()) return ::util::OkStatus();
 
-  ASSIGN_OR_RETURN(const onlp_psu_info_t *psu_onlp_info, psu_info.GetOnlpPsu());
+  ASSIGN_OR_RETURN(const onlp_psu_info_t* psu_onlp_info, psu_info.GetOnlpPsu());
 
   psu_model_name_.AssignValue(std::string(psu_onlp_info->model));
   psu_serial_number_.AssignValue(std::string(psu_onlp_info->serial));
   // Convert from 1mV(ONLP unit) to V(Google unit).
-  psu_vin_.AssignValue(static_cast<double>(psu_onlp_info->mvin)/1000.0);
-  psu_vout_.AssignValue(static_cast<double>(psu_onlp_info->mvout)/1000.0);
+  psu_vin_.AssignValue(static_cast<double>(psu_onlp_info->mvin) / 1000.0);
+  psu_vout_.AssignValue(static_cast<double>(psu_onlp_info->mvout) / 1000.0);
   // Convert from 1mA(ONLP unit) to A(Google unit).
-  psu_iin_.AssignValue(static_cast<double>(psu_onlp_info->miin)/1000.0);
-  psu_iout_.AssignValue(static_cast<double>(psu_onlp_info->miout)/1000.0);
+  psu_iin_.AssignValue(static_cast<double>(psu_onlp_info->miin) / 1000.0);
+  psu_iout_.AssignValue(static_cast<double>(psu_onlp_info->miout) / 1000.0);
   // Convert from 1mW(ONLP unit) to W(Google unit).
-  psu_pin_.AssignValue(static_cast<double>(psu_onlp_info->mpin)/1000.0);
-  psu_pout_.AssignValue(static_cast<double>(psu_onlp_info->mpout)/1000.0);
+  psu_pin_.AssignValue(static_cast<double>(psu_onlp_info->mpin) / 1000.0);
+  psu_pout_.AssignValue(static_cast<double>(psu_onlp_info->mpout) / 1000.0);
   psu_type_ = psu_info.GetPsuType();
 
   return ::util::OkStatus();

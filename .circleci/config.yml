@@ -53,6 +53,12 @@ docker_login: &docker_login
   run:
     name: Docker login
     command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+
+harbor_login: &harbor_login
+  run:
+    name: Harbor login
+    command: echo $AETHER_HARBOR_PWD | docker login -u $AETHER_HARBOR_LOGIN --password-stdin registry.aetherproject.org
+
 docker_build: &docker_build
   run:
     name: Build Docker image
@@ -67,10 +73,21 @@ docker_build: &docker_build
         --label build-timestamp=$(date +%FT%T%z) \
         --label build-machine=circle-ci \
         .
+
+harbor_tag: &harbor_tag
+  run:
+    name: Tag image for Harbor
+    command: docker tag $DOCKER_IMG registry.aetherproject.org/$HARBOR_IMG
+
 docker_push: &docker_push
   run:
     name: Push Docker image
     command: docker push $DOCKER_IMG
+
+harbor_push: &harbor_push
+  run:
+    name: Push Docker image to harbor
+    command: docker push registry.aetherproject.org/$HARBOR_IMG
 
 jobs:
 
@@ -160,6 +177,8 @@ jobs:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
       - DOCKER_IMG: opennetworking/mn-stratum
+      - CC: clang
+      - CXX: clang++
     steps:
       - setup_remote_docker
       - checkout
@@ -267,6 +286,7 @@ jobs:
       - DOCKER_SCOPE: stratum/tools
       - DOCKER_FILE: Dockerfile.stratum_tools
       - DOCKER_IMG: stratumproject/stratum-tools
+      - HARBOR_IMG: tost/stratum-tools
       - CC: clang
       - CXX: clang++
     steps:
@@ -280,12 +300,15 @@ jobs:
             bazel build --config=release //stratum/tools:stratum_tools_deb
             cp bazel-bin/stratum/tools/stratum_tools_deb.deb $DOCKER_SCOPE
       - *docker_login
+      - *harbor_login
       - *docker_build
+      - *harbor_tag
       - run:
           name: Test stratum-tools Docker image
           command: |
             docker run $DOCKER_IMG
       - *docker_push
+      - *harbor_push
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -318,6 +341,17 @@ jobs:
           name: Run reuse
           command: reuse lint
 
+  markdown-lint-check:
+    # We use the machine executor because mounting folders is not possible with
+    # CircleCi remote docker:
+    # https://circleci.com/docs/2.0/building-docker-images/#separation-of-environmentss
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Lint markdown files
+          command: .circleci/lint-markdown.sh
+
 workflows:
   version: 2
   build_and_test:
@@ -327,6 +361,7 @@ workflows:
       - coverage
       - lint-and-style-check
       - license-check
+      - markdown-lint-check
   docker-publish:
     jobs:
       - publish-docker-build:
