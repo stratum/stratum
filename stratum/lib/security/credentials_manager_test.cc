@@ -111,9 +111,9 @@ class CredentialsManagerTest : public ::testing::Test {
         std::make_shared<::grpc::experimental::StaticDataCertificateProvider>(
             ca_crt);
     auto tls_opts =
-        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>();
+        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
+            cert_provider);
     tls_opts->watch_root_certs();
-    tls_opts->set_certificate_provider(cert_provider);
     auto channel_creds = ::grpc::experimental::TlsCredentials(*tls_opts);
 
     ::grpc::ChannelArguments args;

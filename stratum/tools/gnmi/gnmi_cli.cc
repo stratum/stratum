@@ -252,33 +252,22 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
     ctx.TryCancel();
   });
 
-  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials =
-      ::grpc::InsecureChannelCredentials();
+  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
   if (!FLAGS_ca_cert.empty()) {
-    ::grpc::string pem_root_certs;
-    ::grpc::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
-        pem_key_cert_pair;
-    auto key_materials_config =
-        std::make_shared<::grpc::experimental::TlsKeyMaterialsConfig>();
-    ::util::Status status;
-    status.Update(::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
-    key_materials_config->set_pem_root_certs(pem_root_certs);
-
+    auto cert_provider =
+        std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
+            FLAGS_client_key, FLAGS_client_cert, FLAGS_ca_cert, 1);
+    auto tls_opts =
+        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
+            cert_provider);
+    tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
+    tls_opts->watch_root_certs();
     if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
-      status.Update(::stratum::ReadFileToString(FLAGS_client_cert,
-                                                &pem_key_cert_pair.cert_chain));
-      status.Update(::stratum::ReadFileToString(
-          FLAGS_client_key, &pem_key_cert_pair.private_key));
-      key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
+      tls_opts->watch_identity_key_cert_pairs();
     }
-
-    auto cred_opts = ::grpc::experimental::TlsCredentialsOptions(
-        GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
-        key_materials_config, nullptr, nullptr);
-
-    if (status.ok()) {
-      channel_credentials = ::grpc::experimental::TlsCredentials(cred_opts);
-    }
+    channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);
+  } else {
+    channel_credentials = ::grpc::InsecureChannelCredentials();
   }
   auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
   auto stub = ::gnmi::gNMI::NewStub(channel);
