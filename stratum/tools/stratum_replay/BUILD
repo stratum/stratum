@@ -24,6 +24,7 @@ stratum_cc_binary(
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/p4:forwarding_pipeline_configs_cc_proto",
         "//stratum/hal/lib/p4:utils",
+        "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "@com_github_gflags_gflags//:gflags",
