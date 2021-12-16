@@ -32,6 +32,26 @@ py_binary(
 )
 
 stratum_cc_binary(
+    name = "dummy_cli",
+    srcs = ["dummy_cli.cc"],
+    arches = HOST_ARCHES,
+    deps = [
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/dummy:dummy_test_cc_grpc",
+        "//stratum/hal/lib/common:utils",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+stratum_cc_binary(
     name = "stratum_dummy",
     srcs = [
         "main.cc",
