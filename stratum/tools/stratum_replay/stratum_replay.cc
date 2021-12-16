@@ -20,10 +20,12 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/p4/forwarding_pipeline_configs.pb.h"
 #include "stratum/hal/lib/p4/utils.h"
+#include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
+DEFINE_string(grpc_addr, stratum::kLocalStratumUrl,
+              "P4Runtime server address.");
 DEFINE_string(pipeline_cfg, "pipeline_cfg.pb.txt", "The pipeline config file.");
 DEFINE_string(election_id, "0,1",
               "Election id for arbitration update (high,low).");
