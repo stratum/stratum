@@ -39,6 +39,7 @@ stratum/hal/bin/bcm/sim/BUILD
 stratum/hal/bin/bcm/standalone/BUILD
 stratum/hal/bin/bcm/standalone/BUILD
 stratum/hal/bin/bmv2/bmv2.bzl
+stratum/hal/bin/dummy/BUILD
 stratum/hal/bin/np4intel/BUILD
 stratum/hal/bin/np4intel/np4intel.bzl
 stratum/hal/config/platform_config_test.bzl
