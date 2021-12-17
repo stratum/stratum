@@ -63,7 +63,7 @@ Usage:
 
 ```bash
 bazel run //stratum/hal/bin/dummy:dummy_cli --
-              [-h] [--dry-run] [--grpc_addr TEST_SERVICE_URL]
+              [--help] [--dry-run] [--grpc_addr TEST_SERVICE_URL]
               {oper_status,admin_status,mac_address,port_speed,negotiated_port_speed,
               lacp_router_mac,lacp_system_priority,port_counters,forwarding_viability,
               health_indicator,node_packetio_debug_info,memory_error_alarm,
@@ -86,7 +86,7 @@ To continuously update port counters, use the `--port_counter_sim` flag.
 Usage:
 ```bash
 bazel run //stratum/hal/bin/dummy:dummy_cli --
-                        [-h] [--dry-run]
+                        [--help] [--dry-run]
                         [--grpc_addr TEST_SERVICE_URL]
                         [--delay_s DELAY]
                         --port_counter_sim

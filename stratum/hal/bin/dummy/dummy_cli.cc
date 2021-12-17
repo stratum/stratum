@@ -50,7 +50,11 @@ namespace {
 class DummyCli {
  public:
   static constexpr char kUsage[] =
-      R"USAGE(usage:
+      R"USAGE(usage: [--help] [--dry-run] [--grpc_addr TEST_SERVICE_URL]
+    {oper_status,admin_status,mac_address,port_speed,negotiated_port_speed,
+    lacp_router_mac,lacp_system_priority,port_counters,forwarding_viability,
+    health_indicator,node_packetio_debug_info,memory_error_alarm,
+    flow_programming_exception_alarm,port_qos_counters}
   )USAGE";
 
   DummyCli(std::shared_ptr<::grpc::Channel> channel)
@@ -65,19 +69,19 @@ class DummyCli {
   }
 
  private:
-  const absl::flat_hash_set<std::string> node_port_states = {
+  const absl::flat_hash_set<std::string> kNodePortStates = {
       "oper_status",          "admin_status",          "mac_address",
       "port_speed",           "negotiated_port_speed", "lacp_router_mac",
       "lacp_system_priority", "port_counters",         "forwarding_viability",
       "health_indicator",
   };
-  const absl::flat_hash_set<std::string> node_states = {
+  const absl::flat_hash_set<std::string> kNodeStates = {
       "node_packetio_debug_info"};
-  const absl::flat_hash_set<std::string> chassis_states = {
+  const absl::flat_hash_set<std::string> kChassisStates = {
       "memory_error_alarm",
       "flow_programming_exception_alarm",
   };
-  const absl::flat_hash_set<std::string> port_queue_states = {
+  const absl::flat_hash_set<std::string> kPortQueueStates = {
       "port_qos_counters"};
 
   ::util::StatusOr<OperStatus> ParseOperStatus(const std::string& arg) {
@@ -287,7 +291,7 @@ class DummyCli {
     CHECK_RETURN_IF_FALSE(args.size()) << "Invalid arguments. Missing state.";
     std::string state = args[0];
 
-    if (gtl::ContainsKey(node_port_states, state)) {
+    if (gtl::ContainsKey(kNodePortStates, state)) {
       CHECK_RETURN_IF_FALSE(args.size() >= 4)
           << "Invalid number of args. Expected node port value(s).";
       uint64 node;
@@ -297,19 +301,19 @@ class DummyCli {
       req.mutable_source()->mutable_port()->set_node_id(node);
       req.mutable_source()->mutable_port()->set_port_id(port);
       ASSIGN_OR_RETURN(*req.mutable_state_update(), ParsePortNodeStates(args));
-    } else if (gtl::ContainsKey(node_states, state)) {
+    } else if (gtl::ContainsKey(kNodeStates, state)) {
       CHECK_RETURN_IF_FALSE(args.size() >= 3)
           << "Invalid number of args. Expected node value(s).";
       uint64 node;
       CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &node));
       req.mutable_source()->mutable_node()->set_node_id(node);
       ASSIGN_OR_RETURN(*req.mutable_state_update(), ParseNodeStates(args));
-    } else if (gtl::ContainsKey(chassis_states, state)) {
+    } else if (gtl::ContainsKey(kChassisStates, state)) {
       CHECK_RETURN_IF_FALSE(args.size() >= 2)
           << "Invalid number of args. Expected value(s).";
       req.mutable_source()->mutable_chassis();
       ASSIGN_OR_RETURN(*req.mutable_state_update(), ParseChassisStates(args));
-    } else if (gtl::ContainsKey(port_queue_states, state)) {
+    } else if (gtl::ContainsKey(kPortQueueStates, state)) {
       CHECK_RETURN_IF_FALSE(args.size() >= 5)
           << "Invalid number of args. Expected node port queue value(s).";
       uint64 node;
