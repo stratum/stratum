@@ -2,33 +2,12 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 
 licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = ["//visibility:public"],
-)
-
-# TODO(Yi) Move to CC
-py_binary(
-    name = "cli",
-    srcs = ["cli.py"],
-    deps = [
-        "//stratum/hal/lib/common:common_py_proto",
-        "//stratum/hal/lib/dummy:dummy_test_py_grpc",
-    ],
-)
-
-py_binary(
-    name = "port_counter_sim",
-    srcs = ["port_counter_sim.py"],
-    deps = [
-        "//stratum/hal/bin/dummy:cli",
-        "//stratum/hal/lib/common:common_py_proto",
-        "//stratum/hal/lib/dummy:dummy_test_py_grpc",
-    ],
 )
 
 stratum_cc_binary(

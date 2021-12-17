@@ -23,13 +23,13 @@ The `stratum_dummy` binary is a standalone executable which includes following i
 
 To build the `stratum_dummy`:
 
-```
+```bash
 bazel build //stratum/hal/bin/dummy:stratum_dummy
 ```
 
 ## Running the `stratum_dummy` binary
 
-```
+```bash
 bazel run //stratum/hal/bin/dummy:stratum_dummy \
   -- \
   --persistent_config_dir=/tmp/ \
@@ -59,14 +59,11 @@ tcp6       0      0 localhost:28000         [::]:*                  LISTEN      
 
 ## Using CLI to simulate device status change events
 
-The CLI uses python modules compiled from following proto files:
-- stratum/hal/lib/dummy/dummy_test.proto
-- stratum/hal/lib/common/common.proto
-
 Usage:
 
-```
-usage: cli.py [-h] [--dry-run] [--test-service-url TEST_SERVICE_URL]
+```bash
+bazel run //stratum/hal/bin/dummy:dummy_cli --
+              [-h] [--dry-run] [--test-service-url TEST_SERVICE_URL]
               {oper_status,admin_status,mac_address,port_speed,negotiated_port_speed,
               lacp_router_mac,lacp_system_priority,port_counters,forwarding_viability,
               health_indicator,node_packetio_debug_info,memory_error_alarm,
@@ -78,23 +75,26 @@ The state string (e.g. oper_status) is based on the DataResponse from common.pro
 
 For example:
 
-```
-bazel run //stratum/hal/bin/dummy:cli oper_status 1 1 PORT_STATE_DOWN
+```bash
+bazel run //stratum/hal/bin/dummy:dummy_cli -- oper_status 1 1 PORT_STATE_DOWN
 ```
 
 ## Simulate port counter update events
 
-To simulate port counter events, need to build python script first:
+To continuously update port counters, use the `--port_counter_sim` flag.
 
 Usage:
-```
-usage: port_counter_sim [-h] [--dry-run]
+```bash
+bazel run //stratum/hal/bin/dummy:dummy_cli --
+                        [-h] [--dry-run]
                         [--test-service-url TEST_SERVICE_URL]
                         [--delay DELAY]
+                        --port_counter_sim
                         node-id port-id
 ```
 
 For example, we want to generate port counter update event for node 1 port 1 every second:
-```
-bazel run //stratum/hal/bin/dummy:port_counter_sim 1 1
+
+```bash
+bazel run //stratum/hal/bin/dummy:dummy_cli -- --port_counter_sim 1 1
 ```
