@@ -63,7 +63,7 @@ Usage:
 
 ```bash
 bazel run //stratum/hal/bin/dummy:dummy_cli --
-              [-h] [--dry-run] [--test-service-url TEST_SERVICE_URL]
+              [-h] [--dry-run] [--grpc_addr TEST_SERVICE_URL]
               {oper_status,admin_status,mac_address,port_speed,negotiated_port_speed,
               lacp_router_mac,lacp_system_priority,port_counters,forwarding_viability,
               health_indicator,node_packetio_debug_info,memory_error_alarm,
@@ -87,8 +87,8 @@ Usage:
 ```bash
 bazel run //stratum/hal/bin/dummy:dummy_cli --
                         [-h] [--dry-run]
-                        [--test-service-url TEST_SERVICE_URL]
-                        [--delay DELAY]
+                        [--grpc_addr TEST_SERVICE_URL]
+                        [--delay_s DELAY]
                         --port_counter_sim
                         node-id port-id
 ```
