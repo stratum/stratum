@@ -57,7 +57,7 @@ class DummyCli {
     flow_programming_exception_alarm,port_qos_counters}
   )USAGE";
 
-  DummyCli(std::shared_ptr<::grpc::Channel> channel)
+  explicit DummyCli(std::shared_ptr<::grpc::Channel> channel)
       : stub_(Test::NewStub(channel)) {}
 
   ::util::Status RunCli(const std::vector<std::string>& args) {
