@@ -18,6 +18,7 @@
 namespace stratum {
 
 // The Certificate class encapsulates common tasks around x509 certificates.
+// TODO(bocon): set CA attribute in X509v3
 class Certificate {
  public:
   Certificate(const std::string& common_name, int serial_number);
@@ -43,9 +44,5 @@ class Certificate {
 };
 
 }  // namespace stratum
-
-// TODO(bocon): seed random number generator before using this in production
-// code
-// TODO(bocon): set CA attribute in X509v3
 
 #endif  // STRATUM_LIB_SECURITY_CERTIFICATE_H_
