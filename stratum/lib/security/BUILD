@@ -149,12 +149,10 @@ stratum_cc_library(
 
 stratum_cc_test(
     name = "credentials_manager_test",
-    srcs = [
-        "credentials_manager_test.cc",
-    ],
+    srcs = ["credentials_manager_test.cc"],
     data = glob(["testdata/certs*/**"]),
     deps = [
-        ":cert_utils",
+        ":certificate",
         ":credentials_manager",
         ":test_cc_grpc",
         ":test_main",
@@ -203,27 +201,27 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "cert_utils",
+    name = "certificate",
     testonly = True,
-    srcs = ["cert_utils.cc"],
-    hdrs = ["cert_utils.h"],
+    srcs = ["certificate.cc"],
+    hdrs = ["certificate.h"],
     deps = [
         "//stratum/lib:utils",
         "@boringssl//:crypto",
         "@boringssl//:ssl",
+        "@com_google_absl//absl/time",
     ],
 )
 
 stratum_cc_test(
-    name = "cert_utils_test",
-    srcs = [
-        "cert_utils_test.cc",
-    ],
+    name = "certificate_test",
+    srcs = ["certificate_test.cc"],
     deps = [
-        ":cert_utils",
+        ":certificate",
         ":test_main",
         "//stratum/glue/status:status_test_util",
         "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest",
     ],
 )

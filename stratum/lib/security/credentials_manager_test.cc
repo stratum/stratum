@@ -17,7 +17,7 @@
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/security/cert_utils.h"
+#include "stratum/lib/security/certificate.h"
 #include "stratum/lib/security/test.grpc.pb.h"
 #include "stratum/lib/utils.h"
 
@@ -45,13 +45,14 @@ constexpr char cert_common_name[] = "stratum.local";
 
 util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
                            std::string* server_key) {
+  absl::Time valid_until = absl::Now() + absl::Hours(24);
   Certificate ca("Stratum CA", 1);
   EXPECT_OK(ca.GenerateKeyPair(1024));
-  EXPECT_OK(ca.SignCertificate(ca, 30));
+  EXPECT_OK(ca.SignCertificate(ca, valid_until));
 
   Certificate stratum(cert_common_name, 1);
   EXPECT_OK(stratum.GenerateKeyPair(1024));
-  EXPECT_OK(stratum.SignCertificate(ca, 30));
+  EXPECT_OK(stratum.SignCertificate(ca, valid_until));
 
   ASSIGN_OR_RETURN(*ca_crt, ca.GetCertificate());
   ASSIGN_OR_RETURN(*server_crt, stratum.GetCertificate());
