@@ -54,6 +54,7 @@ TEST(ErrorTest, TestErrorCodes) {
                                                    ERR_OUT_OF_RANGE,
                                                    ERR_UNIMPLEMENTED,
                                                    ERR_INTERNAL,
+                                                   ERR_UNAVAILABLE,
                                                    ERR_DATA_LOSS,
                                                    ERR_UNAUTHENTICATED,
                                                    ERR_TABLE_FULL,
@@ -89,6 +90,7 @@ TEST(ErrorTest, TestMakeErrorMacro) {
                                                    ERR_OUT_OF_RANGE,
                                                    ERR_UNIMPLEMENTED,
                                                    ERR_INTERNAL,
+                                                   ERR_UNAVAILABLE,
                                                    ERR_DATA_LOSS,
                                                    ERR_UNAUTHENTICATED,
                                                    ERR_TABLE_FULL,
@@ -160,6 +162,8 @@ TEST(CommonUtilsTest, TestCanonicalCodes) {
                            ::google::rpc::UNAUTHENTICATED);
   TestCanonicalCodesHelper(ERR_INTERNAL, ::grpc::StatusCode::INTERNAL,
                            ::google::rpc::INTERNAL);
+  TestCanonicalCodesHelper(ERR_UNAVAILABLE, ::grpc::StatusCode::UNAVAILABLE,
+                           ::google::rpc::UNAVAILABLE);
   TestCanonicalCodesHelper(ERR_HARDWARE_ERROR, ::grpc::StatusCode::INTERNAL,
                            ::google::rpc::INTERNAL);
   TestCanonicalCodesHelper(ERR_INVALID_PARAM,
