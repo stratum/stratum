@@ -8,22 +8,22 @@ load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 licenses(["notice"])  # Apache v2
 
 package(
-    default_visibility = [ "//visibility:public" ],
+    default_visibility = ["//visibility:public"],
 )
 
 proto_library(
-  name = "taish_proto",
-  srcs = ["taish/taish.proto"],
+    name = "taish_proto",
+    srcs = ["taish/taish.proto"],
 )
 
 cc_proto_library(
-  name = "taish_cc_proto",
-  deps = [":taish_proto"],
+    name = "taish_cc_proto",
+    deps = [":taish_proto"],
 )
 
 cc_grpc_library(
-  name = "taish_cc_grpc",
-  srcs = [":taish_proto"],
-  deps = [":taish_cc_proto"],
-  grpc_only = True,
+    name = "taish_cc_grpc",
+    srcs = [":taish_proto"],
+    grpc_only = True,
+    deps = [":taish_cc_proto"],
 )
