@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file declares proto messages that facilitate the mapping between P4
 // runtime RPC requests/responses and a "flow entry" that can be understood by
 // HAL table management code.
@@ -117,12 +116,12 @@ message P4FieldDescriptor {
   }
 
   // This message is a pseudo-map for field value conversions.  (A real proto
-  // map<p4.config.v1.MatchField.MatchType, P4FieldValueConversion> is not allowed
-  // because enums can't be keys.)  Match field conversions depend on table
-  // context.  The same field may be an EXACT match in one table, an LPM match
-  // in another table, or even a TERNARY match in a third table.  The table's
-  // P4Info match_type for the field becomes the key to get the conversion
-  // value.
+  // map<p4.config.v1.MatchField.MatchType, P4FieldValueConversion> is not
+  // allowed because enums can't be keys.)  Match field conversions depend on
+  // table context.  The same field may be an EXACT match in one table, an LPM
+  // match in another table, or even a TERNARY match in a third table.  The
+  // table's P4Info match_type for the field becomes the key to get the
+  // conversion value.
   message P4FieldConversionEntry {
     p4.config.v1.MatchField.MatchType match_type = 1;
     P4FieldValueConversion conversion = 2;
@@ -402,8 +401,6 @@ message P4ActionDescriptor {
   //      }
   //    }
   //  }
-
-
 
   //    action_redirects {
   //      key_field_name: "local_metadata.encap_type"

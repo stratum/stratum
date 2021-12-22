@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file declares proto messages for representing the P4 program control
 // flow output from the Stratum p4c backend.  It is part of the P4 pipeline
 // configuration.

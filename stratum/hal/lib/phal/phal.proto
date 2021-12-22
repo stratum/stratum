@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 syntax = "proto3";
 
 option cc_generic_services = false;
@@ -87,7 +86,7 @@ message PhalFanTrayConfig {
     // Path to set the fan speed.
     string fan_control_path = 4;
   }
-  int32 slot = 1; // 1-base slot number
+  int32 slot = 1;  // 1-base slot number
   string tray_presence_path = 2;
   // Fan tray info EEPROM path.
   string tray_info_path = 3;
