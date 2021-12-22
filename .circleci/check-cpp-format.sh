@@ -8,6 +8,9 @@ set -ex
 # Files in this branch that are different from main.
 CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- '*.h' '*.cc')
 
+# All proto files.
+PROTO_FILES=$(git ls-files "*.proto")
+
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
 stratum/glue/gtl/map_util_test.cc
@@ -260,7 +263,7 @@ stratum/tools/gnmi/gnmi_cli.cc
 \0
 EOF
 
-echo -e "$KNOWN_FILES\n$CHANGED_FILES" | sort -u | xargs -t -n1 clang-format --style=file -i
+echo -e "$KNOWN_FILES\n$CHANGED_FILES\n$PROTO_FILES" | sort -u | xargs -t -n1 clang-format --style=file -i
 
 # Report which files need to be fixed.
 git update-index --refresh
