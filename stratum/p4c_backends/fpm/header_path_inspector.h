@@ -15,6 +15,7 @@
 #include <deque>
 #include <map>
 #include <string>
+
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 
 namespace stratum {

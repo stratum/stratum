@@ -2,16 +2,15 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_TABLE_MANAGER_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_TABLE_MANAGER_MOCK_H_
 
-#include <vector>
 #include <set>
+#include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_table_manager.h"
 
 namespace stratum {
 namespace hal {

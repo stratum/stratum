@@ -47,9 +47,9 @@ class HitAssignMapper : public Transform {
   // RunPreTestTransform typically runs during test setup
   // from IRTestHelperJson::TransformP4Control to prepare an IR for
   // testing other classes that depend on HitAssignMapper transforms.
-  static const IR::P4Control* RunPreTestTransform(
-      const IR::P4Control& control,
-      P4::ReferenceMap* ref_map, P4::TypeMap* type_map);
+  static const IR::P4Control* RunPreTestTransform(const IR::P4Control& control,
+                                                  P4::ReferenceMap* ref_map,
+                                                  P4::TypeMap* type_map);
 
   // HitAssignMapper is neither copyable nor movable.
   HitAssignMapper(const HitAssignMapper&) = delete;

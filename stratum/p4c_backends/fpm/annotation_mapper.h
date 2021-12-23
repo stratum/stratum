@@ -12,12 +12,13 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+
+#include "absl/container/node_hash_map.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/fpm/annotation_map.pb.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "absl/container/node_hash_map.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -79,14 +80,15 @@ class AnnotationMapper {
  private:
   // This private class maintains mappings from field/table/action addenda
   // name to the corresponding addenda data in the P4AnnotationMap.
-  template <class T> class AddendaLookupMap {
+  template <class T>
+  class AddendaLookupMap {
    public:
     AddendaLookupMap() {}
     virtual ~AddendaLookupMap() {}
 
     // Populates the addenda_lookup_ map for this instance.
     bool BuildMap(
-      const ::google::protobuf::RepeatedPtrField<T>& addenda_fields) {
+        const ::google::protobuf::RepeatedPtrField<T>& addenda_fields) {
       bool map_ok = true;
       for (const auto& addendum : addenda_fields) {
         if (!addendum.name().empty()) {
@@ -143,8 +145,8 @@ class AnnotationMapper {
   // adjusting the action_descriptor as specified by any annotation mappings
   // found.
   bool HandleActionAnnotations(const std::string& action_name,
-                              const hal::P4InfoManager& p4_info_manager,
-                              hal::P4ActionDescriptor* action_descriptor);
+                               const hal::P4InfoManager& p4_info_manager,
+                               hal::P4ActionDescriptor* action_descriptor);
   bool MapActionAnnotation(const std::string& annotation,
                            hal::P4ActionDescriptor* action_descriptor);
 
