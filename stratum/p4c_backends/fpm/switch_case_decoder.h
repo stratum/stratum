@@ -11,14 +11,14 @@
 
 #include <map>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -97,7 +97,7 @@ class SwitchCaseDecoder : public Inspector {
   std::vector<std::pair<std::string, std::string>> color_actions_;
 
   // These members track the decoded state of the current case.
-  std::string action_;     // Name of the action affected by the case.
+  std::string action_;  // Name of the action affected by the case.
 };
 
 }  // namespace p4c_backends

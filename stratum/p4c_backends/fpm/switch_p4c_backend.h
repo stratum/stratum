@@ -13,6 +13,11 @@
 #include <string>
 #include <vector>
 
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/fromv1.0/v1model.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
@@ -29,11 +34,6 @@
 #include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
-#include "external/com_github_p4lang_p4c/frontends/common/options.h"
-#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/fromv1.0/v1model.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
-#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -48,7 +48,7 @@ class SwitchP4cBackend : public BackendExtensionInterface {
                    P4cFrontMidInterface* front_mid_interface,
                    AnnotationMapper* annotation_mapper,
                    TunnelOptimizerInterface* tunnel_optimizer);
-  ~SwitchP4cBackend() override {};
+  ~SwitchP4cBackend() override{};
 
   // The Compile method does all the work to translate the top_level IR program
   // into a P4PipelineConfig for runtime use on a Stratum fixed-function

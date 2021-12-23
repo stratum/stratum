@@ -11,13 +11,13 @@
 
 #include <map>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 #include "stratum/p4c_backends/fpm/header_path_inspector.h"
 #include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -104,17 +104,17 @@ class FieldDecoder {
   // bit_offset and bit_width describe the field's position with its
   // surrounding header.
   void UpdateFieldMapData(const std::string& fq_field_name,
-                             const std::string& header_type_name,
-                             const std::string& field_name,
-                             const AnnotatedFieldTypeMap& annotated_types,
-                             uint32_t bit_offset, uint32_t bit_width);
+                          const std::string& header_type_name,
+                          const std::string& field_name,
+                          const AnnotatedFieldTypeMap& annotated_types,
+                          uint32_t bit_offset, uint32_t bit_width);
 
   // Determines whether the input field has an annotated field type.  If the
   // annotation exists, StoreFieldTypeAnnotation parses the field type and
   // stores it in annotated_types for future use.
-  static void StoreFieldTypeAnnotation(
-      const IR::StructField& field, const std::string& header_type_name,
-      AnnotatedFieldTypeMap* annotated_types);
+  static void StoreFieldTypeAnnotation(const IR::StructField& field,
+                                       const std::string& header_type_name,
+                                       AnnotatedFieldTypeMap* annotated_types);
 
   // Accumulates decoded IR field objects in the output table map, injected
   // by the caller of the constructor, not owned by this class.
