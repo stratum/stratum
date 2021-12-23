@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 syntax = "proto3";
 
 option cc_generic_services = false;
@@ -35,22 +34,22 @@ enum ErrorCode {
   // values start from 500, to make sure they are not conflicting with the
   // canonical errors. DO NOT USE ANY VALUE BELOW 500 FOR THE ERRORS BEYOND
   // THIS LINE.
-  ERR_TABLE_FULL = 500;                 // Table (e.g. flow table) full.
-  ERR_TABLE_EMPTY = 501;                // Table (e.g. flow table) empty.
-  ERR_HARDWARE_ERROR = 502;             // Generic hardware error.
-  ERR_INVALID_PARAM = 503;              // Invalid param.
-  ERR_ENTRY_NOT_FOUND = 504;            // Entry (e.g. flow) not found.
-  ERR_ENTRY_EXISTS = 505;               // Entry (e.g. flow) already exists.
-  ERR_OPER_NOT_SUPPORTED = 506;         // Unsupported operation.
-  ERR_OPER_DISABLED = 507;              // Disabled operation.
-  ERR_OPER_TIMEOUT = 508;               // Operation timeout.
-  ERR_OPER_STILL_RUNNING = 509;         // Operation still running (chip busy).
-  ERR_REBOOT_REQUIRED = 510;            // Operation cannot be done w/o reboot.
-  ERR_FEATURE_UNAVAILABLE = 511;        // Feature not available.
-  ERR_NOT_INITIALIZED = 512;            // Desired module is not initialized.
-  ERR_NO_RESOURCE = 513;                // No resource available (e.g. OOM).
-  ERR_FILE_NOT_FOUND = 514;             // The file is not found.
-  ERR_AT_LEAST_ONE_OPER_FAILED = 515;   // At least one failed (from many).
-  ERR_INVALID_P4_INFO = 516;            // Invalid P4Info pushed.
-  ERR_NO_OP = 517;                      // No operation performed.
+  ERR_TABLE_FULL = 500;                // Table (e.g. flow table) full.
+  ERR_TABLE_EMPTY = 501;               // Table (e.g. flow table) empty.
+  ERR_HARDWARE_ERROR = 502;            // Generic hardware error.
+  ERR_INVALID_PARAM = 503;             // Invalid param.
+  ERR_ENTRY_NOT_FOUND = 504;           // Entry (e.g. flow) not found.
+  ERR_ENTRY_EXISTS = 505;              // Entry (e.g. flow) already exists.
+  ERR_OPER_NOT_SUPPORTED = 506;        // Unsupported operation.
+  ERR_OPER_DISABLED = 507;             // Disabled operation.
+  ERR_OPER_TIMEOUT = 508;              // Operation timeout.
+  ERR_OPER_STILL_RUNNING = 509;        // Operation still running (chip busy).
+  ERR_REBOOT_REQUIRED = 510;           // Operation cannot be done w/o reboot.
+  ERR_FEATURE_UNAVAILABLE = 511;       // Feature not available.
+  ERR_NOT_INITIALIZED = 512;           // Desired module is not initialized.
+  ERR_NO_RESOURCE = 513;               // No resource available (e.g. OOM).
+  ERR_FILE_NOT_FOUND = 514;            // The file is not found.
+  ERR_AT_LEAST_ONE_OPER_FAILED = 515;  // At least one failed (from many).
+  ERR_INVALID_P4_INFO = 516;           // Invalid P4Info pushed.
+  ERR_NO_OP = 517;                     // No operation performed.
 }

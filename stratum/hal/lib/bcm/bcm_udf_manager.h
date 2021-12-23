@@ -6,16 +6,16 @@
 #define STRATUM_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
 
 #include <functional>
-#include <memory>
 #include <map>
-#include <vector>
+#include <memory>
 #include <string>
+#include <vector>
 
+#include "absl/container/flat_hash_set.h"
 #include "stratum/hal/lib/bcm/acl_table.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "absl/container/flat_hash_set.h"
 
 namespace stratum {
 
@@ -314,11 +314,11 @@ class BcmUdfManager {
   // ***************************************************************************
   // Member Variables
   // ***************************************************************************
-  BcmSdkInterface* bcm_sdk_interface_;   // Interface to the Bcm SDK. Not owned
-                                         // by this class.
-  std::map<int, UdfSet> udf_sets_;       // UDF sets managed by this object.
-  int chunk_size_;                       // The size of each chunk in bits.
-  int chunks_per_set_;                   // Number of chunks available per set.
+  BcmSdkInterface* bcm_sdk_interface_;  // Interface to the Bcm SDK. Not owned
+                                        // by this class.
+  std::map<int, UdfSet> udf_sets_;      // UDF sets managed by this object.
+  int chunk_size_;                      // The size of each chunk in bits.
+  int chunks_per_set_;                  // Number of chunks available per set.
 
   // Fixed zero-based BCM unit number corresponding to the node/ASIC managed by
   // this class instance. Assigned in the class constructor.

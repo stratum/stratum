@@ -16,9 +16,9 @@
 
 #include <string>
 
-#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

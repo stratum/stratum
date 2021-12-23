@@ -1,12 +1,14 @@
 #!/bin/bash
-#
 # Copyright 2021-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 set -ex
 
 # Files in this branch that are different from main.
 CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- 'BUILD' '*.BUILD' '*.bzl')
+
+# All Bazel BUILD files.
+BUILD_FILES=$(git ls-files "*BUILD")
 
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
@@ -82,7 +84,7 @@ stratum/tools/stratum_replay/BUILD
 \0
 EOF
 
-echo -e "$KNOWN_FILES\n$CHANGED_FILES" | sort -u | xargs -t buildifier -lint=fix -mode=fix
+echo -e "$KNOWN_FILES\n$CHANGED_FILES\n$BUILD_FILES" | sort -u | xargs -t buildifier -lint=fix -mode=fix
 
 # Report which files need to be fixed.
 git update-index --refresh

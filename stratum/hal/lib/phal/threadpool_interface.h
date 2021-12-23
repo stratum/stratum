@@ -2,15 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_THREADPOOL_INTERFACE_H_
 #define STRATUM_HAL_LIB_PHAL_THREADPOOL_INTERFACE_H_
 
 #include <functional>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {
