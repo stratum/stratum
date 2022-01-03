@@ -4,6 +4,8 @@
 //stratum/hal/bin/barefoot:stratum_bfrt_legal
 //stratum/hal/bin/bcm/standalone/...
 //stratum/hal/bin/bmv2:stratum_bmv2_deb
+//stratum/hal/bin/dummy:dummy_cli
+//stratum/hal/bin/dummy:stratum_dummy
 //stratum/hal/bin/dummy/...
 //stratum/hal/lib/barefoot:bf_cc_proto
 //stratum/hal/lib/barefoot:bf_chassis_manager
