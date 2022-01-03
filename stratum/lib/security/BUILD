@@ -150,7 +150,6 @@ stratum_cc_library(
 stratum_cc_test(
     name = "credentials_manager_test",
     srcs = ["credentials_manager_test.cc"],
-    data = glob(["testdata/certs*/**"]),
     deps = [
         ":certificate",
         ":credentials_manager",
