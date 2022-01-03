@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // P4ConfigVerifier verifies consistency among various P4 objects in the P4Info
 // and the P4PipelineConfig.  It helps P4TableMapper verify forwarding
 // pipeline config pushes.  It also has a role in some unit tests that verify
@@ -15,12 +14,12 @@
 #include <memory>
 #include <string>
 
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -113,9 +112,9 @@ class P4ConfigVerifier {
 
   // These two methods verify assignments within P4 action bodies.
   ::util::Status VerifyHeaderAssignment();
-  ::util::Status VerifyFieldAssignment(
-      const std::string& destination_field,
-      const P4AssignSourceValue& source_value, const std::string& action_name);
+  ::util::Status VerifyFieldAssignment(const std::string& destination_field,
+                                       const P4AssignSourceValue& source_value,
+                                       const std::string& action_name);
 
   // Verifies that the input P4FieldDescriptor contains a known field type.
   bool VerifyKnownFieldType(const P4FieldDescriptor& descriptor);

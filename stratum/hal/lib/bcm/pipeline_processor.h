@@ -6,21 +6,21 @@
 #define STRATUM_HAL_LIB_BCM_PIPELINE_PROCESSOR_H_
 
 #include <memory>
-#include <vector>
-#include <utility>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/container/node_hash_map.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/node_hash_map.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "absl/container/flat_hash_set.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 

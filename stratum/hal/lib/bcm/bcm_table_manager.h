@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_TABLE_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_TABLE_MANAGER_H_
 
@@ -13,6 +12,11 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/acl_table.h"
@@ -24,11 +28,6 @@
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

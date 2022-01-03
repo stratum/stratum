@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_GLUE_STATUS_CANONICAL_ERRORS_H_
 #define STRATUM_GLUE_STATUS_CANONICAL_ERRORS_H_
 

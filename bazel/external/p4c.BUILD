@@ -1,8 +1,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 # Bazel BUILD file for p4c in Stratum, limited to the following outputs:
 #   - Several cc_library targets to link with Stratum-specific p4c backends.
 #   - The p4c IR definitions and IR generator binary.
@@ -27,8 +25,10 @@ load(
     "P4C_BACKEND_IR_FILES",
 )
 
+licenses(["notice"])  # Apache v2
+
 package(
-    default_visibility = [ "//visibility:public" ],
+    default_visibility = ["//visibility:public"],
 )
 
 # Instead of using cmake to generate the config.h, this genrule produces
@@ -76,7 +76,7 @@ genrule(
     name = "p4lexer_lex",
     srcs = ["frontends/parsers/p4/p4lexer.ll"],
     outs = ["frontends/parsers/p4/p4lexer.lex"],
-    cmd = ("sed '/%option outfile=\"lex.yy.c\"/d' $< > $@"),
+    cmd = "sed '/%option outfile=\"lex.yy.c\"/d' $< > $@",
     visibility = ["//visibility:private"],
 )
 
@@ -92,7 +92,7 @@ genrule(
     name = "v1lexer_lex",
     srcs = ["frontends/parsers/v1/v1lexer.ll"],
     outs = ["frontends/parsers/v1/v1lexer.lex"],
-    cmd = ("sed '/%option outfile=\"lex.yy.c\"/d' $< > $@"),
+    cmd = "sed '/%option outfile=\"lex.yy.c\"/d' $< > $@",
     visibility = ["//visibility:private"],
 )
 
@@ -164,7 +164,7 @@ cc_library(
         "tools/ir-generator/ir-generator-lex.c",
         "tools/ir-generator/ir-generator-yacc.hh",
     ] + glob([
-        "tools/ir-generator/*.h"
+        "tools/ir-generator/*.h",
     ]),
     deps = [
         ":p4c_includes",
@@ -176,8 +176,8 @@ cc_library(
 cc_binary(
     name = "irgenerator",
     srcs = ["tools/ir-generator/generator.cpp"],
-    visibility = [":__subpackages__"],
     linkopts = ["-lgmp"],
+    visibility = [":__subpackages__"],
     deps = [
         ":p4c_ir_generator_lib",
         ":p4c_toolkit",
@@ -241,8 +241,8 @@ cc_library(
     ]),
     #visibility = STRATUM_INTERNAL,
     deps = [
-        ":p4c_includes",
         ":p4c_frontend_h",
+        ":p4c_includes",
         ":p4c_toolkit",
     ],
 )
@@ -342,7 +342,6 @@ cc_library(
     ],
 )
 
-
 # These rules build p4c binaries with the bmv2 soft switch and PSA backends.
 # These binaries are for example purposes.  Backends for Stratum production will
 # be implemented elsewhere and build with dependencies on the libraries above.
@@ -389,7 +388,7 @@ genrule(
     name = "p4c_bmv2_version",
     srcs = ["backends/bmv2/simple_switch/version.h.cmake"],
     outs = ["backends/bmv2/simple_switch/version.h"],
-    cmd = ("sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@"),
+    cmd = "sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@",
     visibility = ["//visibility:private"],
 )
 
@@ -423,7 +422,7 @@ genrule(
     name = "p4c_p4test_version",
     srcs = ["backends/p4test/version.h.cmake"],
     outs = ["backends/p4test/version.h"],
-    cmd = ("sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@"),
+    cmd = "sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@",
     #visibility = ["//visibility:private"],
 )
 
@@ -437,14 +436,14 @@ cc_library(
         "backends/p4test/version.h",
     ],
     copts = P4C_BUILD_DEFAULT_COPTS,
+    data = [
+        ":p4c_p4test_version",
+    ],
     deps = [
         ":p4c_frontend_midend",
         ":p4c_ir",
         ":p4c_toolkit",
     ],
-    data = [
-        ":p4c_p4test_version",
-    ]
 )
 
 cc_binary(
@@ -460,15 +459,15 @@ cc_binary(
     deps = [
         ":control_plane",
         ":control_plane_h",
+        ":p4c_backend_p4test_lib",
         ":p4c_frontend_midend",
         ":p4c_ir",
         ":p4c_toolkit",
-        ":p4c_backend_p4test_lib",
     ],
 )
 
 # Includes all valid P4_16 test files
 filegroup(
     name = "testdata_p4_16_samples",
-    data = glob(["testdata/p4_16_samples/*.p4"])
+    data = glob(["testdata/p4_16_samples/*.p4"]),
 )
