@@ -26,6 +26,8 @@ stratum/hal/bin/barefoot/bf_pipeline_builder.cc
 stratum/hal/bin/barefoot/main_bfrt.cc
 stratum/hal/bin/barefoot/main.cc
 stratum/hal/bin/bcm/standalone/main.cc
+stratum/hal/bin/dummy/dummy_cli.cc
+stratum/hal/bin/dummy/main.cc
 stratum/hal/bin/np4intel/main.cc
 stratum/hal/lib/barefoot/bf_chassis_manager_test.cc
 stratum/hal/lib/barefoot/bf_chassis_manager.cc
