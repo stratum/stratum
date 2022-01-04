@@ -67,3 +67,8 @@ cc_library(
     hdrs = ["stamping.h"],
     linkstamp = "stamping.cc",
 )
+
+cc_library(
+    name = "platform",
+    hdrs = ["platform.h"],
+)
