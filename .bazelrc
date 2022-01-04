@@ -4,6 +4,7 @@
 # General build options
 build --conlyopt='-std=gnu11'
 build --cxxopt='-std=gnu++11'
+build --cxxopt='-fext-numeric-literals'
 build --workspace_status_command=.circleci/workspace_status.sh
 
 # General test options

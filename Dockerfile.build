@@ -1,7 +1,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BAZELISK_VERSION=1.8.0
+ARG BAZELISK_VERSION=1.11.0
+ARG BUILDIFIER_VERSION=4.2.4
 ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
 ARG BMV2_COMMIT=b0fb01ecacbf3a7d7f0c01e2f149b0c6a957f779
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
@@ -93,7 +94,7 @@ RUN wget --quiet https://github.com/bazelbuild/bazelisk/releases/download/v${BAZ
 # Tools for style and license checking
 RUN pip install setuptools wheel && \
     pip install 'cpplint==1.*'
-RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
+RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${BUILDIFIER_VERSION}/buildifier
 RUN chmod +x /usr/local/bin/buildifier
 
 # Docker CLI for CI builds
