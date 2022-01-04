@@ -22,6 +22,10 @@ DEFINE_uint64(election_id, 1,
               "Election ID for the controller instance. Will be used in all "
               "P4Runtime RPCs sent to the switch. Note that election_id is 128 "
               "bits, but here we assume we only give the lower 64 bits only.");
+DEFINE_string(ca_cert, "",
+              "CA certificate, will use insecure credentials if empty.");
+DEFINE_string(client_cert, "", "Client certificate (optional).");
+DEFINE_string(client_key, "", "Client key (optional).");
 
 namespace stratum {
 namespace tools {
@@ -44,10 +48,17 @@ const char kUsage[] =
   std::string p4_device_config;
   RETURN_IF_ERROR(
       ReadFileToString(FLAGS_p4_pipeline_config_file, &p4_device_config));
-  ASSIGN_OR_RETURN(auto p4rt_session,
-                   p4runtime::P4RuntimeSession::Create(
-                       FLAGS_grpc_addr, ::grpc::InsecureChannelCredentials(),
-                       FLAGS_device_id, FLAGS_election_id));
+  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
+  if (!FLAGS_ca_cert.empty()) {
+    ASSIGN_OR_RETURN(channel_credentials,
+                     CreateSecureClientGrpcChannelCredentials(
+                         FLAGS_client_key, FLAGS_client_cert, FLAGS_ca_cert));
+  } else {
+    channel_credentials = ::grpc::InsecureChannelCredentials();
+  }
+  ASSIGN_OR_RETURN(auto p4rt_session, p4runtime::P4RuntimeSession::Create(
+                                          FLAGS_grpc_addr, channel_credentials,
+                                          FLAGS_device_id, FLAGS_election_id));
   RETURN_IF_ERROR(
       p4rt_session->SetForwardingPipelineConfig(p4info, p4_device_config));
 

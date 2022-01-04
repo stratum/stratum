@@ -13,6 +13,7 @@
 
 #include <chrono>  // NOLINT
 #include <functional>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <type_traits>
@@ -28,6 +29,7 @@
 #include "grpcpp/grpcpp.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 
@@ -245,6 +247,28 @@ inline U ByteStreamToUint(const std::string& bytes) {
     val += static_cast<uint8>(bytes[i]);
   }
   return val;
+}
+
+// Create secure TLS gRPC channel credentials for use in clients.
+inline ::util::StatusOr<std::shared_ptr<::grpc::ChannelCredentials>>
+CreateSecureClientGrpcChannelCredentials(
+    const std::string& client_key_path,
+    const std::string& identity_certificate_path,
+    const std::string& root_cert_path) {
+  auto cert_provider =
+      std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
+          client_key_path, identity_certificate_path, root_cert_path,
+          /*file checking interval seconds*/ 1);
+  auto tls_opts =
+      std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
+          cert_provider);
+  tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
+  tls_opts->watch_root_certs();
+  if (!identity_certificate_path.empty() && !client_key_path.empty()) {
+    tls_opts->watch_identity_key_cert_pairs();
+  }
+
+  return ::grpc::experimental::TlsCredentials(*tls_opts);
 }
 
 // Demangles a symbol name, if possible. If it fails, the mangled name is
