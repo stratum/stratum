@@ -201,9 +201,6 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "certificate",
-    # TODO(bocon): seed random number generator before using this in production
-    # code
-    testonly = True,
     srcs = ["certificate.cc"],
     hdrs = ["certificate.h"],
     deps = [
