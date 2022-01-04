@@ -8,8 +8,6 @@
 #include <string>
 
 #include "absl/time/time.h"
-#include "openssl/bio.h"
-#include "openssl/bn.h"
 #include "openssl/evp.h"
 #include "openssl/x509.h"
 #include "stratum/glue/status/statusor.h"
@@ -17,8 +15,7 @@
 
 namespace stratum {
 
-// The Certificate class encapsulates common tasks around x509 certificates.
-// TODO(bocon): set CA attribute in X509v3
+// The Certificate class encapsulates common tasks around X509 certificates.
 class Certificate {
  public:
   Certificate(const std::string& common_name, int serial_number);
@@ -37,8 +34,8 @@ class Certificate {
                                absl::Time valid_until);
 
  private:
-  std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)> key_;
-  std::unique_ptr<X509, decltype(&::X509_free)> certificate_;
+  bssl::UniquePtr<EVP_PKEY> key_;
+  bssl::UniquePtr<X509> certificate_;
   std::string common_name_;
   int serial_number_;
 };
