@@ -81,8 +81,8 @@ class TableHitInspector : public Inspector {
   //                         on a prior table hit condition.
   //    true        true     Invalid state.
   // The ref_map and type_map parameters come from the p4c midend output.
-  TableHitInspector(bool table_hit, bool table_miss,
-                    P4::ReferenceMap* ref_map, P4::TypeMap* type_map);
+  TableHitInspector(bool table_hit, bool table_miss, P4::ReferenceMap* ref_map,
+                    P4::TypeMap* type_map);
   ~TableHitInspector() override {}
 
   // The Inspect method inspects all IR nodes under the input statement to

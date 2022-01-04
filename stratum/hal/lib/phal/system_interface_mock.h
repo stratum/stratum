@@ -2,15 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SYSTEM_INTERFACE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_SYSTEM_INTERFACE_MOCK_H_
 
 #include <memory>
 #include <string>
 
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/system_interface.h"
 
 namespace stratum {
 namespace hal {

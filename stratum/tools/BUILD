@@ -14,6 +14,7 @@ pkg_tar(
         "//stratum/hal/stub/embedded:stratum_stub",
         "//stratum/procmon:procmon_main",
         "//stratum/tools/gnmi:gnmi_cli",
+        "//stratum/tools/p4_pipeline_pusher",
         "//stratum/tools/stratum_replay",
     ],
     mode = "0755",

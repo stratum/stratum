@@ -60,4 +60,5 @@ def proto_gen_deps():
             remote = "https://github.com/openconfig/ygot",
             commit = "68346f97239f91ac9fb1f419586f58d6c39f5500",
             build_file = "@//bazel:external/ygot_proto.BUILD",
+            sha256 = "db40653f99d878ab698ea32fdbaa1d9c166281df547c823b896bfbdfc0624c8e",
         )

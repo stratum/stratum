@@ -25,8 +25,8 @@ You can pull a nightly version of this container image from
 $ docker pull stratumproject/stratum-bfrt:[SDE version]
 ```
 
-For example, the container with BF SDE 9.3.2: <br/>
-`stratumproject/stratum-bfrt:9.3.2`
+For example, the container with BF SDE 9.5.0: <br/>
+`stratumproject/stratum-bfrt:9.5.0`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bfrt:9.3.2
-docker save stratumproject/stratum-bfrt:9.3.2 -o stratum-bfrt-9.3.2-docker.tar
+docker pull stratumproject/stratum-bfrt:9.5.0
+docker save stratumproject/stratum-bfrt:9.5.0 -o stratum-bfrt-9.5.0-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bfrt-9.3.2-docker.tar
+docker load -i stratum-bfrt-9.5.0-docker.tar
 ```
 
 ### Set up huge pages
@@ -198,7 +198,7 @@ In one terminal window, run `tofino-model` in one container:
 ```bash
 docker run --rm -it --privileged \
   --network=host \
-  stratumproject/tofino-model:9.3.2  # <SDE_VERSION>
+  stratumproject/tofino-model:9.5.0  # <SDE_VERSION>
 ```
 
 In another terminal window, run Stratum in its own container:
@@ -758,7 +758,7 @@ E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed 
 
 This error occurs when the binary pipeline is not in the correct format.
 Make sure the pipeline config binary has been packed correctly for PI node, like
-so: [update_config.py](/stratum/hal/bin/barefoot/update_config.py#L39-L52).
+so: [bf_pipeline_builder](stratum/hal/bin/barefoot/bf_pipeline_builder.cc).
 You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
 Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline

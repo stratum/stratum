@@ -13,14 +13,14 @@
 #include <map>
 #include <string>
 
-#include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/p4c_backends/fpm/parser_map.pb.h"
-#include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -58,9 +58,7 @@ class ParserValueSetMapper : public Inspector {
   // by the content of a ValueSet.
   struct ValueSetState {
     explicit ValueSetState(const std::string& vs_name)
-        : value_set_name(vs_name),
-          header_type(P4_HEADER_UNKNOWN) {
-    }
+        : value_set_name(vs_name), header_type(P4_HEADER_UNKNOWN) {}
 
     const std::string value_set_name;
     P4HeaderType header_type;

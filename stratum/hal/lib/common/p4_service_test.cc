@@ -952,7 +952,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
-  // Controller #2 connect and since it has higher election_id it becomes the
+  // Controller #2 connects and since it has higher election_id it becomes the
   // new master.
   req.mutable_arbitration()->set_device_id(kNodeId1);
   req.mutable_arbitration()->mutable_election_id()->set_high(
@@ -1171,6 +1171,87 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   // And finally Controller #3 disconnects too. Nothing will be sent.
   stream3->WritesDone();
   ASSERT_TRUE(stream3->Finish().ok());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
+  ::grpc::ClientContext context1;
+  ::grpc::ClientContext context2;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  //----------------------------------------------------------------------------
+  // Now start with making the stream channels for all the controllers. We use
+  // 2 streams to emulate 2 controllers.
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream1 =
+      stub_->StreamChannel(&context1);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream2 =
+      stub_->StreamChannel(&context2);
+
+  //----------------------------------------------------------------------------
+  // Controller #1 connects and becomes master.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  ASSERT_TRUE(stream1->Write(req));
+
+  // Read the mastership info back.
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId1),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId1),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+
+  //----------------------------------------------------------------------------
+  // Controller #2 connects and since it has higher election_id it becomes the
+  // new master.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId2));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId2));
+  ASSERT_TRUE(stream2->Write(req));
+
+  // Read the mastership info back. It will be sent to Controller #1 and #2.
+  // Status will be OK for Controller #2 and non-OK for Controller #1.
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
+
+  ASSERT_TRUE(stream2->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+
+  //----------------------------------------------------------------------------
+  // Controller #1 sends same election ID as #2. The request is rejected and
+  // Controller #2 will remain master, as it still has the highest election id.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId2));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId2));
+  ASSERT_TRUE(stream1->Write(req));
+
+  // Ensure that the request from Controller #1 is rejected and disconnected.
+  EXPECT_FALSE(stream1->Read(&resp));
+  ::grpc::Status status = stream1->Finish();
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(), HasSubstr("Duplicate election ID"));
+  EXPECT_TRUE(status.error_details().empty());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForTooManyConnections) {

@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file declares CommonFlowEntry proto messages to store the output from
 // the mapping of P4Runtime RPC requests/responses.  These messages contain
 // general mapping output, but in some cases they may need to be supplemented

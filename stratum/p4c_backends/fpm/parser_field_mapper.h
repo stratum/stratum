@@ -19,10 +19,10 @@
 #include <string>
 #include <unordered_map>
 
+#include "absl/container/node_hash_map.h"
 #include "stratum/p4c_backends/fpm/field_decoder.h"
 #include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "absl/container/node_hash_map.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -60,8 +60,7 @@ class ParserFieldMapper {
                    const std::string& p4_state_name, bool is_tunnel_entry)
         : target_state_name(target_state_name),
           p4_state_name(p4_state_name),
-          is_tunnel_entry(is_tunnel_entry) {
-    }
+          is_tunnel_entry(is_tunnel_entry) {}
 
     const std::string target_state_name;
     const std::string p4_state_name;

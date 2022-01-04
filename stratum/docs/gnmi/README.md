@@ -45,6 +45,7 @@ Service and tree initialization
  When the service is initialized, it creates a `GnmiPublisher`, and the `GnmiPublisher` instantiates the `YangParseTree`.
  When the tree is initialized, it generates default nodes for wildcard paths such as:
 
+  - `/interfaces/interface[name=*]/state/id`
   - `/interfaces/interface[name=*]/state/ifindex`
   - `/interfaces/interface[name=*]/state/name`
   - `/interfaces/interface/...`

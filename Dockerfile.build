@@ -10,7 +10,7 @@ ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-11 
 # Reasonable for CI
 ARG JOBS=2
 
-FROM debian:9@sha256:75f7d0590b45561bfa443abad0b3e0f86e2811b1fc176f786cd30eb078d1846f
+FROM debian:9@sha256:d8ee86bf0afeb901de293c692a540307a670306cbdb7a06e2c840f17b0c35374
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum"
 

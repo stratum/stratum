@@ -6,17 +6,16 @@
 #ifndef STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
 #define STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
 
-#include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 class TunnelOptimizerMock : public TunnelOptimizerInterface {
  public:
-  MOCK_METHOD2(Optimize,
-               bool(const hal::P4ActionDescriptor& input_action,
-                    hal::P4ActionDescriptor* optimized_action));
+  MOCK_METHOD2(Optimize, bool(const hal::P4ActionDescriptor& input_action,
+                              hal::P4ActionDescriptor* optimized_action));
   MOCK_METHOD3(MergeAndOptimize,
                bool(const hal::P4ActionDescriptor& input_action1,
                     const hal::P4ActionDescriptor& input_action2,

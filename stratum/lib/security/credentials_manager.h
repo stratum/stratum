@@ -8,57 +8,16 @@
 #include <memory>
 #include <string>
 
-#include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"
+#include "grpcpp/security/server_credentials.h"
 #include "grpcpp/security/tls_credentials_options.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 
 namespace stratum {
-using TlsCredentialReloadInterface =
-    ::grpc::experimental::TlsCredentialReloadInterface;
-using TlsCredentialReloadArg = ::grpc::experimental::TlsCredentialReloadArg;
-using TlsCredentialReloadConfig =
-    ::grpc::experimental::TlsCredentialReloadConfig;
-using TlsKeyMaterialsConfig = ::grpc::experimental::TlsKeyMaterialsConfig;
-using TlsCredentialsOptions = ::grpc::experimental::TlsCredentialsOptions;
+using ::grpc::experimental::FileWatcherCertificateProvider;
 using ::grpc::experimental::TlsServerCredentials;
-
-// CredentialsReloadInterface is an implementation of
-// the TlsCredentialReloadInterface which helps reloading gRPC server
-// credentials(private key and certifications)
-// The `Schedule` function will be called when gRPC server initialized or
-// a new connection is created.
-class CredentialsReloadInterface : public TlsCredentialReloadInterface {
- public:
-  ~CredentialsReloadInterface() override = default;
-  CredentialsReloadInterface(std::string pem_root_certs,
-                             std::string server_private_key,
-                             std::string server_cert);
-
-  // Public methods from TlsCredentialReloadInterface
-  int Schedule(TlsCredentialReloadArg* arg) override
-      LOCKS_EXCLUDED(credential_lock_);
-  void Cancel(TlsCredentialReloadArg* arg) override;
-
-  // Loads new credentials
-  ::util::Status LoadNewCredential(const std::string ca_cert,
-                                   const std::string cert,
-                                   const std::string key)
-      LOCKS_EXCLUDED(credential_lock_);
-
-  // CredentialsReloadInterface is neither copyable nor movable.
-  CredentialsReloadInterface(const CredentialsReloadInterface&) = delete;
-  CredentialsReloadInterface& operator=(const CredentialsReloadInterface&) =
-      delete;
-
- private:
-  absl::Mutex credential_lock_;
-  bool reload_credential_ GUARDED_BY(credential_lock_);
-  std::string pem_root_certs_ GUARDED_BY(credential_lock_);
-  std::string server_private_key_ GUARDED_BY(credential_lock_);
-  std::string server_cert_ GUARDED_BY(credential_lock_);
-};
+using ::grpc::experimental::TlsServerCredentialsOptions;
 
 // CredentialsManager manages the server credentials for (external facing) gRPC
 // servers. It handles starting and shutting down TSI as well as generating the
@@ -94,8 +53,8 @@ class CredentialsManager {
   // Function to initialize the credentials manager.
   ::util::Status Initialize();
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
-  std::shared_ptr<TlsCredentialsOptions> tls_opts_;
-  std::shared_ptr<CredentialsReloadInterface> credentials_reload_interface_;
+  std::shared_ptr<TlsServerCredentialsOptions> tls_opts_;
+  std::shared_ptr<FileWatcherCertificateProvider> certificate_provider_;
 };
 
 }  // namespace stratum
