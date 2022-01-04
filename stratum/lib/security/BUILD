@@ -219,6 +219,7 @@ stratum_cc_test(
         ":test_main",
         "//stratum/glue/status:status_test_util",
         "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest",
     ],

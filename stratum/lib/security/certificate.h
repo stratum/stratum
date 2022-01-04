@@ -15,13 +15,11 @@
 
 namespace stratum {
 
-// The Certificate class encapsulates common tasks around x509 certificates.
-// TODO(bocon): set CA attribute in X509v3
+// The Certificate class encapsulates common tasks around X509 certificates.
 class Certificate {
  public:
-  // Creates a new Certificate with the given common name (CN) and serial number
-  // (SN).
-  Certificate(const std::string& common_name, int serial_number);
+  // Creates a new Certificate with the given common name (CN).
+  Certificate(const std::string& common_name);
 
   // Returns PEM-encoded representation of the private key.
   util::StatusOr<std::string> GetPrivateKey();
@@ -30,17 +28,36 @@ class Certificate {
   util::StatusOr<std::string> GetCertificate();
 
   // Generates a RSA key pair with key length as specified.
-  util::Status GenerateKeyPair(int bits);
+  util::Status GenerateKeyPair(int bits = 4096);
+
+  // Loads the certificate and private key from strings.
+  util::Status LoadCertificate(const std::string& cert_pem,
+                               const std::string& key_pem);
+
+  // Returns true if the certificate is a CA certificate.
+  util::StatusOr<bool> IsCA();
+
+  // Checks that the certificate common name matches the provided string.
+  util::Status CheckCommonName(const std::string& name);
+
+  // Returns the common name of the certificate.
+  const std::string& GetCommonName();
+
+  // Check that the issuer of the certificate matches the provided certificate.
+  util::Status CheckIssuer(const Certificate& issuer);
+
+  // Returns the serial number of the certificate as a hex string.
+  util::StatusOr<std::string> GetSerialNumber();
 
   // Signs a certificate using the provided certificate.
   util::Status SignCertificate(const Certificate& issuer,
-                               absl::Time valid_after, absl::Time valid_until);
+                               absl::Time valid_after, absl::Time valid_until,
+                               long serial = 0);
 
  private:
-  std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)> key_;
-  std::unique_ptr<X509, decltype(&::X509_free)> certificate_;
+  bssl::UniquePtr<EVP_PKEY> key_;
+  bssl::UniquePtr<X509> certificate_;
   std::string common_name_;
-  int serial_number_;
 };
 
 }  // namespace stratum
