@@ -19,6 +19,8 @@ namespace stratum {
 // TODO(bocon): set CA attribute in X509v3
 class Certificate {
  public:
+  // Creates a new Certificate with the given common name (CN) and serial number
+  // (SN).
   Certificate(const std::string& common_name, int serial_number);
 
   // Returns PEM-encoded representation of the private key.
@@ -27,7 +29,7 @@ class Certificate {
   // Returns PEM-encoded representation of the X509 certificate.
   util::StatusOr<std::string> GetCertificate();
 
-  // Generate RSA key pair with key length as specified.
+  // Generates a RSA key pair with key length as specified.
   util::Status GenerateKeyPair(int bits);
 
   // Signs a certificate using the provided certificate.
