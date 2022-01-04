@@ -152,6 +152,9 @@ class P4RuntimeSession {
   std::unique_ptr<::p4::v1::P4Runtime::Stub> stub_;
   // This stream channel and context are used to perform master arbitration,
   // but can now also be used for packet IO.
+  // Note that declaration order of context and channel is significant, as
+  // the context must be initialized before it can be used to create the channel
+  // in the contructor.
   std::unique_ptr<grpc::ClientContext> stream_channel_context_;
   std::unique_ptr<grpc::ClientReaderWriterInterface<
       ::p4::v1::StreamMessageRequest, ::p4::v1::StreamMessageResponse>>
