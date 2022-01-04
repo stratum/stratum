@@ -70,15 +70,13 @@ using ClientStreamChannelReaderWriter =
     auto cert_provider =
         std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
             FLAGS_client_key, FLAGS_client_cert, FLAGS_ca_cert, 1);
-    auto tls_opts =
-        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
-            cert_provider);
-    tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
-    tls_opts->watch_root_certs();
+    grpc::experimental::TlsChannelCredentialsOptions options;
+    options.set_certificate_provider(cert_provider);
+    options.watch_root_certs();
     if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
-      tls_opts->watch_identity_key_cert_pairs();
+      options.watch_identity_key_cert_pairs();
     }
-    channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);
+    channel_credentials = ::grpc::experimental::TlsCredentials(options);
   } else {
     channel_credentials = ::grpc::InsecureChannelCredentials();
   }

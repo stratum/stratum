@@ -36,18 +36,21 @@ def stratum_deps():
         http_archive(
             name = "com_github_grpc_grpc",
             urls = [
-                "https://github.com/grpc/grpc/archive/v1.35.0.tar.gz",
+                "https://github.com/grpc/grpc/archive/v1.43.0.tar.gz",
             ],
-            strip_prefix = "grpc-1.35.0",
-            sha256 = "27dd2fc5c9809ddcde8eb6fa1fa278a3486566dfc28335fca13eb8df8bd3b958",
+            strip_prefix = "grpc-1.43.0",
+            sha256 = "9647220c699cea4dafa92ec0917c25c7812be51a18143af047e20f3fb05adddc",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
         http_archive(
             name = "com_google_googleapis",
-            urls = ["https://github.com/googleapis/googleapis/archive/a8cd11e2c420a194348839c6490a8a1bef2835d3.zip"],
-            strip_prefix = "googleapis-a8cd11e2c420a194348839c6490a8a1bef2835d3",
-            sha256 = "bb2b4aa6558e5125a357d829530f2bad932c6f091f0d2faaacfeec185d031ec2",
+            sha256 = "5bb6b0253ccf64b53d6c7249625a7e3f6c3bc6402abd52d3778bfa48258703a0",
+            strip_prefix = "googleapis-2f9af297c84c55c8b871ba4495e01ade42476c92",
+            urls = [
+                "https://storage.googleapis.com/grpc-bazel-mirror/github.com/googleapis/googleapis/archive/2f9af297c84c55c8b871ba4495e01ade42476c92.tar.gz",
+                "https://github.com/googleapis/googleapis/archive/2f9af297c84c55c8b871ba4495e01ade42476c92.tar.gz",
+            ],
         )
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
@@ -55,9 +58,9 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4c",
             remote = "https://github.com/p4lang/p4c",
-            commit = "43568b75796d68a6424ad22eebeee62f46ccd3fe",
+            commit = "87065d1ee1e695167985bd7cdc73d104e30a80c6",
             build_file = "@//bazel:external/p4c.BUILD",
-            sha256 = "6f0c38ccc82a3876403843c67d2994bd66115c569d1ef11cbf8e23a0281266da",
+            sha256 = "7f183c3fe5cc5f2971c98bb2f74fa2e2a234c7d84434fa8c944524799574ed1a",
         )
 
     if "judy" not in native.existing_rules():
