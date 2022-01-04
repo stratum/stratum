@@ -13,16 +13,17 @@
 namespace stratum {
 
 TEST(CertificateTest, Generate_Cert) {
-  absl::Time valid_until = absl::Now() + absl::Hours(24);
+  absl::Time valid_after = absl::Now();
+  absl::Time valid_until = valid_after + absl::Hours(24);
   Certificate ca("Stratum CA", 1);
   EXPECT_OK(ca.GenerateKeyPair(1024));
-  EXPECT_OK(ca.SignCertificate(ca, valid_until));  // Self-sign.
+  EXPECT_OK(ca.SignCertificate(ca, valid_after, valid_until));  // Self-sign.
   EXPECT_OK(ca.GetPrivateKey());
   EXPECT_OK(ca.GetCertificate());
 
   Certificate stratum("stratum.local", 1);
   EXPECT_OK(stratum.GenerateKeyPair(1024));
-  EXPECT_OK(stratum.SignCertificate(ca, valid_until));
+  EXPECT_OK(stratum.SignCertificate(ca, valid_after, valid_until));
   EXPECT_OK(stratum.GetPrivateKey());
   EXPECT_OK(stratum.GetCertificate());
 }

@@ -78,11 +78,14 @@ util::Status GenerateRSAKeyPair(EVP_PKEY* evp, int bits) {
 util::Status GenerateUnsignedCert(X509* unsigned_cert,
                                   EVP_PKEY* unsigned_cert_key,
                                   const std::string& common_name, int serial,
+                                  absl::Time valid_after,
                                   absl::Time valid_until) {
   CHECK_RETURN_IF_FALSE(
       ASN1_INTEGER_set(X509_get_serialNumber(unsigned_cert), serial));
-  CHECK_RETURN_IF_FALSE(X509_gmtime_adj(X509_get_notBefore(unsigned_cert), 0));
-  time_t t = absl::ToTimeT(valid_until);
+  time_t t = absl::ToTimeT(valid_after);
+  CHECK_RETURN_IF_FALSE(
+      X509_time_adj_ex(X509_getm_notBefore(unsigned_cert), 0, 0, &t));
+  t = absl::ToTimeT(valid_until);
   CHECK_RETURN_IF_FALSE(
       X509_time_adj_ex(X509_getm_notAfter(unsigned_cert), 0, 0, &t));
   CHECK_RETURN_IF_FALSE(X509_set_pubkey(unsigned_cert, unsigned_cert_key));
@@ -115,9 +118,11 @@ util::Status GenerateSignedCert(X509* unsigned_cert,
                                 EVP_PKEY* unsigned_cert_key, X509* issuer,
                                 EVP_PKEY* issuer_key,
                                 const std::string& common_name, int serial,
+                                absl::Time valid_after,
                                 absl::Time valid_until) {
   RETURN_IF_ERROR(GenerateUnsignedCert(unsigned_cert, unsigned_cert_key,
-                                       common_name, serial, valid_until));
+                                       common_name, serial, valid_after,
+                                       valid_until));
   RETURN_IF_ERROR(
       SignCert(unsigned_cert, unsigned_cert_key, issuer, issuer_key));
 
@@ -144,6 +149,7 @@ util::Status Certificate::GenerateKeyPair(int bits) {
 }
 
 util::Status Certificate::SignCertificate(const Certificate& issuer,
+                                          absl::Time valid_after,
                                           absl::Time valid_until) {
   X509* issuer_cert;
   EVP_PKEY* issuer_key;
@@ -156,7 +162,7 @@ util::Status Certificate::SignCertificate(const Certificate& issuer,
   }
   return GenerateSignedCert(certificate_.get(), key_.get(), issuer_cert,
                             issuer_key, common_name_, serial_number_,
-                            valid_until);
+                            valid_after, valid_until);
 }
 
 }  // namespace stratum

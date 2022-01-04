@@ -34,7 +34,7 @@ class Certificate {
 
   // Signs a certificate using the provided certificate.
   util::Status SignCertificate(const Certificate& issuer,
-                               absl::Time valid_until);
+                               absl::Time valid_after, absl::Time valid_until);
 
  private:
   std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)> key_;
