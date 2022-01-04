@@ -758,7 +758,7 @@ E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed 
 
 This error occurs when the binary pipeline is not in the correct format.
 Make sure the pipeline config binary has been packed correctly for PI node, like
-so: [update_config.py](/stratum/hal/bin/barefoot/update_config.py#L39-L52).
+so: [bf_pipeline_builder](stratum/hal/bin/barefoot/bf_pipeline_builder.cc).
 You cannot push the compiler output (e.g. `tofino.bin`) directly.
 
 Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline

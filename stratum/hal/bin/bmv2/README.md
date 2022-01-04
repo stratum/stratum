@@ -77,9 +77,7 @@ Protobuf text file, which you can obtain by compiling your P4 program with the
 # text file)
 p4c -b bmv2 -a v1model -o /tmp/ --p4runtime-format text --p4runtime-file /tmp/<prog>.proto.txt <prog>.p4
 # run P4Runtime client
-cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
-[sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
-    --grpc-addr <YOUR_HOST_IP_ADDRESS>:9559 --json <prog>.json --p4info <prog>.proto.txt
+p4_pipeline_pusher --grpc_addr=<YOUR_HOST_IP_ADDRESS>:9559 --p4_info_file=<prog>.proto.txt --p4_pipeline_config_file=<prog>.json
 ```
 
 <!--
