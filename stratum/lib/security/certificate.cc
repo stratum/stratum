@@ -96,8 +96,8 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
   RETURN_OK();
 }
 
-util::Status AddExtension(X509* cert, X509V3_CTX& ctx, const std::string& name,
-                          const std::string& value) {
+util::Status AddExtension(X509* cert, const X509V3_CTX& ctx,
+                          const std::string& name, const std::string& value) {
   bssl::UniquePtr<X509_EXTENSION> ext(
       X509V3_EXT_nconf(nullptr, &ctx, const_cast<char*>(name.c_str()),
                        const_cast<char*>(value.c_str())));
