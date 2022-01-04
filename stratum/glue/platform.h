@@ -136,7 +136,7 @@
 #define EXFULL (ELAST + __COUNTER__)
 #endif
 
-// Typedefs for in6_addr members in struct in6_addr.
+// Typedef aliases for members in struct in6_addr.
 #define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
 
