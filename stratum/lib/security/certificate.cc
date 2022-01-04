@@ -96,10 +96,10 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
   RETURN_OK();
 }
 
-util::Status AddExtension(X509* cert, const X509V3_CTX& ctx,
-                          const std::string& name, const std::string& value) {
+util::Status AddExtension(X509* cert, X509V3_CTX* ctx, const std::string& name,
+                          const std::string& value) {
   bssl::UniquePtr<X509_EXTENSION> ext(
-      X509V3_EXT_nconf(nullptr, &ctx, const_cast<char*>(name.c_str()),
+      X509V3_EXT_nconf(nullptr, ctx, const_cast<char*>(name.c_str()),
                        const_cast<char*>(value.c_str())));
 
   // Return error if the extension could not be created
@@ -147,20 +147,20 @@ util::Status SignCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
 
   std::string key_usage = "critical, digitalSignature";
   if (self_signed) key_usage += ", keyCertSign, cRLSign";
-  RETURN_IF_ERROR(AddExtension(unsigned_cert, ctx, "keyUsage", key_usage));
+  RETURN_IF_ERROR(AddExtension(unsigned_cert, &ctx, "keyUsage", key_usage));
 
   std::string is_ca = "critical, CA:";
   is_ca += self_signed ? "TRUE" : "FALSE";
-  RETURN_IF_ERROR(AddExtension(unsigned_cert, ctx, "basicConstraints", is_ca));
+  RETURN_IF_ERROR(AddExtension(unsigned_cert, &ctx, "basicConstraints", is_ca));
 
   RETURN_IF_ERROR(
-      AddExtension(unsigned_cert, ctx, "subjectKeyIdentifier", "hash"));
+      AddExtension(unsigned_cert, &ctx, "subjectKeyIdentifier", "hash"));
 
   if (!self_signed) {
     RETURN_IF_ERROR(
-        AddExtension(unsigned_cert, ctx, "extendedKeyUsage", "serverAuth"));
+        AddExtension(unsigned_cert, &ctx, "extendedKeyUsage", "serverAuth"));
     RETURN_IF_ERROR(
-        AddExtension(unsigned_cert, ctx, "authorityKeyIdentifier", "keyid"));
+        AddExtension(unsigned_cert, &ctx, "authorityKeyIdentifier", "keyid"));
   }
 
   CHECK_RETURN_IF_FALSE(X509_sign(unsigned_cert, issuer_key, EVP_sha256()));
