@@ -8,8 +8,6 @@
 #include <string>
 
 #include "absl/time/time.h"
-#include "openssl/bio.h"
-#include "openssl/bn.h"
 #include "openssl/evp.h"
 #include "openssl/x509.h"
 #include "stratum/glue/status/statusor.h"
