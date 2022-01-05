@@ -103,6 +103,9 @@ jobs:
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
+          name: Query all Stratum targets
+          command: bazel query '//...'
+      - run:
           name: Build Stratum targets
           command: xargs -a .circleci/build-targets.txt bazel build
       - *analyze_bazel_profile
