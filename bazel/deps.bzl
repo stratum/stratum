@@ -130,23 +130,6 @@ def stratum_deps():
             ],
         )
 
-    if "rules_python" not in native.existing_rules():
-        http_archive(
-            name = "rules_python",
-            url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
-            sha256 = "aa96a691d3a8177f3215b14b0edc9641787abaaa30363a080165d06ab65e1161",
-        )
-
-    if "cython" not in native.existing_rules():
-        http_archive(
-            name = "cython",
-            build_file = "@com_github_grpc_grpc//third_party:cython.BUILD",
-            sha256 = "d68138a2381afbdd0876c3cb2a22389043fa01c4badede1228ee073032b07a27",
-            strip_prefix = "cython-c2b80d87658a8525ce091cbe146cb7eaa29fed5c",
-            urls = [
-                "https://github.com/cython/cython/archive/c2b80d87658a8525ce091cbe146cb7eaa29fed5c.tar.gz",
-            ],
-        )
     if "com_github_openconfig_public" not in native.existing_rules():
         remote_workspace(
             name = "com_github_openconfig_public",
