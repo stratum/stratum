@@ -64,11 +64,6 @@ stratum/p4c_backends/fpm/bcm/BUILD
 stratum/p4c_backends/ir/BUILD
 stratum/p4c_backends/test/BUILD
 stratum/p4c_backends/test/build_defs.bzl
-stratum/pipelines/loopback/BUILD
-stratum/pipelines/main/BUILD
-stratum/pipelines/ptf/BUILD
-stratum/pipelines/ptf/ptf_exec.bzl
-stratum/pipelines/ptf/scapy_exec.bzl
 stratum/portage/BUILD
 stratum/portage/build_defs.bzl
 stratum/procmon/BUILD

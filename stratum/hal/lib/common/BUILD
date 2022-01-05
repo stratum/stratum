@@ -9,7 +9,6 @@ load(
     "stratum_cc_test",
 )
 load("//bazel:deps.bzl", "P4RUNTIME_VER")
-load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 licenses(["notice"])  # Apache v2
 
@@ -188,13 +187,6 @@ proto_library(
 cc_proto_library(
     name = "common_cc_proto",
     deps = [":common_proto"],
-)
-
-py_proto_library(
-    name = "common_py_proto",
-    deps = [
-        ":common_proto",
-    ],
 )
 
 stratum_cc_library(
