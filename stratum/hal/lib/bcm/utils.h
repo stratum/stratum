@@ -2,15 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_UTILS_H_
 #define STRATUM_HAL_LIB_BCM_UTILS_H_
 
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
 
 namespace stratum {
 namespace hal {

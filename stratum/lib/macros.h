@@ -2,17 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_LIB_MACROS_H_
 #define STRATUM_LIB_MACROS_H_
 
 #include <string>
 
-/* START GOOGLE ONLY
-#include "stratum/glue/status/status_builder.h"
-   END GOOGLE ONLY */
-#include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -32,6 +29,7 @@ class BooleanStatus {
   // Implicitly cast to bool.
   operator bool() const { return status_.ok(); }
   inline ::util::Status status() const { return status_; }
+
  private:
   ::util::Status status_;
 };

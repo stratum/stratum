@@ -2,21 +2,20 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_PHAL_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_PHAL_INTERFACE_H_
 
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/lib/channel/channel.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/sfp_configurator.h"
+#include "stratum/lib/channel/channel.h"
 
 namespace stratum {
 namespace hal {

@@ -10,10 +10,10 @@
 #include <set>
 #include <string>
 
-#include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -28,8 +28,8 @@ class ActionDecoder {
   // ownership of all pointers.  ActionDecoder expects the shared instance of
   // P4ModelNames to identify model-dependent prefixes, externs, and other
   // resources.
-  ActionDecoder(TableMapGenerator* table_mapper,
-                P4::ReferenceMap* ref_map, P4::TypeMap* type_map);
+  ActionDecoder(TableMapGenerator* table_mapper, P4::ReferenceMap* ref_map,
+                P4::TypeMap* type_map);
 
   // Converts the statements within one P4 action into a P4PipelineConfig table
   // map action descriptor.  The body parameter is the IR representation of the

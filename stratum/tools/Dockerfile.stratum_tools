@@ -17,4 +17,5 @@ CMD bf_pipeline_builder -version && \
     stratum_stub -version && \
     procmon_main -version && \
     gnmi_cli -version && \
+    p4_pipeline_pusher -version && \
     stratum_replay -version

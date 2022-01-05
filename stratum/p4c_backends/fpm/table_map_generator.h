@@ -12,10 +12,10 @@
 #include <set>
 #include <string>
 
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -74,8 +74,8 @@ class TableMapGenerator {
   virtual void SetFieldType(const std::string& field_name, P4FieldType type);
   virtual void SetFieldAttributes(const std::string& field_name,
                                   P4FieldType field_type,
-                                  P4HeaderType header_type,
-                                  uint32_t bit_offset, uint32_t bit_width);
+                                  P4HeaderType header_type, uint32_t bit_offset,
+                                  uint32_t bit_width);
   virtual void SetFieldLocalMetadataFlag(const std::string& field_name);
   virtual void SetFieldValueSet(const std::string& field_name,
                                 const std::string& value_set_name,
@@ -121,23 +121,21 @@ class TableMapGenerator {
   // define the action behavior according to the IR definition.
   virtual void AddAction(const std::string& action_name);
   virtual void AssignActionSourceValueToField(
-      const std::string& action_name,
-      const P4AssignSourceValue& source_value,
+      const std::string& action_name, const P4AssignSourceValue& source_value,
       const std::string& field_name);
-  virtual void AssignActionParameterToField(
-      const std::string& action_name, const std::string& param_name,
-      const std::string& field_name);
-  virtual void AssignHeaderToHeader(
-      const std::string& action_name,
-      const P4AssignSourceValue& source_header,
-      const std::string& destination_header);
+  virtual void AssignActionParameterToField(const std::string& action_name,
+                                            const std::string& param_name,
+                                            const std::string& field_name);
+  virtual void AssignHeaderToHeader(const std::string& action_name,
+                                    const P4AssignSourceValue& source_header,
+                                    const std::string& destination_header);
   virtual void AddDropPrimitive(const std::string& action_name);
   virtual void AddNopPrimitive(const std::string& action_name);
   virtual void AddMeterColorAction(
       const std::string& action_name,
       const hal::P4ActionDescriptor::P4MeterColorAction& color_action);
-  virtual void AddMeterColorActionsFromString(
-      const std::string& action_name, const std::string& color_actions);
+  virtual void AddMeterColorActionsFromString(const std::string& action_name,
+                                              const std::string& color_actions);
   virtual void AddTunnelAction(
       const std::string& action_name,
       const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action);
@@ -176,8 +174,8 @@ class TableMapGenerator {
   //      the depth parameter to 0, and the existing depth value will be
   //      unchanged.
   virtual void AddHeader(const std::string& header_name);
-  virtual void SetHeaderAttributes(
-      const std::string& header_name, P4HeaderType type, int32 depth);
+  virtual void SetHeaderAttributes(const std::string& header_name,
+                                   P4HeaderType type, int32 depth);
 
   // This method adds a P4ActionDescriptor for an internally-generated action
   // to the P4PipelineConfig output.  An internal action is an action that

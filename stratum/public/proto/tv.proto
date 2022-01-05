@@ -47,10 +47,9 @@ message ControlPlaneOperation {
     // The forwarding pipeline config to push to the switch, to test setting
     // and/or mutating the config directly via P4Runtime API, and its expected
     // RPC response. Note that forwarding pipeline config is also set via gNMI.
-    p4.v1.SetForwardingPipelineConfigRequest
-        p4_set_pipeline_config_request = 1;
-    p4.v1.SetForwardingPipelineConfigResponse
-        p4_set_pipeline_config_response = 2;
+    p4.v1.SetForwardingPipelineConfigRequest p4_set_pipeline_config_request = 1;
+    p4.v1.SetForwardingPipelineConfigResponse p4_set_pipeline_config_response =
+        2;
   }
   oneof operations {
     WriteOperation write_operation = 1;
@@ -86,8 +85,8 @@ message ControlPlaneExpectation {
   }
   message PipelineConfigExpectation {
     p4.v1.GetForwardingPipelineConfigRequest p4_get_pipeline_config_request = 1;
-    p4.v1.GetForwardingPipelineConfigResponse
-        p4_get_pipeline_config_response = 2;
+    p4.v1.GetForwardingPipelineConfigResponse p4_get_pipeline_config_response =
+        2;
   }
   oneof expectations {
     ReadExpectation read_expectation = 1;

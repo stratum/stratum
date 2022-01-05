@@ -74,7 +74,6 @@ switched_rules_by_language(
     name = "com_google_googleapis_imports",
     grpc = True,
     cc = True,
-    python = True,
 )
 
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
@@ -105,12 +104,3 @@ cdlang_rules_dependencies()
 load("@bazel_latex//:repositories.bzl", "latex_repositories")
 
 latex_repositories()
-
-# ---------------------------------------------------------------------------
-#       Load dependencies for pipeline PTF rules
-# ---------------------------------------------------------------------------
-load("@rules_python//python:pip.bzl", "pip_install")
-pip_install(
-    name = "ptf_deps",
-    requirements = "//stratum/pipelines/ptf:requirements.txt",
-)
