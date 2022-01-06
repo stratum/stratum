@@ -299,6 +299,7 @@ jobs:
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile
+      # TODO(max): fix tag
       - DOCKER_IMG: stratumproject/stratum-bfrt:test-do-not-use
       - CC: clang
       - CXX: clang++
@@ -420,9 +421,9 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
-      - publish-docker-stratum-bfrt
-          # requires:
-          #   - publish-docker-build
+      - publish-docker-stratum-bfrt:
+          requires:
+            - publish-docker-build
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build
