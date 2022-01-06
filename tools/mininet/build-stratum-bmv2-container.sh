@@ -7,6 +7,7 @@ DOCKERFILE_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../.." >/dev/null 2>&1 && pwd )"}
 STRATUM_TARGET=stratum_bmv2
 JOBS=${JOBS:-4}
+BMV2_COMMIT=e1fcd5d54cecf7679f46ac462fdf92e049711e6c
 DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
 print_help() {
@@ -77,6 +78,7 @@ fi
 DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
 DOCKER_BUILD_OPTS+="--label build-timestamp=$(date +%FT%T%z) "
 DOCKER_BUILD_OPTS+="--label build-machine=$(hostname) "
+DOCKER_BUILD_OPTS+="--label bmv2-commit=$BMV2_COMMIT "
 
 # Add VCS labels
 pushd $STRATUM_ROOT

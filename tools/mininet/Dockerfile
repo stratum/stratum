@@ -75,6 +75,7 @@ FROM bitnami/minideb:stretch as runtime
 
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="Docker-based Mininet image that uses stratum_bmv2 as the default switch"
+LABEL bmv2-commit="$BMV2_COMMIT"
 
 # Mininet and BMv2 simple_switch runtime dependencies
 ENV RUNTIME_DEPS \
