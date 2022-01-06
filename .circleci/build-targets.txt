@@ -1,6 +1,7 @@
 //stratum/glue/...
 //stratum/hal/bin/barefoot:bf_pipeline_builder
 //stratum/hal/bin/barefoot:stratum_bf_legal
+//stratum/hal/bin/barefoot:stratum_bfrt
 //stratum/hal/bin/barefoot:stratum_bfrt_legal
 //stratum/hal/bin/bcm/standalone/...
 //stratum/hal/bin/bmv2:stratum_bmv2_deb
