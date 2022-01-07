@@ -68,4 +68,5 @@ docker run -it --rm --privileged \
     -v $CONFIG_DIR:/stratum_configs \
     -v $LOG_DIR:/stratum_logs \
     --entrypoint=$ENTRYPOINT \
+    --name stratum \
     $DOCKER_IMAGE $CMD

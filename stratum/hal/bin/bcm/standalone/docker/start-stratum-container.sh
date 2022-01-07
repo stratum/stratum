@@ -27,5 +27,6 @@ docker run -it --rm --privileged --cap-add ALL --shm-size=512m --network host \
     -v /etc/onl:/etc/onl \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \
+    --name stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
     $@
