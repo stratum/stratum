@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "absl/cleanup/cleanup.h"
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
@@ -33,9 +32,9 @@ DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
 DEFINE_string(get_type, "ALL", "The gNMI get request type");
-DEFINE_string(ca_cert, "", "CA certificate");
-DEFINE_string(client_cert, "", "Client certificate");
-DEFINE_string(client_key, "", "Client key");
+DEFINE_string(ca_cert_file, "", "Path to CA certificate file");
+DEFINE_string(client_cert_file, "", "Path to client certificate file");
+DEFINE_string(client_key_file, "", "Path to client key file");
 
 #define PRINT_MSG(msg, prompt)                   \
   do {                                           \
@@ -71,7 +70,6 @@ positional arguments:
   path                                              gNMI path
 
 optional arguments:
-  --help            show this help message and exit
   --grpc_addr GRPC_ADDR    gNMI server address
   --bool_val BOOL_VAL      [SetRequest only] Set boolean value
   --int_val INT_VAL        [SetRequest only] Set int value (64-bit)
@@ -82,9 +80,6 @@ optional arguments:
   --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
   --replace                [SetRequest only] Use replace instead of update
   --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
-  --ca-cert                CA certificate
-  --client-cert            gRPC Client certificate
-  --client-key             gRPC Client key
 )USAGE";
 
 // Pipe file descriptors used to transfer signals from the handler to the cancel
@@ -254,16 +249,17 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   });
 
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert.empty()) {
+  if (!FLAGS_ca_cert_file.empty()) {
     auto cert_provider =
         std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
-            FLAGS_client_key, FLAGS_client_cert, FLAGS_ca_cert, 1);
+            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file,
+            1);
     auto tls_opts =
         std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
             cert_provider);
     tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
     tls_opts->watch_root_certs();
-    if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
+    if (!FLAGS_client_cert_file.empty() && !FLAGS_client_key_file.empty()) {
       tls_opts->watch_identity_key_cert_pairs();
     }
     channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);

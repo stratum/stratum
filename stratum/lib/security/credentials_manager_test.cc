@@ -21,9 +21,9 @@
 #include "stratum/lib/security/test.grpc.pb.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(ca_cert);
-DECLARE_string(server_key);
-DECLARE_string(server_cert);
+DECLARE_string(ca_cert_file);
+DECLARE_string(server_key_file);
+DECLARE_string(server_cert_file);
 DECLARE_string(test_tmpdir);
 
 namespace stratum {
@@ -63,18 +63,19 @@ util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
 
 void SetCerts(const std::string& ca_crt, const std::string& server_crt,
               const std::string& server_key) {
-  ASSERT_OK(WriteStringToFile(ca_crt, FLAGS_ca_cert));
-  ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert));
-  ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key));
+  ASSERT_OK(WriteStringToFile(ca_crt, FLAGS_ca_cert_file));
+  ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert_file));
+  ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key_file));
 }
 
 class CredentialsManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    FLAGS_ca_cert = absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kCaCertFile);
-    FLAGS_server_cert =
+    FLAGS_ca_cert_file =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kCaCertFile);
+    FLAGS_server_cert_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerCertFile);
-    FLAGS_server_key =
+    FLAGS_server_key_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
 
     std::string server_crt, server_key;
@@ -154,9 +155,9 @@ TEST_F(CredentialsManagerTest, LoadNewCredentials) {
   std::string ca_cert_actual;
   std::string cert_actual;
   std::string key_actual;
-  ASSERT_OK(ReadFileToString(FLAGS_ca_cert, &ca_cert_actual));
-  ASSERT_OK(ReadFileToString(FLAGS_server_cert, &cert_actual));
-  ASSERT_OK(ReadFileToString(FLAGS_server_key, &key_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_ca_cert_file, &ca_cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_server_cert_file, &cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_server_key_file, &key_actual));
   EXPECT_EQ(ca_cert_actual, ca_crt);
   EXPECT_EQ(cert_actual, server_crt);
   EXPECT_EQ(key_actual, server_key);
