@@ -20,19 +20,24 @@ DEFINE_string(server_cert_file, "", "gRPC Server certificate path");
 
 namespace stratum {
 
-CredentialsManager::~CredentialsManager() {}
+using ::grpc::experimental::FileWatcherCertificateProvider;
+using ::grpc::experimental::TlsServerCredentials;
+using ::grpc::experimental::TlsServerCredentialsOptions;
+
 CredentialsManager::CredentialsManager() {}
 
-std::shared_ptr<::grpc::ServerCredentials>
-CredentialsManager::GenerateExternalFacingServerCredentials() const {
-  return server_credentials_;
-}
+CredentialsManager::~CredentialsManager() {}
 
 ::util::StatusOr<std::unique_ptr<CredentialsManager>>
 CredentialsManager::CreateInstance() {
   auto instance_ = absl::WrapUnique(new CredentialsManager());
   RETURN_IF_ERROR(instance_->Initialize());
   return std::move(instance_);
+}
+
+std::shared_ptr<::grpc::ServerCredentials>
+CredentialsManager::GenerateExternalFacingServerCredentials() const {
+  return server_credentials_;
 }
 
 ::util::Status CredentialsManager::Initialize() {
@@ -56,10 +61,13 @@ CredentialsManager::CreateInstance() {
 }
 
 ::util::Status CredentialsManager::LoadNewCredential(
-    const std::string root_certs, const std::string cert_chain,
-    const std::string private_key) {
+    const std::string& root_certs, const std::string& cert_chain,
+    const std::string& private_key) {
   ::util::Status status;
   // TODO(Kevin): Validate the provided key material if possible
+  // TODO(max): According to the API of FileWatcherCertificateProvider, any key
+  // and certifcate update must happen atomically. The below code does not
+  // guarantee that.
   status.Update(WriteStringToFile(root_certs, FLAGS_ca_cert_file));
   status.Update(WriteStringToFile(cert_chain, FLAGS_server_cert_file));
   status.Update(WriteStringToFile(private_key, FLAGS_server_key_file));
