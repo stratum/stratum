@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
@@ -20,6 +21,9 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
+DEFINE_bool(enable_p4runtime_translation, false,
+            "Enable experimental P4runtime translation feature.");
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -28,7 +32,8 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
-                   BfSdeInterface* bf_sde_interface, int device_id)
+                   BfSdeInterface* bf_sde_interface, int device_id,
+                   P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_config_(),
@@ -37,6 +42,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
+      p4runtime_bfrt_translator_(ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)),
       node_id_(0),
       device_id_(device_id) {}
 
@@ -49,6 +55,7 @@ BfrtNode::BfrtNode()
       bfrt_packetio_manager_(nullptr),
       bfrt_pre_manager_(nullptr),
       bfrt_counter_manager_(nullptr),
+      p4runtime_bfrt_translator_(nullptr),
       node_id_(0),
       device_id_(-1) {}
 
@@ -59,10 +66,12 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtTableManager* bfrt_table_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
-    BfSdeInterface* bf_sde_interface, int device_id) {
-  return absl::WrapUnique(
-      new BfrtNode(bfrt_table_manager, bfrt_packetio_manager, bfrt_pre_manager,
-                   bfrt_counter_manager, bf_sde_interface, device_id));
+    BfSdeInterface* bf_sde_interface, int device_id,
+    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator) {
+  return absl::WrapUnique(new BfrtNode(bfrt_table_manager,
+                                       bfrt_packetio_manager, bfrt_pre_manager,
+                                       bfrt_counter_manager, bf_sde_interface,
+                                       device_id, p4runtime_bfrt_translator));
 }
 
 ::util::Status BfrtNode::PushChassisConfig(const ChassisConfig& config,
@@ -71,6 +80,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   node_id_ = node_id;
   // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
+  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushChassisConfig(config));
   initialized_ = true;
 
   return ::util::OkStatus();
@@ -115,6 +125,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     *pipeline->mutable_scope() = profile.pipe_scope();
   }
   bfrt_config_ = bfrt_config;
+  pipeline_config_ = config;
   VLOG(2) << bfrt_config_.DebugString();
 
   return ::util::OkStatus();
@@ -139,7 +150,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
-
+  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
+      pipeline_config_));
+  translation_enabled_ = p4runtime_bfrt_translator_->TranslationEnabled() &&
+                         FLAGS_enable_p4runtime_translation;
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }
@@ -195,43 +209,96 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
-      case ::p4::v1::Entity::kTableEntry:
-        status = bfrt_table_manager_->WriteTableEntry(
-            session, update.type(), update.entity().table_entry());
+      case ::p4::v1::Entity::kTableEntry: {
+        ::p4::v1::TableEntry table_entry = update.entity().table_entry();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(table_entry,
+                           p4runtime_bfrt_translator_->TranslateTableEntry(
+                               table_entry, true));
+        }
+        status = bfrt_table_manager_->WriteTableEntry(session, update.type(),
+                                                      table_entry);
         break;
+      }
       case ::p4::v1::Entity::kExternEntry:
         status = WriteExternEntry(session, update.type(),
                                   update.entity().extern_entry());
         break;
-      case ::p4::v1::Entity::kActionProfileMember:
+      case ::p4::v1::Entity::kActionProfileMember: {
+        ::p4::v1::ActionProfileMember action_profile_member =
+            update.entity().action_profile_member();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(
+              action_profile_member,
+              p4runtime_bfrt_translator_->TranslateActionProfileMember(
+                  action_profile_member, true));
+        }
         status = bfrt_table_manager_->WriteActionProfileMember(
-            session, update.type(), update.entity().action_profile_member());
+            session, update.type(), action_profile_member);
         break;
+      }
       case ::p4::v1::Entity::kActionProfileGroup:
         status = bfrt_table_manager_->WriteActionProfileGroup(
             session, update.type(), update.entity().action_profile_group());
         break;
-      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
+        ::p4::v1::PacketReplicationEngineEntry packet_replication_engine_entry =
+            update.entity().packet_replication_engine_entry();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(
+              packet_replication_engine_entry,
+              p4runtime_bfrt_translator_->TranslatePacketReplicationEngineEntry(
+                  packet_replication_engine_entry, true));
+        }
         status = bfrt_pre_manager_->WritePreEntry(
-            session, update.type(),
-            update.entity().packet_replication_engine_entry());
+            session, update.type(), packet_replication_engine_entry);
         break;
-      case ::p4::v1::Entity::kDirectCounterEntry:
+      }
+      case ::p4::v1::Entity::kDirectCounterEntry: {
+        ::p4::v1::DirectCounterEntry counter_entry =
+            update.entity().direct_counter_entry();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(
+              counter_entry,
+              p4runtime_bfrt_translator_->TranslateDirectCounterEntry(
+                  counter_entry, true));
+        }
         status = bfrt_table_manager_->WriteDirectCounterEntry(
-            session, update.type(), update.entity().direct_counter_entry());
+            session, update.type(), counter_entry);
         break;
-      case ::p4::v1::Entity::kCounterEntry:
+      }
+      case ::p4::v1::Entity::kCounterEntry: {
+        ::p4::v1::CounterEntry counter_entry = update.entity().counter_entry();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(counter_entry,
+                           p4runtime_bfrt_translator_->TranslateCounterEntry(
+                               counter_entry, true));
+        }
         status = bfrt_counter_manager_->WriteIndirectCounterEntry(
-            session, update.type(), update.entity().counter_entry());
+            session, update.type(), counter_entry);
         break;
+      }
       case ::p4::v1::Entity::kRegisterEntry: {
-        status = bfrt_table_manager_->WriteRegisterEntry(
-            session, update.type(), update.entity().register_entry());
+        ::p4::v1::RegisterEntry register_entry =
+            update.entity().register_entry();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(register_entry,
+                           p4runtime_bfrt_translator_->TranslateRegisterEntry(
+                               register_entry, true));
+        }
+        status = bfrt_table_manager_->WriteRegisterEntry(session, update.type(),
+                                                         register_entry);
         break;
       }
       case ::p4::v1::Entity::kMeterEntry: {
-        status = bfrt_table_manager_->WriteMeterEntry(
-            session, update.type(), update.entity().meter_entry());
+        ::p4::v1::MeterEntry meter_entry = update.entity().meter_entry();
+        if (translation_enabled_) {
+          ASSIGN_OR_RETURN(meter_entry,
+                           p4runtime_bfrt_translator_->TranslateMeterEntry(
+                               meter_entry, true));
+        }
+        status = bfrt_table_manager_->WriteMeterEntry(session, update.type(),
+                                                      meter_entry);
         break;
       }
       case ::p4::v1::Entity::kDirectMeterEntry:
@@ -269,6 +336,12 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       << "Request device id must be same as id of this BfrtNode.";
   if (!initialized_ || !pipeline_initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  std::unique_ptr<P4RuntimeBfrtTranslationWriterWrapper> writer_wrapper;
+  if (translation_enabled_) {
+    writer_wrapper = P4RuntimeBfrtTranslationWriterWrapper::CreateInstance(
+        writer, p4runtime_bfrt_translator_);
+    writer = writer_wrapper.get();
   }
   ::p4::v1::ReadResponse resp;
   bool success = true;

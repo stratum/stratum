@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
@@ -74,6 +75,38 @@ std::string RangeDefaultHigh(size_t bitwidth) {
 
 int NumBitsToNumBytes(int num_bits) {
   return (num_bits + 7) / 8;  // ceil(num_bits/8)
+}
+
+::util::StatusOr<std::string> Uint32ToBytes(uint32 value, size_t bit_width) {
+  CHECK_RETURN_IF_FALSE(0 < bit_width && bit_width <= 32);
+  CHECK_RETURN_IF_FALSE(value <= (UINT32_MAX >> (32 - bit_width)));
+  size_t bytes = NumBitsToNumBytes(bit_width);
+  std::string ret(bytes, '\x00');
+  uint8* byte_array = reinterpret_cast<uint8*>(gtl::string_as_array(&ret));
+  for (int i = 0; i < bytes; i++) {
+    byte_array[i] = static_cast<char>(value & 0xff);
+    value >>= 8;
+  }
+  return ret;
+}
+
+::util::StatusOr<uint32> BytesToUint32(std::string value) {
+  CHECK_RETURN_IF_FALSE(value.size() > 0);
+  uint8* byte_array = reinterpret_cast<uint8*>(gtl::string_as_array(&value));
+
+  // Check if the number is smaller than 32-bit unsigned interger of the size of
+  // byte array is bigger than 4.
+  for (size_t i = 4; i < value.size(); i++) {
+    CHECK_RETURN_IF_FALSE(byte_array[i] == 0);
+  }
+
+  uint32 result = 0;
+  for (size_t i = value.size(); i > 0; i--) {
+    result += byte_array[i];
+    result <<= 8;
+  }
+  result += byte_array[0];
+  return result;
 }
 
 }  // namespace barefoot

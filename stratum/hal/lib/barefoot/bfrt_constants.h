@@ -67,6 +67,10 @@ constexpr int kMaxQueuesPerPort = 32;
 
 constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(1);
 
+// URIs for P4Runtime Translation.
+constexpr size_t kTnaPortIdBitWidth = 9;
+constexpr char kUriTnaPortId[] = "tna/PortId_t";
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

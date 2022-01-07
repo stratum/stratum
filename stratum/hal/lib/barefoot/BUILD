@@ -289,6 +289,7 @@ stratum_cc_library(
         ":bfrt_packetio_manager",
         ":bfrt_pre_manager",
         ":bfrt_table_manager",
+        ":p4runtime_bfrt_translator",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
@@ -314,6 +315,7 @@ stratum_cc_test(
         ":bfrt_packetio_manager_mock",
         ":bfrt_pre_manager_mock",
         ":bfrt_table_manager_mock",
+        ":p4runtime_bfrt_translator_mock",
         ":test_main",
         "//stratum/glue:integral_types",
         "//stratum/glue/gtl:map_util",
@@ -623,6 +625,55 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "p4runtime_bfrt_translator",
+    srcs = ["p4runtime_bfrt_translator.cc"],
+    hdrs = ["p4runtime_bfrt_translator.h"],
+    deps = [
+        ":bf_sde_interface",
+        ":bfrt_constants",
+        ":utils",
+        "//stratum/glue:integral_types",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:writer_interface",
+        "//stratum/lib:macros",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_test(
+    name = "p4runtime_bfrt_translator_test",
+    srcs = ["p4runtime_bfrt_translator_test.cc"],
+    deps = [
+        ":bf_sde_mock",
+        ":bfrt_constants",
+        ":p4runtime_bfrt_translator",
+        ":p4runtime_bfrt_translator_mock",
+        ":utils",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:writer_mock",
+        "//stratum/lib:utils",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+stratum_cc_library(
+    name = "p4runtime_bfrt_translator_mock",
+    testonly = 1,
+    hdrs = ["p4runtime_bfrt_translator_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":p4runtime_bfrt_translator",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
@@ -632,6 +683,7 @@ stratum_cc_library(
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",

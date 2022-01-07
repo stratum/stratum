@@ -17,6 +17,7 @@
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
+#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 
@@ -67,7 +68,8 @@ class BfrtNode {
       BfrtPacketioManager* bfrt_packetio_manager,
       BfrtPreManager* bfrt_pre_manager,
       BfrtCounterManager* bfrt_counter_manager,
-      BfSdeInterface* bf_sde_interface, int device_id);
+      BfSdeInterface* bf_sde_interface, int device_id,
+      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator);
 
   // BfrtNode is neither copyable nor movable.
   BfrtNode(const BfrtNode&) = delete;
@@ -86,7 +88,8 @@ class BfrtNode {
            BfrtPacketioManager* bfrt_packetio_manager,
            BfrtPreManager* bfrt_pre_manager,
            BfrtCounterManager* bfrt_counter_manager,
-           BfSdeInterface* bf_sde_interface, int device_id);
+           BfSdeInterface* bf_sde_interface, int device_id,
+           P4RuntimeBfrtTranslator* p4runtime_bfrt_translator);
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
@@ -117,6 +120,7 @@ class BfrtNode {
 
   // Stores pipeline information for this node.
   BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
+  ::p4::v1::ForwardingPipelineConfig pipeline_config_ GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   // Not owned by this class.
@@ -127,6 +131,13 @@ class BfrtNode {
   BfrtPacketioManager* bfrt_packetio_manager_;
   BfrtPreManager* bfrt_pre_manager_;
   BfrtCounterManager* bfrt_counter_manager_;
+
+  // Pointer to a P4RuntimeTranslatorInterface implementation that includes all
+  // translator logic. Not owned by this class.
+  P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_ = nullptr;
+
+  // Determine if we need to perform P4Runtime translation.
+  bool translation_enabled_ = false;
 
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the

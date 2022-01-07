@@ -18,6 +18,7 @@
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager_mock.h"
+#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/utils.h"
 
@@ -56,11 +57,13 @@ class BfrtNodeTest : public ::testing::Test {
     bfrt_pre_manager_mock_ = absl::make_unique<BfrtPreManagerMock>();
     bfrt_counter_manager_mock_ = absl::make_unique<BfrtCounterManagerMock>();
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
+    p4runtime_bfrt_translator_mock_ =
+        absl::make_unique<P4RuntimeBfrtTranslatorMock>();
 
     bfrt_node_ = BfrtNode::CreateInstance(
         bfrt_table_manager_mock_.get(), bfrt_packetio_manager_mock_.get(),
         bfrt_pre_manager_mock_.get(), bfrt_counter_manager_mock_.get(),
-        bf_sde_mock_.get(), kDeviceId);
+        bf_sde_mock_.get(), kDeviceId, p4runtime_bfrt_translator_mock_.get());
   }
 
   ::util::Status PushChassisConfig(const ChassisConfig& config,
@@ -124,6 +127,9 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*bfrt_packetio_manager_mock_,
                   PushChassisConfig(EqualsProto(config), kNodeId))
           .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+                  PushChassisConfig(EqualsProto(config)))
+          .WillOnce(Return(::util::OkStatus()));
       // EXPECT_CALL(*bfrt_pre_manager_mock_,
       //             PushChassisConfig(EqualsProto(config), kNodeId))
       //     .WillOnce(Return(::util::OkStatus()));
@@ -153,6 +159,14 @@ class BfrtNodeTest : public ::testing::Test {
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bfrt_counter_manager_mock_, PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+                  PushForwardingPipelineConfig(_))
+          .WillOnce(Return(::util::OkStatus()));
+      // Disable P4Runtime translation for this test
+      // Will test the translation functionality in the
+      // P4RuntimeBfrtTranslatorTest.
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslationEnabled())
+          .WillRepeatedly(Return(false));
     }
     EXPECT_OK(PushForwardingPipelineConfig(config));
     ASSERT_TRUE(IsPipelineInitialized());
@@ -193,7 +207,7 @@ class BfrtNodeTest : public ::testing::Test {
   static constexpr int kLogicalPortId = 35;
   static constexpr uint32 kPortId = 941;
   static constexpr uint32 kL2McastGroupId = 20;
-  static constexpr char kBfConfigPipelineString[] = R"PROTO(
+  static constexpr char kBfConfigPipelineString[] = R"pb(
     p4_name: "prog1"
     bfruntime_info: "{json: true}"
     profiles {
@@ -201,60 +215,26 @@ class BfrtNodeTest : public ::testing::Test {
       context: "{json: true}"
       binary: "<raw bin>"
     }
-  )PROTO";
-  static constexpr char kValidP4InfoString[] = R"PROTO(
-    pkg_info {
-      arch: "tna"
-    }
+  )pb";
+  static constexpr char kValidP4InfoString[] = R"pb(
+    pkg_info { arch: "tna" }
     tables {
-      preamble {
-        id: 33583783
-        name: "Ingress.control.table1"
-      }
-      match_fields {
-        id: 1
-        name: "field1"
-        bitwidth: 9
-        match_type: EXACT
-      }
-      match_fields {
-        id: 2
-        name: "field2"
-        bitwidth: 12
-        match_type: TERNARY
-      }
-      match_fields {
-        id: 3
-        name: "field3"
-        bitwidth: 15
-        match_type: RANGE
-      }
-      action_refs {
-        id: 16794911
-      }
+      preamble { id: 33583783 name: "Ingress.control.table1" }
+      match_fields { id: 1 name: "field1" bitwidth: 9 match_type: EXACT }
+      match_fields { id: 2 name: "field2" bitwidth: 12 match_type: TERNARY }
+      match_fields { id: 3 name: "field3" bitwidth: 15 match_type: RANGE }
+      action_refs { id: 16794911 }
       const_default_action_id: 16836487
       direct_resource_ids: 318814845
       size: 1024
     }
     actions {
-      preamble {
-        id: 16794911
-        name: "Ingress.control.action1"
-      }
-      params {
-        id: 1
-        name: "vlan_id"
-        bitwidth: 12
-      }
+      preamble { id: 16794911 name: "Ingress.control.action1" }
+      params { id: 1 name: "vlan_id" bitwidth: 12 }
     }
     direct_counters {
-      preamble {
-        id: 318814845
-        name: "Ingress.control.counter1"
-      }
-      spec {
-        unit: BOTH
-      }
+      preamble { id: 318814845 name: "Ingress.control.counter1" }
+      spec { unit: BOTH }
       direct_table_id: 33583783
     }
     meters {
@@ -263,9 +243,7 @@ class BfrtNodeTest : public ::testing::Test {
         name: "Ingress.control.meter_bytes"
         alias: "meter_bytes"
       }
-      spec {
-        unit: BYTES
-      }
+      spec { unit: BYTES }
       size: 500
     }
     meters {
@@ -274,12 +252,10 @@ class BfrtNodeTest : public ::testing::Test {
         name: "Ingress.control.meter_packets"
         alias: "meter_packets"
       }
-      spec {
-        unit: PACKETS
-      }
+      spec { unit: PACKETS }
       size: 500
     }
-  )PROTO";
+  )pb";
 
   std::unique_ptr<BfrtTableManagerMock> bfrt_table_manager_mock_;
   std::unique_ptr<BfrtPacketioManagerMock> bfrt_packetio_manager_mock_;
@@ -287,6 +263,7 @@ class BfrtNodeTest : public ::testing::Test {
   std::unique_ptr<BfrtCounterManagerMock> bfrt_counter_manager_mock_;
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
   std::unique_ptr<BfrtNode> bfrt_node_;
+  std::unique_ptr<P4RuntimeBfrtTranslatorMock> p4runtime_bfrt_translator_mock_;
 };
 
 constexpr uint64 BfrtNodeTest::kNodeId;
