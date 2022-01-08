@@ -30,9 +30,9 @@ You can use tools like [OpenSSL][2] to generate these files. We also provide a [
 
 To start Stratum with SSL/TLS, add the following flags:
 ```
---ca-cert=[CA certificate file]
---server-cert=[Server certificate file]
---server-key=[Server private key file]
+--ca_cert_file=[CA certificate file]
+--server_cert_file=[Server certificate file]
+--server_key_file=[Server private key file]
 ```
 
 [1]:https://grpc.io/docs/guides/auth/#with-server-authentication-ssltls-5
