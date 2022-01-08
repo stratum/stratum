@@ -30,10 +30,11 @@ DEFINE_string(pipeline_cfg, "pipeline_cfg.pb.txt", "The pipeline config file.");
 DEFINE_string(election_id, "0,1",
               "Election id for arbitration update (high,low).");
 DEFINE_uint64(device_id, 1, "P4Runtime device ID.");
-DEFINE_string(ca_cert, "",
-              "CA certificate, will use insecure credentials if empty.");
-DEFINE_string(client_cert, "", "Client certificate (optional).");
-DEFINE_string(client_key, "", "Client key (optional).");
+DEFINE_string(
+    ca_cert_file, "",
+    "Path to CA certificate, will use insecure credentials if empty.");
+DEFINE_string(client_cert_file, "", "Path to client certificate (optional).");
+DEFINE_string(client_key_file, "", "Path to client key (optional).");
 
 namespace stratum {
 namespace tools {
@@ -43,15 +44,6 @@ const char kUsage[] = R"USAGE(
 Usage: stratum_replay [options] [p4runtime write log file]
   This tool replays P4Runtime write requests to a Stratum device from a given
   Stratum P4Runtime write request log.
-
-  Options:
-    -device_id: The device ID (default: 1)
-    -election_id: Election ID for arbitration update (high,low). (default: "0,1")
-    -grpc_addr: Stratum gRPC address (default: "127.0.0.1:9339")
-    -pipeline_cfg: The pipeline config file (default: "pipeline.pb.bin")
-    -ca_cert: CA certificate(optional), will use insecure credentials if empty (default: "")
-    -client_cert: Client certificate (optional) (default: "")
-    -client_key: Client key (optional) (default: "")
 )USAGE";
 
 using ClientStreamChannelReaderWriter =
@@ -66,16 +58,17 @@ using ClientStreamChannelReaderWriter =
 
   // Initialize the gRPC channel and P4Runtime service stub
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert.empty()) {
+  if (!FLAGS_ca_cert_file.empty()) {
     auto cert_provider =
         std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
-            FLAGS_client_key, FLAGS_client_cert, FLAGS_ca_cert, 1);
+            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file,
+            1);
     auto tls_opts =
         std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
             cert_provider);
     tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
     tls_opts->watch_root_certs();
-    if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
+    if (!FLAGS_client_cert_file.empty() && !FLAGS_client_key_file.empty()) {
       tls_opts->watch_identity_key_cert_pairs();
     }
     channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);

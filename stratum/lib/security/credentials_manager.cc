@@ -14,9 +14,9 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_string(ca_cert, "", "CA certificate path");
-DEFINE_string(server_key, "", "gRPC Server pricate key path");
-DEFINE_string(server_cert, "", "gRPC Server certificate path");
+DEFINE_string(ca_cert_file, "", "CA certificate path");
+DEFINE_string(server_key_file, "", "gRPC Server private key path");
+DEFINE_string(server_cert_file, "", "gRPC Server certificate path");
 
 namespace stratum {
 
@@ -36,13 +36,13 @@ CredentialsManager::CreateInstance() {
 }
 
 ::util::Status CredentialsManager::Initialize() {
-  if (FLAGS_ca_cert.empty() && FLAGS_server_key.empty() &&
-      FLAGS_server_cert.empty()) {
+  if (FLAGS_ca_cert_file.empty() && FLAGS_server_key_file.empty() &&
+      FLAGS_server_cert_file.empty()) {
     LOG(WARNING) << "Using insecure server credentials";
     server_credentials_ = ::grpc::InsecureServerCredentials();
   } else {
     certificate_provider_ = std::make_shared<FileWatcherCertificateProvider>(
-        FLAGS_server_key, FLAGS_server_cert, FLAGS_ca_cert, 1);
+        FLAGS_server_key_file, FLAGS_server_cert_file, FLAGS_ca_cert_file, 1);
 
     tls_opts_ =
         std::make_shared<TlsServerCredentialsOptions>(certificate_provider_);
@@ -60,9 +60,9 @@ CredentialsManager::CreateInstance() {
     const std::string private_key) {
   ::util::Status status;
   // TODO(Kevin): Validate the provided key material if possible
-  status.Update(WriteStringToFile(root_certs, FLAGS_ca_cert));
-  status.Update(WriteStringToFile(cert_chain, FLAGS_server_cert));
-  status.Update(WriteStringToFile(private_key, FLAGS_server_key));
+  status.Update(WriteStringToFile(root_certs, FLAGS_ca_cert_file));
+  status.Update(WriteStringToFile(cert_chain, FLAGS_server_cert_file));
+  status.Update(WriteStringToFile(private_key, FLAGS_server_key_file));
   return status;
 }
 
