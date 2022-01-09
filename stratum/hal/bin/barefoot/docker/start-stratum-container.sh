@@ -7,15 +7,15 @@ LOG_DIR=${LOG_DIR:-/var/log}
 SDE_VERSION=${SDE_VERSION:-9.5.0}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bfrt}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION}
+STRATUM_ARGS=("$@")
 
 # Try to load the platform string if not already set.
 if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
     PLATFORM=$(cat /etc/onl/platform)
 elif [[ -z "$PLATFORM" ]] && [[ -f "/etc/sonic/sonic-environment" ]]; then
-    source /etc/sonic/sonic-environment
-    PLATFORM=$(echo "$PLATFORM" | sed 's/_/-/g')
+    PLATFORM=$(source /etc/sonic/sonic-environment; echo "$PLATFORM" | sed 's/_/-/g')
     # Disable ONLP when running Stratum on SONiC.
-    set -- ${@} --enable_onlp=false
+    STRATUM_ARGS+=("--enable_onlp=false")
 elif [[ -z "$PLATFORM" ]]; then
     echo "PLATFORM variable must be set manually on non-ONL switches."
     exit 255
@@ -59,4 +59,4 @@ docker run -it --rm --privileged \
     -v $LOG_DIR:/var/log/stratum \
     --name stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
-    $@
+    $STRATUM_ARGS
