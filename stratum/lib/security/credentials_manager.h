@@ -28,6 +28,10 @@ class CredentialsManager {
   virtual std::shared_ptr<::grpc::ServerCredentials>
   GenerateExternalFacingServerCredentials() const;
 
+  // Generates client credentials for contacting an external facing gRPC server.
+  virtual std::shared_ptr<::grpc::ChannelCredentials>
+  GenerateExternalFacingClientCredentials() const;
+
   // Loads new credentials.
   virtual ::util::Status LoadNewCredential(const std::string& ca_cert,
                                            const std::string& cert,
@@ -46,12 +50,12 @@ class CredentialsManager {
   CredentialsManager();
 
  private:
+  static constexpr unsigned int kFileRefreshIntervalSeconds = 1;
+
   // Function to initialize the credentials manager.
   ::util::Status Initialize();
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
-  std::shared_ptr<::grpc::experimental::TlsServerCredentialsOptions> tls_opts_;
-  std::shared_ptr<::grpc::experimental::FileWatcherCertificateProvider>
-      certificate_provider_;
+  std::shared_ptr<::grpc::ChannelCredentials> client_credentials_;
 };
 
 }  // namespace stratum

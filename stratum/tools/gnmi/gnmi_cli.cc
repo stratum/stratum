@@ -249,7 +249,7 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   });
 
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert.empty()) {
+  if (!FLAGS_ca_cert_file.empty()) {
     ASSIGN_OR_RETURN(
         channel_credentials,
         CreateSecureClientGrpcChannelCredentials(

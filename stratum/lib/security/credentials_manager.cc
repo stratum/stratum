@@ -21,8 +21,11 @@ DEFINE_string(server_cert_file, "", "gRPC Server certificate path");
 namespace stratum {
 
 using ::grpc::experimental::FileWatcherCertificateProvider;
+using ::grpc::experimental::TlsChannelCredentialsOptions;
 using ::grpc::experimental::TlsServerCredentials;
 using ::grpc::experimental::TlsServerCredentialsOptions;
+
+constexpr unsigned int CredentialsManager::kFileRefreshIntervalSeconds;
 
 CredentialsManager::CredentialsManager() {}
 
@@ -30,9 +33,9 @@ CredentialsManager::~CredentialsManager() {}
 
 ::util::StatusOr<std::unique_ptr<CredentialsManager>>
 CredentialsManager::CreateInstance() {
-  auto instance_ = absl::WrapUnique(new CredentialsManager());
-  RETURN_IF_ERROR(instance_->Initialize());
-  return std::move(instance_);
+  auto instance = absl::WrapUnique(new CredentialsManager());
+  RETURN_IF_ERROR(instance->Initialize());
+  return std::move(instance);
 }
 
 std::shared_ptr<::grpc::ServerCredentials>
@@ -40,22 +43,44 @@ CredentialsManager::GenerateExternalFacingServerCredentials() const {
   return server_credentials_;
 }
 
+std::shared_ptr<::grpc::ChannelCredentials>
+CredentialsManager::GenerateExternalFacingClientCredentials() const {
+  return client_credentials_;
+}
+
 ::util::Status CredentialsManager::Initialize() {
   if (FLAGS_ca_cert_file.empty() && FLAGS_server_key_file.empty() &&
       FLAGS_server_cert_file.empty()) {
-    LOG(WARNING) << "Using insecure server credentials";
+    LOG(WARNING) << "No key files provided, using insecure credentials!";
     server_credentials_ = ::grpc::InsecureServerCredentials();
+    client_credentials_ = ::grpc::InsecureChannelCredentials();
   } else {
-    certificate_provider_ = std::make_shared<FileWatcherCertificateProvider>(
-        FLAGS_server_key_file, FLAGS_server_cert_file, FLAGS_ca_cert_file, 1);
+    auto certificate_provider =
+        std::make_shared<FileWatcherCertificateProvider>(
+            FLAGS_server_key_file, FLAGS_server_cert_file, FLAGS_ca_cert_file,
+            kFileRefreshIntervalSeconds);
 
-    tls_opts_ =
-        std::make_shared<TlsServerCredentialsOptions>(certificate_provider_);
-    tls_opts_->set_cert_request_type(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
-    tls_opts_->watch_root_certs();
-    tls_opts_->watch_identity_key_cert_pairs();
+    // Server credentials.
+    {
+      auto tls_opts =
+          std::make_shared<TlsServerCredentialsOptions>(certificate_provider);
+      tls_opts->set_cert_request_type(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
+      tls_opts->watch_root_certs();
+      tls_opts->watch_identity_key_cert_pairs();
+      server_credentials_ = TlsServerCredentials(*tls_opts);
+    }
 
-    server_credentials_ = TlsServerCredentials(*tls_opts_);
+    // Client credentials.
+    {
+      auto tls_opts =
+          std::make_shared<TlsChannelCredentialsOptions>(certificate_provider);
+      tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
+      tls_opts->watch_root_certs();
+      if (!FLAGS_ca_cert_file.empty() && !FLAGS_server_key_file.empty()) {
+        tls_opts->watch_identity_key_cert_pairs();
+      }
+      client_credentials_ = ::grpc::experimental::TlsCredentials(*tls_opts);
+    }
   }
   return ::util::OkStatus();
 }

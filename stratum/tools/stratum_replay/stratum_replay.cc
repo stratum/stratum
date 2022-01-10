@@ -58,7 +58,7 @@ using ClientStreamChannelReaderWriter =
 
   // Initialize the gRPC channel and P4Runtime service stub
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert.empty()) {
+  if (!FLAGS_ca_cert_file.empty()) {
     ASSIGN_OR_RETURN(
         channel_credentials,
         CreateSecureClientGrpcChannelCredentials(

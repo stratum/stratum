@@ -22,10 +22,10 @@ DEFINE_uint64(election_id, 1,
               "Election ID for the controller instance. Will be used in all "
               "P4Runtime RPCs sent to the switch. Note that election_id is 128 "
               "bits, but here we assume we only give the lower 64 bits only.");
-DEFINE_string(ca_cert, "",
+DEFINE_string(ca_cert_file, "",
               "CA certificate, will use insecure credentials if empty.");
-DEFINE_string(client_cert, "", "Client certificate (optional).");
-DEFINE_string(client_key, "", "Client key (optional).");
+DEFINE_string(client_cert_file, "", "Client certificate (optional).");
+DEFINE_string(client_key_file, "", "Client key (optional).");
 
 namespace stratum {
 namespace tools {
@@ -49,10 +49,11 @@ const char kUsage[] =
   RETURN_IF_ERROR(
       ReadFileToString(FLAGS_p4_pipeline_config_file, &p4_device_config));
   std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert.empty()) {
-    ASSIGN_OR_RETURN(channel_credentials,
-                     CreateSecureClientGrpcChannelCredentials(
-                         FLAGS_client_key, FLAGS_client_cert, FLAGS_ca_cert));
+  if (!FLAGS_ca_cert_file.empty()) {
+    ASSIGN_OR_RETURN(
+        channel_credentials,
+        CreateSecureClientGrpcChannelCredentials(
+            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file));
   } else {
     channel_credentials = ::grpc::InsecureChannelCredentials();
   }
