@@ -145,11 +145,11 @@ TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
   Connect(GetOriginalCaCert(), false);
 }
 
-TEST_F(CredentialsManagerTest, LoadNewCredentials) {
+TEST_F(CredentialsManagerTest, LoadNewServerCredentialss) {
   std::string ca_crt, server_crt, server_key;
   EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
   EXPECT_OK(
-      credentials_manager_->LoadNewCredential(ca_crt, server_crt, server_key));
+      credentials_manager_->LoadNewServerCredentials(ca_crt, server_crt, server_key));
 
   // Read and verify the active key material files
   std::string ca_cert_actual;

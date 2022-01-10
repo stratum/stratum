@@ -5,6 +5,7 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/p4runtime/p4runtime_session.h"
+#include "stratum/lib/security/credentials_manager.h"
 #include "stratum/lib/utils.h"
 
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
@@ -22,10 +23,6 @@ DEFINE_uint64(election_id, 1,
               "Election ID for the controller instance. Will be used in all "
               "P4Runtime RPCs sent to the switch. Note that election_id is 128 "
               "bits, but here we assume we only give the lower 64 bits only.");
-DEFINE_string(ca_cert_file, "",
-              "CA certificate, will use insecure credentials if empty.");
-DEFINE_string(client_cert_file, "", "Client certificate (optional).");
-DEFINE_string(client_key_file, "", "Client key (optional).");
 
 namespace stratum {
 namespace tools {
@@ -48,18 +45,14 @@ const char kUsage[] =
   std::string p4_device_config;
   RETURN_IF_ERROR(
       ReadFileToString(FLAGS_p4_pipeline_config_file, &p4_device_config));
-  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert_file.empty()) {
-    ASSIGN_OR_RETURN(
-        channel_credentials,
-        CreateSecureClientGrpcChannelCredentials(
-            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file));
-  } else {
-    channel_credentials = ::grpc::InsecureChannelCredentials();
-  }
-  ASSIGN_OR_RETURN(auto p4rt_session, p4runtime::P4RuntimeSession::Create(
-                                          FLAGS_grpc_addr, channel_credentials,
-                                          FLAGS_device_id, FLAGS_election_id));
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
+  ASSIGN_OR_RETURN(
+      auto p4rt_session,
+      p4runtime::P4RuntimeSession::Create(
+          FLAGS_grpc_addr,
+          credentials_manager->GenerateExternalFacingClientCredentials(),
+          FLAGS_device_id, FLAGS_election_id));
   RETURN_IF_ERROR(
       p4rt_session->SetForwardingPipelineConfig(p4info, p4_device_config));
 
