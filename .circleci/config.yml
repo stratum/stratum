@@ -102,7 +102,7 @@ jobs:
       - CXX: clang++
     steps:
       - checkout
-      - *restore_bazel_cache
+      # - *restore_bazel_cache
       - *set_bazelrc
       - run:
           name: Query all Stratum targets
@@ -115,8 +115,8 @@ jobs:
       - run:
           name: Test Stratum targets
           command: xargs -a .circleci/test-targets.txt bazel test
-      - *clean_bazel_cache
-      - *save_bazel_cache
+      # - *clean_bazel_cache
+      # - *save_bazel_cache
 
   # CDLang
   cdlang_tests:
