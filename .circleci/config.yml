@@ -45,7 +45,9 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cat .circleci/bazelrc >> .bazelrc
+    command: |
+      cat .circleci/bazelrc >> .bazelrc
+      echo "build --remote_cache=http://$BAZEL_CACHE_USER:$BAZEL_CACHE_PASSWORD@bazel-cache.stratumproject.org:8080" >> .bazelrc
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.

@@ -5,8 +5,10 @@ build --copt -O0
 build --disk_cache=/tmp/bazel-disk-cache
 
 # Stratum Bazel remote cache.
-# TODO: update url and figure out user/pw loading from env vars.
-build --remote_cache=http://user:pass@143.198.55.252:8080
+# Without authentication only reading is allowed. During CI this line will be
+# replaced with the correct credentials.
+build --remote_cache=http://bazel-cache.stratumproject.org:8080
+build --remote_download_minimal
 
 # Set convenient location for Bazel files to cache
 startup --output_user_root=/tmp/bazel-cache/output-root
