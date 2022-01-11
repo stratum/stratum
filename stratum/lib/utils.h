@@ -13,7 +13,6 @@
 
 #include <chrono>  // NOLINT
 #include <functional>
-#include <memory>
 #include <ostream>
 #include <string>
 #include <type_traits>
@@ -29,7 +28,6 @@
 #include "grpcpp/grpcpp.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 
