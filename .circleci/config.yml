@@ -36,8 +36,7 @@ clean_bazel_cache: &clean_bazel_cache
 
 fetch_sde_tars: &fetch_sde_tars
   aws-s3/sync:
-    # arguments: '--dryrun'
-    arguments: '--exclude "*" --include "bf-sde-9.7.0-install.tgz"'
+    arguments: '--exclude "*" --include "bf-sde-9.7.0-install.tgz" --include "bf-sde-9.5.0-install.tgz" --include "bf-sde-9.3.2-install.tgz"'
     from: 's3://stratum-artifacts'
     to: /tmp/bf-sde-tars
 
@@ -298,13 +297,18 @@ jobs:
   publish-docker-stratum-bfrt:
     docker:
       - image: stratumproject/build:build
+    parameters:
+      sde_version:
+        description: "BF SDE version to build with"
+        type: string
+        default: "9.7.0"
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-9.7.0
+      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-<< parameters.sde_version >>
       - CC: clang
       - CXX: clang++
-      - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-9.7.0-install.tgz
+      - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
     steps:
       - setup_remote_docker
       - checkout
@@ -423,8 +427,11 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-stratum-bfrt:
-          requires:
-            - publish-docker-build
+          # requires:
+          #   - publish-docker-build
+          matrix:
+            parameters:
+              sde_version: ["9.3.1", "9.5.0", "9.7.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build
