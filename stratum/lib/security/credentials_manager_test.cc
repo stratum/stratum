@@ -42,9 +42,9 @@ class TestServiceImpl final : public ::testing::TestService::Service {
 };
 
 constexpr char kServerCaCertFile[] = "ca_server.crt";
-constexpr char kClientCaCertFile[] = "ca_client.crt";
 constexpr char kServerCertFile[] = "stratum_server.crt";
 constexpr char kServerKeyFile[] = "stratum_server.key";
+constexpr char kClientCaCertFile[] = "ca_client.crt";
 constexpr char kClientCertFile[] = "stratum_client.crt";
 constexpr char kClientKeyFile[] = "stratum_client.key";
 constexpr char kCertCommonName[] = "stratum.local";
@@ -81,7 +81,7 @@ void WriteServerCredentialsToDisk(const std::string& server_ca_crt,
   ASSERT_OK(WriteStringToFile(server_ca_crt, FLAGS_server_ca_cert_file));
   ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert_file));
   ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key_file));
-  absl::SleepFor(absl::Seconds(2));  // Wait for file watcher to update certs...
+  absl::SleepFor(absl::Seconds(1));  // kFileRefreshIntervalSeconds
 }
 
 void WriteClientCredentialsToDisk(const std::string& client_ca_crt,
@@ -90,7 +90,7 @@ void WriteClientCredentialsToDisk(const std::string& client_ca_crt,
   ASSERT_OK(WriteStringToFile(client_ca_crt, FLAGS_client_ca_cert_file));
   ASSERT_OK(WriteStringToFile(client_crt, FLAGS_client_cert_file));
   ASSERT_OK(WriteStringToFile(client_key, FLAGS_client_key_file));
-  absl::SleepFor(absl::Seconds(2));  // Wait for file watcher to update certs...
+  absl::SleepFor(absl::Seconds(1));  // kFileRefreshIntervalSeconds
 }
 
 class CredentialsManagerTest : public ::testing::Test {
