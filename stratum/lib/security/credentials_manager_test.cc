@@ -47,11 +47,11 @@ util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
                            std::string* server_key) {
   absl::Time valid_after = absl::Now();
   absl::Time valid_until = valid_after + absl::Hours(24);
-  Certificate ca("Stratum CA", 1);
+  Certificate ca("Stratum CA");
   EXPECT_OK(ca.GenerateKeyPair(1024));
   EXPECT_OK(ca.SignCertificate(ca, valid_after, valid_until));
 
-  Certificate stratum(cert_common_name, 1);
+  Certificate stratum(cert_common_name);
   EXPECT_OK(stratum.GenerateKeyPair(1024));
   EXPECT_OK(stratum.SignCertificate(ca, valid_after, valid_until));
 
