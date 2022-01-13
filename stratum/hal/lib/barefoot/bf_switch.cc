@@ -314,7 +314,8 @@ std::unique_ptr<BfSwitch> BfSwitch::CreateInstance(
 ::util::StatusOr<PINode*> BfSwitch::GetPINodeFromDevice(int device) const {
   PINode* pi_node = gtl::FindPtrOrNull(device_to_pi_node_, device);
   if (pi_node == nullptr) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Device " << device << " is unknown.";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Device " << device << " is unknown.";
   }
   return pi_node;
 }

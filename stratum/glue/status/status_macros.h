@@ -12,13 +12,14 @@
 //   ::util::StatusOr<ValueType> Method(arg, ...);
 //
 // Inside the method, to return errors, use the macros
-//   RETURN_ERROR() << "Message with ::util::error::UNKNOWN code";
-//   RETURN_ERROR(code_enum)
-//       << "Message with an error code, in that error_code's ErrorSpace "
-//       << "(See ErrorCodeOptions below)";
-//   RETURN_ERROR(error_space, code_int)
-//       << "Message with integer error code in specified ErrorSpace "
-//       << "(Not recommended - use previous form with an enum code instead)";
+//   return MAKE_ERROR() << "Message with ::util::error::UNKNOWN code";
+//   return MAKE_ERROR(code_enum)
+//          << "Message with an error code, in that error_code's ErrorSpace "
+//          << "(See ErrorCodeOptions below)";
+//   return MAKE_ERROR(error_space, code_int)
+//          << "Message with integer error code in specified ErrorSpace "
+//          << "(Not recommended - use previous form with an enum code "
+//          << "instead)";
 //
 // When calling another method, use this to propagate status easily.
 //   RETURN_IF_ERROR(method(args));
@@ -45,8 +46,7 @@
 // WARNING: ASSIGN_OR_RETURN expands into multiple statements; it cannot be used
 //  in a single statement (e.g. as the body of an if statement without {})!
 //
-// To construct an error without immediately returning it, use MAKE_ERROR,
-// which supports the same argument types as RETURN_ERROR.
+// To construct an error without immediately returning it, use MAKE_ERROR.
 //   ::util::Status status = MAKE_ERROR(...) << "Message";
 //
 // To add additional text onto an existing error, use
@@ -58,7 +58,7 @@
 // They can also be used to return from a function that returns
 // ::util::StatusOr:
 //   ::util::StatusOr<T> MyFunction() {
-//     RETURN_ERROR(...) << "Message";
+//     return MAKE_ERROR(...) << "Message";
 //   }
 //
 //
@@ -75,16 +75,16 @@
 //
 // Logging:
 //
-// RETURN_ERROR and MAKE_ERROR log the error to LOG(ERROR) by default.
+// MAKE_ERROR logs the error to LOG(ERROR) by default.
 //
 // Logging can be turned on or off for a specific error by using
-//   RETURN_ERROR().with_logging() << "Message logged to LOG(ERROR)";
-//   RETURN_ERROR().without_logging() << "Message not logged";
-//   RETURN_ERROR().set_logging(false) << "Message not logged";
-//   RETURN_ERROR().severity(INFO) << "Message logged to LOG(INFO)";
+//   return MAKE_ERROR().with_logging() << "Message logged to LOG(ERROR)";
+//   return MAKE_ERROR().without_logging() << "Message not logged";
+//   return MAKE_ERROR().set_logging(false) << "Message not logged";
+//   return MAKE_ERROR().severity(INFO) << "Message logged to LOG(INFO)";
 //
 // If logging is enabled, this will make an error also log a stack trace.
-//   RETURN_ERROR().with_log_stack_trace() << "Message";
+//   return MAKE_ERROR().with_log_stack_trace() << "Message";
 //
 // Logging can also be controlled within a scope using
 // ScopedErrorLogSuppression.
@@ -369,12 +369,6 @@ class MakeErrorStream {
 //   return APPEND_ERROR(status) << ", more details";
 #define APPEND_ERROR(status) \
   ::util::status_macros::MakeErrorStream((status), __FILE__, __LINE__)
-
-// Shorthand to make an error (with MAKE_ERROR) and return it.
-//   if (error) {
-//     RETURN_ERROR() << "Message";
-//   }
-#define RETURN_ERROR return MAKE_ERROR
 
 // Wraps a ::util::Status so it can be assigned and used in an if-statement.
 // Implicitly converts from status and to bool.

@@ -102,7 +102,7 @@ void registerDeviceMgrLogger() {
 
     // Now log the return code message
     if (rc != 0) {
-      RETURN_ERROR(ERR_INTERNAL) << "DPDK EAL Init failed";
+      return MAKE_ERROR(ERR_INTERNAL) << "DPDK EAL Init failed";
     }
     LOG(INFO) << "DPDK EAL Init successful";
   }
