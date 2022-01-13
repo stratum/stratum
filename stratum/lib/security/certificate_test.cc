@@ -104,7 +104,7 @@ TEST_F(CertificateTest, SerialNumber) {
   // Server serial is randomly generated
   //   16 bytes (128 bits) yields a 32 character hex string
   EXPECT_THAT(server_.GetSerialNumber(),
-              IsOkAndHolds(::testing::ContainsRegex("[0-9a-f]{32}")));
+              IsOkAndHolds(::testing::ContainsRegex("^[0-9a-f]{32}$")));
 }
 
 }  // namespace
