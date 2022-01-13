@@ -289,7 +289,6 @@ util::Status Certificate::GenerateKeyPair(int bits) {
 util::StatusOr<bool> Certificate::IsCA() {
   switch (X509_check_ca(certificate_.get())) {
     case 0:  // not CA certificate
-             // int X509_check_issued(X509 *issuer, X509 *subject);
       return false;
     case 1:  // X509v3 CA certificate with basicConstraints
     case 3:  // self-signed X509 v1 certificate
