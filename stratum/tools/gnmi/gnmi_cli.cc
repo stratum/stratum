@@ -220,7 +220,7 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   stratum::InitStratumLogging();
   if (argc < 2) {
     std::cout << kUsage << std::endl;
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
   }
 
   ::grpc::ClientContext ctx;
@@ -264,8 +264,8 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   }
 
   if (argc < 3) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Missing path for " << cmd << " request.";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Missing path for " << cmd << " request.";
   }
   std::string path = std::string(argv[2]);
 
@@ -311,7 +311,7 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
     }
     RETURN_IF_GRPC_ERROR(stream_reader_writer->Finish());
   } else {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
   }
   LOG(INFO) << "Done.";
 

@@ -76,9 +76,9 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
         int ret = pthread_create(&sde_rx_thread_id_, nullptr,
                                  &BfrtPacketioManager::SdeRxThreadFunc, this);
         if (ret != 0) {
-          RETURN_ERROR(ERR_INTERNAL)
-              << "Failed to spawn RX thread for SDE wrapper for device with ID "
-              << device_ << ". Err: " << ret << ".";
+          return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for "
+                                             "SDE wrapper for device with ID "
+                                          << device_ << ". Err: " << ret << ".";
         }
       }
       RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
@@ -292,7 +292,8 @@ class BitBuffer {
     const ::p4::v1::PacketOut& packet) {
   {
     absl::ReaderMutexLock l(&data_lock_);
-    if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+    if (!initialized_)
+      return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
   std::string buf;
   RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
@@ -307,7 +308,8 @@ class BitBuffer {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {
     absl::ReaderMutexLock l(&data_lock_);
-    if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+    if (!initialized_)
+      return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<std::string>::Create(packet_receive_channel_);
   }
 

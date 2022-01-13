@@ -451,8 +451,8 @@ uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
     logging_config->first = "0";
     logging_config->second = "2";
   } else {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Invalid severity string \"" << severity_string << "\".";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Invalid severity string \"" << severity_string << "\".";
   }
 
   return ::util::OkStatus();

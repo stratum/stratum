@@ -63,7 +63,7 @@ namespace {
 ::util::StatusOr<Path> ToPhalDBPath(PathQuery req_path) {
   // If no path entries return error
   if (req_path.entries_size() == 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "No Path";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "No Path";
   }
 
   // Create Attribute DB Path

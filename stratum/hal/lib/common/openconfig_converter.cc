@@ -327,8 +327,8 @@ SingletonPortToInterfaces(const SingletonPort& in) {
           OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100GB);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "unknown 'speed_bps' " << in.ShortDebugString();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "unknown 'speed_bps' " << in.ShortDebugString();
   }
 
   // SingletonPort.config_params.admin_state
@@ -403,7 +403,8 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
           OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown trunk type " << in.type();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "unknown trunk type " << in.type();
   }
 
   std::map<int64, std::string> id_to_name;
@@ -414,8 +415,8 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
   for (int64 member_id : in.members()) {
     std::string* name = gtl::FindOrNull(id_to_name, member_id);
     if (name == nullptr) {
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "unknown 'members' " << in.ShortDebugString();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "unknown 'members' " << in.ShortDebugString();
     }
 
     auto member = trunk->mutable_aggregation()->add_member();
@@ -689,8 +690,8 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
   }
 
   if (!if_component_key.has_component()) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Cannot find component for interface " << interface_key.name();
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Cannot find component for interface " << interface_key.name();
   }
 
   const auto& if_component = if_component_key.component();
@@ -725,8 +726,8 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
       to.set_speed_bps(kHundredGigBps);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "Invalid interface speed " << interface.ethernet().port_speed();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Invalid interface speed " << interface.ethernet().port_speed();
   }
 
   auto config_params = to.mutable_config_params();
