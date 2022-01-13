@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 version: 2.1
-
+orbs:
+  codecov: codecov/codecov@3.2.2
 # Cache Bazel output root (see bazelrc) to speed up job execution time.
 # The idea is to use the last cache available for the same branch, or the one
 # from main if this is the first build for this branch.
@@ -154,9 +155,8 @@ jobs:
           command: xargs -a .circleci/test-targets.txt bazel coverage
       - *analyze_bazel_profile
       - *store_bazel_profile
-      - run:
-          name: Upload coverage report
-          command: bash .circleci/codecov.sh -f bazel-out/_coverage/_coverage_report.dat -X s3 -C $CIRCLE_SHA1
+      - codecov/upload:
+          file: bazel-out/_coverage/_coverage_report.dat
       - *clean_bazel_cache
       - *save_bazel_cache
 
