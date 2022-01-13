@@ -27,8 +27,8 @@ namespace stratum {
 // Helper functions around OpenSSL.
 namespace {
 
-// RFC 5280 allows serials numbers up to 20 bytes
-constexpr int SERIAL_NUMBER_LENGTH_BITS = 16 * 8;  // 16 bytes
+// RFC 5280 allows serials numbers up to 20 bytes; using 16.
+constexpr int kSerialNumberLengthBits = 16 * 8;  // 16 bytes
 
 bssl::UniquePtr<BIO> NewBio() {
   bssl::UniquePtr<BIO> bio(BIO_new(BIO_s_mem()));
@@ -58,15 +58,17 @@ std::string BioToString(const bssl::UniquePtr<BIO>& bio) {
 
 // A macro for running an OpenSSL function and returning a
 // on error with a util::Status that contains the OpenSSL error.
-#define OPENSSL_RETURN_IF_ERROR(cond)                 \
-  ERR_clear_error();                                  \
-  if (!ABSL_PREDICT_TRUE(cond)) {                     \
-    auto bio = NewBio();                              \
-    ERR_print_errors(bio.get());                      \
-    RETURN_ERROR(ERR_INVALID_PARAM)                   \
-        << "OpenSSL call '" << #cond << "' failed.\n" \
-        << BioToString(bio);                          \
-  }
+#define OPENSSL_RETURN_IF_ERROR(expr)                   \
+  do {                                                  \
+    ERR_clear_error();                                  \
+    if (!ABSL_PREDICT_TRUE(expr)) {                     \
+      auto bio = NewBio();                              \
+      ERR_print_errors(bio.get());                      \
+      RETURN_ERROR(ERR_INVALID_PARAM)                   \
+          << "OpenSSL call '" << #expr << "' failed.\n" \
+          << BioToString(bio);                          \
+    }                                                   \
+  } while (0)
 
 util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
   RSA* rsa;
@@ -120,7 +122,7 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
     bssl::UniquePtr<BIGNUM> bn(BN_new());
     // Set the MSB to 1 so that all serial numbers are the same length in string
     // form
-    OPENSSL_RETURN_IF_ERROR(BN_rand(bn.get(), SERIAL_NUMBER_LENGTH_BITS,
+    OPENSSL_RETURN_IF_ERROR(BN_rand(bn.get(), kSerialNumberLengthBits,
                                     BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY));
     OPENSSL_RETURN_IF_ERROR(BN_to_ASN1_INTEGER(bn.get(), asn_serial));
   }
