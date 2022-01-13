@@ -32,7 +32,7 @@ SfpAdapter::~SfpAdapter() {
 ::util::Status SfpAdapter::GetFrontPanelPortInfo(
     int card_id, int port_id, FrontPanelPortInfo* fp_port_info) {
   if (card_id <= 0 || port_id <= 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
   }
 
   std::vector<Path> paths = {
@@ -59,8 +59,8 @@ SfpAdapter::~SfpAdapter() {
 
   // Get the SFP (transceiver)
   if (!phal_port.has_transceiver()) {
-    RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
-                   << "] has no transceiver";
+    return MAKE_ERROR() << "cards[" << card_id << "]/ports[" << port_id
+                        << "] has no transceiver";
   }
   auto sfp = phal_port.transceiver();
 
@@ -83,7 +83,7 @@ SfpAdapter::~SfpAdapter() {
       actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
   }
   fp_port_info->set_physical_port_type(actual_val);
 

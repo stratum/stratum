@@ -22,6 +22,7 @@ stratum/glue/gtl/stl_util.h
 stratum/glue/init_google.h
 stratum/glue/status/posix_error_space.cc
 stratum/glue/status/status_test_util.cc
+stratum/glue/status/status_test_util.h
 stratum/hal/bin/barefoot/bf_pipeline_builder.cc
 stratum/hal/bin/barefoot/main_bfrt.cc
 stratum/hal/bin/barefoot/main.cc
@@ -144,6 +145,7 @@ stratum/hal/lib/phal/attribute_group_test.cc
 stratum/hal/lib/phal/attribute_group.cc
 stratum/hal/lib/phal/attribute_group.h
 stratum/hal/lib/phal/datasource_mock.cc
+stratum/hal/lib/phal/datasource.cc
 stratum/hal/lib/phal/onlp/onlp_cli.cc
 stratum/hal/lib/phal/onlp/onlp_event_handler_mock.h
 stratum/hal/lib/phal/onlp/onlp_event_handler_test.cc
