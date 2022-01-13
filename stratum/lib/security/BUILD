@@ -218,6 +218,7 @@ stratum_cc_test(
         ":certificate",
         ":test_main",
         "//stratum/glue/status:status_test_util",
+        "//stratum/public/lib:error",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",

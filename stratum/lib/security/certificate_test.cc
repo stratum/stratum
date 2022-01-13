@@ -10,27 +10,33 @@
 #include "openssl/bio.h"
 #include "openssl/pem.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/public/lib/error.h"
 
 namespace stratum {
+namespace {
 
-constexpr int KEY_SIZE = 1024;
-constexpr char CA_COMMON_NAME[] = "Stratum CA";
-constexpr char SERVER_COMMON_NAME[] = "stratum.local";
-constexpr int CA_SERIAL_NUMBER = 1;
+using test_utils::IsOkAndHolds;
+using test_utils::StatusIs;
+using testing::HasSubstr;
+
+constexpr int kKeySize = 1024;
+constexpr char kCaCommonName[] = "Stratum CA";
+constexpr char kServerCommonName[] = "stratum.local";
+constexpr int kCaSerialNumber = 1;
 
 class CertificateTest : public ::testing::Test {
  protected:
-  CertificateTest() : ca_(CA_COMMON_NAME), server_(SERVER_COMMON_NAME) {}
+  CertificateTest() : ca_(kCaCommonName), server_(kServerCommonName) {}
 
   void SetUp() override {
     absl::Time valid_after = absl::Now();
     absl::Time valid_until = valid_after + absl::Hours(24);
 
-    ASSERT_OK(ca_.GenerateKeyPair(KEY_SIZE));
+    ASSERT_OK(ca_.GenerateKeyPair(kKeySize));
     ASSERT_OK(ca_.SignCertificate(ca_, valid_after, valid_until,
-                                  CA_SERIAL_NUMBER));  // Self-sign.
+                                  kCaSerialNumber));  // Self-sign.
 
-    ASSERT_OK(server_.GenerateKeyPair(KEY_SIZE));
+    ASSERT_OK(server_.GenerateKeyPair(kKeySize));
     ASSERT_OK(server_.SignCertificate(ca_, valid_after, valid_until));
   }
 
@@ -39,54 +45,44 @@ class CertificateTest : public ::testing::Test {
 };
 
 TEST_F(CertificateTest, CheckCommonName) {
-  EXPECT_EQ(ca_.GetCommonName(), CA_COMMON_NAME);
+  EXPECT_EQ(ca_.GetCommonName(), kCaCommonName);
   // Don't CheckCommonName on CA cert because the name is not well formed.
-  EXPECT_EQ(server_.GetCommonName(), SERVER_COMMON_NAME);
-  EXPECT_OK(server_.CheckCommonName(SERVER_COMMON_NAME));
+  EXPECT_EQ(server_.GetCommonName(), kServerCommonName);
+  EXPECT_OK(server_.CheckCommonName(kServerCommonName));
 }
 
 TEST_F(CertificateTest, CheckIsCa) {
-  EXPECT_OK(ca_.IsCA());
-  EXPECT_EQ(ca_.IsCA().ValueOrDie(), true);
-
-  EXPECT_OK(server_.IsCA());
-  EXPECT_EQ(server_.IsCA().ValueOrDie(), false);
+  EXPECT_THAT(ca_.IsCA(), IsOkAndHolds(true));
+  EXPECT_THAT(server_.IsCA(), IsOkAndHolds(false));
 }
 
 TEST_F(CertificateTest, LoadCaCert) {
   Certificate validate_ca("");
   validate_ca.LoadCertificate(ca_.GetCertificate().ValueOrDie(),
                               ca_.GetPrivateKey().ValueOrDie());
-  EXPECT_EQ(validate_ca.GetCommonName(), CA_COMMON_NAME);
-  EXPECT_OK(validate_ca.IsCA());
-  EXPECT_EQ(validate_ca.IsCA().ValueOrDie(), true);
+  EXPECT_EQ(validate_ca.GetCommonName(), kCaCommonName);
+  EXPECT_THAT(validate_ca.IsCA(), IsOkAndHolds(true));
 }
 
 TEST_F(CertificateTest, LoadServerCert) {
   Certificate validate_server("");
   validate_server.LoadCertificate(server_.GetCertificate().ValueOrDie(),
                                   server_.GetPrivateKey().ValueOrDie());
-  EXPECT_EQ(validate_server.GetCommonName(), SERVER_COMMON_NAME);
-  EXPECT_OK(validate_server.IsCA());
-  EXPECT_EQ(validate_server.IsCA().ValueOrDie(), false);
+  EXPECT_EQ(validate_server.GetCommonName(), kServerCommonName);
+  EXPECT_THAT(validate_server.IsCA(), IsOkAndHolds(false));
 }
 
 TEST_F(CertificateTest, CheckPrivateKey) {
-  EXPECT_OK(ca_.GetPrivateKey());
-  EXPECT_OK(server_.GetPrivateKey());
-
-  EXPECT_THAT(ca_.GetPrivateKey().ValueOrDie(),
-              ::testing::HasSubstr("RSA PRIVATE KEY"));
-  EXPECT_THAT(server_.GetPrivateKey().ValueOrDie(),
-              ::testing::HasSubstr("RSA PRIVATE KEY"));
+  EXPECT_THAT(ca_.GetPrivateKey(), IsOkAndHolds(HasSubstr("RSA PRIVATE KEY")));
+  EXPECT_THAT(server_.GetPrivateKey(),
+              IsOkAndHolds(HasSubstr("RSA PRIVATE KEY")));
 }
 
 TEST_F(CertificateTest, CheckCertificate) {
-  ASSERT_OK_AND_ASSIGN(std::string ca_cert, ca_.GetCertificate());
-  EXPECT_THAT(ca_cert, ::testing::HasSubstr("BEGIN CERTIFICATE"));
-
-  ASSERT_OK_AND_ASSIGN(std::string server_cert, server_.GetCertificate());
-  EXPECT_THAT(server_cert, ::testing::HasSubstr("BEGIN CERTIFICATE"));
+  EXPECT_THAT(ca_.GetCertificate(),
+              IsOkAndHolds(HasSubstr("BEGIN CERTIFICATE")));
+  EXPECT_THAT(server_.GetCertificate(),
+              IsOkAndHolds(HasSubstr("BEGIN CERTIFICATE")));
 }
 
 TEST_F(CertificateTest, CheckIssuer) {
@@ -95,21 +91,21 @@ TEST_F(CertificateTest, CheckIssuer) {
 }
 
 TEST_F(CertificateTest, CheckIssuerFail) {
-  auto status = ca_.CheckIssuer(server_);
-  EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.ToString(),
-              ::testing::HasSubstr("Issuer and cert do not match"));
+  EXPECT_THAT(ca_.CheckIssuer(server_),
+              StatusIs(StratumErrorSpace(), ERR_INTERNAL,
+                       HasSubstr("Issuer and cert do not match")));
 }
 
 TEST_F(CertificateTest, SerialNumber) {
   // CA serial is explicitly assigned to 1
-  ASSERT_OK_AND_ASSIGN(std::string ca_serial, ca_.GetSerialNumber());
-  EXPECT_EQ(ca_serial, absl::StrFormat("%02x", CA_SERIAL_NUMBER));
+  EXPECT_THAT(ca_.GetSerialNumber(),
+              IsOkAndHolds(absl::StrFormat("%02x", kCaSerialNumber)));
 
   // Server serial is randomly generated
-  //   128 bits yields a 32 character hex string
-  ASSERT_OK_AND_ASSIGN(std::string server_serial, server_.GetSerialNumber());
-  EXPECT_EQ(server_serial.length(), 16 * 2);
+  //   16 bytes (128 bits) yields a 32 character hex string
+  EXPECT_THAT(server_.GetSerialNumber(),
+              IsOkAndHolds(::testing::ContainsRegex("[0-9a-f]{32}")));
 }
 
+}  // namespace
 }  // namespace stratum
