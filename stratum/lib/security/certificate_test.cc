@@ -82,13 +82,11 @@ TEST_F(CertificateTest, CheckPrivateKey) {
 }
 
 TEST_F(CertificateTest, CheckCertificate) {
-  EXPECT_OK(ca_.GetCertificate());
-  EXPECT_OK(server_.GetCertificate());
+  ASSERT_OK_AND_ASSIGN(std::string ca_cert, ca_.GetCertificate());
+  EXPECT_THAT(ca_cert, ::testing::HasSubstr("BEGIN CERTIFICATE"));
 
-  EXPECT_THAT(ca_.GetCertificate().ValueOrDie(),
-              ::testing::HasSubstr("BEGIN CERTIFICATE"));
-  EXPECT_THAT(server_.GetCertificate().ValueOrDie(),
-              ::testing::HasSubstr("BEGIN CERTIFICATE"));
+  ASSERT_OK_AND_ASSIGN(std::string server_cert, server_.GetCertificate());
+  EXPECT_THAT(server_cert, ::testing::HasSubstr("BEGIN CERTIFICATE"));
 }
 
 TEST_F(CertificateTest, CheckIssuer) {
