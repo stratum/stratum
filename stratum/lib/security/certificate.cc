@@ -99,7 +99,7 @@ util::Status GenerateRSAKeyPair(EVP_PKEY* evp, int bits) {
   // deletion. Note: RSA will still be deleted by the shared pointer on error.
   rsa.release();
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status GenerateUnsignedCert(X509* unsigned_cert,
@@ -141,7 +141,7 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
 
   OPENSSL_RETURN_IF_ERROR(X509_set_pubkey(unsigned_cert, unsigned_cert_key));
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status AddExtension(X509* cert, X509V3_CTX* ctx, const std::string& name,
@@ -156,7 +156,7 @@ util::Status AddExtension(X509* cert, X509V3_CTX* ctx, const std::string& name,
   // Add the extension to the end of the list
   OPENSSL_RETURN_IF_ERROR(X509_add_ext(cert, ext.get(), -1));
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status AddX509v3Extensions(X509* cert, X509* issuer, bool self_signed,
@@ -200,7 +200,7 @@ util::Status AddX509v3Extensions(X509* cert, X509* issuer, bool self_signed,
     RETURN_IF_ERROR(AddExtension(cert, &ctx, "extendedKeyUsage", "serverAuth"));
   }
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status SignCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
@@ -223,7 +223,7 @@ util::Status SignCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
 
   OPENSSL_RETURN_IF_ERROR(X509_sign(unsigned_cert, issuer_key, EVP_sha256()));
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status GenerateSignedCert(X509* unsigned_cert,
@@ -238,7 +238,7 @@ util::Status GenerateSignedCert(X509* unsigned_cert,
   RETURN_IF_ERROR(
       SignCert(unsigned_cert, unsigned_cert_key, issuer, issuer_key));
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status CheckSignatures(X509* cert, X509* ca) {
@@ -264,7 +264,7 @@ util::Status CheckSignatures(X509* cert, X509* ca) {
         << X509_verify_cert_error_string(store_ctx.get()->error);
   }
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 }  // namespace
@@ -306,7 +306,7 @@ util::Status Certificate::CheckCommonName(const std::string& name) {
   switch (X509_check_host(certificate_.get(), name.data(), name.size(), 0,
                           nullptr)) {
     case 1:  // success
-      RETURN_OK();
+      return ::util::OkStatus();
     case 0:  // failed to match
       RETURN_ERROR(ERR_ENTRY_NOT_FOUND) << "Common name does not match.";
     case -2:  // malformed input
@@ -345,7 +345,7 @@ util::Status Certificate::CheckIssuer(const Certificate& issuer) {
   RETURN_IF_ERROR(
       CheckSignatures(certificate_.get(), issuer.certificate_.get()));
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status Certificate::LoadCertificate(const std::string& cert_pem,
@@ -392,7 +392,7 @@ util::Status Certificate::LoadCertificate(const std::string& cert_pem,
                                       << BioToString(bio);
   }
 
-  RETURN_OK();
+  return ::util::OkStatus();
 }
 
 util::Status Certificate::SignCertificate(const Certificate& issuer,
