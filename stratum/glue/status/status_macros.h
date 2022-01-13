@@ -45,9 +45,6 @@
 // WARNING: ASSIGN_OR_RETURN expands into multiple statements; it cannot be used
 //  in a single statement (e.g. as the body of an if statement without {})!
 //
-// This can optionally be used to return ::util::Status::OK.
-//   RETURN_OK();
-//
 // To construct an error without immediately returning it, use MAKE_ERROR,
 // which supports the same argument types as RETURN_ERROR.
 //   ::util::Status status = MAKE_ERROR(...) << "Message";
@@ -378,9 +375,6 @@ class MakeErrorStream {
 //     RETURN_ERROR() << "Message";
 //   }
 #define RETURN_ERROR return MAKE_ERROR
-
-// Return success.
-#define RETURN_OK() return ::util::Status::OK
 
 // Wraps a ::util::Status so it can be assigned and used in an if-statement.
 // Implicitly converts from status and to bool.
