@@ -95,6 +95,7 @@ jobs:
   unit_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: large
     environment:
       - CC: clang
       - CXX: clang++
@@ -145,6 +146,7 @@ jobs:
     environment:
       - CC: clang
       - CXX: clang++
+    resource_class: large
     steps:
       - checkout
       - *restore_bazel_cache
