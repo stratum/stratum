@@ -2,14 +2,13 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/datasource.h"
 
-#include "stratum/glue/status/status.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {
@@ -44,9 +43,7 @@ bool TimedCache::CacheHasExpired() {
   return time - last_cache_time_ > cache_duration_ || time < last_cache_time_;
 }
 
-void TimedCache::CacheUpdated() {
-  last_cache_time_ = absl::Now();
-}
+void TimedCache::CacheUpdated() { last_cache_time_ = absl::Now(); }
 
 FetchOnce::FetchOnce() : should_update_(true) {}
 
@@ -57,25 +54,23 @@ void FetchOnce::CacheUpdated() { should_update_ = false; }
 // Create a new CachePolicy instance
 // note: is passed to DataSource who then manages the deletion
 ::util::StatusOr<CachePolicy*> CachePolicyFactory::CreateInstance(
-    CachePolicyConfig::CachePolicyType cache_type,
-    int32 timed_cache_value) {
-
-    switch (cache_type) {
+    CachePolicyConfig::CachePolicyType cache_type, int32 timed_cache_value) {
+  switch (cache_type) {
     case CachePolicyConfig::NEVER_UPDATE:
-        return new NeverUpdate();
+      return new NeverUpdate();
 
     case CachePolicyConfig::FETCH_ONCE:
-        return new FetchOnce();
+      return new FetchOnce();
 
     case CachePolicyConfig::TIMED_CACHE:
-        return new TimedCache(absl::Seconds(timed_cache_value));
+      return new TimedCache(absl::Seconds(timed_cache_value));
 
     case CachePolicyConfig::NO_CACHE:
-        return new NoCache();
+      return new NoCache();
 
     default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "invalid cache type";
-    }
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "invalid cache type";
+  }
 }
 
 }  // namespace phal
