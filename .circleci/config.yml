@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 version: 2.1
+
 orbs:
   codecov: codecov/codecov@3.2.2
 # Cache Bazel output root (see bazelrc) to speed up job execution time.
