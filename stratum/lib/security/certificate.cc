@@ -106,7 +106,7 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
                                   EVP_PKEY* unsigned_cert_key,
                                   const std::string& common_name,
                                   absl::Time valid_after,
-                                  absl::Time valid_until, long serial) {
+                                  absl::Time valid_until, int serial) {
   // RFC 5280 4.1.2.1.  Version
   OPENSSL_RETURN_IF_ERROR(X509_set_version(unsigned_cert, X509_VERSION_3));
 
@@ -231,7 +231,7 @@ util::Status GenerateSignedCert(X509* unsigned_cert,
                                 EVP_PKEY* issuer_key,
                                 const std::string& common_name,
                                 absl::Time valid_after, absl::Time valid_until,
-                                long serial) {
+                                int serial) {
   RETURN_IF_ERROR(GenerateUnsignedCert(unsigned_cert, unsigned_cert_key,
                                        common_name, valid_after, valid_until,
                                        serial));
@@ -397,7 +397,7 @@ util::Status Certificate::LoadCertificate(const std::string& cert_pem,
 
 util::Status Certificate::SignCertificate(const Certificate& issuer,
                                           absl::Time valid_after,
-                                          absl::Time valid_until, long serial) {
+                                          absl::Time valid_until, int serial) {
   X509* issuer_cert;
   EVP_PKEY* issuer_key;
   if (this == &issuer) {  // self sign

@@ -19,7 +19,7 @@ namespace stratum {
 class Certificate {
  public:
   // Creates a new Certificate with the given common name (CN).
-  Certificate(const std::string& common_name);
+  explicit Certificate(const std::string& common_name);
 
   // Returns PEM-encoded representation of the private key.
   util::StatusOr<std::string> GetPrivateKey();
@@ -52,7 +52,7 @@ class Certificate {
   // Signs a certificate using the provided certificate.
   util::Status SignCertificate(const Certificate& issuer,
                                absl::Time valid_after, absl::Time valid_until,
-                               long serial = 0);
+                               int serial = 0);
 
  private:
   bssl::UniquePtr<EVP_PKEY> key_;
