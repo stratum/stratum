@@ -37,7 +37,7 @@ class CredentialsManager {
                                                   const std::string& cert,
                                                   const std::string& key);
 
-  // Loads new server credentials.
+  // Loads new client credentials.
   virtual ::util::Status LoadNewClientCredentials(const std::string& ca_cert,
                                                   const std::string& cert,
                                                   const std::string& key);
