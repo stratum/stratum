@@ -90,8 +90,9 @@ int NumBitsToNumBytes(int num_bits) {
   return ret;
 }
 
-// Note that this is a protobuf byte array which means the first byte is the most
-// significent byte. For example: 0x511 in 4-byte is "\x00\x00\x01\xff" instead of
+// Note that this is a protobuf byte array which means the first byte is the
+// most significent byte. For example: 0x511 in 4-byte is "\x00\x00\x01\xff"
+// instead of
 // "\xff\x01\x00\x00".
 ::util::StatusOr<uint32> BytesToUint32(std::string value) {
   CHECK_RETURN_IF_FALSE(value.size() > 0);
