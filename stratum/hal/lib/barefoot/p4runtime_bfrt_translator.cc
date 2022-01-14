@@ -322,8 +322,9 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
             break;
           }
           default:
-            RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unsupported field match type: "
-                                            << field_match->ShortDebugString();
+            return MAKE_ERROR(ERR_UNIMPLEMENTED)
+                   << "Unsupported field match type: "
+                   << field_match->ShortDebugString();
         }
       }  // else, we don't modify the value if it doesn't need to be translated.
     }
@@ -441,7 +442,7 @@ P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
   if (uri.compare(kUriTnaPortId) == 0) {
     return TranslateTnaPortId(value, to_sdk, bit_width);
   }
-  RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unknown URI: " << uri;
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unknown URI: " << uri;
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateTnaPortId(
