@@ -38,8 +38,8 @@ util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
     return std::string(mem->data, mem->length);
   }
 
-  RETURN_ERROR(ERR_INVALID_PARAM)
-      << "Failed to write private key in PEM format.";
+  return MAKE_ERROR(ERR_INVALID_PARAM)
+         << "Failed to write private key in PEM format.";
 }
 
 util::StatusOr<std::string> GetCertAsString(X509* x509) {
@@ -55,8 +55,8 @@ util::StatusOr<std::string> GetCertAsString(X509* x509) {
     return std::string(mem->data, mem->length);
   }
 
-  RETURN_ERROR(ERR_INVALID_PARAM)
-      << "Failed to write certificate in PEM format.";
+  return MAKE_ERROR(ERR_INVALID_PARAM)
+         << "Failed to write certificate in PEM format.";
 }
 
 util::Status GenerateRSAKeyPair(EVP_PKEY* evp, int bits) {
@@ -69,7 +69,7 @@ util::Status GenerateRSAKeyPair(EVP_PKEY* evp, int bits) {
   // It will be freed when EVP is freed, so only free on failure.
   if (!EVP_PKEY_assign_RSA(evp, rsa)) {
     RSA_free(rsa);
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Failed to assign key.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Failed to assign key.";
   }
 
   return util::OkStatus();

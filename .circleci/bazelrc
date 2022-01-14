@@ -28,5 +28,5 @@ test --test_verbose_timeout_warnings
 build --profile=/tmp/bazel.profile.json
 
 # Coverage
-coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
+coverage --combined_report=lcov
 

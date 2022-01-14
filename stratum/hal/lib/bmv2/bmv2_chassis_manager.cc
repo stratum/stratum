@@ -68,9 +68,9 @@ namespace {
   auto bm_status = dev_mgr->port_add(
       iface_name, static_cast<bm::PortMonitorIface::port_t>(port_id), {});
   if (bm_status != bm::DevMgrIface::ReturnCode::SUCCESS) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Error when binding port " << port_id << " to interface "
-        << iface_name << " in node " << node_id << ".";
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Error when binding port " << port_id << " to interface "
+           << iface_name << " in node " << node_id << ".";
   }
   return ::util::OkStatus();
 }
@@ -82,8 +82,8 @@ namespace {
   auto bm_status =
       dev_mgr->port_remove(static_cast<bm::PortMonitorIface::port_t>(port_id));
   if (bm_status != bm::DevMgrIface::ReturnCode::SUCCESS) {
-    RETURN_ERROR(ERR_INTERNAL) << "Error when removing port " << port_id
-                               << " from node " << node_id << ".";
+    return MAKE_ERROR(ERR_INTERNAL) << "Error when removing port " << port_id
+                                    << " from node " << node_id << ".";
   }
   return ::util::OkStatus();
 }
@@ -312,7 +312,7 @@ namespace {
       break;
     }
     default:
-      RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
+      return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
   return resp;
 }

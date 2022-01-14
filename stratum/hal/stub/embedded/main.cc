@@ -724,7 +724,7 @@ ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
   } else if (FLAGS_start_gnmi_subscription_session) {
     client.StartGnmiSubscriptionSession();
   } else {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid command.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid command.";
   }
 
   return ::util::OkStatus();
