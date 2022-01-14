@@ -267,25 +267,25 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryToSdk) {
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x01\x00\x00\x00" }
+      exact { value: "\x00\x00\x00\x01" }
     }
     match {
       field_id: 2
-      ternary { value: "\x01\x00\x00\x00" mask: "\xff\x01\x00\x00" }
+      ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
     }
     match {
       field_id: 3
-      range { low: "\x01\x00\x00\x00" high: "\x01\x00\x00\x00" }
+      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
     }
     match {
       field_id: 4
-      exact { value: "\x01\x00\x00\x00" }
+      exact { value: "\x00\x00\x00\x01" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x01\x00\x00\x00" }
-        params { param_id: 2 value: "\x01\x00\x00\x00" }
+        params { param_id: 1 value: "\x00\x00\x00\x01" }
+        params { param_id: 2 value: "\x00\x00\x00\x01" }
       }
     }
   )pb";
@@ -293,25 +293,25 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryToSdk) {
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x2C\x01" }
+      exact { value: "\x01\x2C" }
     }
     match {
       field_id: 2
-      ternary { value: "\x2C\x01" mask: "\xff\x01\x00\x00" }
+      ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
     }
     match {
       field_id: 3
-      range { low: "\x2C\x01" high: "\x2C\x01" }
+      range { low: "\x01\x2C" high: "\x01\x2C" }
     }
     match {
       field_id: 4
-      exact { value: "\x01\x00\x00\x00" }
+      exact { value: "\x00\x00\x00\x01" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x2C\x01" }
-        params { param_id: 2 value: "\x01\x00\x00\x00" }
+        params { param_id: 1 value: "\x01\x2C" }
+        params { param_id: 2 value: "\x00\x00\x00\x01" }
       }
     }
   )pb";
@@ -338,25 +338,25 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryFromSdk) {
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x2C\x01" }
+      exact { value: "\x01\x2C" }
     }
     match {
       field_id: 2
-      ternary { value: "\x2C\x01" mask: "\xff\x01\x00\x00" }
+      ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
     }
     match {
       field_id: 3
-      range { low: "\x2C\x01" high: "\x2C\x01" }
+      range { low: "\x01\x2C" high: "\x01\x2C" }
     }
     match {
       field_id: 4
-      exact { value: "\x2C\x01\x00\x00" }
+      exact { value: "\x00\x00\x01\x2C" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x2C\x01" }
-        params { param_id: 2 value: "\x2C\x01\x00\x00" }
+        params { param_id: 1 value: "\x01\x2C" }
+        params { param_id: 2 value: "\x00\x00\x01\x2C" }
       }
     }
   )pb";
@@ -364,25 +364,25 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryFromSdk) {
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x01\x00\x00\x00" }
+      exact { value: "\x00\x00\x00\x01" }
     }
     match {
       field_id: 2
-      ternary { value: "\x01\x00\x00\x00" mask: "\xff\x01\x00\x00" }
+      ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
     }
     match {
       field_id: 3
-      range { low: "\x01\x00\x00\x00" high: "\x01\x00\x00\x00" }
+      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
     }
     match {
       field_id: 4
-      exact { value: "\x2C\x01\x00\x00" }
+      exact { value: "\x00\x00\x01\x2C" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x01\x00\x00\x00" }
-        params { param_id: 2 value: "\x2C\x01\x00\x00" }
+        params { param_id: 1 value: "\x00\x00\x00\x01" }
+        params { param_id: 2 value: "\x00\x00\x01\x2C" }
       }
     }
   )pb";

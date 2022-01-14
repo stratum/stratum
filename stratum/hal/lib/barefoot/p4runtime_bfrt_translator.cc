@@ -106,10 +106,10 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
     uint32 singleton_port_id = singleton_port.id();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
-    ASSIGN_OR_RETURN(uint32 sdk_port, bf_sde_interface_->GetPortIdFromPortKey(
+    ASSIGN_OR_RETURN(uint32 sdk_port_id, bf_sde_interface_->GetPortIdFromPortKey(
                                           device_id_, singleton_port_key));
-    singleton_port_to_sdk_port_[singleton_port_id] = sdk_port;
-    sdk_port_to_singleton_port_[sdk_port] = singleton_port_id;
+    singleton_port_to_sdk_port_[singleton_port_id] = sdk_port_id;
+    sdk_port_to_singleton_port_[sdk_port_id] = singleton_port_id;
   }
 
   return ::util::OkStatus();

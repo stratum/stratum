@@ -83,29 +83,35 @@ int NumBitsToNumBytes(int num_bits) {
   size_t bytes = NumBitsToNumBytes(bit_width);
   std::string ret(bytes, '\x00');
   uint8* byte_array = reinterpret_cast<uint8*>(gtl::string_as_array(&ret));
-  for (int i = 0; i < bytes; i++) {
+  for (int i = bytes - 1; i >= 0; i--) {
     byte_array[i] = static_cast<char>(value & 0xff);
     value >>= 8;
   }
   return ret;
 }
 
+// Note that this is a protobuf byte array which means the first byte is the most
+// significent byte. For example: 0x511 in 4-byte is "\x00\x00\x01\xff" instead of
+// "\xff\x01\x00\x00".
 ::util::StatusOr<uint32> BytesToUint32(std::string value) {
   CHECK_RETURN_IF_FALSE(value.size() > 0);
   uint8* byte_array = reinterpret_cast<uint8*>(gtl::string_as_array(&value));
 
   // Check if the number is smaller than 32-bit unsigned interger of the size of
   // byte array is bigger than 4.
-  for (size_t i = 4; i < value.size(); i++) {
-    CHECK_RETURN_IF_FALSE(byte_array[i] == 0);
+  int bytes_must_be_zero = 0;
+  if (value.size() > 4) {
+    bytes_must_be_zero = value.size() - 4;
   }
-
   uint32 result = 0;
-  for (size_t i = value.size(); i > 0; i--) {
-    result += byte_array[i];
+  for (size_t i = 0; i < value.size() - 1; i++) {
+    result |= byte_array[i];
     result <<= 8;
+    if (i < bytes_must_be_zero) {
+      CHECK_RETURN_IF_FALSE(byte_array[i] == 0);
+    }
   }
-  result += byte_array[0];
+  result += byte_array[value.size() - 1];
   return result;
 }
 

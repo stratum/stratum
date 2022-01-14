@@ -251,19 +251,19 @@ TEST(Uint32ToBytesTest, ValidCases) {
   auto result = Uint32ToBytes(511, 9);
   EXPECT_OK(result.status());
   auto actual_value = result.ValueOrDie();
-  auto expected_value = std::string({'\xff', '\x01'});
+  auto expected_value = std::string({'\x01', '\xff'});
   EXPECT_EQ(expected_value, actual_value);
 
   result = Uint32ToBytes(128, 9);
   EXPECT_OK(result.status());
   actual_value = result.ValueOrDie();
-  expected_value = std::string({'\x80', '\x00'});
+  expected_value = std::string({'\x00', '\x80'});
   EXPECT_EQ(expected_value, actual_value);
 
   result = Uint32ToBytes(256, 9);
   EXPECT_OK(result.status());
   actual_value = result.ValueOrDie();
-  expected_value = std::string({'\x00', '\x01'});
+  expected_value = std::string({'\x01', '\x00'});
   EXPECT_EQ(expected_value, actual_value);
 
   result = Uint32ToBytes(0, 32);
@@ -301,12 +301,12 @@ TEST(BytesToUint32Test, ValidCases) {
   actual_value = result.ValueOrDie();
   EXPECT_EQ(1U, actual_value);
 
-  result = BytesToUint32({'\xff', '\x01'});  // 0x01ff
+  result = BytesToUint32({'\x01', '\xff'});  // 0x01ff
   EXPECT_OK(result.status());
   actual_value = result.ValueOrDie();
   EXPECT_EQ(511U, actual_value);
 
-  result = BytesToUint32({'\x78', '\x56', '\x34', '\x12'});  // 0x12345678
+  result = BytesToUint32({'\x12', '\x34', '\x56', '\x78'});  // 0x12345678
   EXPECT_OK(result.status());
   actual_value = result.ValueOrDie();
   EXPECT_EQ(0x12345678U, actual_value);
@@ -319,7 +319,7 @@ TEST(BytesToUint32Test, ValidCases) {
 
 TEST(BytesToUint32ToBytes, ValidCases) {
   // From bytes to uint32, and convert back to bytes.
-  std::string bytes_value = std::string({'\x78', '\x56', '\x34', '\x12'});
+  std::string bytes_value = std::string({'\x12', '\x34', '\x56', '\x78'});
   uint32 value = 0x12345678U;
   auto result = BytesToUint32(bytes_value);
   EXPECT_OK(result.status());
