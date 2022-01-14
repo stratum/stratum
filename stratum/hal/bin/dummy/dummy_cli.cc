@@ -232,7 +232,7 @@ class DummyCli {
       ASSIGN_OR_RETURN(*new_state.mutable_health_indicator(),
                        ParseHealthIndicator(args[3]));
     } else {
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
     }
 
     return new_state;
@@ -245,7 +245,7 @@ class DummyCli {
     if (state == "node_packetio_debug_info") {
       new_state.mutable_node_packetio_debug_info()->set_debug_string(args[2]);
     } else {
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
     }
 
     return new_state;
@@ -263,7 +263,7 @@ class DummyCli {
       ASSIGN_OR_RETURN(*new_state.mutable_flow_programming_exception_alarm(),
                        ParseAlarm(alarm_args));
     } else {
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
     }
 
     return new_state;
@@ -278,7 +278,7 @@ class DummyCli {
       ASSIGN_OR_RETURN(*new_state.mutable_port_qos_counters(),
                        ParsePortQosCounters(port_queue_args));
     } else {
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
     }
 
     return new_state;
@@ -328,7 +328,7 @@ class DummyCli {
       ASSIGN_OR_RETURN(*req.mutable_state_update(),
                        ParsePortQueueNodeStates(args));
     } else {
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid state " << state << ".";
     }
 
     return req;

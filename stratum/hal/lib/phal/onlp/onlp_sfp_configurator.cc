@@ -66,7 +66,7 @@ OnlpSfpConfigurator::Make(std::shared_ptr<OnlpSfpDataSource> datasource,
       break;
 
     default:
-      RETURN_ERROR() << "Unknown SFP event state " << state << ".";
+      return MAKE_ERROR() << "Unknown SFP event state " << state << ".";
   }
 
   return ::util::OkStatus();

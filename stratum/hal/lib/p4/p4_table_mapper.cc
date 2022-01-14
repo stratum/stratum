@@ -692,10 +692,10 @@ std::string P4TableMapper::GetMapperNameKey(
   auto convert_iter = field_convert_by_table_.find(key);
   if (convert_iter == field_convert_by_table_.end()) {
     // No way to decode fields that don't go with the table.
-    RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
-        << "P4 TableEntry match field ID "
-        << PrintP4ObjectID(match_field.field_id())
-        << " is not recognized in table " << table_p4_info.preamble().name();
+    return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+           << "P4 TableEntry match field ID "
+           << PrintP4ObjectID(match_field.field_id())
+           << " is not recognized in table " << table_p4_info.preamble().name();
   }
 
   const auto& conversion_value = convert_iter->second;

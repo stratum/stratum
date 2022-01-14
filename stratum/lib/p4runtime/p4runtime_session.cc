@@ -69,38 +69,38 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
   arbitration->set_device_id(device_id);
   *arbitration->mutable_election_id() = session->election_id_;
   if (!session->stream_channel_->Write(request)) {
-    RETURN_ERROR(ERR_UNAVAILABLE)
-        << "Unable to initiate P4RT connection to device ID " << device_id
-        << "; gRPC stream channel closed.";
+    return MAKE_ERROR(ERR_UNAVAILABLE)
+           << "Unable to initiate P4RT connection to device ID " << device_id
+           << "; gRPC stream channel closed.";
   }
 
   // Wait for arbitration response.
   ::p4::v1::StreamMessageResponse response;
   if (!session->stream_channel_->Read(&response)) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "P4RT stream closed while awaiting arbitration response: "
-        << GrpcStatusToStatus(session->stream_channel_->Finish());
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "P4RT stream closed while awaiting arbitration response: "
+           << GrpcStatusToStatus(session->stream_channel_->Finish());
   }
   if (response.update_case() != ::p4::v1::StreamMessageResponse::kArbitration) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "No arbitration update received but received the update of "
-        << response.update_case() << ": " << response.ShortDebugString();
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "No arbitration update received but received the update of "
+           << response.update_case() << ": " << response.ShortDebugString();
   }
   if (response.arbitration().device_id() != session->device_id_) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Received device id doesn't match: " << response.ShortDebugString();
+    return MAKE_ERROR(ERR_INTERNAL) << "Received device id doesn't match: "
+                                    << response.ShortDebugString();
   }
   if (response.arbitration().election_id().high() !=
       session->election_id_.high()) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Highest 64 bits of received election id doesn't match: "
-        << response.ShortDebugString();
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Highest 64 bits of received election id doesn't match: "
+           << response.ShortDebugString();
   }
   if (response.arbitration().election_id().low() !=
       session->election_id_.low()) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Lowest 64 bits of received election id doesn't match: "
-        << response.ShortDebugString();
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Lowest 64 bits of received election id doesn't match: "
+           << response.ShortDebugString();
   }
 
   // When object returned doesn't have the same type as the function's return
