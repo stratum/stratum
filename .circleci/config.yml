@@ -5,6 +5,7 @@ version: 2.1
 
 orbs:
   codecov: codecov/codecov@3.2.2
+
 # Cache Bazel output root (see bazelrc) to speed up job execution time.
 # The idea is to use the last cache available for the same branch, or the one
 # from main if this is the first build for this branch.
