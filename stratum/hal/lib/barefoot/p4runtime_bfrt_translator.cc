@@ -331,68 +331,38 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
   }
 
   if (translated_entry.action().type_case() == ::p4::v1::TableAction::kAction) {
-    auto* action = translated_entry.mutable_action()->mutable_action();
-    const auto& action_id = action->action_id();
-    if (action_to_param_to_type_uri_.count(action_id) &&
-        action_to_param_to_bit_width_.count(action_id)) {
-      for (int i = 0; i < action->params_size(); i++) {
-        auto* param = action->mutable_params()->Mutable(i);
-        const auto& param_id = param->param_id();
-        std::string* uri =
-            gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
-        int32* bit_width =
-            gtl::FindOrNull(action_to_param_to_bit_width_[action_id], param_id);
-        if (uri && bit_width) {
-          ASSIGN_OR_RETURN(
-              const std::string& new_val,
-              TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-          param->set_value(new_val);
-        }  // else, we don't modify the value if it doesn't need to be
-           // translated.
-      }
-    }
+    ASSIGN_OR_RETURN(
+        *(translated_entry.mutable_action()->mutable_action()),
+        TranslateAction(translated_entry.action().action(), to_sdk));
   } else if (translated_entry.action().type_case() ==
              ::p4::v1::TableAction::kActionProfileActionSet) {
-    auto* action_profile_action_set =
+    auto* action_set =
         translated_entry.mutable_action()->mutable_action_profile_action_set();
-    for (int i = 0;
-         i < action_profile_action_set->action_profile_actions_size(); i++) {
+    for (int i = 0; i < action_set->action_profile_actions_size(); i++) {
       auto* action_profile_action =
-          action_profile_action_set->mutable_action_profile_actions()->Mutable(
-              i);
-      auto* action = action_profile_action->mutable_action();
-      const auto& action_id = action->action_id();
-      if (action_to_param_to_type_uri_.count(action_id) &&
-          action_to_param_to_bit_width_.count(action_id)) {
-        for (int j = 0; j < action->params_size(); j++) {
-          auto* param = action->mutable_params()->Mutable(j);
-          const auto& param_id = param->param_id();
-          std::string* uri = gtl::FindOrNull(
-              action_to_param_to_type_uri_[action_id], param_id);
-          int32* bit_width = gtl::FindOrNull(
-              action_to_param_to_bit_width_[action_id], param_id);
-          if (uri && bit_width) {
-            ASSIGN_OR_RETURN(
-                const std::string& new_val,
-                TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-            param->set_value(new_val);
-          }  // else, we don't modify the value if it doesn't need to be
-             // translated.
-        }
-      }
+          action_set->mutable_action_profile_actions()->Mutable(i);
+      ASSIGN_OR_RETURN(
+          *(action_profile_action->mutable_action()),
+          TranslateAction(action_profile_action->action(), to_sdk));
     }
-  }
+  }  // else, we don't translate action profile member id or group id.
 
   return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::ActionProfileMember>
 P4RuntimeBfrtTranslator::TranslateActionProfileMember(
-    const ::p4::v1::ActionProfileMember& action_prof_mem, const bool& to_sdk) {
+    const ::p4::v1::ActionProfileMember& act_prof_mem, const bool& to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
-  // TODO(Yi Tseng): Will support this in another PR.
-  return action_prof_mem;
+  ::p4::v1::ActionProfileMember translated_apm;
+  translated_apm.CopyFrom(act_prof_mem);
+  const auto& action_profile_id = act_prof_mem.action_profile_id();
+  const auto& member_id = act_prof_mem.member_id();
+  ASSIGN_OR_RETURN(*(translated_apm.mutable_action()),
+                   TranslateAction(translated_apm.action(), to_sdk));
+  return translated_apm;
 }
+
 ::util::StatusOr<::p4::v1::MeterEntry>
 P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              const bool& to_sdk) {
@@ -400,6 +370,7 @@ P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, const bool& to_sdk) {
@@ -407,6 +378,7 @@ P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::CounterEntry>
 P4RuntimeBfrtTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, const bool& to_sdk) {
@@ -414,6 +386,7 @@ P4RuntimeBfrtTranslator::TranslateCounterEntry(
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, const bool& to_sdk) {
@@ -421,6 +394,7 @@ P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::RegisterEntry>
 P4RuntimeBfrtTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, const bool& to_sdk) {
@@ -428,12 +402,39 @@ P4RuntimeBfrtTranslator::TranslateRegisterEntry(
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
+}
+
+::util::StatusOr<::p4::v1::Action> P4RuntimeBfrtTranslator::TranslateAction(
+    const ::p4::v1::Action& action, const bool& to_sdk) {
+  ::p4::v1::Action translated_action;
+  translated_action.CopyFrom(action);
+  const auto& action_id = action.action_id();
+  if (action_to_param_to_type_uri_.count(action_id) &&
+      action_to_param_to_bit_width_.count(action_id)) {
+    for (int j = 0; j < translated_action.params_size(); j++) {
+      auto* param = translated_action.mutable_params()->Mutable(j);
+      const auto& param_id = param->param_id();
+      std::string* uri =
+          gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
+      int32* bit_width =
+          gtl::FindOrNull(action_to_param_to_bit_width_[action_id], param_id);
+      if (uri && bit_width) {
+        ASSIGN_OR_RETURN(
+            const std::string& new_val,
+            TranslateValue(param->value(), *uri, to_sdk, *bit_width));
+        param->set_value(new_val);
+      }  // else, we don't modify the value if it doesn't need to be
+         // translated.
+    }
+  }
+  return translated_action;
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateValue(

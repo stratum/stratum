@@ -55,6 +55,9 @@ class P4RuntimeBfrtTranslator {
   TranslatePacketReplicationEngineEntry(
       const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk)
       LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::Action> TranslateAction(
+      const ::p4::v1::Action& action, const bool& to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
   static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
       BfSdeInterface* bf_sde_interface, int device_id) {
     return absl::WrapUnique(
