@@ -16,8 +16,7 @@ namespace hal {
 namespace barefoot {
 bool P4RuntimeBfrtTranslationWriterWrapper::Write(
     const ::p4::v1::ReadResponse& msg) {
-  ::p4::v1::ReadResponse translated_msg;
-  translated_msg.CopyFrom(msg);
+  ::p4::v1::ReadResponse translated_msg(msg);
 
   for (int i = 0; i < translated_msg.entities_size(); i++) {
     auto* entity = translated_msg.mutable_entities()->Mutable(i);

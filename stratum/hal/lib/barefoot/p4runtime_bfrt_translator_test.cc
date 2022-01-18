@@ -417,7 +417,7 @@ class TranslatorWriterWrapperTest : public ::testing::Test {
     writer_mock_ = absl::make_unique<WriterMock<::p4::v1::ReadResponse>>();
     p4runtime_bfrt_translator_mock_ =
         absl::make_unique<P4RuntimeBfrtTranslatorMock>();
-    wrapper_ = P4RuntimeBfrtTranslationWriterWrapper::CreateInstance(
+    wrapper_ = absl::make_unique<P4RuntimeBfrtTranslationWriterWrapper>(
         writer_mock_.get(), p4runtime_bfrt_translator_mock_.get());
   }
 

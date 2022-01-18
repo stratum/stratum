@@ -338,11 +338,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_ || !pipeline_initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  std::unique_ptr<P4RuntimeBfrtTranslationWriterWrapper> writer_wrapper;
+  P4RuntimeBfrtTranslationWriterWrapper writer_wrapper(
+      writer, p4runtime_bfrt_translator_);
   if (translation_enabled_) {
-    writer_wrapper = P4RuntimeBfrtTranslationWriterWrapper::CreateInstance(
-        writer, p4runtime_bfrt_translator_);
-    writer = writer_wrapper.get();
+    writer = &writer_wrapper;
   }
   ::p4::v1::ReadResponse resp;
   bool success = true;

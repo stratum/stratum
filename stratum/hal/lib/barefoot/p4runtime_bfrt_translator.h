@@ -128,28 +128,15 @@ class P4RuntimeBfrtTranslator {
 class P4RuntimeBfrtTranslationWriterWrapper
     : public WriterInterface<::p4::v1::ReadResponse> {
  public:
-  bool Write(const ::p4::v1::ReadResponse& msg) override;
-  ~P4RuntimeBfrtTranslationWriterWrapper() override {}
-  static std::unique_ptr<P4RuntimeBfrtTranslationWriterWrapper> CreateInstance(
-      WriterInterface<::p4::v1::ReadResponse>* writer,
-      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator) {
-    return absl::WrapUnique(new P4RuntimeBfrtTranslationWriterWrapper(
-        writer, p4runtime_bfrt_translator));
-  }
-
- protected:
-  // Default constructor
-  P4RuntimeBfrtTranslationWriterWrapper()
-      : writer_(nullptr), p4runtime_bfrt_translator_(nullptr) {}
-
- private:
   P4RuntimeBfrtTranslationWriterWrapper(
       WriterInterface<::p4::v1::ReadResponse>* writer,
       P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
       : writer_(ABSL_DIE_IF_NULL(writer)),
         p4runtime_bfrt_translator_(
             ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)) {}
+  bool Write(const ::p4::v1::ReadResponse& msg) override;
 
+ private:
   // The original writer, not owned by this class.
   WriterInterface<::p4::v1::ReadResponse>* writer_;
   // The pointer point to the translator, not owned by this class.
