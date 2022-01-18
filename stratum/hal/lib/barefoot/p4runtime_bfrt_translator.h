@@ -29,7 +29,7 @@ class P4RuntimeBfrtTranslator {
   virtual ::util::Status PushChassisConfig(const ChassisConfig& config)
       LOCKS_EXCLUDED(lock_);
   virtual ::util::Status PushForwardingPipelineConfig(
-      const ::p4::v1::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
+      const ::p4::config::v1::P4Info& p4info) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
       const ::p4::v1::TableEntry& entry, const bool& to_sdk)
       LOCKS_EXCLUDED(lock_);

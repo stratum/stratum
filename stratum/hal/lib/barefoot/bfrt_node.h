@@ -120,7 +120,6 @@ class BfrtNode {
 
   // Stores pipeline information for this node.
   BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
-  ::p4::v1::ForwardingPipelineConfig pipeline_config_ GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   // Not owned by this class.

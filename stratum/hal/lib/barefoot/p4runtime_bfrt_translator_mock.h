@@ -16,9 +16,8 @@ namespace barefoot {
 class P4RuntimeBfrtTranslatorMock : public P4RuntimeBfrtTranslator {
  public:
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
-  MOCK_METHOD1(
-      PushForwardingPipelineConfig,
-      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(PushForwardingPipelineConfig,
+               ::util::Status(const ::p4::config::v1::P4Info& p4info));
   MOCK_METHOD2(TranslateTableEntry,
                ::util::StatusOr<::p4::v1::TableEntry>(
                    const ::p4::v1::TableEntry& entry, const bool& to_sdk));

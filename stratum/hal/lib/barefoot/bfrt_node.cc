@@ -125,7 +125,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     *pipeline->mutable_scope() = profile.pipe_scope();
   }
   bfrt_config_ = bfrt_config;
-  pipeline_config_ = config;
   VLOG(2) << bfrt_config_.DebugString();
 
   return ::util::OkStatus();
@@ -151,7 +150,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   RETURN_IF_ERROR(
       bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
-      pipeline_config_));
+      bfrt_config_.programs(0).p4info()));
   translation_enabled_ = p4runtime_bfrt_translator_->TranslationEnabled() &&
                          FLAGS_experimental_enable_p4runtime_translation;
   pipeline_initialized_ = true;

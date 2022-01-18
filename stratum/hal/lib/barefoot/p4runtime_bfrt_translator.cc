@@ -117,9 +117,8 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushForwardingPipelineConfig(
-    const ::p4::v1::ForwardingPipelineConfig& config) {
+    const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
-  const auto& p4info = config.p4info();
 
   // Enable P4Runtime translation When user define a new type with
   // p4runtime_translation.
