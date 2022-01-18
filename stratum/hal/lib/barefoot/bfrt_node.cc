@@ -21,7 +21,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
-DEFINE_bool(enable_p4runtime_translation, false,
+DEFINE_bool(experimental_enable_p4runtime_translation, false,
             "Enable experimental P4runtime translation feature.");
 
 namespace stratum {
@@ -153,7 +153,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
       pipeline_config_));
   translation_enabled_ = p4runtime_bfrt_translator_->TranslationEnabled() &&
-                         FLAGS_enable_p4runtime_translation;
+                         FLAGS_experimental_enable_p4runtime_translation;
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }
