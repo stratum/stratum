@@ -18,72 +18,71 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
     const ::p4::v1::ReadResponse& msg) {
   ::p4::v1::ReadResponse translated_msg(msg);
 
-  for (int i = 0; i < translated_msg.entities_size(); i++) {
-    auto* entity = translated_msg.mutable_entities()->Mutable(i);
-    switch (entity->entity_case()) {
+  for (::p4::v1::Entity& entity : *translated_msg.mutable_entities()) {
+    switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
         auto status = p4runtime_bfrt_translator_->TranslateTableEntry(
-            entity->table_entry(), false);
+            entity.table_entry(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_table_entry() = status.ConsumeValueOrDie();
+        *entity.mutable_table_entry() = status.ConsumeValueOrDie();
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
         auto status = p4runtime_bfrt_translator_->TranslateActionProfileMember(
-            entity->action_profile_member(), false);
+            entity.action_profile_member(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_action_profile_member() = status.ConsumeValueOrDie();
+        *entity.mutable_action_profile_member() = status.ConsumeValueOrDie();
         break;
       }
       case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
         auto status =
             p4runtime_bfrt_translator_->TranslatePacketReplicationEngineEntry(
-                entity->packet_replication_engine_entry(), false);
+                entity.packet_replication_engine_entry(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_packet_replication_engine_entry() =
+        *entity.mutable_packet_replication_engine_entry() =
             status.ConsumeValueOrDie();
         break;
       }
       case ::p4::v1::Entity::kDirectCounterEntry: {
         auto status = p4runtime_bfrt_translator_->TranslateDirectCounterEntry(
-            entity->direct_counter_entry(), false);
+            entity.direct_counter_entry(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_direct_counter_entry() = status.ConsumeValueOrDie();
+        *entity.mutable_direct_counter_entry() = status.ConsumeValueOrDie();
         break;
       }
       case ::p4::v1::Entity::kCounterEntry: {
         auto status = p4runtime_bfrt_translator_->TranslateCounterEntry(
-            entity->counter_entry(), false);
+            entity.counter_entry(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_counter_entry() = status.ConsumeValueOrDie();
+        *entity.mutable_counter_entry() = status.ConsumeValueOrDie();
         break;
       }
       case ::p4::v1::Entity::kRegisterEntry: {
         auto status = p4runtime_bfrt_translator_->TranslateRegisterEntry(
-            entity->register_entry(), false);
+            entity.register_entry(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_register_entry() = status.ConsumeValueOrDie();
+        *entity.mutable_register_entry() = status.ConsumeValueOrDie();
         break;
       }
       case ::p4::v1::Entity::kMeterEntry: {
         auto status = p4runtime_bfrt_translator_->TranslateMeterEntry(
-            entity->meter_entry(), false);
+            entity.meter_entry(), false);
         if (!status.ok()) {
           return false;
         }
-        *entity->mutable_meter_entry() = status.ConsumeValueOrDie();
+        *entity.mutable_meter_entry() = status.ConsumeValueOrDie();
         break;
       }
       default:
@@ -271,58 +270,58 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
   const auto& table_id = translated_entry.table_id();
   if (table_to_field_to_type_uri_.count(table_id) &&
       table_to_field_to_bit_width_.count(table_id)) {
-    for (int i = 0; i < translated_entry.match_size(); i++) {
-      auto* field_match = translated_entry.mutable_match()->Mutable(i);
-      const auto& field_id = field_match->field_id();
+    for (::p4::v1::FieldMatch& field_match :
+         *translated_entry.mutable_match()) {
+      const auto& field_id = field_match.field_id();
       std::string* uri =
           gtl::FindOrNull(table_to_field_to_type_uri_[table_id], field_id);
       int32* bit_width =
           gtl::FindOrNull(table_to_field_to_bit_width_[table_id], field_id);
       if (uri && bit_width) {
-        switch (field_match->field_match_type_case()) {
+        switch (field_match.field_match_type_case()) {
           case ::p4::v1::FieldMatch::kExact: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->exact().value(), *uri,
+                             TranslateValue(field_match.exact().value(), *uri,
                                             to_sdk, *bit_width));
-            field_match->mutable_exact()->set_value(new_val);
+            field_match.mutable_exact()->set_value(new_val);
             break;
           }
           case ::p4::v1::FieldMatch::kTernary: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->ternary().value(),
-                                            *uri, to_sdk, *bit_width));
-            field_match->mutable_ternary()->set_value(new_val);
+                             TranslateValue(field_match.ternary().value(), *uri,
+                                            to_sdk, *bit_width));
+            field_match.mutable_ternary()->set_value(new_val);
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->lpm().value(), *uri,
+                             TranslateValue(field_match.lpm().value(), *uri,
                                             to_sdk, *bit_width));
-            field_match->mutable_lpm()->set_value(new_val);
+            field_match.mutable_lpm()->set_value(new_val);
             break;
           }
           case ::p4::v1::FieldMatch::kRange: {
             ASSIGN_OR_RETURN(const std::string& new_low_val,
-                             TranslateValue(field_match->range().low(), *uri,
+                             TranslateValue(field_match.range().low(), *uri,
                                             to_sdk, *bit_width));
             ASSIGN_OR_RETURN(const std::string& new_high_val,
-                             TranslateValue(field_match->range().high(), *uri,
+                             TranslateValue(field_match.range().high(), *uri,
                                             to_sdk, *bit_width));
-            field_match->mutable_range()->set_low(new_low_val);
-            field_match->mutable_range()->set_high(new_high_val);
+            field_match.mutable_range()->set_low(new_low_val);
+            field_match.mutable_range()->set_high(new_high_val);
             break;
           }
           case ::p4::v1::FieldMatch::kOptional: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->optional().value(),
+                             TranslateValue(field_match.optional().value(),
                                             *uri, to_sdk, *bit_width));
-            field_match->mutable_optional()->set_value(new_val);
+            field_match.mutable_optional()->set_value(new_val);
             break;
           }
           default:
             return MAKE_ERROR(ERR_UNIMPLEMENTED)
                    << "Unsupported field match type: "
-                   << field_match->ShortDebugString();
+                   << field_match.ShortDebugString();
         }
       }  // else, we don't modify the value if it doesn't need to be translated.
     }
@@ -333,9 +332,8 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
     const auto& action_id = action->action_id();
     if (action_to_param_to_type_uri_.count(action_id) &&
         action_to_param_to_bit_width_.count(action_id)) {
-      for (int i = 0; i < action->params_size(); i++) {
-        auto* param = action->mutable_params()->Mutable(i);
-        const auto& param_id = param->param_id();
+      for (::p4::v1::Action_Param& param : *action->mutable_params()) {
+        const auto& param_id = param.param_id();
         std::string* uri =
             gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
         int32* bit_width =
@@ -343,8 +341,8 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
         if (uri && bit_width) {
           ASSIGN_OR_RETURN(
               const std::string& new_val,
-              TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-          param->set_value(new_val);
+              TranslateValue(param.value(), *uri, to_sdk, *bit_width));
+          param.set_value(new_val);
         }  // else, we don't modify the value if it doesn't need to be
            // translated.
       }
@@ -353,18 +351,14 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
              ::p4::v1::TableAction::kActionProfileActionSet) {
     auto* action_profile_action_set =
         translated_entry.mutable_action()->mutable_action_profile_action_set();
-    for (int i = 0;
-         i < action_profile_action_set->action_profile_actions_size(); i++) {
-      auto* action_profile_action =
-          action_profile_action_set->mutable_action_profile_actions()->Mutable(
-              i);
-      auto* action = action_profile_action->mutable_action();
+    for (auto& action_profile_action :
+         *action_profile_action_set->mutable_action_profile_actions()) {
+      auto* action = action_profile_action.mutable_action();
       const auto& action_id = action->action_id();
       if (action_to_param_to_type_uri_.count(action_id) &&
           action_to_param_to_bit_width_.count(action_id)) {
-        for (int j = 0; j < action->params_size(); j++) {
-          auto* param = action->mutable_params()->Mutable(j);
-          const auto& param_id = param->param_id();
+        for (::p4::v1::Action_Param& param : *action->mutable_params()) {
+          const auto& param_id = param.param_id();
           std::string* uri = gtl::FindOrNull(
               action_to_param_to_type_uri_[action_id], param_id);
           int32* bit_width = gtl::FindOrNull(
@@ -372,8 +366,8 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
           if (uri && bit_width) {
             ASSIGN_OR_RETURN(
                 const std::string& new_val,
-                TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-            param->set_value(new_val);
+                TranslateValue(param.value(), *uri, to_sdk, *bit_width));
+            param.set_value(new_val);
           }  // else, we don't modify the value if it doesn't need to be
              // translated.
         }
