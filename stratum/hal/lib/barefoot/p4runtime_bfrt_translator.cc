@@ -262,7 +262,7 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 
 ::util::StatusOr<::p4::v1::TableEntry>
 P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
-                                             const bool& to_sdk) {
+                                             bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   ::p4::v1::TableEntry translated_entry;
   translated_entry.CopyFrom(entry);
@@ -380,57 +380,57 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
 
 ::util::StatusOr<::p4::v1::ActionProfileMember>
 P4RuntimeBfrtTranslator::TranslateActionProfileMember(
-    const ::p4::v1::ActionProfileMember& action_prof_mem, const bool& to_sdk) {
+    const ::p4::v1::ActionProfileMember& action_prof_mem, bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return action_prof_mem;
 }
 ::util::StatusOr<::p4::v1::MeterEntry>
 P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
-                                             const bool& to_sdk) {
+                                             bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
-    const ::p4::v1::DirectMeterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::CounterEntry>
 P4RuntimeBfrtTranslator::TranslateCounterEntry(
-    const ::p4::v1::CounterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::CounterEntry& entry, bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
-    const ::p4::v1::DirectCounterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::RegisterEntry>
 P4RuntimeBfrtTranslator::TranslateRegisterEntry(
-    const ::p4::v1::RegisterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
-    const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
   ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateValue(
-    const std::string& value, const std::string& uri, const bool& to_sdk,
-    const int32& bit_width) {
+    const std::string& value, const std::string& uri, bool to_sdk,
+    int32 bit_width) {
   if (uri.compare(kUriTnaPortId) == 0) {
     return TranslateTnaPortId(value, to_sdk, bit_width);
   }
@@ -438,7 +438,7 @@ P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateTnaPortId(
-    const std::string& value, const bool& to_sdk, const int32& bit_width) {
+    const std::string& value, bool to_sdk, int32 bit_width) {
   // Translate type "tna/PortId_t"
   if (to_sdk) {
     (void)bit_width;  // Ignore this since we always translate the value to

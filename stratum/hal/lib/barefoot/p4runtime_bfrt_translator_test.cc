@@ -72,8 +72,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
 
   ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                const std::string& uri,
-                                               const bool& to_sdk,
-                                               const int32& bit_width) {
+                                               bool to_sdk, int32 bit_width) {
     ::absl::ReaderMutexLock l(&p4rt_bfrt_translator_->lock_);
     return p4rt_bfrt_translator_->TranslateValue(value, uri, to_sdk, bit_width);
   }
