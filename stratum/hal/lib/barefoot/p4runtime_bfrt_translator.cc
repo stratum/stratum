@@ -14,86 +14,54 @@
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+::util::StatusOr<::p4::v1::WriteRequest>
+P4RuntimeBfrtTranslator::TranslateWriteRequest(
+    const ::p4::v1::WriteRequest& request) {
+  absl::ReaderMutexLock l(&lock_);
+  ::p4::v1::WriteRequest translated_request;
+  translated_request.CopyFrom(request);
+  for (int i = 0; i < translated_request.updates_size(); i++) {
+    auto* update = translated_request.mutable_updates()->Mutable(i);
+    ASSIGN_OR_RETURN(*update->mutable_entity(),
+                     TranslateEntity(update->entity(), true));
+  }
+  return translated_request;
+}
+
+::util::StatusOr<::p4::v1::ReadRequest>
+P4RuntimeBfrtTranslator::TranslateReadRequest(
+    const ::p4::v1::ReadRequest& request) {
+  absl::ReaderMutexLock l(&lock_);
+  ::p4::v1::ReadRequest translated_request;
+  translated_request.CopyFrom(request);
+  for (int i = 0; i < translated_request.entities_size(); i++) {
+    auto* entity = translated_request.mutable_entities()->Mutable(i);
+    ASSIGN_OR_RETURN(*entity, TranslateEntity(*entity, true));
+  }
+  return translated_request;
+}
+
+::util::StatusOr<::p4::v1::ReadResponse>
+P4RuntimeBfrtTranslator::TranslateReadResponse(
+    const ::p4::v1::ReadResponse& response) {
+  absl::ReaderMutexLock l(&lock_);
+  ::p4::v1::ReadResponse translated_response;
+  translated_response.CopyFrom(response);
+  for (int i = 0; i < translated_response.entities_size(); i++) {
+    auto* entity = translated_response.mutable_entities()->Mutable(i);
+    ASSIGN_OR_RETURN(*entity, TranslateEntity(*entity, false));
+  }
+  return translated_response;
+}
+
 bool P4RuntimeBfrtTranslationWriterWrapper::Write(
     const ::p4::v1::ReadResponse& msg) {
-  ::p4::v1::ReadResponse translated_msg;
-  translated_msg.CopyFrom(msg);
-
-  for (int i = 0; i < translated_msg.entities_size(); i++) {
-    auto* entity = translated_msg.mutable_entities()->Mutable(i);
-    switch (entity->entity_case()) {
-      case ::p4::v1::Entity::kTableEntry: {
-        auto status = p4runtime_bfrt_translator_->TranslateTableEntry(
-            entity->table_entry(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_table_entry() = status.ConsumeValueOrDie();
-        break;
-      }
-      case ::p4::v1::Entity::kActionProfileMember: {
-        auto status = p4runtime_bfrt_translator_->TranslateActionProfileMember(
-            entity->action_profile_member(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_action_profile_member() = status.ConsumeValueOrDie();
-        break;
-      }
-      case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
-        auto status =
-            p4runtime_bfrt_translator_->TranslatePacketReplicationEngineEntry(
-                entity->packet_replication_engine_entry(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_packet_replication_engine_entry() =
-            status.ConsumeValueOrDie();
-        break;
-      }
-      case ::p4::v1::Entity::kDirectCounterEntry: {
-        auto status = p4runtime_bfrt_translator_->TranslateDirectCounterEntry(
-            entity->direct_counter_entry(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_direct_counter_entry() = status.ConsumeValueOrDie();
-        break;
-      }
-      case ::p4::v1::Entity::kCounterEntry: {
-        auto status = p4runtime_bfrt_translator_->TranslateCounterEntry(
-            entity->counter_entry(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_counter_entry() = status.ConsumeValueOrDie();
-        break;
-      }
-      case ::p4::v1::Entity::kRegisterEntry: {
-        auto status = p4runtime_bfrt_translator_->TranslateRegisterEntry(
-            entity->register_entry(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_register_entry() = status.ConsumeValueOrDie();
-        break;
-      }
-      case ::p4::v1::Entity::kMeterEntry: {
-        auto status = p4runtime_bfrt_translator_->TranslateMeterEntry(
-            entity->meter_entry(), false);
-        if (!status.ok()) {
-          return false;
-        }
-        *entity->mutable_meter_entry() = status.ConsumeValueOrDie();
-        break;
-      }
-      default:
-        // Skip entity type that no need to be translated.
-        break;
-    }
+  auto status = p4runtime_bfrt_translator_->TranslateReadResponse(msg);
+  if (!status.ok()) {
+    return false;
   }
-
-  return writer_->Write(translated_msg);
+  return writer_->Write(status.ConsumeValueOrDie());
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushChassisConfig(
@@ -263,10 +231,69 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
   return ::util::OkStatus();
 }
 
+::util::StatusOr<::p4::v1::Entity> P4RuntimeBfrtTranslator::TranslateEntity(
+    const ::p4::v1::Entity& entity, const bool& to_sdk) {
+  ::p4::v1::Entity translate_entity;
+  translate_entity.CopyFrom(entity);
+  switch (translate_entity.entity_case()) {
+    case ::p4::v1::Entity::kTableEntry: {
+      ASSIGN_OR_RETURN(
+          *translate_entity.mutable_table_entry(),
+          TranslateTableEntry(translate_entity.table_entry(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kActionProfileMember: {
+      ASSIGN_OR_RETURN(*translate_entity.mutable_action_profile_member(),
+                       TranslateActionProfileMember(
+                           translate_entity.action_profile_member(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
+      ASSIGN_OR_RETURN(
+          *translate_entity.mutable_packet_replication_engine_entry(),
+          TranslatePacketReplicationEngineEntry(
+              translate_entity.packet_replication_engine_entry(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kDirectCounterEntry: {
+      ASSIGN_OR_RETURN(*translate_entity.mutable_direct_counter_entry(),
+                       TranslateDirectCounterEntry(
+                           translate_entity.direct_counter_entry(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kCounterEntry: {
+      ASSIGN_OR_RETURN(
+          *translate_entity.mutable_counter_entry(),
+          TranslateCounterEntry(translate_entity.counter_entry(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kRegisterEntry: {
+      ASSIGN_OR_RETURN(
+          *translate_entity.mutable_register_entry(),
+          TranslateRegisterEntry(translate_entity.register_entry(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kDirectMeterEntry: {
+      ASSIGN_OR_RETURN(*translate_entity.mutable_direct_meter_entry(),
+                       TranslateDirectMeterEntry(
+                           translate_entity.direct_meter_entry(), to_sdk));
+      break;
+    }
+    case ::p4::v1::Entity::kMeterEntry: {
+      ASSIGN_OR_RETURN(
+          *translate_entity.mutable_meter_entry(),
+          TranslateMeterEntry(translate_entity.meter_entry(), to_sdk));
+      break;
+    }
+    default:
+      break;
+  }
+  return translate_entity;
+}
+
 ::util::StatusOr<::p4::v1::TableEntry>
 P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
                                              const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   ::p4::v1::TableEntry translated_entry;
   translated_entry.CopyFrom(entry);
 
@@ -389,51 +416,56 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
 ::util::StatusOr<::p4::v1::ActionProfileMember>
 P4RuntimeBfrtTranslator::TranslateActionProfileMember(
     const ::p4::v1::ActionProfileMember& action_prof_mem, const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return action_prof_mem;
 }
 ::util::StatusOr<::p4::v1::MeterEntry>
 P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::CounterEntry>
 P4RuntimeBfrtTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::RegisterEntry>
 P4RuntimeBfrtTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk) {
-  ::absl::ReaderMutexLock l(&lock_);
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
+}
+
+::util::StatusOr<::p4::v1::StreamMessageRequest> TranslateStreamMessageRequest(
+    const ::p4::v1::StreamMessageRequest& request) {
+  // TODO(Yi Tseng): Will support this in another PR.
+  return request;
+}
+::util::StatusOr<::p4::v1::StreamMessageResponse>
+TranslateStreamMessageResponse(
+    const ::p4::v1::StreamMessageResponse& response) {
+  // TODO(Yi Tseng): Will support this in another PR.
+  return response;
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateValue(

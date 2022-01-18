@@ -30,44 +30,18 @@ class P4RuntimeBfrtTranslator {
       LOCKS_EXCLUDED(lock_);
   virtual ::util::Status PushForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
-      const ::p4::v1::TableEntry& entry, const bool& to_sdk)
+  virtual ::util::StatusOr<::p4::v1::WriteRequest> TranslateWriteRequest(
+      const ::p4::v1::WriteRequest& request) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::ReadRequest> TranslateReadRequest(
+      const ::p4::v1::ReadRequest& request) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::ReadResponse> TranslateReadResponse(
+      const ::p4::v1::ReadResponse& request) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::StreamMessageRequest>
+  TranslateStreamMessageRequest(const ::p4::v1::StreamMessageRequest& request)
       LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::ActionProfileMember>
-  TranslateActionProfileMember(const ::p4::v1::ActionProfileMember& entry,
-                               const bool& to_sdk) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::MeterEntry> TranslateMeterEntry(
-      const ::p4::v1::MeterEntry& entry, const bool& to_sdk)
-      LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::DirectMeterEntry>
-  TranslateDirectMeterEntry(const ::p4::v1::DirectMeterEntry& entry,
-                            const bool& to_sdk) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::CounterEntry> TranslateCounterEntry(
-      const ::p4::v1::CounterEntry& entry, const bool& to_sdk)
-      LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::DirectCounterEntry>
-  TranslateDirectCounterEntry(const ::p4::v1::DirectCounterEntry& entry,
-                              const bool& to_sdk) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::RegisterEntry> TranslateRegisterEntry(
-      const ::p4::v1::RegisterEntry& entry, const bool& to_sdk)
-      LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
-  TranslatePacketReplicationEngineEntry(
-      const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk)
-      LOCKS_EXCLUDED(lock_);
-  static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
-      BfSdeInterface* bf_sde_interface, int device_id) {
-    return absl::WrapUnique(
-        new P4RuntimeBfrtTranslator(bf_sde_interface, device_id));
-  }
-  virtual ::util::StatusOr<std::string> TranslateValue(const std::string& value,
-                                                       const std::string& uri,
-                                                       const bool& to_sdk,
-                                                       const int32& bit_width)
-      SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<std::string> TranslateTnaPortId(
-      const std::string& value, const bool& to_sdk, const int32& bit_width)
-      SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::StreamMessageResponse>
+  TranslateStreamMessageResponse(
+      const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
   virtual bool TranslationEnabled() LOCKS_EXCLUDED(lock_);
 
  protected:
@@ -84,6 +58,47 @@ class P4RuntimeBfrtTranslator {
       : device_id_(device_id),
         bf_sde_interface_(bf_sde_interface),
         translation_enabled_(false) {}
+  virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntity(
+    const ::p4::v1::Entity& entity, const bool& to_sdk)
+    SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
+      const ::p4::v1::TableEntry& entry, const bool& to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::ActionProfileMember>
+  TranslateActionProfileMember(const ::p4::v1::ActionProfileMember& entry,
+                               const bool& to_sdk) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::MeterEntry> TranslateMeterEntry(
+      const ::p4::v1::MeterEntry& entry, const bool& to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::DirectMeterEntry>
+  TranslateDirectMeterEntry(const ::p4::v1::DirectMeterEntry& entry,
+                            const bool& to_sdk) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::CounterEntry> TranslateCounterEntry(
+      const ::p4::v1::CounterEntry& entry, const bool& to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::DirectCounterEntry>
+  TranslateDirectCounterEntry(const ::p4::v1::DirectCounterEntry& entry,
+                              const bool& to_sdk) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::RegisterEntry> TranslateRegisterEntry(
+      const ::p4::v1::RegisterEntry& entry, const bool& to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
+  TranslatePacketReplicationEngineEntry(
+      const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
+  static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
+      BfSdeInterface* bf_sde_interface, int device_id) {
+    return absl::WrapUnique(
+        new P4RuntimeBfrtTranslator(bf_sde_interface, device_id));
+  }
+  virtual ::util::StatusOr<std::string> TranslateValue(const std::string& value,
+                                                       const std::string& uri,
+                                                       const bool& to_sdk,
+                                                       const int32& bit_width)
+      SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<std::string> TranslateTnaPortId(
+      const std::string& value, const bool& to_sdk, const int32& bit_width)
+      SHARED_LOCKS_REQUIRED(lock_);
 
   // Reader-writer lock used to protect access to specific states.
   mutable absl::Mutex lock_;
