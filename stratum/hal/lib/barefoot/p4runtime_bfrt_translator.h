@@ -4,10 +4,10 @@
 #ifndef STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_H_
 #define STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_H_
 
-#include <map>
 #include <memory>
 #include <string>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "p4/v1/p4runtime.pb.h"
@@ -98,30 +98,34 @@ class P4RuntimeBfrtTranslator {
   BfSdeInterface* bf_sde_interface_ = nullptr;
 
   // Maps between singleton port and SDK port, vice versa
-  std::map<uint32, uint32> singleton_port_to_sdk_port_ GUARDED_BY(lock_);
-  std::map<uint32, uint32> sdk_port_to_singleton_port_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, uint32> singleton_port_to_sdk_port_
+      GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, uint32> sdk_port_to_singleton_port_
+      GUARDED_BY(lock_);
   bool translation_enabled_ GUARDED_BY(lock_);
 
   // P4Runtime translation information
-  std::map<uint32, std::map<uint32, std::string>> table_to_field_to_type_uri_
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
+      table_to_field_to_type_uri_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
+      action_to_param_to_type_uri_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
+      ctrl_hdr_to_meta_to_type_uri_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, std::string> counter_to_type_uri_
       GUARDED_BY(lock_);
-  std::map<uint32, std::map<uint32, std::string>> action_to_param_to_type_uri_
+  absl::flat_hash_map<uint32, std::string> meter_to_type_uri_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, std::string> register_to_type_uri_
       GUARDED_BY(lock_);
-  std::map<uint32, std::map<uint32, std::string>> ctrl_hdr_to_meta_to_type_uri_
-      GUARDED_BY(lock_);
-  std::map<uint32, std::string> counter_to_type_uri_ GUARDED_BY(lock_);
-  std::map<uint32, std::string> meter_to_type_uri_ GUARDED_BY(lock_);
-  std::map<uint32, std::string> register_to_type_uri_ GUARDED_BY(lock_);
 
-  std::map<uint32, std::map<uint32, int32>> table_to_field_to_bit_width_
-      GUARDED_BY(lock_);
-  std::map<uint32, std::map<uint32, int32>> action_to_param_to_bit_width_
-      GUARDED_BY(lock_);
-  std::map<uint32, std::map<uint32, int32>> ctrl_hdr_to_meta_to_bit_width_
-      GUARDED_BY(lock_);
-  std::map<uint32, int32> counter_to_bit_width_ GUARDED_BY(lock_);
-  std::map<uint32, int32> meter_to_bit_width_ GUARDED_BY(lock_);
-  std::map<uint32, int32> register_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
+      table_to_field_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
+      action_to_param_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
+      ctrl_hdr_to_meta_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, int32> counter_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, int32> meter_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, int32> register_to_bit_width_ GUARDED_BY(lock_);
 
   friend class P4RuntimeBfrtTranslatorTest;
 };

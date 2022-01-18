@@ -125,8 +125,8 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
   if (p4info.has_type_info()) {
     // First, store types that need to be translated(will check the type_name
     // later)
-    std::map<std::string, std::string> type_name_to_uri;
-    std::map<std::string, int32> type_name_to_bit_width;
+    absl::flat_hash_map<std::string, std::string> type_name_to_uri;
+    absl::flat_hash_map<std::string, int32> type_name_to_bit_width;
     for (const auto& new_type : p4info.type_info().new_types()) {
       const auto& type_name = new_type.first;
       const auto& value = new_type.second;
