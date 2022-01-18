@@ -207,7 +207,7 @@ class BfrtNodeTest : public ::testing::Test {
   static constexpr int kLogicalPortId = 35;
   static constexpr uint32 kPortId = 941;
   static constexpr uint32 kL2McastGroupId = 20;
-  static constexpr char kBfConfigPipelineString[] = R"pb(
+  static constexpr char kBfConfigPipelineString[] = R"PROTO(
     p4_name: "prog1"
     bfruntime_info: "{json: true}"
     profiles {
@@ -215,26 +215,60 @@ class BfrtNodeTest : public ::testing::Test {
       context: "{json: true}"
       binary: "<raw bin>"
     }
-  )pb";
-  static constexpr char kValidP4InfoString[] = R"pb(
-    pkg_info { arch: "tna" }
+  )PROTO";
+  static constexpr char kValidP4InfoString[] = R"PROTO(
+    pkg_info {
+      arch: "tna"
+    }
     tables {
-      preamble { id: 33583783 name: "Ingress.control.table1" }
-      match_fields { id: 1 name: "field1" bitwidth: 9 match_type: EXACT }
-      match_fields { id: 2 name: "field2" bitwidth: 12 match_type: TERNARY }
-      match_fields { id: 3 name: "field3" bitwidth: 15 match_type: RANGE }
-      action_refs { id: 16794911 }
+      preamble {
+        id: 33583783
+        name: "Ingress.control.table1"
+      }
+      match_fields {
+        id: 1
+        name: "field1"
+        bitwidth: 9
+        match_type: EXACT
+      }
+      match_fields {
+        id: 2
+        name: "field2"
+        bitwidth: 12
+        match_type: TERNARY
+      }
+      match_fields {
+        id: 3
+        name: "field3"
+        bitwidth: 15
+        match_type: RANGE
+      }
+      action_refs {
+        id: 16794911
+      }
       const_default_action_id: 16836487
       direct_resource_ids: 318814845
       size: 1024
     }
     actions {
-      preamble { id: 16794911 name: "Ingress.control.action1" }
-      params { id: 1 name: "vlan_id" bitwidth: 12 }
+      preamble {
+        id: 16794911
+        name: "Ingress.control.action1"
+      }
+      params {
+        id: 1
+        name: "vlan_id"
+        bitwidth: 12
+      }
     }
     direct_counters {
-      preamble { id: 318814845 name: "Ingress.control.counter1" }
-      spec { unit: BOTH }
+      preamble {
+        id: 318814845
+        name: "Ingress.control.counter1"
+      }
+      spec {
+        unit: BOTH
+      }
       direct_table_id: 33583783
     }
     meters {
@@ -243,7 +277,9 @@ class BfrtNodeTest : public ::testing::Test {
         name: "Ingress.control.meter_bytes"
         alias: "meter_bytes"
       }
-      spec { unit: BYTES }
+      spec {
+        unit: BYTES
+      }
       size: 500
     }
     meters {
@@ -252,10 +288,12 @@ class BfrtNodeTest : public ::testing::Test {
         name: "Ingress.control.meter_packets"
         alias: "meter_packets"
       }
-      spec { unit: PACKETS }
+      spec {
+        unit: PACKETS
+      }
       size: 500
     }
-  )pb";
+  )PROTO";
 
   std::unique_ptr<BfrtTableManagerMock> bfrt_table_manager_mock_;
   std::unique_ptr<BfrtPacketioManagerMock> bfrt_packetio_manager_mock_;
