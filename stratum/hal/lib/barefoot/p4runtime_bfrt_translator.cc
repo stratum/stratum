@@ -65,7 +65,7 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushChassisConfig(
-    const ChassisConfig& config) {
+    const ChassisConfig& config, uint64 node_id) {
   ::absl::WriterMutexLock l(&lock_);
   // Port mapping for P4Runtime translation.
   singleton_port_to_sdk_port_.clear();
@@ -85,10 +85,8 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushForwardingPipelineConfig(
-    const ::p4::v1::ForwardingPipelineConfig& config) {
+  const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
-  const auto& p4info = config.p4info();
-
   // Enable P4Runtime translation When user define a new type with
   // p4runtime_translation.
   translation_enabled_ = false;
@@ -96,8 +94,8 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
   if (p4info.has_type_info()) {
     // First, store types that need to be translated(will check the type_name
     // later)
-    std::map<std::string, std::string> type_name_to_uri;
-    std::map<std::string, int32> type_name_to_bit_width;
+    absl::flat_hash_map<std::string, std::string> type_name_to_uri;
+    absl::flat_hash_map<std::string, int32> type_name_to_bit_width;
     for (const auto& new_type : p4info.type_info().new_types()) {
       const auto& type_name = new_type.first;
       const auto& value = new_type.second;
@@ -232,7 +230,7 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 }
 
 ::util::StatusOr<::p4::v1::Entity> P4RuntimeBfrtTranslator::TranslateEntity(
-    const ::p4::v1::Entity& entity, const bool& to_sdk) {
+    const ::p4::v1::Entity& entity, bool to_sdk) {
   ::p4::v1::Entity translate_entity;
   translate_entity.CopyFrom(entity);
   switch (translate_entity.entity_case()) {
@@ -293,65 +291,65 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 
 ::util::StatusOr<::p4::v1::TableEntry>
 P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
-                                             const bool& to_sdk) {
+                                             bool to_sdk) {
   ::p4::v1::TableEntry translated_entry;
   translated_entry.CopyFrom(entry);
 
   const auto& table_id = translated_entry.table_id();
   if (table_to_field_to_type_uri_.count(table_id) &&
       table_to_field_to_bit_width_.count(table_id)) {
-    for (int i = 0; i < translated_entry.match_size(); i++) {
-      auto* field_match = translated_entry.mutable_match()->Mutable(i);
-      const auto& field_id = field_match->field_id();
+    for (::p4::v1::FieldMatch& field_match :
+         *translated_entry.mutable_match()) {
+      const auto& field_id = field_match.field_id();
       std::string* uri =
           gtl::FindOrNull(table_to_field_to_type_uri_[table_id], field_id);
       int32* bit_width =
           gtl::FindOrNull(table_to_field_to_bit_width_[table_id], field_id);
       if (uri && bit_width) {
-        switch (field_match->field_match_type_case()) {
+        switch (field_match.field_match_type_case()) {
           case ::p4::v1::FieldMatch::kExact: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->exact().value(), *uri,
+                             TranslateValue(field_match.exact().value(), *uri,
                                             to_sdk, *bit_width));
-            field_match->mutable_exact()->set_value(new_val);
+            field_match.mutable_exact()->set_value(new_val);
             break;
           }
           case ::p4::v1::FieldMatch::kTernary: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->ternary().value(),
-                                            *uri, to_sdk, *bit_width));
-            field_match->mutable_ternary()->set_value(new_val);
+                             TranslateValue(field_match.ternary().value(), *uri,
+                                            to_sdk, *bit_width));
+            field_match.mutable_ternary()->set_value(new_val);
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->lpm().value(), *uri,
+                             TranslateValue(field_match.lpm().value(), *uri,
                                             to_sdk, *bit_width));
-            field_match->mutable_lpm()->set_value(new_val);
+            field_match.mutable_lpm()->set_value(new_val);
             break;
           }
           case ::p4::v1::FieldMatch::kRange: {
             ASSIGN_OR_RETURN(const std::string& new_low_val,
-                             TranslateValue(field_match->range().low(), *uri,
+                             TranslateValue(field_match.range().low(), *uri,
                                             to_sdk, *bit_width));
             ASSIGN_OR_RETURN(const std::string& new_high_val,
-                             TranslateValue(field_match->range().high(), *uri,
+                             TranslateValue(field_match.range().high(), *uri,
                                             to_sdk, *bit_width));
-            field_match->mutable_range()->set_low(new_low_val);
-            field_match->mutable_range()->set_high(new_high_val);
+            field_match.mutable_range()->set_low(new_low_val);
+            field_match.mutable_range()->set_high(new_high_val);
             break;
           }
           case ::p4::v1::FieldMatch::kOptional: {
             ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match->optional().value(),
+                             TranslateValue(field_match.optional().value(),
                                             *uri, to_sdk, *bit_width));
-            field_match->mutable_optional()->set_value(new_val);
+            field_match.mutable_optional()->set_value(new_val);
             break;
           }
           default:
             return MAKE_ERROR(ERR_UNIMPLEMENTED)
                    << "Unsupported field match type: "
-                   << field_match->ShortDebugString();
+                   << field_match.ShortDebugString();
         }
       }  // else, we don't modify the value if it doesn't need to be translated.
     }
@@ -362,9 +360,8 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
     const auto& action_id = action->action_id();
     if (action_to_param_to_type_uri_.count(action_id) &&
         action_to_param_to_bit_width_.count(action_id)) {
-      for (int i = 0; i < action->params_size(); i++) {
-        auto* param = action->mutable_params()->Mutable(i);
-        const auto& param_id = param->param_id();
+      for (::p4::v1::Action_Param& param : *action->mutable_params()) {
+        const auto& param_id = param.param_id();
         std::string* uri =
             gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
         int32* bit_width =
@@ -372,8 +369,8 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
         if (uri && bit_width) {
           ASSIGN_OR_RETURN(
               const std::string& new_val,
-              TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-          param->set_value(new_val);
+              TranslateValue(param.value(), *uri, to_sdk, *bit_width));
+          param.set_value(new_val);
         }  // else, we don't modify the value if it doesn't need to be
            // translated.
       }
@@ -382,18 +379,14 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
              ::p4::v1::TableAction::kActionProfileActionSet) {
     auto* action_profile_action_set =
         translated_entry.mutable_action()->mutable_action_profile_action_set();
-    for (int i = 0;
-         i < action_profile_action_set->action_profile_actions_size(); i++) {
-      auto* action_profile_action =
-          action_profile_action_set->mutable_action_profile_actions()->Mutable(
-              i);
-      auto* action = action_profile_action->mutable_action();
+    for (auto& action_profile_action :
+         *action_profile_action_set->mutable_action_profile_actions()) {
+      auto* action = action_profile_action.mutable_action();
       const auto& action_id = action->action_id();
       if (action_to_param_to_type_uri_.count(action_id) &&
           action_to_param_to_bit_width_.count(action_id)) {
-        for (int j = 0; j < action->params_size(); j++) {
-          auto* param = action->mutable_params()->Mutable(j);
-          const auto& param_id = param->param_id();
+        for (::p4::v1::Action_Param& param : *action->mutable_params()) {
+          const auto& param_id = param.param_id();
           std::string* uri = gtl::FindOrNull(
               action_to_param_to_type_uri_[action_id], param_id);
           int32* bit_width = gtl::FindOrNull(
@@ -401,8 +394,8 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
           if (uri && bit_width) {
             ASSIGN_OR_RETURN(
                 const std::string& new_val,
-                TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-            param->set_value(new_val);
+                TranslateValue(param.value(), *uri, to_sdk, *bit_width));
+            param.set_value(new_val);
           }  // else, we don't modify the value if it doesn't need to be
              // translated.
         }
@@ -415,43 +408,43 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
 
 ::util::StatusOr<::p4::v1::ActionProfileMember>
 P4RuntimeBfrtTranslator::TranslateActionProfileMember(
-    const ::p4::v1::ActionProfileMember& action_prof_mem, const bool& to_sdk) {
+    const ::p4::v1::ActionProfileMember& action_prof_mem, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return action_prof_mem;
 }
 ::util::StatusOr<::p4::v1::MeterEntry>
 P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
-                                             const bool& to_sdk) {
+                                             bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
-    const ::p4::v1::DirectMeterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::CounterEntry>
 P4RuntimeBfrtTranslator::TranslateCounterEntry(
-    const ::p4::v1::CounterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::CounterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
-    const ::p4::v1::DirectCounterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::RegisterEntry>
 P4RuntimeBfrtTranslator::TranslateRegisterEntry(
-    const ::p4::v1::RegisterEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
-    const ::p4::v1::PacketReplicationEngineEntry& entry, const bool& to_sdk) {
+    const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
@@ -469,8 +462,8 @@ TranslateStreamMessageResponse(
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateValue(
-    const std::string& value, const std::string& uri, const bool& to_sdk,
-    const int32& bit_width) {
+    const std::string& value, const std::string& uri, bool to_sdk,
+    int32 bit_width) {
   if (uri.compare(kUriTnaPortId) == 0) {
     return TranslateTnaPortId(value, to_sdk, bit_width);
   }
@@ -478,7 +471,7 @@ TranslateStreamMessageResponse(
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateTnaPortId(
-    const std::string& value, const bool& to_sdk, const int32& bit_width) {
+    const std::string& value, bool to_sdk, int32 bit_width) {
   // Translate type "tna/PortId_t"
   if (to_sdk) {
     (void)bit_width;  // Ignore this since we always translate the value to

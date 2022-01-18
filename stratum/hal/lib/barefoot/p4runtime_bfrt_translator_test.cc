@@ -57,7 +57,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
     const PortKey port_key(kSlot, kPort, kChannel);
     EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kDeviceId, port_key))
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkPortId)));
-    return p4rt_bfrt_translator_->PushChassisConfig(config);
+    return p4rt_bfrt_translator_->PushChassisConfig(config, kNodeId);
   }
 
   ::util::Status PushForwardingPipelineConfig() {
@@ -72,8 +72,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
 
   ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                const std::string& uri,
-                                               const bool& to_sdk,
-                                               const int32& bit_width) {
+                                               bool to_sdk, int32 bit_width) {
     ::absl::ReaderMutexLock l(&p4rt_bfrt_translator_->lock_);
     return p4rt_bfrt_translator_->TranslateValue(value, uri, to_sdk, bit_width);
   }
@@ -417,7 +416,7 @@ class TranslatorWriterWrapperTest : public ::testing::Test {
     writer_mock_ = absl::make_unique<WriterMock<::p4::v1::ReadResponse>>();
     p4runtime_bfrt_translator_mock_ =
         absl::make_unique<P4RuntimeBfrtTranslatorMock>();
-    wrapper_ = P4RuntimeBfrtTranslationWriterWrapper::CreateInstance(
+    wrapper_ = absl::make_unique<P4RuntimeBfrtTranslationWriterWrapper>(
         writer_mock_.get(), p4runtime_bfrt_translator_mock_.get());
   }
 

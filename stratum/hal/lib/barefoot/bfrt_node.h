@@ -68,8 +68,8 @@ class BfrtNode {
       BfrtPacketioManager* bfrt_packetio_manager,
       BfrtPreManager* bfrt_pre_manager,
       BfrtCounterManager* bfrt_counter_manager,
-      BfSdeInterface* bf_sde_interface, int device_id,
-      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator);
+      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+      BfSdeInterface* bf_sde_interface, int device_id);
 
   // BfrtNode is neither copyable nor movable.
   BfrtNode(const BfrtNode&) = delete;
@@ -88,8 +88,8 @@ class BfrtNode {
            BfrtPacketioManager* bfrt_packetio_manager,
            BfrtPreManager* bfrt_pre_manager,
            BfrtCounterManager* bfrt_counter_manager,
-           BfSdeInterface* bf_sde_interface, int device_id,
-           P4RuntimeBfrtTranslator* p4runtime_bfrt_translator);
+           P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+           BfSdeInterface* bf_sde_interface, int device_id);
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
@@ -120,7 +120,6 @@ class BfrtNode {
 
   // Stores pipeline information for this node.
   BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
-  ::p4::v1::ForwardingPipelineConfig pipeline_config_ GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   // Not owned by this class.

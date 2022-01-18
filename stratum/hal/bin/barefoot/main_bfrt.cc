@@ -60,8 +60,8 @@ namespace barefoot {
       P4RuntimeBfrtTranslator::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_packetio_manger.get(),
-      bfrt_pre_manager.get(), bfrt_counter_manager.get(), bf_sde_wrapper,
-      device_id, p4runtime_bfrt_translator.get());
+      bfrt_pre_manager.get(), bfrt_counter_manager.get(),
+      p4runtime_bfrt_translator.get(), bf_sde_wrapper, device_id);
   PhalInterface* phal = phal::Phal::CreateSingleton();
   std::map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},

@@ -139,7 +139,8 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
-
+  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
+      bfrt_config_.programs(0).p4info()));
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }

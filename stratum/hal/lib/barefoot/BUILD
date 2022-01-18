@@ -640,6 +640,7 @@ stratum_cc_library(
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:macros",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
     ],

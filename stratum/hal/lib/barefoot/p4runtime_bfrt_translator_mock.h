@@ -18,7 +18,7 @@ class P4RuntimeBfrtTranslatorMock : public P4RuntimeBfrtTranslator {
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
   MOCK_METHOD1(
       PushForwardingPipelineConfig,
-      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+      ::util::Status(const ::p4::config::v1::P4Info& p4info));
   MOCK_METHOD1(TranslateWriteRequest,
                ::util::StatusOr<::p4::v1::WriteRequest>(
                    const ::p4::v1::WriteRequest& request))
