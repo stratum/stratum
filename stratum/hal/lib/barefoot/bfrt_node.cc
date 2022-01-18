@@ -29,8 +29,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
                    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
-                   BfSdeInterface* bf_sde_interface,
-                   int device_id)
+                   BfSdeInterface* bf_sde_interface, int device_id)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_config_(),
@@ -39,7 +38,6 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
-      translation_enabled_(false),
       node_id_(0),
       device_id_(device_id) {}
 
@@ -52,7 +50,6 @@ BfrtNode::BfrtNode()
       bfrt_packetio_manager_(nullptr),
       bfrt_pre_manager_(nullptr),
       bfrt_counter_manager_(nullptr),
-      translation_enabled_(false),
       node_id_(0),
       device_id_(-1) {}
 

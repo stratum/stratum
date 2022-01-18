@@ -3,6 +3,7 @@
 
 #include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator.h"
 
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/status/status_macros.h"
@@ -15,16 +16,20 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+DEFINE_bool(experimental_enable_p4runtime_translation, false,
+            "Enable experimental P4runtime translation feature.");
+
 ::util::StatusOr<::p4::v1::WriteRequest>
 P4RuntimeBfrtTranslator::TranslateWriteRequest(
     const ::p4::v1::WriteRequest& request) {
   absl::ReaderMutexLock l(&lock_);
-  ::p4::v1::WriteRequest translated_request;
-  translated_request.CopyFrom(request);
-  for (int i = 0; i < translated_request.updates_size(); i++) {
-    auto* update = translated_request.mutable_updates()->Mutable(i);
-    ASSIGN_OR_RETURN(*update->mutable_entity(),
-                     TranslateEntity(update->entity(), true));
+  if (!translation_enabled_) {
+    return request;
+  }
+  ::p4::v1::WriteRequest translated_request(request);
+  for (::p4::v1::Update& update : *translated_request.mutable_updates()) {
+    ASSIGN_OR_RETURN(*update.mutable_entity(),
+                     TranslateEntity(update.entity(), true));
   }
   return translated_request;
 }
@@ -33,11 +38,12 @@ P4RuntimeBfrtTranslator::TranslateWriteRequest(
 P4RuntimeBfrtTranslator::TranslateReadRequest(
     const ::p4::v1::ReadRequest& request) {
   absl::ReaderMutexLock l(&lock_);
-  ::p4::v1::ReadRequest translated_request;
-  translated_request.CopyFrom(request);
-  for (int i = 0; i < translated_request.entities_size(); i++) {
-    auto* entity = translated_request.mutable_entities()->Mutable(i);
-    ASSIGN_OR_RETURN(*entity, TranslateEntity(*entity, true));
+  if (!translation_enabled_) {
+    return request;
+  }
+  ::p4::v1::ReadRequest translated_request(request);
+  for (::p4::v1::Entity& entity : *translated_request.mutable_entities()) {
+    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, true));
   }
   return translated_request;
 }
@@ -46,11 +52,12 @@ P4RuntimeBfrtTranslator::TranslateReadRequest(
 P4RuntimeBfrtTranslator::TranslateReadResponse(
     const ::p4::v1::ReadResponse& response) {
   absl::ReaderMutexLock l(&lock_);
-  ::p4::v1::ReadResponse translated_response;
-  translated_response.CopyFrom(response);
-  for (int i = 0; i < translated_response.entities_size(); i++) {
-    auto* entity = translated_response.mutable_entities()->Mutable(i);
-    ASSIGN_OR_RETURN(*entity, TranslateEntity(*entity, false));
+  if (!translation_enabled_) {
+    return response;
+  }
+  ::p4::v1::ReadResponse translated_response(response);
+  for (::p4::v1::Entity& entity : *translated_response.mutable_entities()) {
+    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, false));
   }
   return translated_response;
 }
@@ -85,8 +92,12 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushForwardingPipelineConfig(
-  const ::p4::config::v1::P4Info& p4info) {
+    const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
+  if (!FLAGS_experimental_enable_p4runtime_translation) {
+    translation_enabled_ = false;
+    return ::util::OkStatus();
+  }
   // Enable P4Runtime translation When user define a new type with
   // p4runtime_translation.
   translation_enabled_ = false;
@@ -231,70 +242,67 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 
 ::util::StatusOr<::p4::v1::Entity> P4RuntimeBfrtTranslator::TranslateEntity(
     const ::p4::v1::Entity& entity, bool to_sdk) {
-  ::p4::v1::Entity translate_entity;
-  translate_entity.CopyFrom(entity);
-  switch (translate_entity.entity_case()) {
+  ::p4::v1::Entity translated_entity(entity);
+  switch (translated_entity.entity_case()) {
     case ::p4::v1::Entity::kTableEntry: {
       ASSIGN_OR_RETURN(
-          *translate_entity.mutable_table_entry(),
-          TranslateTableEntry(translate_entity.table_entry(), to_sdk));
+          *translated_entity.mutable_table_entry(),
+          TranslateTableEntry(translated_entity.table_entry(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kActionProfileMember: {
-      ASSIGN_OR_RETURN(*translate_entity.mutable_action_profile_member(),
+      ASSIGN_OR_RETURN(*translated_entity.mutable_action_profile_member(),
                        TranslateActionProfileMember(
-                           translate_entity.action_profile_member(), to_sdk));
+                           translated_entity.action_profile_member(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
       ASSIGN_OR_RETURN(
-          *translate_entity.mutable_packet_replication_engine_entry(),
+          *translated_entity.mutable_packet_replication_engine_entry(),
           TranslatePacketReplicationEngineEntry(
-              translate_entity.packet_replication_engine_entry(), to_sdk));
+              translated_entity.packet_replication_engine_entry(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kDirectCounterEntry: {
-      ASSIGN_OR_RETURN(*translate_entity.mutable_direct_counter_entry(),
+      ASSIGN_OR_RETURN(*translated_entity.mutable_direct_counter_entry(),
                        TranslateDirectCounterEntry(
-                           translate_entity.direct_counter_entry(), to_sdk));
+                           translated_entity.direct_counter_entry(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kCounterEntry: {
       ASSIGN_OR_RETURN(
-          *translate_entity.mutable_counter_entry(),
-          TranslateCounterEntry(translate_entity.counter_entry(), to_sdk));
+          *translated_entity.mutable_counter_entry(),
+          TranslateCounterEntry(translated_entity.counter_entry(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kRegisterEntry: {
       ASSIGN_OR_RETURN(
-          *translate_entity.mutable_register_entry(),
-          TranslateRegisterEntry(translate_entity.register_entry(), to_sdk));
+          *translated_entity.mutable_register_entry(),
+          TranslateRegisterEntry(translated_entity.register_entry(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kDirectMeterEntry: {
-      ASSIGN_OR_RETURN(*translate_entity.mutable_direct_meter_entry(),
+      ASSIGN_OR_RETURN(*translated_entity.mutable_direct_meter_entry(),
                        TranslateDirectMeterEntry(
-                           translate_entity.direct_meter_entry(), to_sdk));
+                           translated_entity.direct_meter_entry(), to_sdk));
       break;
     }
     case ::p4::v1::Entity::kMeterEntry: {
       ASSIGN_OR_RETURN(
-          *translate_entity.mutable_meter_entry(),
-          TranslateMeterEntry(translate_entity.meter_entry(), to_sdk));
+          *translated_entity.mutable_meter_entry(),
+          TranslateMeterEntry(translated_entity.meter_entry(), to_sdk));
       break;
     }
     default:
       break;
   }
-  return translate_entity;
+  return translated_entity;
 }
 
 ::util::StatusOr<::p4::v1::TableEntry>
 P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
                                              bool to_sdk) {
-  ::p4::v1::TableEntry translated_entry;
-  translated_entry.CopyFrom(entry);
-
+  ::p4::v1::TableEntry translated_entry(entry);
   const auto& table_id = translated_entry.table_id();
   if (table_to_field_to_type_uri_.count(table_id) &&
       table_to_field_to_bit_width_.count(table_id)) {
@@ -449,13 +457,14 @@ P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
   return entry;
 }
 
-::util::StatusOr<::p4::v1::StreamMessageRequest> TranslateStreamMessageRequest(
+::util::StatusOr<::p4::v1::StreamMessageRequest>
+P4RuntimeBfrtTranslator::TranslateStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& request) {
   // TODO(Yi Tseng): Will support this in another PR.
   return request;
 }
 ::util::StatusOr<::p4::v1::StreamMessageResponse>
-TranslateStreamMessageResponse(
+P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
     const ::p4::v1::StreamMessageResponse& response) {
   // TODO(Yi Tseng): Will support this in another PR.
   return response;

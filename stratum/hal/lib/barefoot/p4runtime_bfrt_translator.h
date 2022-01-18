@@ -44,6 +44,11 @@ class P4RuntimeBfrtTranslator {
   TranslateStreamMessageResponse(
       const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
   virtual bool TranslationEnabled() LOCKS_EXCLUDED(lock_);
+  static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
+      BfSdeInterface* bf_sde_interface, int device_id) {
+    return absl::WrapUnique(
+        new P4RuntimeBfrtTranslator(bf_sde_interface, device_id));
+  }
 
  protected:
   // Default constructor.
@@ -60,8 +65,7 @@ class P4RuntimeBfrtTranslator {
         bf_sde_interface_(bf_sde_interface),
         translation_enabled_(false) {}
   virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntity(
-    const ::p4::v1::Entity& entity, bool to_sdk)
-    SHARED_LOCKS_REQUIRED(lock_);
+      const ::p4::v1::Entity& entity, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
       const ::p4::v1::TableEntry& entry, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
@@ -87,11 +91,6 @@ class P4RuntimeBfrtTranslator {
   TranslatePacketReplicationEngineEntry(
       const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
-  static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
-      BfSdeInterface* bf_sde_interface, int device_id) {
-    return absl::WrapUnique(
-        new P4RuntimeBfrtTranslator(bf_sde_interface, device_id));
-  }
   virtual ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                        const std::string& uri,
                                                        bool to_sdk,

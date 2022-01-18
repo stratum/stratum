@@ -135,9 +135,6 @@ class BfrtNode {
   // translator logic. Not owned by this class.
   P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_ = nullptr;
 
-  // Determine if we need to perform P4Runtime translation.
-  bool translation_enabled_ = false;
-
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the
   // lifetime of the class.
