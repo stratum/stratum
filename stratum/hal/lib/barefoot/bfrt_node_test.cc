@@ -63,7 +63,7 @@ class BfrtNodeTest : public ::testing::Test {
     bfrt_node_ = BfrtNode::CreateInstance(
         bfrt_table_manager_mock_.get(), bfrt_packetio_manager_mock_.get(),
         bfrt_pre_manager_mock_.get(), bfrt_counter_manager_mock_.get(),
-        bf_sde_mock_.get(), kDeviceId, p4runtime_bfrt_translator_mock_.get());
+        p4runtime_bfrt_translator_mock_.get(), bf_sde_mock_.get(), kDeviceId);
   }
 
   ::util::Status PushChassisConfig(const ChassisConfig& config,

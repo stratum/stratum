@@ -68,8 +68,8 @@ class BfrtNode {
       BfrtPacketioManager* bfrt_packetio_manager,
       BfrtPreManager* bfrt_pre_manager,
       BfrtCounterManager* bfrt_counter_manager,
-      BfSdeInterface* bf_sde_interface, int device_id,
-      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator);
+      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+      BfSdeInterface* bf_sde_interface, int device_id);
 
   // BfrtNode is neither copyable nor movable.
   BfrtNode(const BfrtNode&) = delete;
@@ -88,8 +88,8 @@ class BfrtNode {
            BfrtPacketioManager* bfrt_packetio_manager,
            BfrtPreManager* bfrt_pre_manager,
            BfrtCounterManager* bfrt_counter_manager,
-           BfSdeInterface* bf_sde_interface, int device_id,
-           P4RuntimeBfrtTranslator* p4runtime_bfrt_translator);
+           P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+           BfSdeInterface* bf_sde_interface, int device_id);
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(

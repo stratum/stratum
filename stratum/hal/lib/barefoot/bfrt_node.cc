@@ -32,8 +32,8 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
-                   BfSdeInterface* bf_sde_interface, int device_id,
-                   P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
+                   P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+                   BfSdeInterface* bf_sde_interface, int device_id)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_config_(),
@@ -66,12 +66,12 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtTableManager* bfrt_table_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
-    BfSdeInterface* bf_sde_interface, int device_id,
-    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator) {
-  return absl::WrapUnique(new BfrtNode(bfrt_table_manager,
-                                       bfrt_packetio_manager, bfrt_pre_manager,
-                                       bfrt_counter_manager, bf_sde_interface,
-                                       device_id, p4runtime_bfrt_translator));
+    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+    BfSdeInterface* bf_sde_interface, int device_id) {
+  return absl::WrapUnique(
+      new BfrtNode(bfrt_table_manager, bfrt_packetio_manager, bfrt_pre_manager,
+                   bfrt_counter_manager, p4runtime_bfrt_translator,
+                   bf_sde_interface, device_id));
 }
 
 ::util::Status BfrtNode::PushChassisConfig(const ChassisConfig& config,
