@@ -82,7 +82,8 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   node_id_ = node_id;
   // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
-  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushChassisConfig(config));
+  RETURN_IF_ERROR(
+      p4runtime_bfrt_translator_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
   return ::util::OkStatus();

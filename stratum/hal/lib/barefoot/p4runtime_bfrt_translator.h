@@ -26,7 +26,8 @@ namespace barefoot {
 class P4RuntimeBfrtTranslator {
  public:
   virtual ~P4RuntimeBfrtTranslator() = default;
-  virtual ::util::Status PushChassisConfig(const ChassisConfig& config)
+  virtual ::util::Status PushChassisConfig(const ChassisConfig& config,
+                                           uint64 node_id)
       LOCKS_EXCLUDED(lock_);
   virtual ::util::Status PushForwardingPipelineConfig(
       const ::p4::config::v1::P4Info& p4info) LOCKS_EXCLUDED(lock_);

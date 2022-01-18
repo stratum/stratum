@@ -57,7 +57,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
     const PortKey port_key(kSlot, kPort, kChannel);
     EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kDeviceId, port_key))
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkPortId)));
-    return p4rt_bfrt_translator_->PushChassisConfig(config);
+    return p4rt_bfrt_translator_->PushChassisConfig(config, kNodeId);
   }
 
   ::util::Status PushForwardingPipelineConfig() {

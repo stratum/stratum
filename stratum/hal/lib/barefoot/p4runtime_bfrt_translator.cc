@@ -95,7 +95,7 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushChassisConfig(
-    const ChassisConfig& config) {
+    const ChassisConfig& config, uint64 node_id) {
   ::absl::WriterMutexLock l(&lock_);
   // Port mapping for P4Runtime translation.
   singleton_port_to_sdk_port_.clear();
