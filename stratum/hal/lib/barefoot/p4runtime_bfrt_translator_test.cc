@@ -265,7 +265,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_UnknownUri) {
 
   // Unknown URI
   EXPECT_THAT(
-      TranslateValue("some value", "foo", false, kTnaPortIdBitWidth).status(),
+      TranslateValue("some value", "foo", /*to_sdk=*/false, kTnaPortIdBitWidth)
+          .status(),
       DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_UNIMPLEMENTED,
                                        "Unknown URI: foo")));
 }
@@ -273,25 +274,25 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_UnknownUri) {
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_InvalidSize) {
   EXPECT_OK(PushChassisConfig());
   // Invalid size
-  EXPECT_THAT(
-      TranslateValue("some value", kUriTnaPortId, false, kTnaPortIdBitWidth)
-          .status(),
-      DerivedFromStatus(
-          ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                         "'value.size() == "
-                         "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
+  EXPECT_THAT(TranslateValue("some value", kUriTnaPortId, /*to_sdk=*/false,
+                             kTnaPortIdBitWidth)
+                  .status(),
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'value.size() == "
+                  "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToSdk) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
-  EXPECT_THAT(
-      TranslateValue(singleton_port_id, kUriTnaPortId, true, kTnaPortIdBitWidth)
-          .status(),
-      DerivedFromStatus(::util::Status(
-          StratumErrorSpace(), ERR_INVALID_PARAM,
-          "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
+  EXPECT_THAT(TranslateValue(singleton_port_id, kUriTnaPortId, /*to_sdk=*/true,
+                             kTnaPortIdBitWidth)
+                  .status(),
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
@@ -299,7 +300,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
   // No mapping from sdk port to singleton port
   auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
   EXPECT_THAT(
-      TranslateValue(sdk_port_id, kUriTnaPortId, false, kTnaPortIdBitWidth)
+      TranslateValue(sdk_port_id, kUriTnaPortId, /*to_sdk=*/false,
+                     kTnaPortIdBitWidth)
           .status(),
       DerivedFromStatus(::util::Status(
           StratumErrorSpace(), ERR_INVALID_PARAM,
@@ -311,9 +313,9 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
   // Translate from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
   auto expected_value = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
-  auto actual_value =
-      TranslateValue(singleton_port_id, kUriTnaPortId, true, kTnaPortIdBitWidth)
-          .ValueOrDie();
+  auto actual_value = TranslateValue(singleton_port_id, kUriTnaPortId,
+                                     /*to_sdk=*/true, kTnaPortIdBitWidth)
+                          .ValueOrDie();
   EXPECT_EQ(expected_value, actual_value);
 }
 
@@ -322,9 +324,9 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
   // Translate from sdk port to singleton port
   auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
   auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
-  auto actual_value =
-      TranslateValue(sdk_port_id, kUriTnaPortId, false, kTnaPortIdBitWidth)
-          .ValueOrDie();
+  auto actual_value = TranslateValue(sdk_port_id, kUriTnaPortId,
+                                     /*to_sdk=*/false, kTnaPortIdBitWidth)
+                          .ValueOrDie();
   EXPECT_EQ(expected_value, actual_value);
 }
 

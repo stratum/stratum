@@ -28,7 +28,7 @@ P4RuntimeBfrtTranslator::TranslateWriteRequest(
   ::p4::v1::WriteRequest translated_request(request);
   for (::p4::v1::Update& update : *translated_request.mutable_updates()) {
     ASSIGN_OR_RETURN(*update.mutable_entity(),
-                     TranslateEntity(update.entity(), true));
+                     TranslateEntity(update.entity(), /*to_sdk=*/true));
   }
   return translated_request;
 }
@@ -42,7 +42,7 @@ P4RuntimeBfrtTranslator::TranslateReadRequest(
   }
   ::p4::v1::ReadRequest translated_request(request);
   for (::p4::v1::Entity& entity : *translated_request.mutable_entities()) {
-    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, true));
+    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, /*to_sdk=*/true));
   }
   return translated_request;
 }
@@ -56,7 +56,7 @@ P4RuntimeBfrtTranslator::TranslateReadResponse(
   }
   ::p4::v1::ReadResponse translated_response(response);
   for (::p4::v1::Entity& entity : *translated_response.mutable_entities()) {
-    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, false));
+    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, /*to_sdk=*/false));
   }
   return translated_response;
 }
