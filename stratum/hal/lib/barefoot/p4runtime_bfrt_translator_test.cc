@@ -61,13 +61,9 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
   }
 
   ::util::Status PushForwardingPipelineConfig() {
-    ::p4::v1::ForwardingPipelineConfig config;
-    BfPipelineConfig bf_config;
-    EXPECT_OK(ParseProtoFromString(kBfConfigPipelineString, &bf_config));
-    std::string bf_config_bytes;
-    CHECK(bf_config.SerializeToString(&bf_config_bytes));
-    EXPECT_OK(ParseProtoFromString(kP4InfoString, config.mutable_p4info()));
-    return p4rt_bfrt_translator_->PushForwardingPipelineConfig(config);
+    ::p4::config::v1::P4Info p4info;
+    EXPECT_OK(ParseProtoFromString(kP4InfoString, &p4info));
+    return p4rt_bfrt_translator_->PushForwardingPipelineConfig(p4info);
   }
 
   ::util::StatusOr<std::string> TranslateValue(const std::string& value,
@@ -81,51 +77,60 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
   std::unique_ptr<P4RuntimeBfrtTranslator> p4rt_bfrt_translator_;
 
   static constexpr int kDeviceId = 1;
+  static constexpr uint64 kNodeId = 0;
   static constexpr uint32 kPortId = 1;
   static constexpr uint32 kSdkPortId = 300;
   static constexpr int32 kPort = 1;
   static constexpr int32 kSlot = 1;
   static constexpr int32 kChannel = 1;
 
-  static constexpr char kChassisConfig[] = R"pb(
-    nodes { id: 1 }
-    singleton_ports { id: 1 slot: 1 port: 1 channel: 1 }
-  )pb";
-
-  static constexpr char kBfConfigPipelineString[] = R"pb(
-    p4_name: "prog1"
-    bfruntime_info: "{json: true}"
-    profiles {
-      profile_name: "pipe1"
-      context: "{json: true}"
-      binary: "<raw bin>"
+  static constexpr char kChassisConfig[] = R"PROTO(
+    nodes {
+      id: 1
     }
-  )pb";
+    singleton_ports {
+      id: 1
+      slot: 1
+      port: 1
+      channel: 1
+    }
+  )PROTO";
 
-  static constexpr char kP4InfoString[] = R"pb(
-    pkg_info { arch: "tna" }
+  static constexpr char kP4InfoString[] = R"PROTO(
+    pkg_info {
+      arch: "tna"
+    }
     tables {
-      preamble { id: 33583783 name: "Ingress.control.table1" }
+      preamble {
+        id: 33583783
+        name: "Ingress.control.table1"
+      }
       match_fields {
         id: 1
         name: "field1"
         bitwidth: 9
         match_type: EXACT
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 2
         name: "field2"
         bitwidth: 9
         match_type: TERNARY
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 3
         name: "field3"
         bitwidth: 9
         match_type: RANGE
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 4
@@ -133,24 +138,42 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
         bitwidth: 32
         match_type: EXACT
       }
-      action_refs { id: 16794911 }
+      action_refs {
+        id: 16794911
+      }
       const_default_action_id: 16836487
       size: 1024
     }
     actions {
-      preamble { id: 16794911 name: "Ingress.control.action1" }
+      preamble {
+        id: 16794911
+        name: "Ingress.control.action1"
+      }
       params {
         id: 1
         name: "port_id"
         bitwidth: 9
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
-      params { id: 2 name: "don't translate" bitwidth: 32 }
+      params {
+        id: 2
+        name: "don't translate"
+        bitwidth: 32
+      }
     }
     counters {
-      preamble { id: 318814845 name: "Ingress.control.counter1" }
-      spec { unit: BOTH }
-      index_type_name { name: "FabricPortId_t" }
+      preamble {
+        id: 318814845
+        name: "Ingress.control.counter1"
+      }
+      spec {
+        unit: BOTH
+      }
+      index_type_name {
+        name: "FabricPortId_t"
+      }
     }
     meters {
       preamble {
@@ -158,17 +181,26 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
         name: "Ingress.control.meter_bytes"
         alias: "meter_bytes"
       }
-      spec { unit: BYTES }
-      index_type_name { name: "FabricPortId_t" }
+      spec {
+        unit: BYTES
+      }
+      index_type_name {
+        name: "FabricPortId_t"
+      }
       size: 500
     }
     type_info {
       new_types {
         key: "FabricPortId_t"
-        value { translated_type { uri: "tna/PortId_t" sdn_bitwidth: 32 } }
+        value {
+          translated_type {
+            uri: "tna/PortId_t"
+            sdn_bitwidth: 32
+          }
+        }
       }
     }
-  )pb";
+  )PROTO";
 };
 
 constexpr int P4RuntimeBfrtTranslatorTest::kDeviceId;
@@ -179,7 +211,6 @@ constexpr int32 P4RuntimeBfrtTranslatorTest::kSlot;
 constexpr int32
     P4RuntimeBfrtTranslatorTest::P4RuntimeBfrtTranslatorTest::kChannel;
 constexpr char P4RuntimeBfrtTranslatorTest::kChassisConfig[];
-constexpr char P4RuntimeBfrtTranslatorTest::kBfConfigPipelineString[];
 constexpr char P4RuntimeBfrtTranslatorTest::kP4InfoString[];
 
 TEST_F(P4RuntimeBfrtTranslatorTest, PushConfig) {
@@ -256,145 +287,165 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
 }
 
 // Table entry
-TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryToSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
 
   // Translate to SDK port.
   // We expect that every port number translated from 1 to 300(0x012C).
-  const char table_entry_string[] = R"pb(
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    match {
-      field_id: 2
-      ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
-    }
-    match {
-      field_id: 3
-      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
-    }
-    match {
-      field_id: 4
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    action {
-      action {
-        action_id: 16794911
-        params { param_id: 1 value: "\x00\x00\x00\x01" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 4
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x00\x00\x00\x01" }
+              params { param_id: 2 value: "\x00\x00\x00\x01" }
+            }
+          }
+        }
       }
     }
-  )pb";
-  const char expected_translated_table_entry_string[] = R"pb(
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x01\x2C" }
-    }
-    match {
-      field_id: 2
-      ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
-    }
-    match {
-      field_id: 3
-      range { low: "\x01\x2C" high: "\x01\x2C" }
-    }
-    match {
-      field_id: 4
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    action {
-      action {
-        action_id: 16794911
-        params { param_id: 1 value: "\x01\x2C" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
+  )PROTO";
+  const char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x01\x2C" high: "\x01\x2C" }
+          }
+          match {
+            field_id: 4
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x01\x2C" }
+              params { param_id: 2 value: "\x00\x00\x00\x01" }
+            }
+          }
+        }
       }
     }
-  )pb";
+  )PROTO";
 
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(table_entry_string, &table_entry));
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
   auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true);
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
   EXPECT_OK(translated_value.status());
-  auto translated_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_translated_table_entry;
-  EXPECT_OK(ParseProtoFromString(expected_translated_table_entry_string,
-                                 &expected_translated_table_entry));
-  EXPECT_THAT(translated_entry, EqualsProto(expected_translated_table_entry));
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str,
+                                 &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryFromSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
 
   // Translate from SDK port
   // We expect that every port number translated from 300(0x012c) to 1.
-  const char table_entry_string[] = R"pb(
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x01\x2C" }
-    }
-    match {
-      field_id: 2
-      ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
-    }
-    match {
-      field_id: 3
-      range { low: "\x01\x2C" high: "\x01\x2C" }
-    }
-    match {
-      field_id: 4
-      exact { value: "\x00\x00\x01\x2C" }
-    }
-    action {
-      action {
-        action_id: 16794911
-        params { param_id: 1 value: "\x01\x2C" }
-        params { param_id: 2 value: "\x00\x00\x01\x2C" }
+  const char read_req_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 33583783
+        match {
+          field_id: 1
+          exact { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 2
+          ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
+        }
+        match {
+          field_id: 3
+          range { low: "\x01\x2C" high: "\x01\x2C" }
+        }
+        match {
+          field_id: 4
+          exact { value: "\x00\x00\x01\x2C" }
+        }
+        action {
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x01\x2C" }
+            params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          }
+        }
       }
     }
-  )pb";
-  const char expected_translated_table_entry_string[] = R"pb(
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    match {
-      field_id: 2
-      ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
-    }
-    match {
-      field_id: 3
-      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
-    }
-    match {
-      field_id: 4
-      exact { value: "\x00\x00\x01\x2C" }
-    }
-    action {
-      action {
-        action_id: 16794911
-        params { param_id: 1 value: "\x00\x00\x00\x01" }
-        params { param_id: 2 value: "\x00\x00\x01\x2C" }
+  )PROTO";
+  const char expected_read_req_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 33583783
+        match {
+          field_id: 1
+          exact { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 2
+          ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
+        }
+        match {
+          field_id: 3
+          range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 4
+          exact { value: "\x00\x00\x01\x2C" }
+        }
+        action {
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x00\x00\x00\x01" }
+            params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          }
+        }
       }
     }
-  )pb";
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(table_entry_string, &table_entry));
+  )PROTO";
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
   auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, false);
+      p4rt_bfrt_translator_->TranslateReadRequest(read_req);
   EXPECT_OK(translated_value.status());
-  auto translated_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_translated_table_entry;
-  EXPECT_OK(ParseProtoFromString(expected_translated_table_entry_string,
-                                 &expected_translated_table_entry));
-  EXPECT_THAT(translated_entry, EqualsProto(expected_translated_table_entry));
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str,
+                                 &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
 // TODO(Yi Tseng): Will support these tests in other PRs.
@@ -427,55 +478,19 @@ class TranslatorWriterWrapperTest : public ::testing::Test {
 };
 
 TEST_F(TranslatorWriterWrapperTest, Entities) {
-  const char read_resp_str[] = R"pb(
-    entities { table_entry { table_id: 1 } }
-    entities { action_profile_member { action_profile_id: 1 } }
+  const char read_resp_str[] = R"PROTO(
     entities {
-      packet_replication_engine_entry { clone_session_entry { session_id: 1 } }
+      table_entry {
+        table_id: 1
+        }
     }
-    entities { direct_counter_entry { table_entry { table_id: 1 } } }
-    entities { counter_entry { counter_id: 1 } }
-    entities { register_entry { register_id: 1 } }
-    entities { meter_entry { meter_id: 1 } }
-    entities {
-      # writer wrapper won't touch this entity
-      action_profile_group { action_profile_id: 1 }
-    }
-  )pb";
+  )PROTO";
 
   ::p4::v1::ReadResponse read_resp;
   EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
-  auto te = read_resp.entities().at(0).table_entry();
-  auto apm = read_resp.entities().at(1).action_profile_member();
-  auto pree = read_resp.entities().at(2).packet_replication_engine_entry();
-  auto dce = read_resp.entities().at(3).direct_counter_entry();
-  auto ce = read_resp.entities().at(4).counter_entry();
-  auto re = read_resp.entities().at(5).register_entry();
-  auto me = read_resp.entities().at(6).meter_entry();
-
   EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateTableEntry(EqualsProto(te), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(te)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateActionProfileMember(EqualsProto(apm), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::ActionProfileMember>(apm)));
-  EXPECT_CALL(
-      *p4runtime_bfrt_translator_mock_,
-      TranslatePacketReplicationEngineEntry(EqualsProto(pree), Eq(false)))
-      .WillOnce(Return(
-          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(pree)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateDirectCounterEntry(EqualsProto(dce), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::DirectCounterEntry>(dce)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateCounterEntry(EqualsProto(ce), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::CounterEntry>(ce)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateRegisterEntry(EqualsProto(re), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::RegisterEntry>(re)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateMeterEntry(EqualsProto(me), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(me)));
+              TranslateReadResponse(EqualsProto(read_resp)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>(read_resp)));
   EXPECT_CALL(*writer_mock_, Write(_)).WillOnce(Return(true));
   EXPECT_EQ(Write(read_resp), true);
 }
