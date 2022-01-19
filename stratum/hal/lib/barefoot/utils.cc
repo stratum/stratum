@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <utility>
 
-#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
