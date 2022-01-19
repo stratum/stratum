@@ -440,7 +440,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest) {
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest_ActionProfileActionSet) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       WriteTableEntryRequest_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -585,7 +586,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest_ActionProfileActionSet) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       ReadTableEntryRequest_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_req_str[] = R"PROTO(
@@ -725,7 +727,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse_ActionProfileActionSet) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       ReadTableEntryResponse_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -940,7 +943,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberRequest) {
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberResponse) {
-EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
     entities {

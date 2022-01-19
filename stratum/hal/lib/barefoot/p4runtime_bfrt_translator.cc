@@ -401,10 +401,10 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
              ::p4::v1::TableAction::kActionProfileActionSet) {
     auto* action_set =
         translated_entry.mutable_action()->mutable_action_profile_action_set();
-    for (::p4::v1::ActionProfileAction& action_profile_action : *action_set->mutable_action_profile_actions()) {
-      ASSIGN_OR_RETURN(
-          *(action_profile_action.mutable_action()),
-          TranslateAction(action_profile_action.action(), to_sdk));
+    for (::p4::v1::ActionProfileAction& action_profile_action :
+         *action_set->mutable_action_profile_actions()) {
+      ASSIGN_OR_RETURN(*(action_profile_action.mutable_action()),
+                       TranslateAction(action_profile_action.action(), to_sdk));
     }
   }  // else, we don't translate action profile member id or group id.
 
@@ -502,7 +502,7 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
             TranslateValue(param.value(), *uri, to_sdk, to_bit_width));
         param.set_value(new_val);
       }  // else, we don't modify the value if it doesn't need to be
-          // translated.
+         // translated.
     }
   }
   return translated_action;
