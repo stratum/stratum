@@ -394,102 +394,70 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
   }
 
   if (translated_entry.action().type_case() == ::p4::v1::TableAction::kAction) {
-    auto* action = translated_entry.mutable_action()->mutable_action();
-    const auto& action_id = action->action_id();
-    if (action_to_param_to_type_uri_.count(action_id) &&
-        action_to_param_to_bit_width_.count(action_id)) {
-      for (::p4::v1::Action_Param& param : *action->mutable_params()) {
-        const auto& param_id = param.param_id();
-        std::string* uri =
-            gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
-        int32 to_bit_width = 0;
-        if (to_sdk && uri) {
-          to_bit_width = gtl::FindWithDefault(kUriToBitWidth, *uri, 0);
-        } else {
-          to_bit_width = gtl::FindWithDefault(
-              action_to_param_to_bit_width_[action_id], param_id, 0);
-        }
-        if (uri && to_bit_width) {
-          ASSIGN_OR_RETURN(
-              const std::string& new_val,
-              TranslateValue(param.value(), *uri, to_sdk, to_bit_width));
-          param.set_value(new_val);
-        }  // else, we don't modify the value if it doesn't need to be
-           // translated.
-      }
-    }
+    ASSIGN_OR_RETURN(
+        *(translated_entry.mutable_action()->mutable_action()),
+        TranslateAction(translated_entry.action().action(), to_sdk));
   } else if (translated_entry.action().type_case() ==
              ::p4::v1::TableAction::kActionProfileActionSet) {
-    auto* action_profile_action_set =
+    auto* action_set =
         translated_entry.mutable_action()->mutable_action_profile_action_set();
-    for (auto& action_profile_action :
-         *action_profile_action_set->mutable_action_profile_actions()) {
-      auto* action = action_profile_action.mutable_action();
-      const auto& action_id = action->action_id();
-      if (action_to_param_to_type_uri_.count(action_id) &&
-          action_to_param_to_bit_width_.count(action_id)) {
-        for (::p4::v1::Action_Param& param : *action->mutable_params()) {
-          const auto& param_id = param.param_id();
-          std::string* uri = gtl::FindOrNull(
-              action_to_param_to_type_uri_[action_id], param_id);
-          int32 to_bit_width = 0;
-          if (to_sdk && uri) {
-            to_bit_width = gtl::FindWithDefault(kUriToBitWidth, *uri, 0);
-          } else {
-            to_bit_width = gtl::FindWithDefault(
-                action_to_param_to_bit_width_[action_id], param_id, 0);
-          }
-          if (uri && to_bit_width) {
-            ASSIGN_OR_RETURN(
-                const std::string& new_val,
-                TranslateValue(param.value(), *uri, to_sdk, to_bit_width));
-            param.set_value(new_val);
-          }  // else, we don't modify the value if it doesn't need to be
-             // translated.
-        }
-      }
+    for (::p4::v1::ActionProfileAction& action_profile_action :
+         *action_set->mutable_action_profile_actions()) {
+      ASSIGN_OR_RETURN(*(action_profile_action.mutable_action()),
+                       TranslateAction(action_profile_action.action(), to_sdk));
     }
-  }
+  }  // else, we don't translate action profile member id or group id.
 
   return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::ActionProfileMember>
 P4RuntimeBfrtTranslator::TranslateActionProfileMember(
-    const ::p4::v1::ActionProfileMember& action_prof_mem, bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return action_prof_mem;
+    const ::p4::v1::ActionProfileMember& act_prof_mem, bool to_sdk) {
+  ::p4::v1::ActionProfileMember translated_apm;
+  translated_apm.CopyFrom(act_prof_mem);
+  const auto& action_profile_id = act_prof_mem.action_profile_id();
+  const auto& member_id = act_prof_mem.member_id();
+  ASSIGN_OR_RETURN(*(translated_apm.mutable_action()),
+                   TranslateAction(translated_apm.action(), to_sdk));
+  return translated_apm;
 }
+
 ::util::StatusOr<::p4::v1::MeterEntry>
 P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::CounterEntry>
 P4RuntimeBfrtTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::RegisterEntry>
 P4RuntimeBfrtTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
+
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
@@ -508,6 +476,36 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
     const ::p4::v1::StreamMessageResponse& response) {
   // TODO(Yi Tseng): Will support this in another PR.
   return response;
+}
+
+::util::StatusOr<::p4::v1::Action> P4RuntimeBfrtTranslator::TranslateAction(
+    const ::p4::v1::Action& action, const bool& to_sdk) {
+  ::p4::v1::Action translated_action;
+  translated_action.CopyFrom(action);
+  const auto& action_id = action.action_id();
+  if (action_to_param_to_type_uri_.count(action_id) &&
+      action_to_param_to_bit_width_.count(action_id)) {
+    for (::p4::v1::Action_Param& param : *translated_action.mutable_params()) {
+      const auto& param_id = param.param_id();
+      std::string* uri =
+          gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
+      int32 to_bit_width = 0;
+      if (to_sdk && uri) {
+        to_bit_width = gtl::FindWithDefault(kUriToBitWidth, *uri, 0);
+      } else {
+        to_bit_width = gtl::FindWithDefault(
+            action_to_param_to_bit_width_[action_id], param_id, 0);
+      }
+      if (uri && to_bit_width) {
+        ASSIGN_OR_RETURN(
+            const std::string& new_val,
+            TranslateValue(param.value(), *uri, to_sdk, to_bit_width));
+        param.set_value(new_val);
+      }  // else, we don't modify the value if it doesn't need to be
+         // translated.
+    }
+  }
+  return translated_action;
 }
 
 ::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateValue(
@@ -544,7 +542,6 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
     return port_id_bytes;
   }
 }
-
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
