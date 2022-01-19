@@ -58,8 +58,9 @@ namespace barefoot {
       BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_counter_manager =
       BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto p4runtime_bfrt_translator =
-      P4RuntimeBfrtTranslator::CreateInstance(bf_sde_wrapper, device_id);
+  auto p4runtime_bfrt_translator = P4RuntimeBfrtTranslator::CreateInstance(
+      bf_sde_wrapper, device_id,
+      FLAGS_experimental_enable_p4runtime_translation);
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_packetio_manger.get(),
       bfrt_pre_manager.get(), bfrt_counter_manager.get(),
