@@ -58,6 +58,9 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
     const PortKey port_key(kSlot, kPort, kChannel);
     EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kDeviceId, port_key))
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkPortId)));
+    const PortKey port_key2(kSlot, kPort2, kChannel);
+    EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kDeviceId, port_key2))
+        .WillOnce(Return(::util::StatusOr<uint32>(kSdkPortId2)));
     return p4rt_bfrt_translator_->PushChassisConfig(config, kNodeId);
   }
 
@@ -86,7 +89,9 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
   static constexpr uint64 kNodeId = 0;
   static constexpr uint32 kPortId = 1;
   static constexpr uint32 kSdkPortId = 300;
+  static constexpr uint32 kSdkPortId2 = 301;
   static constexpr int32 kPort = 1;
+  static constexpr int32 kPort2 = 2;
   static constexpr int32 kSlot = 1;
   static constexpr int32 kChannel = 1;
 
@@ -98,6 +103,12 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       id: 1
       slot: 1
       port: 1
+      channel: 1
+    }
+    singleton_ports {
+      id: 2
+      slot: 1
+      port: 2
       channel: 1
     }
   )PROTO";
@@ -248,7 +259,9 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
 constexpr int P4RuntimeBfrtTranslatorTest::kDeviceId;
 constexpr uint32 P4RuntimeBfrtTranslatorTest::kPortId;
 constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPortId;
+constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPortId2;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kPort;
+constexpr int32 P4RuntimeBfrtTranslatorTest::kPort2;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kSlot;
 constexpr int32
     P4RuntimeBfrtTranslatorTest::P4RuntimeBfrtTranslatorTest::kChannel;
@@ -684,6 +697,329 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
           "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
 }
 
+TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_MulticastGroup) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        packet_replication_engine_entry {
+          multicast_group_entry {
+            multicast_group_id: 1
+            replicas {
+              egress_port: 1
+              instance: 1
+            }
+            replicas {
+              egress_port: 2
+              instance: 1
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        packet_replication_engine_entry {
+          multicast_group_entry {
+            multicast_group_id: 1
+            replicas {
+              egress_port: 300
+              instance: 1
+            }
+            replicas {
+              egress_port: 301
+              instance: 1
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
+  EXPECT_OK(translated_value.status());
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_MulticastGroup) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_req_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        multicast_group_entry {
+          multicast_group_id: 1
+          replicas {
+            egress_port: 1
+            instance: 1
+          }
+          replicas {
+            egress_port: 2
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_req_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        multicast_group_entry {
+          multicast_group_id: 1
+          replicas {
+            egress_port: 300
+            instance: 1
+          }
+          replicas {
+            egress_port: 301
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
+  EXPECT_OK(translated_value.status());
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationResponse_MulticastGroup) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        multicast_group_entry {
+          multicast_group_id: 1
+          replicas {
+            egress_port: 300
+            instance: 1
+          }
+          replicas {
+            egress_port: 301
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_resp_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        multicast_group_entry {
+          multicast_group_id: 1
+          replicas {
+            egress_port: 1
+            instance: 1
+          }
+          replicas {
+            egress_port: 2
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateReadResponse(read_resp);
+  EXPECT_OK(translated_value.status());
+  read_resp = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadResponse expected_read_resp;
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
+  EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_CloneSession) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        packet_replication_engine_entry {
+          clone_session_entry {
+            session_id: 1
+            replicas {
+              egress_port: 1
+              instance: 1
+            }
+            replicas {
+              egress_port: 2
+              instance: 1
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        packet_replication_engine_entry {
+          clone_session_entry {
+            session_id: 1
+            replicas {
+              egress_port: 300
+              instance: 1
+            }
+            replicas {
+              egress_port: 301
+              instance: 1
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
+  EXPECT_OK(translated_value.status());
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_CloneSession) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_req_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        clone_session_entry {
+          session_id: 1
+          replicas {
+            egress_port: 1
+            instance: 1
+          }
+          replicas {
+            egress_port: 2
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_req_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        clone_session_entry {
+          session_id: 1
+          replicas {
+            egress_port: 300
+            instance: 1
+          }
+          replicas {
+            egress_port: 301
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
+  EXPECT_OK(translated_value.status());
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationResponse_CloneSession) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        clone_session_entry {
+          session_id: 1
+          replicas {
+            egress_port: 300
+            instance: 1
+          }
+          replicas {
+            egress_port: 301
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_resp_str[] = R"PROTO(
+    entities {
+      packet_replication_engine_entry {
+        clone_session_entry {
+          session_id: 1
+          replicas {
+            egress_port: 1
+            instance: 1
+          }
+          replicas {
+            egress_port: 2
+            instance: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateReadResponse(read_resp);
+  EXPECT_OK(translated_value.status());
+  read_resp = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadResponse expected_read_resp;
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
+  EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        packet_replication_engine_entry {
+          multicast_group_entry {
+            multicast_group_id: 1
+            replicas {
+              egress_port: 3
+              instance: 1
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+  DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM, "'singleton_port_to_sdk_port_.count(replica.egress_port())' is false.")));
+}
+
 // TODO(Yi Tseng): Will support these tests in other PRs.
 // Action profile member
 // Meter entry (translate index)
@@ -691,8 +1027,6 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
 // Counter entry (translate index)
 // Direct counter entry (translate index)
 // Register entry (translate index)
-// Packet replication engine entry (no p4info represent this, but still need to
-// translate)
 // PacketIO
 class TranslatorWriterWrapperTest : public ::testing::Test {
  public:
