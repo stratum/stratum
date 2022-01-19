@@ -21,8 +21,6 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-DECLARE_bool(experimental_enable_p4runtime_translation);
-
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -50,9 +48,8 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
-    p4rt_bfrt_translator_ =
-        P4RuntimeBfrtTranslator::CreateInstance(bf_sde_mock_.get(), kDeviceId);
-    FLAGS_experimental_enable_p4runtime_translation = true;
+    p4rt_bfrt_translator_ = P4RuntimeBfrtTranslator::CreateInstance(
+        bf_sde_mock_.get(), kDeviceId, /* enable translation */ true);
   }
 
   ::util::Status PushChassisConfig() {

@@ -43,11 +43,11 @@ class P4RuntimeBfrtTranslator {
   virtual ::util::StatusOr<::p4::v1::StreamMessageResponse>
   TranslateStreamMessageResponse(
       const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
-  virtual bool TranslationEnabled() LOCKS_EXCLUDED(lock_);
   static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
-      BfSdeInterface* bf_sde_interface, int device_id) {
-    return absl::WrapUnique(
-        new P4RuntimeBfrtTranslator(bf_sde_interface, device_id));
+      BfSdeInterface* bf_sde_interface, int device_id,
+      bool translation_enabled) {
+    return absl::WrapUnique(new P4RuntimeBfrtTranslator(
+        bf_sde_interface, device_id, translation_enabled));
   }
 
  protected:
@@ -55,15 +55,18 @@ class P4RuntimeBfrtTranslator {
   P4RuntimeBfrtTranslator()
       : device_id_(0),
         bf_sde_interface_(nullptr),
-        translation_enabled_(false) {}
+        translation_enabled_(false),
+        pipeline_require_translation_(false) {}
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  P4RuntimeBfrtTranslator(BfSdeInterface* bf_sde_interface, int device_id)
+  P4RuntimeBfrtTranslator(BfSdeInterface* bf_sde_interface, int device_id,
+                          bool translation_enabled)
       : device_id_(device_id),
         bf_sde_interface_(bf_sde_interface),
-        translation_enabled_(false) {}
+        translation_enabled_(translation_enabled),
+        pipeline_require_translation_(false) {}
   virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntity(
       const ::p4::v1::Entity& entity, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
@@ -116,7 +119,8 @@ class P4RuntimeBfrtTranslator {
       GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, uint32> sdk_port_to_singleton_port_
       GUARDED_BY(lock_);
-  bool translation_enabled_ GUARDED_BY(lock_);
+  const bool translation_enabled_;
+  bool pipeline_require_translation_ GUARDED_BY(lock_);
 
   // P4Runtime translation information
   absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>

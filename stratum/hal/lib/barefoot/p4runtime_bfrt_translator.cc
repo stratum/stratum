@@ -18,14 +18,11 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-DEFINE_bool(experimental_enable_p4runtime_translation, false,
-            "Enable experimental P4runtime translation feature.");
-
 ::util::StatusOr<::p4::v1::WriteRequest>
 P4RuntimeBfrtTranslator::TranslateWriteRequest(
     const ::p4::v1::WriteRequest& request) {
   absl::ReaderMutexLock l(&lock_);
-  if (!translation_enabled_) {
+  if (!pipeline_require_translation_) {
     return request;
   }
   ::p4::v1::WriteRequest translated_request(request);
@@ -40,7 +37,7 @@ P4RuntimeBfrtTranslator::TranslateWriteRequest(
 P4RuntimeBfrtTranslator::TranslateReadRequest(
     const ::p4::v1::ReadRequest& request) {
   absl::ReaderMutexLock l(&lock_);
-  if (!translation_enabled_) {
+  if (!pipeline_require_translation_) {
     return request;
   }
   ::p4::v1::ReadRequest translated_request(request);
@@ -54,7 +51,7 @@ P4RuntimeBfrtTranslator::TranslateReadRequest(
 P4RuntimeBfrtTranslator::TranslateReadResponse(
     const ::p4::v1::ReadResponse& response) {
   absl::ReaderMutexLock l(&lock_);
-  if (!translation_enabled_) {
+  if (!pipeline_require_translation_) {
     return response;
   }
   ::p4::v1::ReadResponse translated_response(response);
@@ -96,14 +93,12 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 ::util::Status P4RuntimeBfrtTranslator::PushForwardingPipelineConfig(
     const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
-  if (!FLAGS_experimental_enable_p4runtime_translation) {
-    translation_enabled_ = false;
+  pipeline_require_translation_ = false;
+  if (!translation_enabled_) {
     return ::util::OkStatus();
   }
-  // Enable P4Runtime translation When user define a new type with
+  // Enable P4Runtime translation when user define a new type with
   // p4runtime_translation.
-  translation_enabled_ = false;
-
   if (p4info.has_type_info()) {
     // First, store types that need to be translated(will check the type_name
     // later)
@@ -114,7 +109,7 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
       const auto& value = new_type.second;
       if (value.representation_case() ==
           ::p4::config::v1::P4NewTypeSpec::kTranslatedType) {
-        translation_enabled_ = true;
+        pipeline_require_translation_ = true;
         // TODO(Yi Tseng): Verify URI string
         type_name_to_uri[type_name] = value.translated_type().uri();
         if (value.translated_type().sdn_type_case() ==
@@ -548,11 +543,6 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
         Uint32ToByteStream(port_id), NumBitsToNumBytes(bit_width));
     return port_id_bytes;
   }
-}
-
-bool P4RuntimeBfrtTranslator::TranslationEnabled() {
-  ::absl::ReaderMutexLock l(&lock_);
-  return translation_enabled_;
 }
 
 }  // namespace barefoot

@@ -24,6 +24,8 @@ DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
+DEFINE_bool(experimental_enable_p4runtime_translation, false,
+            "Enable experimental P4runtime translation feature.");
 
 namespace stratum {
 namespace hal {

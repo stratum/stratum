@@ -162,11 +162,6 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
                   PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
-      // Disable P4Runtime translation for this test
-      // Will test the translation functionality in the
-      // P4RuntimeBfrtTranslatorTest.
-      EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslationEnabled())
-          .WillRepeatedly(Return(false));
     }
     EXPECT_OK(PushForwardingPipelineConfig(config));
     ASSERT_TRUE(IsPipelineInitialized());
