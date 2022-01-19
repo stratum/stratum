@@ -196,11 +196,12 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_ || !pipeline_initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-
+  ASSIGN_OR_RETURN(const auto& request,
+                   p4runtime_bfrt_translator_->TranslateWriteRequest(req));
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
   RETURN_IF_ERROR(session->BeginBatch());
-  for (const auto& update : req.updates()) {
+  for (const auto& update : request.updates()) {
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
       case ::p4::v1::Entity::kTableEntry:
@@ -278,10 +279,14 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_ || !pipeline_initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+  ASSIGN_OR_RETURN(const auto& request,
+                   p4runtime_bfrt_translator_->TranslateReadRequest(req));
+  P4RuntimeBfrtTranslationWriterWrapper writer_wrapper(writer, p4runtime_bfrt_translator_);
+  writer = &writer_wrapper;
   ::p4::v1::ReadResponse resp;
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
-  for (const auto& entity : req.entities()) {
+  for (const auto& entity : request.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
         auto status = bfrt_table_manager_->ReadTableEntry(
