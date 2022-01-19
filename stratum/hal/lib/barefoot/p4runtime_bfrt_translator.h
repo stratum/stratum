@@ -97,6 +97,8 @@ class P4RuntimeBfrtTranslator {
   virtual ::util::StatusOr<::p4::v1::Replica> TranslateReplica(
       const ::p4::v1::Replica& replica, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::Action> TranslateAction(
+      const ::p4::v1::Action& action, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                        const std::string& uri,
                                                        bool to_sdk,
