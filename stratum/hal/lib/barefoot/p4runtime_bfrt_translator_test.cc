@@ -14,6 +14,7 @@
 #include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator_mock.h"
 #include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
 
 namespace stratum {
@@ -47,8 +48,8 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
-    p4rt_bfrt_translator_ =
-        P4RuntimeBfrtTranslator::CreateInstance(bf_sde_mock_.get(), kDeviceId);
+    p4rt_bfrt_translator_ = P4RuntimeBfrtTranslator::CreateInstance(
+        bf_sde_mock_.get(), kDeviceId, /* enable translation */ true);
   }
 
   ::util::Status PushChassisConfig() {
@@ -60,31 +61,32 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
     const PortKey port2_key(kSlot, kPort2, kChannel);
     EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kDeviceId, port2_key))
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkPort2Id)));
-    return p4rt_bfrt_translator_->PushChassisConfig(config);
+    return p4rt_bfrt_translator_->PushChassisConfig(config, kNodeId);
   }
 
   ::util::Status PushForwardingPipelineConfig() {
-    ::p4::v1::ForwardingPipelineConfig config;
-    BfPipelineConfig bf_config;
-    EXPECT_OK(ParseProtoFromString(kBfConfigPipelineString, &bf_config));
-    std::string bf_config_bytes;
-    CHECK(bf_config.SerializeToString(&bf_config_bytes));
-    EXPECT_OK(ParseProtoFromString(kP4InfoString, config.mutable_p4info()));
-    return p4rt_bfrt_translator_->PushForwardingPipelineConfig(config);
+    ::p4::config::v1::P4Info p4info;
+    EXPECT_OK(ParseProtoFromString(kP4InfoString, &p4info));
+    return p4rt_bfrt_translator_->PushForwardingPipelineConfig(p4info);
   }
 
   ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                const std::string& uri,
-                                               const bool& to_sdk,
-                                               const int32& bit_width) {
+                                               bool to_sdk, int32 bit_width) {
     ::absl::ReaderMutexLock l(&p4rt_bfrt_translator_->lock_);
     return p4rt_bfrt_translator_->TranslateValue(value, uri, to_sdk, bit_width);
+  }
+
+  std::string Uint32ToBytes(uint32 value, int32 bit_width) {
+    return P4RuntimeByteStringToPaddedByteString(Uint32ToByteStream(value),
+                                                 NumBitsToNumBytes(bit_width));
   }
 
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
   std::unique_ptr<P4RuntimeBfrtTranslator> p4rt_bfrt_translator_;
 
   static constexpr int kDeviceId = 1;
+  static constexpr uint64 kNodeId = 0;
   // Singleton port 1
   static constexpr uint32 kPortId = 1;
   static constexpr uint32 kSdkPortId = 300;
@@ -96,78 +98,120 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
   static constexpr uint32 kSdkPort2Id = 301;
   static constexpr int32 kPort2 = 2;
 
-  static constexpr char kChassisConfig[] = R"pb(
-    nodes { id: 1 }
-    singleton_ports { id: 1 slot: 1 port: 1 channel: 1 }
-    singleton_ports { id: 2 slot: 1 port: 2 channel: 1 }
-  )pb";
-
-  static constexpr char kBfConfigPipelineString[] = R"pb(
-    p4_name: "prog1"
-    bfruntime_info: "{json: true}"
-    profiles {
-      profile_name: "pipe1"
-      context: "{json: true}"
-      binary: "<raw bin>"
+  static constexpr char kChassisConfig[] = R"PROTO(
+    nodes {
+      id: 1
     }
-  )pb";
+    singleton_ports {
+      id: 1
+      slot: 1
+      port: 1
+      channel: 1
+    }
+    singleton_ports {
+      id: 1
+      slot: 1
+      port: 2
+      channel: 1
+    }
+  )PROTO";
 
-  static constexpr char kP4InfoString[] = R"pb(
-    pkg_info { arch: "tna" }
+  static constexpr char kP4InfoString[] = R"PROTO(
+    pkg_info {
+      arch: "tna"
+    }
     tables {
-      preamble { id: 33583783 name: "Ingress.control.table1" }
+      preamble {
+        id: 33583783
+        name: "Ingress.control.table1"
+      }
       match_fields {
         id: 1
         name: "field1"
-        bitwidth: 9
+        bitwidth: 32
         match_type: EXACT
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 2
         name: "field2"
-        bitwidth: 9
+        bitwidth: 32
         match_type: TERNARY
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 3
         name: "field3"
-        bitwidth: 9
+        bitwidth: 32
         match_type: RANGE
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 4
         name: "field4"
         bitwidth: 32
         match_type: LPM
-        type_name { name: "FabricPortId_t" }
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
       match_fields {
         id: 5
-        name: "don't translate"
+        name: "field5"
+        bitwidth: 32
+        match_type: OPTIONAL
+        type_name {
+          name: "FabricPortId_t"
+        }
+      }
+      match_fields {
+        id: 6
+        name: "field6"
         bitwidth: 32
         match_type: EXACT
       }
-      action_refs { id: 16794911 }
+      action_refs {
+        id: 16794911
+      }
       const_default_action_id: 16836487
       size: 1024
     }
     actions {
-      preamble { id: 16794911 name: "Ingress.control.action1" }
+      preamble {
+        id: 16794911
+        name: "Ingress.control.action1"
+      }
       params {
         id: 1
         name: "port_id"
-        bitwidth: 9
-        type_name { name: "FabricPortId_t" }
+        bitwidth: 32
+        type_name {
+          name: "FabricPortId_t"
+        }
       }
-      params { id: 2 name: "don't translate" bitwidth: 32 }
+      params {
+        id: 2
+        name: "don't translate"
+        bitwidth: 32
+      }
     }
     counters {
-      preamble { id: 318814845 name: "Ingress.control.counter1" }
-      spec { unit: BOTH }
-      index_type_name { name: "FabricPortId_t" }
+      preamble {
+        id: 318814845
+        name: "Ingress.control.counter1"
+      }
+      spec {
+        unit: BOTH
+      }
+      index_type_name {
+        name: "FabricPortId_t"
+      }
     }
     meters {
       preamble {
@@ -175,157 +219,44 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
         name: "Ingress.control.meter_bytes"
         alias: "meter_bytes"
       }
-      spec { unit: BYTES }
-      index_type_name { name: "FabricPortId_t" }
+      spec {
+        unit: BYTES
+      }
+      index_type_name {
+        name: "FabricPortId_t"
+      }
       size: 500
+    }
+    registers {
+      preamble {
+        id: 66666
+        name: "Ingress.control.my_register"
+        alias: "my_register"
+      }
+      type_spec {
+        bitstring {
+          bit {
+            bitwidth: 32
+          }
+        }
+      }
+      size: 10
+      index_type_name {
+        name: "FabricPortId_t"
+      }
     }
     type_info {
       new_types {
         key: "FabricPortId_t"
-        value { translated_type { uri: "tna/PortId_t" sdn_bitwidth: 32 } }
-      }
-    }
-  )pb";
-
-  static constexpr char kTableEntryFromControllerStr[] = R"pb(
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    match {
-      field_id: 2
-      ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
-    }
-    match {
-      field_id: 3
-      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
-    }
-    match {
-      field_id: 4
-      lpm { value: "\x00\x00\x00\x01" prefix_len: 24 }
-    }
-    match {
-      field_id: 5
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    action {
-      action {
-        action_id: 16794911
-        params { param_id: 1 value: "\x00\x00\x00\x01" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
-      }
-    }
-  )pb";
-
-  static constexpr char kTableEntryFromSdkStr[] = R"pb(
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x01\x2C" }
-    }
-    match {
-      field_id: 2
-      ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
-    }
-    match {
-      field_id: 3
-      range { low: "\x01\x2C" high: "\x01\x2C" }
-    }
-    match {
-      field_id: 4
-      lpm { value: "\x01\x2C" prefix_len: 24 }
-    }
-    match {
-      field_id: 5
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    action {
-      action {
-        action_id: 16794911
-        params { param_id: 1 value: "\x01\x2C" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
-      }
-    }
-  )pb";
-
-  static constexpr char kTableEntry2FromControllerStr[] = R"pb(
-    # With action profile action set
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
-    }
-    action {
-      action_profile_action_set {
-        action_profile_actions {
-          action {
-            action_id: 16794911
-            params { param_id: 1 value: "\x00\x00\x00\x01" }
-            params { param_id: 2 value: "\x00\x00\x00\x01" }
+        value {
+          translated_type {
+            uri: "tna/PortId_t"
+            sdn_bitwidth: 32
           }
-          weight: 1
-        }
-        action_profile_actions {
-          action {
-            action_id: 16794911
-            params { param_id: 1 value: "\x00\x00\x00\x02" }
-            params { param_id: 2 value: "\x00\x00\x00\x02" }
-          }
-          weight: 1
         }
       }
     }
-  )pb";
-
-  static constexpr char kTableEntry2FromSdkStr[] = R"pb(
-    # With action profile action set
-    table_id: 33583783
-    match {
-      field_id: 1
-      exact { value: "\x01\x2C" }
-    }
-    action {
-      action_profile_action_set {
-        action_profile_actions {
-          action {
-            action_id: 16794911
-            params { param_id: 1 value: "\x01\x2C" }
-            params { param_id: 2 value: "\x00\x00\x00\x01" }
-          }
-          weight: 1
-        }
-        action_profile_actions {
-          action {
-            action_id: 16794911
-            params { param_id: 1 value: "\x01\x2D" }
-            params { param_id: 2 value: "\x00\x00\x00\x02" }
-          }
-          weight: 1
-        }
-      }
-    }
-  )pb";
-
-  static constexpr char kActProfMemFromControllerStr[] = R"pb(
-    action_profile_id: 1
-    member_id: 1
-    action {
-      action_id: 16794911
-      params { param_id: 1 value: "\x00\x00\x00\x01" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
-    }
-  )pb";
-
-  static constexpr char kActProfMemFromSdkStr[] = R"pb(
-    action_profile_id: 1
-    member_id: 1
-    action {
-      action_id: 16794911
-      params { param_id: 1 value: "\x01\x2C" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
-    }
-  )pb";
+  )PROTO";
 };
 
 constexpr int P4RuntimeBfrtTranslatorTest::kDeviceId;
@@ -335,14 +266,7 @@ constexpr int32 P4RuntimeBfrtTranslatorTest::kPort;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kSlot;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kChannel;
 constexpr char P4RuntimeBfrtTranslatorTest::kChassisConfig[];
-constexpr char P4RuntimeBfrtTranslatorTest::kBfConfigPipelineString[];
 constexpr char P4RuntimeBfrtTranslatorTest::kP4InfoString[];
-constexpr char P4RuntimeBfrtTranslatorTest::kTableEntryFromControllerStr[];
-constexpr char P4RuntimeBfrtTranslatorTest::kTableEntryFromSdkStr[];
-constexpr char P4RuntimeBfrtTranslatorTest::kTableEntry2FromControllerStr[];
-constexpr char P4RuntimeBfrtTranslatorTest::kTableEntry2FromSdkStr[];
-constexpr char P4RuntimeBfrtTranslatorTest::kActProfMemFromControllerStr[];
-constexpr char P4RuntimeBfrtTranslatorTest::kActProfMemFromSdkStr[];
 constexpr uint32 P4RuntimeBfrtTranslatorTest::kPort2Id;
 constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPort2Id;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kPort2;
@@ -368,26 +292,28 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_InvalidSize) {
   EXPECT_THAT(
       TranslateValue("some value", kUriTnaPortId, false, kTnaPortIdBitWidth)
           .status(),
-      DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                                       "'value.size() == 2' is false. ")));
+      DerivedFromStatus(
+          ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                         "'value.size() == "
+                         "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToSdk) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
-  EXPECT_THAT(TranslateValue(singleton_port_id.ValueOrDie(), kUriTnaPortId,
-                             true, kTnaPortIdBitWidth)
-                  .status(),
-              DerivedFromStatus(::util::Status(
-                  StratumErrorSpace(), ERR_INVALID_PARAM,
-                  "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
+  EXPECT_THAT(
+      TranslateValue(singleton_port_id, kUriTnaPortId, true, kTnaPortIdBitWidth)
+          .status(),
+      DerivedFromStatus(::util::Status(
+          StratumErrorSpace(), ERR_INVALID_PARAM,
+          "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from sdk port to singleton port
-  auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth).ValueOrDie();
+  auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
   EXPECT_THAT(
       TranslateValue(sdk_port_id, kUriTnaPortId, false, kTnaPortIdBitWidth)
           .status(),
@@ -399,10 +325,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from singleton port to sdk port
-  auto singleton_port_id =
-      Uint32ToBytes(kPortId, kTnaPortIdBitWidth).ValueOrDie();
-  auto expected_value =
-      Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth).ValueOrDie();
+  auto singleton_port_id = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
+  auto expected_value = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
   auto actual_value =
       TranslateValue(singleton_port_id, kUriTnaPortId, true, kTnaPortIdBitWidth)
           .ValueOrDie();
@@ -412,8 +336,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from sdk port to singleton port
-  auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth).ValueOrDie();
-  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth).ValueOrDie();
+  auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
+  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
   auto actual_value =
       TranslateValue(sdk_port_id, kUriTnaPortId, false, kTnaPortIdBitWidth)
           .ValueOrDie();
@@ -421,100 +345,483 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
 }
 
 // Table entry
-TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryToSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntryFromControllerStr, &table_entry));
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 4
+            lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x00\x00\x00\x01"}
+          }
+          match {
+            field_id: 6
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x00\x00\x00\x01" }
+              params { param_id: 2 value: "\x00\x00\x00\x01" }
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x01\x2C" mask: "\x01\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x01\x2C" high: "\x01\x2C" }
+          }
+          match {
+            field_id: 4
+            lpm { value: "\x01\x2C" prefix_len: 9 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 6
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x01\x2C" }
+              params { param_id: 2 value: "\x00\x00\x00\x01" }
+            }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
   auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true);
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
   EXPECT_OK(translated_value.status());
-  auto translated_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_translated_table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntryFromSdkStr,
-                                 &expected_translated_table_entry));
-  EXPECT_THAT(translated_entry, EqualsProto(expected_translated_table_entry));
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryFromSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntryFromSdkStr, &table_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, false);
+  const char read_req_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 33583783
+        match {
+          field_id: 1
+          exact { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 2
+          ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        }
+        match {
+          field_id: 3
+          range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 4
+          lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 6
+          exact { value: "\x00\x00\x00\x01" }
+        }
+        action {
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x00\x00\x00\x01" }
+            params { param_id: 2 value: "\x00\x00\x00\x01" }
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_req_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 33583783
+        match {
+          field_id: 1
+          exact { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 2
+          ternary { value: "\x01\x2C" mask: "\x01\xff" }
+        }
+        match {
+          field_id: 3
+          range { low: "\x01\x2C" high: "\x01\x2C" }
+        }
+        match {
+          field_id: 4
+          lpm { value: "\x01\x2C" prefix_len: 9 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 6
+          exact { value: "\x00\x00\x00\x01" }
+        }
+        action {
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x01\x2C" }
+            params { param_id: 2 value: "\x00\x00\x00\x01" }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
   EXPECT_OK(translated_value.status());
-  auto translated_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_translated_table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntryFromControllerStr,
-                                 &expected_translated_table_entry));
-  EXPECT_THAT(translated_entry, EqualsProto(expected_translated_table_entry));
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryActProfToSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntry2FromControllerStr, &table_entry));
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 33583783
+        match {
+          field_id: 1
+          exact { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 2
+          ternary { value: "\x01\x2C" mask: "\x01\xff" }
+        }
+        match {
+          field_id: 3
+          range { low: "\x01\x2C" high: "\x01\x2C" }
+        }
+        match {
+          field_id: 4
+          lpm { value: "\x01\x2C" prefix_len: 9 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 6
+          exact { value: "\x00\x00\x01\x2C" }
+        }
+        action {
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x01\x2C" }
+            params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_resp_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 33583783
+        match {
+          field_id: 1
+          exact { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 2
+          ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        }
+        match {
+          field_id: 3
+          range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 4
+          lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 6
+          exact { value: "\x00\x00\x01\x2C" }
+        }
+        action {
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x00\x00\x00\x01" }
+            params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          }
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
   auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true);
+      p4rt_bfrt_translator_->TranslateReadResponse(read_resp);
   EXPECT_OK(translated_value.status());
-  auto translated_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_translated_table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntry2FromSdkStr,
-                                 &expected_translated_table_entry));
-  EXPECT_THAT(translated_entry, EqualsProto(expected_translated_table_entry));
+  read_resp = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadResponse expected_read_resp;
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
+  EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TableEntryActProfFromSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidTernary) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntry2FromSdkStr, &table_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, false);
-  EXPECT_OK(translated_value.status());
-  auto translated_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_translated_table_entry;
-  EXPECT_OK(ParseProtoFromString(kTableEntry2FromControllerStr,
-                                 &expected_translated_table_entry));
-  EXPECT_THAT(translated_entry, EqualsProto(expected_translated_table_entry));
+  // mask must be all-one.
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 2
+            ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\xff\xff" }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'field_match.ternary().mask() == all_one' is false.")));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidRange) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  // mask must be all-one.
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 3
+            range { low: "foo" high: "bar" }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+              DerivedFromStatus(
+                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                 "'field_match.range().low() == "
+                                 "field_match.range().high()' is false.")));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  // mask must be all-one.
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 4
+            lpm { value: "\x00\x00\x00\x01" prefix_len: 10 }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+      DerivedFromStatus(::util::Status(
+          StratumErrorSpace(), ERR_INVALID_PARAM,
+          "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
 }
 
 // Action profile member
-TEST_F(P4RuntimeBfrtTranslatorTest, ActionProfileMemberToSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteActionProfileMemberRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  ::p4::v1::ActionProfileMember action_profile_member;
-  ::p4::v1::ActionProfileMember expected_action_profile_member;
-  EXPECT_OK(ParseProtoFromString(kActProfMemFromControllerStr,
-                                 &action_profile_member));
-  EXPECT_OK(ParseProtoFromString(kActProfMemFromSdkStr,
-                                 &expected_action_profile_member));
-  auto translated_value = p4rt_bfrt_translator_->TranslateActionProfileMember(
-      action_profile_member, true);
+  constexpr char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        action_profile_member {
+          action_profile_id: 1
+          member_id: 1
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x00\x00\x00\x01" }
+            params { param_id: 2 value: "\x00\x00\x00\x01" }
+          }
+        }
+      }
+    }
+  )PROTO";
+  constexpr char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        action_profile_member {
+          action_profile_id: 1
+          member_id: 1
+          action {
+            action_id: 16794911
+            params { param_id: 1 value: "\x01\x2C" }
+            params { param_id: 2 value: "\x00\x00\x00\x01" }
+          }
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
   EXPECT_OK(translated_value.status());
-  auto translated_action_profile_member = translated_value.ConsumeValueOrDie();
-  EXPECT_THAT(translated_action_profile_member,
-              EqualsProto(expected_action_profile_member));
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-// Action profile member
-TEST_F(P4RuntimeBfrtTranslatorTest, ActionProfileMemberFromSdk) {
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  ::p4::v1::ActionProfileMember action_profile_member;
-  ::p4::v1::ActionProfileMember expected_action_profile_member;
-  EXPECT_OK(
-      ParseProtoFromString(kActProfMemFromSdkStr, &action_profile_member));
-  EXPECT_OK(ParseProtoFromString(kActProfMemFromControllerStr,
-                                 &expected_action_profile_member));
-  auto translated_value = p4rt_bfrt_translator_->TranslateActionProfileMember(
-      action_profile_member, false);
+  constexpr char read_req_str[] = R"PROTO(
+    entities {
+      action_profile_member {
+        action_profile_id: 1
+        member_id: 1
+        action {
+          action_id: 16794911
+          params { param_id: 1 value: "\x00\x00\x00\x01" }
+          params { param_id: 2 value: "\x00\x00\x00\x01" }
+        }
+      }
+    }
+  )PROTO";
+  constexpr char expected_read_req_str[] = R"PROTO(
+    entities {
+      action_profile_member {
+        action_profile_id: 1
+        member_id: 1
+        action {
+          action_id: 16794911
+          params { param_id: 1 value: "\x01\x2C" }
+          params { param_id: 2 value: "\x00\x00\x00\x01" }
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
   EXPECT_OK(translated_value.status());
-  auto translated_action_profile_member = translated_value.ConsumeValueOrDie();
-  EXPECT_THAT(translated_action_profile_member,
-              EqualsProto(expected_action_profile_member));
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberResponse) {
+EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      action_profile_member {
+        action_profile_id: 1
+        member_id: 1
+        action {
+          action_id: 16794911
+          params { param_id: 1 value: "\x01\x2C" }
+          params { param_id: 2 value: "\x00\x00\x00\x01" }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_resp_str[] = R"PROTO(
+    entities {
+      action_profile_member {
+        action_profile_id: 1
+        member_id: 1
+        action {
+          action_id: 16794911
+          params { param_id: 1 value: "\x00\x00\x00\x01" }
+          params { param_id: 2 value: "\x00\x00\x00\x01" }
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateReadResponse(read_resp);
+  EXPECT_OK(translated_value.status());
+  read_resp = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadResponse expected_read_resp;
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
+  EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
 // TODO(Yi Tseng): Will support these tests in other PRs.
@@ -536,7 +843,7 @@ class TranslatorWriterWrapperTest : public ::testing::Test {
     writer_mock_ = absl::make_unique<WriterMock<::p4::v1::ReadResponse>>();
     p4runtime_bfrt_translator_mock_ =
         absl::make_unique<P4RuntimeBfrtTranslatorMock>();
-    wrapper_ = P4RuntimeBfrtTranslationWriterWrapper::CreateInstance(
+    wrapper_ = absl::make_unique<P4RuntimeBfrtTranslationWriterWrapper>(
         writer_mock_.get(), p4runtime_bfrt_translator_mock_.get());
   }
 
@@ -547,55 +854,19 @@ class TranslatorWriterWrapperTest : public ::testing::Test {
 };
 
 TEST_F(TranslatorWriterWrapperTest, Entities) {
-  const char read_resp_str[] = R"pb(
-    entities { table_entry { table_id: 1 } }
-    entities { action_profile_member { action_profile_id: 1 } }
+  const char read_resp_str[] = R"PROTO(
     entities {
-      packet_replication_engine_entry { clone_session_entry { session_id: 1 } }
+      table_entry {
+        table_id: 1
+        }
     }
-    entities { direct_counter_entry { table_entry { table_id: 1 } } }
-    entities { counter_entry { counter_id: 1 } }
-    entities { register_entry { register_id: 1 } }
-    entities { meter_entry { meter_id: 1 } }
-    entities {
-      # writer wrapper won't touch this entity
-      action_profile_group { action_profile_id: 1 }
-    }
-  )pb";
+  )PROTO";
 
   ::p4::v1::ReadResponse read_resp;
   EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
-  auto te = read_resp.entities().at(0).table_entry();
-  auto apm = read_resp.entities().at(1).action_profile_member();
-  auto pree = read_resp.entities().at(2).packet_replication_engine_entry();
-  auto dce = read_resp.entities().at(3).direct_counter_entry();
-  auto ce = read_resp.entities().at(4).counter_entry();
-  auto re = read_resp.entities().at(5).register_entry();
-  auto me = read_resp.entities().at(6).meter_entry();
-
   EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateTableEntry(EqualsProto(te), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(te)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateActionProfileMember(EqualsProto(apm), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::ActionProfileMember>(apm)));
-  EXPECT_CALL(
-      *p4runtime_bfrt_translator_mock_,
-      TranslatePacketReplicationEngineEntry(EqualsProto(pree), Eq(false)))
-      .WillOnce(Return(
-          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(pree)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateDirectCounterEntry(EqualsProto(dce), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::DirectCounterEntry>(dce)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateCounterEntry(EqualsProto(ce), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::CounterEntry>(ce)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateRegisterEntry(EqualsProto(re), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::RegisterEntry>(re)));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-              TranslateMeterEntry(EqualsProto(me), Eq(false)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(me)));
+              TranslateReadResponse(EqualsProto(read_resp)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>(read_resp)));
   EXPECT_CALL(*writer_mock_, Write(_)).WillOnce(Return(true));
   EXPECT_EQ(Write(read_resp), true);
 }

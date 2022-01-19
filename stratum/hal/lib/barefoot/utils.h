@@ -47,11 +47,6 @@ std::string RangeDefaultHigh(size_t bitwidth);
 // byte string.
 int NumBitsToNumBytes(int num_bits);
 
-// Converts unsigned integer to a byte array that fits certain bit width.
-// Returns error if the value is bigger than the size of bit width can store.
-::util::StatusOr<std::string> Uint32ToBytes(uint32 value, size_t bitwidth);
-::util::StatusOr<uint32> BytesToUint32(std::string value);
-
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

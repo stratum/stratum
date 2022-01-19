@@ -4,6 +4,9 @@
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
 
+#include <string>
+
+#include "absl/container/flat_hash_map.h"
 #include "absl/time/time.h"
 #include "stratum/glue/integral_types.h"
 
@@ -68,8 +71,10 @@ constexpr int kMaxQueuesPerPort = 32;
 constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(1);
 
 // URIs for P4Runtime Translation.
-constexpr size_t kTnaPortIdBitWidth = 9;
+constexpr int32 kTnaPortIdBitWidth = 9;
 constexpr char kUriTnaPortId[] = "tna/PortId_t";
+const absl::flat_hash_map<std::string, int32> kUriToBitWidth = {
+    {kUriTnaPortId, kTnaPortIdBitWidth}};
 
 }  // namespace barefoot
 }  // namespace hal
