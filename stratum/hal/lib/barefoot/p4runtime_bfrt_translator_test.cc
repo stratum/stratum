@@ -697,7 +697,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
           "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_MulticastGroup) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       WritePacketReplicationRequest_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -750,7 +751,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_MulticastGroup
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_MulticastGroup) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       ReadPacketReplicationRequest_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_req_str[] = R"PROTO(
@@ -798,7 +800,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_MulticastGroup)
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationResponse_MulticastGroup) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       ReadPacketReplicationResponse_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -846,7 +849,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationResponse_MulticastGroup
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_CloneSession) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       WritePacketReplicationRequest_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -947,7 +951,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_CloneSession) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationResponse_CloneSession) {
+TEST_F(P4RuntimeBfrtTranslatorTest,
+       ReadPacketReplicationResponse_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -1016,8 +1021,11 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
 
   ::p4::v1::WriteRequest write_req;
   EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
-  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
-  DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM, "'singleton_port_to_sdk_port_.count(replica.egress_port())' is false.")));
+  EXPECT_THAT(
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+      DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                       "'singleton_port_to_sdk_port_.count("
+                                       "replica.egress_port())' is false.")));
 }
 
 // TODO(Yi Tseng): Will support these tests in other PRs.

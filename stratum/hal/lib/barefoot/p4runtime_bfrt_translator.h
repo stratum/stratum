@@ -94,7 +94,9 @@ class P4RuntimeBfrtTranslator {
   TranslatePacketReplicationEngineEntry(
       const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::Replica> TranslateReplica(const ::p4::v1::Replica& replica, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::Replica> TranslateReplica(
+      const ::p4::v1::Replica& replica, bool to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                        const std::string& uri,
                                                        bool to_sdk,

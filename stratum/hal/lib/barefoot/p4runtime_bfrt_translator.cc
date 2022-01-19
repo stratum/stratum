@@ -491,16 +491,21 @@ P4RuntimeBfrtTranslator::TranslateRegisterEntry(
   return entry;
 }
 
-::util::StatusOr<::p4::v1::Replica> P4RuntimeBfrtTranslator::TranslateReplica(const ::p4::v1::Replica& replica, bool to_sdk) {
+::util::StatusOr<::p4::v1::Replica> P4RuntimeBfrtTranslator::TranslateReplica(
+    const ::p4::v1::Replica& replica, bool to_sdk) {
   ::p4::v1::Replica translated_replica(replica);
   // Since we know we are always translating the port number, we can simply
   // use the port map here.
   if (to_sdk) {
-    CHECK_RETURN_IF_FALSE(singleton_port_to_sdk_port_.count(replica.egress_port()));
-    translated_replica.set_egress_port(singleton_port_to_sdk_port_[replica.egress_port()]);
+    CHECK_RETURN_IF_FALSE(
+        singleton_port_to_sdk_port_.count(replica.egress_port()));
+    translated_replica.set_egress_port(
+        singleton_port_to_sdk_port_[replica.egress_port()]);
   } else {
-    CHECK_RETURN_IF_FALSE(sdk_port_to_singleton_port_.count(replica.egress_port()));
-    translated_replica.set_egress_port(sdk_port_to_singleton_port_[replica.egress_port()]);
+    CHECK_RETURN_IF_FALSE(
+        sdk_port_to_singleton_port_.count(replica.egress_port()));
+    translated_replica.set_egress_port(
+        sdk_port_to_singleton_port_[replica.egress_port()]);
   }
   return translated_replica;
 }
@@ -511,15 +516,19 @@ P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
   ::p4::v1::PacketReplicationEngineEntry translated_entry(entry);
   switch (translated_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::kMulticastGroupEntry: {
-      auto* multicast_group_entry = translated_entry.mutable_multicast_group_entry();
-      for (::p4::v1::Replica& replica : *multicast_group_entry->mutable_replicas()) {
+      auto* multicast_group_entry =
+          translated_entry.mutable_multicast_group_entry();
+      for (::p4::v1::Replica& replica :
+           *multicast_group_entry->mutable_replicas()) {
         ASSIGN_OR_RETURN(replica, TranslateReplica(replica, to_sdk));
       }
       break;
     }
     case ::p4::v1::PacketReplicationEngineEntry::kCloneSessionEntry: {
-      auto* clone_session_entry = translated_entry.mutable_clone_session_entry();
-      for (::p4::v1::Replica& replica : *clone_session_entry->mutable_replicas()) {
+      auto* clone_session_entry =
+          translated_entry.mutable_clone_session_entry();
+      for (::p4::v1::Replica& replica :
+           *clone_session_entry->mutable_replicas()) {
         ASSIGN_OR_RETURN(replica, TranslateReplica(replica, to_sdk));
       }
       break;
