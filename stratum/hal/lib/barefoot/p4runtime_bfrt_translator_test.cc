@@ -111,7 +111,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       match_fields {
         id: 1
         name: "field1"
-        bitwidth: 9
+        bitwidth: 32
         match_type: EXACT
         type_name {
           name: "FabricPortId_t"
@@ -120,7 +120,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       match_fields {
         id: 2
         name: "field2"
-        bitwidth: 9
+        bitwidth: 32
         match_type: TERNARY
         type_name {
           name: "FabricPortId_t"
@@ -129,7 +129,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       match_fields {
         id: 3
         name: "field3"
-        bitwidth: 9
+        bitwidth: 32
         match_type: RANGE
         type_name {
           name: "FabricPortId_t"
@@ -137,7 +137,25 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       }
       match_fields {
         id: 4
-        name: "don't translate"
+        name: "field4"
+        bitwidth: 32
+        match_type: LPM
+        type_name {
+          name: "FabricPortId_t"
+        }
+      }
+      match_fields {
+        id: 5
+        name: "field5"
+        bitwidth: 32
+        match_type: OPTIONAL
+        type_name {
+          name: "FabricPortId_t"
+        }
+      }
+      match_fields {
+        id: 6
+        name: "field6"
         bitwidth: 32
         match_type: EXACT
       }
@@ -155,7 +173,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       params {
         id: 1
         name: "port_id"
-        bitwidth: 9
+        bitwidth: 32
         type_name {
           name: "FabricPortId_t"
         }
@@ -191,6 +209,24 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
         name: "FabricPortId_t"
       }
       size: 500
+    }
+    registers {
+      preamble {
+        id: 66666
+        name: "Ingress.control.my_register"
+        alias: "my_register"
+      }
+      type_spec {
+        bitstring {
+          bit {
+            bitwidth: 32
+          }
+        }
+      }
+      size: 10
+      index_type_name {
+        name: "FabricPortId_t"
+      }
     }
     type_info {
       new_types {
@@ -290,12 +326,9 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
 }
 
 // Table entry
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-
-  // Translate to SDK port.
-  // We expect that every port number translated from 1 to 300(0x012C).
   const char write_req_str[] = R"PROTO(
     updates {
       entity {
@@ -307,7 +340,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
           }
           match {
             field_id: 2
-            ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
+            ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
           }
           match {
             field_id: 3
@@ -315,6 +348,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
           }
           match {
             field_id: 4
+            lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x00\x00\x00\x01"}
+          }
+          match {
+            field_id: 6
             exact { value: "\x00\x00\x00\x01" }
           }
           action {
@@ -339,7 +380,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
           }
           match {
             field_id: 2
-            ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
+            ternary { value: "\x01\x2C" mask: "\x01\xff" }
           }
           match {
             field_id: 3
@@ -347,6 +388,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
           }
           match {
             field_id: 4
+            lpm { value: "\x01\x2C" prefix_len: 9 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 6
             exact { value: "\x00\x00\x00\x01" }
           }
           action {
@@ -368,8 +417,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry) {
   EXPECT_OK(translated_value.status());
   write_req = translated_value.ConsumeValueOrDie();
   ::p4::v1::WriteRequest expected_write_req;
-  EXPECT_OK(ParseProtoFromString(expected_write_req_str,
-                                 &expected_write_req));
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
@@ -386,7 +434,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
         }
         match {
           field_id: 2
-          ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
+          ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
         }
         match {
           field_id: 3
@@ -394,6 +442,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
         }
         match {
           field_id: 4
+          lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 6
           exact { value: "\x00\x00\x00\x01" }
         }
         action {
@@ -416,7 +472,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
         }
         match {
           field_id: 2
-          ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
+          ternary { value: "\x01\x2C" mask: "\x01\xff" }
         }
         match {
           field_id: 3
@@ -424,6 +480,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
         }
         match {
           field_id: 4
+          lpm { value: "\x01\x2C" prefix_len: 9 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 6
           exact { value: "\x00\x00\x00\x01" }
         }
         action {
@@ -437,17 +501,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
     }
   )PROTO";
 
-
-    ::p4::v1::ReadRequest read_req;
-    EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
-    auto translated_value =
-        p4rt_bfrt_translator_->TranslateReadRequest(read_req);
-    EXPECT_OK(translated_value.status());
-    read_req = translated_value.ConsumeValueOrDie();
-    ::p4::v1::ReadRequest expected_read_req;
-    EXPECT_OK(ParseProtoFromString(expected_read_req_str,
-                                  &expected_read_req));
-    EXPECT_THAT(read_req, EqualsProto(expected_read_req));
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
+  EXPECT_OK(translated_value.status());
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
@@ -463,7 +524,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
         }
         match {
           field_id: 2
-          ternary { value: "\x01\x2C" mask: "\x00\x00\x01\xff" }
+          ternary { value: "\x01\x2C" mask: "\x01\xff" }
         }
         match {
           field_id: 3
@@ -471,6 +532,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
         }
         match {
           field_id: 4
+          lpm { value: "\x01\x2C" prefix_len: 9 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x01\x2C" }
+        }
+        match {
+          field_id: 6
           exact { value: "\x00\x00\x01\x2C" }
         }
         action {
@@ -493,7 +562,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
         }
         match {
           field_id: 2
-          ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\x01\xff" }
+          ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
         }
         match {
           field_id: 3
@@ -501,6 +570,14 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
         }
         match {
           field_id: 4
+          lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        }
+        match {
+          field_id: 5
+          optional { value: "\x00\x00\x00\x01" }
+        }
+        match {
+          field_id: 6
           exact { value: "\x00\x00\x01\x2C" }
         }
         action {
@@ -520,9 +597,86 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
   EXPECT_OK(translated_value.status());
   read_resp = translated_value.ConsumeValueOrDie();
   ::p4::v1::ReadResponse expected_read_resp;
-  EXPECT_OK(ParseProtoFromString(expected_read_resp_str,
-                                 &expected_read_resp));
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidTernary) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  // mask must be all-one.
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 2
+            ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\xff\xff" }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+              DerivedFromStatus(
+                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                 "'field_match.ternary().mask() == all_one' is false.")));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidRange) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  // mask must be all-one.
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 3
+            range { low: "foo" high: "bar" }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+              DerivedFromStatus(
+                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                 "'field_match.range().low() == field_match.range().high()' is false.")));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  // mask must be all-one.
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 4
+            lpm { value: "\x00\x00\x00\x01" prefix_len: 10 }
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+              DerivedFromStatus(
+                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                 "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
 }
 
 // TODO(Yi Tseng): Will support these tests in other PRs.
