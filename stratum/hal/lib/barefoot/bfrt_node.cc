@@ -38,6 +38,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
+      p4runtime_bfrt_translator_(ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)),
       node_id_(0),
       device_id_(device_id) {}
 
@@ -50,6 +51,7 @@ BfrtNode::BfrtNode()
       bfrt_packetio_manager_(nullptr),
       bfrt_pre_manager_(nullptr),
       bfrt_counter_manager_(nullptr),
+      p4runtime_bfrt_translator_(nullptr),
       node_id_(0),
       device_id_(-1) {}
 
@@ -74,6 +76,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   node_id_ = node_id;
   // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
+  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
   return ::util::OkStatus();
