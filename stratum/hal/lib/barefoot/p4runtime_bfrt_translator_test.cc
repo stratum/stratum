@@ -14,6 +14,7 @@
 #include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator_mock.h"
 #include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
 
 namespace stratum {
@@ -74,6 +75,11 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
                                                bool to_sdk, int32 bit_width) {
     ::absl::ReaderMutexLock l(&p4rt_bfrt_translator_->lock_);
     return p4rt_bfrt_translator_->TranslateValue(value, uri, to_sdk, bit_width);
+  }
+
+  std::string Uint32ToBytes(uint32 value, int32 bit_width) {
+    return P4RuntimeByteStringToPaddedByteString(Uint32ToByteStream(value),
+                                                 NumBitsToNumBytes(bit_width));
   }
 
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
@@ -273,26 +279,28 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_InvalidSize) {
   EXPECT_THAT(
       TranslateValue("some value", kUriTnaPortId, false, kTnaPortIdBitWidth)
           .status(),
-      DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                                       "'value.size() == 2' is false. ")));
+      DerivedFromStatus(
+          ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                         "'value.size() == "
+                         "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToSdk) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
-  EXPECT_THAT(TranslateValue(singleton_port_id.ValueOrDie(), kUriTnaPortId,
-                             true, kTnaPortIdBitWidth)
-                  .status(),
-              DerivedFromStatus(::util::Status(
-                  StratumErrorSpace(), ERR_INVALID_PARAM,
-                  "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
+  EXPECT_THAT(
+      TranslateValue(singleton_port_id, kUriTnaPortId, true, kTnaPortIdBitWidth)
+          .status(),
+      DerivedFromStatus(::util::Status(
+          StratumErrorSpace(), ERR_INVALID_PARAM,
+          "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from sdk port to singleton port
-  auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth).ValueOrDie();
+  auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
   EXPECT_THAT(
       TranslateValue(sdk_port_id, kUriTnaPortId, false, kTnaPortIdBitWidth)
           .status(),
@@ -304,10 +312,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from singleton port to sdk port
-  auto singleton_port_id =
-      Uint32ToBytes(kPortId, kTnaPortIdBitWidth).ValueOrDie();
-  auto expected_value =
-      Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth).ValueOrDie();
+  auto singleton_port_id = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
+  auto expected_value = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
   auto actual_value =
       TranslateValue(singleton_port_id, kUriTnaPortId, true, kTnaPortIdBitWidth)
           .ValueOrDie();
@@ -317,8 +323,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
 TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from sdk port to singleton port
-  auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth).ValueOrDie();
-  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth).ValueOrDie();
+  auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
+  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
   auto actual_value =
       TranslateValue(sdk_port_id, kUriTnaPortId, false, kTnaPortIdBitWidth)
           .ValueOrDie();
@@ -622,9 +628,9 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidTernary) {
   ::p4::v1::WriteRequest write_req;
   EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
   EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
-              DerivedFromStatus(
-                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                                 "'field_match.ternary().mask() == all_one' is false.")));
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'field_match.ternary().mask() == all_one' is false.")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidRange) {
@@ -650,7 +656,8 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidRange) {
   EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
               DerivedFromStatus(
                   ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                                 "'field_match.range().low() == field_match.range().high()' is false.")));
+                                 "'field_match.range().low() == "
+                                 "field_match.range().high()' is false.")));
 }
 
 TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
@@ -673,10 +680,11 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
 
   ::p4::v1::WriteRequest write_req;
   EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
-  EXPECT_THAT(p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
-              DerivedFromStatus(
-                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                                 "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
+  EXPECT_THAT(
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req).status(),
+      DerivedFromStatus(::util::Status(
+          StratumErrorSpace(), ERR_INVALID_PARAM,
+          "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
 }
 
 // TODO(Yi Tseng): Will support these tests in other PRs.

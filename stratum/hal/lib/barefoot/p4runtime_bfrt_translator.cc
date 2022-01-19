@@ -9,7 +9,9 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/utils.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
 namespace stratum {
@@ -528,21 +530,22 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
   if (to_sdk) {
     // singleton port id(N-byte) -> singleton port id(uint32) -> sdk port
     // id(uint32) -> sdk port id(2-byte)
-    ASSIGN_OR_RETURN(const uint32 port_id, BytesToUint32(value));
+    const uint32 port_id = ByteStreamToUint<uint32>(value);
     CHECK_RETURN_IF_FALSE(singleton_port_to_sdk_port_.count(port_id));
     const uint32 sdk_port_id = singleton_port_to_sdk_port_[port_id];
-    ASSIGN_OR_RETURN(std::string sdk_port_id_bytes,
-                     Uint32ToBytes(sdk_port_id, bit_width));
+    std::string sdk_port_id_bytes = P4RuntimeByteStringToPaddedByteString(
+        Uint32ToByteStream(sdk_port_id), NumBitsToNumBytes(bit_width));
     return sdk_port_id_bytes;
   } else {
     // sdk port id(2-byte) -> sdk port id(uint32) -> singleton port id(uint32)
     // -> singleton port id(N-byte)
-    CHECK_RETURN_IF_FALSE(value.size() == 2);
-    ASSIGN_OR_RETURN(const uint32 sdk_port_id, BytesToUint32(value));
+    CHECK_RETURN_IF_FALSE(value.size() ==
+                          NumBitsToNumBytes(kTnaPortIdBitWidth));
+    const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
     CHECK_RETURN_IF_FALSE(sdk_port_to_singleton_port_.count(sdk_port_id));
     const uint32 port_id = sdk_port_to_singleton_port_[sdk_port_id];
-    ASSIGN_OR_RETURN(std::string port_id_bytes,
-                     Uint32ToBytes(port_id, bit_width));
+    std::string port_id_bytes = P4RuntimeByteStringToPaddedByteString(
+        Uint32ToByteStream(port_id), NumBitsToNumBytes(bit_width));
     return port_id_bytes;
   }
 }

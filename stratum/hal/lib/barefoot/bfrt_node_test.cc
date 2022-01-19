@@ -974,7 +974,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::INSERT,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   std::vector<::util::Status> results = {};
@@ -996,7 +997,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::MODIFY,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   std::vector<::util::Status> results = {};
@@ -1018,7 +1020,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::DELETE,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   std::vector<::util::Status> results = {};
@@ -1046,7 +1049,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::INSERT,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1073,7 +1077,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::MODIFY,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1100,7 +1105,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::DELETE,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1127,7 +1133,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
               WriteActionProfileGroup(session_mock, ::p4::v1::Update::INSERT,
                                       EqualsProto(*group)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1160,7 +1167,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
 //   EXPECT_CALL(*bfrt_table_manager_mock_,
 //               AddActionProfileGroup(EqualsProto(*group), kEgressIntfId))
 //       .WillOnce(Return(::util::OkStatus()));
-//   EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+//   EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+//   TranslateWriteRequest(EqualsProto(req)))
 //       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
 //   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1198,7 +1206,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
 //   EXPECT_CALL(*bfrt_table_manager_mock_,
 //               UpdateActionProfileGroup(EqualsProto(*group)))
 //       .WillOnce(Return(::util::OkStatus()));
-//   EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+//   EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+//   TranslateWriteRequest(EqualsProto(req)))
 //       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
 //   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1230,7 +1239,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
 //   EXPECT_CALL(*bfrt_table_manager_mock_,
 //               DeleteActionProfileGroup(EqualsProto(*group)))
 //       .WillOnce(Return(::util::OkStatus()));
-//   EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+//   EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+//   TranslateWriteRequest(EqualsProto(req)))
 //   .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
 //   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1260,7 +1270,8 @@ TEST_F(BfrtNodeTest,
       *bfrt_table_manager_mock_,
       WriteActionProfileMember(session_mock, ::p4::v1::Update::INSERT, _))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1290,7 +1301,8 @@ TEST_F(BfrtNodeTest,
       *bfrt_table_manager_mock_,
       WriteActionProfileGroup(session_mock, ::p4::v1::Update::INSERT, _))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1317,7 +1329,8 @@ TEST_F(BfrtNodeTest,
       *bfrt_pre_manager_mock_,
       WritePreEntry(session_mock, ::p4::v1::Update::INSERT, EqualsProto(*pre)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1343,7 +1356,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertDirectCounterEntry) {
               WriteDirectCounterEntry(session_mock, ::p4::v1::Update::INSERT,
                                       EqualsProto(*direct_counter_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1369,7 +1383,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertIndirectCounterEntry) {
               WriteIndirectCounterEntry(session_mock, ::p4::v1::Update::INSERT,
                                         EqualsProto(*counter_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1395,7 +1410,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertRegisterEntry) {
               WriteRegisterEntry(session_mock, ::p4::v1::Update::INSERT,
                                  EqualsProto(*register_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1421,7 +1437,8 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertMeterEntry) {
               WriteMeterEntry(session_mock, ::p4::v1::Update::INSERT,
                               EqualsProto(*meter_entry)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateWriteRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateWriteRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::WriteRequest>(req)));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1440,11 +1457,12 @@ TEST_F(BfrtNodeTest, ReadForwardingEntriesSuccess_TableEntry) {
   std::shared_ptr<BfSdeInterface::SessionInterface> session_mock =
       std::make_shared<SessionMock>();
   EXPECT_CALL(*bf_sde_mock_, CreateSession()).WillOnce(Return(session_mock));
-  EXPECT_CALL(
-      *bfrt_table_manager_mock_,
-      ReadTableEntry(session_mock, EqualsProto(*table_entry), _)) // Writer will be replaced by a wrapper.
+  EXPECT_CALL(*bfrt_table_manager_mock_,
+              ReadTableEntry(session_mock, EqualsProto(*table_entry),
+                             _))  // Writer will be replaced by a wrapper.
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateReadRequest(EqualsProto(req)))
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateReadRequest(EqualsProto(req)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::ReadRequest>(req)));
   ::p4::v1::ReadResponse resp;
   EXPECT_CALL(*p4runtime_bfrt_translator_mock_, TranslateReadResponse(_))

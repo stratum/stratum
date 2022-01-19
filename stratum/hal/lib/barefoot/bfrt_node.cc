@@ -281,7 +281,8 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   }
   ASSIGN_OR_RETURN(const auto& request,
                    p4runtime_bfrt_translator_->TranslateReadRequest(req));
-  P4RuntimeBfrtTranslationWriterWrapper writer_wrapper(writer, p4runtime_bfrt_translator_);
+  P4RuntimeBfrtTranslationWriterWrapper writer_wrapper(
+      writer, p4runtime_bfrt_translator_);
   writer = &writer_wrapper;
   ::p4::v1::ReadResponse resp;
   bool success = true;
