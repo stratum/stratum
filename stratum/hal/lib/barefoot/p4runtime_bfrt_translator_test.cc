@@ -109,7 +109,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       channel: 1
     }
     singleton_ports {
-      id: 1
+      id: 2
       slot: 1
       port: 2
       channel: 1

@@ -485,20 +485,24 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
   const auto& action_id = action.action_id();
   if (action_to_param_to_type_uri_.count(action_id) &&
       action_to_param_to_bit_width_.count(action_id)) {
-    for (int j = 0; j < translated_action.params_size(); j++) {
-      auto* param = translated_action.mutable_params()->Mutable(j);
-      const auto& param_id = param->param_id();
+    for (::p4::v1::Action_Param& param : *translated_action.mutable_params()) {
+      const auto& param_id = param.param_id();
       std::string* uri =
           gtl::FindOrNull(action_to_param_to_type_uri_[action_id], param_id);
-      int32* bit_width =
-          gtl::FindOrNull(action_to_param_to_bit_width_[action_id], param_id);
-      if (uri && bit_width) {
+      int32 to_bit_width = 0;
+      if (to_sdk && uri) {
+        to_bit_width = gtl::FindWithDefault(kUriToBitWidth, *uri, 0);
+      } else {
+        to_bit_width = gtl::FindWithDefault(
+            action_to_param_to_bit_width_[action_id], param_id, 0);
+      }
+      if (uri && to_bit_width) {
         ASSIGN_OR_RETURN(
             const std::string& new_val,
-            TranslateValue(param->value(), *uri, to_sdk, *bit_width));
-        param->set_value(new_val);
+            TranslateValue(param.value(), *uri, to_sdk, to_bit_width));
+        param.set_value(new_val);
       }  // else, we don't modify the value if it doesn't need to be
-         // translated.
+          // translated.
     }
   }
   return translated_action;
