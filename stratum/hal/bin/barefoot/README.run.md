@@ -782,3 +782,25 @@ In a bash shell on the switch:
 lspci -d 1d1c:
 # 05:00.0 Unassigned class [ff00]: Device 1d1c:0010 (rev 10)
 ```
+
+### Experimental P4Runtime translation support
+
+The `stratum_bfrt` target supports P4Runtime translation which helps to translate
+between SDN port and the SDK port.
+
+To enable this, you need to create a new port type in you P4 code and use this type
+for match field and action parameter, for example:
+
+```p4
+@p4runtime_translation("tna/PortId_t", 32)
+type bit<32> MyPortId_t;
+```
+
+To enable it on Stratum, add `--experimental_enable_p4runtime_translation` flag
+when starting Stratum.
+
+Note that `stratum_bfrt` also follows the PSA port spec, below are reserved ports
+when using `stratum_bfrt`:
+
+- `0xFFFFFFFD`: CPU port
+- `0xFFFFFF00`~`0xFFFFFF03`: Recirculation ports for pipeline 0~3.

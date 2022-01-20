@@ -76,6 +76,18 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
   // Port mapping for P4Runtime translation.
   singleton_port_to_sdk_port_.clear();
   sdk_port_to_singleton_port_.clear();
+  // Initialize with special ports.
+  ASSIGN_OR_RETURN(const auto& cpu_sdk_port,
+                   bf_sde_interface_->GetPcieCpuPort(device_id_));
+  singleton_port_to_sdk_port_[kSdnCpuPortId] = cpu_sdk_port;
+  sdk_port_to_singleton_port_[cpu_sdk_port] = kSdnCpuPortId;
+  for (int pipe = 0; pipe < 4; pipe++) {
+    uint32 sdk_port = kTnaRecirculationPortBase | (pipe << 7);
+    uint32 sdn_port = kSdnTnaRecirculationPortBase + pipe;
+    singleton_port_to_sdk_port_[sdn_port] = sdk_port;
+    sdk_port_to_singleton_port_[sdk_port] = sdn_port;
+  }
+
   for (const auto& singleton_port : config.singleton_ports()) {
     uint32 singleton_port_id = singleton_port.id();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
@@ -458,11 +470,52 @@ P4RuntimeBfrtTranslator::TranslateRegisterEntry(
   return entry;
 }
 
+::util::StatusOr<::p4::v1::Replica> P4RuntimeBfrtTranslator::TranslateReplica(
+    const ::p4::v1::Replica& replica, bool to_sdk) {
+  ::p4::v1::Replica translated_replica(replica);
+  // Since we know we are always translating the port number, we can simply
+  // use the port map here.
+  if (to_sdk) {
+    CHECK_RETURN_IF_FALSE(
+        singleton_port_to_sdk_port_.count(replica.egress_port()));
+    translated_replica.set_egress_port(
+        singleton_port_to_sdk_port_[replica.egress_port()]);
+  } else {
+    CHECK_RETURN_IF_FALSE(
+        sdk_port_to_singleton_port_.count(replica.egress_port()));
+    translated_replica.set_egress_port(
+        sdk_port_to_singleton_port_[replica.egress_port()]);
+  }
+  return translated_replica;
+}
+
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return entry;
+  ::p4::v1::PacketReplicationEngineEntry translated_entry(entry);
+  switch (translated_entry.type_case()) {
+    case ::p4::v1::PacketReplicationEngineEntry::kMulticastGroupEntry: {
+      auto* multicast_group_entry =
+          translated_entry.mutable_multicast_group_entry();
+      for (::p4::v1::Replica& replica :
+           *multicast_group_entry->mutable_replicas()) {
+        ASSIGN_OR_RETURN(replica, TranslateReplica(replica, to_sdk));
+      }
+      break;
+    }
+    case ::p4::v1::PacketReplicationEngineEntry::kCloneSessionEntry: {
+      auto* clone_session_entry =
+          translated_entry.mutable_clone_session_entry();
+      for (::p4::v1::Replica& replica :
+           *clone_session_entry->mutable_replicas()) {
+        ASSIGN_OR_RETURN(replica, TranslateReplica(replica, to_sdk));
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::StreamMessageRequest>
@@ -479,7 +532,7 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
 }
 
 ::util::StatusOr<::p4::v1::Action> P4RuntimeBfrtTranslator::TranslateAction(
-    const ::p4::v1::Action& action, const bool& to_sdk) {
+    const ::p4::v1::Action& action, bool to_sdk) {
   ::p4::v1::Action translated_action;
   translated_action.CopyFrom(action);
   const auto& action_id = action.action_id();
