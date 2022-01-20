@@ -138,6 +138,14 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
 
   // Push pipeline config to the managers.
+  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
+      bfrt_config_.programs(0).p4info()));
+
+  // Augment the P4Info so managers will use the original bitwith from P4 code
+  // for every fields (e.g, 9-bit port number instead of 32-bits).
+  ASSIGN_OR_RETURN(const auto& low_level_p4info,
+                   p4runtime_bfrt_translator_->GetLowLevelP4Info());
+  *bfrt_config_.mutable_programs(0)->mutable_p4info() = low_level_p4info;
   RETURN_IF_ERROR(
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
@@ -146,8 +154,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
       bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
-  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
-      bfrt_config_.programs(0).p4info()));
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }

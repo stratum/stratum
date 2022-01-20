@@ -43,6 +43,8 @@ class P4RuntimeBfrtTranslator {
   virtual ::util::StatusOr<::p4::v1::StreamMessageResponse>
   TranslateStreamMessageResponse(
       const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::config::v1::P4Info> GetLowLevelP4Info()
+      LOCKS_EXCLUDED(lock_);
   static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
       BfSdeInterface* bf_sde_interface, int device_id,
       bool translation_enabled) {
@@ -149,6 +151,10 @@ class P4RuntimeBfrtTranslator {
   absl::flat_hash_map<uint32, int32> counter_to_bit_width_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> meter_to_bit_width_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> register_to_bit_width_ GUARDED_BY(lock_);
+
+  // This P4Info contains field information without P4Runtime translation
+  // which is useful for low level managers.
+  ::p4::config::v1::P4Info low_level_p4info_;
 
   friend class P4RuntimeBfrtTranslatorTest;
 };

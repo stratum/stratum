@@ -130,6 +130,8 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
                   PushChassisConfig(EqualsProto(config), kNodeId))
           .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_, GetLowLevelP4INfo())
+          .WillOnce(Return(::util::StatusOr<::p4::config::v1::P4Info>(config)));
       // EXPECT_CALL(*bfrt_pre_manager_mock_,
       //             PushChassisConfig(EqualsProto(config), kNodeId))
       //     .WillOnce(Return(::util::OkStatus()));

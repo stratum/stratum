@@ -350,6 +350,121 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_EQ(expected_value, actual_value);
 }
 
+TEST_F(P4RuntimeBfrtTranslatorTest, GetLowLevelP4Info) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char expect_low_level_p4info_str[] = R"PROTO(
+    pkg_info {
+      arch: "tna"
+    }
+    tables {
+      preamble {
+        id: 33583783
+        name: "Ingress.control.table1"
+      }
+      match_fields {
+        id: 1
+        name: "field1"
+        bitwidth: 9
+        match_type: EXACT
+      }
+      match_fields {
+        id: 2
+        name: "field2"
+        bitwidth: 9
+        match_type: TERNARY
+      }
+      match_fields {
+        id: 3
+        name: "field3"
+        bitwidth: 9
+        match_type: RANGE
+      }
+      match_fields {
+        id: 4
+        name: "field4"
+        bitwidth: 9
+        match_type: LPM
+      }
+      match_fields {
+        id: 5
+        name: "field5"
+        bitwidth: 9
+        match_type: OPTIONAL
+      }
+      match_fields {
+        id: 6
+        name: "field6"
+        bitwidth: 32
+        match_type: EXACT
+      }
+      action_refs {
+        id: 16794911
+      }
+      const_default_action_id: 16836487
+      size: 1024
+    }
+    actions {
+      preamble {
+        id: 16794911
+        name: "Ingress.control.action1"
+      }
+      params {
+        id: 1
+        name: "port_id"
+        bitwidth: 9
+      }
+      params {
+        id: 2
+        name: "don't translate"
+        bitwidth: 32
+      }
+    }
+    counters {
+      preamble {
+        id: 318814845
+        name: "Ingress.control.counter1"
+      }
+      spec {
+        unit: BOTH
+      }
+    }
+    meters {
+      preamble {
+        id: 55555
+        name: "Ingress.control.meter_bytes"
+        alias: "meter_bytes"
+      }
+      spec {
+        unit: BYTES
+      }
+      size: 500
+    }
+    registers {
+      preamble {
+        id: 66666
+        name: "Ingress.control.my_register"
+        alias: "my_register"
+      }
+      type_spec {
+        bitstring {
+          bit {
+            bitwidth: 32
+          }
+        }
+      }
+      size: 10
+    }
+  )PROTO";
+  ::p4::config::v1::P4Info expected_low_level_p4info;
+  EXPECT_OK(ParseProtoFromString(expect_low_level_p4info_str,
+                                 &expected_low_level_p4info));
+  const auto& statusor = p4rt_bfrt_translator_->GetLowLevelP4Info();
+  EXPECT_OK(statusor.status());
+  const auto& low_level_p4info = statusor.ValueOrDie();
+  EXPECT_THAT(low_level_p4info, EqualsProto(expected_low_level_p4info));
+}
+
 // Table entry
 TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest) {
   EXPECT_OK(PushChassisConfig());
@@ -1401,7 +1516,6 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
 }
 
 // TODO(Yi Tseng): Will support these tests in other PRs.
-// PacketIO
 // Meter entry (translate index)
 // Direct meter entry (translate index)
 // Counter entry (translate index)
