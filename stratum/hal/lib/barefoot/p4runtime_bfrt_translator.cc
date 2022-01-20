@@ -77,7 +77,8 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
   singleton_port_to_sdk_port_.clear();
   sdk_port_to_singleton_port_.clear();
   // Initialize with special ports.
-  ASSIGN_OR_RETURN(const auto& cpu_sdk_port, bf_sde_interface_->GetPcieCpuPort(device_id_));
+  ASSIGN_OR_RETURN(const auto& cpu_sdk_port,
+                   bf_sde_interface_->GetPcieCpuPort(device_id_));
   singleton_port_to_sdk_port_[kSdnCpuPortId] = cpu_sdk_port;
   sdk_port_to_singleton_port_[cpu_sdk_port] = kSdnCpuPortId;
   for (int pipe = 0; pipe < 4; pipe++) {
