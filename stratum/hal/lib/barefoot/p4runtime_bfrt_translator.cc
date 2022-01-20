@@ -76,6 +76,17 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
   // Port mapping for P4Runtime translation.
   singleton_port_to_sdk_port_.clear();
   sdk_port_to_singleton_port_.clear();
+  // Initialize with special ports.
+  ASSIGN_OR_RETURN(const auto& cpu_sdk_port, bf_sde_interface_->GetPcieCpuPort(device_id_));
+  singleton_port_to_sdk_port_[kSdnCpuPortId] = cpu_sdk_port;
+  sdk_port_to_singleton_port_[cpu_sdk_port] = kSdnCpuPortId;
+  for (int pipe = 0; pipe < 4; pipe++) {
+    uint32 sdk_port = kTnaRecirculationPortBase | (pipe << 7);
+    uint32 sdn_port = kSdnTnaRecirculationPortBase + pipe;
+    singleton_port_to_sdk_port_[sdn_port] = sdk_port;
+    sdk_port_to_singleton_port_[sdk_port] = sdn_port;
+  }
+
   for (const auto& singleton_port : config.singleton_ports()) {
     uint32 singleton_port_id = singleton_port.id();
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),

@@ -61,6 +61,8 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
     const PortKey port2_key(kSlot, kPort2, kChannel);
     EXPECT_CALL(*bf_sde_mock_, GetPortIdFromPortKey(kDeviceId, port2_key))
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkPort2Id)));
+    EXPECT_CALL(*bf_sde_mock_, GetPcieCpuPort(kDeviceId))
+        .WillOnce(Return(::util::StatusOr<uint32>(kSdkCpuPortId)));
     return p4rt_bfrt_translator_->PushChassisConfig(config, kNodeId);
   }
 
@@ -87,10 +89,10 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
 
   static constexpr int kDeviceId = 1;
   static constexpr uint64 kNodeId = 0;
+  static constexpr uint32 kSdkCpuPortId = 320;
   // Singleton port 1
   static constexpr uint32 kPortId = 1;
   static constexpr uint32 kSdkPortId = 300;
-  static constexpr uint32 kSdkPortId2 = 301;
   static constexpr int32 kPort = 1;
   static constexpr int32 kSlot = 1;
   static constexpr int32 kChannel = 1;
@@ -261,9 +263,9 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
 };
 
 constexpr int P4RuntimeBfrtTranslatorTest::kDeviceId;
+constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkCpuPortId;
 constexpr uint32 P4RuntimeBfrtTranslatorTest::kPortId;
 constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPortId;
-constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPortId2;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kPort;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kSlot;
 constexpr int32 P4RuntimeBfrtTranslatorTest::kChannel;
@@ -1157,6 +1159,26 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
               egress_port: 2
               instance: 1
             }
+            replicas {
+              egress_port: 0xfffffffd # CPU
+              instance: 1
+            }
+            replicas {
+              egress_port: 0xffffff00 # Recirculation port 0
+              instance: 1
+            }
+            replicas {
+              egress_port: 0xffffff01 # Recirculation port 1
+              instance: 1
+            }
+            replicas {
+              egress_port: 0xffffff02 # Recirculation port 2
+              instance: 1
+            }
+            replicas {
+              egress_port: 0xffffff03 # Recirculation port 3
+              instance: 1
+            }
           }
         }
       }
@@ -1174,6 +1196,26 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
             }
             replicas {
               egress_port: 301
+              instance: 1
+            }
+            replicas {
+              egress_port: 320
+              instance: 1
+            }
+            replicas {
+              egress_port: 68
+              instance: 1
+            }
+            replicas {
+              egress_port: 196
+              instance: 1
+            }
+            replicas {
+              egress_port: 324
+              instance: 1
+            }
+            replicas {
+              egress_port: 452
               instance: 1
             }
           }
@@ -1258,6 +1300,26 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
             egress_port: 301
             instance: 1
           }
+          replicas {
+            egress_port: 320
+            instance: 1
+          }
+          replicas {
+            egress_port: 68
+            instance: 1
+          }
+          replicas {
+            egress_port: 196
+            instance: 1
+          }
+          replicas {
+            egress_port: 324
+            instance: 1
+          }
+          replicas {
+            egress_port: 452
+            instance: 1
+          }
         }
       }
     }
@@ -1273,6 +1335,26 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
           }
           replicas {
             egress_port: 2
+            instance: 1
+          }
+          replicas {
+            egress_port: 0xfffffffd
+            instance: 1
+          }
+          replicas {
+            egress_port: 0xffffff00
+            instance: 1
+          }
+          replicas {
+            egress_port: 0xffffff01
+            instance: 1
+          }
+          replicas {
+            egress_port: 0xffffff02
+            instance: 1
+          }
+          replicas {
+            egress_port: 0xffffff03
             instance: 1
           }
         }
