@@ -130,8 +130,6 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
                   PushChassisConfig(EqualsProto(config), kNodeId))
           .WillOnce(Return(::util::OkStatus()));
-      EXPECT_CALL(*p4runtime_bfrt_translator_mock_, GetLowLevelP4INfo())
-          .WillOnce(Return(::util::StatusOr<::p4::config::v1::P4Info>(config)));
       // EXPECT_CALL(*bfrt_pre_manager_mock_,
       //             PushChassisConfig(EqualsProto(config), kNodeId))
       //     .WillOnce(Return(::util::OkStatus()));
@@ -153,6 +151,12 @@ class BfrtNodeTest : public ::testing::Test {
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bf_sde_mock_, AddDevice(kDeviceId, _))
           .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+                  PushForwardingPipelineConfig(_))
+          .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_, GetLowLevelP4Info())
+          .WillOnce(Return(
+              ::util::StatusOr<::p4::config::v1::P4Info>(config.p4info())));
       EXPECT_CALL(*bfrt_packetio_manager_mock_, PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bfrt_table_manager_mock_, PushForwardingPipelineConfig(_))
@@ -160,9 +164,6 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*bfrt_pre_manager_mock_, PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bfrt_counter_manager_mock_, PushForwardingPipelineConfig(_))
-          .WillOnce(Return(::util::OkStatus()));
-      EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-                  PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
     }
     EXPECT_OK(PushForwardingPipelineConfig(config));

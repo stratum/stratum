@@ -96,6 +96,13 @@ class P4RuntimeBfrtTranslator {
   TranslatePacketReplicationEngineEntry(
       const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::PacketMetadata> TranslatePacketMetadata(
+      const p4::v1::PacketMetadata& packet_metadata, const std::string& uri,
+      int32 bit_width, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::PacketIn> TranslatePacketIn(
+      const ::p4::v1::PacketIn& packet_in) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::PacketOut> TranslatePacketOut(
+      const ::p4::v1::PacketOut& packet_out) SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<::p4::v1::Replica> TranslateReplica(
       const ::p4::v1::Replica& replica, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
@@ -134,8 +141,10 @@ class P4RuntimeBfrtTranslator {
       table_to_field_to_type_uri_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
       action_to_param_to_type_uri_ GUARDED_BY(lock_);
-  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
-      ctrl_hdr_to_meta_to_type_uri_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, std::string> packet_in_meta_to_type_uri_
+      GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, std::string> packet_out_meta_to_type_uri_
+      GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, std::string> counter_to_type_uri_
       GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, std::string> meter_to_type_uri_ GUARDED_BY(lock_);
@@ -146,8 +155,10 @@ class P4RuntimeBfrtTranslator {
       table_to_field_to_bit_width_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
       action_to_param_to_bit_width_ GUARDED_BY(lock_);
-  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
-      ctrl_hdr_to_meta_to_bit_width_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, int32> packet_in_meta_to_bit_width_
+      GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, int32> packet_out_meta_to_bit_width_
+      GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> counter_to_bit_width_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> meter_to_bit_width_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> register_to_bit_width_ GUARDED_BY(lock_);
@@ -157,26 +168,49 @@ class P4RuntimeBfrtTranslator {
   ::p4::config::v1::P4Info low_level_p4info_;
 
   friend class P4RuntimeBfrtTranslatorTest;
-};
 
-class P4RuntimeBfrtTranslationWriterWrapper
-    : public WriterInterface<::p4::v1::ReadResponse> {
  public:
-  P4RuntimeBfrtTranslationWriterWrapper(
-      WriterInterface<::p4::v1::ReadResponse>* writer,
-      P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
-      : writer_(ABSL_DIE_IF_NULL(writer)),
-        p4runtime_bfrt_translator_(
-            ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)) {}
-  bool Write(const ::p4::v1::ReadResponse& msg) override;
+  // Wrapper for writers
+  class ReadResponseWriterWrapper
+      : public WriterInterface<::p4::v1::ReadResponse> {
+   public:
+    ReadResponseWriterWrapper(
+        WriterInterface<::p4::v1::ReadResponse>* writer,
+        P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
+        : writer_(ABSL_DIE_IF_NULL(writer)),
+          p4runtime_bfrt_translator_(
+              ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)) {}
+    bool Write(const ::p4::v1::ReadResponse& msg) override;
 
- private:
-  // The original writer, not owned by this class.
-  WriterInterface<::p4::v1::ReadResponse>* writer_;
-  // The pointer point to the translator, not owned by this class.
-  P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_;
+   private:
+    // The original writer, not owned by this class.
+    WriterInterface<::p4::v1::ReadResponse>* writer_;
+    // The pointer point to the translator, not owned by this class.
+    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_;
 
-  friend class TranslatorWriterWrapperTest;
+    friend class TranslatorWriterWrapperTest;
+  };
+
+  class StreamMessageResponseWriterWrapper
+      : public WriterInterface<::p4::v1::StreamMessageResponse> {
+   public:
+    StreamMessageResponseWriterWrapper(
+        std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
+            writer,
+        P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
+        : writer_(writer),
+          p4runtime_bfrt_translator_(
+              ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)) {}
+    bool Write(const ::p4::v1::StreamMessageResponse& msg) override;
+
+   private:
+    // The original writer, not owned by this class.
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer_;
+    // The pointer point to the translator, not owned by this class.
+    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_;
+
+    friend class TranslatorWriterWrapperTest;
+  };
 };
 
 }  // namespace barefoot

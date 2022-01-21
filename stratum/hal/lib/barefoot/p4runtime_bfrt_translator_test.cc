@@ -248,6 +248,49 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
         name: "FabricPortId_t"
       }
     }
+    controller_packet_metadata {
+      preamble {
+        id: 81826293
+        name: "packet_in"
+        alias: "packet_in"
+        annotations: "@controller_header(\"packet_in\")"
+      }
+      metadata {
+        id: 1
+        name: "ingress_port"
+        bitwidth: 32
+        type_name {
+          name: "FabricPortId_t"
+        }
+      }
+      metadata {
+        id: 2
+        name: "_pad0"
+        bitwidth: 7
+      }
+    }
+    controller_packet_metadata {
+      preamble {
+        id: 76689799
+        name: "packet_out"
+        alias: "packet_out"
+        annotations: "@controller_header(\"packet_out\")"
+      }
+      metadata {
+        id: 1
+        name: "pad0"
+        annotations: "@padding"
+        bitwidth: 7
+      }
+      metadata {
+        id: 2
+        name: "egress_port"
+        bitwidth: 32
+        type_name {
+          name: "FabricPortId_t"
+        }
+      }
+    }
     type_info {
       new_types {
         key: "FabricPortId_t"
@@ -454,6 +497,43 @@ TEST_F(P4RuntimeBfrtTranslatorTest, GetLowLevelP4Info) {
         }
       }
       size: 10
+    }
+    controller_packet_metadata {
+      preamble {
+        id: 81826293
+        name: "packet_in"
+        alias: "packet_in"
+        annotations: "@controller_header(\"packet_in\")"
+      }
+      metadata {
+        id: 1
+        name: "ingress_port"
+        bitwidth: 9
+      }
+      metadata {
+        id: 2
+        name: "_pad0"
+        bitwidth: 7
+      }
+    }
+    controller_packet_metadata {
+      preamble {
+        id: 76689799
+        name: "packet_out"
+        alias: "packet_out"
+        annotations: "@controller_header(\"packet_out\")"
+      }
+      metadata {
+        id: 1
+        name: "pad0"
+        annotations: "@padding"
+        bitwidth: 7
+      }
+      metadata {
+        id: 2
+        name: "egress_port"
+        bitwidth: 9
+      }
     }
   )PROTO";
   ::p4::config::v1::P4Info expected_low_level_p4info;
@@ -1515,6 +1595,94 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
                                        "replica.egress_port())' is false.")));
 }
 
+TEST_F(P4RuntimeBfrtTranslatorTest, PacketOut) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  char stream_message_request_str[] = R"PROTO(
+    packet {
+      payload: "<raw packet>"
+      metadata {
+        metadata_id: 1
+        value: "\x00" # padding
+      }
+      metadata {
+        metadata_id: 2
+        value: "\x00\x00\x00\x01" # egress port
+      }
+    }
+  )PROTO";
+  char expected_stream_message_request_str[] = R"PROTO(
+    packet {
+      payload: "<raw packet>"
+      metadata {
+        metadata_id: 1
+        value: "\x00" # padding
+      }
+      metadata {
+        metadata_id: 2
+        value: "\x01\x2C" # egress port
+      }
+    }
+  )PROTO";
+  ::p4::v1::StreamMessageRequest stream_message_request;
+  ::p4::v1::StreamMessageRequest expected_stream_message_request;
+  EXPECT_OK(ParseProtoFromString(stream_message_request_str,
+                                 &stream_message_request));
+  EXPECT_OK(ParseProtoFromString(expected_stream_message_request_str,
+                                 &expected_stream_message_request));
+
+  auto translated = p4rt_bfrt_translator_->TranslateStreamMessageRequest(
+      stream_message_request);
+  EXPECT_OK(translated.status());
+  stream_message_request = translated.ValueOrDie();
+  EXPECT_THAT(stream_message_request,
+              EqualsProto(expected_stream_message_request));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, PacketIn) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  char stream_message_response_str[] = R"PROTO(
+    packet {
+      payload: "<raw packet>"
+      metadata {
+        metadata_id: 1
+        value: "\x01\x2C" # ingress port
+      }
+      metadata {
+        metadata_id: 2
+        value: "\x00" # padding
+      }
+    }
+  )PROTO";
+  char expected_stream_message_response_str[] = R"PROTO(
+    packet {
+      payload: "<raw packet>"
+      metadata {
+        metadata_id: 1
+        value: "\x00\x00\x00\x01" # ingress port
+      }
+      metadata {
+        metadata_id: 2
+        value: "\x00" # padding
+      }
+    }
+  )PROTO";
+  ::p4::v1::StreamMessageResponse stream_message_response;
+  ::p4::v1::StreamMessageResponse expected_stream_message_response;
+  EXPECT_OK(ParseProtoFromString(stream_message_response_str,
+                                 &stream_message_response));
+  EXPECT_OK(ParseProtoFromString(expected_stream_message_response_str,
+                                 &expected_stream_message_response));
+
+  auto translated = p4rt_bfrt_translator_->TranslateStreamMessageResponse(
+      stream_message_response);
+  EXPECT_OK(translated.status());
+  stream_message_response = translated.ValueOrDie();
+  EXPECT_THAT(stream_message_response,
+              EqualsProto(expected_stream_message_response));
+}
+
 // TODO(Yi Tseng): Will support these tests in other PRs.
 // Meter entry (translate index)
 // Direct meter entry (translate index)
@@ -1523,24 +1691,43 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
 // Register entry (translate index)
 class TranslatorWriterWrapperTest : public ::testing::Test {
  public:
-  bool Write(const ::p4::v1::ReadResponse& msg) { return wrapper_->Write(msg); }
+  bool Write(const ::p4::v1::ReadResponse& msg) {
+    return read_response_writer_wrapper_->Write(msg);
+  }
+  bool Write(const ::p4::v1::StreamMessageResponse& msg) {
+    return stream_message_response_writer_wrapper_->Write(msg);
+  }
 
  protected:
   void SetUp() override {
-    writer_mock_ = absl::make_unique<WriterMock<::p4::v1::ReadResponse>>();
     p4runtime_bfrt_translator_mock_ =
         absl::make_unique<P4RuntimeBfrtTranslatorMock>();
-    wrapper_ = absl::make_unique<P4RuntimeBfrtTranslationWriterWrapper>(
-        writer_mock_.get(), p4runtime_bfrt_translator_mock_.get());
+    read_response_writer_mock_ =
+        absl::make_unique<WriterMock<::p4::v1::ReadResponse>>();
+    stream_message_response_writer_mock_ =
+        std::make_shared<WriterMock<::p4::v1::StreamMessageResponse>>();
+    read_response_writer_wrapper_ =
+        absl::make_unique<P4RuntimeBfrtTranslator::ReadResponseWriterWrapper>(
+            read_response_writer_mock_.get(),
+            p4runtime_bfrt_translator_mock_.get());
+    stream_message_response_writer_wrapper_ = absl::make_unique<
+        P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper>(
+        stream_message_response_writer_mock_,
+        p4runtime_bfrt_translator_mock_.get());
   }
 
-  std::unique_ptr<P4RuntimeBfrtTranslationWriterWrapper> wrapper_;
-  std::unique_ptr<WriterMock<::p4::v1::ReadResponse>> writer_mock_;
-  // The pointer point to the translator, not owned by this class.
+  std::unique_ptr<P4RuntimeBfrtTranslator::ReadResponseWriterWrapper>
+      read_response_writer_wrapper_;
+  std::unique_ptr<P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper>
+      stream_message_response_writer_wrapper_;
+  std::unique_ptr<WriterMock<::p4::v1::ReadResponse>>
+      read_response_writer_mock_;
+  std::shared_ptr<WriterMock<::p4::v1::StreamMessageResponse>>
+      stream_message_response_writer_mock_;
   std::unique_ptr<P4RuntimeBfrtTranslatorMock> p4runtime_bfrt_translator_mock_;
 };
 
-TEST_F(TranslatorWriterWrapperTest, Entities) {
+TEST_F(TranslatorWriterWrapperTest, ReadResponse) {
   const char read_resp_str[] = R"PROTO(
     entities {
       table_entry {
@@ -1548,14 +1735,77 @@ TEST_F(TranslatorWriterWrapperTest, Entities) {
         }
     }
   )PROTO";
-
   ::p4::v1::ReadResponse read_resp;
   EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
   EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
               TranslateReadResponse(EqualsProto(read_resp)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>(read_resp)));
-  EXPECT_CALL(*writer_mock_, Write(_)).WillOnce(Return(true));
+  EXPECT_CALL(*read_response_writer_mock_, Write(_)).WillOnce(Return(true));
   EXPECT_EQ(Write(read_resp), true);
+}
+
+TEST_F(TranslatorWriterWrapperTest, StreamMessageResponse) {
+  const char stream_msg_resp_str[] = R"PROTO(
+    packet {
+      payload: "<raw packet>"
+      metadata {
+        metadata_id: 1
+        value: "\x01\x2C"
+      }
+      metadata {
+        metadata_id: 2
+        value: "\x00"
+      }
+    }
+  )PROTO";
+  ::p4::v1::StreamMessageResponse stream_msg_resp;
+  EXPECT_OK(ParseProtoFromString(stream_msg_resp_str, &stream_msg_resp));
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateStreamMessageResponse(EqualsProto(stream_msg_resp)))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::StreamMessageResponse>(stream_msg_resp)));
+  EXPECT_CALL(*stream_message_response_writer_mock_, Write(_))
+      .WillOnce(Return(true));
+  EXPECT_EQ(Write(stream_msg_resp), true);
+}
+
+TEST_F(TranslatorWriterWrapperTest, ReadResponse_TranslationFailed) {
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      table_entry {
+        table_id: 1
+        }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateReadResponse(EqualsProto(read_resp)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>()));
+  EXPECT_EQ(Write(read_resp), false);
+}
+
+TEST_F(TranslatorWriterWrapperTest, StreamMessageResponse_TranslationFailed) {
+  const char stream_msg_resp_str[] = R"PROTO(
+    packet {
+      payload: "<raw packet>"
+      metadata {
+        metadata_id: 1
+        value: "\x01\x2C"
+      }
+      metadata {
+        metadata_id: 2
+        value: "\x00"
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::StreamMessageResponse stream_msg_resp;
+  EXPECT_OK(ParseProtoFromString(stream_msg_resp_str, &stream_msg_resp));
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateStreamMessageResponse(EqualsProto(stream_msg_resp)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageResponse>()));
+  EXPECT_EQ(Write(stream_msg_resp), false);
 }
 
 }  // namespace barefoot

@@ -287,7 +287,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   }
   ASSIGN_OR_RETURN(const auto& request,
                    p4runtime_bfrt_translator_->TranslateReadRequest(req));
-  P4RuntimeBfrtTranslationWriterWrapper writer_wrapper(
+  P4RuntimeBfrtTranslator::ReadResponseWriterWrapper writer_wrapper(
       writer, p4runtime_bfrt_translator_);
   writer = &writer_wrapper;
   ::p4::v1::ReadResponse resp;
@@ -390,10 +390,13 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+  auto translator_wrapper = std::make_shared<
+      P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper>(
+      writer, p4runtime_bfrt_translator_);
   auto packet_in_writer =
       std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
-          writer, &::p4::v1::StreamMessageResponse::mutable_packet);
+          translator_wrapper, &::p4::v1::StreamMessageResponse::mutable_packet);
 
   return bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer);
 }
