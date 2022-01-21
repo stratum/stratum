@@ -801,5 +801,6 @@ when starting Stratum.
 Note that `stratum_bfrt` also follows the PSA port spec, below are reserved ports
 when using `stratum_bfrt`:
 
-- `0xFFFFFFFD`: CPU port
+- `0x00000000`: Unspecified port.
+- `0xFFFFFFFD`: CPU port.
 - `0xFFFFFF00`~`0xFFFFFF03`: Recirculation ports for pipeline 0~3.
