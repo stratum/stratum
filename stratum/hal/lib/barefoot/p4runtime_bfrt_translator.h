@@ -108,6 +108,9 @@ class P4RuntimeBfrtTranslator {
       SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<::p4::v1::Action> TranslateAction(
       const ::p4::v1::Action& action, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
+  virtual ::util::StatusOr<::p4::v1::Index> TranslateIndex(
+      const ::p4::v1::Index& index, const std::string& uri, bool to_sdk)
+      SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                        const std::string& uri,
                                                        bool to_sdk,
@@ -159,9 +162,6 @@ class P4RuntimeBfrtTranslator {
       GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> packet_out_meta_to_bit_width_
       GUARDED_BY(lock_);
-  absl::flat_hash_map<uint32, int32> counter_to_bit_width_ GUARDED_BY(lock_);
-  absl::flat_hash_map<uint32, int32> meter_to_bit_width_ GUARDED_BY(lock_);
-  absl::flat_hash_map<uint32, int32> register_to_bit_width_ GUARDED_BY(lock_);
 
   // This P4Info contains field information without P4Runtime translation
   // which is useful for low level managers.

@@ -184,6 +184,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       }
       const_default_action_id: 16836487
       size: 1024
+      direct_resource_ids: 330152573
     }
     actions {
       preamble {
@@ -215,6 +216,17 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
       index_type_name {
         name: "FabricPortId_t"
       }
+    }
+    direct_counters {
+      preamble {
+        id: 330152573
+        name: "Ingress.control.table1_counter"
+        alias: "table1_counter"
+      }
+      spec {
+        unit: BOTH
+      }
+      direct_table_id: 33583783
     }
     meters {
       preamble {
@@ -446,6 +458,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, GetLowLevelP4Info) {
       }
       const_default_action_id: 16836487
       size: 1024
+      direct_resource_ids: 330152573
     }
     actions {
       preamble {
@@ -471,6 +484,17 @@ TEST_F(P4RuntimeBfrtTranslatorTest, GetLowLevelP4Info) {
       spec {
         unit: BOTH
       }
+    }
+    direct_counters {
+      preamble {
+        id: 330152573
+        name: "Ingress.control.table1_counter"
+        alias: "table1_counter"
+      }
+      spec {
+        unit: BOTH
+      }
+      direct_table_id: 33583783
     }
     meters {
       preamble {
@@ -1595,6 +1619,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
                                        "replica.egress_port())' is false.")));
 }
 
+// PacketIO
 TEST_F(P4RuntimeBfrtTranslatorTest, PacketOut) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1683,11 +1708,453 @@ TEST_F(P4RuntimeBfrtTranslatorTest, PacketIn) {
               EqualsProto(expected_stream_message_response));
 }
 
+// Counter entry
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteCounterEntryRequest) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        counter_entry {
+          counter_id: 318814845
+          index {
+            index: 1
+          }
+          data {
+            byte_count: 1
+            packet_count: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        counter_entry {
+          counter_id: 318814845
+          index {
+            index: 300
+          }
+          data {
+            byte_count: 1
+            packet_count: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
+  EXPECT_OK(translated_value.status());
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadCounterEntryRequest) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_req_str[] = R"PROTO(
+    entities {
+      counter_entry {
+        counter_id: 318814845
+        index {
+          index: 1
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_req_str[] = R"PROTO(
+    entities {
+      counter_entry {
+        counter_id: 318814845
+        index {
+          index: 300
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
+  EXPECT_OK(translated_value.status());
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadCounterEntryResponse) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      counter_entry {
+        counter_id: 318814845
+        index {
+          index: 300
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_resp_str[] = R"PROTO(
+    entities {
+      counter_entry {
+        counter_id: 318814845
+        index {
+          index: 1
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateReadResponse(read_resp);
+  EXPECT_OK(translated_value.status());
+  read_resp = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadResponse expected_read_resp;
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
+  EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
+}
+
+// Direct counter entry
+TEST_F(P4RuntimeBfrtTranslatorTest, WriteDirectCounterEntryRequest) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        direct_counter_entry {
+          table_entry {
+            table_id: 33583783
+            match {
+              field_id: 1
+              exact { value: "\x00\x00\x00\x01" }
+            }
+            match {
+              field_id: 2
+              ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+            }
+            match {
+              field_id: 3
+              range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+            }
+            match {
+              field_id: 4
+              lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+            }
+            match {
+              field_id: 5
+              optional { value: "\x00\x00\x00\x01" }
+            }
+            match {
+              field_id: 6
+              exact { value: "\x00\x00\x00\x01" }
+            }
+            action {
+              action {
+                action_id: 16794911
+                params { param_id: 1 value: "\x00\x00\x00\x01" }
+                params { param_id: 2 value: "\x00\x00\x00\x01" }
+              }
+            }
+          }
+          data {
+            byte_count: 1
+            packet_count: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+  const char expected_write_req_str[] = R"PROTO(
+    updates {
+      entity {
+        direct_counter_entry {
+          table_entry {
+            table_id: 33583783
+            match {
+              field_id: 1
+              exact { value: "\x01\x2C" }
+            }
+            match {
+              field_id: 2
+              ternary { value: "\x01\x2C" mask: "\x01\xff" }
+            }
+            match {
+              field_id: 3
+              range { low: "\x01\x2C" high: "\x01\x2C" }
+            }
+            match {
+              field_id: 4
+              lpm { value: "\x01\x2C" prefix_len: 9 }
+            }
+            match {
+              field_id: 5
+              optional { value: "\x01\x2C" }
+            }
+            match {
+              field_id: 6
+              exact { value: "\x00\x00\x00\x01" }
+            }
+            action {
+              action {
+                action_id: 16794911
+                params { param_id: 1 value: "\x01\x2C" }
+                params { param_id: 2 value: "\x00\x00\x00\x01" }
+              }
+            }
+          }
+          data {
+            byte_count: 1
+            packet_count: 1
+          }
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::WriteRequest write_req;
+  EXPECT_OK(ParseProtoFromString(write_req_str, &write_req));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateWriteRequest(write_req);
+  EXPECT_OK(translated_value.status());
+  write_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::WriteRequest expected_write_req;
+  EXPECT_OK(ParseProtoFromString(expected_write_req_str, &expected_write_req));
+  EXPECT_THAT(write_req, EqualsProto(expected_write_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadDirectCounterEntryRequest) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_req_str[] = R"PROTO(
+    entities {
+      direct_counter_entry {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 4
+            lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 6
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x00\x00\x00\x01" }
+              params { param_id: 2 value: "\x00\x00\x00\x01" }
+            }
+          }
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_req_str[] = R"PROTO(
+    entities {
+      direct_counter_entry {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x01\x2C" mask: "\x01\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x01\x2C" high: "\x01\x2C" }
+          }
+          match {
+            field_id: 4
+            lpm { value: "\x01\x2C" prefix_len: 9 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 6
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x01\x2C" }
+              params { param_id: 2 value: "\x00\x00\x00\x01" }
+            }
+          }
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+
+  ::p4::v1::ReadRequest read_req;
+  EXPECT_OK(ParseProtoFromString(read_req_str, &read_req));
+  auto translated_value = p4rt_bfrt_translator_->TranslateReadRequest(read_req);
+  EXPECT_OK(translated_value.status());
+  read_req = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadRequest expected_read_req;
+  EXPECT_OK(ParseProtoFromString(expected_read_req_str, &expected_read_req));
+  EXPECT_THAT(read_req, EqualsProto(expected_read_req));
+}
+
+TEST_F(P4RuntimeBfrtTranslatorTest, ReadDirectCounterEntryResponse) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char read_resp_str[] = R"PROTO(
+    entities {
+      direct_counter_entry {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x01\x2C" mask: "\x01\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x01\x2C" high: "\x01\x2C" }
+          }
+          match {
+            field_id: 4
+            lpm { value: "\x01\x2C" prefix_len: 9 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x01\x2C" }
+          }
+          match {
+            field_id: 6
+            exact { value: "\x00\x00\x01\x2C" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x01\x2C" }
+              params { param_id: 2 value: "\x00\x00\x01\x2C" }
+            }
+          }
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+  const char expected_read_resp_str[] = R"PROTO(
+    entities {
+      direct_counter_entry {
+        table_entry {
+          table_id: 33583783
+          match {
+            field_id: 1
+            exact { value: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 2
+            ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+          }
+          match {
+            field_id: 3
+            range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 4
+            lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+          }
+          match {
+            field_id: 5
+            optional { value: "\x00\x00\x00\x01" }
+          }
+          match {
+            field_id: 6
+            exact { value: "\x00\x00\x01\x2C" }
+          }
+          action {
+            action {
+              action_id: 16794911
+              params { param_id: 1 value: "\x00\x00\x00\x01" }
+              params { param_id: 2 value: "\x00\x00\x01\x2C" }
+            }
+          }
+        }
+        data {
+          byte_count: 1
+          packet_count: 1
+        }
+      }
+    }
+  )PROTO";
+  ::p4::v1::ReadResponse read_resp;
+  EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
+  auto translated_value =
+      p4rt_bfrt_translator_->TranslateReadResponse(read_resp);
+  EXPECT_OK(translated_value.status());
+  read_resp = translated_value.ConsumeValueOrDie();
+  ::p4::v1::ReadResponse expected_read_resp;
+  EXPECT_OK(ParseProtoFromString(expected_read_resp_str, &expected_read_resp));
+  EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
+}
+
 // TODO(Yi Tseng): Will support these tests in other PRs.
 // Meter entry (translate index)
 // Direct meter entry (translate index)
-// Counter entry (translate index)
-// Direct counter entry (translate index)
 // Register entry (translate index)
 class TranslatorWriterWrapperTest : public ::testing::Test {
  public:
