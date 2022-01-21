@@ -7,16 +7,18 @@ SPDX-License-Identifier: Apache-2.0
 
 # P4Runtime p4_device_config formats
 
-Stratum supports a few different device configuration formats for pushing the P4
-pipeline over P4Runtime for Barefoot Tofino devices, including
-the older binary packing used by [PI](https://github.com/p4lang/PI)
-and a newer more flexible protobuf based format ([bf.proto](/stratum/hal/lib/barefoot/bf.proto)).
+Stratum-bfrt uses a protobuf based format ([bf.proto](/stratum/hal/lib/barefoot/bf.proto))
+to push a pipeline over P4Runtime for Barefoot Tofino devices. Use the
+`BfPipelineBuilder` tool to generate it.
 
-*Note: The older PI format does not work with `stratum_bfrt`.*
+For legacy reasons, Stratum-bf supports both the older binary packing used by
+[PI](https://github.com/p4lang/PI) and the new protobuf based format also
+supported in Stratum-bfrt.
 
 ## Stratum BfPipelineConfig format and the BfPipelineBuilder
 
-You can use the device config builder to generate the protobuf based format:
+You can use the device config builder to generate the protobuf based format
+directly from the `bf-p4c` compiler output:
 
 ```bash
 bazel run //stratum/hal/bin/barefoot:bf_pipeline_builder -- \
