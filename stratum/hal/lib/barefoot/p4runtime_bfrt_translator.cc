@@ -622,6 +622,7 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageRequest(
   }
   return translated_request;
 }
+
 ::util::StatusOr<::p4::v1::StreamMessageResponse>
 P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
     const ::p4::v1::StreamMessageResponse& response) {

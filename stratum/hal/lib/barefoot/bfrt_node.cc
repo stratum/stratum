@@ -416,14 +416,16 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+  ASSIGN_OR_RETURN(const auto& translated_req,
+      p4runtime_bfrt_translator_->TranslateStreamMessageRequest(req));
 
-  switch (req.update_case()) {
+  switch (translated_req.update_case()) {
     case ::p4::v1::StreamMessageRequest::kPacket: {
-      return bfrt_packetio_manager_->TransmitPacket(req.packet());
+      return bfrt_packetio_manager_->TransmitPacket(translated_req.packet());
     }
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-             << "Unsupported StreamMessageRequest " << req.ShortDebugString()
+             << "Unsupported StreamMessageRequest " << translated_req.ShortDebugString()
              << ".";
   }
 }
