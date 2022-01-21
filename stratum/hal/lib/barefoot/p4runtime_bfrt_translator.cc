@@ -61,13 +61,16 @@ P4RuntimeBfrtTranslator::TranslateReadResponse(
   return translated_response;
 }
 
-bool P4RuntimeBfrtTranslationWriterWrapper::Write(
+bool P4RuntimeBfrtTranslator::ReadResponseWriterWrapper::Write(
     const ::p4::v1::ReadResponse& msg) {
   auto status = p4runtime_bfrt_translator_->TranslateReadResponse(msg);
-  if (!status.ok()) {
-    return false;
-  }
-  return writer_->Write(status.ConsumeValueOrDie());
+  return status.ok() && writer_->Write(status.ConsumeValueOrDie());
+}
+
+bool P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper::Write(
+    const ::p4::v1::StreamMessageResponse& msg) {
+  auto status = p4runtime_bfrt_translator_->TranslateStreamMessageResponse(msg);
+  return status.ok() && writer_->Write(status.ConsumeValueOrDie());
 }
 
 ::util::Status P4RuntimeBfrtTranslator::PushChassisConfig(
@@ -106,6 +109,7 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
 ::util::Status P4RuntimeBfrtTranslator::PushForwardingPipelineConfig(
     const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
+  low_level_p4info_ = p4info;
   pipeline_require_translation_ = false;
   if (!translation_enabled_) {
     return ::util::OkStatus();
@@ -141,16 +145,18 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
     // Counter, Meter, Register (index)
     table_to_field_to_type_uri_.clear();
     action_to_param_to_type_uri_.clear();
-    ctrl_hdr_to_meta_to_type_uri_.clear();
+    packet_in_meta_to_type_uri_.clear();
+    packet_out_meta_to_type_uri_.clear();
     counter_to_type_uri_.clear();
     meter_to_type_uri_.clear();
     register_to_type_uri_.clear();
     table_to_field_to_bit_width_.clear();
     action_to_param_to_bit_width_.clear();
-    ctrl_hdr_to_meta_to_bit_width_.clear();
+    packet_in_meta_to_bit_width_.clear();
+    packet_out_meta_to_bit_width_.clear();
 
-    for (const auto& table : p4info.tables()) {
-      for (const auto& match_field : table.match_fields()) {
+    for (auto& table : *low_level_p4info_.mutable_tables()) {
+      for (auto& match_field : *table.mutable_match_fields()) {
         if (match_field.has_type_name()) {
           const auto& type_name = match_field.type_name().name();
           const auto& table_id = table.preamble().id();
@@ -158,16 +164,20 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
           std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
           if (uri) {
             table_to_field_to_type_uri_[table_id][match_field_id] = *uri;
+            // Replace bitwidth to the low level one.
+            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+            match_field.set_bitwidth(kUriToBitWidth.at(*uri));
           }
           int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
           if (bit_width) {
             table_to_field_to_bit_width_[table_id][match_field_id] = *bit_width;
           }
+          match_field.clear_type_name();
         }
       }
     }
-    for (const auto& action : p4info.actions()) {
-      for (const auto& param : action.params()) {
+    for (auto& action : *low_level_p4info_.mutable_actions()) {
+      for (auto& param : *action.mutable_params()) {
         if (param.has_type_name()) {
           const auto& type_name = param.type_name().name();
           const auto& action_id = action.preamble().id();
@@ -175,32 +185,54 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
           std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
           if (uri) {
             action_to_param_to_type_uri_[action_id][param_id] = *uri;
+            // Replace bitwidth to the low level one.
+            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+            param.set_bitwidth(kUriToBitWidth.at(*uri));
           }
           int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
           if (bit_width) {
             action_to_param_to_bit_width_[action_id][param_id] = *bit_width;
           }
+          param.clear_type_name();
         }
       }
     }
-    for (const auto& pkt_md : p4info.controller_packet_metadata()) {
-      for (const auto& metadata : pkt_md.metadata()) {
+    for (auto& pkt_md :
+         *low_level_p4info_.mutable_controller_packet_metadata()) {
+      const auto& ctrl_hdr_name = pkt_md.preamble().name();
+      absl::flat_hash_map<uint32, std::string>* meta_to_type_uri_;
+      absl::flat_hash_map<uint32, int32>* meta_to_bit_width_;
+      if (ctrl_hdr_name == kIngressMetadataPreambleName) {
+        meta_to_type_uri_ = &packet_in_meta_to_type_uri_;
+        meta_to_bit_width_ = &packet_in_meta_to_bit_width_;
+      } else if (ctrl_hdr_name == kEgressMetadataPreambleName) {
+        meta_to_type_uri_ = &packet_out_meta_to_type_uri_;
+        meta_to_bit_width_ = &packet_out_meta_to_bit_width_;
+      } else {
+        // Skip this controller header if it is not a packet_in or packet_out
+        // header.
+        continue;
+      }
+      for (auto& metadata : *pkt_md.mutable_metadata()) {
         if (metadata.has_type_name()) {
           const auto& type_name = metadata.type_name().name();
-          const auto& ctrl_hdr_id = pkt_md.preamble().id();
           const auto& md_id = metadata.id();
           std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
           if (uri) {
-            ctrl_hdr_to_meta_to_type_uri_[ctrl_hdr_id][md_id] = *uri;
+            meta_to_type_uri_->emplace(md_id, *uri);
+            // Replace bitwidth to the low level one.
+            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+            metadata.set_bitwidth(kUriToBitWidth.at(*uri));
           }
           int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
           if (bit_width) {
-            ctrl_hdr_to_meta_to_bit_width_[ctrl_hdr_id][md_id] = *bit_width;
+            meta_to_bit_width_->emplace(md_id, *bit_width);
           }
+          metadata.clear_type_name();
         }
       }
     }
-    for (const auto& counter : p4info.counters()) {
+    for (auto& counter : *low_level_p4info_.mutable_counters()) {
       if (counter.has_index_type_name()) {
         const auto& type_name = counter.index_type_name().name();
         const auto& counter_id = counter.preamble().id();
@@ -208,9 +240,10 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
         if (uri) {
           counter_to_type_uri_[counter_id] = *uri;
         }
+        counter.clear_index_type_name();
       }
     }
-    for (const auto& meter : p4info.meters()) {
+    for (auto& meter : *low_level_p4info_.mutable_meters()) {
       if (meter.has_index_type_name()) {
         const auto& type_name = meter.index_type_name().name();
         const auto& meter_id = meter.preamble().id();
@@ -218,10 +251,11 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
         if (uri) {
           meter_to_type_uri_[meter_id] = *uri;
         }
+        meter.clear_index_type_name();
       }
     }
 
-    for (const auto& reg : p4info.registers()) {
+    for (auto& reg : *low_level_p4info_.mutable_registers()) {
       if (reg.has_index_type_name()) {
         const auto& type_name = reg.index_type_name().name();
         const auto& register_id = reg.preamble().id();
@@ -229,8 +263,10 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
         if (uri) {
           register_to_type_uri_[register_id] = *uri;
         }
+        reg.clear_index_type_name();
       }
     }
+    low_level_p4info_.clear_type_info();
   }
 
   return ::util::OkStatus();
@@ -534,17 +570,107 @@ P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
   return translated_entry;
 }
 
+::util::StatusOr<::p4::v1::PacketMetadata>
+P4RuntimeBfrtTranslator::TranslatePacketMetadata(
+    const p4::v1::PacketMetadata& packet_metadata, const std::string& uri,
+    int32 bit_width, bool to_sdk) {
+  p4::v1::PacketMetadata translated_packet_metadata(packet_metadata);
+  ASSIGN_OR_RETURN(*translated_packet_metadata.mutable_value(),
+                   TranslateValue(translated_packet_metadata.value(), uri,
+                                  to_sdk, bit_width));
+  return translated_packet_metadata;
+}
+
+::util::StatusOr<::p4::v1::PacketIn> P4RuntimeBfrtTranslator::TranslatePacketIn(
+    const ::p4::v1::PacketIn& packet_in) {
+  ::p4::v1::PacketIn translated_packet_in(packet_in);
+  for (auto& md : *translated_packet_in.mutable_metadata()) {
+    const std::string* uri =
+        gtl::FindOrNull(packet_in_meta_to_type_uri_, md.metadata_id());
+    const int32* bit_width =
+        gtl::FindOrNull(packet_in_meta_to_bit_width_, md.metadata_id());
+    if (uri && bit_width) {
+      ASSIGN_OR_RETURN(
+          md, TranslatePacketMetadata(md, *uri, *bit_width, /*to_sdk=*/false))
+    }
+  }
+  return translated_packet_in;
+}
+
+::util::StatusOr<::p4::v1::PacketOut>
+P4RuntimeBfrtTranslator::TranslatePacketOut(
+    const ::p4::v1::PacketOut& packet_out) {
+  ::p4::v1::PacketOut translated_packet_out(packet_out);
+  for (auto& md : *translated_packet_out.mutable_metadata()) {
+    const std::string* uri =
+        gtl::FindOrNull(packet_out_meta_to_type_uri_, md.metadata_id());
+    if (uri) {
+      const int32* bit_width = gtl::FindOrNull(kUriToBitWidth, *uri);
+      if (bit_width) {
+        ASSIGN_OR_RETURN(
+            md, TranslatePacketMetadata(md, *uri, *bit_width, /*to_sdk=*/true))
+      }
+    }
+  }
+  return translated_packet_out;
+}
+
 ::util::StatusOr<::p4::v1::StreamMessageRequest>
 P4RuntimeBfrtTranslator::TranslateStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& request) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return request;
+  absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return request;
+  }
+  ::p4::v1::StreamMessageRequest translated_request(request);
+  switch (request.update_case()) {
+    case ::p4::v1::StreamMessageRequest::kPacket: {
+      ASSIGN_OR_RETURN(*translated_request.mutable_packet(),
+                       TranslatePacketOut(translated_request.packet()));
+      break;
+    }
+    // No translation support.
+    case ::p4::v1::StreamMessageRequest::kDigestAck:
+    case ::p4::v1::StreamMessageRequest::kArbitration:
+    case ::p4::v1::StreamMessageRequest::kOther:
+    default:
+      break;
+  }
+  return translated_request;
 }
+
 ::util::StatusOr<::p4::v1::StreamMessageResponse>
 P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
     const ::p4::v1::StreamMessageResponse& response) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return response;
+  absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return response;
+  }
+  ::p4::v1::StreamMessageResponse translated_response(response);
+  switch (translated_response.update_case()) {
+    case ::p4::v1::StreamMessageResponse::kPacket: {
+      ASSIGN_OR_RETURN(*translated_response.mutable_packet(),
+                       TranslatePacketIn(translated_response.packet()));
+      break;
+    }
+    // We may need to support these since they contains info which we need to
+    // translate them(e.g., TableEntry, PacketOut)
+    case ::p4::v1::StreamMessageResponse::kIdleTimeoutNotification:
+    case ::p4::v1::StreamMessageResponse::kError:
+    // No translation support.
+    case ::p4::v1::StreamMessageResponse::kArbitration:
+    case ::p4::v1::StreamMessageResponse::kDigest:
+    case ::p4::v1::StreamMessageResponse::kOther:
+    default:
+      break;
+  }
+  return translated_response;
+}
+
+::util::StatusOr<::p4::config::v1::P4Info>
+P4RuntimeBfrtTranslator::GetLowLevelP4Info() {
+  absl::ReaderMutexLock l(&lock_);
+  return low_level_p4info_;
 }
 
 ::util::StatusOr<::p4::v1::Action> P4RuntimeBfrtTranslator::TranslateAction(

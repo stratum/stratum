@@ -151,6 +151,12 @@ class BfrtNodeTest : public ::testing::Test {
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bf_sde_mock_, AddDevice(kDeviceId, _))
           .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+                  PushForwardingPipelineConfig(_))
+          .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*p4runtime_bfrt_translator_mock_, GetLowLevelP4Info())
+          .WillOnce(Return(
+              ::util::StatusOr<::p4::config::v1::P4Info>(config.p4info())));
       EXPECT_CALL(*bfrt_packetio_manager_mock_, PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bfrt_table_manager_mock_, PushForwardingPipelineConfig(_))
@@ -158,9 +164,6 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*bfrt_pre_manager_mock_, PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bfrt_counter_manager_mock_, PushForwardingPipelineConfig(_))
-          .WillOnce(Return(::util::OkStatus()));
-      EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
-                  PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
     }
     EXPECT_OK(PushForwardingPipelineConfig(config));
@@ -1504,6 +1507,11 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_PacketOut) {
   ::p4::v1::StreamMessageRequest req;
   auto* packet = req.mutable_packet();
 
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateStreamMessageRequest(EqualsProto(req)))
+      .Times(2)
+      .WillRepeatedly(
+          Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_CALL(*bfrt_packetio_manager_mock_,
               TransmitPacket(EqualsProto(*packet)))
       .WillOnce(Return(::util::OkStatus()))
@@ -1519,6 +1527,9 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Invalid) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
 
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateStreamMessageRequest(EqualsProto(req)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
@@ -1531,6 +1542,9 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_DigestAck) {
   ::p4::v1::StreamMessageRequest req;
   req.mutable_digest_ack();
 
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateStreamMessageRequest(EqualsProto(req)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
@@ -1543,6 +1557,9 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Arbitration) {
   ::p4::v1::StreamMessageRequest req;
   req.mutable_arbitration();
 
+  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+              TranslateStreamMessageRequest(EqualsProto(req)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
