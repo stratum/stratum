@@ -147,9 +147,6 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
     table_to_field_to_bit_width_.clear();
     action_to_param_to_bit_width_.clear();
     ctrl_hdr_to_meta_to_bit_width_.clear();
-    counter_to_bit_width_.clear();
-    meter_to_bit_width_.clear();
-    register_to_bit_width_.clear();
 
     for (const auto& table : p4info.tables()) {
       for (const auto& match_field : table.match_fields()) {
@@ -210,10 +207,6 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
         if (uri) {
           counter_to_type_uri_[counter_id] = *uri;
         }
-        int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
-        if (bit_width) {
-          counter_to_bit_width_[counter_id] = *bit_width;
-        }
       }
     }
     for (const auto& meter : p4info.meters()) {
@@ -224,12 +217,9 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
         if (uri) {
           meter_to_type_uri_[meter_id] = *uri;
         }
-        int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
-        if (bit_width) {
-          meter_to_bit_width_[meter_id] = *bit_width;
-        }
       }
     }
+
     for (const auto& reg : p4info.registers()) {
       if (reg.has_index_type_name()) {
         const auto& type_name = reg.index_type_name().name();
@@ -237,10 +227,6 @@ bool P4RuntimeBfrtTranslationWriterWrapper::Write(
         std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
         if (uri) {
           register_to_type_uri_[register_id] = *uri;
-        }
-        int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
-        if (bit_width) {
-          register_to_bit_width_[register_id] = *bit_width;
         }
       }
     }
@@ -449,18 +435,47 @@ P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
   return entry;
 }
 
+::util::StatusOr<::p4::v1::Index> P4RuntimeBfrtTranslator::TranslateIndex(
+    const ::p4::v1::Index& index, const std::string& uri, bool to_sdk) {
+  int64 index_value = index.index();
+  if (uri == kUriTnaPortId) {
+    ::p4::v1::Index translated_index;
+    if (to_sdk) {
+      CHECK_RETURN_IF_FALSE(
+          singleton_port_to_sdk_port_.count(static_cast<uint32>(index_value)));
+      translated_index.set_index(
+          singleton_port_to_sdk_port_[static_cast<uint32>(index_value)]);
+    } else {
+      CHECK_RETURN_IF_FALSE(
+          sdk_port_to_singleton_port_.count(static_cast<uint32>(index_value)));
+      translated_index.set_index(
+          sdk_port_to_singleton_port_[static_cast<uint32>(index_value)]);
+    }
+    return translated_index;
+  } else {
+    return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unsupported URI: " << uri;
+  }
+}
+
 ::util::StatusOr<::p4::v1::CounterEntry>
 P4RuntimeBfrtTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return entry;
+  ::p4::v1::CounterEntry translated_entry(entry);
+  std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.counter_id());
+  if (entry.has_index() && uri) {
+    ASSIGN_OR_RETURN(*translated_entry.mutable_index(),
+                     TranslateIndex(translated_entry.index(), *uri, to_sdk))
+  }
+  return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return entry;
+  ::p4::v1::DirectCounterEntry translated_entry(entry);
+  ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
+                   TranslateTableEntry(entry.table_entry(), to_sdk));
+  return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::RegisterEntry>
