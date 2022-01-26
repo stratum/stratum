@@ -135,8 +135,9 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
               value.translated_type().sdn_bitwidth();
         } else {
           // TODO(Yi Tseng): support SDN String translation.
-          return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unsupported SDN type: "
-              << value.translated_type().sdn_type_case();
+          return MAKE_ERROR(ERR_UNIMPLEMENTED)
+                 << "Unsupported SDN type: "
+                 << value.translated_type().sdn_type_case();
         }
       }
     }
@@ -371,13 +372,15 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
           case ::p4::v1::FieldMatch::kTernary: {
             // We only allow the "exact" type of ternary match, which means
             // all bits from mask must be one.
-            CHECK_RETURN_IF_FALSE(field_match.ternary().mask() == MaxValueOfBits(from_bit_width));
+            CHECK_RETURN_IF_FALSE(field_match.ternary().mask() ==
+                                  MaxValueOfBits(from_bit_width));
             // New mask with bit width.
             ASSIGN_OR_RETURN(const std::string& new_val,
                              TranslateValue(field_match.ternary().value(), *uri,
                                             to_sdk, to_bit_width));
             field_match.mutable_ternary()->set_value(new_val);
-            field_match.mutable_ternary()->set_mask(MaxValueOfBits(from_bit_width));
+            field_match.mutable_ternary()->set_mask(
+                MaxValueOfBits(from_bit_width));
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {

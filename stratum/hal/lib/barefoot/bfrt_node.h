@@ -14,10 +14,10 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
-#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 

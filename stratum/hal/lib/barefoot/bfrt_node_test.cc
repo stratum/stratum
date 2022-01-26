@@ -15,10 +15,10 @@
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager_mock.h"
-#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/utils.h"
 
