@@ -31,8 +31,8 @@ class BfrtP4RuntimeTranslator {
       LOCKS_EXCLUDED(lock_);
   virtual ::util::Status PushForwardingPipelineConfig(
       const ::p4::config::v1::P4Info& p4info) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::WriteRequest> TranslateWriteRequest(
-      const ::p4::v1::WriteRequest& request) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntity(
+      const ::p4::v1::Entity& entity, bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::ReadRequest> TranslateReadRequest(
       const ::p4::v1::ReadRequest& request) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::ReadResponse> TranslateReadResponse(
@@ -69,7 +69,7 @@ class BfrtP4RuntimeTranslator {
         bf_sde_interface_(bf_sde_interface),
         translation_enabled_(translation_enabled),
         pipeline_require_translation_(false) {}
-  virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntity(
+  virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntityInternal(
       const ::p4::v1::Entity& entity, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
       const ::p4::v1::TableEntry& entry, bool to_sdk)

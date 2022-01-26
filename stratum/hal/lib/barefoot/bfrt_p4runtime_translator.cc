@@ -18,21 +18,6 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::StatusOr<::p4::v1::WriteRequest>
-BfrtP4RuntimeTranslator::TranslateWriteRequest(
-    const ::p4::v1::WriteRequest& request) {
-  absl::ReaderMutexLock l(&lock_);
-  if (!pipeline_require_translation_) {
-    return request;
-  }
-  ::p4::v1::WriteRequest translated_request(request);
-  for (::p4::v1::Update& update : *translated_request.mutable_updates()) {
-    ASSIGN_OR_RETURN(*update.mutable_entity(),
-                     TranslateEntity(update.entity(), /*to_sdk=*/true));
-  }
-  return translated_request;
-}
-
 ::util::StatusOr<::p4::v1::ReadRequest>
 BfrtP4RuntimeTranslator::TranslateReadRequest(
     const ::p4::v1::ReadRequest& request) {
@@ -42,7 +27,7 @@ BfrtP4RuntimeTranslator::TranslateReadRequest(
   }
   ::p4::v1::ReadRequest translated_request(request);
   for (::p4::v1::Entity& entity : *translated_request.mutable_entities()) {
-    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, /*to_sdk=*/true));
+    ASSIGN_OR_RETURN(entity, TranslateEntityInternal(entity, /*to_sdk=*/true));
   }
   return translated_request;
 }
@@ -56,7 +41,7 @@ BfrtP4RuntimeTranslator::TranslateReadResponse(
   }
   ::p4::v1::ReadResponse translated_response(response);
   for (::p4::v1::Entity& entity : *translated_response.mutable_entities()) {
-    ASSIGN_OR_RETURN(entity, TranslateEntity(entity, /*to_sdk=*/false));
+    ASSIGN_OR_RETURN(entity, TranslateEntityInternal(entity, /*to_sdk=*/false));
   }
   return translated_response;
 }
@@ -292,6 +277,13 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
 
 ::util::StatusOr<::p4::v1::Entity> BfrtP4RuntimeTranslator::TranslateEntity(
     const ::p4::v1::Entity& entity, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
+  return TranslateEntityInternal(entity, to_sdk);
+}
+
+::util::StatusOr<::p4::v1::Entity>
+BfrtP4RuntimeTranslator::TranslateEntityInternal(const ::p4::v1::Entity& entity,
+                                                 bool to_sdk) {
   ::p4::v1::Entity translated_entity(entity);
   switch (translated_entity.entity_case()) {
     case ::p4::v1::Entity::kTableEntry: {

@@ -19,9 +19,9 @@ class BfrtP4RuntimeTranslatorMock : public BfrtP4RuntimeTranslator {
                ::util::Status(const ChassisConfig& config, uint64 node_id));
   MOCK_METHOD1(PushForwardingPipelineConfig,
                ::util::Status(const ::p4::config::v1::P4Info& p4info));
-  MOCK_METHOD1(TranslateWriteRequest,
-               ::util::StatusOr<::p4::v1::WriteRequest>(
-                   const ::p4::v1::WriteRequest& request));
+  MOCK_METHOD2(TranslateEntity,
+               ::util::StatusOr<::p4::v1::Entity>(
+                   const ::p4::v1::Entity& entity, bool to_sdk));
   MOCK_METHOD1(TranslateReadRequest, ::util::StatusOr<::p4::v1::ReadRequest>(
                                          const ::p4::v1::ReadRequest& request));
   MOCK_METHOD1(TranslateReadResponse,
