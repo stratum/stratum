@@ -1,5 +1,6 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
+
 #include "stratum/lib/security/credentials_manager.h"
 
 #include <fstream>
@@ -75,23 +76,7 @@ util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
   return util::OkStatus();
 }
 
-void WriteServerCredentialsToDisk(const std::string& server_ca_crt,
-                                  const std::string& server_crt,
-                                  const std::string& server_key) {
-  ASSERT_OK(WriteStringToFile(server_ca_crt, FLAGS_server_ca_cert_file));
-  ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert_file));
-  ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key_file));
-  absl::SleepFor(absl::Seconds(1));  // kFileRefreshIntervalSeconds
-}
-
-void WriteClientCredentialsToDisk(const std::string& client_ca_crt,
-                                  const std::string& client_crt,
-                                  const std::string& client_key) {
-  ASSERT_OK(WriteStringToFile(client_ca_crt, FLAGS_client_ca_cert_file));
-  ASSERT_OK(WriteStringToFile(client_crt, FLAGS_client_cert_file));
-  ASSERT_OK(WriteStringToFile(client_key, FLAGS_client_key_file));
-  absl::SleepFor(absl::Seconds(1));  // kFileRefreshIntervalSeconds
-}
+}  // namespace
 
 class CredentialsManagerTest : public ::testing::Test {
  protected:
@@ -149,6 +134,26 @@ class CredentialsManagerTest : public ::testing::Test {
   }
 
   void TearDown() override { server_->Shutdown(); }
+
+  static void WriteServerCredentialsToDisk(const std::string& server_ca_crt,
+                                           const std::string& server_crt,
+                                           const std::string& server_key) {
+    ASSERT_OK(WriteStringToFile(server_ca_crt, FLAGS_server_ca_cert_file));
+    ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert_file));
+    ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key_file));
+    absl::SleepFor(
+        absl::Seconds(CredentialsManager::kFileRefreshIntervalSeconds + 1));
+  }
+
+  static void WriteClientCredentialsToDisk(const std::string& client_ca_crt,
+                                           const std::string& client_crt,
+                                           const std::string& client_key) {
+    ASSERT_OK(WriteStringToFile(client_ca_crt, FLAGS_client_ca_cert_file));
+    ASSERT_OK(WriteStringToFile(client_crt, FLAGS_client_cert_file));
+    ASSERT_OK(WriteStringToFile(client_key, FLAGS_client_key_file));
+    absl::SleepFor(
+        absl::Seconds(CredentialsManager::kFileRefreshIntervalSeconds + 1));
+  }
 
   std::unique_ptr<CredentialsManager> credentials_manager_;
   std::unique_ptr<::grpc::Server> server_;
@@ -209,5 +214,4 @@ TEST_F(CredentialsManagerTest, LoadNewServerCredentials) {
   EXPECT_OK(Connect());
 }
 
-}  // namespace
 }  // namespace stratum

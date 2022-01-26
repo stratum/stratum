@@ -61,6 +61,8 @@ class CredentialsManager {
   ::util::Status Initialize();
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
   std::shared_ptr<::grpc::ChannelCredentials> client_credentials_;
+
+  friend class CredentialsManagerTest;
 };
 
 }  // namespace stratum
