@@ -379,7 +379,8 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
                              TranslateValue(field_match.ternary().value(), *uri,
                                             to_sdk, to_bit_width));
             field_match.mutable_ternary()->set_value(new_val);
-            field_match.mutable_ternary()->set_mask(MaxValueOfBits(to_bit_width));
+            field_match.mutable_ternary()->set_mask(
+                MaxValueOfBits(to_bit_width));
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {
@@ -455,15 +456,22 @@ BfrtP4RuntimeTranslator::TranslateActionProfileMember(
 ::util::StatusOr<::p4::v1::MeterEntry>
 BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return entry;
+  ::p4::v1::MeterEntry translated_entry(entry);
+  std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.meter_id());
+  if (entry.has_index() && uri) {
+    ASSIGN_OR_RETURN(*translated_entry.mutable_index(),
+                     TranslateIndex(translated_entry.index(), *uri, to_sdk))
+  }
+  return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return entry;
+  ::p4::v1::DirectMeterEntry translated_entry(entry);
+  ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
+                   TranslateTableEntry(entry.table_entry(), to_sdk));
+  return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::Index> BfrtP4RuntimeTranslator::TranslateIndex(
@@ -512,8 +520,13 @@ BfrtP4RuntimeTranslator::TranslateDirectCounterEntry(
 ::util::StatusOr<::p4::v1::RegisterEntry>
 BfrtP4RuntimeTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
-  // TODO(Yi Tseng): Will support this in another PR.
-  return entry;
+  ::p4::v1::RegisterEntry translated_entry(entry);
+  std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.register_id());
+  if (entry.has_index() && uri) {
+    ASSIGN_OR_RETURN(*translated_entry.mutable_index(),
+                     TranslateIndex(translated_entry.index(), *uri, to_sdk))
+  }
+  return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::Replica> BfrtP4RuntimeTranslator::TranslateReplica(
