@@ -205,16 +205,17 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
   RETURN_IF_ERROR(session->BeginBatch());
-  for (const auto& update : request.updates()) {
+  for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
     const auto& translated_result = bfrt_p4runtime_translator_->TranslateEntity(
-        update.entity(), /*to_sdk=*/true) status = translated_result.status();
+        update.entity(), /*to_sdk=*/true);
+    status = translated_result.status();
     if (!status.ok()) {
       success = false;
       results->push_back(status);
       continue;
     }
-    const auto& entoty = translated_result.ValueOrDie();
+    const auto& entity = translated_result.ValueOrDie();
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry:
         status = bfrt_table_manager_->WriteTableEntry(session, update.type(),
