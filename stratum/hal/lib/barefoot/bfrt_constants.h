@@ -70,12 +70,6 @@ constexpr int kMaxQueuesPerPort = 32;
 
 constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(1);
 
-// P4Runtime Translation.
-constexpr int32 kTnaPortIdBitWidth = 9;
-constexpr char kUriTnaPortId[] = "tna/PortId_t";
-const absl::flat_hash_map<std::string, int32> kUriToBitWidth = {
-    {kUriTnaPortId, kTnaPortIdBitWidth}};
-
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

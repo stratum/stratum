@@ -23,6 +23,15 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+// Constants.
+constexpr int32 kTnaPortIdBitWidth = 9;
+constexpr char kUriTnaPortId[] = "tna/PortId_t";
+constexpr uint32 kSdnTnaRecirculationPortBase = 0xFFFFFF00;
+constexpr uint32 kTnaRecirculationPortBase = 0x44;
+constexpr int32 kTnaMaxNumPipes = 4;
+const absl::flat_hash_map<std::string, int32> kUriToBitWidth = {
+    {kUriTnaPortId, kTnaPortIdBitWidth}};
+
 class BfrtP4RuntimeTranslator {
  public:
   virtual ~BfrtP4RuntimeTranslator() = default;
@@ -166,9 +175,6 @@ class BfrtP4RuntimeTranslator {
   // which is useful for low level managers.
   ::p4::config::v1::P4Info low_level_p4info_;
 
-  static constexpr uint32 kSdnTnaRecirculationPortBase = 0xFFFFFF00;
-  static constexpr uint32 kTnaRecirculationPortBase = 0x44;
-  static constexpr int32 kTnaMaxNumPipes = 4;
   friend class BfrtP4RuntimeTranslatorTest;
 
  public:
