@@ -22,10 +22,9 @@
 #include "stratum/lib/security/test.grpc.pb.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(server_ca_cert_file);
+DECLARE_string(ca_cert_file);
 DECLARE_string(server_key_file);
 DECLARE_string(server_cert_file);
-DECLARE_string(client_ca_cert_file);
 DECLARE_string(client_key_file);
 DECLARE_string(client_cert_file);
 DECLARE_string(test_tmpdir);
@@ -42,10 +41,9 @@ class TestServiceImpl final : public ::testing::TestService::Service {
   }
 };
 
-constexpr char kServerCaCertFile[] = "ca_server.crt";
+constexpr char kCaCertFile[] = "ca_server.crt";
 constexpr char kServerCertFile[] = "stratum_server.crt";
 constexpr char kServerKeyFile[] = "stratum_server.key";
-constexpr char kClientCaCertFile[] = "ca_client.crt";
 constexpr char kClientCertFile[] = "stratum_client.crt";
 constexpr char kClientKeyFile[] = "stratum_client.key";
 constexpr char kCertCommonName[] = "stratum.local";
@@ -81,14 +79,12 @@ util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
 class CredentialsManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    FLAGS_server_ca_cert_file =
-        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerCaCertFile);
+    FLAGS_ca_cert_file =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kCaCertFile);
     FLAGS_server_cert_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerCertFile);
     FLAGS_server_key_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
-    FLAGS_client_ca_cert_file =
-        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kClientCaCertFile);
     FLAGS_client_cert_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kClientCertFile);
     FLAGS_client_key_file =
@@ -138,7 +134,7 @@ class CredentialsManagerTest : public ::testing::Test {
   static void WriteServerCredentialsToDisk(const std::string& server_ca_crt,
                                            const std::string& server_crt,
                                            const std::string& server_key) {
-    ASSERT_OK(WriteStringToFile(server_ca_crt, FLAGS_server_ca_cert_file));
+    ASSERT_OK(WriteStringToFile(server_ca_crt, FLAGS_ca_cert_file));
     ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert_file));
     ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key_file));
     absl::SleepFor(
@@ -148,7 +144,7 @@ class CredentialsManagerTest : public ::testing::Test {
   static void WriteClientCredentialsToDisk(const std::string& client_ca_crt,
                                            const std::string& client_crt,
                                            const std::string& client_key) {
-    ASSERT_OK(WriteStringToFile(client_ca_crt, FLAGS_client_ca_cert_file));
+    ASSERT_OK(WriteStringToFile(client_ca_crt, FLAGS_ca_cert_file));
     ASSERT_OK(WriteStringToFile(client_crt, FLAGS_client_cert_file));
     ASSERT_OK(WriteStringToFile(client_key, FLAGS_client_key_file));
     absl::SleepFor(
@@ -163,7 +159,20 @@ class CredentialsManagerTest : public ::testing::Test {
 
 TEST_F(CredentialsManagerTest, ConnectSuccess) { EXPECT_OK(Connect()); }
 
-TEST_F(CredentialsManagerTest, ConnectFailWrongCert) {
+TEST_F(CredentialsManagerTest, ConnectAfterBothCertsChangeSuccess) {
+  std::string ca_crt, server_crt, server_key, client_crt, client_key;
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                          &client_key));
+  // Initial connect with old credentials succeeds.
+  EXPECT_OK(Connect());
+  // Now update the server and client credentials. The file watcher should pick
+  // those up and the connect should still work.
+  WriteServerCredentialsToDisk(ca_crt, server_crt, server_key);
+  WriteClientCredentialsToDisk(ca_crt, client_crt, client_key);
+  EXPECT_OK(Connect());
+}
+
+TEST_F(CredentialsManagerTest, ConnectWrongClientCaCertFailure) {
   std::string ca_crt, server_crt, server_key, client_crt, client_key;
   EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
                           &client_key));
@@ -172,46 +181,41 @@ TEST_F(CredentialsManagerTest, ConnectFailWrongCert) {
   EXPECT_FALSE(status.ok());
 }
 
-TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
+TEST_F(CredentialsManagerTest, LoadNewServerCredentialsSuccess) {
   std::string ca_crt, server_crt, server_key, client_crt, client_key;
   EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
                           &client_key));
-  // Update server keys. Client connect will now fail because of CA mismatch.
-  WriteServerCredentialsToDisk(ca_crt, server_crt, server_key);
-  EXPECT_FALSE(Connect().ok());
-
-  // Update client credentials. Connects will work again.
-  WriteClientCredentialsToDisk(ca_crt, client_crt, client_key);
-  EXPECT_OK(Connect());
-}
-
-TEST_F(CredentialsManagerTest, LoadNewServerCredentials) {
-  std::string ca_crt, server_crt, server_key, client_crt, client_key;
-  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
-                          &client_key));
-  ASSERT_FALSE(server_crt.empty());
-  ASSERT_FALSE(server_key.empty());
   EXPECT_OK(credentials_manager_->LoadNewServerCredentials(ca_crt, server_crt,
                                                            server_key));
-
   // Read and verify the active key material files.
   std::string ca_cert_actual;
   std::string cert_actual;
   std::string key_actual;
-  ASSERT_OK(ReadFileToString(FLAGS_server_ca_cert_file, &ca_cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_ca_cert_file, &ca_cert_actual));
   ASSERT_OK(ReadFileToString(FLAGS_server_cert_file, &cert_actual));
   ASSERT_OK(ReadFileToString(FLAGS_server_key_file, &key_actual));
   EXPECT_EQ(ca_cert_actual, ca_crt);
   EXPECT_EQ(cert_actual, server_crt);
   EXPECT_EQ(key_actual, server_key);
+}
 
-  // Make sure client connections using the old CA certificates do not work.
-  EXPECT_FALSE(Connect().ok());
+TEST_F(CredentialsManagerTest, LoadNewClientCredentialsSuccess) {
+  std::string ca_crt, server_crt, server_key, client_crt, client_key;
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                          &client_key));
 
-  // Load new CA and connect.
   EXPECT_OK(credentials_manager_->LoadNewClientCredentials(ca_crt, client_crt,
                                                            client_key));
-  EXPECT_OK(Connect());
+  // Read and verify the active key material files.
+  std::string ca_cert_actual;
+  std::string cert_actual;
+  std::string key_actual;
+  ASSERT_OK(ReadFileToString(FLAGS_ca_cert_file, &ca_cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_client_cert_file, &cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_client_key_file, &key_actual));
+  EXPECT_EQ(ca_cert_actual, ca_crt);
+  EXPECT_EQ(cert_actual, client_crt);
+  EXPECT_EQ(key_actual, client_key);
 }
 
 }  // namespace stratum

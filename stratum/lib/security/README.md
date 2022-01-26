@@ -40,14 +40,14 @@ You can use tools like [OpenSSL][2] to generate these files. We also provide a
 
 To start Stratum with SSL/TLS, add the following flags:
 ```
---server_ca_cert_file=[CA certificate file]
+--ca_cert_file=[CA certificate file]
 --server_cert_file=[Server certificate file]
 --server_key_file=[Server private key file]
 ```
 
 On client tools like CLIs, add the following flags:
 ```
---client_ca_cert_file=[CA certificate file]
+--ca_cert_file=[CA certificate file]
 --client_cert_file=[Client certificate file]
 --client_key_file=[Client private key file]
 ```

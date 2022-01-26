@@ -16,10 +16,9 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_string(server_ca_cert_file, "", "Path to CA certificate file");
+DEFINE_string(ca_cert_file, "", "Path to CA certificate file");
 DEFINE_string(server_key_file, "", "Path to gRPC server private key file");
 DEFINE_string(server_cert_file, "", "Path to gRPC server certificate file");
-DEFINE_string(client_ca_cert_file, "", "Path to CA certificate file");
 DEFINE_string(client_key_file, "", "Path to gRPC client key file");
 DEFINE_string(client_cert_file, "", "Path to gRPC client certificate file");
 
@@ -55,7 +54,7 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
 
 ::util::Status CredentialsManager::Initialize() {
   // Server credentials.
-  if (FLAGS_server_ca_cert_file.empty() && FLAGS_server_key_file.empty() &&
+  if (FLAGS_ca_cert_file.empty() && FLAGS_server_key_file.empty() &&
       FLAGS_server_cert_file.empty()) {
     LOG(WARNING) << "No key files provided, using insecure server credentials!";
     server_credentials_ = ::grpc::InsecureServerCredentials();
@@ -63,7 +62,7 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
     auto certificate_provider =
         std::make_shared<FileWatcherCertificateProvider>(
             FLAGS_server_key_file, FLAGS_server_cert_file,
-            FLAGS_server_ca_cert_file, kFileRefreshIntervalSeconds);
+            FLAGS_ca_cert_file, kFileRefreshIntervalSeconds);
     auto tls_opts =
         std::make_shared<TlsServerCredentialsOptions>(certificate_provider);
     tls_opts->set_cert_request_type(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
@@ -73,7 +72,7 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
   }
 
   // Client credentials.
-  if (FLAGS_client_ca_cert_file.empty() && FLAGS_client_key_file.empty() &&
+  if (FLAGS_ca_cert_file.empty() && FLAGS_client_key_file.empty() &&
       FLAGS_client_cert_file.empty()) {
     client_credentials_ = ::grpc::InsecureChannelCredentials();
     LOG(WARNING) << "No key files provided, using insecure client credentials!";
@@ -81,12 +80,12 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
     auto certificate_provider =
         std::make_shared<FileWatcherCertificateProvider>(
             FLAGS_client_key_file, FLAGS_client_cert_file,
-            FLAGS_client_ca_cert_file, kFileRefreshIntervalSeconds);
+            FLAGS_ca_cert_file, kFileRefreshIntervalSeconds);
     auto tls_opts =
         std::make_shared<TlsChannelCredentialsOptions>(certificate_provider);
     tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
     tls_opts->watch_root_certs();
-    if (!FLAGS_client_ca_cert_file.empty() && !FLAGS_client_key_file.empty()) {
+    if (!FLAGS_ca_cert_file.empty() && !FLAGS_client_key_file.empty()) {
       tls_opts->watch_identity_key_cert_pairs();
     }
     client_credentials_ = ::grpc::experimental::TlsCredentials(*tls_opts);
@@ -103,7 +102,7 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
   // TODO(max): According to the API of FileWatcherCertificateProvider, any key
   // and certifcate update must happen atomically. The below code does not
   // guarantee that.
-  status.Update(WriteStringToFile(root_certs, FLAGS_server_ca_cert_file));
+  status.Update(WriteStringToFile(root_certs, FLAGS_ca_cert_file));
   status.Update(WriteStringToFile(cert_chain, FLAGS_server_cert_file));
   status.Update(WriteStringToFile(private_key, FLAGS_server_key_file));
   absl::SleepFor(absl::Seconds(kFileRefreshIntervalSeconds + 1));
@@ -119,7 +118,7 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
   // TODO(max): According to the API of FileWatcherCertificateProvider, any key
   // and certifcate update must happen atomically. The below code does not
   // guarantee that.
-  status.Update(WriteStringToFile(root_certs, FLAGS_client_ca_cert_file));
+  status.Update(WriteStringToFile(root_certs, FLAGS_ca_cert_file));
   status.Update(WriteStringToFile(cert_chain, FLAGS_client_cert_file));
   status.Update(WriteStringToFile(private_key, FLAGS_client_key_file));
   absl::SleepFor(absl::Seconds(kFileRefreshIntervalSeconds + 1));
