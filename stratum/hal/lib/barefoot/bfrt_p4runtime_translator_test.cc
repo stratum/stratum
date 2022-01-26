@@ -2161,7 +2161,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteMeterEntryRequest) {
     updates {
       entity {
         meter_entry {
-          meter_id: 318814845
+          meter_id: 55555
           index {
             index: 1
           }
@@ -2177,7 +2177,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteMeterEntryRequest) {
     updates {
       entity {
         meter_entry {
-          meter_id: 318814845
+          meter_id: 55555
           index {
             index: 300
           }
@@ -2207,7 +2207,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntryRequest) {
   const char read_req_str[] = R"PROTO(
     entities {
       meter_entry {
-        meter_id: 318814845
+        meter_id: 55555
         index {
           index: 1
         }
@@ -2221,7 +2221,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntryRequest) {
   const char expected_read_req_str[] = R"PROTO(
     entities {
       meter_entry {
-        meter_id: 318814845
+        meter_id: 55555
         index {
           index: 300
         }
@@ -2249,7 +2249,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntryResponse) {
   const char read_resp_str[] = R"PROTO(
     entities {
       meter_entry {
-        meter_id: 318814845
+        meter_id: 55555
         index {
           index: 300
         }
@@ -2263,7 +2263,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntryResponse) {
   const char expected_read_resp_str[] = R"PROTO(
     entities {
       meter_entry {
-        meter_id: 318814845
+        meter_id: 55555
         index {
           index: 1
         }
@@ -2605,7 +2605,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteRegisterEntryRequest) {
     updates {
       entity {
         register_entry {
-          register_id: 318814845
+          register_id: 66666
           index {
             index: 1
           }
@@ -2620,7 +2620,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteRegisterEntryRequest) {
     updates {
       entity {
         register_entry {
-          register_id: 318814845
+          register_id: 66666
           index {
             index: 300
           }
@@ -2649,7 +2649,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntryRequest) {
   const char read_req_str[] = R"PROTO(
     entities {
       register_entry {
-        register_id: 318814845
+        register_id: 66666
         index {
           index: 1
         }
@@ -2662,7 +2662,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntryRequest) {
   const char expected_read_req_str[] = R"PROTO(
     entities {
       register_entry {
-        register_id: 318814845
+        register_id: 66666
         index {
           index: 300
         }
@@ -2689,7 +2689,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntryResponse) {
   const char read_resp_str[] = R"PROTO(
     entities {
       register_entry {
-        register_id: 318814845
+        register_id: 66666
         index {
           index: 300
         }
@@ -2702,7 +2702,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntryResponse) {
   const char expected_read_resp_str[] = R"PROTO(
     entities {
       register_entry {
-        register_id: 318814845
+        register_id: 66666
         index {
           index: 1
         }

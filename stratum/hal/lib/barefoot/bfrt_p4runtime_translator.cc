@@ -109,169 +109,184 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
 ::util::Status BfrtP4RuntimeTranslator::PushForwardingPipelineConfig(
     const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
-  low_level_p4info_ = p4info;
-  pipeline_require_translation_ = false;
-  if (!translation_enabled_) {
+  ::p4::config::v1::P4Info low_level_p4info(p4info);
+  // Enable P4Runtime translation when user define a new type with
+  // p4runtime_translation and user enabled it when starting the Stratum.
+  if (!translation_enabled_ || !p4info.has_type_info()) {
+    pipeline_require_translation_ = false;
     return ::util::OkStatus();
   }
-  // Enable P4Runtime translation when user define a new type with
-  // p4runtime_translation.
-  if (p4info.has_type_info()) {
-    // First, store types that need to be translated (will check the type_name
-    // later).
-    absl::flat_hash_map<std::string, std::string> type_name_to_uri;
-    absl::flat_hash_map<std::string, int32> type_name_to_bit_width;
-    for (const auto& new_type : p4info.type_info().new_types()) {
-      const auto& type_name = new_type.first;
-      const auto& value = new_type.second;
-      if (value.representation_case() ==
-          ::p4::config::v1::P4NewTypeSpec::kTranslatedType) {
-        pipeline_require_translation_ = true;
-        // TODO(Yi Tseng): Verify URI string
-        type_name_to_uri[type_name] = value.translated_type().uri();
-        if (value.translated_type().sdn_type_case() ==
-            ::p4::config::v1::P4NewTypeTranslation::kSdnBitwidth) {
-          type_name_to_bit_width[type_name] =
-              value.translated_type().sdn_bitwidth();
-        } else {
-          // TODO(Yi Tseng): support SDN String translation.
-          return MAKE_ERROR(ERR_UNIMPLEMENTED)
-                 << "Unsupported SDN type: "
-                 << value.translated_type().sdn_type_case();
-        }
-      }
-    }
 
-    // Second, cache all P4Info ID to URI/Bit width mapping
-    // Types that support P4Runtime translation:
-    // Table.MatchField, Action.Param, ControllerPacketMetadata.Metadata
-    // Counter, Meter, Register (index)
-    table_to_field_to_type_uri_.clear();
-    action_to_param_to_type_uri_.clear();
-    packet_in_meta_to_type_uri_.clear();
-    packet_out_meta_to_type_uri_.clear();
-    counter_to_type_uri_.clear();
-    meter_to_type_uri_.clear();
-    register_to_type_uri_.clear();
-    table_to_field_to_bit_width_.clear();
-    action_to_param_to_bit_width_.clear();
-    packet_in_meta_to_bit_width_.clear();
-    packet_out_meta_to_bit_width_.clear();
-
-    for (auto& table : *low_level_p4info_.mutable_tables()) {
-      for (auto& match_field : *table.mutable_match_fields()) {
-        if (match_field.has_type_name()) {
-          const auto& type_name = match_field.type_name().name();
-          const auto& table_id = table.preamble().id();
-          const auto& match_field_id = match_field.id();
-          std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
-          if (uri) {
-            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
-            table_to_field_to_type_uri_[table_id][match_field_id] = *uri;
-            // Replace bitwidth to the low level one.
-            match_field.set_bitwidth(kUriToBitWidth.at(*uri));
-          }
-          int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
-          if (bit_width) {
-            table_to_field_to_bit_width_[table_id][match_field_id] = *bit_width;
-          }
-          match_field.clear_type_name();
-        }
-      }
-    }
-    for (auto& action : *low_level_p4info_.mutable_actions()) {
-      for (auto& param : *action.mutable_params()) {
-        if (param.has_type_name()) {
-          const auto& type_name = param.type_name().name();
-          const auto& action_id = action.preamble().id();
-          const auto& param_id = param.id();
-          std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
-          if (uri) {
-            action_to_param_to_type_uri_[action_id][param_id] = *uri;
-            // Replace bitwidth to the low level one.
-            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
-            param.set_bitwidth(kUriToBitWidth.at(*uri));
-          }
-          int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
-          if (bit_width) {
-            action_to_param_to_bit_width_[action_id][param_id] = *bit_width;
-          }
-          param.clear_type_name();
-        }
-      }
-    }
-    for (auto& pkt_md :
-         *low_level_p4info_.mutable_controller_packet_metadata()) {
-      const auto& ctrl_hdr_name = pkt_md.preamble().name();
-      absl::flat_hash_map<uint32, std::string>* meta_to_type_uri_;
-      absl::flat_hash_map<uint32, int32>* meta_to_bit_width_;
-      if (ctrl_hdr_name == kIngressMetadataPreambleName) {
-        meta_to_type_uri_ = &packet_in_meta_to_type_uri_;
-        meta_to_bit_width_ = &packet_in_meta_to_bit_width_;
-      } else if (ctrl_hdr_name == kEgressMetadataPreambleName) {
-        meta_to_type_uri_ = &packet_out_meta_to_type_uri_;
-        meta_to_bit_width_ = &packet_out_meta_to_bit_width_;
+  // First, store types that need to be translated (will check the type_name
+  // later).
+  absl::flat_hash_map<std::string, std::string> type_name_to_uri;
+  absl::flat_hash_map<std::string, int32> type_name_to_bit_width;
+  for (const auto& new_type : p4info.type_info().new_types()) {
+    const auto& type_name = new_type.first;
+    const auto& value = new_type.second;
+    if (value.representation_case() ==
+        ::p4::config::v1::P4NewTypeSpec::kTranslatedType) {
+      pipeline_require_translation_ = true;
+      // TODO(Yi Tseng): Verify URI string
+      type_name_to_uri[type_name] = value.translated_type().uri();
+      if (value.translated_type().sdn_type_case() ==
+          ::p4::config::v1::P4NewTypeTranslation::kSdnBitwidth) {
+        type_name_to_bit_width[type_name] =
+            value.translated_type().sdn_bitwidth();
       } else {
-        // Skip this controller header if it is not a packet_in or packet_out
-        // header.
-        continue;
-      }
-      for (auto& metadata : *pkt_md.mutable_metadata()) {
-        if (metadata.has_type_name()) {
-          const auto& type_name = metadata.type_name().name();
-          const auto& md_id = metadata.id();
-          std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
-          if (uri) {
-            meta_to_type_uri_->emplace(md_id, *uri);
-            // Replace bitwidth to the low level one.
-            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
-            metadata.set_bitwidth(kUriToBitWidth.at(*uri));
-          }
-          int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
-          if (bit_width) {
-            meta_to_bit_width_->emplace(md_id, *bit_width);
-          }
-          metadata.clear_type_name();
-        }
+        // TODO(Yi Tseng): support SDN String translation.
+        return MAKE_ERROR(ERR_UNIMPLEMENTED)
+               << "Unsupported SDN type: "
+               << value.translated_type().sdn_type_case();
       }
     }
-    for (auto& counter : *low_level_p4info_.mutable_counters()) {
-      if (counter.has_index_type_name()) {
-        const auto& type_name = counter.index_type_name().name();
-        const auto& counter_id = counter.preamble().id();
-        std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
-        if (uri) {
-          counter_to_type_uri_[counter_id] = *uri;
-        }
-        counter.clear_index_type_name();
-      }
-    }
-    for (auto& meter : *low_level_p4info_.mutable_meters()) {
-      if (meter.has_index_type_name()) {
-        const auto& type_name = meter.index_type_name().name();
-        const auto& meter_id = meter.preamble().id();
-        std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
-        if (uri) {
-          meter_to_type_uri_[meter_id] = *uri;
-        }
-        meter.clear_index_type_name();
-      }
-    }
-
-    for (auto& reg : *low_level_p4info_.mutable_registers()) {
-      if (reg.has_index_type_name()) {
-        const auto& type_name = reg.index_type_name().name();
-        const auto& register_id = reg.preamble().id();
-        std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
-        if (uri) {
-          register_to_type_uri_[register_id] = *uri;
-        }
-        reg.clear_index_type_name();
-      }
-    }
-    low_level_p4info_.clear_type_info();
   }
 
+  // Second, cache all P4Info ID to URI/Bit width mapping
+  // Types that support P4Runtime translation:
+  // Table.MatchField, Action.Param, ControllerPacketMetadata.Metadata
+  // Counter, Meter, Register (index)
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
+      table_to_field_to_type_uri;
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
+      action_to_param_to_type_uri;
+  absl::flat_hash_map<uint32, std::string> packet_in_meta_to_type_uri;
+  absl::flat_hash_map<uint32, std::string> packet_out_meta_to_type_uri;
+  absl::flat_hash_map<uint32, std::string> counter_to_type_uri;
+  absl::flat_hash_map<uint32, std::string> meter_to_type_uri;
+  absl::flat_hash_map<uint32, std::string> register_to_type_uri;
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
+      table_to_field_to_bit_width;
+  absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
+      action_to_param_to_bit_width;
+  absl::flat_hash_map<uint32, int32> packet_in_meta_to_bit_width;
+  absl::flat_hash_map<uint32, int32> packet_out_meta_to_bit_width;
+
+  for (auto& table : *low_level_p4info.mutable_tables()) {
+    for (auto& match_field : *table.mutable_match_fields()) {
+      if (match_field.has_type_name()) {
+        const auto& type_name = match_field.type_name().name();
+        const auto& table_id = table.preamble().id();
+        const auto& match_field_id = match_field.id();
+        std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
+        if (uri) {
+          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          table_to_field_to_type_uri[table_id][match_field_id] = *uri;
+          // Replace bitwidth to the low level one.
+          match_field.set_bitwidth(kUriToBitWidth.at(*uri));
+        }
+        int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
+        if (bit_width) {
+          table_to_field_to_bit_width[table_id][match_field_id] = *bit_width;
+        }
+        match_field.clear_type_name();
+      }
+    }
+  }
+  for (auto& action : *low_level_p4info.mutable_actions()) {
+    for (auto& param : *action.mutable_params()) {
+      if (param.has_type_name()) {
+        const auto& type_name = param.type_name().name();
+        const auto& action_id = action.preamble().id();
+        const auto& param_id = param.id();
+        std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
+        if (uri) {
+          action_to_param_to_type_uri[action_id][param_id] = *uri;
+          // Replace bitwidth to the low level one.
+          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          param.set_bitwidth(kUriToBitWidth.at(*uri));
+        }
+        int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
+        if (bit_width) {
+          action_to_param_to_bit_width[action_id][param_id] = *bit_width;
+        }
+        param.clear_type_name();
+      }
+    }
+  }
+  for (auto& pkt_md : *low_level_p4info.mutable_controller_packet_metadata()) {
+    const auto& ctrl_hdr_name = pkt_md.preamble().name();
+    absl::flat_hash_map<uint32, std::string>* meta_to_type_uri;
+    absl::flat_hash_map<uint32, int32>* meta_to_bit_width;
+    if (ctrl_hdr_name == kIngressMetadataPreambleName) {
+      meta_to_type_uri = &packet_in_meta_to_type_uri;
+      meta_to_bit_width = &packet_in_meta_to_bit_width;
+    } else if (ctrl_hdr_name == kEgressMetadataPreambleName) {
+      meta_to_type_uri = &packet_out_meta_to_type_uri;
+      meta_to_bit_width = &packet_out_meta_to_bit_width;
+    } else {
+      // Skip this controller header if it is not a packet_in or packet_out
+      // header.
+      continue;
+    }
+    for (auto& metadata : *pkt_md.mutable_metadata()) {
+      if (metadata.has_type_name()) {
+        const auto& type_name = metadata.type_name().name();
+        const auto& md_id = metadata.id();
+        std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
+        if (uri) {
+          meta_to_type_uri->emplace(md_id, *uri);
+          // Replace bitwidth to the low level one.
+          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          metadata.set_bitwidth(kUriToBitWidth.at(*uri));
+        }
+        int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
+        if (bit_width) {
+          meta_to_bit_width->emplace(md_id, *bit_width);
+        }
+        metadata.clear_type_name();
+      }
+    }
+  }
+  for (auto& counter : *low_level_p4info.mutable_counters()) {
+    if (counter.has_index_type_name()) {
+      const auto& type_name = counter.index_type_name().name();
+      const auto& counter_id = counter.preamble().id();
+      std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
+      if (uri) {
+        counter_to_type_uri[counter_id] = *uri;
+      }
+      counter.clear_index_type_name();
+    }
+  }
+  for (auto& meter : *low_level_p4info.mutable_meters()) {
+    if (meter.has_index_type_name()) {
+      const auto& type_name = meter.index_type_name().name();
+      const auto& meter_id = meter.preamble().id();
+      std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
+      if (uri) {
+        meter_to_type_uri[meter_id] = *uri;
+      }
+      meter.clear_index_type_name();
+    }
+  }
+
+  for (auto& reg : *low_level_p4info.mutable_registers()) {
+    if (reg.has_index_type_name()) {
+      const auto& type_name = reg.index_type_name().name();
+      const auto& register_id = reg.preamble().id();
+      std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
+      if (uri) {
+        register_to_type_uri[register_id] = *uri;
+      }
+      reg.clear_index_type_name();
+    }
+  }
+  low_level_p4info.clear_type_info();
+
+  low_level_p4info_ = low_level_p4info;
+  table_to_field_to_type_uri_ = table_to_field_to_type_uri;
+  action_to_param_to_type_uri_ = action_to_param_to_type_uri;
+  packet_in_meta_to_type_uri_ = packet_in_meta_to_type_uri;
+  packet_out_meta_to_type_uri_ = packet_out_meta_to_type_uri;
+  counter_to_type_uri_ = counter_to_type_uri;
+  meter_to_type_uri_ = meter_to_type_uri;
+  register_to_type_uri_ = register_to_type_uri;
+  table_to_field_to_bit_width_ = table_to_field_to_bit_width;
+  action_to_param_to_bit_width_ = action_to_param_to_bit_width;
+  packet_in_meta_to_bit_width_ = packet_in_meta_to_bit_width;
+  packet_out_meta_to_bit_width_ = packet_out_meta_to_bit_width;
+  pipeline_require_translation_ = true;
   return ::util::OkStatus();
 }
 
@@ -457,7 +472,7 @@ BfrtP4RuntimeTranslator::TranslateActionProfileMember(
 BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              bool to_sdk) {
   ::p4::v1::MeterEntry translated_entry(entry);
-  std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.meter_id());
+  std::string* uri = gtl::FindOrNull(meter_to_type_uri_, entry.meter_id());
   if (entry.has_index() && uri) {
     ASSIGN_OR_RETURN(*translated_entry.mutable_index(),
                      TranslateIndex(translated_entry.index(), *uri, to_sdk))
@@ -521,7 +536,8 @@ BfrtP4RuntimeTranslator::TranslateDirectCounterEntry(
 BfrtP4RuntimeTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
   ::p4::v1::RegisterEntry translated_entry(entry);
-  std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.register_id());
+  std::string* uri =
+      gtl::FindOrNull(register_to_type_uri_, entry.register_id());
   if (entry.has_index() && uri) {
     ASSIGN_OR_RETURN(*translated_entry.mutable_index(),
                      TranslateIndex(translated_entry.index(), *uri, to_sdk))

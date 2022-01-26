@@ -153,7 +153,6 @@ class BfrtP4RuntimeTranslator {
   absl::flat_hash_map<uint32, std::string> meter_to_type_uri_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, std::string> register_to_type_uri_
       GUARDED_BY(lock_);
-
   absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
       table_to_field_to_bit_width_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, int32>>
