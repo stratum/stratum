@@ -1,19 +1,19 @@
 // Copyright 2022-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_MOCK_H_
-#define STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_MOCK_H_
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_P4RUNTIME_TRANSLATOR_MOCK_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_P4RUNTIME_TRANSLATOR_MOCK_H_
 
 #include <string>
 
 #include "gmock/gmock.h"
-#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
-class P4RuntimeBfrtTranslatorMock : public P4RuntimeBfrtTranslator {
+class BfrtP4RuntimeTranslatorMock : public BfrtP4RuntimeTranslator {
  public:
   MOCK_METHOD2(PushChassisConfig,
                ::util::Status(const ChassisConfig& config, uint64 node_id));
@@ -40,4 +40,4 @@ class P4RuntimeBfrtTranslatorMock : public P4RuntimeBfrtTranslator {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_MOCK_H_
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_P4RUNTIME_TRANSLATOR_MOCK_H_

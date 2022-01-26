@@ -12,7 +12,7 @@
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
-#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
 #include "stratum/lib/security/auth_policy_checker.h"
@@ -58,13 +58,13 @@ namespace barefoot {
       BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_counter_manager =
       BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto p4runtime_bfrt_translator = P4RuntimeBfrtTranslator::CreateInstance(
+  auto bfrt_p4runtime_translator = BfrtP4RuntimeTranslator::CreateInstance(
       bf_sde_wrapper, device_id,
       FLAGS_experimental_enable_p4runtime_translation);
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_packetio_manger.get(),
       bfrt_pre_manager.get(), bfrt_counter_manager.get(),
-      p4runtime_bfrt_translator.get(), bf_sde_wrapper, device_id);
+      bfrt_p4runtime_translator.get(), bf_sde_wrapper, device_id);
   PhalInterface* phal = phal::Phal::CreateSingleton();
   std::map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},

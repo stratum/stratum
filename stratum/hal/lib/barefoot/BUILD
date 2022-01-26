@@ -289,7 +289,7 @@ stratum_cc_library(
         ":bfrt_packetio_manager",
         ":bfrt_pre_manager",
         ":bfrt_table_manager",
-        ":p4runtime_bfrt_translator",
+        ":bfrt_p4runtime_translator",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
@@ -315,7 +315,7 @@ stratum_cc_test(
         ":bfrt_packetio_manager_mock",
         ":bfrt_pre_manager_mock",
         ":bfrt_table_manager_mock",
-        ":p4runtime_bfrt_translator_mock",
+        ":bfrt_p4runtime_translator_mock",
         ":test_main",
         "//stratum/glue:integral_types",
         "//stratum/glue/gtl:map_util",
@@ -625,9 +625,9 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "p4runtime_bfrt_translator",
-    srcs = ["p4runtime_bfrt_translator.cc"],
-    hdrs = ["p4runtime_bfrt_translator.h"],
+    name = "bfrt_p4runtime_translator",
+    srcs = ["bfrt_p4runtime_translator.cc"],
+    hdrs = ["bfrt_p4runtime_translator.h"],
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
@@ -649,13 +649,13 @@ stratum_cc_library(
 )
 
 stratum_cc_test(
-    name = "p4runtime_bfrt_translator_test",
-    srcs = ["p4runtime_bfrt_translator_test.cc"],
+    name = "bfrt_p4runtime_translator_test",
+    srcs = ["bfrt_p4runtime_translator_test.cc"],
     deps = [
         ":bf_sde_mock",
         ":bfrt_constants",
-        ":p4runtime_bfrt_translator",
-        ":p4runtime_bfrt_translator_mock",
+        ":bfrt_p4runtime_translator",
+        ":bfrt_p4runtime_translator_mock",
         ":utils",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:writer_mock",
@@ -667,12 +667,12 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
-    name = "p4runtime_bfrt_translator_mock",
+    name = "bfrt_p4runtime_translator_mock",
     testonly = 1,
-    hdrs = ["p4runtime_bfrt_translator_mock.h"],
+    hdrs = ["bfrt_p4runtime_translator_mock.h"],
     arches = HOST_ARCHES,
     deps = [
-        ":p4runtime_bfrt_translator",
+        ":bfrt_p4runtime_translator",
         "@com_google_googletest//:gtest",
     ],
 )

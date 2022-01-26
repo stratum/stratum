@@ -28,7 +28,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    BfrtCounterManager* bfrt_counter_manager,
-                   P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+                   BfrtP4RuntimeTranslator* bfrt_p4runtime_translator,
                    BfSdeInterface* bf_sde_interface, int device_id)
     : pipeline_initialized_(false),
       initialized_(false),
@@ -38,7 +38,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
-      p4runtime_bfrt_translator_(ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       node_id_(0),
       device_id_(device_id) {}
 
@@ -51,7 +51,7 @@ BfrtNode::BfrtNode()
       bfrt_packetio_manager_(nullptr),
       bfrt_pre_manager_(nullptr),
       bfrt_counter_manager_(nullptr),
-      p4runtime_bfrt_translator_(nullptr),
+      bfrt_p4runtime_translator_(nullptr),
       node_id_(0),
       device_id_(-1) {}
 
@@ -62,11 +62,11 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtTableManager* bfrt_table_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
-    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator,
     BfSdeInterface* bf_sde_interface, int device_id) {
   return absl::WrapUnique(
       new BfrtNode(bfrt_table_manager, bfrt_packetio_manager, bfrt_pre_manager,
-                   bfrt_counter_manager, p4runtime_bfrt_translator,
+                   bfrt_counter_manager, bfrt_p4runtime_translator,
                    bf_sde_interface, device_id));
 }
 
@@ -77,7 +77,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(
-      p4runtime_bfrt_translator_->PushChassisConfig(config, node_id));
+      bfrt_p4runtime_translator_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
   return ::util::OkStatus();
@@ -138,13 +138,13 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
 
   // Push pipeline config to the managers.
-  RETURN_IF_ERROR(p4runtime_bfrt_translator_->PushForwardingPipelineConfig(
+  RETURN_IF_ERROR(bfrt_p4runtime_translator_->PushForwardingPipelineConfig(
       bfrt_config_.programs(0).p4info()));
 
   // Augment the P4Info so managers will use the original bitwith from P4 code
   // for every fields (e.g, 9-bit port number instead of 32-bits).
   ASSIGN_OR_RETURN(const auto& low_level_p4info,
-                   p4runtime_bfrt_translator_->GetLowLevelP4Info());
+                   bfrt_p4runtime_translator_->GetLowLevelP4Info());
   *bfrt_config_.mutable_programs(0)->mutable_p4info() = low_level_p4info;
   RETURN_IF_ERROR(
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
@@ -203,7 +203,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   ASSIGN_OR_RETURN(const auto& request,
-                   p4runtime_bfrt_translator_->TranslateWriteRequest(req));
+                   bfrt_p4runtime_translator_->TranslateWriteRequest(req));
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
   RETURN_IF_ERROR(session->BeginBatch());
@@ -286,9 +286,9 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   ASSIGN_OR_RETURN(const auto& request,
-                   p4runtime_bfrt_translator_->TranslateReadRequest(req));
-  P4RuntimeBfrtTranslator::ReadResponseWriterWrapper writer_wrapper(
-      writer, p4runtime_bfrt_translator_);
+                   bfrt_p4runtime_translator_->TranslateReadRequest(req));
+  BfrtP4RuntimeTranslator::ReadResponseWriterWrapper writer_wrapper(
+      writer, bfrt_p4runtime_translator_);
   writer = &writer_wrapper;
   ::p4::v1::ReadResponse resp;
   bool success = true;
@@ -391,8 +391,8 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   auto translator_wrapper = std::make_shared<
-      P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper>(
-      writer, p4runtime_bfrt_translator_);
+      BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper>(
+      writer, bfrt_p4runtime_translator_);
   auto packet_in_writer =
       std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
@@ -418,7 +418,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   }
   ASSIGN_OR_RETURN(
       const auto& translated_req,
-      p4runtime_bfrt_translator_->TranslateStreamMessageRequest(req));
+      bfrt_p4runtime_translator_->TranslateStreamMessageRequest(req));
 
   switch (translated_req.update_case()) {
     case ::p4::v1::StreamMessageRequest::kPacket: {

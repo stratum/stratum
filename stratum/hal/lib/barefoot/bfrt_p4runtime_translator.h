@@ -1,8 +1,8 @@
 // Copyright 2022-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_H_
-#define STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_H_
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_P4RUNTIME_TRANSLATOR_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_P4RUNTIME_TRANSLATOR_H_
 
 #include <memory>
 #include <string>
@@ -23,9 +23,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-class P4RuntimeBfrtTranslator {
+class BfrtP4RuntimeTranslator {
  public:
-  virtual ~P4RuntimeBfrtTranslator() = default;
+  virtual ~BfrtP4RuntimeTranslator() = default;
   virtual ::util::Status PushChassisConfig(const ChassisConfig& config,
                                            uint64 node_id)
       LOCKS_EXCLUDED(lock_);
@@ -45,16 +45,16 @@ class P4RuntimeBfrtTranslator {
       const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::config::v1::P4Info> GetLowLevelP4Info()
       LOCKS_EXCLUDED(lock_);
-  static std::unique_ptr<P4RuntimeBfrtTranslator> CreateInstance(
+  static std::unique_ptr<BfrtP4RuntimeTranslator> CreateInstance(
       BfSdeInterface* bf_sde_interface, int device_id,
       bool translation_enabled) {
-    return absl::WrapUnique(new P4RuntimeBfrtTranslator(
+    return absl::WrapUnique(new BfrtP4RuntimeTranslator(
         bf_sde_interface, device_id, translation_enabled));
   }
 
  protected:
   // Default constructor.
-  P4RuntimeBfrtTranslator()
+  BfrtP4RuntimeTranslator()
       : device_id_(0),
         bf_sde_interface_(nullptr),
         translation_enabled_(false),
@@ -63,7 +63,7 @@ class P4RuntimeBfrtTranslator {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  P4RuntimeBfrtTranslator(BfSdeInterface* bf_sde_interface, int device_id,
+  BfrtP4RuntimeTranslator(BfSdeInterface* bf_sde_interface, int device_id,
                           bool translation_enabled)
       : device_id_(device_id),
         bf_sde_interface_(bf_sde_interface),
@@ -167,7 +167,7 @@ class P4RuntimeBfrtTranslator {
   // which is useful for low level managers.
   ::p4::config::v1::P4Info low_level_p4info_;
 
-  friend class P4RuntimeBfrtTranslatorTest;
+  friend class BfrtP4RuntimeTranslatorTest;
 
  public:
   // Wrapper for writers
@@ -176,17 +176,17 @@ class P4RuntimeBfrtTranslator {
    public:
     ReadResponseWriterWrapper(
         WriterInterface<::p4::v1::ReadResponse>* writer,
-        P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
+        BfrtP4RuntimeTranslator* bfrt_p4runtime_translator)
         : writer_(ABSL_DIE_IF_NULL(writer)),
-          p4runtime_bfrt_translator_(
-              ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)) {}
+          bfrt_p4runtime_translator_(
+              ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)) {}
     bool Write(const ::p4::v1::ReadResponse& msg) override;
 
    private:
     // The original writer, not owned by this class.
     WriterInterface<::p4::v1::ReadResponse>* writer_;
     // The pointer point to the translator, not owned by this class.
-    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_;
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_;
 
     friend class TranslatorWriterWrapperTest;
   };
@@ -197,17 +197,17 @@ class P4RuntimeBfrtTranslator {
     StreamMessageResponseWriterWrapper(
         std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
             writer,
-        P4RuntimeBfrtTranslator* p4runtime_bfrt_translator)
+        BfrtP4RuntimeTranslator* bfrt_p4runtime_translator)
         : writer_(writer),
-          p4runtime_bfrt_translator_(
-              ABSL_DIE_IF_NULL(p4runtime_bfrt_translator)) {}
+          bfrt_p4runtime_translator_(
+              ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)) {}
     bool Write(const ::p4::v1::StreamMessageResponse& msg) override;
 
    private:
     // The original writer, not owned by this class.
     std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer_;
     // The pointer point to the translator, not owned by this class.
-    P4RuntimeBfrtTranslator* p4runtime_bfrt_translator_;
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_;
 
     friend class TranslatorWriterWrapperTest;
   };
@@ -217,4 +217,4 @@ class P4RuntimeBfrtTranslator {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_P4RUNTIME_BFRT_TRANSLATOR_H_
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_P4RUNTIME_TRANSLATOR_H_

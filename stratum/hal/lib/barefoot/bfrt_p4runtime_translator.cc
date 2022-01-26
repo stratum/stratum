@@ -1,7 +1,7 @@
 // Copyright 2022-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 
 #include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -19,7 +19,7 @@ namespace hal {
 namespace barefoot {
 
 ::util::StatusOr<::p4::v1::WriteRequest>
-P4RuntimeBfrtTranslator::TranslateWriteRequest(
+BfrtP4RuntimeTranslator::TranslateWriteRequest(
     const ::p4::v1::WriteRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_require_translation_) {
@@ -34,7 +34,7 @@ P4RuntimeBfrtTranslator::TranslateWriteRequest(
 }
 
 ::util::StatusOr<::p4::v1::ReadRequest>
-P4RuntimeBfrtTranslator::TranslateReadRequest(
+BfrtP4RuntimeTranslator::TranslateReadRequest(
     const ::p4::v1::ReadRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_require_translation_) {
@@ -48,7 +48,7 @@ P4RuntimeBfrtTranslator::TranslateReadRequest(
 }
 
 ::util::StatusOr<::p4::v1::ReadResponse>
-P4RuntimeBfrtTranslator::TranslateReadResponse(
+BfrtP4RuntimeTranslator::TranslateReadResponse(
     const ::p4::v1::ReadResponse& response) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_require_translation_) {
@@ -61,19 +61,19 @@ P4RuntimeBfrtTranslator::TranslateReadResponse(
   return translated_response;
 }
 
-bool P4RuntimeBfrtTranslator::ReadResponseWriterWrapper::Write(
+bool BfrtP4RuntimeTranslator::ReadResponseWriterWrapper::Write(
     const ::p4::v1::ReadResponse& msg) {
-  auto status = p4runtime_bfrt_translator_->TranslateReadResponse(msg);
+  auto status = bfrt_p4runtime_translator_->TranslateReadResponse(msg);
   return status.ok() && writer_->Write(status.ConsumeValueOrDie());
 }
 
-bool P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper::Write(
+bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
     const ::p4::v1::StreamMessageResponse& msg) {
-  auto status = p4runtime_bfrt_translator_->TranslateStreamMessageResponse(msg);
+  auto status = bfrt_p4runtime_translator_->TranslateStreamMessageResponse(msg);
   return status.ok() && writer_->Write(status.ConsumeValueOrDie());
 }
 
-::util::Status P4RuntimeBfrtTranslator::PushChassisConfig(
+::util::Status BfrtP4RuntimeTranslator::PushChassisConfig(
     const ChassisConfig& config, uint64 node_id) {
   ::absl::WriterMutexLock l(&lock_);
   // Port mapping for P4Runtime translation.
@@ -106,7 +106,7 @@ bool P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper::Write(
   return ::util::OkStatus();
 }
 
-::util::Status P4RuntimeBfrtTranslator::PushForwardingPipelineConfig(
+::util::Status BfrtP4RuntimeTranslator::PushForwardingPipelineConfig(
     const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
   low_level_p4info_ = p4info;
@@ -272,7 +272,7 @@ bool P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper::Write(
   return ::util::OkStatus();
 }
 
-::util::StatusOr<::p4::v1::Entity> P4RuntimeBfrtTranslator::TranslateEntity(
+::util::StatusOr<::p4::v1::Entity> BfrtP4RuntimeTranslator::TranslateEntity(
     const ::p4::v1::Entity& entity, bool to_sdk) {
   ::p4::v1::Entity translated_entity(entity);
   switch (translated_entity.entity_case()) {
@@ -332,7 +332,7 @@ bool P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper::Write(
 }
 
 ::util::StatusOr<::p4::v1::TableEntry>
-P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
+BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
                                              bool to_sdk) {
   ::p4::v1::TableEntry translated_entry(entry);
   const auto& table_id = translated_entry.table_id();
@@ -447,7 +447,7 @@ P4RuntimeBfrtTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
 }
 
 ::util::StatusOr<::p4::v1::ActionProfileMember>
-P4RuntimeBfrtTranslator::TranslateActionProfileMember(
+BfrtP4RuntimeTranslator::TranslateActionProfileMember(
     const ::p4::v1::ActionProfileMember& act_prof_mem, bool to_sdk) {
   ::p4::v1::ActionProfileMember translated_apm;
   translated_apm.CopyFrom(act_prof_mem);
@@ -459,20 +459,20 @@ P4RuntimeBfrtTranslator::TranslateActionProfileMember(
 }
 
 ::util::StatusOr<::p4::v1::MeterEntry>
-P4RuntimeBfrtTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
+BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
-P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
+BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 
-::util::StatusOr<::p4::v1::Index> P4RuntimeBfrtTranslator::TranslateIndex(
+::util::StatusOr<::p4::v1::Index> BfrtP4RuntimeTranslator::TranslateIndex(
     const ::p4::v1::Index& index, const std::string& uri, bool to_sdk) {
   int64 index_value = index.index();
   if (uri == kUriTnaPortId) {
@@ -495,7 +495,7 @@ P4RuntimeBfrtTranslator::TranslateDirectMeterEntry(
 }
 
 ::util::StatusOr<::p4::v1::CounterEntry>
-P4RuntimeBfrtTranslator::TranslateCounterEntry(
+BfrtP4RuntimeTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, bool to_sdk) {
   ::p4::v1::CounterEntry translated_entry(entry);
   std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.counter_id());
@@ -507,7 +507,7 @@ P4RuntimeBfrtTranslator::TranslateCounterEntry(
 }
 
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
-P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
+BfrtP4RuntimeTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
   ::p4::v1::DirectCounterEntry translated_entry(entry);
   ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
@@ -516,13 +516,13 @@ P4RuntimeBfrtTranslator::TranslateDirectCounterEntry(
 }
 
 ::util::StatusOr<::p4::v1::RegisterEntry>
-P4RuntimeBfrtTranslator::TranslateRegisterEntry(
+BfrtP4RuntimeTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
   // TODO(Yi Tseng): Will support this in another PR.
   return entry;
 }
 
-::util::StatusOr<::p4::v1::Replica> P4RuntimeBfrtTranslator::TranslateReplica(
+::util::StatusOr<::p4::v1::Replica> BfrtP4RuntimeTranslator::TranslateReplica(
     const ::p4::v1::Replica& replica, bool to_sdk) {
   ::p4::v1::Replica translated_replica(replica);
   // Since we know we are always translating the port number, we can simply
@@ -542,7 +542,7 @@ P4RuntimeBfrtTranslator::TranslateRegisterEntry(
 }
 
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
-P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
+BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
   ::p4::v1::PacketReplicationEngineEntry translated_entry(entry);
   switch (translated_entry.type_case()) {
@@ -571,7 +571,7 @@ P4RuntimeBfrtTranslator::TranslatePacketReplicationEngineEntry(
 }
 
 ::util::StatusOr<::p4::v1::PacketMetadata>
-P4RuntimeBfrtTranslator::TranslatePacketMetadata(
+BfrtP4RuntimeTranslator::TranslatePacketMetadata(
     const p4::v1::PacketMetadata& packet_metadata, const std::string& uri,
     int32 bit_width, bool to_sdk) {
   p4::v1::PacketMetadata translated_packet_metadata(packet_metadata);
@@ -581,7 +581,7 @@ P4RuntimeBfrtTranslator::TranslatePacketMetadata(
   return translated_packet_metadata;
 }
 
-::util::StatusOr<::p4::v1::PacketIn> P4RuntimeBfrtTranslator::TranslatePacketIn(
+::util::StatusOr<::p4::v1::PacketIn> BfrtP4RuntimeTranslator::TranslatePacketIn(
     const ::p4::v1::PacketIn& packet_in) {
   ::p4::v1::PacketIn translated_packet_in(packet_in);
   for (auto& md : *translated_packet_in.mutable_metadata()) {
@@ -598,7 +598,7 @@ P4RuntimeBfrtTranslator::TranslatePacketMetadata(
 }
 
 ::util::StatusOr<::p4::v1::PacketOut>
-P4RuntimeBfrtTranslator::TranslatePacketOut(
+BfrtP4RuntimeTranslator::TranslatePacketOut(
     const ::p4::v1::PacketOut& packet_out) {
   ::p4::v1::PacketOut translated_packet_out(packet_out);
   for (auto& md : *translated_packet_out.mutable_metadata()) {
@@ -616,7 +616,7 @@ P4RuntimeBfrtTranslator::TranslatePacketOut(
 }
 
 ::util::StatusOr<::p4::v1::StreamMessageRequest>
-P4RuntimeBfrtTranslator::TranslateStreamMessageRequest(
+BfrtP4RuntimeTranslator::TranslateStreamMessageRequest(
     const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_require_translation_) {
@@ -640,7 +640,7 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageRequest(
 }
 
 ::util::StatusOr<::p4::v1::StreamMessageResponse>
-P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
+BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
     const ::p4::v1::StreamMessageResponse& response) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_require_translation_) {
@@ -668,12 +668,12 @@ P4RuntimeBfrtTranslator::TranslateStreamMessageResponse(
 }
 
 ::util::StatusOr<::p4::config::v1::P4Info>
-P4RuntimeBfrtTranslator::GetLowLevelP4Info() {
+BfrtP4RuntimeTranslator::GetLowLevelP4Info() {
   absl::ReaderMutexLock l(&lock_);
   return low_level_p4info_;
 }
 
-::util::StatusOr<::p4::v1::Action> P4RuntimeBfrtTranslator::TranslateAction(
+::util::StatusOr<::p4::v1::Action> BfrtP4RuntimeTranslator::TranslateAction(
     const ::p4::v1::Action& action, bool to_sdk) {
   ::p4::v1::Action translated_action;
   translated_action.CopyFrom(action);
@@ -703,7 +703,7 @@ P4RuntimeBfrtTranslator::GetLowLevelP4Info() {
   return translated_action;
 }
 
-::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateValue(
+::util::StatusOr<std::string> BfrtP4RuntimeTranslator::TranslateValue(
     const std::string& value, const std::string& uri, bool to_sdk,
     int32 bit_width) {
   if (uri.compare(kUriTnaPortId) == 0) {
@@ -712,7 +712,7 @@ P4RuntimeBfrtTranslator::GetLowLevelP4Info() {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unknown URI: " << uri;
 }
 
-::util::StatusOr<std::string> P4RuntimeBfrtTranslator::TranslateTnaPortId(
+::util::StatusOr<std::string> BfrtP4RuntimeTranslator::TranslateTnaPortId(
     const std::string& value, bool to_sdk, int32 bit_width) {
   // Translate type "tna/PortId_t"
   if (to_sdk) {

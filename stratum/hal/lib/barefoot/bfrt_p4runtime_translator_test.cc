@@ -1,7 +1,7 @@
 // Copyright 2022-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 
 #include <string>
 
@@ -11,7 +11,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
-#include "stratum/hal/lib/barefoot/p4runtime_bfrt_translator_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/utils.h"
@@ -44,11 +44,11 @@ MATCHER_P(DerivedFromStatus, status, "") {
   return true;
 }
 
-class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
+class BfrtP4RuntimeTranslatorTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
-    p4rt_bfrt_translator_ = P4RuntimeBfrtTranslator::CreateInstance(
+    p4rt_bfrt_translator_ = BfrtP4RuntimeTranslator::CreateInstance(
         bf_sde_mock_.get(), kDeviceId, /* enable translation */ true);
   }
 
@@ -85,7 +85,7 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
   }
 
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
-  std::unique_ptr<P4RuntimeBfrtTranslator> p4rt_bfrt_translator_;
+  std::unique_ptr<BfrtP4RuntimeTranslator> p4rt_bfrt_translator_;
 
   static constexpr int kDeviceId = 1;
   static constexpr uint64 kNodeId = 0;
@@ -317,25 +317,25 @@ class P4RuntimeBfrtTranslatorTest : public ::testing::Test {
   )PROTO";
 };
 
-constexpr int P4RuntimeBfrtTranslatorTest::kDeviceId;
-constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkCpuPortId;
-constexpr uint32 P4RuntimeBfrtTranslatorTest::kPortId;
-constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPortId;
-constexpr int32 P4RuntimeBfrtTranslatorTest::kPort;
-constexpr int32 P4RuntimeBfrtTranslatorTest::kSlot;
-constexpr int32 P4RuntimeBfrtTranslatorTest::kChannel;
-constexpr char P4RuntimeBfrtTranslatorTest::kChassisConfig[];
-constexpr char P4RuntimeBfrtTranslatorTest::kP4InfoString[];
-constexpr uint32 P4RuntimeBfrtTranslatorTest::kPort2Id;
-constexpr uint32 P4RuntimeBfrtTranslatorTest::kSdkPort2Id;
-constexpr int32 P4RuntimeBfrtTranslatorTest::kPort2;
+constexpr int BfrtP4RuntimeTranslatorTest::kDeviceId;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkCpuPortId;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kPortId;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkPortId;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kPort;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kSlot;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kChannel;
+constexpr char BfrtP4RuntimeTranslatorTest::kChassisConfig[];
+constexpr char BfrtP4RuntimeTranslatorTest::kP4InfoString[];
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kPort2Id;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkPort2Id;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kPort2;
 
-TEST_F(P4RuntimeBfrtTranslatorTest, PushConfig) {
+TEST_F(BfrtP4RuntimeTranslatorTest, PushConfig) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_UnknownUri) {
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_UnknownUri) {
   EXPECT_OK(PushChassisConfig());
 
   // Unknown URI
@@ -346,7 +346,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_UnknownUri) {
                                        "Unknown URI: foo")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_InvalidSize) {
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_InvalidSize) {
   EXPECT_OK(PushChassisConfig());
   // Invalid size
   EXPECT_THAT(TranslateValue("some value", kUriTnaPortId, /*to_sdk=*/false,
@@ -358,7 +358,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_InvalidSize) {
                   "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToSdk) {
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToSdk) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
@@ -370,7 +370,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToSdk) {
                   "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToPort) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from sdk port to singleton port
   auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
@@ -383,7 +383,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_MissingMappingToPort) {
           "'sdk_port_to_singleton_port_.count(sdk_port_id)' is false. ")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_ToSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
@@ -394,7 +394,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_ToSdk) {
   EXPECT_EQ(expected_value, actual_value);
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from sdk port to singleton port
   auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
@@ -405,7 +405,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_EQ(expected_value, actual_value);
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, GetLowLevelP4Info) {
+TEST_F(BfrtP4RuntimeTranslatorTest, GetLowLevelP4Info) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char expect_low_level_p4info_str[] = R"PROTO(
@@ -570,7 +570,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, GetLowLevelP4Info) {
 }
 
 // Table entry
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -665,7 +665,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntryRequest) {
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        WriteTableEntryRequest_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -721,7 +721,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_req_str[] = R"PROTO(
@@ -811,7 +811,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryRequest) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        ReadTableEntryRequest_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -862,7 +862,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntryResponse) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -952,7 +952,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadTableEntryResponse) {
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        ReadTableEntryResponse_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1003,7 +1003,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidTernary) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidTernary) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   // mask must be all-one.
@@ -1029,7 +1029,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidTernary) {
                   "'field_match.ternary().mask() == all_one' is false.")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidRange) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidRange) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   // mask must be all-one.
@@ -1056,7 +1056,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidRange) {
                                  "field_match.range().high()' is false.")));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidLpm) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   // mask must be all-one.
@@ -1084,7 +1084,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteTableEntry_InvalidLpm) {
 }
 
 // Action profile member
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteActionProfileMemberRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteActionProfileMemberRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   constexpr char write_req_str[] = R"PROTO(
@@ -1128,7 +1128,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteActionProfileMemberRequest) {
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadActionProfileMemberRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   constexpr char read_req_str[] = R"PROTO(
@@ -1167,7 +1167,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberRequest) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberResponse) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadActionProfileMemberResponse) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -1208,7 +1208,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadActionProfileMemberResponse) {
 }
 
 // Packet replication engine.
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        WritePacketReplicationRequest_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1262,7 +1262,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        ReadPacketReplicationRequest_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1311,7 +1311,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        ReadPacketReplicationResponse_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1360,7 +1360,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        WritePacketReplicationRequest_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1454,7 +1454,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_CloneSession) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadPacketReplicationRequest_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_req_str[] = R"PROTO(
@@ -1502,7 +1502,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadPacketReplicationRequest_CloneSession) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest,
+TEST_F(BfrtP4RuntimeTranslatorTest,
        ReadPacketReplicationResponse_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
@@ -1591,7 +1591,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest,
   EXPECT_THAT(read_resp, EqualsProto(expected_read_resp));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -1620,7 +1620,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WritePacketReplicationRequest_InvalidPort) {
 }
 
 // PacketIO
-TEST_F(P4RuntimeBfrtTranslatorTest, PacketOut) {
+TEST_F(BfrtP4RuntimeTranslatorTest, PacketOut) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   char stream_message_request_str[] = R"PROTO(
@@ -1664,7 +1664,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, PacketOut) {
               EqualsProto(expected_stream_message_request));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, PacketIn) {
+TEST_F(BfrtP4RuntimeTranslatorTest, PacketIn) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   char stream_message_response_str[] = R"PROTO(
@@ -1709,7 +1709,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, PacketIn) {
 }
 
 // Counter entry
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteCounterEntryRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteCounterEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -1756,7 +1756,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteCounterEntryRequest) {
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadCounterEntryRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_req_str[] = R"PROTO(
@@ -1798,7 +1798,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadCounterEntryRequest) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadCounterEntryResponse) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntryResponse) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -1841,7 +1841,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadCounterEntryResponse) {
 }
 
 // Direct counter entry
-TEST_F(P4RuntimeBfrtTranslatorTest, WriteDirectCounterEntryRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectCounterEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char write_req_str[] = R"PROTO(
@@ -1948,7 +1948,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, WriteDirectCounterEntryRequest) {
   EXPECT_THAT(write_req, EqualsProto(expected_write_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadDirectCounterEntryRequest) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntryRequest) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_req_str[] = R"PROTO(
@@ -2050,7 +2050,7 @@ TEST_F(P4RuntimeBfrtTranslatorTest, ReadDirectCounterEntryRequest) {
   EXPECT_THAT(read_req, EqualsProto(expected_read_req));
 }
 
-TEST_F(P4RuntimeBfrtTranslatorTest, ReadDirectCounterEntryResponse) {
+TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntryResponse) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   const char read_resp_str[] = R"PROTO(
@@ -2167,31 +2167,31 @@ class TranslatorWriterWrapperTest : public ::testing::Test {
 
  protected:
   void SetUp() override {
-    p4runtime_bfrt_translator_mock_ =
-        absl::make_unique<P4RuntimeBfrtTranslatorMock>();
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
     read_response_writer_mock_ =
         absl::make_unique<WriterMock<::p4::v1::ReadResponse>>();
     stream_message_response_writer_mock_ =
         std::make_shared<WriterMock<::p4::v1::StreamMessageResponse>>();
     read_response_writer_wrapper_ =
-        absl::make_unique<P4RuntimeBfrtTranslator::ReadResponseWriterWrapper>(
+        absl::make_unique<BfrtP4RuntimeTranslator::ReadResponseWriterWrapper>(
             read_response_writer_mock_.get(),
-            p4runtime_bfrt_translator_mock_.get());
+            bfrt_p4runtime_translator_mock_.get());
     stream_message_response_writer_wrapper_ = absl::make_unique<
-        P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper>(
+        BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper>(
         stream_message_response_writer_mock_,
-        p4runtime_bfrt_translator_mock_.get());
+        bfrt_p4runtime_translator_mock_.get());
   }
 
-  std::unique_ptr<P4RuntimeBfrtTranslator::ReadResponseWriterWrapper>
+  std::unique_ptr<BfrtP4RuntimeTranslator::ReadResponseWriterWrapper>
       read_response_writer_wrapper_;
-  std::unique_ptr<P4RuntimeBfrtTranslator::StreamMessageResponseWriterWrapper>
+  std::unique_ptr<BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper>
       stream_message_response_writer_wrapper_;
   std::unique_ptr<WriterMock<::p4::v1::ReadResponse>>
       read_response_writer_mock_;
   std::shared_ptr<WriterMock<::p4::v1::StreamMessageResponse>>
       stream_message_response_writer_mock_;
-  std::unique_ptr<P4RuntimeBfrtTranslatorMock> p4runtime_bfrt_translator_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
 };
 
 TEST_F(TranslatorWriterWrapperTest, ReadResponse) {
@@ -2204,7 +2204,7 @@ TEST_F(TranslatorWriterWrapperTest, ReadResponse) {
   )PROTO";
   ::p4::v1::ReadResponse read_resp;
   EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateReadResponse(EqualsProto(read_resp)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>(read_resp)));
   EXPECT_CALL(*read_response_writer_mock_, Write(_)).WillOnce(Return(true));
@@ -2227,7 +2227,7 @@ TEST_F(TranslatorWriterWrapperTest, StreamMessageResponse) {
   )PROTO";
   ::p4::v1::StreamMessageResponse stream_msg_resp;
   EXPECT_OK(ParseProtoFromString(stream_msg_resp_str, &stream_msg_resp));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateStreamMessageResponse(EqualsProto(stream_msg_resp)))
       .WillOnce(Return(
           ::util::StatusOr<::p4::v1::StreamMessageResponse>(stream_msg_resp)));
@@ -2246,7 +2246,7 @@ TEST_F(TranslatorWriterWrapperTest, ReadResponse_TranslationFailed) {
   )PROTO";
   ::p4::v1::ReadResponse read_resp;
   EXPECT_OK(ParseProtoFromString(read_resp_str, &read_resp));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateReadResponse(EqualsProto(read_resp)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>()));
   EXPECT_EQ(Write(read_resp), false);
@@ -2269,7 +2269,7 @@ TEST_F(TranslatorWriterWrapperTest, StreamMessageResponse_TranslationFailed) {
 
   ::p4::v1::StreamMessageResponse stream_msg_resp;
   EXPECT_OK(ParseProtoFromString(stream_msg_resp_str, &stream_msg_resp));
-  EXPECT_CALL(*p4runtime_bfrt_translator_mock_,
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateStreamMessageResponse(EqualsProto(stream_msg_resp)))
       .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageResponse>()));
   EXPECT_EQ(Write(stream_msg_resp), false);
