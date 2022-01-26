@@ -379,8 +379,7 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
                              TranslateValue(field_match.ternary().value(), *uri,
                                             to_sdk, to_bit_width));
             field_match.mutable_ternary()->set_value(new_val);
-            field_match.mutable_ternary()->set_mask(
-                MaxValueOfBits(from_bit_width));
+            field_match.mutable_ternary()->set_mask(MaxValueOfBits(to_bit_width));
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {
