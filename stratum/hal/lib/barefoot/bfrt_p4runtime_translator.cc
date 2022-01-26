@@ -85,7 +85,7 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
                    bf_sde_interface_->GetPcieCpuPort(device_id_));
   singleton_port_to_sdk_port_[kSdnCpuPortId] = cpu_sdk_port;
   sdk_port_to_singleton_port_[cpu_sdk_port] = kSdnCpuPortId;
-  for (int pipe = 0; pipe < 4; pipe++) {
+  for (int pipe = 0; pipe < kTnaMaxNumPipes; pipe++) {
     uint32 sdk_port = kTnaRecirculationPortBase | (pipe << 7);
     uint32 sdn_port = kSdnTnaRecirculationPortBase + pipe;
     singleton_port_to_sdk_port_[sdn_port] = sdk_port;
@@ -117,8 +117,8 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
   // Enable P4Runtime translation when user define a new type with
   // p4runtime_translation.
   if (p4info.has_type_info()) {
-    // First, store types that need to be translated(will check the type_name
-    // later)
+    // First, store types that need to be translated (will check the type_name
+    // later).
     absl::flat_hash_map<std::string, std::string> type_name_to_uri;
     absl::flat_hash_map<std::string, int32> type_name_to_bit_width;
     for (const auto& new_type : p4info.type_info().new_types()) {
@@ -135,6 +135,8 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
               value.translated_type().sdn_bitwidth();
         } else {
           // TODO(Yi Tseng): support SDN String translation.
+          return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unsupported SDN type: "
+              << value.translated_type().sdn_type_case();
         }
       }
     }
@@ -163,9 +165,9 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
           const auto& match_field_id = match_field.id();
           std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
           if (uri) {
+            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
             table_to_field_to_type_uri_[table_id][match_field_id] = *uri;
             // Replace bitwidth to the low level one.
-            CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
             match_field.set_bitwidth(kUriToBitWidth.at(*uri));
           }
           int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
@@ -343,19 +345,21 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
       const auto& field_id = field_match.field_id();
       std::string* uri =
           gtl::FindOrNull(table_to_field_to_type_uri_[table_id], field_id);
-
+      if (!uri) {
+        continue;
+      }
       int32 from_bit_width = 0;
       int32 to_bit_width = 0;
-      if (to_sdk && uri) {
+      if (to_sdk) {
         from_bit_width = gtl::FindWithDefault(
             table_to_field_to_bit_width_[table_id], field_id, 0);
         to_bit_width = gtl::FindWithDefault(kUriToBitWidth, *uri, 0);
-      } else if (uri) {
+      } else {
         from_bit_width = gtl::FindWithDefault(kUriToBitWidth, *uri, 0);
         to_bit_width = gtl::FindWithDefault(
             table_to_field_to_bit_width_[table_id], field_id, 0);
       }
-      if (uri && from_bit_width && to_bit_width) {
+      if (from_bit_width && to_bit_width) {
         switch (field_match.field_match_type_case()) {
           case ::p4::v1::FieldMatch::kExact: {
             ASSIGN_OR_RETURN(const std::string& new_val,
@@ -367,25 +371,13 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
           case ::p4::v1::FieldMatch::kTernary: {
             // We only allow the "exact" type of ternary match, which means
             // all bits from mask must be one.
-            std::string all_one = std::string(from_bit_width / 8, '\xff');
-            if (from_bit_width % 8) {
-              all_one.insert(
-                  0, 1, static_cast<char>(1 << ((from_bit_width % 8) - 1)));
-            }
-            CHECK_RETURN_IF_FALSE(field_match.ternary().mask() == all_one);
+            CHECK_RETURN_IF_FALSE(field_match.ternary().mask() == MaxValueOfBits(from_bit_width));
             // New mask with bit width.
-            if (from_bit_width != to_bit_width) {
-              all_one = std::string(to_bit_width / 8, '\xff');
-              if (to_bit_width % 8) {
-                all_one.insert(0, 1,
-                               static_cast<char>(1 << (to_bit_width % 8 - 1)));
-              }
-            }
             ASSIGN_OR_RETURN(const std::string& new_val,
                              TranslateValue(field_match.ternary().value(), *uri,
                                             to_sdk, to_bit_width));
             field_match.mutable_ternary()->set_value(new_val);
-            field_match.mutable_ternary()->set_mask(all_one);
+            field_match.mutable_ternary()->set_mask(MaxValueOfBits(from_bit_width));
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {
@@ -604,12 +596,13 @@ BfrtP4RuntimeTranslator::TranslatePacketOut(
   for (auto& md : *translated_packet_out.mutable_metadata()) {
     const std::string* uri =
         gtl::FindOrNull(packet_out_meta_to_type_uri_, md.metadata_id());
-    if (uri) {
-      const int32* bit_width = gtl::FindOrNull(kUriToBitWidth, *uri);
-      if (bit_width) {
-        ASSIGN_OR_RETURN(
-            md, TranslatePacketMetadata(md, *uri, *bit_width, /*to_sdk=*/true))
-      }
+    if (!uri) {
+      continue;
+    }
+    const int32* bit_width = gtl::FindOrNull(kUriToBitWidth, *uri);
+    if (bit_width) {
+      ASSIGN_OR_RETURN(
+          md, TranslatePacketMetadata(md, *uri, *bit_width, /*to_sdk=*/true))
     }
   }
   return translated_packet_out;
@@ -706,7 +699,7 @@ BfrtP4RuntimeTranslator::GetLowLevelP4Info() {
 ::util::StatusOr<std::string> BfrtP4RuntimeTranslator::TranslateValue(
     const std::string& value, const std::string& uri, bool to_sdk,
     int32 bit_width) {
-  if (uri.compare(kUriTnaPortId) == 0) {
+  if (uri == kUriTnaPortId) {
     return TranslateTnaPortId(value, to_sdk, bit_width);
   }
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unknown URI: " << uri;

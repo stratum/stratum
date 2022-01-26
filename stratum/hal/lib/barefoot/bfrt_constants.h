@@ -75,8 +75,6 @@ constexpr int32 kTnaPortIdBitWidth = 9;
 constexpr char kUriTnaPortId[] = "tna/PortId_t";
 const absl::flat_hash_map<std::string, int32> kUriToBitWidth = {
     {kUriTnaPortId, kTnaPortIdBitWidth}};
-constexpr uint32 kSdnTnaRecirculationPortBase = 0xFFFFFF00;
-constexpr uint32 kTnaRecirculationPortBase = 0x44;
 
 }  // namespace barefoot
 }  // namespace hal

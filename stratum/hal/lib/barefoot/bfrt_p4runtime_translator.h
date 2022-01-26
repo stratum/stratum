@@ -167,6 +167,9 @@ class BfrtP4RuntimeTranslator {
   // which is useful for low level managers.
   ::p4::config::v1::P4Info low_level_p4info_;
 
+  static constexpr uint32 kSdnTnaRecirculationPortBase = 0xFFFFFF00;
+  static constexpr uint32 kTnaRecirculationPortBase = 0x44;
+  static constexpr int32 kTnaMaxNumPipes = 4;
   friend class BfrtP4RuntimeTranslatorTest;
 
  public:
