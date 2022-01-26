@@ -91,7 +91,7 @@ class CredentialsManagerTest : public ::testing::Test {
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kClientKeyFile);
 
     std::string ca_crt, server_crt, server_key, client_crt, client_key;
-    EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+    ASSERT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
                             &client_key));
     WriteServerCredentialsToDisk(ca_crt, server_crt, server_key);
     WriteClientCredentialsToDisk(ca_crt, client_crt, client_key);
