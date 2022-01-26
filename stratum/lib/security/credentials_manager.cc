@@ -106,7 +106,7 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
   status.Update(WriteStringToFile(root_certs, FLAGS_server_ca_cert_file));
   status.Update(WriteStringToFile(cert_chain, FLAGS_server_cert_file));
   status.Update(WriteStringToFile(private_key, FLAGS_server_key_file));
-  absl::SleepFor(absl::Seconds(kFileRefreshIntervalSeconds));
+  absl::SleepFor(absl::Seconds(kFileRefreshIntervalSeconds + 1));
 
   return status;
 }
