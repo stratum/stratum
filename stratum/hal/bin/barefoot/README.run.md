@@ -792,7 +792,7 @@ for match field and action parameter, for example:
 
 ```p4
 @p4runtime_translation("tna/PortId_t", 32)
-type bit<32> MyPortId_t;
+type bit<9> FabricPortId_t;
 ```
 
 To enable it on Stratum, add `--experimental_enable_p4runtime_translation` flag
