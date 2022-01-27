@@ -27,6 +27,7 @@ stratum_cc_binary(
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
+        "//stratum/lib/security:credentials_manager",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
