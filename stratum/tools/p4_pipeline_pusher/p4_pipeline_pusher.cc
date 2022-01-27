@@ -38,8 +38,8 @@ const char kUsage[] =
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
 
-  CHECK_RETURN_IF_FALSE(!FLAGS_p4_info_file.empty());
-  CHECK_RETURN_IF_FALSE(!FLAGS_p4_pipeline_config_file.empty());
+  RET_CHECK(!FLAGS_p4_info_file.empty());
+  RET_CHECK(!FLAGS_p4_pipeline_config_file.empty());
   ::p4::config::v1::P4Info p4info;
   RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_p4_info_file, &p4info));
   std::string p4_device_config;

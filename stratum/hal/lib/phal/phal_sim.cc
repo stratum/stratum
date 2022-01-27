@@ -2,13 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/phal_sim.h"
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -53,16 +52,15 @@ PhalSim::~PhalSim() {}
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  CHECK_RETURN_IF_FALSE(transceiver_event_writers_.size() <
-                        static_cast<size_t>(kMaxNumTransceiverEventWriters))
+  RET_CHECK(transceiver_event_writers_.size() <
+            static_cast<size_t>(kMaxNumTransceiverEventWriters))
       << "Can only support " << kMaxNumTransceiverEventWriters
       << " transceiver event Writers.";
 
   // Find the next available ID for the Writer.
   int next_id = kInvalidWriterId;
   for (int id = 1;
-       id <= static_cast<int>(transceiver_event_writers_.size()) + 1;
-       ++id) {
+       id <= static_cast<int>(transceiver_event_writers_.size()) + 1; ++id) {
     auto it = std::find_if(
         transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
         [id](const TransceiverEventWriter& w) { return w.id == id; });
@@ -72,7 +70,7 @@ PhalSim::~PhalSim() {}
       break;
     }
   }
-  CHECK_RETURN_IF_FALSE(next_id != kInvalidWriterId)
+  RET_CHECK(next_id != kInvalidWriterId)
       << "Could not find a new ID for the Writer. next_id=" << next_id << ".";
 
   transceiver_event_writers_.insert({std::move(writer), priority, next_id});
@@ -90,7 +88,7 @@ PhalSim::~PhalSim() {}
   auto it = std::find_if(
       transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
       [id](const TransceiverEventWriter& h) { return h.id == id; });
-  CHECK_RETURN_IF_FALSE(it != transceiver_event_writers_.end())
+  RET_CHECK(it != transceiver_event_writers_.end())
       << "Could not find a transceiver event Writer with ID " << id << ".";
 
   transceiver_event_writers_.erase(it);

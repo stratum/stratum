@@ -2,12 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/system_fake.h"
 
-#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -39,7 +38,7 @@ bool SystemFake::PathExists(const std::string& path) const {
 ::util::Status SystemFake::ReadFileToString(const std::string& path,
                                             std::string* buffer) const {
   auto found_contents = path_to_file_contents_.find(path);
-  CHECK_RETURN_IF_FALSE(found_contents != path_to_file_contents_.end())
+  RET_CHECK(found_contents != path_to_file_contents_.end())
       << "Cannot read file " << path << " to string. Does not exist.";
   *buffer = found_contents->second;
   return ::util::OkStatus();
@@ -78,7 +77,7 @@ UdevFake::EnumerateSubsystem(const std::string& subsystem) {
 }
 
 ::util::Status UdevMonitorFake::AddFilter(const std::string& subsystem) {
-  CHECK_RETURN_IF_FALSE(!receiving_);
+  RET_CHECK(!receiving_);
   // This currently only supports testing subsystem filters. We'll need to
   // update this if we ever want to use devtype filters as well.
   filters_.insert(subsystem);
@@ -92,7 +91,7 @@ UdevFake::EnumerateSubsystem(const std::string& subsystem) {
 
 ::util::StatusOr<bool> UdevMonitorFake::GetUdevEvent(Udev::Event* event) {
   absl::MutexLock lock(&system_->udev_mutex_);
-  CHECK_RETURN_IF_FALSE(receiving_);
+  RET_CHECK(receiving_);
   for (const auto& udev_filter : filters_) {
     auto filter_updates = system_->updated_udev_devices_.find(udev_filter);
     if (filter_updates != system_->updated_udev_devices_.end()) {

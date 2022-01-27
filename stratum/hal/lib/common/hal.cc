@@ -105,17 +105,17 @@ Hal::~Hal() {
 ::util::Status Hal::SanityCheck() {
   const std::vector<std::string> external_stratum_urls =
       absl::StrSplit(FLAGS_external_stratum_urls, ',', absl::SkipEmpty());
-  CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
+  RET_CHECK(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
 
   auto it = std::find_if(
       external_stratum_urls.begin(), external_stratum_urls.end(),
       [](const std::string& url) { return url == FLAGS_local_stratum_url; });
-  CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
+  RET_CHECK(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
       << FLAGS_local_stratum_url << ".";
 
-  CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
+  RET_CHECK(!FLAGS_persistent_config_dir.empty())
       << "persistent_config_dir flag needs to be explicitly given.";
 
   LOG(INFO) << "HAL sanity checks all passed.";
@@ -322,8 +322,8 @@ Hal* Hal::GetSingleton() {
   // Create the pipe to transfer signals.
   RETURN_IF_ERROR(CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
   // Start the signal waiter thread that initiates shutdown.
-  CHECK_RETURN_IF_FALSE(pthread_create(&signal_waiter_tid_, nullptr,
-                                       SignalWaiterThreadFunc, nullptr) == 0)
+  RET_CHECK(pthread_create(&signal_waiter_tid_, nullptr, SignalWaiterThreadFunc,
+                           nullptr) == 0)
       << "Could not start the signal waiter thread.";
 
   return ::util::OkStatus();

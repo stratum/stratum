@@ -120,7 +120,7 @@ class BfSdeWrapper : public BfSdeInterface {
     static ::util::StatusOr<std::shared_ptr<BfSdeInterface::SessionInterface>>
     CreateSession() {
       auto bfrt_session = bfrt::BfRtSession::sessionCreate();
-      CHECK_RETURN_IF_FALSE(bfrt_session) << "Failed to create new session.";
+      RET_CHECK(bfrt_session) << "Failed to create new session.";
       VLOG(1) << "Started new BfRt session with ID "
               << bfrt_session->sessHandleGet();
 

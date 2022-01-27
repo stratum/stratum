@@ -108,8 +108,7 @@ BcmNode::~BcmNode() {}
     const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
   P4PipelineConfig p4_pipeline_config;
-  CHECK_RETURN_IF_FALSE(
-      p4_pipeline_config.ParseFromString(config.p4_device_config()))
+  RET_CHECK(p4_pipeline_config.ParseFromString(config.p4_device_config()))
       << "Failed to parse p4_device_config byte stream for node with ID "
       << node_id_ << ".";
   RETURN_IF_ERROR(StaticEntryWrite(p4_pipeline_config, /*post_push=*/false));
@@ -162,10 +161,10 @@ BcmNode::~BcmNode() {}
 
 ::util::Status BcmNode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
-  CHECK_RETURN_IF_FALSE(results) << "Results pointer must be non-null.";
+  RET_CHECK(results) << "Results pointer must be non-null.";
 
   absl::WriterMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
+  RET_CHECK(req.device_id() == node_id_)
       << "Request device id must be same as id of this BcmNode.";
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -177,11 +176,11 @@ BcmNode::~BcmNode() {}
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   absl::ReaderMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
+  RET_CHECK(req.device_id() == node_id_)
       << "Request device id must be same as id of this BcmNode.";
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -513,7 +512,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 // TODO(unknown): Complete this function for all the update types.
 ::util::Status BcmNode::TableWrite(const ::p4::v1::TableEntry& entry,
                                    ::p4::v1::Update::Type type) {
-  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED);
+  RET_CHECK(type != ::p4::v1::Update::UNSPECIFIED);
 
   // We populate BcmFlowEntry based on the given TableEntry.
   BcmFlowEntry bcm_flow_entry;
@@ -647,7 +646,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       break;
   }
 
-  CHECK_RETURN_IF_FALSE(consumed)
+  RET_CHECK(consumed)
       << "Do not know what to do with the following BcmTableType when doing "
       << "table update of type " << ::p4::v1::Update::Type_Name(type) << ": "
       << BcmFlowEntry::BcmTableType_Name(bcm_table_type)
@@ -665,8 +664,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   switch (type) {
     case ::p4::v1::Update::INSERT: {
       // Member must not exist. Instead of re-add, controller must use modify.
-      CHECK_RETURN_IF_FALSE(
-          !bcm_table_manager_->ActionProfileMemberExists(member_id))
+      RET_CHECK(!bcm_table_manager_->ActionProfileMemberExists(member_id))
           << "member_id " << member_id << " already exists on node " << node_id_
           << ". ActionProfileMember: " << member.ShortDebugString() << ".";
       // Fill BcmNonMultipathNexthop for this member and add it to the HW.
@@ -702,7 +700,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       BcmNonMultipathNexthop nexthop;
       RETURN_IF_ERROR(
           bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop));
-      CHECK_RETURN_IF_FALSE(unit_ == nexthop.unit())
+      RET_CHECK(unit_ == nexthop.unit())
           << "Something is wrong. This should never happen (" << unit_
           << " != " << nexthop.unit() << ").";
       RETURN_IF_ERROR(
@@ -725,8 +723,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       BcmNonMultipathNexthopInfo info;
       RETURN_IF_ERROR(
           bcm_table_manager_->GetBcmNonMultipathNexthopInfo(member_id, &info));
-      CHECK_RETURN_IF_FALSE(info.group_ref_count == 0 &&
-                            info.flow_ref_count == 0)
+      RET_CHECK(info.group_ref_count == 0 && info.flow_ref_count == 0)
           << "member_id " << member_id << " is already used by "
           << info.group_ref_count << " groups and " << info.flow_ref_count
           << "flows on node " << node_id_
@@ -743,7 +740,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       break;
   }
 
-  CHECK_RETURN_IF_FALSE(consumed)
+  RET_CHECK(consumed)
       << "Do not know what to do with this ActionProfileMember: "
       << member.ShortDebugString() << ".";
 
@@ -822,10 +819,10 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       break;
   }
 
-  CHECK_RETURN_IF_FALSE(consumed)
-      << "Do not know what to do with this "
-      << ::p4::v1::Update::Type_Name(type)
-      << " PacketReplicationEngineEntry: " << entry.ShortDebugString() << ".";
+  RET_CHECK(consumed) << "Do not know what to do with this "
+                      << ::p4::v1::Update::Type_Name(type)
+                      << " PacketReplicationEngineEntry: "
+                      << entry.ShortDebugString() << ".";
   return ::util::OkStatus();
 }
 
@@ -838,7 +835,7 @@ namespace {
     uint32 member_id = member.member_id();
     // We do not allow repeated member_ids as well. It does not make sense.
     // Controller can use the weights instead.
-    CHECK_RETURN_IF_FALSE(!member_ids.count(member_id))
+    RET_CHECK(!member_ids.count(member_id))
         << "member_id " << member_id << " is given more than once. "
         << "ActionProfileGroup: " << group.ShortDebugString() << ".";
     member_ids.insert(member_id);
@@ -858,8 +855,7 @@ namespace {
     case ::p4::v1::Update::INSERT: {
       // All the members that are being added to the group must exist. But the
       // group itself must not exist.
-      CHECK_RETURN_IF_FALSE(
-          !bcm_table_manager_->ActionProfileGroupExists(group_id))
+      RET_CHECK(!bcm_table_manager_->ActionProfileGroupExists(group_id))
           << "group_id " << group_id << " already exists on node " << node_id_
           << ". ActionProfileGroup: " << group.ShortDebugString() << ".";
       RETURN_IF_ERROR(CheckForUniqueMemberIds(group));
@@ -894,7 +890,7 @@ namespace {
       BcmMultipathNexthop nexthop;
       RETURN_IF_ERROR(bcm_table_manager_->FillBcmMultipathNexthop(
           group, &nexthop));  // will error out if any member not found
-      CHECK_RETURN_IF_FALSE(unit_ == nexthop.unit())
+      RET_CHECK(unit_ == nexthop.unit())
           << "Something is wrong. This should never happen (" << unit_
           << " != " << nexthop.unit() << ").";
       RETURN_IF_ERROR(
@@ -911,7 +907,7 @@ namespace {
       BcmMultipathNexthopInfo info;
       RETURN_IF_ERROR(bcm_table_manager_->GetBcmMultipathNexthopInfo(
           group_id, &info));  // will error out if group not found
-      CHECK_RETURN_IF_FALSE(info.flow_ref_count == 0)
+      RET_CHECK(info.flow_ref_count == 0)
           << "group_id " << group_id << " is already used by "
           << info.flow_ref_count << " flows on node " << node_id_
           << ". ActionProfileGroup: " << group.ShortDebugString() << ".";
@@ -927,9 +923,8 @@ namespace {
       break;
   }
 
-  CHECK_RETURN_IF_FALSE(consumed)
-      << "Do not know what to do with this ActionProfileGroup: "
-      << group.ShortDebugString() << ".";
+  RET_CHECK(consumed) << "Do not know what to do with this ActionProfileGroup: "
+                      << group.ShortDebugString() << ".";
 
   return ::util::OkStatus();
 }

@@ -63,7 +63,7 @@ class OnlpPhalCli {
 
     Path query_path;
     for (const auto& query_field : query_fields) {
-      CHECK_RETURN_IF_FALSE(query_field != "")
+      RET_CHECK(query_field != "")
           << "Encountered unexpected empty query field.";
       RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
       RE2 bracket_regex(R"#(\[(\d+)\])#");
@@ -71,7 +71,7 @@ class OnlpPhalCli {
       PathEntry entry;
 
       std::string bracket_match;
-      CHECK_RETURN_IF_FALSE(
+      RET_CHECK(
           RE2::FullMatch(query_field, field_regex, &entry.name, &bracket_match))
           << "Could not parse query field: " << query_field;
       if (!bracket_match.empty()) {

@@ -2,10 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include <memory>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -23,13 +24,9 @@
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
-DEFINE_string(
-    bcm_sdk_sim_bin,
-    "stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8",
-    "Path to look for BCMSIM or PCID binary.");
+DEFINE_string(bcm_sdk_sim_bin, "stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8",
+              "Path to look for BCMSIM or PCID binary.");
 DEFINE_int32(max_units, 1,
              "Maximum number of units supported on the switch platform.");
 
@@ -107,8 +104,7 @@ struct PerNodeInstances {
   auto* hal = Hal::CreateSingleton(OPERATION_MODE_SIM, bcm_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK_RETURN_IF_FALSE(hal)
-      << "Failed to create the Stratum Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
   // Sanity check, setup and start serving RPCs.
   RETURN_IF_ERROR(hal->SanityCheck());
   ::util::Status status = hal->Setup();

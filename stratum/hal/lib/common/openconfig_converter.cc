@@ -908,13 +908,13 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig& in) {
     }
   }
 
-  CHECK_RETURN_IF_FALSE(node_exists);
-  CHECK_RETURN_IF_FALSE(chassis_exists);
+  RET_CHECK(node_exists);
+  RET_CHECK(chassis_exists);
 
   // Verify interfaces.
   for (const auto& interface_key : in.interface()) {
     // Every interface must stores an id
-    CHECK_RETURN_IF_FALSE(interface_key.interface().has_id());
+    RET_CHECK(interface_key.interface().has_id());
   }
 
   return ::util::OkStatus();
