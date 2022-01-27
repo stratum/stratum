@@ -150,6 +150,7 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
+    # WIP, find a way to check if sem version >= 9.7.0
     if [ "$sde_version" == "9.7.0" -a "$target" == "stratum_bf" ]; then
       echo "Skipping $target with BF SDE $sde_version."
       continue

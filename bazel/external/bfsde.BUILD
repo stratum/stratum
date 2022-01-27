@@ -131,3 +131,10 @@ config_setting(
         ":sde_version_setting": "9.7.0",
     },
 )
+
+config_setting(
+    name = "sde_version_9.8.0",
+    flag_values = {
+        ":sde_version_setting": "9.8.0",
+    },
+)

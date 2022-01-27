@@ -150,7 +150,15 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
-if [[ $SDE_VERSION == "9.7.0" ]]; then
+if [[ $SDE_VERSION == "9.3.1" ]] || [[ $SDE_VERSION == "9.5.0" ]]; then
+    # Patch stratum_profile.yaml in SDE
+    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
+    # Build BF SDE
+    pushd "$SDE/p4studio_build"
+    ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
+    popd
+else
+    # Version >= 9.7.0
     pushd "$SDE/p4studio"
     $sudo ./install-p4studio-dependencies.sh
     ./p4studio packages extract
@@ -160,13 +168,6 @@ if [[ $SDE_VERSION == "9.7.0" ]]; then
     ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
     ./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
     ./p4studio build --jobs $JOBS
-    popd
-else
-    # Patch stratum_profile.yaml in SDE
-    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
-    # Build BF SDE
-    pushd "$SDE/p4studio_build"
-    ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
     popd
 fi
 
