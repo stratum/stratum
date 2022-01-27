@@ -48,6 +48,10 @@ class OnlpPhal final : public OnlpPhalInterface {
   OnlpPhal(const OnlpPhal&) = delete;
   OnlpPhal& operator=(const OnlpPhal&) = delete;
 
+//JR
+  ::util::Status SetSfpFrequencyOnlp(uint32 port_number, uint32 frequency)
+      LOCKS_EXCLUDED(config_lock_);
+
  private:
   friend class OnlpPhalCli;
   friend class OnlpPhalTest;

@@ -101,6 +101,16 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   return onlp_event_handler_->RegisterEventCallback(callback);
 }
 
+::util::Status OnlpPhal::SetSfpFrequencyOnlp(uint32 port_number, uint32 frequency) {
+  absl::WriterMutexLock l(&config_lock_);
+
+  OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number);
+  if(frequency != 0) {
+    RETURN_IF_ERROR(onlp_interface_->SetSfpFrequency(sfp_oid_, port_number, frequency));
+  }
+  return ::util::OkStatus();
+}
+
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

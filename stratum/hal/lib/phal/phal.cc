@@ -213,6 +213,26 @@ Phal* Phal::CreateSingleton() {
   return ::util::OkStatus();
 }
 
+//::util::Status Phal::SetSfpFrequencyPhal(uint32 port_number, uint32 frequency) {
+//  absl::WriterMutexLock l(&config_lock_);
+//
+//  //Here, see how we can add oid.
+//  //OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number);
+//  ::util::Status status = ::util::OkStatus();
+//  //::util::Status status = onlp::OnlpPhal::SetSfpFrequencyOnlp(port_number, frequency);
+//  //APPEND_STATUS_IF_ERROR(status, onlp::OnlpPhal::SetSfpFrequencyOnlp(port_number, frequency);
+//  APPEND_STATUS_IF_ERROR(status, onlp_phal->SetSfpFrequencyOnlp(port_number, frequency));
+//  if (status.ok()) {
+//      LOG(INFO) << "SetSfpFrequencyOnlp successful.";
+//  }
+////  for (const auto& phal_interface : phal_interfaces_) {
+////    if(frequency != 0) {
+////      RETURN_IF_ERROR(phal_interface->SetSfpFrequency(port_number, port_number, frequency));
+////    }
+////  }
+//  return ::util::OkStatus();
+//}
+
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum

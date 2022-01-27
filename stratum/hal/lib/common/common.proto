@@ -1328,6 +1328,10 @@ message SdnPortId {
   uint32 port_id = 1;
 }
 
+message SfpFrequency {
+  uint64 frequency = 1;
+}
+
 // DataRequest is a message used internally to request data about a component
 // or a set of components through SwitchInterface. It is specifically used in
 // ConfigMonitoringService, as part of gNMI Get/Subscribe RPC implementation.
@@ -1377,6 +1381,7 @@ message DataRequest {
       Port loopback_status = 20;
       Node node_info = 21;
       Port sdn_port_id = 22;
+      Port frequency = 23;
     }
   }
   repeated Request requests = 1;
@@ -1409,6 +1414,7 @@ message DataResponse {
     LoopbackStatus loopback_status = 20;
     NodeInfo node_info = 21;
     SdnPortId sdn_port_id = 22;
+    SfpFrequency frequency = 23;
   }
 }
 
@@ -1438,6 +1444,8 @@ message SetRequest {
         ForwardingViability forwarding_viability = 10;
         // The intended loopback state of the port.
         LoopbackStatus loopback_status = 11;
+        // The new frequency of the SFP module.
+        SfpFrequency frequency = 12;
       }
     }
     // Data required to set info for a specific node.

@@ -1469,6 +1469,79 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/config/sfp-frequency
+// frequency in GHz.
+void SetUpInterfacesInterfaceConfigSfpFrequency(uint64 node_id,
+                                                     uint32 port_id,
+                                                     uint64 frequency,
+                                                     TreeNode* node,
+                                                     YangParseTree* tree) {
+  auto poll_functor = [frequency](const GnmiEvent& event,
+                                  const ::gnmi::Path& path,
+                                  GnmiSubscribeStream* stream) {
+    // OpenConfig model uses MHz as well.
+    return SendResponse(GetResponse(path, frequency),
+                        stream);
+  };
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    auto typed_frequency = dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (!typed_frequency) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
+    }
+    if (typed_frequency->value_case() != gnmi::TypedValue::kUintVal) {
+          return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
+    }
+    if (typed_frequency == 0) {
+          return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
+    }
+
+    uint64 uint_frequency = typed_frequency->uint_val();
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.mutable_config_params()->set_frequency(uint_frequency);
+        // const auto& config_params = singleton_port.config_params();
+        // config_params.set_frequency(uint_frequency);
+        break;
+      }
+    }
+
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_frequency,
+                           &SfpFrequency::set_frequency, uint_frequency);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the YANG parse tree.
+    auto poll_functor = [uint_frequency](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+
+      return SendResponse(GetResponse(path, uint_frequency), stream);
+    };
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortSfpFrequencyChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortSfpFrequencyChangedEvent::GetSfpFrequency);
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/auto-negotiate
 void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
                                                          uint32 port_id,
@@ -1627,6 +1700,22 @@ void SetUpInterfacesInterfaceEthernetStatePortSpeed(uint64 node_id,
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
       ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/state/sfp-frequency
+void SetUpInterfacesInterfaceStateSfpFrequency(uint64 node_id,
+                                                    uint32 port_id,
+                                                    TreeNode* node,
+                                                    YangParseTree* tree) {
+  auto poll_functor = GetOnPollFunctor(
+      node_id, port_id, tree, &DataResponse::frequency,
+      &DataResponse::has_frequency, &DataRequest::Request::mutable_frequency,
+      &SfpFrequency::frequency);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -3377,6 +3466,10 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   SetUpInterfacesInterfaceStateLoopbackMode(node_id, port_id, node, tree);
 
   node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("state")("sfp-frequency")());
+  SetUpInterfacesInterfaceStateSfpFrequency(node_id, port_id, node, tree);
+
+  node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("hardware-port")());
   SetUpInterfacesInterfaceStateHardwarePort(name, node, tree);
 
@@ -3608,6 +3701,11 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("loopback-mode")());
   SetUpInterfacesInterfaceConfigLoopbackMode(loopback_enabled, node_id, port_id,
+                                             node, tree);
+
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("config")("sfp-frequency")());
+  SetUpInterfacesInterfaceConfigSfpFrequency(singleton.config_params().frequency(), node_id, port_id,
                                              node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(

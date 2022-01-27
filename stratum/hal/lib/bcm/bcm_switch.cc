@@ -19,6 +19,9 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {
@@ -476,6 +479,16 @@ BcmSwitch::~BcmSwitch() {}
             status.Update(bcm_chassis_manager_->SetPortLoopbackState(
                 req.port().node_id(), req.port().port_id(),
                 req.port().loopback_status().state()));
+            break;
+          }
+          case SetRequest::Request::Port::ValueCase::kSfpFrequency: {
+            absl::WriterMutexLock l(&chassis_lock);
+            // or put the function in phal.cc calling onlp_phal.cc
+            //status.Update(phal_interface->PushChassisConfig(config))
+            status.Update(phal_interface_->SetSfpFrequencyOnlp(req.port().port_id(), req.port().frequency()));
+            //status.Update(onlp::OnlpPhal::SetSfpFrequencyOnlp(
+            //    req.port().port_id(),
+            //    req.port().frequency()));
             break;
           }
           default:
