@@ -61,8 +61,8 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
   } else {
     auto certificate_provider =
         std::make_shared<FileWatcherCertificateProvider>(
-            FLAGS_server_key_file, FLAGS_server_cert_file,
-            FLAGS_ca_cert_file, kFileRefreshIntervalSeconds);
+            FLAGS_server_key_file, FLAGS_server_cert_file, FLAGS_ca_cert_file,
+            kFileRefreshIntervalSeconds);
     auto tls_opts =
         std::make_shared<TlsServerCredentialsOptions>(certificate_provider);
     tls_opts->set_cert_request_type(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
@@ -79,8 +79,8 @@ CredentialsManager::GenerateExternalFacingClientCredentials() const {
   } else {
     auto certificate_provider =
         std::make_shared<FileWatcherCertificateProvider>(
-            FLAGS_client_key_file, FLAGS_client_cert_file,
-            FLAGS_ca_cert_file, kFileRefreshIntervalSeconds);
+            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file,
+            kFileRefreshIntervalSeconds);
     auto tls_opts =
         std::make_shared<TlsChannelCredentialsOptions>(certificate_provider);
     tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
