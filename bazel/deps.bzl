@@ -36,10 +36,10 @@ def stratum_deps():
         http_archive(
             name = "com_github_grpc_grpc",
             urls = [
-                "https://github.com/grpc/grpc/archive/v1.33.2.tar.gz",
+                "https://github.com/grpc/grpc/archive/v1.35.0.tar.gz",
             ],
-            strip_prefix = "grpc-1.33.2",
-            sha256 = "2060769f2d4b0d3535ba594b2ab614d7f68a492f786ab94b4318788d45e3278a",
+            strip_prefix = "grpc-1.35.0",
+            sha256 = "27dd2fc5c9809ddcde8eb6fa1fa278a3486566dfc28335fca13eb8df8bd3b958",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
@@ -137,23 +137,6 @@ def stratum_deps():
             ],
         )
 
-    if "rules_python" not in native.existing_rules():
-        http_archive(
-            name = "rules_python",
-            url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
-            sha256 = "aa96a691d3a8177f3215b14b0edc9641787abaaa30363a080165d06ab65e1161",
-        )
-
-    if "cython" not in native.existing_rules():
-        http_archive(
-            name = "cython",
-            build_file = "@com_github_grpc_grpc//third_party:cython.BUILD",
-            sha256 = "d68138a2381afbdd0876c3cb2a22389043fa01c4badede1228ee073032b07a27",
-            strip_prefix = "cython-c2b80d87658a8525ce091cbe146cb7eaa29fed5c",
-            urls = [
-                "https://github.com/cython/cython/archive/c2b80d87658a8525ce091cbe146cb7eaa29fed5c.tar.gz",
-            ],
-        )
     if "com_github_openconfig_public" not in native.existing_rules():
         remote_workspace(
             name = "com_github_openconfig_public",
@@ -184,8 +167,8 @@ def stratum_deps():
     if "com_github_nlohmann_json" not in native.existing_rules():
         http_archive(
             name = "com_github_nlohmann_json",
-            url = "https://github.com/nlohmann/json/releases/download/v3.9.1/include.zip",
-            sha256 = "6bea5877b1541d353bd77bdfbdb2696333ae5ed8f9e8cc22df657192218cad91",
+            url = "https://github.com/nlohmann/json/releases/download/v3.10.4/include.zip",
+            sha256 = "62c585468054e2d8e7c2759c0d990fd339d13be988577699366fe195162d16cb",
             build_file = "@//bazel:external/json.BUILD",
         )
 
@@ -207,9 +190,9 @@ def stratum_deps():
     if "com_google_absl" not in native.existing_rules():
         http_archive(
             name = "com_google_absl",
-            urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.tar.gz"],
-            strip_prefix = "abseil-cpp-20210324.2",
-            sha256 = "59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f",
+            urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"],
+            strip_prefix = "abseil-cpp-20211102.0",
+            sha256 = "dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4",
         )
 
     if "com_github_google_glog" not in native.existing_rules():

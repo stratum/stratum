@@ -2,14 +2,13 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 
 #include <memory>
 
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/common/phal_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -36,9 +35,10 @@ class PhalMock : public PhalInterface {
                               const OpticalTransceiverInfo& ot_info));
   MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
                                                LedColor color, LedState state));
-  MOCK_METHOD3(RegisterSfpConfigurator,
-    ::util::Status(int slot, int port,
-      ::stratum::hal::phal::SfpConfigurator* configurator));
+  MOCK_METHOD3(
+      RegisterSfpConfigurator,
+      ::util::Status(int slot, int port,
+                     ::stratum::hal::phal::SfpConfigurator* configurator));
 };
 
 }  // namespace hal

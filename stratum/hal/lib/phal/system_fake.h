@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SYSTEM_FAKE_H_
 #define STRATUM_HAL_LIB_PHAL_SYSTEM_FAKE_H_
 
@@ -13,10 +12,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/system_interface.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

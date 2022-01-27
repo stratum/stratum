@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // P4StaticEntryMapper is a P4TableMapper helper class.  Similar to
 // P4TableMapper, one instance exists per configured P4 device ID.
 // P4StaticEntryMapper manages the static table entries, i.e. those defined
@@ -23,9 +22,9 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_STATIC_ENTRY_MAPPER_H_
 #define STRATUM_HAL_LIB_P4_P4_STATIC_ENTRY_MAPPER_H_
 
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

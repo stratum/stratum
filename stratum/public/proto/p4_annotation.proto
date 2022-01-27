@@ -33,7 +33,7 @@ import "stratum/public/proto/p4_table_defs.proto";
 message P4Annotation {
   // Defines the set of physical pipeline stages.
   enum PipelineStage {
-    DEFAULT_STAGE = 0; // Invalid. Reserved for future use.
+    DEFAULT_STAGE = 0;  // Invalid. Reserved for future use.
     VLAN_ACL = 1;
     L2 = 2;
     L3_LPM = 3;

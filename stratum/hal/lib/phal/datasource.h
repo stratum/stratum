@@ -2,20 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_DATASOURCE_H_
 
 #include <memory>
 #include <utility>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {
@@ -101,7 +100,7 @@ class DataSource : public std::enable_shared_from_this<DataSource> {
   template <typename T>
   ::util::StatusOr<T> ReadAttribute(
       ::util::StatusOr<ManagedAttribute*> statusor_attr) const {
-    ASSIGN_OR_RETURN(ManagedAttribute* attr, std::move(statusor_attr));
+    ASSIGN_OR_RETURN(ManagedAttribute * attr, std::move(statusor_attr));
     return attr->ReadValue<T>();
   }
 

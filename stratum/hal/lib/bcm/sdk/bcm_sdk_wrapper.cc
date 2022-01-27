@@ -3076,9 +3076,9 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   // Set pipeline stage for table.
   bcm_field_qualify_t bcm_stage = HalAclStageToBcm(table.stage());
   if (bcm_stage == bcmFieldQualifyCount) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Attempted to create ACL table with invalid pipeline stage: "
-        << BcmAclStage_Name(table.stage()) << ".";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Attempted to create ACL table with invalid pipeline stage: "
+           << BcmAclStage_Name(table.stage()) << ".";
   }
   BCM_FIELD_QSET_ADD(group_config.qset, bcm_stage);
   // Add qualifier fields to group config.
@@ -3092,9 +3092,10 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     bcm_field_qualify_t bcm_field =
         HalAclFieldToBcm(table.stage(), field.type());
     if (bcm_field == bcmFieldQualifyCount) {
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "Attempted to create ACL table with invalid predefined qualifier: "
-          << field.ShortDebugString() << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Attempted to create ACL table with invalid predefined "
+                "qualifier: "
+             << field.ShortDebugString() << ".";
     }
     BCM_FIELD_QSET_ADD(group_config.qset, bcm_field);
   }
@@ -3187,9 +3188,9 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
                                   const BcmField& field) {
   if ((field.type() != BcmField::ETH_DST) &&
       (field.type() != BcmField::ETH_SRC)) {
-    RETURN_ERROR()
-        << "Attempted to add MAC address qualifier with wrong field type: "
-        << BcmField::Type_Name(field.type()) << ".";
+    return MAKE_ERROR()
+           << "Attempted to add MAC address qualifier with wrong field type: "
+           << BcmField::Type_Name(field.type()) << ".";
   }
 
   // Copy over value and mask from field to BCM types.
@@ -3222,9 +3223,9 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
         (field.type() != BcmField::IPV6_DST) ||
         (field.type() != BcmField::IPV6_SRC_UPPER_64) ||
         (field.type() != BcmField::IPV6_DST_UPPER_64))) {
-    RETURN_ERROR()
-        << "Attempted to add IPv6 address qualifier with wrong field type: "
-        << BcmField::Type_Name(field.type()) << ".";
+    return MAKE_ERROR()
+           << "Attempted to add IPv6 address qualifier with wrong field type: "
+           << BcmField::Type_Name(field.type()) << ".";
   }
 
   // Copy over value and mask from field to BCM types.
@@ -3255,7 +3256,7 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
           bcm_field_qualify_DstIp6High(unit, entry, value, mask));
       break;
     default:
-      RETURN_ERROR() << "Control flow is broken.";
+      return MAKE_ERROR() << "Control flow is broken.";
   }
   return ::util::OkStatus();
 }
@@ -3443,8 +3444,9 @@ inline int bcm_add_field_u32(F func, int unit, int flow_id,
           bcm_field_qualify_IcmpTypeCode, unit, entry, field));
       break;
     default:
-      RETURN_ERROR() << "Attempted to translate unsupported BcmField::Type: "
-                     << BcmField::Type_Name(field.type()) << ".";
+      return MAKE_ERROR()
+             << "Attempted to translate unsupported BcmField::Type: "
+             << BcmField::Type_Name(field.type()) << ".";
   }
   return ::util::OkStatus();
 }
@@ -3897,9 +3899,9 @@ inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
       retval = bcm_field_qualify_SrcMac_get(unit, entry, &value, &mask);
       break;
     default:
-      RETURN_ERROR()
-          << "Attempted to get MAC address qualifier with wrong field type: "
-          << BcmField::Type_Name(field->type()) << ".";
+      return MAKE_ERROR()
+             << "Attempted to get MAC address qualifier with wrong field type: "
+             << BcmField::Type_Name(field->type()) << ".";
   }
 
   // Check success and copy over value and mask
@@ -3945,9 +3947,9 @@ inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
       retval = bcm_field_qualify_DstIp6High_get(unit, entry, &value, &mask);
       break;
     default:
-      RETURN_ERROR()
-          << "Attempted to get IPv6 address qualifier with wrong field type: "
-          << BcmField::Type_Name(field->type()) << ".";
+      return MAKE_ERROR() << "Attempted to get IPv6 address qualifier with "
+                             "wrong field type: "
+                          << BcmField::Type_Name(field->type()) << ".";
   }
 
   // Check success and copy over value and mask.
@@ -4540,9 +4542,10 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
               hw_field.mask().b() == ExactMatchMaskBytes(field.type());
           break;
         default:
-          RETURN_ERROR() << "Invalid mask type: " << hw_field.mask().data_case()
-                         << " for retrieved qualifier of type "
-                         << BcmField::Type_Name(hw_field.type()) << ".";
+          return MAKE_ERROR()
+                 << "Invalid mask type: " << hw_field.mask().data_case()
+                 << " for retrieved qualifier of type "
+                 << BcmField::Type_Name(hw_field.type()) << ".";
       }
       if (!exact_match) {
         return std::string(absl::Substitute(
@@ -4608,9 +4611,9 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
   RETURN_IF_BCM_ERROR(
       bcm_field_entry_multi_get(unit, table_id, 0, nullptr, &num_entries));
   if (num_entries < 0) {
-    RETURN_ERROR()
-        << "bcm_field_entry_multi_get() returned negative flow count for table "
-        << table_id << " on unit " << unit << ".";
+    return MAKE_ERROR() << "bcm_field_entry_multi_get() returned negative flow "
+                           "count for table "
+                        << table_id << " on unit " << unit << ".";
   } else if (!num_entries) {
     return ::util::OkStatus();
   }
@@ -4620,9 +4623,9 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
   RETURN_IF_BCM_ERROR(bcm_field_entry_multi_get(
       unit, table_id, num_entries, flow_ids->data(), &num_entries));
   if (num_entries != static_cast<int>(flow_ids->size())) {
-    RETURN_ERROR() << "Consecutive bcm_field_entry_multi_get() for table "
-                   << table_id << " on unit " << unit
-                   << " return different flow counts.";
+    return MAKE_ERROR() << "Consecutive bcm_field_entry_multi_get() for table "
+                        << table_id << " on unit " << unit
+                        << " return different flow counts.";
   }
   return ::util::OkStatus();
 }
@@ -4643,9 +4646,9 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
         unit, table_id, kUncoloredStatCount, stat_entry, &stat_id));
   }
   if (stat_id < 0) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Received invalid stat_id " << stat_id << " for new stats object for"
-        << " flow " << flow_id << ".";
+    return MAKE_ERROR(ERR_INTERNAL) << "Received invalid stat_id " << stat_id
+                                    << " for new stats object for"
+                                    << " flow " << flow_id << ".";
   }
   // Attach stat to flow.
   RETURN_IF_BCM_ERROR(bcm_field_entry_stat_attach(unit, flow_id, stat_id));
@@ -4716,8 +4719,8 @@ inline util::Status GetAclStatCounters(int unit, int stat_id,
     green->set_packets(counter_data[kGreenCounterIndex]);
     green->set_bytes(counter_data[kGreenCounterIndex + 1]);
   } else {
-    RETURN_ERROR() << "Invalid stat count for stat id " << stat_id
-                   << " on unit " << unit << ".";
+    return MAKE_ERROR() << "Invalid stat count for stat id " << stat_id
+                        << " on unit " << unit << ".";
   }
   return ::util::OkStatus();
 }

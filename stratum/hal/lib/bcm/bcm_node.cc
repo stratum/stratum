@@ -357,8 +357,9 @@ BcmNode::~BcmNode() {}
           GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, req.packet());
     }
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unsupported StreamMessageRequest "
-                                      << req.ShortDebugString() << ".";
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
+             << "Unsupported StreamMessageRequest " << req.ShortDebugString()
+             << ".";
   }
 }
 

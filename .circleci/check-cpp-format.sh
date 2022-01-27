@@ -1,12 +1,17 @@
 #!/bin/bash
-#
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 set -ex
 
 # Files in this branch that are different from main.
 CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/main -- '*.h' '*.cc')
+
+# All proto files.
+PROTO_FILES=$(git ls-files "*.proto")
+
+# All header files.
+HEADER_FILES=$(git ls-files "*.h")
 
 # List of files that are already formatted.
 read -r -d '\0' KNOWN_FILES << EOF
@@ -17,10 +22,13 @@ stratum/glue/gtl/stl_util.h
 stratum/glue/init_google.h
 stratum/glue/status/posix_error_space.cc
 stratum/glue/status/status_test_util.cc
+stratum/glue/status/status_test_util.h
 stratum/hal/bin/barefoot/bf_pipeline_builder.cc
 stratum/hal/bin/barefoot/main_bfrt.cc
 stratum/hal/bin/barefoot/main.cc
 stratum/hal/bin/bcm/standalone/main.cc
+stratum/hal/bin/dummy/dummy_cli.cc
+stratum/hal/bin/dummy/main.cc
 stratum/hal/bin/np4intel/main.cc
 stratum/hal/lib/barefoot/bf_chassis_manager_test.cc
 stratum/hal/lib/barefoot/bf_chassis_manager.cc
@@ -137,6 +145,7 @@ stratum/hal/lib/phal/attribute_group_test.cc
 stratum/hal/lib/phal/attribute_group.cc
 stratum/hal/lib/phal/attribute_group.h
 stratum/hal/lib/phal/datasource_mock.cc
+stratum/hal/lib/phal/datasource.cc
 stratum/hal/lib/phal/onlp/onlp_cli.cc
 stratum/hal/lib/phal/onlp/onlp_event_handler_mock.h
 stratum/hal/lib/phal/onlp/onlp_event_handler_test.cc
@@ -260,7 +269,7 @@ stratum/tools/gnmi/gnmi_cli.cc
 \0
 EOF
 
-echo -e "$KNOWN_FILES\n$CHANGED_FILES" | sort -u | xargs -t -n1 clang-format --style=file -i
+echo -e "$KNOWN_FILES\n$CHANGED_FILES\n$PROTO_FILES\n$HEADER_FILES" | sort -u | xargs -t -n1 clang-format --style=file -i
 
 # Report which files need to be fixed.
 git update-index --refresh

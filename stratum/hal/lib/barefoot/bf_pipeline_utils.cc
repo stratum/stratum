@@ -39,7 +39,8 @@ std::string Uint32ToLeByteStream(uint32 val) {
     return util::OkStatus();
   }
 
-  RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown format for p4_device_config.";
+  return MAKE_ERROR(ERR_INVALID_PARAM)
+         << "Unknown format for p4_device_config.";
 }
 
 ::util::Status BfPipelineConfigToPiConfig(const BfPipelineConfig& bf_config,

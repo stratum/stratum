@@ -60,6 +60,7 @@ stratum_cc_library(
         ":bits",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
+        "//stratum/glue:platform",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",

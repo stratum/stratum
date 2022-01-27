@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "absl/cleanup/cleanup.h"
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
@@ -18,10 +17,11 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_string(grpc_addr, "127.0.0.1:9339", "gNMI server address");
+DEFINE_string(grpc_addr, stratum::kLocalStratumUrl, "gNMI server address");
 DEFINE_string(bool_val, "", "Boolean value to be set");
 DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
 DEFINE_string(uint_val, "", "Unsigned integer value to be set (64-bit)");
@@ -32,9 +32,9 @@ DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
 DEFINE_string(get_type, "ALL", "The gNMI get request type");
-DEFINE_string(ca_cert, "", "CA certificate");
-DEFINE_string(client_cert, "", "Client certificate");
-DEFINE_string(client_key, "", "Client key");
+DEFINE_string(ca_cert_file, "", "Path to CA certificate file");
+DEFINE_string(client_cert_file, "", "Path to client certificate file");
+DEFINE_string(client_key_file, "", "Path to client key file");
 
 #define PRINT_MSG(msg, prompt)                   \
   do {                                           \
@@ -70,7 +70,6 @@ positional arguments:
   path                                              gNMI path
 
 optional arguments:
-  --help            show this help message and exit
   --grpc_addr GRPC_ADDR    gNMI server address
   --bool_val BOOL_VAL      [SetRequest only] Set boolean value
   --int_val INT_VAL        [SetRequest only] Set int value (64-bit)
@@ -81,9 +80,6 @@ optional arguments:
   --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
   --replace                [SetRequest only] Use replace instead of update
   --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
-  --ca-cert                CA certificate
-  --client-cert            gRPC Client certificate
-  --client-key             gRPC Client key
 )USAGE";
 
 // Pipe file descriptors used to transfer signals from the handler to the cancel
@@ -226,7 +222,7 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   stratum::InitStratumLogging();
   if (argc < 2) {
     std::cout << kUsage << std::endl;
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
   }
 
   ::grpc::ClientContext ctx;
@@ -252,33 +248,23 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
     ctx.TryCancel();
   });
 
-  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials =
-      ::grpc::InsecureChannelCredentials();
-  if (!FLAGS_ca_cert.empty()) {
-    ::grpc::string pem_root_certs;
-    ::grpc::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
-        pem_key_cert_pair;
-    auto key_materials_config =
-        std::make_shared<::grpc::experimental::TlsKeyMaterialsConfig>();
-    ::util::Status status;
-    status.Update(::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
-    key_materials_config->set_pem_root_certs(pem_root_certs);
-
-    if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
-      status.Update(::stratum::ReadFileToString(FLAGS_client_cert,
-                                                &pem_key_cert_pair.cert_chain));
-      status.Update(::stratum::ReadFileToString(
-          FLAGS_client_key, &pem_key_cert_pair.private_key));
-      key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
+  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
+  if (!FLAGS_ca_cert_file.empty()) {
+    auto cert_provider =
+        std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
+            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file,
+            1);
+    auto tls_opts =
+        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
+            cert_provider);
+    tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
+    tls_opts->watch_root_certs();
+    if (!FLAGS_client_cert_file.empty() && !FLAGS_client_key_file.empty()) {
+      tls_opts->watch_identity_key_cert_pairs();
     }
-
-    auto cred_opts = ::grpc::experimental::TlsCredentialsOptions(
-        GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
-        key_materials_config, nullptr, nullptr);
-
-    if (status.ok()) {
-      channel_credentials = ::grpc::experimental::TlsCredentials(cred_opts);
-    }
+    channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);
+  } else {
+    channel_credentials = ::grpc::InsecureChannelCredentials();
   }
   auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
   auto stub = ::gnmi::gNMI::NewStub(channel);
@@ -294,8 +280,8 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
   }
 
   if (argc < 3) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Missing path for " << cmd << " request.";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Missing path for " << cmd << " request.";
   }
   std::string path = std::string(argv[2]);
 
@@ -341,7 +327,7 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
     }
     RETURN_IF_GRPC_ERROR(stream_reader_writer->Finish());
   } else {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
   }
   LOG(INFO) << "Done.";
 

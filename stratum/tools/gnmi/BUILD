@@ -21,6 +21,7 @@ stratum_cc_binary(
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
+        "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "@com_github_gflags_gflags//:gflags",

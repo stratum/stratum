@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This proto is for use in tests that require a basic phal attribute
 // database schema. It's intended to include simple patterns that can
 // appear in a valid schema protobuf. This is strictly for testing that
