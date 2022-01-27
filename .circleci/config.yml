@@ -346,16 +346,16 @@ jobs:
           name: Run reuse
           command: reuse lint
 
-  markdown-lint-check:
+  markdown-style-check:
     # We use the machine executor because mounting folders is not possible with
     # CircleCi remote docker:
-    # https://circleci.com/docs/2.0/building-docker-images/#separation-of-environmentss
+    # https://circleci.com/docs/2.0/building-docker-images/#separation-of-environments
     machine: true
     steps:
       - checkout
       - run:
-          name: Lint markdown files
-          command: .circleci/lint-markdown.sh
+          name: Run markdownlint script
+          command: .circleci/check-markdown.sh
 
 workflows:
   version: 2
@@ -366,7 +366,7 @@ workflows:
       - coverage
       - lint-and-style-checks
       - license-check
-      - markdown-lint-check
+      - markdown-style-check
   docker-publish:
     jobs:
       - publish-docker-build:
