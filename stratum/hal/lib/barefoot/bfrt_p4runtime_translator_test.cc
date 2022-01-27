@@ -559,8 +559,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateP4Info) {
     }
   )PROTO";
   ::p4::config::v1::P4Info p4info;
-  EXPECT_OK(ParseProtoFromString(kP4InfoString,
-                                 &p4info));
+  EXPECT_OK(ParseProtoFromString(kP4InfoString, &p4info));
   ::p4::config::v1::P4Info expected_translated_p4info;
   EXPECT_OK(ParseProtoFromString(expect_translated_p4info_str,
                                  &expected_translated_p4info));

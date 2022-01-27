@@ -140,7 +140,8 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
 
   // Push pipeline config to the managers.
   const auto& p4info = bfrt_config.programs(0).p4info();
-  RETURN_IF_ERROR(bfrt_p4runtime_translator_->PushForwardingPipelineConfig(p4info));
+  RETURN_IF_ERROR(
+      bfrt_p4runtime_translator_->PushForwardingPipelineConfig(p4info));
 
   // Augment the P4Info so managers will use the original bitwith from P4 code
   // for every fields (e.g, 9-bit port number instead of 32-bits).
@@ -150,8 +151,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config));
   RETURN_IF_ERROR(
       bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config));
-  RETURN_IF_ERROR(
-      bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config));
+  RETURN_IF_ERROR(bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config));
   RETURN_IF_ERROR(
       bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config));
   pipeline_initialized_ = true;

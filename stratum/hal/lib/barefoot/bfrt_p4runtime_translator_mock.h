@@ -34,7 +34,7 @@ class BfrtP4RuntimeTranslatorMock : public BfrtP4RuntimeTranslator {
                ::util::StatusOr<::p4::v1::StreamMessageResponse>(
                    const ::p4::v1::StreamMessageResponse& response));
   MOCK_METHOD1(TranslateP4Info, ::util::StatusOr<::p4::config::v1::P4Info>(
-      const ::p4::config::v1::P4Info& p4info));
+                                    const ::p4::config::v1::P4Info& p4info));
 };
 
 }  // namespace barefoot

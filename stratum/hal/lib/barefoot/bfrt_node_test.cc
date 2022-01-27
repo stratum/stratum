@@ -154,7 +154,8 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
                   PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
-      EXPECT_CALL(*bfrt_p4runtime_translator_mock_, TranslateP4Info(EqualsProto(config.p4info())))
+      EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                  TranslateP4Info(EqualsProto(config.p4info())))
           .WillOnce(Return(
               ::util::StatusOr<::p4::config::v1::P4Info>(config.p4info())));
       EXPECT_CALL(*bfrt_packetio_manager_mock_, PushForwardingPipelineConfig(_))

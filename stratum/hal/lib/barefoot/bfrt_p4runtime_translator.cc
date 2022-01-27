@@ -665,8 +665,9 @@ BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
   return translated_response;
 }
 
-::util::StatusOr<::p4::config::v1::P4Info> BfrtP4RuntimeTranslator::TranslateP4Info(
-      const ::p4::config::v1::P4Info& p4info) {
+::util::StatusOr<::p4::config::v1::P4Info>
+BfrtP4RuntimeTranslator::TranslateP4Info(
+    const ::p4::config::v1::P4Info& p4info) {
   if (!translation_enabled_ || !p4info.has_type_info()) {
     return p4info;
   }
@@ -683,7 +684,8 @@ BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
   for (auto& table : *translated_p4info.mutable_tables()) {
     for (auto& match_field : *table.mutable_match_fields()) {
       if (match_field.has_type_name()) {
-        std::string* uri = gtl::FindOrNull(type_name_to_uri, match_field.type_name().name());
+        std::string* uri =
+            gtl::FindOrNull(type_name_to_uri, match_field.type_name().name());
         if (uri) {
           CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
           match_field.set_bitwidth(kUriToBitWidth.at(*uri));
@@ -695,7 +697,8 @@ BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
   for (auto& action : *translated_p4info.mutable_actions()) {
     for (auto& param : *action.mutable_params()) {
       if (param.has_type_name()) {
-        std::string* uri = gtl::FindOrNull(type_name_to_uri, param.type_name().name());
+        std::string* uri =
+            gtl::FindOrNull(type_name_to_uri, param.type_name().name());
         if (uri) {
           CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
           param.set_bitwidth(kUriToBitWidth.at(*uri));
@@ -707,7 +710,8 @@ BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
   for (auto& pkt_md : *translated_p4info.mutable_controller_packet_metadata()) {
     for (auto& metadata : *pkt_md.mutable_metadata()) {
       if (metadata.has_type_name()) {
-        std::string* uri = gtl::FindOrNull(type_name_to_uri, metadata.type_name().name());
+        std::string* uri =
+            gtl::FindOrNull(type_name_to_uri, metadata.type_name().name());
         if (uri) {
           CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
           metadata.set_bitwidth(kUriToBitWidth.at(*uri));
