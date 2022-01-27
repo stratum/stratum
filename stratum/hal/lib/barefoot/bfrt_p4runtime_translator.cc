@@ -94,7 +94,6 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
 ::util::Status BfrtP4RuntimeTranslator::PushForwardingPipelineConfig(
     const ::p4::config::v1::P4Info& p4info) {
   ::absl::WriterMutexLock l(&lock_);
-  ::p4::config::v1::P4Info low_level_p4info(p4info);
   // Enable P4Runtime translation when user define a new type with
   // p4runtime_translation and user enabled it when starting the Stratum.
   if (!translation_enabled_ || !p4info.has_type_info()) {
@@ -147,8 +146,8 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
   absl::flat_hash_map<uint32, int32> packet_in_meta_to_bit_width;
   absl::flat_hash_map<uint32, int32> packet_out_meta_to_bit_width;
 
-  for (auto& table : *low_level_p4info.mutable_tables()) {
-    for (auto& match_field : *table.mutable_match_fields()) {
+  for (const auto& table : p4info.tables()) {
+    for (const auto& match_field : table.match_fields()) {
       if (match_field.has_type_name()) {
         const auto& type_name = match_field.type_name().name();
         const auto& table_id = table.preamble().id();
@@ -157,19 +156,16 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
         if (uri) {
           CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
           table_to_field_to_type_uri[table_id][match_field_id] = *uri;
-          // Replace bitwidth to the low level one.
-          match_field.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
         if (bit_width) {
           table_to_field_to_bit_width[table_id][match_field_id] = *bit_width;
         }
-        match_field.clear_type_name();
       }
     }
   }
-  for (auto& action : *low_level_p4info.mutable_actions()) {
-    for (auto& param : *action.mutable_params()) {
+  for (const auto& action : p4info.actions()) {
+    for (const auto& param : action.params()) {
       if (param.has_type_name()) {
         const auto& type_name = param.type_name().name();
         const auto& action_id = action.preamble().id();
@@ -177,19 +173,15 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
         std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
         if (uri) {
           action_to_param_to_type_uri[action_id][param_id] = *uri;
-          // Replace bitwidth to the low level one.
-          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
-          param.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
         if (bit_width) {
           action_to_param_to_bit_width[action_id][param_id] = *bit_width;
         }
-        param.clear_type_name();
       }
     }
   }
-  for (auto& pkt_md : *low_level_p4info.mutable_controller_packet_metadata()) {
+  for (const auto& pkt_md : p4info.controller_packet_metadata()) {
     const auto& ctrl_hdr_name = pkt_md.preamble().name();
     absl::flat_hash_map<uint32, std::string>* meta_to_type_uri;
     absl::flat_hash_map<uint32, int32>* meta_to_bit_width;
@@ -204,26 +196,22 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
       // header.
       continue;
     }
-    for (auto& metadata : *pkt_md.mutable_metadata()) {
+    for (const auto& metadata : pkt_md.metadata()) {
       if (metadata.has_type_name()) {
         const auto& type_name = metadata.type_name().name();
         const auto& md_id = metadata.id();
         std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
         if (uri) {
           meta_to_type_uri->emplace(md_id, *uri);
-          // Replace bitwidth to the low level one.
-          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
-          metadata.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
         if (bit_width) {
           meta_to_bit_width->emplace(md_id, *bit_width);
         }
-        metadata.clear_type_name();
       }
     }
   }
-  for (auto& counter : *low_level_p4info.mutable_counters()) {
+  for (const auto& counter : p4info.counters()) {
     if (counter.has_index_type_name()) {
       const auto& type_name = counter.index_type_name().name();
       const auto& counter_id = counter.preamble().id();
@@ -231,10 +219,9 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
       if (uri) {
         counter_to_type_uri[counter_id] = *uri;
       }
-      counter.clear_index_type_name();
     }
   }
-  for (auto& meter : *low_level_p4info.mutable_meters()) {
+  for (const auto& meter : p4info.meters()) {
     if (meter.has_index_type_name()) {
       const auto& type_name = meter.index_type_name().name();
       const auto& meter_id = meter.preamble().id();
@@ -242,11 +229,10 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
       if (uri) {
         meter_to_type_uri[meter_id] = *uri;
       }
-      meter.clear_index_type_name();
     }
   }
 
-  for (auto& reg : *low_level_p4info.mutable_registers()) {
+  for (const auto& reg : p4info.registers()) {
     if (reg.has_index_type_name()) {
       const auto& type_name = reg.index_type_name().name();
       const auto& register_id = reg.preamble().id();
@@ -254,12 +240,8 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
       if (uri) {
         register_to_type_uri[register_id] = *uri;
       }
-      reg.clear_index_type_name();
     }
   }
-  low_level_p4info.clear_type_info();
-
-  low_level_p4info_ = low_level_p4info;
   table_to_field_to_type_uri_ = table_to_field_to_type_uri;
   action_to_param_to_type_uri_ = action_to_param_to_type_uri;
   packet_in_meta_to_type_uri_ = packet_in_meta_to_type_uri;
@@ -683,10 +665,74 @@ BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
   return translated_response;
 }
 
-::util::StatusOr<::p4::config::v1::P4Info>
-BfrtP4RuntimeTranslator::GetLowLevelP4Info() {
-  absl::ReaderMutexLock l(&lock_);
-  return low_level_p4info_;
+::util::StatusOr<::p4::config::v1::P4Info> BfrtP4RuntimeTranslator::TranslateP4Info(
+      const ::p4::config::v1::P4Info& p4info) {
+  if (!translation_enabled_ || !p4info.has_type_info()) {
+    return p4info;
+  }
+  ::p4::config::v1::P4Info translated_p4info(p4info);
+  absl::flat_hash_map<std::string, std::string> type_name_to_uri;
+  for (const auto& new_type : p4info.type_info().new_types()) {
+    const auto& type_name = new_type.first;
+    const auto& value = new_type.second;
+    if (value.representation_case() ==
+        ::p4::config::v1::P4NewTypeSpec::kTranslatedType) {
+      type_name_to_uri[type_name] = value.translated_type().uri();
+    }
+  }
+  for (auto& table : *translated_p4info.mutable_tables()) {
+    for (auto& match_field : *table.mutable_match_fields()) {
+      if (match_field.has_type_name()) {
+        std::string* uri = gtl::FindOrNull(type_name_to_uri, match_field.type_name().name());
+        if (uri) {
+          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          match_field.set_bitwidth(kUriToBitWidth.at(*uri));
+        }
+        match_field.clear_type_name();
+      }
+    }
+  }
+  for (auto& action : *translated_p4info.mutable_actions()) {
+    for (auto& param : *action.mutable_params()) {
+      if (param.has_type_name()) {
+        std::string* uri = gtl::FindOrNull(type_name_to_uri, param.type_name().name());
+        if (uri) {
+          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          param.set_bitwidth(kUriToBitWidth.at(*uri));
+        }
+        param.clear_type_name();
+      }
+    }
+  }
+  for (auto& pkt_md : *translated_p4info.mutable_controller_packet_metadata()) {
+    for (auto& metadata : *pkt_md.mutable_metadata()) {
+      if (metadata.has_type_name()) {
+        std::string* uri = gtl::FindOrNull(type_name_to_uri, metadata.type_name().name());
+        if (uri) {
+          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          metadata.set_bitwidth(kUriToBitWidth.at(*uri));
+        }
+        metadata.clear_type_name();
+      }
+    }
+  }
+  for (auto& counter : *translated_p4info.mutable_counters()) {
+    if (counter.has_index_type_name()) {
+      counter.clear_index_type_name();
+    }
+  }
+  for (auto& meter : *translated_p4info.mutable_meters()) {
+    if (meter.has_index_type_name()) {
+      meter.clear_index_type_name();
+    }
+  }
+  for (auto& reg : *translated_p4info.mutable_registers()) {
+    if (reg.has_index_type_name()) {
+      reg.clear_index_type_name();
+    }
+  }
+  translated_p4info.clear_type_info();
+  return translated_p4info;
 }
 
 ::util::StatusOr<::p4::v1::Action> BfrtP4RuntimeTranslator::TranslateAction(

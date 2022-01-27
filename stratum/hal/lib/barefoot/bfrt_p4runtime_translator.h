@@ -52,8 +52,15 @@ class BfrtP4RuntimeTranslator {
   virtual ::util::StatusOr<::p4::v1::StreamMessageResponse>
   TranslateStreamMessageResponse(
       const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::config::v1::P4Info> GetLowLevelP4Info()
-      LOCKS_EXCLUDED(lock_);
+
+  // A helper function which removes custom type from the P4Info.
+  // Which is useful for some components that requires the original spec from
+  // the P4 code.
+  // For example, the Packet-IO manager requires the real bitwidth information
+  // of controller header metadata.
+  virtual ::util::StatusOr<::p4::config::v1::P4Info> TranslateP4Info(
+      const ::p4::config::v1::P4Info& p4info);
+
   static std::unique_ptr<BfrtP4RuntimeTranslator> CreateInstance(
       BfSdeInterface* bf_sde_interface, int device_id,
       bool translation_enabled) {

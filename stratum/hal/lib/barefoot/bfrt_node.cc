@@ -132,28 +132,28 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
+  BfrtDeviceConfig bfrt_config(bfrt_config_);
+  CHECK_RETURN_IF_FALSE(bfrt_config.programs_size() > 0);
 
   // Calling AddDevice() overwrites any previous pipeline.
-  RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
+  RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config));
 
   // Push pipeline config to the managers.
-  RETURN_IF_ERROR(bfrt_p4runtime_translator_->PushForwardingPipelineConfig(
-      bfrt_config_.programs(0).p4info()));
+  const auto& p4info = bfrt_config.programs(0).p4info();
+  RETURN_IF_ERROR(bfrt_p4runtime_translator_->PushForwardingPipelineConfig(p4info));
 
   // Augment the P4Info so managers will use the original bitwith from P4 code
   // for every fields (e.g, 9-bit port number instead of 32-bits).
-  ASSIGN_OR_RETURN(const auto& low_level_p4info,
-                   bfrt_p4runtime_translator_->GetLowLevelP4Info());
-  *bfrt_config_.mutable_programs(0)->mutable_p4info() = low_level_p4info;
+  ASSIGN_OR_RETURN(*bfrt_config.mutable_programs(0)->mutable_p4info(),
+                   bfrt_p4runtime_translator_->TranslateP4Info(p4info));
   RETURN_IF_ERROR(
-      bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
+      bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config));
   RETURN_IF_ERROR(
-      bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config_));
+      bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config));
   RETURN_IF_ERROR(
-      bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
+      bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config));
   RETURN_IF_ERROR(
-      bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
+      bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config));
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }

@@ -405,10 +405,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_EQ(expected_value, actual_value);
 }
 
-TEST_F(BfrtP4RuntimeTranslatorTest, GetLowLevelP4Info) {
-  EXPECT_OK(PushChassisConfig());
-  EXPECT_OK(PushForwardingPipelineConfig());
-  const char expect_low_level_p4info_str[] = R"PROTO(
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateP4Info) {
+  const char expect_translated_p4info_str[] = R"PROTO(
     pkg_info {
       arch: "tna"
     }
@@ -560,13 +558,16 @@ TEST_F(BfrtP4RuntimeTranslatorTest, GetLowLevelP4Info) {
       }
     }
   )PROTO";
-  ::p4::config::v1::P4Info expected_low_level_p4info;
-  EXPECT_OK(ParseProtoFromString(expect_low_level_p4info_str,
-                                 &expected_low_level_p4info));
-  const auto& statusor = p4rt_bfrt_translator_->GetLowLevelP4Info();
+  ::p4::config::v1::P4Info p4info;
+  EXPECT_OK(ParseProtoFromString(kP4InfoString,
+                                 &p4info));
+  ::p4::config::v1::P4Info expected_translated_p4info;
+  EXPECT_OK(ParseProtoFromString(expect_translated_p4info_str,
+                                 &expected_translated_p4info));
+  const auto& statusor = p4rt_bfrt_translator_->TranslateP4Info(p4info);
   EXPECT_OK(statusor.status());
-  const auto& low_level_p4info = statusor.ValueOrDie();
-  EXPECT_THAT(low_level_p4info, EqualsProto(expected_low_level_p4info));
+  const auto& translated_p4info = statusor.ValueOrDie();
+  EXPECT_THAT(translated_p4info, EqualsProto(expected_translated_p4info));
 }
 
 // Table entry
