@@ -4,9 +4,6 @@
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
 
-#include <string>
-
-#include "absl/container/flat_hash_map.h"
 #include "absl/time/time.h"
 #include "stratum/glue/integral_types.h"
 
