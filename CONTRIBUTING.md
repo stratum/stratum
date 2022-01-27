@@ -20,16 +20,17 @@ You generally only need to submit a CLA once, so if you've already submitted one
 (even if it was for a different project), you probably don't need to do it
 again.
 
-## Submitting Code
+## Guides, Rules and Best Practices
 
-### General Information
-
-Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/),
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/),
 [C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and
 [unit test rules](stratum/docs/testing.md). Use these documents as a guide when
-submitting code.
+writing, submitting or reviewing code. Also see Abseil's [Tip of the Week](abseil.io/tips/)
+series with in-depth information about select C++ topics.
 
-Some additional points:
+### Submitting Code
+
+Some additional points for developers:
 
  - Submit your changes early and often. GitHub has
    [Draft PRs](https://github.blog/2019-02-14-introducing-draft-pull-requests/)
@@ -44,7 +45,7 @@ Some additional points:
    [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords).
    This keeps code review and design discussions clean.
 
-### Steps to Follow
+#### Steps to successful PRs
 
 1. Fork Stratum into your personal or organization account via the fork button
    on GitHub.
@@ -58,10 +59,8 @@ Some additional points:
    to run all currently enabled tests:
    `xargs -a .circleci/test-targets.txt bazel test`
 
-4. Check code style compliance with `cpplint` and `clang-format`
-   (pre-installed in development docker container). If you're editing Bazel
-   files, consider [buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier)
-   as well (also pre-installed).
+4. Check code style compliance with the `check-*.sh` scripts in the `.circleci`
+   directory.
 
 5. Create a [Pull Request](https://github.com/stratum/stratum/compare). Consider
    [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork)
