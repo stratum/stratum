@@ -240,7 +240,7 @@ P4InfoManager::FindRegisterByName(const std::string& register_name) const {
           bit_width = type_spec.bitstring().varbit().max_bitwidth();
           break;
         default:
-          RETURN_ERROR(ERR_UNIMPLEMENTED) << "Not implemented.";
+          return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not implemented.";
       }
       CHECK_RETURN_IF_FALSE(data.bitstring().size() * 8 <= bit_width);
       break;
@@ -258,9 +258,9 @@ P4InfoManager::FindRegisterByName(const std::string& register_name) const {
       break;
     }
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED)
-          << "P4data type " << data.data_case() << " in P4Data "
-          << data.ShortDebugString() << " is not supported.";
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
+             << "P4data type " << data.data_case() << " in P4Data "
+             << data.ShortDebugString() << " is not supported.";
   }
 
   return ::util::OkStatus();
