@@ -152,8 +152,8 @@ namespace barefoot {
       meta_to_type_uri = &packet_out_meta_to_type_uri;
       meta_to_bit_width = &packet_out_meta_to_bit_width;
     } else {
-      return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Undupported controller header"
-          << ctrl_hdr_name;
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
+             << "Undupported controller header" << ctrl_hdr_name;
     }
     for (const auto& metadata : pkt_md.metadata()) {
       if (metadata.has_type_name()) {
