@@ -2,14 +2,13 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/system_real.h"
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/posix_error_space.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

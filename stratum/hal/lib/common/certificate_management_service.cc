@@ -4,13 +4,13 @@
 
 #include "stratum/hal/lib/common/certificate_management_service.h"
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
