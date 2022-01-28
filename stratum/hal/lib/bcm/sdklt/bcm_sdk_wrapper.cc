@@ -1,7 +1,7 @@
 // Copyright 2018 Google LLC
 // Copyright 2018-present Open Networking Foundation
-// Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to
-// Broadcom Inc. and/or its subsidiaries. SPDX-License-Identifier: Apache-2.0
+// Copyright 2019 Broadcom.
+// SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/hal/lib/bcm/bcm_sdk_wrapper.h"  // NOLINT
 

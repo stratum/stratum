@@ -474,7 +474,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   switch (common_flow_entry.action().type()) {
     case P4_ACTION_TYPE_PROFILE_MEMBER_ID: {
       uint32 member_id = common_flow_entry.action().profile_member_id();
-      ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+      ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                        GetBcmNonMultipathNexthopInfo(member_id));
       auto* bcm_action = bcm_flow_entry->add_actions();
       auto* param = bcm_action->add_params();
@@ -501,7 +501,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     }
     case P4_ACTION_TYPE_PROFILE_GROUP_ID: {
       uint32 group_id = common_flow_entry.action().profile_group_id();
-      ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+      ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                        GetBcmMultipathNexthopInfo(group_id));
       auto* bcm_action = bcm_flow_entry->add_actions();
       bcm_action->set_type(BcmAction::OUTPUT_L3);
@@ -913,7 +913,7 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     // If member points to singleton port, check state before adding member.
     // TODO(madhaviyengar): Add support for checking trunk state once this
@@ -975,7 +975,7 @@ namespace {
 ::util::Status BcmTableManager::UpdateTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
   ASSIGN_OR_RETURN(::p4::v1::TableEntry old_entry,
                    table->ModifyEntry(table_entry));
 
@@ -1009,7 +1009,7 @@ namespace {
 ::util::Status BcmTableManager::DeleteTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
   ASSIGN_OR_RETURN(::p4::v1::TableEntry old_entry,
                    table->DeleteEntry(table_entry));
 
@@ -1043,7 +1043,7 @@ namespace {
            << table_entry.ShortDebugString() << ".";
   }
 
-  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
   ASSIGN_OR_RETURN(::p4::v1::TableEntry modified_entry,
                    table->Lookup(table_entry));
   *modified_entry.mutable_meter_config() = meter.config();
@@ -1142,7 +1142,7 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     group_nexthop_info->member_id_to_weight[member_id] = weight;
     member_nexthop_info->group_ref_count++;
@@ -1220,7 +1220,7 @@ namespace {
   // Member must exist when calling this function. Find the corresponding
   // BcmNonMultipathNexthopInfo and update it. At the moment only type can
   // change.
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   member_nexthop_info->type = type;
   member_nexthop_info->bcm_port = bcm_port;
@@ -1242,7 +1242,7 @@ namespace {
   // The group and all the members to add and remove to the group must exist
   // when calling this function. Find the corresponding BcmMultipathNexthopInfo
   // for the group and update it.
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
 
   // Save a copy of old member_id_to_weight and then populate it with the new
@@ -1255,7 +1255,7 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     group_nexthop_info->member_id_to_weight[member_id] = weight;
     // Keep track of the modified set of ports the group references.
@@ -1279,7 +1279,7 @@ namespace {
 
   for (const auto& e : old_member_id_to_weight) {
     uint32 member_id = e.first;
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     RET_CHECK(member_nexthop_info->group_ref_count > 0)
         << "Non-positive group_ref_count for following member_id: " << member_id
@@ -1320,7 +1320,7 @@ namespace {
 
   // Member must exist when calling this function. Find the corresponding
   // BcmNonMultipathNexthopInfo and remove it.
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   RET_CHECK(member_nexthop_info->flow_ref_count == 0);
   RET_CHECK(member_nexthop_info->group_ref_count == 0);
@@ -1341,10 +1341,10 @@ namespace {
 
   // group and all its members must exist when calling this function. Find the
   // corresponding BcmMultipathNexthopInfo and update it.
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   for (const auto& e : group_nexthop_info->member_id_to_weight) {
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(e.first));
     RET_CHECK(member_nexthop_info->group_ref_count > 0)
         << "Non-positive group_ref_count for following member_id: " << e.first
@@ -1438,7 +1438,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
     return MAKE_ERROR(ERR_INTERNAL) << "Null info.";
   }
 
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   info->egress_intf_id = member_nexthop_info->egress_intf_id;
   info->type = member_nexthop_info->type;
@@ -1455,7 +1455,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
     return MAKE_ERROR(ERR_INTERNAL) << "Null info.";
   }
 
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   info->egress_intf_id = group_nexthop_info->egress_intf_id;
   info->flow_ref_count = group_nexthop_info->flow_ref_count;
@@ -1710,7 +1710,7 @@ std::unique_ptr<BcmTableManager> BcmTableManager::CreateInstance(
 
 ::util::Status BcmTableManager::UpdateFlowRefCountForMember(uint32 member_id,
                                                             int delta) {
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   if (delta < 0) {
     RET_CHECK(member_nexthop_info->flow_ref_count + delta >= 0)
@@ -1726,7 +1726,7 @@ std::unique_ptr<BcmTableManager> BcmTableManager::CreateInstance(
 
 ::util::Status BcmTableManager::UpdateFlowRefCountForGroup(uint32 group_id,
                                                            int delta) {
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   if (delta < 0) {
     RET_CHECK(group_nexthop_info->flow_ref_count + delta >= 0)

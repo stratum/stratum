@@ -162,7 +162,8 @@ class BcmTableManagerTest : public ::testing::Test {
       uint32 flow_ref_count,
       std::map<uint32, std::tuple<uint32, uint32, int>>
           member_id_to_weight_group_ref_count_port) {
-    RET_CHECK(bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
+    RET_CHECK(
+        bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
     const auto& groups = bcm_table_manager_->groups_;
     auto it = groups.find(group.group_id());
     RET_CHECK(it != groups.end());
@@ -173,14 +174,15 @@ class BcmTableManagerTest : public ::testing::Test {
     RET_CHECK(egress_intf_id == group_info.egress_intf_id);
     RET_CHECK(flow_ref_count == group_info.flow_ref_count);
     RET_CHECK(member_id_to_weight_group_ref_count_port.size() ==
-              group_info.member_id_to_weight.size());
+                          group_info.member_id_to_weight.size());
     for (const auto& e : member_id_to_weight_group_ref_count_port) {
       RET_CHECK(std::get<0>(e.second) ==
-                group_info.member_id_to_weight[e.first]);
+                            group_info.member_id_to_weight[e.first]);
       BcmNonMultipathNexthopInfo member_info;
       RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
           e.first, &member_info));
-      RET_CHECK(std::get<1>(e.second) == member_info.group_ref_count);
+      RET_CHECK(std::get<1>(e.second) ==
+                            member_info.group_ref_count);
       RET_CHECK(std::get<2>(e.second) == member_info.bcm_port);
       // If this is a logical port, check that there is a mapping to the set of
       // referencing groups.
@@ -422,8 +424,7 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
       type: P4_FIELD_TYPE_ETH_SRC
       value { u64: 11111111111111 }
       mask { u64: 99999999999999 }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -431,8 +432,7 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
       type: P4_FIELD_TYPE_ETH_DST
       value { u64: 22222222222222 }
       mask { u64: 99999999999999 }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
     // P4_FIELD_TYPE_ETH_TYPE: No currentf conversion.
@@ -443,8 +443,7 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
       type: P4_FIELD_TYPE_IPV4_SRC
       value { u32: 11111111 }
       mask { u32: 99999999 }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -452,8 +451,7 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
       type: P4_FIELD_TYPE_IPV4_DST
       value { u32: 22222222 }
       mask { u32: 99999999 }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -465,30 +463,26 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
       type: P4_FIELD_TYPE_IPV6_SRC
       value { b: "\x00\x01\x02\x03\x04\x05" }
       mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     // IPV6_SRC translated to IPV6_SRC_UPPER_64.
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: IPV6_SRC_UPPER_64
       value { b: "\x00\x01\x02\x03\x04\x05" }
       mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
-    )PROTO",
-                                   &bcm_field));
+    )PROTO", &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_IPV6_DST
       value { b: "\x10\x11\x12\x13\x14\x15" }
       mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     // IPV6_DST translated to IPV6_SRC_UPPER_64.
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: IPV6_DST_UPPER_64
       value { b: "\x10\x11\x12\x13\x14\x15" }
       mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
-    )PROTO",
-                                   &bcm_field));
+    )PROTO", &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     // P4_FIELD_TYPE_IPV6_NEXT_HDR: No current conversion.
@@ -501,8 +495,7 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_VRF
       value { u32: 1234 }
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -577,47 +570,41 @@ P4ToBcmActions() {
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_ETH_SRC
       u64: 11111111111111
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_ETH_DST
       u64: 22222222222222
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
     // P4_FIELD_TYPE_ETH_TYPE: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_VLAN_VID u32: 22
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_VLAN_PCP u32: 22
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_IPV4_SRC
       u32: 11111111
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_IPV4_DST
       u32: 22222222
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
@@ -628,16 +615,14 @@ P4ToBcmActions() {
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_IPV6_SRC
       b: "\x00\x01\x02\x03\x04\x05"
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_IPV6_DST
       b: "\x10\x11\x12\x13\x14\x15"
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
@@ -650,16 +635,14 @@ P4ToBcmActions() {
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_VRF u32: 1234
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
       type: P4_FIELD_TYPE_CLASS_ID
       u32: 1234
-    )PROTO",
-                                   &p4_field));
+    )PROTO", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
     // P4_FIELD_TYPE_COLOR: No current conversion.
@@ -1671,8 +1654,7 @@ TEST_F(BcmTableManagerTest,
     type: P4_FIELD_TYPE_IPV4_DST
     value { u32: 1 }
     mask { u32: 0xffffffff }
-  )PROTO",
-                                 ip_field));
+  )PROTO", ip_field));
 
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
@@ -1684,8 +1666,7 @@ TEST_F(BcmTableManagerTest,
     type: P4_FIELD_TYPE_VRF
     value { u32: 1 }
     mask { u32: 1 }
-  )PROTO",
-                                 vrf_field));
+  )PROTO", vrf_field));
   ::util::Status status = bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
       source, ::p4::v1::Update::INSERT, &actual);
   EXPECT_FALSE(status.ok());
@@ -1696,8 +1677,7 @@ TEST_F(BcmTableManagerTest,
   ASSERT_OK(ParseProtoFromString(R"PROTO(
     type: P4_FIELD_TYPE_VRF
     value { u32: 99999999 }
-  )PROTO",
-                                 vrf_field));
+  )PROTO", vrf_field));
   status = bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
       source, ::p4::v1::Update::INSERT, &actual);
   EXPECT_FALSE(status.ok());
@@ -1713,8 +1693,7 @@ TEST_F(BcmTableManagerTest,
     type: P4_FIELD_TYPE_IPV4_DST
     value { u32: 22 }
     mask { u32: 99 }
-  )PROTO",
-                                 source.add_fields()));
+  )PROTO", source.add_fields()));
 
   // Setup table type and stage.
   source.mutable_table_info()->set_type(P4_TABLE_L3_IP);
@@ -1743,8 +1722,7 @@ TEST_F(BcmTableManagerTest,
     type: P4_FIELD_TYPE_IPV6_DST
     value { b: "\x22\x23" }
     mask { b: "\xff\xff" }
-  )PROTO",
-                                 source.add_fields()));
+  )PROTO", source.add_fields()));
 
   // Setup table type and stage.
   source.mutable_table_info()->set_type(P4_TABLE_L3_IP);
@@ -4442,8 +4420,7 @@ TEST_F(BcmTableManagerTest,
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO",
-                                &source));
+  )PROTO", &source));
 
   BcmFlowEntry expected;
   CHECK_OK(ParseProtoFromString(R"PROTO(
@@ -4451,8 +4428,7 @@ TEST_F(BcmTableManagerTest,
     bcm_acl_table_id: 1
     fields { type: ETH_TYPE value { u32: 10 } }
     acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO",
-                                &expected));
+  )PROTO", &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4485,8 +4461,7 @@ TEST_F(BcmTableManagerTest,
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO",
-                                &source));
+  )PROTO", &source));
 
   BcmFlowEntry expected;
   CHECK_OK(ParseProtoFromString(R"PROTO(
@@ -4496,8 +4471,7 @@ TEST_F(BcmTableManagerTest,
     fields { type: IP_TYPE value { u32: 0x86dd } }
     fields { type: IP_PROTO_NEXT_HDR value { u32: 58 } }
     acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO",
-                                &expected));
+  )PROTO", &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4528,8 +4502,7 @@ TEST_F(BcmTableManagerTest,
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO",
-                                &source));
+  )PROTO", &source));
 
   BcmFlowEntry actual;
   EXPECT_THAT(bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
@@ -4562,8 +4535,7 @@ TEST_P(ConstConditionTest,
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO",
-                                &source));
+  )PROTO", &source));
 
   BcmFlowEntry expected;
   CHECK_OK(ParseProtoFromString(R"PROTO(
@@ -4571,8 +4543,7 @@ TEST_P(ConstConditionTest,
     bcm_acl_table_id: 1
     fields { type: ETH_TYPE value { u32: 10 } }
     acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO",
-                                &expected));
+  )PROTO", &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
