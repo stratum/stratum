@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/fixed_layout_datasource.h"
 
 #include <algorithm>
@@ -19,8 +18,8 @@ template <>
       << "Called UpdateAttribute before RegisterDataSource";
   float buffer_val;
   if (is_signed_) {
-    buffer_val = static_cast<float>(ParseSignedIntegralBytes<int32>(
-        buffer + offset_, length_, false));
+    buffer_val = static_cast<float>(
+        ParseSignedIntegralBytes<int32>(buffer + offset_, length_, false));
   } else {
     buffer_val = static_cast<float>(
         ParseIntegralBytes<uint32>(buffer + offset_, length_, false));
@@ -34,8 +33,8 @@ template <>
       << "Called UpdateAttribute before RegisterDataSource";
   double buffer_val;
   if (is_signed_) {
-    buffer_val = static_cast<double>(ParseSignedIntegralBytes<int32>(
-        buffer + offset_, length_, false));
+    buffer_val = static_cast<double>(
+        ParseSignedIntegralBytes<int32>(buffer + offset_, length_, false));
   } else {
     buffer_val = static_cast<double>(
         ParseIntegralBytes<uint32>(buffer + offset_, length_, false));
