@@ -152,9 +152,8 @@ namespace barefoot {
       meta_to_type_uri = &packet_out_meta_to_type_uri;
       meta_to_bit_width = &packet_out_meta_to_bit_width;
     } else {
-      // Skip this controller header if it is not a packet_in or packet_out
-      // header.
-      continue;
+      return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Undupported controller header"
+          << ctrl_hdr_name;
     }
     for (const auto& metadata : pkt_md.metadata()) {
       if (metadata.has_type_name()) {
@@ -221,6 +220,9 @@ namespace barefoot {
 BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
                                              bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   return TranslateTableEntryInternal(entry, to_sdk);
 }
 
@@ -335,6 +337,9 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
 BfrtP4RuntimeTranslator::TranslateActionProfileMember(
     const ::p4::v1::ActionProfileMember& act_prof_mem, bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return act_prof_mem;
+  }
   ::p4::v1::ActionProfileMember translated_apm;
   translated_apm.CopyFrom(act_prof_mem);
   const auto& action_profile_id = act_prof_mem.action_profile_id();
@@ -348,6 +353,9 @@ BfrtP4RuntimeTranslator::TranslateActionProfileMember(
 BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   ::p4::v1::MeterEntry translated_entry(entry);
   std::string* uri = gtl::FindOrNull(meter_to_type_uri_, entry.meter_id());
   if (entry.has_index() && uri) {
@@ -361,6 +369,9 @@ BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
 BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   ::p4::v1::DirectMeterEntry translated_entry(entry);
   ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
                    TranslateTableEntryInternal(entry.table_entry(), to_sdk));
@@ -393,6 +404,9 @@ BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
 BfrtP4RuntimeTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   ::p4::v1::CounterEntry translated_entry(entry);
   std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.counter_id());
   if (entry.has_index() && uri) {
@@ -406,6 +420,9 @@ BfrtP4RuntimeTranslator::TranslateCounterEntry(
 BfrtP4RuntimeTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   ::p4::v1::DirectCounterEntry translated_entry(entry);
   ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
                    TranslateTableEntryInternal(entry.table_entry(), to_sdk));
@@ -416,6 +433,9 @@ BfrtP4RuntimeTranslator::TranslateDirectCounterEntry(
 BfrtP4RuntimeTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   ::p4::v1::RegisterEntry translated_entry(entry);
   std::string* uri =
       gtl::FindOrNull(register_to_type_uri_, entry.register_id());
@@ -449,6 +469,9 @@ BfrtP4RuntimeTranslator::TranslateRegisterEntry(
 BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return entry;
+  }
   ::p4::v1::PacketReplicationEngineEntry translated_entry(entry);
   switch (translated_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::kMulticastGroupEntry: {
@@ -489,6 +512,9 @@ BfrtP4RuntimeTranslator::TranslatePacketMetadata(
 ::util::StatusOr<::p4::v1::PacketIn> BfrtP4RuntimeTranslator::TranslatePacketIn(
     const ::p4::v1::PacketIn& packet_in) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return packet_in;
+  }
   ::p4::v1::PacketIn translated_packet_in(packet_in);
   for (auto& md : *translated_packet_in.mutable_metadata()) {
     const std::string* uri =
@@ -507,6 +533,9 @@ BfrtP4RuntimeTranslator::TranslatePacketMetadata(
 BfrtP4RuntimeTranslator::TranslatePacketOut(
     const ::p4::v1::PacketOut& packet_out) {
   absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_require_translation_) {
+    return packet_out;
+  }
   ::p4::v1::PacketOut translated_packet_out(packet_out);
   for (auto& md : *translated_packet_out.mutable_metadata()) {
     const std::string* uri =

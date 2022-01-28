@@ -48,8 +48,8 @@ class BfrtP4RuntimeTranslatorTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
-    p4rt_bfrt_translator_ = BfrtP4RuntimeTranslator::CreateInstance(
-        /* enable translation */ true, bf_sde_mock_.get(), kDeviceId);
+    bfrt_p4runtime_translator_ = BfrtP4RuntimeTranslator::CreateInstance(
+        /*translation_enabled=*/true, bf_sde_mock_.get(), kDeviceId);
   }
 
   ::util::Status PushChassisConfig() {
@@ -63,20 +63,22 @@ class BfrtP4RuntimeTranslatorTest : public ::testing::Test {
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkPort2Id)));
     EXPECT_CALL(*bf_sde_mock_, GetPcieCpuPort(kDeviceId))
         .WillOnce(Return(::util::StatusOr<uint32>(kSdkCpuPortId)));
-    return p4rt_bfrt_translator_->PushChassisConfig(config, kNodeId);
+    return bfrt_p4runtime_translator_->PushChassisConfig(config, kNodeId);
   }
 
-  ::util::Status PushForwardingPipelineConfig() {
+  ::util::Status PushForwardingPipelineConfig(
+      const char* p4info_str = kP4InfoString) {
     ::p4::config::v1::P4Info p4info;
-    EXPECT_OK(ParseProtoFromString(kP4InfoString, &p4info));
-    return p4rt_bfrt_translator_->PushForwardingPipelineConfig(p4info);
+    EXPECT_OK(ParseProtoFromString(p4info_str, &p4info));
+    return bfrt_p4runtime_translator_->PushForwardingPipelineConfig(p4info);
   }
 
   ::util::StatusOr<std::string> TranslateValue(const std::string& value,
                                                const std::string& uri,
                                                bool to_sdk, int32 bit_width) {
-    ::absl::ReaderMutexLock l(&p4rt_bfrt_translator_->lock_);
-    return p4rt_bfrt_translator_->TranslateValue(value, uri, to_sdk, bit_width);
+    ::absl::ReaderMutexLock l(&bfrt_p4runtime_translator_->lock_);
+    return bfrt_p4runtime_translator_->TranslateValue(value, uri, to_sdk,
+                                                      bit_width);
   }
 
   std::string Uint32ToBytes(uint32 value, int32 bit_width) {
@@ -84,8 +86,41 @@ class BfrtP4RuntimeTranslatorTest : public ::testing::Test {
                                                  NumBitsToNumBytes(bit_width));
   }
 
+  template <typename E>
+  void TestEntryTranslation(
+      std::string from_entry_str, std::string to_entry_str, bool to_sdk,
+      ::util::StatusOr<E> (BfrtP4RuntimeTranslator::*translation_func)(const E&,
+                                                                       bool)) {
+    E from_entry;
+    E to_entry;
+    EXPECT_OK(ParseProtoFromString(from_entry_str, &from_entry));
+    EXPECT_OK(ParseProtoFromString(to_entry_str, &to_entry));
+    ::util::StatusOr<E> res =
+        (bfrt_p4runtime_translator_.get()->*translation_func)(from_entry,
+                                                              to_sdk);
+    EXPECT_OK(res.status());
+    E translated_entry = res.ValueOrDie();
+    EXPECT_THAT(translated_entry, EqualsProto(to_entry));
+  }
+
+  template <typename E>
+  void TestEntryTranslation(
+      std::string from_entry_str, std::string to_entry_str,
+      ::util::StatusOr<E> (BfrtP4RuntimeTranslator::*translation_func)(
+          const E&)) {
+    E from_entry;
+    E to_entry;
+    EXPECT_OK(ParseProtoFromString(from_entry_str, &from_entry));
+    EXPECT_OK(ParseProtoFromString(to_entry_str, &to_entry));
+    ::util::StatusOr<E> res =
+        (bfrt_p4runtime_translator_.get()->*translation_func)(from_entry);
+    EXPECT_OK(res.status());
+    E translated_entry = res.ValueOrDie();
+    EXPECT_THAT(translated_entry, EqualsProto(to_entry));
+  }
+
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
-  std::unique_ptr<BfrtP4RuntimeTranslator> p4rt_bfrt_translator_;
+  std::unique_ptr<BfrtP4RuntimeTranslator> bfrt_p4runtime_translator_;
 
   static constexpr int kDeviceId = 1;
   static constexpr uint64 kNodeId = 0;
@@ -315,98 +350,8 @@ class BfrtP4RuntimeTranslatorTest : public ::testing::Test {
       }
     }
   )PROTO";
-};
 
-constexpr int BfrtP4RuntimeTranslatorTest::kDeviceId;
-constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkCpuPortId;
-constexpr uint32 BfrtP4RuntimeTranslatorTest::kPortId;
-constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkPortId;
-constexpr int32 BfrtP4RuntimeTranslatorTest::kPort;
-constexpr int32 BfrtP4RuntimeTranslatorTest::kSlot;
-constexpr int32 BfrtP4RuntimeTranslatorTest::kChannel;
-constexpr char BfrtP4RuntimeTranslatorTest::kChassisConfig[];
-constexpr char BfrtP4RuntimeTranslatorTest::kP4InfoString[];
-constexpr uint32 BfrtP4RuntimeTranslatorTest::kPort2Id;
-constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkPort2Id;
-constexpr int32 BfrtP4RuntimeTranslatorTest::kPort2;
-
-TEST_F(BfrtP4RuntimeTranslatorTest, PushConfig) {
-  EXPECT_OK(PushChassisConfig());
-  EXPECT_OK(PushForwardingPipelineConfig());
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_UnknownUri) {
-  EXPECT_OK(PushChassisConfig());
-
-  // Unknown URI
-  EXPECT_THAT(
-      TranslateValue("some value", "foo", /*to_sdk=*/false, kTnaPortIdBitWidth)
-          .status(),
-      DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_UNIMPLEMENTED,
-                                       "Unknown URI: foo")));
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_InvalidSize) {
-  EXPECT_OK(PushChassisConfig());
-  // Invalid size
-  EXPECT_THAT(TranslateValue("some value", kUriTnaPortId, /*to_sdk=*/false,
-                             kTnaPortIdBitWidth)
-                  .status(),
-              DerivedFromStatus(::util::Status(
-                  StratumErrorSpace(), ERR_INVALID_PARAM,
-                  "'value.size() == "
-                  "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToSdk) {
-  EXPECT_OK(PushChassisConfig());
-  // No mapping from singleton port to sdk port
-  auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
-  EXPECT_THAT(TranslateValue(singleton_port_id, kUriTnaPortId, /*to_sdk=*/true,
-                             kTnaPortIdBitWidth)
-                  .status(),
-              DerivedFromStatus(::util::Status(
-                  StratumErrorSpace(), ERR_INVALID_PARAM,
-                  "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToPort) {
-  EXPECT_OK(PushChassisConfig());
-  // No mapping from sdk port to singleton port
-  auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
-  EXPECT_THAT(
-      TranslateValue(sdk_port_id, kUriTnaPortId, /*to_sdk=*/false,
-                     kTnaPortIdBitWidth)
-          .status(),
-      DerivedFromStatus(::util::Status(
-          StratumErrorSpace(), ERR_INVALID_PARAM,
-          "'sdk_port_to_singleton_port_.count(sdk_port_id)' is false. ")));
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_ToSdk) {
-  EXPECT_OK(PushChassisConfig());
-  // Translate from singleton port to sdk port
-  auto singleton_port_id = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
-  auto expected_value = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
-  auto actual_value = TranslateValue(singleton_port_id, kUriTnaPortId,
-                                     /*to_sdk=*/true, kTnaPortIdBitWidth)
-                          .ValueOrDie();
-  EXPECT_EQ(expected_value, actual_value);
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_FromSdk) {
-  EXPECT_OK(PushChassisConfig());
-  // Translate from sdk port to singleton port
-  auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
-  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
-  auto actual_value = TranslateValue(sdk_port_id, kUriTnaPortId,
-                                     /*to_sdk=*/false, kTnaPortIdBitWidth)
-                          .ValueOrDie();
-  EXPECT_EQ(expected_value, actual_value);
-}
-
-TEST_F(BfrtP4RuntimeTranslatorTest, TranslateP4Info) {
-  const char expect_translated_p4info_str[] = R"PROTO(
+  static constexpr char kNoTranslationP4InfoString[] = R"PROTO(
     pkg_info {
       arch: "tna"
     }
@@ -558,15 +503,100 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateP4Info) {
       }
     }
   )PROTO";
-  ::p4::config::v1::P4Info p4info;
-  EXPECT_OK(ParseProtoFromString(kP4InfoString, &p4info));
-  ::p4::config::v1::P4Info expected_translated_p4info;
-  EXPECT_OK(ParseProtoFromString(expect_translated_p4info_str,
-                                 &expected_translated_p4info));
-  const auto& statusor = p4rt_bfrt_translator_->TranslateP4Info(p4info);
-  EXPECT_OK(statusor.status());
-  const auto& translated_p4info = statusor.ValueOrDie();
-  EXPECT_THAT(translated_p4info, EqualsProto(expected_translated_p4info));
+};
+
+constexpr int BfrtP4RuntimeTranslatorTest::kDeviceId;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkCpuPortId;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kPortId;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkPortId;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kPort;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kSlot;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kChannel;
+constexpr char BfrtP4RuntimeTranslatorTest::kChassisConfig[];
+constexpr char BfrtP4RuntimeTranslatorTest::kP4InfoString[];
+constexpr char BfrtP4RuntimeTranslatorTest::kNoTranslationP4InfoString[];
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kPort2Id;
+constexpr uint32 BfrtP4RuntimeTranslatorTest::kSdkPort2Id;
+constexpr int32 BfrtP4RuntimeTranslatorTest::kPort2;
+
+TEST_F(BfrtP4RuntimeTranslatorTest, PushConfig) {
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_UnknownUri) {
+  EXPECT_OK(PushChassisConfig());
+
+  // Unknown URI
+  EXPECT_THAT(
+      TranslateValue("some value", "foo", /*to_sdk=*/false, kTnaPortIdBitWidth)
+          .status(),
+      DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_UNIMPLEMENTED,
+                                       "Unknown URI: foo")));
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_InvalidSize) {
+  EXPECT_OK(PushChassisConfig());
+  // Invalid size
+  EXPECT_THAT(TranslateValue("some value", kUriTnaPortId, /*to_sdk=*/false,
+                             kTnaPortIdBitWidth)
+                  .status(),
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'value.size() == "
+                  "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToSdk) {
+  EXPECT_OK(PushChassisConfig());
+  // No mapping from singleton port to sdk port
+  auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
+  EXPECT_THAT(TranslateValue(singleton_port_id, kUriTnaPortId, /*to_sdk=*/true,
+                             kTnaPortIdBitWidth)
+                  .status(),
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToPort) {
+  EXPECT_OK(PushChassisConfig());
+  // No mapping from sdk port to singleton port
+  auto sdk_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
+  EXPECT_THAT(
+      TranslateValue(sdk_port_id, kUriTnaPortId, /*to_sdk=*/false,
+                     kTnaPortIdBitWidth)
+          .status(),
+      DerivedFromStatus(::util::Status(
+          StratumErrorSpace(), ERR_INVALID_PARAM,
+          "'sdk_port_to_singleton_port_.count(sdk_port_id)' is false. ")));
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_ToSdk) {
+  EXPECT_OK(PushChassisConfig());
+  // Translate from singleton port to sdk port
+  auto singleton_port_id = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
+  auto expected_value = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
+  auto actual_value = TranslateValue(singleton_port_id, kUriTnaPortId,
+                                     /*to_sdk=*/true, kTnaPortIdBitWidth)
+                          .ValueOrDie();
+  EXPECT_EQ(expected_value, actual_value);
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_FromSdk) {
+  EXPECT_OK(PushChassisConfig());
+  // Translate from sdk port to singleton port
+  auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
+  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
+  auto actual_value = TranslateValue(sdk_port_id, kUriTnaPortId,
+                                     /*to_sdk=*/false, kTnaPortIdBitWidth)
+                          .ValueOrDie();
+  EXPECT_EQ(expected_value, actual_value);
+}
+
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslateP4Info) {
+  TestEntryTranslation(kP4InfoString, kNoTranslationP4InfoString,
+                       &BfrtP4RuntimeTranslator::TranslateP4Info);
 }
 
 // Table entry
@@ -642,16 +672,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry) {
     }
   )PROTO";
 
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true);
-  EXPECT_OK(translated_value.status());
-  table_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_table_entry;
-  EXPECT_OK(
-      ParseProtoFromString(expected_table_entry_str, &expected_table_entry));
-  EXPECT_THAT(table_entry, EqualsProto(expected_table_entry));
+  TestEntryTranslation(table_entry_str, expected_table_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateTableEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_ActionProfileActionSet) {
@@ -686,16 +708,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_ActionProfileActionSet) {
     }
   )PROTO";
 
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true);
-  EXPECT_OK(translated_value.status());
-  table_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_table_entry;
-  EXPECT_OK(
-      ParseProtoFromString(expected_table_entry_str, &expected_table_entry));
-  EXPECT_THAT(table_entry, EqualsProto(expected_table_entry));
+  TestEntryTranslation(table_entry_str, expected_table_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateTableEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry) {
@@ -771,16 +785,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry) {
     }
   )PROTO";
 
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, false);
-  EXPECT_OK(translated_value.status());
-  table_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_table_entry;
-  EXPECT_OK(
-      ParseProtoFromString(expected_table_entry_str, &expected_table_entry));
-  EXPECT_THAT(table_entry, EqualsProto(expected_table_entry));
+  TestEntryTranslation(table_entry_str, expected_table_entry_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateTableEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry_ActionProfileActionSet) {
@@ -815,16 +821,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry_ActionProfileActionSet) {
     }
   )PROTO";
 
-  ::p4::v1::TableEntry table_entry;
-  EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, false);
-  EXPECT_OK(translated_value.status());
-  table_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::TableEntry expected_table_entry;
-  EXPECT_OK(
-      ParseProtoFromString(expected_table_entry_str, &expected_table_entry));
-  EXPECT_THAT(table_entry, EqualsProto(expected_table_entry));
+  TestEntryTranslation(table_entry_str, expected_table_entry_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateTableEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidTernary) {
@@ -841,12 +839,12 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidTernary) {
 
   ::p4::v1::TableEntry table_entry;
   EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
-  EXPECT_THAT(
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true).status(),
-      DerivedFromStatus(
-          ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                         "'field_match.ternary().mask() == "
-                         "AllOnesByteString(from_bit_width)' is false.")));
+  EXPECT_THAT(bfrt_p4runtime_translator_->TranslateTableEntry(table_entry, true)
+                  .status(),
+              DerivedFromStatus(::util::Status(
+                  StratumErrorSpace(), ERR_INVALID_PARAM,
+                  "'field_match.ternary().mask() == "
+                  "AllOnesByteString(from_bit_width)' is false.")));
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidRange) {
@@ -863,12 +861,12 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidRange) {
 
   ::p4::v1::TableEntry table_entry;
   EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
-  EXPECT_THAT(
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true).status(),
-      DerivedFromStatus(
-          ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                         "'field_match.range().low() == "
-                         "field_match.range().high()' is false.")));
+  EXPECT_THAT(bfrt_p4runtime_translator_->TranslateTableEntry(table_entry, true)
+                  .status(),
+              DerivedFromStatus(
+                  ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                 "'field_match.range().low() == "
+                                 "field_match.range().high()' is false.")));
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidLpm) {
@@ -886,7 +884,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidLpm) {
   ::p4::v1::TableEntry table_entry;
   EXPECT_OK(ParseProtoFromString(table_entry_str, &table_entry));
   EXPECT_THAT(
-      p4rt_bfrt_translator_->TranslateTableEntry(table_entry, true).status(),
+      bfrt_p4runtime_translator_->TranslateTableEntry(table_entry, true)
+          .status(),
       DerivedFromStatus(::util::Status(
           StratumErrorSpace(), ERR_INVALID_PARAM,
           "'field_match.lpm().prefix_len() == from_bit_width' is false.")));
@@ -914,18 +913,10 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteActionProfileMember) {
       params { param_id: 2 value: "\x00\x00\x00\x01" }
     }
   )PROTO";
-  ::p4::v1::ActionProfileMember action_profile_member;
-  EXPECT_OK(
-      ParseProtoFromString(action_profile_member_str, &action_profile_member));
-  auto translated_value = p4rt_bfrt_translator_->TranslateActionProfileMember(
-      action_profile_member, true);
-  EXPECT_OK(translated_value.status());
-  action_profile_member = translated_value.ConsumeValueOrDie();
-  ::p4::v1::ActionProfileMember expected_action_profile_member;
-  EXPECT_OK(ParseProtoFromString(expected_action_profile_member_str,
-                                 &expected_action_profile_member));
-  EXPECT_THAT(action_profile_member,
-              EqualsProto(expected_action_profile_member));
+
+  TestEntryTranslation(action_profile_member_str,
+                       expected_action_profile_member_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateActionProfileMember);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadActionProfileMember) {
@@ -949,18 +940,10 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadActionProfileMember) {
       params { param_id: 2 value: "\x00\x00\x00\x01" }
     }
   )PROTO";
-  ::p4::v1::ActionProfileMember action_profile_member;
-  EXPECT_OK(
-      ParseProtoFromString(action_profile_member_str, &action_profile_member));
-  auto translated_value = p4rt_bfrt_translator_->TranslateActionProfileMember(
-      action_profile_member, false);
-  EXPECT_OK(translated_value.status());
-  action_profile_member = translated_value.ConsumeValueOrDie();
-  ::p4::v1::ActionProfileMember expected_action_profile_member;
-  EXPECT_OK(ParseProtoFromString(expected_action_profile_member_str,
-                                 &expected_action_profile_member));
-  EXPECT_THAT(action_profile_member,
-              EqualsProto(expected_action_profile_member));
+
+  TestEntryTranslation(action_profile_member_str,
+                       expected_action_profile_member_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateActionProfileMember);
 }
 
 // Packet replication engine.
@@ -994,16 +977,9 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_MulticastGroup) {
     }
   )PROTO";
 
-  ::p4::v1::PacketReplicationEngineEntry pre_entry;
-  EXPECT_OK(ParseProtoFromString(pre_entry_str, &pre_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslatePacketReplicationEngineEntry(pre_entry,
-                                                                   true);
-  EXPECT_OK(translated_value.status());
-  pre_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::PacketReplicationEngineEntry expected_pre_entry;
-  EXPECT_OK(ParseProtoFromString(expected_pre_entry_str, &expected_pre_entry));
-  EXPECT_THAT(pre_entry, EqualsProto(expected_pre_entry));
+  TestEntryTranslation(
+      pre_entry_str, expected_pre_entry_str, true,
+      &BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_MulticastGroup) {
@@ -1035,16 +1011,10 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_MulticastGroup) {
       }
     }
   )PROTO";
-  ::p4::v1::PacketReplicationEngineEntry pre_entry;
-  EXPECT_OK(ParseProtoFromString(pre_entry_str, &pre_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslatePacketReplicationEngineEntry(pre_entry,
-                                                                   false);
-  EXPECT_OK(translated_value.status());
-  pre_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::PacketReplicationEngineEntry expected_pre_entry;
-  EXPECT_OK(ParseProtoFromString(expected_pre_entry_str, &expected_pre_entry));
-  EXPECT_THAT(pre_entry, EqualsProto(expected_pre_entry));
+
+  TestEntryTranslation(
+      pre_entry_str, expected_pre_entry_str, false,
+      &BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_CloneSession) {
@@ -1117,16 +1087,9 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_CloneSession) {
     }
   )PROTO";
 
-  ::p4::v1::PacketReplicationEngineEntry pre_entry;
-  EXPECT_OK(ParseProtoFromString(pre_entry_str, &pre_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslatePacketReplicationEngineEntry(pre_entry,
-                                                                   true);
-  EXPECT_OK(translated_value.status());
-  pre_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::PacketReplicationEngineEntry expected_pre_entry;
-  EXPECT_OK(ParseProtoFromString(expected_pre_entry_str, &expected_pre_entry));
-  EXPECT_THAT(pre_entry, EqualsProto(expected_pre_entry));
+  TestEntryTranslation(
+      pre_entry_str, expected_pre_entry_str, true,
+      &BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_CloneSession) {
@@ -1198,16 +1161,10 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_CloneSession) {
       }
     }
   )PROTO";
-  ::p4::v1::PacketReplicationEngineEntry pre_entry;
-  EXPECT_OK(ParseProtoFromString(pre_entry_str, &pre_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslatePacketReplicationEngineEntry(pre_entry,
-                                                                   false);
-  EXPECT_OK(translated_value.status());
-  pre_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::PacketReplicationEngineEntry expected_pre_entry;
-  EXPECT_OK(ParseProtoFromString(expected_pre_entry_str, &expected_pre_entry));
-  EXPECT_THAT(pre_entry, EqualsProto(expected_pre_entry));
+
+  TestEntryTranslation(
+      pre_entry_str, expected_pre_entry_str, false,
+      &BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_InvalidPort) {
@@ -1226,7 +1183,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_InvalidPort) {
   ::p4::v1::PacketReplicationEngineEntry pre_entry;
   EXPECT_OK(ParseProtoFromString(pre_entry_str, &pre_entry));
   EXPECT_THAT(
-      p4rt_bfrt_translator_
+      bfrt_p4runtime_translator_
           ->TranslatePacketReplicationEngineEntry(pre_entry, true)
           .status(),
       DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
@@ -1260,22 +1217,15 @@ TEST_F(BfrtP4RuntimeTranslatorTest, PacketOut) {
       value: "\x01\x2C" # egress port
     }
   )PROTO";
-  ::p4::v1::PacketOut packet_out;
-  ::p4::v1::PacketOut expected_packet_out;
-  EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
-  EXPECT_OK(
-      ParseProtoFromString(expected_packet_out_str, &expected_packet_out));
 
-  auto translated = p4rt_bfrt_translator_->TranslatePacketOut(packet_out);
-  EXPECT_OK(translated.status());
-  packet_out = translated.ValueOrDie();
-  EXPECT_THAT(packet_out, EqualsProto(expected_packet_out));
+  TestEntryTranslation(packet_out_str, expected_packet_out_str,
+                       &BfrtP4RuntimeTranslator::TranslatePacketOut);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, PacketIn) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  char packet_int_str[] = R"PROTO(
+  char packet_in_str[] = R"PROTO(
     payload: "<raw packet>"
     metadata {
       metadata_id: 1
@@ -1286,7 +1236,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, PacketIn) {
       value: "\x00" # padding
     }
   )PROTO";
-  char expected_packet_int_str[] = R"PROTO(
+  char expected_packet_in_str[] = R"PROTO(
     payload: "<raw packet>"
     metadata {
       metadata_id: 1
@@ -1297,16 +1247,9 @@ TEST_F(BfrtP4RuntimeTranslatorTest, PacketIn) {
       value: "\x00" # padding
     }
   )PROTO";
-  ::p4::v1::PacketIn packet_int;
-  ::p4::v1::PacketIn expected_packet_int;
-  EXPECT_OK(ParseProtoFromString(packet_int_str, &packet_int));
-  EXPECT_OK(
-      ParseProtoFromString(expected_packet_int_str, &expected_packet_int));
 
-  auto translated = p4rt_bfrt_translator_->TranslatePacketIn(packet_int);
-  EXPECT_OK(translated.status());
-  packet_int = translated.ValueOrDie();
-  EXPECT_THAT(packet_int, EqualsProto(expected_packet_int));
+  TestEntryTranslation(packet_in_str, expected_packet_in_str,
+                       &BfrtP4RuntimeTranslator::TranslatePacketIn);
 }
 
 // Counter entry
@@ -1334,16 +1277,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteCounterEntry) {
     }
   )PROTO";
 
-  ::p4::v1::CounterEntry counter_entry;
-  EXPECT_OK(ParseProtoFromString(counter_entry_str, &counter_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateCounterEntry(counter_entry, true);
-  EXPECT_OK(translated_value.status());
-  counter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::CounterEntry expected_counter_entry;
-  EXPECT_OK(ParseProtoFromString(expected_counter_entry_str,
-                                 &expected_counter_entry));
-  EXPECT_THAT(counter_entry, EqualsProto(expected_counter_entry));
+  TestEntryTranslation(counter_entry_str, expected_counter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateCounterEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntry) {
@@ -1369,16 +1304,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntry) {
       packet_count: 1
     }
   )PROTO";
-  ::p4::v1::CounterEntry counter_entry;
-  EXPECT_OK(ParseProtoFromString(counter_entry_str, &counter_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateCounterEntry(counter_entry, false);
-  EXPECT_OK(translated_value.status());
-  counter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::CounterEntry expected_counter_entry;
-  EXPECT_OK(ParseProtoFromString(expected_counter_entry_str,
-                                 &expected_counter_entry));
-  EXPECT_THAT(counter_entry, EqualsProto(expected_counter_entry));
+  TestEntryTranslation(counter_entry_str, expected_counter_entry_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateCounterEntry);
 }
 
 // Direct counter entry
@@ -1466,17 +1393,9 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectCounterEntry) {
     }
   )PROTO";
 
-  ::p4::v1::DirectCounterEntry direct_counter_entry;
-  EXPECT_OK(
-      ParseProtoFromString(direct_counter_entry_str, &direct_counter_entry));
-  auto translated_value = p4rt_bfrt_translator_->TranslateDirectCounterEntry(
-      direct_counter_entry, true);
-  EXPECT_OK(translated_value.status());
-  direct_counter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::DirectCounterEntry expected_direct_counter_entry;
-  EXPECT_OK(ParseProtoFromString(expected_direct_counter_entry_str,
-                                 &expected_direct_counter_entry));
-  EXPECT_THAT(direct_counter_entry, EqualsProto(expected_direct_counter_entry));
+  TestEntryTranslation(direct_counter_entry_str,
+                       expected_direct_counter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateDirectCounterEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntry) {
@@ -1562,17 +1481,10 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntry) {
       packet_count: 1
     }
   )PROTO";
-  ::p4::v1::DirectCounterEntry direct_counter_entry;
-  EXPECT_OK(
-      ParseProtoFromString(direct_counter_entry_str, &direct_counter_entry));
-  auto translated_value = p4rt_bfrt_translator_->TranslateDirectCounterEntry(
-      direct_counter_entry, false);
-  EXPECT_OK(translated_value.status());
-  direct_counter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::DirectCounterEntry expected_direct_counter_entry;
-  EXPECT_OK(ParseProtoFromString(expected_direct_counter_entry_str,
-                                 &expected_direct_counter_entry));
-  EXPECT_THAT(direct_counter_entry, EqualsProto(expected_direct_counter_entry));
+
+  TestEntryTranslation(direct_counter_entry_str,
+                       expected_direct_counter_entry_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateDirectCounterEntry);
 }
 
 // Meter entry
@@ -1600,16 +1512,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteMeterEntry) {
     }
   )PROTO";
 
-  ::p4::v1::MeterEntry meter_entry;
-  EXPECT_OK(ParseProtoFromString(meter_entry_str, &meter_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateMeterEntry(meter_entry, true);
-  EXPECT_OK(translated_value.status());
-  meter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::MeterEntry expected_meter_entry;
-  EXPECT_OK(
-      ParseProtoFromString(expected_meter_entry_str, &expected_meter_entry));
-  EXPECT_THAT(meter_entry, EqualsProto(expected_meter_entry));
+  TestEntryTranslation(meter_entry_str, expected_meter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateMeterEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntry) {
@@ -1635,16 +1539,9 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntry) {
       pir: 1
     }
   )PROTO";
-  ::p4::v1::MeterEntry meter_entry;
-  EXPECT_OK(ParseProtoFromString(meter_entry_str, &meter_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateMeterEntry(meter_entry, false);
-  EXPECT_OK(translated_value.status());
-  meter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::MeterEntry expected_meter_entry;
-  EXPECT_OK(
-      ParseProtoFromString(expected_meter_entry_str, &expected_meter_entry));
-  EXPECT_THAT(meter_entry, EqualsProto(expected_meter_entry));
+
+  TestEntryTranslation(meter_entry_str, expected_meter_entry_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateMeterEntry);
 }
 
 // Direct meter entry
@@ -1732,16 +1629,9 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectMeterEntry) {
     }
   )PROTO";
 
-  ::p4::v1::DirectMeterEntry direct_meter_entry;
-  EXPECT_OK(ParseProtoFromString(direct_meter_entry_str, &direct_meter_entry));
-  auto translated_value = p4rt_bfrt_translator_->TranslateDirectMeterEntry(
-      direct_meter_entry, true);
-  EXPECT_OK(translated_value.status());
-  direct_meter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::DirectMeterEntry expected_direct_meter_entry;
-  EXPECT_OK(ParseProtoFromString(expected_direct_meter_entry_str,
-                                 &expected_direct_meter_entry));
-  EXPECT_THAT(direct_meter_entry, EqualsProto(expected_direct_meter_entry));
+  TestEntryTranslation(direct_meter_entry_str, expected_direct_meter_entry_str,
+                       true,
+                       &BfrtP4RuntimeTranslator::TranslateDirectMeterEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectMeterEntry) {
@@ -1827,16 +1717,10 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectMeterEntry) {
       pir: 1
     }
   )PROTO";
-  ::p4::v1::DirectMeterEntry direct_meter_entry;
-  EXPECT_OK(ParseProtoFromString(direct_meter_entry_str, &direct_meter_entry));
-  auto translated_value = p4rt_bfrt_translator_->TranslateDirectMeterEntry(
-      direct_meter_entry, false);
-  EXPECT_OK(translated_value.status());
-  direct_meter_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::DirectMeterEntry expected_direct_meter_entry;
-  EXPECT_OK(ParseProtoFromString(expected_direct_meter_entry_str,
-                                 &expected_direct_meter_entry));
-  EXPECT_THAT(direct_meter_entry, EqualsProto(expected_direct_meter_entry));
+
+  TestEntryTranslation(direct_meter_entry_str, expected_direct_meter_entry_str,
+                       false,
+                       &BfrtP4RuntimeTranslator::TranslateDirectMeterEntry);
 }
 
 // Register entry
@@ -1862,16 +1746,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteRegisterEntry) {
     }
   )PROTO";
 
-  ::p4::v1::RegisterEntry register_entry;
-  EXPECT_OK(ParseProtoFromString(register_entry_str, &register_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateRegisterEntry(register_entry, true);
-  EXPECT_OK(translated_value.status());
-  register_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::RegisterEntry expected_register_entry;
-  EXPECT_OK(ParseProtoFromString(expected_register_entry_str,
-                                 &expected_register_entry));
-  EXPECT_THAT(register_entry, EqualsProto(expected_register_entry));
+  TestEntryTranslation(register_entry_str, expected_register_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateRegisterEntry);
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntry) {
@@ -1895,16 +1771,219 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntry) {
       bitstring: "\x00"
     }
   )PROTO";
-  ::p4::v1::RegisterEntry register_entry;
-  EXPECT_OK(ParseProtoFromString(register_entry_str, &register_entry));
-  auto translated_value =
-      p4rt_bfrt_translator_->TranslateRegisterEntry(register_entry, false);
-  EXPECT_OK(translated_value.status());
-  register_entry = translated_value.ConsumeValueOrDie();
-  ::p4::v1::RegisterEntry expected_register_entry;
-  EXPECT_OK(ParseProtoFromString(expected_register_entry_str,
-                                 &expected_register_entry));
-  EXPECT_THAT(register_entry, EqualsProto(expected_register_entry));
+
+  TestEntryTranslation(register_entry_str, expected_register_entry_str, false,
+                       &BfrtP4RuntimeTranslator::TranslateRegisterEntry);
+}
+
+// Translation disabled
+TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
+  bfrt_p4runtime_translator_ = BfrtP4RuntimeTranslator::CreateInstance(
+      /*translation_enabled=*/false, bf_sde_mock_.get(), kDeviceId);
+  EXPECT_OK(PushChassisConfig());
+  EXPECT_OK(PushForwardingPipelineConfig());
+  const char table_entry_str[] = R"PROTO(
+    table_id: 33583783
+    match {
+      field_id: 1
+      exact { value: "\x00\x00\x00\x01" }
+    }
+    action {
+      action {
+        action_id: 16794911
+        params { param_id: 1 value: "\x00\x00\x00\x01" }
+      }
+    }
+  )PROTO";
+
+  TestEntryTranslation(table_entry_str, table_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateTableEntry);
+
+  constexpr char action_profile_member_str[] = R"PROTO(
+    action_profile_id: 1
+    member_id: 1
+    action {
+      action_id: 16794911
+      params { param_id: 1 value: "\x00\x00\x00\x01" }
+      params { param_id: 2 value: "\x00\x00\x00\x01" }
+    }
+  )PROTO";
+
+  TestEntryTranslation(action_profile_member_str, action_profile_member_str,
+                       true,
+                       &BfrtP4RuntimeTranslator::TranslateActionProfileMember);
+
+  const char direct_meter_entry_str[] = R"PROTO(
+    table_entry {
+      table_id: 33583783
+      match {
+        field_id: 1
+        exact { value: "\x01\x2C" }
+      }
+      match {
+        field_id: 2
+        ternary { value: "\x01\x2C" mask: "\x01\xff" }
+      }
+      match {
+        field_id: 3
+        range { low: "\x01\x2C" high: "\x01\x2C" }
+      }
+      match {
+        field_id: 4
+        lpm { value: "\x01\x2C" prefix_len: 9 }
+      }
+      match {
+        field_id: 5
+        optional { value: "\x01\x2C" }
+      }
+      match {
+        field_id: 6
+        exact { value: "\x00\x00\x01\x2C" }
+      }
+      action {
+        action {
+          action_id: 16794911
+          params { param_id: 1 value: "\x01\x2C" }
+          params { param_id: 2 value: "\x00\x00\x01\x2C" }
+        }
+      }
+    }
+    config {
+      cir: 1
+      pir: 1
+    }
+  )PROTO";
+  TestEntryTranslation(direct_meter_entry_str, direct_meter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateDirectMeterEntry);
+
+  const char meter_entry_str[] = R"PROTO(
+    meter_id: 55555
+    index {
+      index: 1
+    }
+    config {
+      cir: 1
+      pir: 1
+    }
+  )PROTO";
+  TestEntryTranslation(meter_entry_str, meter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateMeterEntry);
+
+  const char counter_entry_str[] = R"PROTO(
+    counter_id: 318814845
+    index {
+      index: 1
+    }
+    data {
+      byte_count: 1
+      packet_count: 1
+    }
+  )PROTO";
+  TestEntryTranslation(counter_entry_str, counter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateCounterEntry);
+
+  const char direct_counter_entry_str[] = R"PROTO(
+    table_entry {
+      table_id: 33583783
+      match {
+        field_id: 1
+        exact { value: "\x00\x00\x00\x01" }
+      }
+      match {
+        field_id: 2
+        ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+      }
+      match {
+        field_id: 3
+        range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+      }
+      match {
+        field_id: 4
+        lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+      }
+      match {
+        field_id: 5
+        optional { value: "\x00\x00\x00\x01" }
+      }
+      match {
+        field_id: 6
+        exact { value: "\x00\x00\x00\x01" }
+      }
+      action {
+        action {
+          action_id: 16794911
+          params { param_id: 1 value: "\x00\x00\x00\x01" }
+          params { param_id: 2 value: "\x00\x00\x00\x01" }
+        }
+      }
+    }
+    data {
+      byte_count: 1
+      packet_count: 1
+    }
+  )PROTO";
+  TestEntryTranslation(direct_counter_entry_str, direct_counter_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateDirectCounterEntry);
+
+  const char pre_entry_str[] = R"PROTO(
+    multicast_group_entry {
+      multicast_group_id: 1
+      replicas {
+        egress_port: 1
+        instance: 1
+      }
+      replicas {
+        egress_port: 2
+        instance: 1
+      }
+    }
+  )PROTO";
+  TestEntryTranslation(
+      pre_entry_str, pre_entry_str, true,
+      &BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry);
+
+  char packet_out_str[] = R"PROTO(
+    payload: "<raw packet>"
+    metadata {
+      metadata_id: 1
+      value: "\x00" # padding
+    }
+    metadata {
+      metadata_id: 2
+      value: "\x00\x00\x00\x01" # egress port
+    }
+  )PROTO";
+  TestEntryTranslation(packet_out_str, packet_out_str,
+                       &BfrtP4RuntimeTranslator::TranslatePacketOut);
+
+  char packet_in_str[] = R"PROTO(
+    payload: "<raw packet>"
+    metadata {
+      metadata_id: 1
+      value: "\x01\x2C" # ingress port
+    }
+    metadata {
+      metadata_id: 2
+      value: "\x00" # padding
+    }
+  )PROTO";
+  TestEntryTranslation(packet_in_str, packet_in_str,
+                       &BfrtP4RuntimeTranslator::TranslatePacketIn);
+
+  const char register_entry_str[] = R"PROTO(
+    register_id: 66666
+    index {
+      index: 300
+    }
+    data {
+      bitstring: "\x00"
+    }
+  )PROTO";
+  TestEntryTranslation(register_entry_str, register_entry_str, true,
+                       &BfrtP4RuntimeTranslator::TranslateRegisterEntry);
+
+  TestEntryTranslation(kNoTranslationP4InfoString, kNoTranslationP4InfoString,
+                       &BfrtP4RuntimeTranslator::TranslateP4Info);
 }
 
 }  // namespace barefoot
