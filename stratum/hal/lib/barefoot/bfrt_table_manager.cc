@@ -64,9 +64,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
       << "Only one P4 program is supported.";
   register_timer_descriptors_.clear();
   const auto& program = config.programs(0);
-  ASSIGN_OR_RETURN(
-      const auto& p4_info,
-      bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
+  const auto& p4_info = program.p4info();
   std::unique_ptr<P4InfoManager> p4_info_manager =
       absl::make_unique<P4InfoManager>(p4_info);
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());

@@ -103,7 +103,6 @@ class BfrtP4RuntimeTranslator {
   virtual ::util::StatusOr<::p4::v1::PacketMetadata> TranslatePacketMetadata(
       const p4::v1::PacketMetadata& packet_metadata, const std::string& uri,
       int32 bit_width, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
-
   virtual ::util::StatusOr<::p4::v1::Replica> TranslateReplica(
       const ::p4::v1::Replica& replica, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
@@ -162,10 +161,6 @@ class BfrtP4RuntimeTranslator {
       GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, int32> packet_out_meta_to_bit_width_
       GUARDED_BY(lock_);
-
-  // This P4Info contains field information without P4Runtime translation
-  // which is useful for low level managers.
-  ::p4::config::v1::P4Info low_level_p4info_;
 
   friend class BfrtP4RuntimeTranslatorTest;
 };

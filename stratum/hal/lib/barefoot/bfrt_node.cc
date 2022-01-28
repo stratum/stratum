@@ -197,6 +197,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_ || !pipeline_initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
   RETURN_IF_ERROR(session->BeginBatch());
@@ -401,6 +402,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+
   switch (req.update_case()) {
     case ::p4::v1::StreamMessageRequest::kPacket: {
       return bfrt_packetio_manager_->TransmitPacket(req.packet());

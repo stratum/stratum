@@ -969,6 +969,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::INSERT,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   std::vector<::util::Status> results = {};
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -988,6 +989,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::MODIFY,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   std::vector<::util::Status> results = {};
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -1007,6 +1009,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::DELETE,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   std::vector<::util::Status> results = {};
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -1032,6 +1035,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::INSERT,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1056,6 +1060,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::MODIFY,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1080,6 +1085,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::DELETE,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1104,6 +1110,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
               WriteActionProfileGroup(session_mock, ::p4::v1::Update::INSERT,
                                       EqualsProto(*group)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1228,6 +1235,7 @@ TEST_F(BfrtNodeTest,
       *bfrt_table_manager_mock_,
       WriteActionProfileMember(session_mock, ::p4::v1::Update::INSERT, _))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1255,6 +1263,7 @@ TEST_F(BfrtNodeTest,
       *bfrt_table_manager_mock_,
       WriteActionProfileGroup(session_mock, ::p4::v1::Update::INSERT, _))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1279,6 +1288,7 @@ TEST_F(BfrtNodeTest,
       *bfrt_pre_manager_mock_,
       WritePreEntry(session_mock, ::p4::v1::Update::INSERT, EqualsProto(*pre)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1302,6 +1312,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertDirectCounterEntry) {
               WriteDirectCounterEntry(session_mock, ::p4::v1::Update::INSERT,
                                       EqualsProto(*direct_counter_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1325,6 +1336,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertIndirectCounterEntry) {
               WriteIndirectCounterEntry(session_mock, ::p4::v1::Update::INSERT,
                                         EqualsProto(*counter_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1348,6 +1360,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertRegisterEntry) {
               WriteRegisterEntry(session_mock, ::p4::v1::Update::INSERT,
                                  EqualsProto(*register_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1371,6 +1384,7 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertMeterEntry) {
               WriteMeterEntry(session_mock, ::p4::v1::Update::INSERT,
                               EqualsProto(*meter_entry)))
       .WillOnce(Return(::util::OkStatus()));
+
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1387,9 +1401,9 @@ TEST_F(BfrtNodeTest, ReadForwardingEntriesSuccess_TableEntry) {
   std::shared_ptr<BfSdeInterface::SessionInterface> session_mock =
       std::make_shared<SessionMock>();
   EXPECT_CALL(*bf_sde_mock_, CreateSession()).WillOnce(Return(session_mock));
-  EXPECT_CALL(*bfrt_table_manager_mock_,
-              ReadTableEntry(session_mock, EqualsProto(*table_entry),
-                             _))  // Writer will be replaced by a wrapper.
+  EXPECT_CALL(
+      *bfrt_table_manager_mock_,
+      ReadTableEntry(session_mock, EqualsProto(*table_entry), &writer_mock))
       .WillOnce(Return(::util::OkStatus()));
   std::vector<::util::Status> results = {};
   EXPECT_OK(ReadForwardingEntries(req, &writer_mock, &results));
@@ -1431,6 +1445,7 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_PacketOut) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   auto* packet = req.mutable_packet();
+
   EXPECT_CALL(*bfrt_packetio_manager_mock_,
               TransmitPacket(EqualsProto(*packet)))
       .WillOnce(Return(::util::OkStatus()))
@@ -1445,6 +1460,7 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_PacketOut) {
 TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Invalid) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
+
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
@@ -1456,6 +1472,7 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_DigestAck) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   req.mutable_digest_ack();
+
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
@@ -1467,6 +1484,7 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Arbitration) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   req.mutable_arbitration();
+
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
