@@ -17,7 +17,12 @@ class CredentialsManagerMock : public CredentialsManager {
  public:
   MOCK_CONST_METHOD0(GenerateExternalFacingServerCredentials,
                      std::shared_ptr<::grpc::ServerCredentials>());
-  MOCK_METHOD3(LoadNewCredential,
+  MOCK_CONST_METHOD0(GenerateExternalFacingClientCredentials,
+                     std::shared_ptr<::grpc::ChannelCredentials>());
+  MOCK_METHOD3(LoadNewServerCredentials,
+               ::util::Status(const std::string& ca_cert,
+                              const std::string& cert, const std::string& key));
+  MOCK_METHOD3(LoadNewClientCredentials,
                ::util::Status(const std::string& ca_cert,
                               const std::string& cert, const std::string& key));
 };

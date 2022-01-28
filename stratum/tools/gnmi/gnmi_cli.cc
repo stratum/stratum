@@ -19,6 +19,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/security/credentials_manager.h"
 #include "stratum/lib/utils.h"
 
 DEFINE_string(grpc_addr, stratum::kLocalStratumUrl, "gNMI server address");
@@ -32,9 +33,6 @@ DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
 DEFINE_string(get_type, "ALL", "The gNMI get request type");
-DEFINE_string(ca_cert_file, "", "Path to CA certificate file");
-DEFINE_string(client_cert_file, "", "Path to client certificate file");
-DEFINE_string(client_key_file, "", "Path to client key file");
 
 #define PRINT_MSG(msg, prompt)                   \
   do {                                           \
@@ -248,25 +246,11 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
     ctx.TryCancel();
   });
 
-  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert_file.empty()) {
-    auto cert_provider =
-        std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
-            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file,
-            1);
-    auto tls_opts =
-        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
-            cert_provider);
-    tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
-    tls_opts->watch_root_certs();
-    if (!FLAGS_client_cert_file.empty() && !FLAGS_client_key_file.empty()) {
-      tls_opts->watch_identity_key_cert_pairs();
-    }
-    channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);
-  } else {
-    channel_credentials = ::grpc::InsecureChannelCredentials();
-  }
-  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
+  auto channel = ::grpc::CreateChannel(
+      FLAGS_grpc_addr,
+      credentials_manager->GenerateExternalFacingClientCredentials());
   auto stub = ::gnmi::gNMI::NewStub(channel);
   std::string cmd = std::string(argv[1]);
 
