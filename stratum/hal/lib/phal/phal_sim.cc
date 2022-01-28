@@ -2,13 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/phal_sim.h"
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -61,8 +60,7 @@ PhalSim::~PhalSim() {}
   // Find the next available ID for the Writer.
   int next_id = kInvalidWriterId;
   for (int id = 1;
-       id <= static_cast<int>(transceiver_event_writers_.size()) + 1;
-       ++id) {
+       id <= static_cast<int>(transceiver_event_writers_.size()) + 1; ++id) {
     auto it = std::find_if(
         transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
         [id](const TransceiverEventWriter& w) { return w.id == id; });
