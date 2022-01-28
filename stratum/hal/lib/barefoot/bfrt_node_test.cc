@@ -154,10 +154,6 @@ class BfrtNodeTest : public ::testing::Test {
       EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
                   PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
-      EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                  TranslateP4Info(EqualsProto(config.p4info())))
-          .WillOnce(Return(
-              ::util::StatusOr<::p4::config::v1::P4Info>(config.p4info())));
       EXPECT_CALL(*bfrt_packetio_manager_mock_, PushForwardingPipelineConfig(_))
           .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bfrt_table_manager_mock_, PushForwardingPipelineConfig(_))
@@ -973,13 +969,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::INSERT,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   std::vector<::util::Status> results = {};
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -999,13 +988,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::MODIFY,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   std::vector<::util::Status> results = {};
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -1025,13 +1007,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry) {
               WriteTableEntry(session_mock, ::p4::v1::Update::DELETE,
                               EqualsProto(*table_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   std::vector<::util::Status> results = {};
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -1057,13 +1032,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::INSERT,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1088,13 +1056,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::MODIFY,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1119,13 +1080,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileMember) {
               WriteActionProfileMember(session_mock, ::p4::v1::Update::DELETE,
                                        EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1150,13 +1104,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
               WriteActionProfileGroup(session_mock, ::p4::v1::Update::INSERT,
                                       EqualsProto(*group)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1281,13 +1228,6 @@ TEST_F(BfrtNodeTest,
       *bfrt_table_manager_mock_,
       WriteActionProfileMember(session_mock, ::p4::v1::Update::INSERT, _))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1315,13 +1255,6 @@ TEST_F(BfrtNodeTest,
       *bfrt_table_manager_mock_,
       WriteActionProfileGroup(session_mock, ::p4::v1::Update::INSERT, _))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1346,13 +1279,6 @@ TEST_F(BfrtNodeTest,
       *bfrt_pre_manager_mock_,
       WritePreEntry(session_mock, ::p4::v1::Update::INSERT, EqualsProto(*pre)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1376,13 +1302,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertDirectCounterEntry) {
               WriteDirectCounterEntry(session_mock, ::p4::v1::Update::INSERT,
                                       EqualsProto(*direct_counter_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1406,13 +1325,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertIndirectCounterEntry) {
               WriteIndirectCounterEntry(session_mock, ::p4::v1::Update::INSERT,
                                         EqualsProto(*counter_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1436,13 +1348,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertRegisterEntry) {
               WriteRegisterEntry(session_mock, ::p4::v1::Update::INSERT,
                                  EqualsProto(*register_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1466,13 +1371,6 @@ TEST_F(BfrtNodeTest, WriteForwardingEntriesSuccess_InsertMeterEntry) {
               WriteMeterEntry(session_mock, ::p4::v1::Update::INSERT,
                               EqualsProto(*meter_entry)))
       .WillOnce(Return(::util::OkStatus()));
-
-  for (const auto& update : req.updates()) {
-    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-                TranslateEntity(EqualsProto(update.entity()), true))
-        .WillOnce(Return(::util::StatusOr<::p4::v1::Entity>(update.entity())));
-  }
-
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
@@ -1493,13 +1391,6 @@ TEST_F(BfrtNodeTest, ReadForwardingEntriesSuccess_TableEntry) {
               ReadTableEntry(session_mock, EqualsProto(*table_entry),
                              _))  // Writer will be replaced by a wrapper.
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-              TranslateReadRequest(EqualsProto(req)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::ReadRequest>(req)));
-  ::p4::v1::ReadResponse resp;
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_, TranslateReadResponse(_))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::ReadResponse>(resp)));
-
   std::vector<::util::Status> results = {};
   EXPECT_OK(ReadForwardingEntries(req, &writer_mock, &results));
   EXPECT_EQ(1U, results.size());
@@ -1540,12 +1431,6 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_PacketOut) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   auto* packet = req.mutable_packet();
-
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-              TranslateStreamMessageRequest(EqualsProto(req)))
-      .Times(2)
-      .WillRepeatedly(
-          Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_CALL(*bfrt_packetio_manager_mock_,
               TransmitPacket(EqualsProto(*packet)))
       .WillOnce(Return(::util::OkStatus()))
@@ -1560,10 +1445,6 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_PacketOut) {
 TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Invalid) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
-
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-              TranslateStreamMessageRequest(EqualsProto(req)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
@@ -1575,10 +1456,6 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_DigestAck) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   req.mutable_digest_ack();
-
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-              TranslateStreamMessageRequest(EqualsProto(req)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
@@ -1590,10 +1467,6 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Arbitration) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   req.mutable_arbitration();
-
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-              TranslateStreamMessageRequest(EqualsProto(req)))
-      .WillOnce(Return(::util::StatusOr<::p4::v1::StreamMessageRequest>(req)));
   EXPECT_THAT(HandleStreamMessageRequest(req),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
