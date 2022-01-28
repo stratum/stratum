@@ -22,10 +22,9 @@
 // When the flag is false, the switch stack treats const entries in hidden
 // tables like any other const entry.
 DEFINE_bool(remap_hidden_table_const_entries, true,
-            "Enables/disables "
-            "remapping of hidden table const entries.  When enabled, the "
-            "hidden const entry actions are integrated into the actions of "
-            "related physical tables.");
+            "Enables/disables remapping of hidden table const entries.  When "
+            "enabled, the hidden const entry actions are integrated into the "
+            "actions of related physical tables.");
 
 namespace stratum {
 namespace hal {
