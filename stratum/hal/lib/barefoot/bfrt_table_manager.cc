@@ -338,10 +338,10 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     const ::p4::v1::TableEntry& table_entry) {
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
+  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(const auto& translated_table_entry,
                    bfrt_p4runtime_translator_->TranslateTableEntry(
                        table_entry, /*to_sdk=*/true));
-  absl::ReaderMutexLock l(&lock_);
 
   ASSIGN_OR_RETURN(auto table, p4_info_manager_->FindTableByID(
                                    translated_table_entry.table_id()));
@@ -645,10 +645,10 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
+  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(const auto& translated_table_entry,
                    bfrt_p4runtime_translator_->TranslateTableEntry(
                        table_entry, /*to_sdk=*/true));
-  absl::ReaderMutexLock l(&lock_);
 
   // We have four cases to handle:
   // 1. table id not set: return all table entries from all tables
@@ -865,24 +865,22 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::RegisterEntry& register_entry) {
-  ASSIGN_OR_RETURN(const auto& translated_register_entry,
-                   bfrt_p4runtime_translator_->TranslateRegisterEntry(
-                       register_entry, /*to_sdk=*/true))
-
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update type of RegisterEntry "
-      << translated_register_entry.ShortDebugString() << " must be MODIFY.";
-  CHECK_RETURN_IF_FALSE(translated_register_entry.has_data())
-      << "RegisterEntry " << translated_register_entry.ShortDebugString()
+      << "Update type of RegisterEntry " << register_entry.ShortDebugString()
+      << " must be MODIFY.";
+  CHECK_RETURN_IF_FALSE(register_entry.has_data())
+      << "RegisterEntry " << register_entry.ShortDebugString()
       << " must have data.";
-  CHECK_RETURN_IF_FALSE(translated_register_entry.data().data_case() ==
+  CHECK_RETURN_IF_FALSE(register_entry.data().data_case() ==
                         ::p4::v1::P4Data::kBitstring)
       << "Only bitstring registers data types are supported.";
 
-  ASSIGN_OR_RETURN(
-      uint32 table_id,
-      bf_sde_interface_->GetBfRtId(translated_register_entry.register_id()));
+  ASSIGN_OR_RETURN(uint32 table_id,
+                   bf_sde_interface_->GetBfRtId(register_entry.register_id()));
 
+  ASSIGN_OR_RETURN(const auto& translated_register_entry,
+                   bfrt_p4runtime_translator_->TranslateRegisterEntry(
+                       register_entry, /*to_sdk=*/true));
   absl::optional<uint32> register_index;
   if (translated_register_entry.has_index()) {
     register_index = translated_register_entry.index().index();
@@ -901,7 +899,6 @@ BfrtTableManager::ReadDirectCounterEntry(
   ASSIGN_OR_RETURN(const auto& translated_meter_entry,
                    bfrt_p4runtime_translator_->TranslateMeterEntry(
                        meter_entry, /*to_sdk=*/true));
-
   CHECK_RETURN_IF_FALSE(translated_meter_entry.meter_id() != 0)
       << "Wildcard MeterEntry reads are not supported.";
   ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
@@ -975,13 +972,12 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::MeterEntry& meter_entry) {
+  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+      << "Update type of MeterEntry " << meter_entry.ShortDebugString()
+      << " must be MODIFY.";
   ASSIGN_OR_RETURN(const auto& translated_meter_entry,
                    bfrt_p4runtime_translator_->TranslateMeterEntry(
                        meter_entry, /*to_sdk=*/true));
-
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update type of MeterEntry "
-      << translated_meter_entry.ShortDebugString() << " must be MODIFY.";
   CHECK_RETURN_IF_FALSE(translated_meter_entry.meter_id() != 0)
       << "Missing meter id in MeterEntry "
       << translated_meter_entry.ShortDebugString() << ".";
@@ -1036,12 +1032,10 @@ BfrtTableManager::ReadDirectCounterEntry(
     const ::p4::v1::ActionProfileMember& action_profile_member) {
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
-
+  absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(const auto& translated_action_profile_member,
                    bfrt_p4runtime_translator_->TranslateActionProfileMember(
-                       action_profile_member, /*to_sdk=*/true))
-
-  absl::WriterMutexLock l(&lock_);
+                       action_profile_member, /*to_sdk=*/true));
   ASSIGN_OR_RETURN(uint32 bfrt_table_id,
                    bf_sde_interface_->GetBfRtId(
                        translated_action_profile_member.action_profile_id()));
@@ -1086,15 +1080,13 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::ActionProfileMember& action_profile_member,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  ASSIGN_OR_RETURN(const auto& translated_action_profile_member,
-                   bfrt_p4runtime_translator_->TranslateActionProfileMember(
-                       action_profile_member, /*to_sdk=*/true))
-
-  CHECK_RETURN_IF_FALSE(translated_action_profile_member.action_profile_id() !=
-                        0)
+  CHECK_RETURN_IF_FALSE(action_profile_member.action_profile_id() != 0)
       << "Reading all action profiles is not supported yet.";
 
   absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(const auto& translated_action_profile_member,
+                   bfrt_p4runtime_translator_->TranslateActionProfileMember(
+                       action_profile_member, /*to_sdk=*/true))
   ASSIGN_OR_RETURN(uint32 bfrt_table_id,
                    bf_sde_interface_->GetBfRtId(
                        translated_action_profile_member.action_profile_id()));

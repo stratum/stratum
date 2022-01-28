@@ -12,8 +12,8 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -69,8 +69,9 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
 
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_, TranslateCounterEntry(EqualsProto(entry), true))
-  .WillOnce(Return(::util::StatusOr<::p4::v1::CounterEntry>(entry)));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateCounterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::CounterEntry>(entry)));
   EXPECT_OK(bfrt_counter_manager_->WriteIndirectCounterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
