@@ -2,16 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+
 #include <algorithm>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+#include "absl/memory/memory.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -503,8 +504,8 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
         if (key->mask_ipv4 != 0 &&
             bcm_table_type == BcmFlowEntry::BCM_TABLE_IPV4_HOST) {
           return MAKE_ERROR(ERR_INVALID_PARAM)
-                  << "Must not specify mask on host dst routes "
-                  << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
+                 << "Must not specify mask on host dst routes "
+                 << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
         }
       }
       break;
