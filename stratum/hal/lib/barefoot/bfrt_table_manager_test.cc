@@ -133,6 +133,10 @@ class BfrtTableManagerTest : public ::testing::Test {
     )PROTO";
     BfrtDeviceConfig config;
     RETURN_IF_ERROR(ParseProtoFromString(kSamplePipelineText, &config));
+    const auto& p4info = config.programs(0).p4info();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateP4Info(EqualsProto(p4info)))
+        .WillOnce(Return(::util::StatusOr<::p4::config::v1::P4Info>(p4info)));
     return bfrt_table_manager_->PushForwardingPipelineConfig(config);
   }
 
@@ -195,7 +199,9 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
 
   ::p4::v1::DirectCounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kDirectCounterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateDirectCounterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::DirectCounterEntry>(entry)));
   EXPECT_OK(bfrt_table_manager_->WriteDirectCounterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
@@ -229,7 +235,9 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
@@ -259,7 +267,9 @@ TEST_F(BfrtTableManagerTest, ResetIndirectMeterEntryTest) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
@@ -282,7 +292,9 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryModifyWithoutMeterId) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   ::util::Status ret = bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry);
   ASSERT_FALSE(ret.ok());
@@ -308,7 +320,9 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDelete) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillRepeatedly(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   ::util::Status ret = bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
@@ -345,6 +359,7 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
                         SetArgPointee<6>(cbursts), SetArgPointee<7>(pirs),
                         SetArgPointee<8>(pbursts), SetArgPointee<9>(in_pps),
                         Return(::util::OkStatus())));
+
     const std::string kMeterResponseText = R"PROTO(
       entities {
         meter_entry {
@@ -363,6 +378,10 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
     )PROTO";
     ::p4::v1::ReadResponse resp;
     ASSERT_OK(ParseProtoFromString(kMeterResponseText, &resp));
+    const auto& entry = resp.entities(0).meter_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateMeterEntry(EqualsProto(entry), false))
+        .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
     EXPECT_CALL(writer_mock, Write(EqualsProto(resp))).WillOnce(Return(true));
   }
 
@@ -374,7 +393,9 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   EXPECT_OK(
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock));
 }
@@ -398,7 +419,9 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutId) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   ::util::Status ret =
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock);
   ASSERT_FALSE(ret.ok());
@@ -435,7 +458,9 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
   )PROTO";
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateTableEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   ::util::Status ret =
       bfrt_table_manager_->ReadTableEntry(session_mock, entry, &writer_mock);
   ASSERT_FALSE(ret.ok());
