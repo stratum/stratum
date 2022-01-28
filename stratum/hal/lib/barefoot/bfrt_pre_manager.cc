@@ -21,7 +21,7 @@ BfrtPreManager::BfrtPreManager(
     BfSdeInterface* bf_sde_interface,
     BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
-      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator_)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       device_(device) {}
 
 BfrtPreManager::BfrtPreManager()

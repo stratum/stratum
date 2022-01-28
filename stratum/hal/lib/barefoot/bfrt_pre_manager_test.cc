@@ -53,6 +53,7 @@ constexpr int BfrtPreManagerTest::kDevice1;
 
 TEST_F(BfrtPreManagerTest, PushForwardingPipelineConfigSuccess) {
   BfrtDeviceConfig config;
+
   EXPECT_OK(bfrt_pre_manager_->PushForwardingPipelineConfig(config));
 }
 
@@ -98,7 +99,10 @@ TEST_F(BfrtPreManagerTest, InsertMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::INSERT, entry));
 }
@@ -153,7 +157,10 @@ TEST_F(BfrtPreManagerTest, ModifyMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::MODIFY, entry));
 }
@@ -179,6 +186,11 @@ TEST_F(BfrtPreManagerTest, DeleteMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::DELETE, entry));
@@ -253,6 +265,20 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  const auto& resp_pre_entry =
+      resp.entities(0).packet_replication_engine_entry();
+  EXPECT_CALL(
+      *bfrt_p4runtime_translator_mock_,
+      TranslatePacketReplicationEngineEntry(EqualsProto(resp_pre_entry), false))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+          resp_pre_entry)));
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
@@ -332,6 +358,22 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupWildcardSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  for (const auto& entity : resp.entities()) {
+    const auto& resp_pre_entry = entity.packet_replication_engine_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslatePacketReplicationEngineEntry(
+                    EqualsProto(resp_pre_entry), false))
+        .WillOnce(
+            Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+                resp_pre_entry)));
+  }
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
@@ -361,6 +403,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::INSERT, entry));
 }
@@ -378,6 +425,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidSessionIdFail) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -400,6 +452,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidPacketLengthFail) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -426,6 +483,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionMultipleReplicasFail) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
@@ -449,6 +511,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInstanceSetFail) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
@@ -471,6 +538,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidEgressPortFail) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
@@ -492,6 +564,11 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidCosFail) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -527,6 +604,11 @@ TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::MODIFY, entry));
 }
@@ -546,6 +628,11 @@ TEST_F(BfrtPreManagerTest, DeleteCloneSessionSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::DELETE, entry));
@@ -593,6 +680,20 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  const auto& resp_pre_entry =
+      resp.entities(0).packet_replication_engine_entry();
+  EXPECT_CALL(
+      *bfrt_p4runtime_translator_mock_,
+      TranslatePacketReplicationEngineEntry(EqualsProto(resp_pre_entry), false))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+          resp_pre_entry)));
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
@@ -652,6 +753,22 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionWildcardSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  for (const auto& entity : resp.entities()) {
+    const auto& resp_pre_entry = entity.packet_replication_engine_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslatePacketReplicationEngineEntry(
+                    EqualsProto(resp_pre_entry), false))
+        .WillOnce(
+            Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+                resp_pre_entry)));
+  }
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
