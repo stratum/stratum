@@ -17,10 +17,17 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPreManager::BfrtPreManager(BfSdeInterface* bf_sde_interface, int device)
-    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
+BfrtPreManager::BfrtPreManager(
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
+    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator_)),
+      device_(device) {}
 
-BfrtPreManager::BfrtPreManager() : bf_sde_interface_(nullptr), device_(-1) {}
+BfrtPreManager::BfrtPreManager()
+    : bf_sde_interface_(nullptr),
+      bfrt_p4runtime_translator_(nullptr),
+      device_(-1) {}
 
 ::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
@@ -70,8 +77,10 @@ BfrtPreManager::~BfrtPreManager() = default;
 }
 
 std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
-    BfSdeInterface* bf_sde_interface, int device) {
-  return absl::WrapUnique(new BfrtPreManager(bf_sde_interface, device));
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device) {
+  return absl::WrapUnique(
+      new BfrtPreManager(bf_sde_interface, bfrt_p4runtime_translator, device));
 }
 
 ::util::StatusOr<std::vector<uint32>> BfrtPreManager::InsertMulticastNodes(

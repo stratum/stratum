@@ -355,6 +355,7 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_sde_interface",
+        ":bfrt_p4runtime_translator",
         ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -384,6 +385,7 @@ stratum_cc_test(
     srcs = ["bfrt_table_manager_test.cc"],
     deps = [
         ":bf_sde_mock",
+        ":bfrt_p4runtime_translator_mock",
         ":bfrt_table_manager",
         ":test_main",
         "//stratum/glue/status:status_test_util",
@@ -462,6 +464,7 @@ stratum_cc_library(
     deps = [
         ":bf_cc_proto",
         ":bf_sde_interface",
+        ":bfrt_p4runtime_translator",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -483,6 +486,7 @@ stratum_cc_test(
     srcs = ["bfrt_packetio_manager_test.cc"],
     deps = [
         ":bf_sde_mock",
+        ":bfrt_p4runtime_translator_mock",
         ":bfrt_packetio_manager",
         ":test_main",
         "//stratum/glue/status:status_test_util",
@@ -516,6 +520,7 @@ stratum_cc_library(
         ":bf_cc_proto",
         ":bf_sde_interface",
         ":bfrt_constants",
+        ":bfrt_p4runtime_translator",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -541,6 +546,7 @@ stratum_cc_test(
     srcs = ["bfrt_pre_manager_test.cc"],
     deps = [
         ":bf_sde_mock",
+        ":bfrt_p4runtime_translator_mock",
         ":bfrt_pre_manager",
         ":test_main",
         "//stratum/glue/status:status_test_util",
@@ -573,6 +579,7 @@ stratum_cc_library(
     deps = [
         ":bf_sde_interface",
         ":bfrt_constants",
+        ":bfrt_p4runtime_translator",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
@@ -599,6 +606,7 @@ stratum_cc_test(
     deps = [
         ":bf_sde_mock",
         ":bfrt_counter_manager",
+        ":bfrt_p4runtime_translator_mock",
         ":bfrt_table_manager",  # FIXME: for bfrt_table_sync_timeout_ms storage
         ":test_main",
         "//stratum/glue/status:status_test_util",

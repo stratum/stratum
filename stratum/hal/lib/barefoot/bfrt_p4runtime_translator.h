@@ -40,19 +40,35 @@ class BfrtP4RuntimeTranslator {
       LOCKS_EXCLUDED(lock_);
   virtual ::util::Status PushForwardingPipelineConfig(
       const ::p4::config::v1::P4Info& p4info) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntity(
-      const ::p4::v1::Entity& entity, bool to_sdk) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::ReadRequest> TranslateReadRequest(
-      const ::p4::v1::ReadRequest& request) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::ReadResponse> TranslateReadResponse(
-      const ::p4::v1::ReadResponse& request) LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::StreamMessageRequest>
-  TranslateStreamMessageRequest(const ::p4::v1::StreamMessageRequest& request)
+virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
+      const ::p4::v1::TableEntry& entry, bool to_sdk)
       LOCKS_EXCLUDED(lock_);
-  virtual ::util::StatusOr<::p4::v1::StreamMessageResponse>
-  TranslateStreamMessageResponse(
-      const ::p4::v1::StreamMessageResponse& response) LOCKS_EXCLUDED(lock_);
-
+  virtual ::util::StatusOr<::p4::v1::ActionProfileMember>
+  TranslateActionProfileMember(const ::p4::v1::ActionProfileMember& entry,
+                               bool to_sdk) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::MeterEntry> TranslateMeterEntry(
+      const ::p4::v1::MeterEntry& entry, bool to_sdk)
+      LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::DirectMeterEntry>
+  TranslateDirectMeterEntry(const ::p4::v1::DirectMeterEntry& entry,
+                            bool to_sdk) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::CounterEntry> TranslateCounterEntry(
+      const ::p4::v1::CounterEntry& entry, bool to_sdk)
+      LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::DirectCounterEntry>
+  TranslateDirectCounterEntry(const ::p4::v1::DirectCounterEntry& entry,
+                              bool to_sdk) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::RegisterEntry> TranslateRegisterEntry(
+      const ::p4::v1::RegisterEntry& entry, bool to_sdk)
+      LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
+  TranslatePacketReplicationEngineEntry(
+      const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk)
+      LOCKS_EXCLUDED(lock_);
+virtual ::util::StatusOr<::p4::v1::PacketIn> TranslatePacketIn(
+      const ::p4::v1::PacketIn& packet_in) LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::PacketOut> TranslatePacketOut(
+      const ::p4::v1::PacketOut& packet_out) LOCKS_EXCLUDED(lock_);
   // A helper function which removes custom type from the P4Info.
   // Which is useful for some components that requires the original spec from
   // the P4 code.
@@ -87,38 +103,13 @@ class BfrtP4RuntimeTranslator {
         pipeline_require_translation_(false) {}
   virtual ::util::StatusOr<::p4::v1::Entity> TranslateEntityInternal(
       const ::p4::v1::Entity& entity, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
+  virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntryInternal(
       const ::p4::v1::TableEntry& entry, bool to_sdk)
-      SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::ActionProfileMember>
-  TranslateActionProfileMember(const ::p4::v1::ActionProfileMember& entry,
-                               bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::MeterEntry> TranslateMeterEntry(
-      const ::p4::v1::MeterEntry& entry, bool to_sdk)
-      SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::DirectMeterEntry>
-  TranslateDirectMeterEntry(const ::p4::v1::DirectMeterEntry& entry,
-                            bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::CounterEntry> TranslateCounterEntry(
-      const ::p4::v1::CounterEntry& entry, bool to_sdk)
-      SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::DirectCounterEntry>
-  TranslateDirectCounterEntry(const ::p4::v1::DirectCounterEntry& entry,
-                              bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::RegisterEntry> TranslateRegisterEntry(
-      const ::p4::v1::RegisterEntry& entry, bool to_sdk)
-      SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
-  TranslatePacketReplicationEngineEntry(
-      const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
   virtual ::util::StatusOr<::p4::v1::PacketMetadata> TranslatePacketMetadata(
       const p4::v1::PacketMetadata& packet_metadata, const std::string& uri,
       int32 bit_width, bool to_sdk) SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::PacketIn> TranslatePacketIn(
-      const ::p4::v1::PacketIn& packet_in) SHARED_LOCKS_REQUIRED(lock_);
-  virtual ::util::StatusOr<::p4::v1::PacketOut> TranslatePacketOut(
-      const ::p4::v1::PacketOut& packet_out) SHARED_LOCKS_REQUIRED(lock_);
+
   virtual ::util::StatusOr<::p4::v1::Replica> TranslateReplica(
       const ::p4::v1::Replica& replica, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
@@ -183,49 +174,6 @@ class BfrtP4RuntimeTranslator {
   ::p4::config::v1::P4Info low_level_p4info_;
 
   friend class BfrtP4RuntimeTranslatorTest;
-
- public:
-  // Wrapper for writers
-  class ReadResponseWriterWrapper
-      : public WriterInterface<::p4::v1::ReadResponse> {
-   public:
-    ReadResponseWriterWrapper(
-        WriterInterface<::p4::v1::ReadResponse>* writer,
-        BfrtP4RuntimeTranslator* bfrt_p4runtime_translator)
-        : writer_(ABSL_DIE_IF_NULL(writer)),
-          bfrt_p4runtime_translator_(
-              ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)) {}
-    bool Write(const ::p4::v1::ReadResponse& msg) override;
-
-   private:
-    // The original writer, not owned by this class.
-    WriterInterface<::p4::v1::ReadResponse>* writer_;
-    // The pointer point to the translator, not owned by this class.
-    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_;
-
-    friend class TranslatorWriterWrapperTest;
-  };
-
-  class StreamMessageResponseWriterWrapper
-      : public WriterInterface<::p4::v1::StreamMessageResponse> {
-   public:
-    StreamMessageResponseWriterWrapper(
-        std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
-            writer,
-        BfrtP4RuntimeTranslator* bfrt_p4runtime_translator)
-        : writer_(writer),
-          bfrt_p4runtime_translator_(
-              ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)) {}
-    bool Write(const ::p4::v1::StreamMessageResponse& msg) override;
-
-   private:
-    // The original writer, not owned by this class.
-    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer_;
-    // The pointer point to the translator, not owned by this class.
-    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_;
-
-    friend class TranslatorWriterWrapperTest;
-  };
 };
 
 }  // namespace barefoot

@@ -23,8 +23,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
-                                         int device)
+BfrtPacketioManager::BfrtPacketioManager(
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : initialized_(false),
       rx_writer_(nullptr),
       packetin_header_(),
@@ -34,6 +35,7 @@ BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
       packet_receive_channel_(nullptr),
       sde_rx_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       device_(device) {}
 
 BfrtPacketioManager::BfrtPacketioManager()
@@ -51,8 +53,10 @@ BfrtPacketioManager::BfrtPacketioManager()
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
 std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
-    BfSdeInterface* bf_sde_interface_, int device) {
-  return absl::WrapUnique(new BfrtPacketioManager(bf_sde_interface_, device));
+    BfSdeInterface* bf_sde_interface_,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device) {
+  return absl::WrapUnique(new BfrtPacketioManager(
+      bf_sde_interface_, bfrt_p4runtime_translator, device));
 }
 
 ::util::Status BfrtPacketioManager::PushChassisConfig(

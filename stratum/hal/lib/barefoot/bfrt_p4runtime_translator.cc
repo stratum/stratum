@@ -18,46 +18,6 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::StatusOr<::p4::v1::ReadRequest>
-BfrtP4RuntimeTranslator::TranslateReadRequest(
-    const ::p4::v1::ReadRequest& request) {
-  absl::ReaderMutexLock l(&lock_);
-  if (!pipeline_require_translation_) {
-    return request;
-  }
-  ::p4::v1::ReadRequest translated_request(request);
-  for (::p4::v1::Entity& entity : *translated_request.mutable_entities()) {
-    ASSIGN_OR_RETURN(entity, TranslateEntityInternal(entity, /*to_sdk=*/true));
-  }
-  return translated_request;
-}
-
-::util::StatusOr<::p4::v1::ReadResponse>
-BfrtP4RuntimeTranslator::TranslateReadResponse(
-    const ::p4::v1::ReadResponse& response) {
-  absl::ReaderMutexLock l(&lock_);
-  if (!pipeline_require_translation_) {
-    return response;
-  }
-  ::p4::v1::ReadResponse translated_response(response);
-  for (::p4::v1::Entity& entity : *translated_response.mutable_entities()) {
-    ASSIGN_OR_RETURN(entity, TranslateEntityInternal(entity, /*to_sdk=*/false));
-  }
-  return translated_response;
-}
-
-bool BfrtP4RuntimeTranslator::ReadResponseWriterWrapper::Write(
-    const ::p4::v1::ReadResponse& msg) {
-  auto status = bfrt_p4runtime_translator_->TranslateReadResponse(msg);
-  return status.ok() && writer_->Write(status.ConsumeValueOrDie());
-}
-
-bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
-    const ::p4::v1::StreamMessageResponse& msg) {
-  auto status = bfrt_p4runtime_translator_->TranslateStreamMessageResponse(msg);
-  return status.ok() && writer_->Write(status.ConsumeValueOrDie());
-}
-
 ::util::Status BfrtP4RuntimeTranslator::PushChassisConfig(
     const ChassisConfig& config, uint64 node_id) {
   ::absl::WriterMutexLock l(&lock_);
@@ -257,74 +217,15 @@ bool BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper::Write(
   return ::util::OkStatus();
 }
 
-::util::StatusOr<::p4::v1::Entity> BfrtP4RuntimeTranslator::TranslateEntity(
-    const ::p4::v1::Entity& entity, bool to_sdk) {
+::util::StatusOr<::p4::v1::TableEntry>
+BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
+                                             bool to_sdk) {
   absl::ReaderMutexLock l(&lock_);
-  return TranslateEntityInternal(entity, to_sdk);
-}
-
-::util::StatusOr<::p4::v1::Entity>
-BfrtP4RuntimeTranslator::TranslateEntityInternal(const ::p4::v1::Entity& entity,
-                                                 bool to_sdk) {
-  ::p4::v1::Entity translated_entity(entity);
-  switch (translated_entity.entity_case()) {
-    case ::p4::v1::Entity::kTableEntry: {
-      ASSIGN_OR_RETURN(
-          *translated_entity.mutable_table_entry(),
-          TranslateTableEntry(translated_entity.table_entry(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kActionProfileMember: {
-      ASSIGN_OR_RETURN(*translated_entity.mutable_action_profile_member(),
-                       TranslateActionProfileMember(
-                           translated_entity.action_profile_member(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
-      ASSIGN_OR_RETURN(
-          *translated_entity.mutable_packet_replication_engine_entry(),
-          TranslatePacketReplicationEngineEntry(
-              translated_entity.packet_replication_engine_entry(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kDirectCounterEntry: {
-      ASSIGN_OR_RETURN(*translated_entity.mutable_direct_counter_entry(),
-                       TranslateDirectCounterEntry(
-                           translated_entity.direct_counter_entry(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kCounterEntry: {
-      ASSIGN_OR_RETURN(
-          *translated_entity.mutable_counter_entry(),
-          TranslateCounterEntry(translated_entity.counter_entry(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kRegisterEntry: {
-      ASSIGN_OR_RETURN(
-          *translated_entity.mutable_register_entry(),
-          TranslateRegisterEntry(translated_entity.register_entry(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kDirectMeterEntry: {
-      ASSIGN_OR_RETURN(*translated_entity.mutable_direct_meter_entry(),
-                       TranslateDirectMeterEntry(
-                           translated_entity.direct_meter_entry(), to_sdk));
-      break;
-    }
-    case ::p4::v1::Entity::kMeterEntry: {
-      ASSIGN_OR_RETURN(
-          *translated_entity.mutable_meter_entry(),
-          TranslateMeterEntry(translated_entity.meter_entry(), to_sdk));
-      break;
-    }
-    default:
-      break;
-  }
-  return translated_entity;
+  return TranslateTableEntryInternal(entry, to_sdk);
 }
 
 ::util::StatusOr<::p4::v1::TableEntry>
-BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
+BfrtP4RuntimeTranslator::TranslateTableEntryInternal(const ::p4::v1::TableEntry& entry,
                                              bool to_sdk) {
   ::p4::v1::TableEntry translated_entry(entry);
   const auto& table_id = translated_entry.table_id();
@@ -433,6 +334,7 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
 ::util::StatusOr<::p4::v1::ActionProfileMember>
 BfrtP4RuntimeTranslator::TranslateActionProfileMember(
     const ::p4::v1::ActionProfileMember& act_prof_mem, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::ActionProfileMember translated_apm;
   translated_apm.CopyFrom(act_prof_mem);
   const auto& action_profile_id = act_prof_mem.action_profile_id();
@@ -445,6 +347,7 @@ BfrtP4RuntimeTranslator::TranslateActionProfileMember(
 ::util::StatusOr<::p4::v1::MeterEntry>
 BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
                                              bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::MeterEntry translated_entry(entry);
   std::string* uri = gtl::FindOrNull(meter_to_type_uri_, entry.meter_id());
   if (entry.has_index() && uri) {
@@ -457,9 +360,10 @@ BfrtP4RuntimeTranslator::TranslateMeterEntry(const ::p4::v1::MeterEntry& entry,
 ::util::StatusOr<::p4::v1::DirectMeterEntry>
 BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
     const ::p4::v1::DirectMeterEntry& entry, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::DirectMeterEntry translated_entry(entry);
   ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
-                   TranslateTableEntry(entry.table_entry(), to_sdk));
+                   TranslateTableEntryInternal(entry.table_entry(), to_sdk));
   return translated_entry;
 }
 
@@ -488,6 +392,7 @@ BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
 ::util::StatusOr<::p4::v1::CounterEntry>
 BfrtP4RuntimeTranslator::TranslateCounterEntry(
     const ::p4::v1::CounterEntry& entry, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::CounterEntry translated_entry(entry);
   std::string* uri = gtl::FindOrNull(counter_to_type_uri_, entry.counter_id());
   if (entry.has_index() && uri) {
@@ -500,15 +405,17 @@ BfrtP4RuntimeTranslator::TranslateCounterEntry(
 ::util::StatusOr<::p4::v1::DirectCounterEntry>
 BfrtP4RuntimeTranslator::TranslateDirectCounterEntry(
     const ::p4::v1::DirectCounterEntry& entry, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::DirectCounterEntry translated_entry(entry);
   ASSIGN_OR_RETURN(*translated_entry.mutable_table_entry(),
-                   TranslateTableEntry(entry.table_entry(), to_sdk));
+                   TranslateTableEntryInternal(entry.table_entry(), to_sdk));
   return translated_entry;
 }
 
 ::util::StatusOr<::p4::v1::RegisterEntry>
 BfrtP4RuntimeTranslator::TranslateRegisterEntry(
     const ::p4::v1::RegisterEntry& entry, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::RegisterEntry translated_entry(entry);
   std::string* uri =
       gtl::FindOrNull(register_to_type_uri_, entry.register_id());
@@ -541,6 +448,7 @@ BfrtP4RuntimeTranslator::TranslateRegisterEntry(
 ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
 BfrtP4RuntimeTranslator::TranslatePacketReplicationEngineEntry(
     const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::PacketReplicationEngineEntry translated_entry(entry);
   switch (translated_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::kMulticastGroupEntry: {
@@ -580,6 +488,7 @@ BfrtP4RuntimeTranslator::TranslatePacketMetadata(
 
 ::util::StatusOr<::p4::v1::PacketIn> BfrtP4RuntimeTranslator::TranslatePacketIn(
     const ::p4::v1::PacketIn& packet_in) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::PacketIn translated_packet_in(packet_in);
   for (auto& md : *translated_packet_in.mutable_metadata()) {
     const std::string* uri =
@@ -597,6 +506,7 @@ BfrtP4RuntimeTranslator::TranslatePacketMetadata(
 ::util::StatusOr<::p4::v1::PacketOut>
 BfrtP4RuntimeTranslator::TranslatePacketOut(
     const ::p4::v1::PacketOut& packet_out) {
+  absl::ReaderMutexLock l(&lock_);
   ::p4::v1::PacketOut translated_packet_out(packet_out);
   for (auto& md : *translated_packet_out.mutable_metadata()) {
     const std::string* uri =
@@ -611,58 +521,6 @@ BfrtP4RuntimeTranslator::TranslatePacketOut(
     }
   }
   return translated_packet_out;
-}
-
-::util::StatusOr<::p4::v1::StreamMessageRequest>
-BfrtP4RuntimeTranslator::TranslateStreamMessageRequest(
-    const ::p4::v1::StreamMessageRequest& request) {
-  absl::ReaderMutexLock l(&lock_);
-  if (!pipeline_require_translation_) {
-    return request;
-  }
-  ::p4::v1::StreamMessageRequest translated_request(request);
-  switch (request.update_case()) {
-    case ::p4::v1::StreamMessageRequest::kPacket: {
-      ASSIGN_OR_RETURN(*translated_request.mutable_packet(),
-                       TranslatePacketOut(translated_request.packet()));
-      break;
-    }
-    // No translation support.
-    case ::p4::v1::StreamMessageRequest::kDigestAck:
-    case ::p4::v1::StreamMessageRequest::kArbitration:
-    case ::p4::v1::StreamMessageRequest::kOther:
-    default:
-      break;
-  }
-  return translated_request;
-}
-
-::util::StatusOr<::p4::v1::StreamMessageResponse>
-BfrtP4RuntimeTranslator::TranslateStreamMessageResponse(
-    const ::p4::v1::StreamMessageResponse& response) {
-  absl::ReaderMutexLock l(&lock_);
-  if (!pipeline_require_translation_) {
-    return response;
-  }
-  ::p4::v1::StreamMessageResponse translated_response(response);
-  switch (translated_response.update_case()) {
-    case ::p4::v1::StreamMessageResponse::kPacket: {
-      ASSIGN_OR_RETURN(*translated_response.mutable_packet(),
-                       TranslatePacketIn(translated_response.packet()));
-      break;
-    }
-    // We may need to support these since they contains info which we need to
-    // translate them(e.g., TableEntry, PacketOut)
-    case ::p4::v1::StreamMessageResponse::kIdleTimeoutNotification:
-    case ::p4::v1::StreamMessageResponse::kError:
-    // No translation support.
-    case ::p4::v1::StreamMessageResponse::kArbitration:
-    case ::p4::v1::StreamMessageResponse::kDigest:
-    case ::p4::v1::StreamMessageResponse::kOther:
-    default:
-      break;
-  }
-  return translated_response;
 }
 
 ::util::StatusOr<::p4::config::v1::P4Info>

@@ -142,11 +142,6 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   const auto& p4info = bfrt_config.programs(0).p4info();
   RETURN_IF_ERROR(
       bfrt_p4runtime_translator_->PushForwardingPipelineConfig(p4info));
-
-  // Augment the P4Info so managers will use the original bitwith from P4 code
-  // for every fields (e.g, 9-bit port number instead of 32-bits).
-  ASSIGN_OR_RETURN(*bfrt_config.mutable_programs(0)->mutable_p4info(),
-                   bfrt_p4runtime_translator_->TranslateP4Info(p4info));
   RETURN_IF_ERROR(
       bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config));
   RETURN_IF_ERROR(
@@ -207,52 +202,44 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   RETURN_IF_ERROR(session->BeginBatch());
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
-    const auto& translated_result = bfrt_p4runtime_translator_->TranslateEntity(
-        update.entity(), /*to_sdk=*/true);
-    status = translated_result.status();
-    if (!status.ok()) {
-      success = false;
-      results->push_back(status);
-      continue;
-    }
-    const auto& entity = translated_result.ValueOrDie();
-    switch (entity.entity_case()) {
+    switch (update.entity().entity_case()) {
       case ::p4::v1::Entity::kTableEntry:
-        status = bfrt_table_manager_->WriteTableEntry(session, update.type(),
-                                                      entity.table_entry());
+        status = bfrt_table_manager_->WriteTableEntry(
+            session, update.type(), update.entity().table_entry());
         break;
       case ::p4::v1::Entity::kExternEntry:
-        status =
-            WriteExternEntry(session, update.type(), entity.extern_entry());
+        status = WriteExternEntry(session, update.type(),
+                                  update.entity().extern_entry());
         break;
       case ::p4::v1::Entity::kActionProfileMember:
         status = bfrt_table_manager_->WriteActionProfileMember(
-            session, update.type(), entity.action_profile_member());
+            session, update.type(), update.entity().action_profile_member());
         break;
       case ::p4::v1::Entity::kActionProfileGroup:
         status = bfrt_table_manager_->WriteActionProfileGroup(
-            session, update.type(), entity.action_profile_group());
+            session, update.type(), update.entity().action_profile_group());
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
         status = bfrt_pre_manager_->WritePreEntry(
-            session, update.type(), entity.packet_replication_engine_entry());
+            session, update.type(),
+            update.entity().packet_replication_engine_entry());
         break;
       case ::p4::v1::Entity::kDirectCounterEntry:
         status = bfrt_table_manager_->WriteDirectCounterEntry(
-            session, update.type(), entity.direct_counter_entry());
+            session, update.type(), update.entity().direct_counter_entry());
         break;
       case ::p4::v1::Entity::kCounterEntry:
         status = bfrt_counter_manager_->WriteIndirectCounterEntry(
-            session, update.type(), entity.counter_entry());
+            session, update.type(), update.entity().counter_entry());
         break;
       case ::p4::v1::Entity::kRegisterEntry: {
         status = bfrt_table_manager_->WriteRegisterEntry(
-            session, update.type(), entity.register_entry());
+            session, update.type(), update.entity().register_entry());
         break;
       }
       case ::p4::v1::Entity::kMeterEntry: {
-        status = bfrt_table_manager_->WriteMeterEntry(session, update.type(),
-                                                      entity.meter_entry());
+        status = bfrt_table_manager_->WriteMeterEntry(
+            session, update.type(), update.entity().meter_entry());
         break;
       }
       case ::p4::v1::Entity::kDirectMeterEntry:
@@ -291,15 +278,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_ || !pipeline_initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  ASSIGN_OR_RETURN(const auto& request,
-                   bfrt_p4runtime_translator_->TranslateReadRequest(req));
-  BfrtP4RuntimeTranslator::ReadResponseWriterWrapper writer_wrapper(
-      writer, bfrt_p4runtime_translator_);
-  writer = &writer_wrapper;
   ::p4::v1::ReadResponse resp;
   bool success = true;
   ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
-  for (const auto& entity : request.entities()) {
+  for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
         auto status = bfrt_table_manager_->ReadTableEntry(
@@ -396,13 +378,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  auto translator_wrapper = std::make_shared<
-      BfrtP4RuntimeTranslator::StreamMessageResponseWriterWrapper>(
-      writer, bfrt_p4runtime_translator_);
   auto packet_in_writer =
       std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
-          translator_wrapper, &::p4::v1::StreamMessageResponse::mutable_packet);
+          writer, &::p4::v1::StreamMessageResponse::mutable_packet);
 
   return bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer);
 }
@@ -422,18 +401,14 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  ASSIGN_OR_RETURN(
-      const auto& translated_req,
-      bfrt_p4runtime_translator_->TranslateStreamMessageRequest(req));
-
-  switch (translated_req.update_case()) {
+  switch (req.update_case()) {
     case ::p4::v1::StreamMessageRequest::kPacket: {
-      return bfrt_packetio_manager_->TransmitPacket(translated_req.packet());
+      return bfrt_packetio_manager_->TransmitPacket(req.packet());
     }
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-             << "Unsupported StreamMessageRequest "
-             << translated_req.ShortDebugString() << ".";
+             << "Unsupported StreamMessageRequest " << req.ShortDebugString()
+             << ".";
   }
 }
 

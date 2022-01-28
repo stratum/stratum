@@ -49,18 +49,17 @@ namespace barefoot {
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
   VLOG(1) << "Switch SKU: " << bf_sde_wrapper->GetBfChipType(device_id);
-
-  auto bfrt_table_manager =
-      BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
-  auto bfrt_packetio_manger =
-      BfrtPacketioManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_pre_manager =
-      BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_counter_manager =
-      BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
   auto bfrt_p4runtime_translator = BfrtP4RuntimeTranslator::CreateInstance(
       bf_sde_wrapper, device_id,
       FLAGS_experimental_enable_p4runtime_translation);
+  auto bfrt_table_manager = BfrtTableManager::CreateInstance(
+      mode, bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_pre_manager = BfrtPreManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_counter_manager = BfrtCounterManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_packetio_manger.get(),
       bfrt_pre_manager.get(), bfrt_counter_manager.get(),

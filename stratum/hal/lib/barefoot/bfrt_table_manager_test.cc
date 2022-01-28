@@ -12,6 +12,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -39,8 +40,11 @@ class BfrtTableManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<BfSdeMock>();
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
     bfrt_table_manager_ = BfrtTableManager::CreateInstance(
-        OPERATION_MODE_STANDALONE, bf_sde_wrapper_mock_.get(), kDevice1);
+        OPERATION_MODE_STANDALONE, bf_sde_wrapper_mock_.get(),
+        bfrt_p4runtime_translator_mock_.get(), kDevice1);
   }
 
   ::util::Status PushTestConfig() {
@@ -135,6 +139,7 @@ class BfrtTableManagerTest : public ::testing::Test {
   static constexpr int kDevice1 = 0;
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtTableManager> bfrt_table_manager_;
 };
 

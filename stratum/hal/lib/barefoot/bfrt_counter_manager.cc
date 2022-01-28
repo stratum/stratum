@@ -17,16 +17,23 @@ namespace hal {
 namespace barefoot {
 
 std::unique_ptr<BfrtCounterManager> BfrtCounterManager::CreateInstance(
-    BfSdeInterface* bf_sde_interface, int device) {
-  return absl::WrapUnique(new BfrtCounterManager(bf_sde_interface, device));
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device) {
+  return absl::WrapUnique(new BfrtCounterManager(
+      bf_sde_interface, bfrt_p4runtime_translator, device));
 }
 
-BfrtCounterManager::BfrtCounterManager(BfSdeInterface* bf_sde_interface,
-                                       int device)
-    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)), device_(device) {}
+BfrtCounterManager::BfrtCounterManager(
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
+    : bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
+      device_(device) {}
 
 BfrtCounterManager::BfrtCounterManager()
-    : bf_sde_interface_(nullptr), device_(-1) {}
+    : bf_sde_interface_(nullptr),
+      bfrt_p4runtime_translator_(nullptr),
+      device_(-1) {}
 
 BfrtCounterManager::~BfrtCounterManager() = default;
 
