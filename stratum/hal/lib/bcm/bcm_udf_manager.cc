@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <utility>
 
-#include "stratum/lib/macros.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/container/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 
@@ -328,11 +328,11 @@ std::string OffsetBuffer(const std::string& input, size_t input_offset,
 
     // Here, we take parts of the two overlapping bytes.
     uint16 bit_shift = offset_from_input & 7;
-    output[byte_index] =
-        static_cast<uint8>(input.at(input_byte_index)) << bit_shift;
+    output[byte_index] = static_cast<uint8>(input.at(input_byte_index))
+                         << bit_shift;
     if (input_byte_index + 1 < input.size()) {
       output[byte_index] +=
-        static_cast<uint8>(input.at(input_byte_index + 1)) >> (8 - bit_shift);
+          static_cast<uint8>(input.at(input_byte_index + 1)) >> (8 - bit_shift);
     }
   }
 

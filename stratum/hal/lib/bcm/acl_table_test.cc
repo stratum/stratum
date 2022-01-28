@@ -2,17 +2,18 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/acl_table.h"
+
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/acl_table.h"
+#include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
