@@ -25,7 +25,7 @@ DEFINE_bool(bf_switchd_background, false,
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
 DEFINE_bool(experimental_enable_p4runtime_translation, false,
-            "Enable experimental P4runtime translation feature.");
+            "Enable experimental P4Runtime translation feature.");
 
 namespace stratum {
 namespace hal {
@@ -50,8 +50,8 @@ namespace barefoot {
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
   VLOG(1) << "Switch SKU: " << bf_sde_wrapper->GetBfChipType(device_id);
   auto bfrt_p4runtime_translator = BfrtP4RuntimeTranslator::CreateInstance(
-      bf_sde_wrapper, device_id,
-      FLAGS_experimental_enable_p4runtime_translation);
+      FLAGS_experimental_enable_p4runtime_translation, bf_sde_wrapper,
+      device_id);
   auto bfrt_table_manager = BfrtTableManager::CreateInstance(
       mode, bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
   auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(

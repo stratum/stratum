@@ -53,7 +53,7 @@ std::string RangeDefaultLow(size_t bitwidth) {
 }
 
 std::string RangeDefaultHigh(size_t bitwidth) {
-  return MaxValueOfBits(bitwidth);
+  return AllOnesByteString(bitwidth);
 }
 
 ::util::StatusOr<uint64> ConvertPriorityFromP4rtToBfrt(int32 priority) {
@@ -71,7 +71,7 @@ int NumBitsToNumBytes(int num_bits) {
   return (num_bits + 7) / 8;  // ceil(num_bits/8)
 }
 
-std::string MaxValueOfBits(size_t bitwidth) {
+std::string AllOnesByteString(size_t bitwidth) {
   const size_t nbytes = NumBitsToNumBytes(bitwidth);
   std::string value(nbytes, '\xff');
   size_t zero_nbits = (nbytes * 8) - bitwidth;

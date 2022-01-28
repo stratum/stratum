@@ -846,7 +846,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidTernary) {
       DerivedFromStatus(
           ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
                          "'field_match.ternary().mask() == "
-                         "MaxValueOfBits(from_bit_width)' is false.")));
+                         "AllOnesByteString(from_bit_width)' is false.")));
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidRange) {

@@ -263,14 +263,14 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
             // We only allow the "exact" type of ternary match, which means
             // all bits from mask must be one.
             CHECK_RETURN_IF_FALSE(field_match.ternary().mask() ==
-                                  MaxValueOfBits(from_bit_width));
+                                  AllOnesByteString(from_bit_width));
             // New mask with bit width.
             ASSIGN_OR_RETURN(const std::string& new_val,
                              TranslateValue(field_match.ternary().value(), *uri,
                                             to_sdk, to_bit_width));
             field_match.mutable_ternary()->set_value(new_val);
             field_match.mutable_ternary()->set_mask(
-                MaxValueOfBits(to_bit_width));
+                AllOnesByteString(to_bit_width));
             break;
           }
           case ::p4::v1::FieldMatch::kLpm: {

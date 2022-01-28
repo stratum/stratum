@@ -74,29 +74,29 @@ class BfrtP4RuntimeTranslator {
       const ::p4::config::v1::P4Info& p4info);
 
   static std::unique_ptr<BfrtP4RuntimeTranslator> CreateInstance(
-      BfSdeInterface* bf_sde_interface, int device_id,
-      bool translation_enabled) {
+      bool translation_enabled, BfSdeInterface* bf_sde_interface,
+      int device_id) {
     return absl::WrapUnique(new BfrtP4RuntimeTranslator(
-        bf_sde_interface, device_id, translation_enabled));
+        translation_enabled, bf_sde_interface, device_id));
   }
 
  protected:
   // Default constructor.
   BfrtP4RuntimeTranslator()
-      : device_id_(0),
+      : translation_enabled_(false),
+        pipeline_require_translation_(false),
         bf_sde_interface_(nullptr),
-        translation_enabled_(false),
-        pipeline_require_translation_(false) {}
+        device_id_(0) {}
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BfrtP4RuntimeTranslator(BfSdeInterface* bf_sde_interface, int device_id,
-                          bool translation_enabled)
-      : device_id_(device_id),
+  BfrtP4RuntimeTranslator(bool translation_enabled,
+                          BfSdeInterface* bf_sde_interface, int device_id)
+      : translation_enabled_(translation_enabled),
+        pipeline_require_translation_(false),
         bf_sde_interface_(bf_sde_interface),
-        translation_enabled_(translation_enabled),
-        pipeline_require_translation_(false) {}
+        device_id_(device_id) {}
   virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntryInternal(
       const ::p4::v1::TableEntry& entry, bool to_sdk)
       SHARED_LOCKS_REQUIRED(lock_);
@@ -123,21 +123,22 @@ class BfrtP4RuntimeTranslator {
   // Reader-writer lock used to protect access to specific states.
   mutable absl::Mutex lock_;
 
-  // Fixed zero-based BFRT device_id number corresponding to the node/ASIC
-  // managed by this class instance. Assigned in the class constructor.
-  const int device_id_;
+  const bool translation_enabled_;
+  bool pipeline_require_translation_ GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   // Not owned by this class.
   BfSdeInterface* bf_sde_interface_ = nullptr;
+
+  // Fixed zero-based BFRT device_id number corresponding to the node/ASIC
+  // managed by this class instance. Assigned in the class constructor.
+  const int device_id_;
 
   // Maps between singleton port and SDK port, vice versa
   absl::flat_hash_map<uint32, uint32> singleton_port_to_sdk_port_
       GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, uint32> sdk_port_to_singleton_port_
       GUARDED_BY(lock_);
-  const bool translation_enabled_;
-  bool pipeline_require_translation_ GUARDED_BY(lock_);
 
   // P4Runtime translation information
   absl::flat_hash_map<uint32, absl::flat_hash_map<uint32, std::string>>
