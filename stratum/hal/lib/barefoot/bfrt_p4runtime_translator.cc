@@ -225,8 +225,8 @@ BfrtP4RuntimeTranslator::TranslateTableEntry(const ::p4::v1::TableEntry& entry,
 }
 
 ::util::StatusOr<::p4::v1::TableEntry>
-BfrtP4RuntimeTranslator::TranslateTableEntryInternal(const ::p4::v1::TableEntry& entry,
-                                             bool to_sdk) {
+BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
+    const ::p4::v1::TableEntry& entry, bool to_sdk) {
   ::p4::v1::TableEntry translated_entry(entry);
   const auto& table_id = translated_entry.table_id();
   if (table_to_field_to_type_uri_.count(table_id) &&

@@ -64,7 +64,8 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
       << "Only one P4 program is supported.";
   register_timer_descriptors_.clear();
   const auto& program = config.programs(0);
-  ASSIGN_OR_RETURN(const auto& p4_info,
+  ASSIGN_OR_RETURN(
+      const auto& p4_info,
       bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
   std::unique_ptr<P4InfoManager> p4_info_manager =
       absl::make_unique<P4InfoManager>(p4_info);
@@ -337,14 +338,15 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     const ::p4::v1::TableEntry& table_entry) {
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
-ASSIGN_OR_RETURN(const auto& translated_table_entry,
-  bfrt_p4runtime_translator_->TranslateTableEntry(table_entry, /*to_sdk=*/true));
+  ASSIGN_OR_RETURN(const auto& translated_table_entry,
+                   bfrt_p4runtime_translator_->TranslateTableEntry(
+                       table_entry, /*to_sdk=*/true));
   absl::ReaderMutexLock l(&lock_);
 
-  ASSIGN_OR_RETURN(auto table,
-                   p4_info_manager_->FindTableByID(translated_table_entry.table_id()));
-  ASSIGN_OR_RETURN(uint32 table_id,
-                   bf_sde_interface_->GetBfRtId(translated_table_entry.table_id()));
+  ASSIGN_OR_RETURN(auto table, p4_info_manager_->FindTableByID(
+                                   translated_table_entry.table_id()));
+  ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
+                                        translated_table_entry.table_id()));
 
   if (!translated_table_entry.is_default_action()) {
     if (table.is_const_table()) {
@@ -356,9 +358,10 @@ ASSIGN_OR_RETURN(const auto& translated_table_entry,
                      bf_sde_interface_->CreateTableKey(table_id));
     RETURN_IF_ERROR(BuildTableKey(translated_table_entry, table_key.get()));
 
-    ASSIGN_OR_RETURN(auto table_data,
-                     bf_sde_interface_->CreateTableData(
-                         table_id, translated_table_entry.action().action().action_id()));
+    ASSIGN_OR_RETURN(
+        auto table_data,
+        bf_sde_interface_->CreateTableData(
+            table_id, translated_table_entry.action().action().action_id()));
     if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
       RETURN_IF_ERROR(BuildTableData(translated_table_entry, table_data.get()));
     }
@@ -549,7 +552,8 @@ ASSIGN_OR_RETURN(const auto& translated_table_entry,
       BuildP4TableEntry(table_entry, table_key.get(), table_data.get()));
   ::p4::v1::ReadResponse resp;
   ASSIGN_OR_RETURN(*resp.add_entities()->mutable_table_entry(),
-  bfrt_p4runtime_translator_->TranslateTableEntry(result, /*to_sdk=*/false));
+                   bfrt_p4runtime_translator_->TranslateTableEntry(
+                       result, /*to_sdk=*/false));
   VLOG(1) << "ReadSingleTableEntry resp " << resp.DebugString();
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
@@ -583,7 +587,8 @@ ASSIGN_OR_RETURN(const auto& translated_table_entry,
 
   ::p4::v1::ReadResponse resp;
   ASSIGN_OR_RETURN(*resp.add_entities()->mutable_table_entry(),
-  bfrt_p4runtime_translator_->TranslateTableEntry(result, /*to_sdk=*/false));
+                   bfrt_p4runtime_translator_->TranslateTableEntry(
+                       result, /*to_sdk=*/false));
   VLOG(1) << "ReadDefaultTableEntry resp " << resp.DebugString();
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
@@ -614,7 +619,7 @@ ASSIGN_OR_RETURN(const auto& translated_table_entry,
   RETURN_IF_ERROR(bf_sde_interface_->GetAllTableEntries(
       device_, session, table_id, &keys, &datas));
   ::p4::v1::ReadResponse resp;
-  for (size_t i = 0; i < keys.size(); ++i){
+  for (size_t i = 0; i < keys.size(); ++i) {
     const std::unique_ptr<BfSdeInterface::TableKeyInterface>& table_key =
         keys[i];
     const std::unique_ptr<BfSdeInterface::TableDataInterface>& table_data =
@@ -623,7 +628,8 @@ ASSIGN_OR_RETURN(const auto& translated_table_entry,
         auto result,
         BuildP4TableEntry(table_entry, table_key.get(), table_data.get()));
     ASSIGN_OR_RETURN(*resp.add_entities()->mutable_table_entry(),
-        bfrt_p4runtime_translator_->TranslateTableEntry(result, /*to_sdk=*/false));
+                     bfrt_p4runtime_translator_->TranslateTableEntry(
+                         result, /*to_sdk=*/false));
   }
 
   VLOG(1) << "ReadAllTableEntries resp " << resp.DebugString();
@@ -638,9 +644,10 @@ ASSIGN_OR_RETURN(const auto& translated_table_entry,
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
+  CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
   ASSIGN_OR_RETURN(const auto& translated_table_entry,
-  bfrt_p4runtime_translator_->TranslateTableEntry(table_entry, /*to_sdk=*/true));
+                   bfrt_p4runtime_translator_->TranslateTableEntry(
+                       table_entry, /*to_sdk=*/true));
   absl::ReaderMutexLock l(&lock_);
 
   // We have four cases to handle:
@@ -649,7 +656,8 @@ CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
   // 3. table id set, no match key, is_default_action set: return default action
   // 4. table id and match key: return single entry
 
-  if (translated_table_entry.match_size() == 0 && !translated_table_entry.is_default_action()) {
+  if (translated_table_entry.match_size() == 0 &&
+      !translated_table_entry.is_default_action()) {
     std::vector<::p4::v1::TableEntry> wanted_tables;
     if (translated_table_entry.table_id() == 0) {
       // 1.
@@ -682,7 +690,8 @@ CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
           << translated_table_entry.ShortDebugString() << ".";
     }
     return ::util::OkStatus();
-  } else if (translated_table_entry.match_size() == 0 && translated_table_entry.is_default_action()) {
+  } else if (translated_table_entry.match_size() == 0 &&
+             translated_table_entry.is_default_action()) {
     // 3.
     return ReadDefaultTableEntry(session, translated_table_entry, writer);
   } else {
@@ -707,7 +716,8 @@ CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
       << "Update type of DirectCounterEntry "
       << direct_counter_entry.ShortDebugString() << " must be MODIFY.";
   ASSIGN_OR_RETURN(const auto& translated_direct_counter_entry,
-  bfrt_p4runtime_translator_->TranslateDirectCounterEntry(direct_counter_entry, /*to_sdk=*/true));
+                   bfrt_p4runtime_translator_->TranslateDirectCounterEntry(
+                       direct_counter_entry, /*to_sdk=*/true));
   // Read table entry first.
   const auto& table_entry = translated_direct_counter_entry.table_entry();
   CHECK_RETURN_IF_FALSE(table_entry.action().action().action_id() == 0)
@@ -737,9 +747,9 @@ CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
     return ::util::OkStatus();
   }
 
-  RETURN_IF_ERROR(
-      table_data->SetCounterData(translated_direct_counter_entry.data().byte_count(),
-                                 translated_direct_counter_entry.data().packet_count()));
+  RETURN_IF_ERROR(table_data->SetCounterData(
+      translated_direct_counter_entry.data().byte_count(),
+      translated_direct_counter_entry.data().packet_count()));
 
   RETURN_IF_ERROR(bf_sde_interface_->ModifyTableEntry(
       device_, session, table_id, table_key.get(), table_data.get()));
@@ -753,7 +763,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
   ASSIGN_OR_RETURN(const auto& translated_direct_counter_entry,
-  bfrt_p4runtime_translator_->TranslateDirectCounterEntry(direct_counter_entry, /*to_sdk=*/true));
+                   bfrt_p4runtime_translator_->TranslateDirectCounterEntry(
+                       direct_counter_entry, /*to_sdk=*/true));
   const auto& table_entry = translated_direct_counter_entry.table_entry();
   CHECK_RETURN_IF_FALSE(table_entry.action().action().action_id() == 0)
       << "Found action on DirectCounterEntry "
@@ -788,7 +799,8 @@ BfrtTableManager::ReadDirectCounterEntry(
   result.mutable_data()->set_byte_count(static_cast<int64>(bytes));
   result.mutable_data()->set_packet_count(static_cast<int64>(packets));
 
-  return bfrt_p4runtime_translator_->TranslateDirectCounterEntry(result, /*to_sdk=*/false);
+  return bfrt_p4runtime_translator_->TranslateDirectCounterEntry(
+      result, /*to_sdk=*/false);
 }
 
 ::util::Status BfrtTableManager::ReadRegisterEntry(
@@ -796,10 +808,12 @@ BfrtTableManager::ReadDirectCounterEntry(
     const ::p4::v1::RegisterEntry& register_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   ASSIGN_OR_RETURN(const auto& translated_register_entry,
-  bfrt_p4runtime_translator_->TranslateRegisterEntry(register_entry, /*to_sdk=*/true));
+                   bfrt_p4runtime_translator_->TranslateRegisterEntry(
+                       register_entry, /*to_sdk=*/true));
   {
     absl::ReaderMutexLock l(&lock_);
-    RETURN_IF_ERROR(p4_info_manager_->VerifyRegisterEntry(translated_register_entry));
+    RETURN_IF_ERROR(
+        p4_info_manager_->VerifyRegisterEntry(translated_register_entry));
   }
 
   // Index 0 is a valid value and not a wildcard.
@@ -808,8 +822,9 @@ BfrtTableManager::ReadDirectCounterEntry(
     optional_register_index = translated_register_entry.index().index();
   }
 
-  ASSIGN_OR_RETURN(uint32 table_id,
-                   bf_sde_interface_->GetBfRtId(translated_register_entry.register_id()));
+  ASSIGN_OR_RETURN(
+      uint32 table_id,
+      bf_sde_interface_->GetBfRtId(translated_register_entry.register_id()));
   std::vector<uint32> register_indices;
   std::vector<uint64> register_datas;
   RETURN_IF_ERROR(bf_sde_interface_->ReadRegisters(
@@ -834,7 +849,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     result.mutable_data()->set_bitstring(Uint64ToByteStream(register_data));
 
     ASSIGN_OR_RETURN(*resp.add_entities()->mutable_register_entry(),
-    bfrt_p4runtime_translator_->TranslateRegisterEntry(result, /*to_sdk=*/false));
+                     bfrt_p4runtime_translator_->TranslateRegisterEntry(
+                         result, /*to_sdk=*/false));
   }
 
   VLOG(1) << "ReadRegisterEntry resp " << resp.DebugString();
@@ -849,13 +865,13 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::RegisterEntry& register_entry) {
-
   ASSIGN_OR_RETURN(const auto& translated_register_entry,
-  bfrt_p4runtime_translator_->TranslateRegisterEntry(register_entry, /*to_sdk=*/true))
+                   bfrt_p4runtime_translator_->TranslateRegisterEntry(
+                       register_entry, /*to_sdk=*/true))
 
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update type of RegisterEntry " << translated_register_entry.ShortDebugString()
-      << " must be MODIFY.";
+      << "Update type of RegisterEntry "
+      << translated_register_entry.ShortDebugString() << " must be MODIFY.";
   CHECK_RETURN_IF_FALSE(translated_register_entry.has_data())
       << "RegisterEntry " << translated_register_entry.ShortDebugString()
       << " must have data.";
@@ -863,8 +879,9 @@ BfrtTableManager::ReadDirectCounterEntry(
                         ::p4::v1::P4Data::kBitstring)
       << "Only bitstring registers data types are supported.";
 
-  ASSIGN_OR_RETURN(uint32 table_id,
-                   bf_sde_interface_->GetBfRtId(translated_register_entry.register_id()));
+  ASSIGN_OR_RETURN(
+      uint32 table_id,
+      bf_sde_interface_->GetBfRtId(translated_register_entry.register_id()));
 
   absl::optional<uint32> register_index;
   if (translated_register_entry.has_index()) {
@@ -881,18 +898,19 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::MeterEntry& meter_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-      ASSIGN_OR_RETURN(const auto& translated_meter_entry,
-      bfrt_p4runtime_translator_->TranslateMeterEntry(meter_entry, /*to_sdk=*/true));
+  ASSIGN_OR_RETURN(const auto& translated_meter_entry,
+                   bfrt_p4runtime_translator_->TranslateMeterEntry(
+                       meter_entry, /*to_sdk=*/true));
 
   CHECK_RETURN_IF_FALSE(translated_meter_entry.meter_id() != 0)
       << "Wildcard MeterEntry reads are not supported.";
-  ASSIGN_OR_RETURN(uint32 table_id,
-                   bf_sde_interface_->GetBfRtId(translated_meter_entry.meter_id()));
+  ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
+                                        translated_meter_entry.meter_id()));
   bool meter_units_in_bits;  // or packets
   {
     absl::ReaderMutexLock l(&lock_);
-    ASSIGN_OR_RETURN(auto meter,
-                     p4_info_manager_->FindMeterByID(translated_meter_entry.meter_id()));
+    ASSIGN_OR_RETURN(auto meter, p4_info_manager_->FindMeterByID(
+                                     translated_meter_entry.meter_id()));
     switch (meter.spec().unit()) {
       case ::p4::config::v1::MeterSpec::BYTES:
         meter_units_in_bits = true;
@@ -941,7 +959,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     }
 
     ASSIGN_OR_RETURN(*resp.add_entities()->mutable_meter_entry(),
-    bfrt_p4runtime_translator_->TranslateMeterEntry(result, /*to_sdk=*/false));
+                     bfrt_p4runtime_translator_->TranslateMeterEntry(
+                         result, /*to_sdk=*/false));
   }
 
   VLOG(1) << "ReadMeterEntry resp " << resp.DebugString();
@@ -956,22 +975,22 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::MeterEntry& meter_entry) {
-
   ASSIGN_OR_RETURN(const auto& translated_meter_entry,
-  bfrt_p4runtime_translator_->TranslateMeterEntry(meter_entry, /*to_sdk=*/true));
+                   bfrt_p4runtime_translator_->TranslateMeterEntry(
+                       meter_entry, /*to_sdk=*/true));
 
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update type of MeterEntry " << translated_meter_entry.ShortDebugString()
-      << " must be MODIFY.";
+      << "Update type of MeterEntry "
+      << translated_meter_entry.ShortDebugString() << " must be MODIFY.";
   CHECK_RETURN_IF_FALSE(translated_meter_entry.meter_id() != 0)
-      << "Missing meter id in MeterEntry " << translated_meter_entry.ShortDebugString()
-      << ".";
+      << "Missing meter id in MeterEntry "
+      << translated_meter_entry.ShortDebugString() << ".";
 
   bool meter_units_in_packets;  // or bytes
   {
     absl::ReaderMutexLock l(&lock_);
-    ASSIGN_OR_RETURN(auto meter,
-                     p4_info_manager_->FindMeterByID(translated_meter_entry.meter_id()));
+    ASSIGN_OR_RETURN(auto meter, p4_info_manager_->FindMeterByID(
+                                     translated_meter_entry.meter_id()));
     switch (meter.spec().unit()) {
       case ::p4::config::v1::MeterSpec::BYTES:
         meter_units_in_packets = false;
@@ -986,8 +1005,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     }
   }
 
-  ASSIGN_OR_RETURN(uint32 meter_id,
-                   bf_sde_interface_->GetBfRtId(translated_meter_entry.meter_id()));
+  ASSIGN_OR_RETURN(uint32 meter_id, bf_sde_interface_->GetBfRtId(
+                                        translated_meter_entry.meter_id()));
 
   absl::optional<uint32> meter_index;
   if (translated_meter_entry.has_index()) {
@@ -997,8 +1016,10 @@ BfrtTableManager::ReadDirectCounterEntry(
     RETURN_IF_ERROR(IsValidMeterConfig(translated_meter_entry.config()));
     RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
         device_, session, meter_id, meter_index, meter_units_in_packets,
-        translated_meter_entry.config().cir(), translated_meter_entry.config().cburst(),
-        translated_meter_entry.config().pir(), translated_meter_entry.config().pburst()));
+        translated_meter_entry.config().cir(),
+        translated_meter_entry.config().cburst(),
+        translated_meter_entry.config().pir(),
+        translated_meter_entry.config().pburst()));
   } else {
     RETURN_IF_ERROR(bf_sde_interface_->WriteIndirectMeter(
         device_, session, meter_id, meter_index, meter_units_in_packets,
@@ -1017,18 +1038,19 @@ BfrtTableManager::ReadDirectCounterEntry(
       << "Invalid update type " << type;
 
   ASSIGN_OR_RETURN(const auto& translated_action_profile_member,
-  bfrt_p4runtime_translator_->TranslateActionProfileMember(action_profile_member, /*to_sdk=*/true))
+                   bfrt_p4runtime_translator_->TranslateActionProfileMember(
+                       action_profile_member, /*to_sdk=*/true))
 
   absl::WriterMutexLock l(&lock_);
-  ASSIGN_OR_RETURN(
-      uint32 bfrt_table_id,
-      bf_sde_interface_->GetBfRtId(translated_action_profile_member.action_profile_id()));
+  ASSIGN_OR_RETURN(uint32 bfrt_table_id,
+                   bf_sde_interface_->GetBfRtId(
+                       translated_action_profile_member.action_profile_id()));
 
   // Action data
-  ASSIGN_OR_RETURN(
-      auto table_data,
-      bf_sde_interface_->CreateTableData(
-          bfrt_table_id, translated_action_profile_member.action().action_id()));
+  ASSIGN_OR_RETURN(auto table_data,
+                   bf_sde_interface_->CreateTableData(
+                       bfrt_table_id,
+                       translated_action_profile_member.action().action_id()));
   for (const auto& param : translated_action_profile_member.action().params()) {
     RETURN_IF_ERROR(table_data->SetParam(param.param_id(), param.value()));
   }
@@ -1036,19 +1058,20 @@ BfrtTableManager::ReadDirectCounterEntry(
   switch (type) {
     case ::p4::v1::Update::INSERT: {
       RETURN_IF_ERROR(bf_sde_interface_->InsertActionProfileMember(
-          device_, session, bfrt_table_id, translated_action_profile_member.member_id(),
-          table_data.get()));
+          device_, session, bfrt_table_id,
+          translated_action_profile_member.member_id(), table_data.get()));
       break;
     }
     case ::p4::v1::Update::MODIFY: {
       RETURN_IF_ERROR(bf_sde_interface_->ModifyActionProfileMember(
-          device_, session, bfrt_table_id, translated_action_profile_member.member_id(),
-          table_data.get()));
+          device_, session, bfrt_table_id,
+          translated_action_profile_member.member_id(), table_data.get()));
       break;
     }
     case ::p4::v1::Update::DELETE: {
       RETURN_IF_ERROR(bf_sde_interface_->DeleteActionProfileMember(
-          device_, session, bfrt_table_id, translated_action_profile_member.member_id()));
+          device_, session, bfrt_table_id,
+          translated_action_profile_member.member_id()));
       break;
     }
     default:
@@ -1063,24 +1086,24 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::ActionProfileMember& action_profile_member,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-
-
   ASSIGN_OR_RETURN(const auto& translated_action_profile_member,
-  bfrt_p4runtime_translator_->TranslateActionProfileMember(action_profile_member, /*to_sdk=*/true))
+                   bfrt_p4runtime_translator_->TranslateActionProfileMember(
+                       action_profile_member, /*to_sdk=*/true))
 
-  CHECK_RETURN_IF_FALSE(translated_action_profile_member.action_profile_id() != 0)
+  CHECK_RETURN_IF_FALSE(translated_action_profile_member.action_profile_id() !=
+                        0)
       << "Reading all action profiles is not supported yet.";
 
   absl::ReaderMutexLock l(&lock_);
-  ASSIGN_OR_RETURN(
-      uint32 bfrt_table_id,
-      bf_sde_interface_->GetBfRtId(translated_action_profile_member.action_profile_id()));
+  ASSIGN_OR_RETURN(uint32 bfrt_table_id,
+                   bf_sde_interface_->GetBfRtId(
+                       translated_action_profile_member.action_profile_id()));
 
   std::vector<int> member_ids;
   std::vector<std::unique_ptr<BfSdeInterface::TableDataInterface>> table_datas;
   RETURN_IF_ERROR(bf_sde_interface_->GetActionProfileMembers(
-      device_, session, bfrt_table_id, translated_action_profile_member.member_id(),
-      &member_ids, &table_datas));
+      device_, session, bfrt_table_id,
+      translated_action_profile_member.member_id(), &member_ids, &table_datas));
 
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < member_ids.size(); ++i) {
@@ -1111,7 +1134,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     }
 
     ASSIGN_OR_RETURN(*resp.add_entities()->mutable_action_profile_member(),
-    bfrt_p4runtime_translator_->TranslateActionProfileMember(result, /*to_sdk*/false));
+                     bfrt_p4runtime_translator_->TranslateActionProfileMember(
+                         result, /*to_sdk*/ false));
   }
 
   if (!writer->Write(resp)) {

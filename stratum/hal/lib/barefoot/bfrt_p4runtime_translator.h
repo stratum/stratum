@@ -40,32 +40,28 @@ class BfrtP4RuntimeTranslator {
       LOCKS_EXCLUDED(lock_);
   virtual ::util::Status PushForwardingPipelineConfig(
       const ::p4::config::v1::P4Info& p4info) LOCKS_EXCLUDED(lock_);
-virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
-      const ::p4::v1::TableEntry& entry, bool to_sdk)
-      LOCKS_EXCLUDED(lock_);
+  virtual ::util::StatusOr<::p4::v1::TableEntry> TranslateTableEntry(
+      const ::p4::v1::TableEntry& entry, bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::ActionProfileMember>
   TranslateActionProfileMember(const ::p4::v1::ActionProfileMember& entry,
                                bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::MeterEntry> TranslateMeterEntry(
-      const ::p4::v1::MeterEntry& entry, bool to_sdk)
-      LOCKS_EXCLUDED(lock_);
+      const ::p4::v1::MeterEntry& entry, bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::DirectMeterEntry>
   TranslateDirectMeterEntry(const ::p4::v1::DirectMeterEntry& entry,
                             bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::CounterEntry> TranslateCounterEntry(
-      const ::p4::v1::CounterEntry& entry, bool to_sdk)
-      LOCKS_EXCLUDED(lock_);
+      const ::p4::v1::CounterEntry& entry, bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::DirectCounterEntry>
   TranslateDirectCounterEntry(const ::p4::v1::DirectCounterEntry& entry,
                               bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::RegisterEntry> TranslateRegisterEntry(
-      const ::p4::v1::RegisterEntry& entry, bool to_sdk)
-      LOCKS_EXCLUDED(lock_);
+      const ::p4::v1::RegisterEntry& entry, bool to_sdk) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>
   TranslatePacketReplicationEngineEntry(
       const ::p4::v1::PacketReplicationEngineEntry& entry, bool to_sdk)
       LOCKS_EXCLUDED(lock_);
-virtual ::util::StatusOr<::p4::v1::PacketIn> TranslatePacketIn(
+  virtual ::util::StatusOr<::p4::v1::PacketIn> TranslatePacketIn(
       const ::p4::v1::PacketIn& packet_in) LOCKS_EXCLUDED(lock_);
   virtual ::util::StatusOr<::p4::v1::PacketOut> TranslatePacketOut(
       const ::p4::v1::PacketOut& packet_out) LOCKS_EXCLUDED(lock_);
