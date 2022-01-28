@@ -47,7 +47,7 @@ std::string RangeDefaultHigh(size_t bitwidth);
 // byte string.
 int NumBitsToNumBytes(int num_bits);
 
-// Gets the max value of certain bitwidth.
+// Returns a byte string with bitwidth bits set to zero.
 std::string AllOnesByteString(size_t bitwidth);
 
 }  // namespace barefoot
