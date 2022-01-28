@@ -57,7 +57,10 @@ class BfrtPacketioManagerTest : public ::testing::Test {
           .WillOnce(Invoke(
               this, &BfrtPacketioManagerTest::RegisterPacketReceiveWriter));
     }
-
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateP4Info(EqualsProto(program->p4info())))
+        .WillOnce(Return(
+            ::util::StatusOr<::p4::config::v1::P4Info>(program->p4info())));
     auto status = bfrt_packetio_manager_->PushForwardingPipelineConfig(config);
     // FIXME(Yi Tseng): Wait few milliseconds to ensure the rx thread is ready.
     //                  Should check the internal state.
@@ -269,6 +272,9 @@ TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
       "\0\x80\0\0\0\0\0\0\0\0\0\0\xBF\x1"
       "abcde",
       19);
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketOut(EqualsProto(packet_out)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketOut>(packet_out)));
   EXPECT_CALL(*bf_sde_wrapper_mock_, TxPacket(kDevice1, expected_packet))
       .WillOnce(Return(util::OkStatus()));
   EXPECT_OK(bfrt_packetio_manager_->TransmitPacket(packet_out));
@@ -295,6 +301,9 @@ TEST_F(BfrtPacketioManagerTest, TransmitInvalidPacketAfterPipelineConfigPush) {
     }
   )PROTO";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketOut(EqualsProto(packet_out)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketOut>(packet_out)));
   auto status = bfrt_packetio_manager_->TransmitPacket(packet_out);
   EXPECT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(),
@@ -337,6 +346,10 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
               return false;
             }
           }));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketIn(EqualsProto(expected_packet_in)))
+      .WillOnce(
+          Return(::util::StatusOr<::p4::v1::PacketIn>(expected_packet_in)));
   EXPECT_OK(packet_rx_writer->Write(packet_from_asic, absl::Milliseconds(100)));
 
   // Here we need to wait until we receive and verify the packet from the mock
