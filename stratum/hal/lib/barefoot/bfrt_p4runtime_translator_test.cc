@@ -49,7 +49,7 @@ class BfrtP4RuntimeTranslatorTest : public ::testing::Test {
   void SetUp() override {
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
     p4rt_bfrt_translator_ = BfrtP4RuntimeTranslator::CreateInstance(
-        bf_sde_mock_.get(), kDeviceId, /* enable translation */ true);
+        /* enable translation */ true, bf_sde_mock_.get(), kDeviceId);
   }
 
   ::util::Status PushChassisConfig() {
