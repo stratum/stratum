@@ -71,7 +71,10 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
   const auto& program = config.programs(0);
   {
     absl::WriterMutexLock l(&data_lock_);
-    RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
+    ASSIGN_OR_RETURN(
+        const auto& p4info,
+        bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
+    RETURN_IF_ERROR(BuildMetadataMapping(p4info));
     // PushForwardingPipelineConfig resets the bf_pkt driver.
     RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
     if (!initialized_) {
@@ -294,13 +297,15 @@ class BitBuffer {
 
 ::util::Status BfrtPacketioManager::TransmitPacket(
     const ::p4::v1::PacketOut& packet) {
+  ASSIGN_OR_RETURN(const auto& translated_packet_out,
+                   bfrt_p4runtime_translator_->TranslatePacketOut(packet));
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
   std::string buf;
-  RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
+  RETURN_IF_ERROR(DeparsePacketOut(translated_packet_out, &buf));
 
   RETURN_IF_ERROR(bf_sde_interface_->TxPacket(device_, buf));
 
@@ -330,9 +335,11 @@ class BitBuffer {
     // FIXME: returning here in case of parsing errors might not be the best
     // solution.
     RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
+    ASSIGN_OR_RETURN(const auto& translated_packet_in,
+                     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in));
     {
       absl::WriterMutexLock l(&rx_writer_lock_);
-      rx_writer_->Write(packet_in);
+      rx_writer_->Write(translated_packet_in);
     }
     VLOG(1) << "Handled PacketIn: " << packet_in.ShortDebugString();
   }

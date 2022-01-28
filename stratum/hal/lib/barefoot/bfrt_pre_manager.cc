@@ -41,15 +41,21 @@ BfrtPreManager::~BfrtPreManager() = default;
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type& type, const PreEntry& entry) {
   absl::WriterMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      const auto& translated_entry,
+      bfrt_p4runtime_translator_->TranslatePacketReplicationEngineEntry(
+          entry, /*to_sdk=*/true));
   switch (entry.type_case()) {
     case PreEntry::kMulticastGroupEntry:
       return WriteMulticastGroupEntry(session, type,
-                                      entry.multicast_group_entry());
+                                      translated_entry.multicast_group_entry());
     case PreEntry::kCloneSessionEntry:
-      return WriteCloneSessionEntry(session, type, entry.clone_session_entry());
+      return WriteCloneSessionEntry(session, type,
+                                    translated_entry.clone_session_entry());
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-             << "Unsupported PRE entry: " << entry.ShortDebugString();
+             << "Unsupported PRE entry: "
+             << translated_entry.ShortDebugString();
   }
 }
 
@@ -57,20 +63,25 @@ BfrtPreManager::~BfrtPreManager() = default;
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const PreEntry& entry, WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
+  ASSIGN_OR_RETURN(
+      const auto& translated_entry,
+      bfrt_p4runtime_translator_->TranslatePacketReplicationEngineEntry(
+          entry, /*to_sdk=*/true));
   switch (entry.type_case()) {
     case PreEntry::kMulticastGroupEntry: {
       RETURN_IF_ERROR(ReadMulticastGroupEntry(
-          session, entry.multicast_group_entry(), writer));
+          session, translated_entry.multicast_group_entry(), writer));
       break;
     }
     case PreEntry::kCloneSessionEntry: {
-      RETURN_IF_ERROR(
-          ReadCloneSessionEntry(session, entry.clone_session_entry(), writer));
+      RETURN_IF_ERROR(ReadCloneSessionEntry(
+          session, translated_entry.clone_session_entry(), writer));
       break;
     }
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-             << "Unsupported PRE entry: " << entry.ShortDebugString();
+             << "Unsupported PRE entry: "
+             << translated_entry.ShortDebugString();
   }
 
   return ::util::OkStatus();
@@ -221,9 +232,12 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
                 return false;
               });
     LOG(INFO) << "MulticastGroupEntry " << result.ShortDebugString();
-    *resp.add_entities()
-         ->mutable_packet_replication_engine_entry()
-         ->mutable_multicast_group_entry() = result;
+    PreEntry entry;
+    *entry.mutable_multicast_group_entry() = result;
+    ASSIGN_OR_RETURN(
+        *resp.add_entities()->mutable_packet_replication_engine_entry(),
+        bfrt_p4runtime_translator_->TranslatePacketReplicationEngineEntry(
+            entry, /*to_sdk=*/false));
   }
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
@@ -326,9 +340,12 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
     replica->set_instance(0);
 
     LOG(INFO) << "CloneSessionEntry " << result.ShortDebugString();
-    *resp.add_entities()
-         ->mutable_packet_replication_engine_entry()
-         ->mutable_clone_session_entry() = result;
+    PreEntry entry;
+    *entry.mutable_clone_session_entry() = result;
+    ASSIGN_OR_RETURN(
+        *resp.add_entities()->mutable_packet_replication_engine_entry(),
+        bfrt_p4runtime_translator_->TranslatePacketReplicationEngineEntry(
+            entry, /*to_sdk=*/false));
   }
 
   if (!writer->Write(resp)) {
