@@ -297,13 +297,13 @@ class BitBuffer {
 
 ::util::Status BfrtPacketioManager::TransmitPacket(
     const ::p4::v1::PacketOut& packet) {
-  ASSIGN_OR_RETURN(const auto& translated_packet_out,
-                   bfrt_p4runtime_translator_->TranslatePacketOut(packet));
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
+  ASSIGN_OR_RETURN(const auto& translated_packet_out,
+                   bfrt_p4runtime_translator_->TranslatePacketOut(packet));
   std::string buf;
   RETURN_IF_ERROR(DeparsePacketOut(translated_packet_out, &buf));
 

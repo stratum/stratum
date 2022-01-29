@@ -153,7 +153,7 @@ namespace barefoot {
       meta_to_bit_width = &packet_out_meta_to_bit_width;
     } else {
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-             << "Undupported controller header" << ctrl_hdr_name;
+             << "Unsupported controller header " << ctrl_hdr_name;
     }
     for (const auto& metadata : pkt_md.metadata()) {
       if (metadata.has_type_name()) {
@@ -252,84 +252,91 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
         to_bit_width = gtl::FindWithDefault(
             table_to_field_to_bit_width_[table_id], field_id, 0);
       }
-      if (from_bit_width && to_bit_width) {
-        switch (field_match.field_match_type_case()) {
-          case ::p4::v1::FieldMatch::kExact: {
-            ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match.exact().value(), *uri,
-                                            to_sdk, to_bit_width));
-            field_match.mutable_exact()->set_value(new_val);
-            break;
-          }
-          case ::p4::v1::FieldMatch::kTernary: {
-            // We only allow the "exact" type of ternary match, which means
-            // all bits from mask must be one.
-            CHECK_RETURN_IF_FALSE(field_match.ternary().mask() ==
-                                  AllOnesByteString(from_bit_width));
-            // New mask with bit width.
-            ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match.ternary().value(), *uri,
-                                            to_sdk, to_bit_width));
-            field_match.mutable_ternary()->set_value(new_val);
-            field_match.mutable_ternary()->set_mask(
-                AllOnesByteString(to_bit_width));
-            break;
-          }
-          case ::p4::v1::FieldMatch::kLpm: {
-            // Only accept "exact match" LPM value, which means the prefix
-            // length must same as the bit width of the field.
-            CHECK_RETURN_IF_FALSE(field_match.lpm().prefix_len() ==
-                                  from_bit_width);
-            ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match.lpm().value(), *uri,
-                                            to_sdk, to_bit_width));
-            field_match.mutable_lpm()->set_value(new_val);
-            field_match.mutable_lpm()->set_prefix_len(to_bit_width);
-            break;
-          }
-          case ::p4::v1::FieldMatch::kRange: {
-            // Only accept "exact match" range value, which means both low
-            // and high value must be the same.
-            CHECK_RETURN_IF_FALSE(field_match.range().low() ==
-                                  field_match.range().high());
-            ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match.range().low(), *uri,
-                                            to_sdk, to_bit_width));
-            field_match.mutable_range()->set_low(new_val);
-            field_match.mutable_range()->set_high(new_val);
-            break;
-          }
-          case ::p4::v1::FieldMatch::kOptional: {
-            ASSIGN_OR_RETURN(const std::string& new_val,
-                             TranslateValue(field_match.optional().value(),
-                                            *uri, to_sdk, to_bit_width));
-            field_match.mutable_optional()->set_value(new_val);
-            break;
-          }
-          default:
-            return MAKE_ERROR(ERR_UNIMPLEMENTED)
-                   << "Unsupported field match type: "
-                   << field_match.ShortDebugString();
+      if (!from_bit_width || !to_bit_width) {
+        continue;
+      }
+      switch (field_match.field_match_type_case()) {
+        case ::p4::v1::FieldMatch::kExact: {
+          ASSIGN_OR_RETURN(const std::string& new_val,
+                           TranslateValue(field_match.exact().value(), *uri,
+                                          to_sdk, to_bit_width));
+          field_match.mutable_exact()->set_value(new_val);
+          break;
         }
-      }  // else, we don't modify the value if it doesn't need to be translated.
+        case ::p4::v1::FieldMatch::kTernary: {
+          // We only allow the "exact" type of ternary match, which means
+          // all bits from mask must be one.
+          CHECK_RETURN_IF_FALSE(field_match.ternary().mask() ==
+                                AllOnesByteString(from_bit_width));
+          // New mask with bit width.
+          ASSIGN_OR_RETURN(const std::string& new_val,
+                           TranslateValue(field_match.ternary().value(), *uri,
+                                          to_sdk, to_bit_width));
+          field_match.mutable_ternary()->set_value(new_val);
+          field_match.mutable_ternary()->set_mask(
+              AllOnesByteString(to_bit_width));
+          break;
+        }
+        case ::p4::v1::FieldMatch::kLpm: {
+          // Only accept "exact match" LPM value, which means the prefix
+          // length must same as the bit width of the field.
+          CHECK_RETURN_IF_FALSE(field_match.lpm().prefix_len() ==
+                                from_bit_width);
+          ASSIGN_OR_RETURN(const std::string& new_val,
+                           TranslateValue(field_match.lpm().value(), *uri,
+                                          to_sdk, to_bit_width));
+          field_match.mutable_lpm()->set_value(new_val);
+          field_match.mutable_lpm()->set_prefix_len(to_bit_width);
+          break;
+        }
+        case ::p4::v1::FieldMatch::kRange: {
+          // Only accept "exact match" range value, which means both low
+          // and high value must be the same.
+          CHECK_RETURN_IF_FALSE(field_match.range().low() ==
+                                field_match.range().high());
+          ASSIGN_OR_RETURN(const std::string& new_val,
+                           TranslateValue(field_match.range().low(), *uri,
+                                          to_sdk, to_bit_width));
+          field_match.mutable_range()->set_low(new_val);
+          field_match.mutable_range()->set_high(new_val);
+          break;
+        }
+        case ::p4::v1::FieldMatch::kOptional: {
+          ASSIGN_OR_RETURN(const std::string& new_val,
+                           TranslateValue(field_match.optional().value(), *uri,
+                                          to_sdk, to_bit_width));
+          field_match.mutable_optional()->set_value(new_val);
+          break;
+        }
+        default:
+          return MAKE_ERROR(ERR_UNIMPLEMENTED)
+                 << "Unsupported field match type: "
+                 << field_match.ShortDebugString();
+      }
     }
   }
 
-  if (translated_entry.action().type_case() == ::p4::v1::TableAction::kAction) {
-    ASSIGN_OR_RETURN(
-        *(translated_entry.mutable_action()->mutable_action()),
-        TranslateAction(translated_entry.action().action(), to_sdk));
-  } else if (translated_entry.action().type_case() ==
-             ::p4::v1::TableAction::kActionProfileActionSet) {
-    auto* action_set =
-        translated_entry.mutable_action()->mutable_action_profile_action_set();
-    for (::p4::v1::ActionProfileAction& action_profile_action :
-         *action_set->mutable_action_profile_actions()) {
-      ASSIGN_OR_RETURN(*(action_profile_action.mutable_action()),
-                       TranslateAction(action_profile_action.action(), to_sdk));
+  switch (translated_entry.action().type_case()) {
+    case ::p4::v1::TableAction::kAction: {
+      ASSIGN_OR_RETURN(
+          *(translated_entry.mutable_action()->mutable_action()),
+          TranslateAction(translated_entry.action().action(), to_sdk));
+      break;
     }
-  }  // else, we don't translate action profile member id or group id.
-
+    case ::p4::v1::TableAction::kActionProfileActionSet: {
+      auto* action_set = translated_entry.mutable_action()
+                             ->mutable_action_profile_action_set();
+      for (::p4::v1::ActionProfileAction& action_profile_action :
+           *action_set->mutable_action_profile_actions()) {
+        ASSIGN_OR_RETURN(
+            *(action_profile_action.mutable_action()),
+            TranslateAction(action_profile_action.action(), to_sdk));
+      }
+      break;
+    }
+    default:
+      break;
+  }
   return translated_entry;
 }
 

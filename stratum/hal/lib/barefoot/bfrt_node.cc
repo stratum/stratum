@@ -132,23 +132,23 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  BfrtDeviceConfig bfrt_config(bfrt_config_);
-  CHECK_RETURN_IF_FALSE(bfrt_config.programs_size() > 0);
+  CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
 
   // Calling AddDevice() overwrites any previous pipeline.
-  RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config));
+  RETURN_IF_ERROR(bf_sde_interface_->AddDevice(device_id_, bfrt_config_));
 
   // Push pipeline config to the managers.
-  const auto& p4info = bfrt_config.programs(0).p4info();
+  const auto& p4info = bfrt_config_.programs(0).p4info();
   RETURN_IF_ERROR(
       bfrt_p4runtime_translator_->PushForwardingPipelineConfig(p4info));
   RETURN_IF_ERROR(
-      bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config));
+      bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
-      bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config));
-  RETURN_IF_ERROR(bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config));
+      bfrt_table_manager_->PushForwardingPipelineConfig(bfrt_config_));
   RETURN_IF_ERROR(
-      bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config));
+      bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_));
+  RETURN_IF_ERROR(
+      bfrt_counter_manager_->PushForwardingPipelineConfig(bfrt_config_));
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }
