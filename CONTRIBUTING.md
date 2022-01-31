@@ -130,7 +130,8 @@ For branches in the main repository, please try to use sensible names (which
 could include your username, issue number, and/or a short descriptive tag).
 
 Stratum follows [Google’s best practices for code review](https://google.github.io/eng-practices/review/reviewer/).
-You should follow these guidelines when reviewing pull requests.
+You should apply these guidelines strictly and with confidence when reviewing
+pull requests.
 
 If you are unsure about something in an issue or pull request, leave a comment
 that outlines your concerns. If a resolution is difficult to reach in the
