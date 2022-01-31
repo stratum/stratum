@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_sdk_sim.h"
 
 #include <errno.h>
@@ -10,16 +9,16 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "absl/synchronization/mutex.h"
 
+#include "absl/strings/str_cat.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/macros.h"
 #include "stratum/lib/macros.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/substitute.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 
 #define MAX_SIM_ARGS 20
 #define MAX_WAIT_TIME_TO_TERM_SIM_SECS 3
@@ -32,15 +31,15 @@ namespace {
 
 // Reads the simulator server output to extract rpc port simulator server is
 // listening to.
-int GetSimServerRpcPort(FILE *fp, const int bin_path_len) {
-  char *str;
+int GetSimServerRpcPort(FILE* fp, const int bin_path_len) {
+  char* str;
   int port = -1;
   // Allocate buffer that is large enough hold the line we want, which
   // looks like:
   // ${pcid_path}: Emulating ${chip}, listening on SOC_TARGET_PORT ${port}\n
   // see ${SDK}/systems/sim/pcid/pcidappl.c
   int buffer_len = bin_path_len + 100;
-  char *buffer = reinterpret_cast<char *>(malloc(buffer_len));
+  char* buffer = reinterpret_cast<char*>(malloc(buffer_len));
   while (fgets(buffer, buffer_len, fp)) {
     str = strstr(buffer, "SOC_TARGET_PORT");
     if (!str) continue;
@@ -62,9 +61,9 @@ BcmSdkSim::BcmSdkSim(const std::string& bcm_sdk_sim_bin)
 BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 
 ::util::Status BcmSdkSim::InitializeSdk(
-    const std::string &config_file_path,
-    const std::string &config_flush_file_path,
-    const std::string &bcm_shell_log_file_path) {
+    const std::string& config_file_path,
+    const std::string& config_flush_file_path,
+    const std::string& bcm_shell_log_file_path) {
   // TODO(unknown): hardcode one simulator instance for now. Later get the
   // map from config_file_path.
   std::map<int, BcmChip::BcmChipType> unit_to_type = {{0, BcmChip::TRIDENT2}};
@@ -75,7 +74,7 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
   setenv("BCM_CONFIG_FILE", config_file_path.c_str(), 1);
   setenv("SOC_TARGET_COUNT", num_chips.c_str(), 1);
   setenv("SOC_TARGET_SERVER", "localhost", 1);
-  for (const auto &e : unit_to_type) {
+  for (const auto& e : unit_to_type) {
     RETURN_IF_ERROR(InitializeSim(e.first, e.second));
   }
   RETURN_IF_ERROR(BcmSdkWrapper::InitializeSdk(
@@ -88,7 +87,7 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
                                    BcmChip::BcmChipType chip_type) {
   {
     absl::WriterMutexLock l(&sim_lock_);
-    BcmSimDeviceInfo *info = gtl::FindPtrOrNull(unit_to_dev_info_, unit);
+    BcmSimDeviceInfo* info = gtl::FindPtrOrNull(unit_to_dev_info_, unit);
     CHECK_RETURN_IF_FALSE(info != nullptr) << "Unit " << unit << " not found!";
     CHECK_RETURN_IF_FALSE(info->chip_type == chip_type)
         << "Inconsistent state. Unit " << unit << " must be " << chip_type
@@ -126,8 +125,8 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkSim::CreateKnetIntf(int unit, int vlan,
-                                         std::string *netif_name,
-                                         int *netif_id) {
+                                         std::string* netif_name,
+                                         int* netif_id) {
   *netif_name = absl::Substitute("fake-knet-intf-$0", unit + 1);
   *netif_id = unit + 1;
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
@@ -146,7 +145,7 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
 
-::util::Status BcmSdkSim::StartRx(int unit, const RxConfig &rx_config) {
+::util::Status BcmSdkSim::StartRx(int unit, const RxConfig& rx_config) {
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
 
@@ -155,20 +154,20 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkSim::SetRateLimit(
-    int unit, const RateLimitConfig &rate_limit_config) {
+    int unit, const RateLimitConfig& rate_limit_config) {
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
 
 ::util::Status BcmSdkSim::GetKnetHeaderForDirectTx(int unit, int port, int cos,
                                                    uint64 smac,
                                                    size_t packet_len,
-                                                   std::string *header) {
+                                                   std::string* header) {
   *header = "";
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
 
 ::util::Status BcmSdkSim::GetKnetHeaderForIngressPipelineTx(
-    int unit, uint64 smac, size_t packet_len, std::string *header) {
+    int unit, uint64 smac, size_t packet_len, std::string* header) {
   *header = "";
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
@@ -176,28 +175,28 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 size_t BcmSdkSim::GetKnetHeaderSizeForRx(int unit) { return 0; }
 
 ::util::Status BcmSdkSim::ParseKnetHeaderForRx(int unit,
-                                               const std::string &header,
-                                               int *ingress_logical_port,
-                                               int *egress_logical_port,
-                                               int *cos) {
+                                               const std::string& header,
+                                               int* ingress_logical_port,
+                                               int* egress_logical_port,
+                                               int* cos) {
   *ingress_logical_port = -1;
   *egress_logical_port = -1;
   *cos = -1;
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
 
-BcmSdkSim *BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
+BcmSdkSim* BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {
     singleton_ = new BcmSdkSim(bcm_sdk_sim_bin);
   }
 
-  return static_cast<BcmSdkSim *>(singleton_);
+  return static_cast<BcmSdkSim*>(singleton_);
 }
 
-::util::Status BcmSdkSim::GetPciInfo(int unit, uint32 *bus, uint32 *slot) {
+::util::Status BcmSdkSim::GetPciInfo(int unit, uint32* bus, uint32* slot) {
   absl::ReaderMutexLock l(&sim_lock_);
-  BcmSimDeviceInfo *info = gtl::FindPtrOrNull(unit_to_dev_info_, unit);
+  BcmSimDeviceInfo* info = gtl::FindPtrOrNull(unit_to_dev_info_, unit);
   CHECK_RETURN_IF_FALSE(info != nullptr) << "Unit " << unit << " not found!";
   *bus = static_cast<uint32>(info->pci_bus);
   *slot = static_cast<uint32>(info->pci_slot);
@@ -217,7 +216,7 @@ BcmSdkSim *BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
   // sim_args must have these arguments with a nullptr at the end.
   // chip_name is required. RPC port is randomly selected if unspecified.
   // Revision and Device ID have default values for each chip.
-  const char *argv[MAX_SIM_ARGS];
+  const char* argv[MAX_SIM_ARGS];
   argv[0] = bcm_sdk_sim_bin_.c_str();
   switch (chip_type) {
     case BcmChip::TRIDENT2:
@@ -250,7 +249,7 @@ BcmSdkSim *BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
     close(fds[0]);
     dup2(fds[1], fileno(stdout));  // Redirect standard output for child.
     execv(bcm_sdk_sim_bin_.c_str(),
-          const_cast<char *const *>(argv));  // blocking
+          const_cast<char* const*>(argv));  // blocking
     if (errno != 0) {
       LOG(ERROR) << "Simulator process ends with error: " << strerror(errno);
     }
@@ -259,7 +258,7 @@ BcmSdkSim *BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
     // Parent -- main process
     close(fds[1]);
     // Read the output of the simulator server
-    FILE *fp = fdopen(fds[0], "r");
+    FILE* fp = fdopen(fds[0], "r");
 
     if (fp == nullptr) {
       return MAKE_ERROR(ERR_INTERNAL) << "Unable to run simulator.";

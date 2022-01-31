@@ -22,6 +22,7 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/security/credentials_manager.h"
 #include "stratum/lib/utils.h"
 
 DEFINE_string(grpc_addr, stratum::kLocalStratumUrl,
@@ -30,11 +31,6 @@ DEFINE_string(pipeline_cfg, "pipeline_cfg.pb.txt", "The pipeline config file.");
 DEFINE_string(election_id, "0,1",
               "Election id for arbitration update (high,low).");
 DEFINE_uint64(device_id, 1, "P4Runtime device ID.");
-DEFINE_string(
-    ca_cert_file, "",
-    "Path to CA certificate, will use insecure credentials if empty.");
-DEFINE_string(client_cert_file, "", "Path to client certificate (optional).");
-DEFINE_string(client_key_file, "", "Path to client key (optional).");
 
 namespace stratum {
 namespace tools {
@@ -57,25 +53,11 @@ using ClientStreamChannelReaderWriter =
   }
 
   // Initialize the gRPC channel and P4Runtime service stub
-  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials;
-  if (!FLAGS_ca_cert_file.empty()) {
-    auto cert_provider =
-        std::make_shared<::grpc::experimental::FileWatcherCertificateProvider>(
-            FLAGS_client_key_file, FLAGS_client_cert_file, FLAGS_ca_cert_file,
-            1);
-    auto tls_opts =
-        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
-            cert_provider);
-    tls_opts->set_server_verification_option(GRPC_TLS_SERVER_VERIFICATION);
-    tls_opts->watch_root_certs();
-    if (!FLAGS_client_cert_file.empty() && !FLAGS_client_key_file.empty()) {
-      tls_opts->watch_identity_key_cert_pairs();
-    }
-    channel_credentials = ::grpc::experimental::TlsCredentials(*tls_opts);
-  } else {
-    channel_credentials = ::grpc::InsecureChannelCredentials();
-  }
-  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
+  auto channel = ::grpc::CreateChannel(
+      FLAGS_grpc_addr,
+      credentials_manager->GenerateExternalFacingClientCredentials());
   auto stub = ::p4::v1::P4Runtime::NewStub(channel);
 
   // Sends the arbitration update with given device id and election id.
