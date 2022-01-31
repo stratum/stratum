@@ -15,6 +15,7 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
@@ -115,7 +116,8 @@ class BfrtTableManager {
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
-      OperationMode mode, BfSdeInterface* bf_sde_interface, int device);
+      OperationMode mode, BfSdeInterface* bf_sde_interface,
+      BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device);
 
  protected:
   // Default constructor. To be called by the Mock class instance only.
@@ -125,7 +127,9 @@ class BfrtTableManager {
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   explicit BfrtTableManager(OperationMode mode,
-                            BfSdeInterface* bf_sde_interface, int device);
+                            BfSdeInterface* bf_sde_interface,
+                            BfrtP4RuntimeTranslator* bfrt_p4runtime_translator,
+                            int device);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                BfSdeInterface::TableKeyInterface* table_key)
@@ -187,6 +191,10 @@ class BfrtTableManager {
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
+
+  // Pointer to a BfrtTranslator implementation that translate P4Runtime
+  // entities, not owned by this class.
+  BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_ = nullptr;
 
   // Helper class to validate the P4Info and requests against it.
   // TODO(max): Maybe this manager should be created in the node and passed down

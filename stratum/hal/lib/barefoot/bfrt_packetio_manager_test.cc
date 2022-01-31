@@ -10,6 +10,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -31,8 +32,11 @@ class BfrtPacketioManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<BfSdeMock>();
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
     bfrt_packetio_manager_ = BfrtPacketioManager::CreateInstance(
-        bf_sde_wrapper_mock_.get(), kDevice1);
+        bf_sde_wrapper_mock_.get(), bfrt_p4runtime_translator_mock_.get(),
+        kDevice1);
   }
 
   ::util::Status PushPipelineConfig(const std::string& p4info_str = kP4Info,
@@ -53,7 +57,10 @@ class BfrtPacketioManagerTest : public ::testing::Test {
           .WillOnce(Invoke(
               this, &BfrtPacketioManagerTest::RegisterPacketReceiveWriter));
     }
-
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateP4Info(EqualsProto(program->p4info())))
+        .WillOnce(Return(
+            ::util::StatusOr<::p4::config::v1::P4Info>(program->p4info())));
     auto status = bfrt_packetio_manager_->PushForwardingPipelineConfig(config);
     // FIXME(Yi Tseng): Wait few milliseconds to ensure the rx thread is ready.
     //                  Should check the internal state.
@@ -138,6 +145,7 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   )PROTO";
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtPacketioManager> bfrt_packetio_manager_;
   std::unique_ptr<ChannelWriter<std::string>> packet_rx_writer;
 };
@@ -264,6 +272,9 @@ TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
       "\0\x80\0\0\0\0\0\0\0\0\0\0\xBF\x1"
       "abcde",
       19);
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketOut(EqualsProto(packet_out)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketOut>(packet_out)));
   EXPECT_CALL(*bf_sde_wrapper_mock_, TxPacket(kDevice1, expected_packet))
       .WillOnce(Return(util::OkStatus()));
   EXPECT_OK(bfrt_packetio_manager_->TransmitPacket(packet_out));
@@ -290,6 +301,9 @@ TEST_F(BfrtPacketioManagerTest, TransmitInvalidPacketAfterPipelineConfigPush) {
     }
   )PROTO";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketOut(EqualsProto(packet_out)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketOut>(packet_out)));
   auto status = bfrt_packetio_manager_->TransmitPacket(packet_out);
   EXPECT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(),
@@ -332,6 +346,10 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
               return false;
             }
           }));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketIn(EqualsProto(expected_packet_in)))
+      .WillOnce(
+          Return(::util::StatusOr<::p4::v1::PacketIn>(expected_packet_in)));
   EXPECT_OK(packet_rx_writer->Write(packet_from_asic, absl::Milliseconds(100)));
 
   // Here we need to wait until we receive and verify the packet from the mock

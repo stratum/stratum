@@ -23,8 +23,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
-                                         int device)
+BfrtPacketioManager::BfrtPacketioManager(
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : initialized_(false),
       rx_writer_(nullptr),
       packetin_header_(),
@@ -34,6 +35,7 @@ BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
       packet_receive_channel_(nullptr),
       sde_rx_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       device_(device) {}
 
 BfrtPacketioManager::BfrtPacketioManager()
@@ -51,8 +53,10 @@ BfrtPacketioManager::BfrtPacketioManager()
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
 std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
-    BfSdeInterface* bf_sde_interface_, int device) {
-  return absl::WrapUnique(new BfrtPacketioManager(bf_sde_interface_, device));
+    BfSdeInterface* bf_sde_interface_,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device) {
+  return absl::WrapUnique(new BfrtPacketioManager(
+      bf_sde_interface_, bfrt_p4runtime_translator, device));
 }
 
 ::util::Status BfrtPacketioManager::PushChassisConfig(
@@ -67,7 +71,10 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
   const auto& program = config.programs(0);
   {
     absl::WriterMutexLock l(&data_lock_);
-    RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
+    ASSIGN_OR_RETURN(
+        const auto& p4info,
+        bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
+    RETURN_IF_ERROR(BuildMetadataMapping(p4info));
     // PushForwardingPipelineConfig resets the bf_pkt driver.
     RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
     if (!initialized_) {
@@ -295,8 +302,10 @@ class BitBuffer {
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
+  ASSIGN_OR_RETURN(const auto& translated_packet_out,
+                   bfrt_p4runtime_translator_->TranslatePacketOut(packet));
   std::string buf;
-  RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
+  RETURN_IF_ERROR(DeparsePacketOut(translated_packet_out, &buf));
 
   RETURN_IF_ERROR(bf_sde_interface_->TxPacket(device_, buf));
 
@@ -326,9 +335,11 @@ class BitBuffer {
     // FIXME: returning here in case of parsing errors might not be the best
     // solution.
     RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
+    ASSIGN_OR_RETURN(const auto& translated_packet_in,
+                     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in));
     {
       absl::WriterMutexLock l(&rx_writer_lock_);
-      rx_writer_->Write(packet_in);
+      rx_writer_->Write(translated_packet_in);
     }
     VLOG(1) << "Handled PacketIn: " << packet_in.ShortDebugString();
   }
