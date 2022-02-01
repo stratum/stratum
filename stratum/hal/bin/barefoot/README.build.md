@@ -20,7 +20,8 @@ access P4 Studio SDE. Contact Intel for more details.*
 #### Supported SDE versions
 
  - 9.3.1 (Extended support for legacy switches)
- - 9.5.0 (Recommended; LTS release)
+ - 9.5.0 (LTS release)
+ - 9.5.2 (Recommended; LTS release)
  - ~~9.6.0~~ (skipped)
  - 9.7.0 (experimental; stratum_bfrt only)
 
