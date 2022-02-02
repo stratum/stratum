@@ -1411,6 +1411,8 @@ namespace {
           PriorityToTofinoSchedulingPriority(queue_mapping.priority()));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_priority_set(
           device, sdk_port, queue_mapping.queue_id(), priority));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_remaining_bw_priority_set(
+          device, sdk_port, queue_mapping.queue_id(), priority));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
           device, sdk_port, queue_mapping.queue_id(), queue_mapping.weight()));
       // Set maximum shaping rate on queue, if requested.
