@@ -23,8 +23,6 @@ DEFINE_uint32(
     bfrt_table_sync_timeout_ms,
     stratum::hal::barefoot::kDefaultSyncTimeout / absl::Milliseconds(1),
     "The timeout for table sync operation like counters and registers.");
-DEFINE_bool(incompatible_enable_register_reset_annotations, false,
-            "Enables handling of annotions to reset registers.");
 
 namespace stratum {
 namespace hal {
@@ -34,7 +32,6 @@ BfrtTableManager::BfrtTableManager(
     OperationMode mode, BfSdeInterface* bf_sde_interface,
     BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : mode_(mode),
-      register_timer_descriptors_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       p4_info_manager_(nullptr),
@@ -42,7 +39,6 @@ BfrtTableManager::BfrtTableManager(
 
 BfrtTableManager::BfrtTableManager()
     : mode_(OPERATION_MODE_STANDALONE),
-      register_timer_descriptors_(),
       bf_sde_interface_(nullptr),
       bfrt_p4runtime_translator_(nullptr),
       p4_info_manager_(nullptr),
@@ -62,14 +58,12 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
       << "Only one P4 program is supported.";
-  register_timer_descriptors_.clear();
   const auto& program = config.programs(0);
   const auto& p4_info = program.p4info();
   std::unique_ptr<P4InfoManager> p4_info_manager =
       absl::make_unique<P4InfoManager>(p4_info);
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
   p4_info_manager_ = std::move(p4_info_manager);
-  RETURN_IF_ERROR(SetupRegisterReset(p4_info));
 
   return ::util::OkStatus();
 }
@@ -77,88 +71,6 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
 ::util::Status BfrtTableManager::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) const {
   // TODO(unknown): Implement if needed.
-  return ::util::OkStatus();
-}
-
-::util::Status BfrtTableManager::SetupRegisterReset(
-    const ::p4::config::v1::P4Info& p4_info) {
-  if (!FLAGS_incompatible_enable_register_reset_annotations) {
-    return ::util::OkStatus();
-  }
-  // Crude check to prevent consecutive pipeline pushes.
-  static bool first_time = true;
-  if (!first_time) {
-    LOG(FATAL) << "Multiple pipeline pushes are not allowed when using "
-                  "register reset annotations.";
-  }
-  first_time = false;
-  if (mode_ == OPERATION_MODE_SIM) {
-    LOG(WARNING)
-        << "Register reset annotations are disabled in simulation mode.";
-    return ::util::OkStatus();
-  }
-
-  // Validate consistent reset intervals.
-  std::vector<uint64> intervals_ms;
-  for (const auto& reg : p4_info.registers()) {
-    ASSIGN_OR_RETURN(
-        P4Annotation annotation,
-        p4_info_manager_->GetSwitchStackAnnotations(reg.preamble().name()));
-    if (annotation.register_reset_interval_ms()) {
-      intervals_ms.push_back(annotation.register_reset_interval_ms());
-    }
-  }
-  if (intervals_ms.empty()) {
-    return ::util::OkStatus();
-  }
-  std::sort(intervals_ms.begin(), intervals_ms.end());
-  auto last = std::unique(intervals_ms.begin(), intervals_ms.end());
-  intervals_ms.erase(last, intervals_ms.end());
-  if (intervals_ms.size() != 1) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Inconsistent register reset intervals are not supported.";
-  }
-
-  TimerDaemon::DescriptorPtr handle;
-  RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
-      0, intervals_ms[0],
-      [this, p4_info]() -> ::util::Status {
-        auto t1 = absl::Now();
-        ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
-        RETURN_IF_ERROR(session->BeginBatch());
-        ::util::Status status = ::util::OkStatus();
-        for (const auto& reg : p4_info.registers()) {
-          P4Annotation annotation;
-          {
-            absl::ReaderMutexLock l(&lock_);
-            ASSIGN_OR_RETURN(annotation,
-                             p4_info_manager_->GetSwitchStackAnnotations(
-                                 reg.preamble().name()));
-          }
-          std::string clear_value =
-              Uint64ToByteStream(annotation.register_reset_value());
-          ::p4::v1::RegisterEntry register_entry;
-          register_entry.set_register_id(reg.preamble().id());
-          register_entry.mutable_data()->set_bitstring(clear_value);
-          register_entry.clear_index();
-          APPEND_STATUS_IF_ERROR(
-              status, this->WriteRegisterEntry(
-                          session, ::p4::v1::Update::MODIFY, register_entry));
-          VLOG(1) << "Cleared register " << reg.preamble().name() << ".";
-        }
-        // We need to end the batch and destroy the session in every case.
-        RETURN_IF_ERROR(session->EndBatch());
-        session.reset();
-
-        auto t2 = absl::Now();
-        VLOG(1) << "Reset all registers in "
-                << (t2 - t1) / absl::Milliseconds(1) << " ms.";
-
-        return status;
-      },
-      &handle));
-  register_timer_descriptors_.push_back(handle);
-
   return ::util::OkStatus();
 }
 

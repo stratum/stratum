@@ -56,7 +56,7 @@
 #   bazel cquery "filter(@, kind(cc_.*, deps(//stratum/hal/bin/barefoot:stratum_bfrt) except deps(//stratum/hal/bin/dummy:stratum_dummy)))" | cut -d/ -f1 | sort -u
 #
 #   @com_github_nlohmann_json
-#   @com_github_p4lang_PI_bf_9_5_0
+#   @com_github_p4lang_PI_bf_9_5_2
 #   @judy
 #   @local_barefoot_bin
 #
