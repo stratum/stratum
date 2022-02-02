@@ -31,6 +31,7 @@ Additional environment variables:
     RELEASE_BUILD: Optimized build with stripped symbols (Default: false)
     BAZEL_CACHE: Path to Bazel cache (Default: <empty>)
     BSP: Path to optional BSP package directory (Default: <empty>)
+    RUNTIME_IMAGE: The image tag for the runtime image (Default: stratumproject/$STRATUM_TARGET:<SDE version>)
 "
 }
 
@@ -168,8 +169,8 @@ fi
 popd
 
 # Build Stratum BF runtime Docker image
-STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
-RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
+STRATUM_NAME=${STRATUM_TARGET//_/-}
+RUNTIME_IMAGE=${RUNTIME_IMAGE:-stratumproject/$STRATUM_NAME:$SDE_VERSION}
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
 docker build \
