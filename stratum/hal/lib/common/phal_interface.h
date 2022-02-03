@@ -126,10 +126,6 @@ class PhalInterface {
       int module, int network_interface,
       const OpticalTransceiverInfo& optical_netif_info) = 0;
 
-//  virtual ::util::Status SetSfpFrequencyPhal(
-//      uint32 port_number, uint32 frequency) = 0;
-//
-
   // Set the color/state of a frontpanel port LED, corresponding to the physical
   // port specified by (slot, port, channel). The caller assumes each physical
   // port has one frontpanel port LED, i.e., if a transceiver has 4 channels we

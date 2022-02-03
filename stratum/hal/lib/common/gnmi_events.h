@@ -206,7 +206,7 @@ class PortLoopbackStateChangedEvent
   LoopbackState new_state_;
 };
 
-// A Port's frequency Has Changed event.
+// A Port's SFP frequency Has Changed event.
 class PortSfpFrequencyChangedEvent
     : public PerPortGnmiEvent<PortSfpFrequencyChangedEvent> {
  public:

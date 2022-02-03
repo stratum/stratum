@@ -193,12 +193,12 @@ template <typename T>
       return ::util::OkStatus();
   }
 
-  //Check if the symbol is present
-//  TODO
+  // TODO: Check if the symbol is present
 //  CHECK_RETURN_IF_FALSE(onlp_functions_.set_sfp_frequency(port_number, frequency) != nullptr)
 //      << "Symbol set_sfp_frequency does not exist.";
 
-  // Set the new frequency. If a failure occurs the function will still return TRUE but a LOG message will apprear with the error.
+  // Set the new frequency. If a failure occurs the function will still return TRUE
+  // but a LOG message will appear with the error.
   CHECK_RETURN_IF_FALSE(
        ONLP_SUCCESS(onlp_functions_.set_sfp_frequency(port_number, frequency)))
        << "Failed to set SFP frequency.";

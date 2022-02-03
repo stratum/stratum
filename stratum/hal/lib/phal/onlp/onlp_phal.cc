@@ -66,16 +66,14 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   // TODO(unknown): Process Chassis Config here
-  for (const auto& singleton_port : config.singleton_ports()) { // or const SingletonPort&?
+  for (const auto& singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
     uint32 port_number = singleton_port.port();
-    OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number); // Is it correct? Or port_id? (sfp_id)
+    OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number);
     const auto& config_params = singleton_port.config_params();
     if(config_params.frequency() != 0) {
       RETURN_IF_ERROR(onlp_interface_->SetSfpFrequency(sfp_oid_, port_number, config_params.frequency()));
-      LOG(INFO) << "SetSfpFrequency from onlp_phal.cc successful.";
     }
-    //config->frequency = config_params.frequency();
   }
   return ::util::OkStatus();
 }
@@ -100,17 +98,6 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   CHECK_RETURN_IF_FALSE(onlp_event_handler_ != nullptr);
 
   return onlp_event_handler_->RegisterEventCallback(callback);
-}
-
-::util::Status OnlpPhal::SetSfpFrequencyOnlp(uint32 port_number, uint32 frequency) {
-  absl::WriterMutexLock l(&config_lock_);
-
-  OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number);
-  if(frequency != 0) {
-    RETURN_IF_ERROR(onlp_interface_->SetSfpFrequency(sfp_oid_, port_number, frequency));
-    LOG(INFO) << "SetSfpFrequency from onlp done.";
-  }
-  return ::util::OkStatus();
 }
 
 }  // namespace onlp

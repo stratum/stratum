@@ -19,9 +19,6 @@
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {

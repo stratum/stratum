@@ -17,9 +17,6 @@
 #include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {

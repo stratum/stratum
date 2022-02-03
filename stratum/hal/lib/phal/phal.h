@@ -53,11 +53,6 @@ class Phal : public PhalInterface {
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
 
-////JR
-//  ::util::Status SetSfpFrequencyPhal(uint32 port_number, uint32 frequency)
-//      LOCKS_EXCLUDED(config_lock_);
-
-
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
   static Phal* CreateSingleton() LOCKS_EXCLUDED(config_lock_, init_lock_);

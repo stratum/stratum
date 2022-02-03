@@ -129,7 +129,7 @@ Phal* Phal::CreateSingleton() {
   for (const auto& phal_interface : phal_interfaces_) {
     RETURN_IF_ERROR(phal_interface->PushChassisConfig(config));
   }
-  LOG(INFO) << "PushChassiConfig from phal.cc successful.";
+
   return ::util::OkStatus();
 }
 
@@ -212,23 +212,6 @@ Phal* Phal::CreateSingleton() {
   // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
-
-//::util::Status Phal::SetSfpFrequencyPhal(uint32 port_number, uint32 frequency) {
-//  absl::WriterMutexLock l(&config_lock_);
-//
-//  //::util::Status status = ::util::OkStatus();
-//  //::util::Status status = onlp::OnlpPhal::SetSfpFrequencyOnlp(port_number, frequency);
-//  //APPEND_STATUS_IF_ERROR(status, onlp::OnlpPhal::SetSfpFrequencyOnlp(port_number, frequency));
-//  //APPEND_STATUS_IF_ERROR(status, onlp_phal->SetSfpFrequencyOnlp(port_number, frequency));
-////  if (status.ok()) {
-////      LOG(INFO) << "SetSfpFrequencyOnlp successful.";
-////  }
-//  if(frequency != 0) {
-//    RETURN_IF_ERROR(onlp_phal_->SetSfpFrequencyOnlp(port_number, port_number, frequency));
-//  }
-//  LOG(INFO) << "SetSfpFrequencyOnlp successful.";
-//  return ::util::OkStatus();
-//}
 
 }  // namespace phal
 }  // namespace hal

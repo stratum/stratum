@@ -1513,8 +1513,6 @@ void SetUpInterfacesInterfaceConfigSfpFrequency(uint64 node_id,
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
         singleton_port.mutable_config_params()->set_frequency(uint_frequency);
-        // const auto& config_params = singleton_port.config_params();
-        // config_params.set_frequency(uint_frequency);
         break;
       }
     }

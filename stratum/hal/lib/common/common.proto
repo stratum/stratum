@@ -1328,6 +1328,7 @@ message SdnPortId {
   uint32 port_id = 1;
 }
 
+//Wrapper around the Frequency of the tunable transceiver.
 message SfpFrequency {
   uint64 frequency = 1;
 }

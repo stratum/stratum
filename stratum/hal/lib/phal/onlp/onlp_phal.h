@@ -38,8 +38,6 @@ class OnlpPhal final : public OnlpPhalInterface {
   ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
   ::util::Status RegisterOnlpEventCallback(OnlpEventCallback* callback)
       EXCLUSIVE_LOCKS_REQUIRED(config_lock_) override;
-  ::util::Status SetSfpFrequencyOnlp(uint32 port_number, uint32 frequency)
-      LOCKS_EXCLUDED(config_lock_);
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
