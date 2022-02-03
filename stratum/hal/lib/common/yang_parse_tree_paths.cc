@@ -1500,6 +1500,14 @@ void SetUpInterfacesInterfaceConfigSfpFrequency(uint64 node_id,
 
     uint64 uint_frequency = typed_frequency->uint_val();
 
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_frequency,
+                           &SfpFrequency::set_frequency, uint_frequency);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
@@ -1509,14 +1517,6 @@ void SetUpInterfacesInterfaceConfigSfpFrequency(uint64 node_id,
         // config_params.set_frequency(uint_frequency);
         break;
       }
-    }
-
-    // Set the value.
-    auto status = SetValue(node_id, port_id, tree,
-                           &SetRequest::Request::Port::mutable_frequency,
-                           &SfpFrequency::set_frequency, uint_frequency);
-    if (status != ::util::OkStatus()) {
-      return status;
     }
 
     // Update the YANG parse tree.
@@ -1713,9 +1713,13 @@ void SetUpInterfacesInterfaceStateSfpFrequency(uint64 node_id,
       node_id, port_id, tree, &DataResponse::frequency,
       &DataResponse::has_frequency, &DataRequest::Request::mutable_frequency,
       &SfpFrequency::frequency);
-  auto on_change_functor = UnsupportedFunc();
+
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortSfpFrequencyChangedEvent::GetSfpFrequency);
+  auto register_functor = RegisterFunc<PortSfpFrequencyChangedEvent>();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -3705,7 +3709,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("sfp-frequency")());
-  SetUpInterfacesInterfaceConfigSfpFrequency(singleton.config_params().frequency(), node_id, port_id,
+  SetUpInterfacesInterfaceConfigSfpFrequency(node_id, port_id, singleton.config_params().frequency(),
                                              node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(

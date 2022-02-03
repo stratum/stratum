@@ -204,6 +204,7 @@ BfrtSwitch::~BfrtSwitch() {}
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
       case DataRequest::Request::kLoopbackStatus:
+//      case DataRequest::Request::kSfpFrequency:
       case DataRequest::Request::kSdnPortId: {
         auto port_data = bf_chassis_manager_->GetPortData(req);
         if (!port_data.ok()) {
@@ -246,9 +247,52 @@ BfrtSwitch::~BfrtSwitch() {}
 ::util::Status BfrtSwitch::SetValue(uint64 node_id, const SetRequest& request,
                                     std::vector<::util::Status>* details) {
   LOG(INFO) << "BfrtSwitch::SetValue is not implemented yet, but changes will "
-            << "be performed when ChassisConfig is pushed again. "
+            << "be performed when ChassisConfig is pushed again."
             << request.ShortDebugString() << ".";
-
+//  for (const auto& req : request.requests()) {
+//    ::util::Status status = ::util::OkStatus();
+//    switch (req.request_case()) {
+//      case SetRequest::Request::RequestCase::kPort:
+//        switch (req.port().value_case()) {
+//          case SetRequest::Request::Port::ValueCase::kHealthIndicator:
+//            LOG(ERROR) << "Request " << req.port().ShortDebugString()
+//                       << " through SetValue() is ignored. Modify the "
+//                          "ChassisConfig instead!";
+//            break;
+//          case SetRequest::Request::Port::ValueCase::kLoopbackStatus:
+//          case SetRequest::Request::Port::ValueCase::kSfpFrequency: {
+//            LOG(INFO) << "SetRequest::Request::Port::ValueCase::kSfpFrequency:";
+//            //absl::WriterMutexLock l(&chassis_lock);
+//            status.Update(phal_interface_->SetSfpFrequencyPhal(req.port().port_id(), req.port().frequency()));
+//            //status.Update(onlp::OnlpPhal::SetSfpFrequencyOnlp(
+//            //    req.port().port_id(),
+//            //    req.port().frequency()));
+//            break;
+//          }
+//          default:
+//            status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+//        }
+//        break;
+//      case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
+//        switch (req.optical_network_interface().value_case()) {
+//          case SetRequest::Request::OpticalNetworkInterface::ValueCase::
+//              kOpticalTransceiverInfo: {
+//            status.Update(phal_interface_->SetOpticalTransceiverInfo(
+//                req.optical_network_interface().module(),
+//                req.optical_network_interface().network_interface(),
+//                req.optical_network_interface().optical_transceiver_info()));
+//            break;
+//          }
+//          default:
+//            status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+//        }
+//        break;
+//      default:
+//        status = MAKE_ERROR(ERR_INTERNAL)
+//                 << req.ShortDebugString() << " Not supported yet!";
+//    }
+//    if (details) details->push_back(status);
+//  }
   return ::util::OkStatus();
 }
 

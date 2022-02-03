@@ -24,6 +24,9 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {
@@ -142,8 +145,7 @@ BfChassisManager::~BfChassisManager() = default;
   config->loopback_mode = config_params.loopback_mode();
 
   if (config_params.frequency() != 0) {
-    RETURN_IF_ERROR(
-        onlp_interface_->SetSfpFrequency(unit, sdk_port_id, config_params.frequency()));
+    LOG(INFO) << "Not supported yet.";
   }
   config->frequency = config_params.frequency();
 
@@ -256,6 +258,11 @@ BfChassisManager::~BfChassisManager() = default;
             << LoopbackState_Name(config_params.loopback_mode()) << " for port "
             << port_id << " in node " << node_id << " (SDK Port " << sdk_port_id
             << ").";
+  }
+  if (config_params.frequency() != config_old.frequency) {
+    LOG(INFO) << "Frequency will be updated when PushChassisConfig is called.";
+    config->frequency = config_params.frequency();
+    config_changed = true;
   }
   // Due to lack of information about the new shaping config here, we always
   // disable it. If required, it will be configured later.
@@ -430,6 +437,16 @@ BfChassisManager::~BfChassisManager() = default;
                                        singleton_port, *old_port_config,
                                        &port_config));
     }
+  }
+
+  for (const auto& singleton_port : config.singleton_ports()) {
+    uint32 port_id = singleton_port.id();
+    uint64 node_id = singleton_port.node();
+    const auto& config_params = singleton_port.config_params();
+    if(config_params.frequency() != 0) {
+          RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
+    }
+    LOG(INFO) << "PushChassisConfig from bf_chassis_manager successful.";
   }
 
   if (config.has_vendor_config() &&
@@ -1125,7 +1142,11 @@ BfChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
               << port_id << " in node " << node_id << " (SDK Port "
               << sdk_port_id << ").";
     }
-
+    if (config.frequency) {
+      LOG(INFO) << "ReplayChassisConfig - no SetSfpFrequency.";
+      config_new->frequency = *config.frequency;
+      LOG(INFO) << "ReplayChassisConfig - config_new->frequency.";
+    }
     if (config.admin_state == ADMIN_STATE_ENABLED) {
       RETURN_IF_ERROR(bf_sde_interface_->EnablePort(device, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;

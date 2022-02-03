@@ -73,6 +73,7 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
     const auto& config_params = singleton_port.config_params();
     if(config_params.frequency() != 0) {
       RETURN_IF_ERROR(onlp_interface_->SetSfpFrequency(sfp_oid_, port_number, config_params.frequency()));
+      LOG(INFO) << "SetSfpFrequency from onlp_phal.cc successful.";
     }
     //config->frequency = config_params.frequency();
   }
@@ -107,6 +108,7 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number);
   if(frequency != 0) {
     RETURN_IF_ERROR(onlp_interface_->SetSfpFrequency(sfp_oid_, port_number, frequency));
+    LOG(INFO) << "SetSfpFrequency from onlp done.";
   }
   return ::util::OkStatus();
 }

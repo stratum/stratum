@@ -350,6 +350,12 @@ SingletonPortToInterfaces(const SingletonPort& in) {
         IsLoopbackStateEnabled(in.config_params().loopback_mode()));
   }
 
+//  // SingletonPort.config_params.frequency
+//  // -> /interfaces/interface/config/sfp-frequency
+//  if (in.config_params().frequency() != 0) {
+//    interface->mutable_frequency()->set_value(
+//        in.config_params().frequency());
+//  }
   // FIXME(Yi Tseng): Should we use other field to store interface channel?
   interface->add_physical_channel()->set_value(in.channel());
 
@@ -760,6 +766,11 @@ TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
                                   : LOOPBACK_STATE_NONE;
     config_params->set_loopback_mode(lpbk_mode);
   }
+
+//  if (interface.has_frequency()) {
+//    uint64 freq = interface.frequency().value();
+//    config_params->set_frequency(freq);
+//  }
 
   // FIXME(Yi Tseng): Should we use other field to store interface channel?
   if (interface.physical_channel_size() > 0) {

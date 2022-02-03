@@ -211,7 +211,7 @@ class PortSfpFrequencyChangedEvent
     : public PerPortGnmiEvent<PortSfpFrequencyChangedEvent> {
  public:
   PortSfpFrequencyChangedEvent(uint64 node_id, uint32 port_id,
-                                uint64 frequency)
+                                const uint64 frequency)
       : PerPortGnmiEvent(node_id, port_id), frequency_(frequency) {}
   ~PortSfpFrequencyChangedEvent() override {}
 

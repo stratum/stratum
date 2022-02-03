@@ -56,7 +56,7 @@ class Phal : public PhalInterface {
 ////JR
 //  ::util::Status SetSfpFrequencyPhal(uint32 port_number, uint32 frequency)
 //      LOCKS_EXCLUDED(config_lock_);
-//
+
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
