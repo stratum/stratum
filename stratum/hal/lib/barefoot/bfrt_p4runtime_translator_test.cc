@@ -587,7 +587,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_FromSdk) {
   EXPECT_OK(PushChassisConfig());
   // Translate from sdk port to singleton port
   auto sdk_port_id = Uint32ToBytes(kSdkPortId, kTnaPortIdBitWidth);
-  auto expected_value = Uint32ToBytes(kPortId, kTnaPortIdBitWidth);
+  auto expected_value = ByteStringToP4RuntimeByteString(
+      Uint32ToBytes(kPortId, kTnaPortIdBitWidth));
   auto actual_value = TranslateValue(sdk_port_id, kUriTnaPortId,
                                      /*to_sdk=*/false, kTnaPortIdBitWidth)
                           .ValueOrDie();
@@ -603,41 +604,41 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateP4Info) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     match {
       field_id: 2
-      ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+      ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
     }
     match {
       field_id: 3
-      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+      range { low: "\x01" high: "\x01" }
     }
     match {
       field_id: 4
-      lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+      lpm { value: "\x01" prefix_len: 32 }
     }
     match {
       field_id: 5
-      optional { value: "\x00\x00\x00\x01"}
+      optional { value: "\x01"}
     }
     match {
       field_id: 6
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x00\x00\x00\x01" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
+        params { param_id: 1 value: "\x01" }
+        params { param_id: 2 value: "\x01" }
       }
     }
   )PROTO";
-  const char expected_table_entry_str[] = R"PROTO(
+  constexpr char expected_table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 1
@@ -661,13 +662,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry) {
     }
     match {
       field_id: 6
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     action {
       action {
         action_id: 16794911
         params { param_id: 1 value: "\x01\x2C" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
+        params { param_id: 2 value: "\x01" }
       }
     }
   )PROTO";
@@ -679,21 +680,21 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     action {
       action_profile_action_set {
         action_profile_actions {
           action {
             action_id: 16794911
-            params { param_id: 1 value: "\x00\x00\x00\x01" }
-            params { param_id: 2 value: "\x00\x00\x00\x01" }
+            params { param_id: 1 value: "\x01" }
+            params { param_id: 2 value: "\x01" }
           }
         }
       }
     }
   )PROTO";
-  const char expected_table_entry_str[] = R"PROTO(
+  constexpr char expected_table_entry_str[] = R"PROTO(
     table_id: 33583783
     action {
       action_profile_action_set {
@@ -701,7 +702,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_ActionProfileActionSet) {
           action {
             action_id: 16794911
             params { param_id: 1 value: "\x01\x2C" }
-            params { param_id: 2 value: "\x00\x00\x00\x01" }
+            params { param_id: 2 value: "\x01" }
           }
         }
       }
@@ -715,7 +716,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_ActionProfileActionSet) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 1
@@ -739,48 +740,48 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry) {
     }
     match {
       field_id: 6
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     action {
       action {
         action_id: 16794911
         params { param_id: 1 value: "\x01\x2C" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
+        params { param_id: 2 value: "\x01" }
       }
     }
 
   )PROTO";
-  const char expected_table_entry_str[] = R"PROTO(
+  constexpr char expected_table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     match {
       field_id: 2
-      ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+      ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
     }
     match {
       field_id: 3
-      range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+      range { low: "\x01" high: "\x01" }
     }
     match {
       field_id: 4
-      lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+      lpm { value: "\x01" prefix_len: 32 }
     }
     match {
       field_id: 5
-      optional { value: "\x00\x00\x00\x01" }
+      optional { value: "\x01" }
     }
     match {
       field_id: 6
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x00\x00\x00\x01" }
-        params { param_id: 2 value: "\x00\x00\x00\x01" }
+        params { param_id: 1 value: "\x01" }
+        params { param_id: 2 value: "\x01" }
       }
     }
   )PROTO";
@@ -792,7 +793,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry_ActionProfileActionSet) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     action {
       action_profile_action_set {
@@ -800,21 +801,21 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadTableEntry_ActionProfileActionSet) {
           action {
             action_id: 16794911
             params { param_id: 1 value: "\x01\x2C" }
-            params { param_id: 2 value: "\x00\x00\x00\x01" }
+            params { param_id: 2 value: "\x01" }
           }
         }
       }
     }
   )PROTO";
-  const char expected_table_entry_str[] = R"PROTO(
+  constexpr char expected_table_entry_str[] = R"PROTO(
     table_id: 33583783
     action {
       action_profile_action_set {
         action_profile_actions {
           action {
             action_id: 16794911
-            params { param_id: 1 value: "\x00\x00\x00\x01" }
-            params { param_id: 2 value: "\x00\x00\x00\x01" }
+            params { param_id: 1 value: "\x01" }
+            params { param_id: 2 value: "\x01" }
           }
         }
       }
@@ -829,11 +830,11 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidTernary) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   // mask must be all-one.
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 2
-      ternary { value: "\x00\x00\x00\x01" mask: "\x00\x00\xff\xff" }
+      ternary { value: "\x01" mask: "\xff\xff" }
     }
   )PROTO";
 
@@ -851,7 +852,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidRange) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   // low and high must be the same value.
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 3
@@ -873,11 +874,11 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteTableEntry_InvalidLpm) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
   // prefix must be the same value as bitwidth of the field
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 4
-      lpm { value: "\x00\x00\x00\x01" prefix_len: 10 }
+      lpm { value: "\x01" prefix_len: 10 }
     }
   )PROTO";
 
@@ -900,8 +901,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteActionProfileMember) {
     member_id: 1
     action {
       action_id: 16794911
-      params { param_id: 1 value: "\x00\x00\x00\x01" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
+      params { param_id: 1 value: "\x01" }
+      params { param_id: 2 value: "\x01" }
     }
   )PROTO";
   constexpr char expected_action_profile_member_str[] = R"PROTO(
@@ -910,7 +911,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteActionProfileMember) {
     action {
       action_id: 16794911
       params { param_id: 1 value: "\x01\x2C" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
+      params { param_id: 2 value: "\x01" }
     }
   )PROTO";
 
@@ -922,22 +923,22 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteActionProfileMember) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadActionProfileMember) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char action_profile_member_str[] = R"PROTO(
+  constexpr char action_profile_member_str[] = R"PROTO(
     action_profile_id: 1
     member_id: 1
     action {
       action_id: 16794911
       params { param_id: 1 value: "\x01\x2C" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
+      params { param_id: 2 value: "\x01" }
     }
   )PROTO";
-  const char expected_action_profile_member_str[] = R"PROTO(
+  constexpr char expected_action_profile_member_str[] = R"PROTO(
     action_profile_id: 1
     member_id: 1
     action {
       action_id: 16794911
-      params { param_id: 1 value: "\x00\x00\x00\x01" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
+      params { param_id: 1 value: "\x01" }
+      params { param_id: 2 value: "\x01" }
     }
   )PROTO";
 
@@ -950,7 +951,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadActionProfileMember) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char pre_entry_str[] = R"PROTO(
+  constexpr char pre_entry_str[] = R"PROTO(
     multicast_group_entry {
       multicast_group_id: 1
       replicas {
@@ -963,7 +964,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_MulticastGroup) {
       }
     }
   )PROTO";
-  const char expected_pre_entry_str[] = R"PROTO(
+  constexpr char expected_pre_entry_str[] = R"PROTO(
     multicast_group_entry {
       multicast_group_id: 1
       replicas {
@@ -985,7 +986,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_MulticastGroup) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_MulticastGroup) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char pre_entry_str[] = R"PROTO(
+  constexpr char pre_entry_str[] = R"PROTO(
     multicast_group_entry {
       multicast_group_id: 1
       replicas {
@@ -998,7 +999,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_MulticastGroup) {
       }
     }
   )PROTO";
-  const char expected_pre_entry_str[] = R"PROTO(
+  constexpr char expected_pre_entry_str[] = R"PROTO(
     multicast_group_entry {
       multicast_group_id: 1
       replicas {
@@ -1020,7 +1021,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_MulticastGroup) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char pre_entry_str[] = R"PROTO(
+  constexpr char pre_entry_str[] = R"PROTO(
     clone_session_entry {
       session_id: 1
       replicas {
@@ -1053,7 +1054,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_CloneSession) {
       }
     }
   )PROTO";
-  const char expected_pre_entry_str[] = R"PROTO(
+  constexpr char expected_pre_entry_str[] = R"PROTO(
     clone_session_entry {
       session_id: 1
       replicas {
@@ -1095,7 +1096,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_CloneSession) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_CloneSession) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char pre_entry_str[] = R"PROTO(
+  constexpr char pre_entry_str[] = R"PROTO(
     clone_session_entry {
       session_id: 1
       replicas {
@@ -1128,7 +1129,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_CloneSession) {
       }
     }
   )PROTO";
-  const char expected_pre_entry_str[] = R"PROTO(
+  constexpr char expected_pre_entry_str[] = R"PROTO(
     clone_session_entry {
       session_id: 1
       replicas {
@@ -1170,7 +1171,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadPRE_CloneSession) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_InvalidPort) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char pre_entry_str[] = R"PROTO(
+  constexpr char pre_entry_str[] = R"PROTO(
     multicast_group_entry {
       multicast_group_id: 1
       replicas {
@@ -1203,7 +1204,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, PacketOut) {
     }
     metadata {
       metadata_id: 2
-      value: "\x00\x00\x00\x01" # egress port
+      value: "\x01" # egress port
     }
   )PROTO";
   char expected_packet_out_str[] = R"PROTO(
@@ -1240,7 +1241,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, PacketIn) {
     payload: "<raw packet>"
     metadata {
       metadata_id: 1
-      value: "\x00\x00\x00\x01" # ingress port
+      value: "\x01" # ingress port
     }
     metadata {
       metadata_id: 2
@@ -1256,7 +1257,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, PacketIn) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteCounterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char counter_entry_str[] = R"PROTO(
+  constexpr char counter_entry_str[] = R"PROTO(
     counter_id: 318814845
     index {
       index: 1
@@ -1266,7 +1267,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteCounterEntry) {
       packet_count: 1
     }
   )PROTO";
-  const char expected_counter_entry_str[] = R"PROTO(
+  constexpr char expected_counter_entry_str[] = R"PROTO(
     counter_id: 318814845
     index {
       index: 300
@@ -1284,7 +1285,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteCounterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char counter_entry_str[] = R"PROTO(
+  constexpr char counter_entry_str[] = R"PROTO(
     counter_id: 318814845
     index {
       index: 300
@@ -1294,7 +1295,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntry) {
       packet_count: 1
     }
   )PROTO";
-  const char expected_counter_entry_str[] = R"PROTO(
+  constexpr char expected_counter_entry_str[] = R"PROTO(
     counter_id: 318814845
     index {
       index: 1
@@ -1312,38 +1313,38 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadCounterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectCounterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char direct_counter_entry_str[] = R"PROTO(
+  constexpr char direct_counter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
       }
       match {
         field_id: 3
-        range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        range { low: "\x01" high: "\x01" }
       }
       match {
         field_id: 4
-        lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        lpm { value: "\x01" prefix_len: 32 }
       }
       match {
         field_id: 5
-        optional { value: "\x00\x00\x00\x01" }
+        optional { value: "\x01" }
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       action {
         action {
           action_id: 16794911
-          params { param_id: 1 value: "\x00\x00\x00\x01" }
-          params { param_id: 2 value: "\x00\x00\x00\x01" }
+          params { param_id: 1 value: "\x01" }
+          params { param_id: 2 value: "\x01" }
         }
       }
     }
@@ -1352,7 +1353,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectCounterEntry) {
       packet_count: 1
     }
   )PROTO";
-  const char expected_direct_counter_entry_str[] = R"PROTO(
+  constexpr char expected_direct_counter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
@@ -1377,13 +1378,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectCounterEntry) {
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       action {
         action {
           action_id: 16794911
           params { param_id: 1 value: "\x01\x2C" }
-          params { param_id: 2 value: "\x00\x00\x00\x01" }
+          params { param_id: 2 value: "\x01" }
         }
       }
     }
@@ -1401,7 +1402,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectCounterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char direct_counter_entry_str[] = R"PROTO(
+  constexpr char direct_counter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
@@ -1426,13 +1427,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntry) {
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x01\x2C" }
+        exact { value: "\x01\x2C" }
       }
       action {
         action {
           action_id: 16794911
           params { param_id: 1 value: "\x01\x2C" }
-          params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          params { param_id: 2 value: "\x01\x2C" }
         }
       }
     }
@@ -1441,38 +1442,38 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntry) {
       packet_count: 1
     }
   )PROTO";
-  const char expected_direct_counter_entry_str[] = R"PROTO(
+  constexpr char expected_direct_counter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
       }
       match {
         field_id: 3
-        range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        range { low: "\x01" high: "\x01" }
       }
       match {
         field_id: 4
-        lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        lpm { value: "\x01" prefix_len: 32 }
       }
       match {
         field_id: 5
-        optional { value: "\x00\x00\x00\x01" }
+        optional { value: "\x01" }
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x01\x2C" }
+        exact { value: "\x01\x2C" }
       }
       action {
         action {
           action_id: 16794911
-          params { param_id: 1 value: "\x00\x00\x00\x01" }
-          params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          params { param_id: 1 value: "\x01" }
+          params { param_id: 2 value: "\x01\x2C" }
         }
       }
     }
@@ -1491,7 +1492,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectCounterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteMeterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char meter_entry_str[] = R"PROTO(
+  constexpr char meter_entry_str[] = R"PROTO(
     meter_id: 55555
     index {
       index: 1
@@ -1501,7 +1502,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteMeterEntry) {
       pir: 1
     }
   )PROTO";
-  const char expected_meter_entry_str[] = R"PROTO(
+  constexpr char expected_meter_entry_str[] = R"PROTO(
     meter_id: 55555
     index {
       index: 300
@@ -1519,7 +1520,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteMeterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char meter_entry_str[] = R"PROTO(
+  constexpr char meter_entry_str[] = R"PROTO(
     meter_id: 55555
     index {
       index: 300
@@ -1529,7 +1530,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntry) {
       pir: 1
     }
   )PROTO";
-  const char expected_meter_entry_str[] = R"PROTO(
+  constexpr char expected_meter_entry_str[] = R"PROTO(
     meter_id: 55555
     index {
       index: 1
@@ -1548,38 +1549,38 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadMeterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectMeterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char direct_meter_entry_str[] = R"PROTO(
+  constexpr char direct_meter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
       }
       match {
         field_id: 3
-        range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        range { low: "\x01" high: "\x01" }
       }
       match {
         field_id: 4
-        lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        lpm { value: "\x01" prefix_len: 32 }
       }
       match {
         field_id: 5
-        optional { value: "\x00\x00\x00\x01" }
+        optional { value: "\x01" }
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       action {
         action {
           action_id: 16794911
-          params { param_id: 1 value: "\x00\x00\x00\x01" }
-          params { param_id: 2 value: "\x00\x00\x00\x01" }
+          params { param_id: 1 value: "\x01" }
+          params { param_id: 2 value: "\x01" }
         }
       }
     }
@@ -1588,7 +1589,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectMeterEntry) {
       pir: 1
     }
   )PROTO";
-  const char expected_direct_meter_entry_str[] = R"PROTO(
+  constexpr char expected_direct_meter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
@@ -1613,13 +1614,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectMeterEntry) {
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       action {
         action {
           action_id: 16794911
           params { param_id: 1 value: "\x01\x2C" }
-          params { param_id: 2 value: "\x00\x00\x00\x01" }
+          params { param_id: 2 value: "\x01" }
         }
       }
     }
@@ -1637,7 +1638,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteDirectMeterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectMeterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char direct_meter_entry_str[] = R"PROTO(
+  constexpr char direct_meter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
@@ -1662,13 +1663,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectMeterEntry) {
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x01\x2C" }
+        exact { value: "\x01\x2C" }
       }
       action {
         action {
           action_id: 16794911
           params { param_id: 1 value: "\x01\x2C" }
-          params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          params { param_id: 2 value: "\x01\x2C" }
         }
       }
     }
@@ -1677,38 +1678,38 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectMeterEntry) {
       pir: 1
     }
   )PROTO";
-  const char expected_direct_meter_entry_str[] = R"PROTO(
+  constexpr char expected_direct_meter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
       }
       match {
         field_id: 3
-        range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        range { low: "\x01" high: "\x01" }
       }
       match {
         field_id: 4
-        lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        lpm { value: "\x01" prefix_len: 32 }
       }
       match {
         field_id: 5
-        optional { value: "\x00\x00\x00\x01" }
+        optional { value: "\x01" }
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x01\x2C" }
+        exact { value: "\x01\x2C" }
       }
       action {
         action {
           action_id: 16794911
-          params { param_id: 1 value: "\x00\x00\x00\x01" }
-          params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          params { param_id: 1 value: "\x01" }
+          params { param_id: 2 value: "\x01\x2C" }
         }
       }
     }
@@ -1727,7 +1728,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadDirectMeterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, WriteRegisterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char register_entry_str[] = R"PROTO(
+  constexpr char register_entry_str[] = R"PROTO(
     register_id: 66666
     index {
       index: 1
@@ -1736,7 +1737,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteRegisterEntry) {
       bitstring: "\x00"
     }
   )PROTO";
-  const char expected_register_entry_str[] = R"PROTO(
+  constexpr char expected_register_entry_str[] = R"PROTO(
     register_id: 66666
     index {
       index: 300
@@ -1753,7 +1754,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WriteRegisterEntry) {
 TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntry) {
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char register_entry_str[] = R"PROTO(
+  constexpr char register_entry_str[] = R"PROTO(
     register_id: 66666
     index {
       index: 300
@@ -1762,7 +1763,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, ReadRegisterEntry) {
       bitstring: "\x00"
     }
   )PROTO";
-  const char expected_register_entry_str[] = R"PROTO(
+  constexpr char expected_register_entry_str[] = R"PROTO(
     register_id: 66666
     index {
       index: 1
@@ -1782,16 +1783,16 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
       /*translation_enabled=*/false, bf_sde_mock_.get(), kDeviceId);
   EXPECT_OK(PushChassisConfig());
   EXPECT_OK(PushForwardingPipelineConfig());
-  const char table_entry_str[] = R"PROTO(
+  constexpr char table_entry_str[] = R"PROTO(
     table_id: 33583783
     match {
       field_id: 1
-      exact { value: "\x00\x00\x00\x01" }
+      exact { value: "\x01" }
     }
     action {
       action {
         action_id: 16794911
-        params { param_id: 1 value: "\x00\x00\x00\x01" }
+        params { param_id: 1 value: "\x01" }
       }
     }
   )PROTO";
@@ -1804,8 +1805,8 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
     member_id: 1
     action {
       action_id: 16794911
-      params { param_id: 1 value: "\x00\x00\x00\x01" }
-      params { param_id: 2 value: "\x00\x00\x00\x01" }
+      params { param_id: 1 value: "\x01" }
+      params { param_id: 2 value: "\x01" }
     }
   )PROTO";
 
@@ -1813,7 +1814,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
                        true,
                        &BfrtP4RuntimeTranslator::TranslateActionProfileMember);
 
-  const char direct_meter_entry_str[] = R"PROTO(
+  constexpr char direct_meter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
@@ -1838,13 +1839,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x01\x2C" }
+        exact { value: "\x01\x2C" }
       }
       action {
         action {
           action_id: 16794911
           params { param_id: 1 value: "\x01\x2C" }
-          params { param_id: 2 value: "\x00\x00\x01\x2C" }
+          params { param_id: 2 value: "\x01\x2C" }
         }
       }
     }
@@ -1856,7 +1857,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
   TestEntryTranslation(direct_meter_entry_str, direct_meter_entry_str, true,
                        &BfrtP4RuntimeTranslator::TranslateDirectMeterEntry);
 
-  const char meter_entry_str[] = R"PROTO(
+  constexpr char meter_entry_str[] = R"PROTO(
     meter_id: 55555
     index {
       index: 1
@@ -1869,7 +1870,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
   TestEntryTranslation(meter_entry_str, meter_entry_str, true,
                        &BfrtP4RuntimeTranslator::TranslateMeterEntry);
 
-  const char counter_entry_str[] = R"PROTO(
+  constexpr char counter_entry_str[] = R"PROTO(
     counter_id: 318814845
     index {
       index: 1
@@ -1882,38 +1883,38 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
   TestEntryTranslation(counter_entry_str, counter_entry_str, true,
                        &BfrtP4RuntimeTranslator::TranslateCounterEntry);
 
-  const char direct_counter_entry_str[] = R"PROTO(
+  constexpr char direct_counter_entry_str[] = R"PROTO(
     table_entry {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00\x00\x01" mask: "\xff\xff\xff\xff" }
+        ternary { value: "\x01" mask: "\xff\xff\xff\xff" }
       }
       match {
         field_id: 3
-        range { low: "\x00\x00\x00\x01" high: "\x00\x00\x00\x01" }
+        range { low: "\x01" high: "\x01" }
       }
       match {
         field_id: 4
-        lpm { value: "\x00\x00\x00\x01" prefix_len: 32 }
+        lpm { value: "\x01" prefix_len: 32 }
       }
       match {
         field_id: 5
-        optional { value: "\x00\x00\x00\x01" }
+        optional { value: "\x01" }
       }
       match {
         field_id: 6
-        exact { value: "\x00\x00\x00\x01" }
+        exact { value: "\x01" }
       }
       action {
         action {
           action_id: 16794911
-          params { param_id: 1 value: "\x00\x00\x00\x01" }
-          params { param_id: 2 value: "\x00\x00\x00\x01" }
+          params { param_id: 1 value: "\x01" }
+          params { param_id: 2 value: "\x01" }
         }
       }
     }
@@ -1925,7 +1926,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
   TestEntryTranslation(direct_counter_entry_str, direct_counter_entry_str, true,
                        &BfrtP4RuntimeTranslator::TranslateDirectCounterEntry);
 
-  const char pre_entry_str[] = R"PROTO(
+  constexpr char pre_entry_str[] = R"PROTO(
     multicast_group_entry {
       multicast_group_id: 1
       replicas {
@@ -1950,7 +1951,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
     }
     metadata {
       metadata_id: 2
-      value: "\x00\x00\x00\x01" # egress port
+      value: "\x01" # egress port
     }
   )PROTO";
   TestEntryTranslation(packet_out_str, packet_out_str,
@@ -1970,7 +1971,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslationDisabled) {
   TestEntryTranslation(packet_in_str, packet_in_str,
                        &BfrtP4RuntimeTranslator::TranslatePacketIn);
 
-  const char register_entry_str[] = R"PROTO(
+  constexpr char register_entry_str[] = R"PROTO(
     register_id: 66666
     index {
       index: 300

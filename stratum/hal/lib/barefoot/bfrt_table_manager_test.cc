@@ -179,11 +179,11 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\000\001" }
+        exact { value: "\001" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00" mask: "\x0f\xff" }
+        ternary { value: "\x00" mask: "\x0f\xff" }
       }
       priority: 10
     }

@@ -45,7 +45,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
-DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, true,
+DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, false,
             "Enables the legacy padded byte string format in P4Runtime "
             "responses for Stratum-bfrt. The strings are left unchanged from "
             "the underlying SDE.");
