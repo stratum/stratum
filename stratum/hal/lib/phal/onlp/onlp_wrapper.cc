@@ -7,6 +7,10 @@
 #include <dlfcn.h>
 
 #include <string>
+#include <stdint.h>
+
+#include<iostream>
+using namespace std;
 
 #include "absl/memory/memory.h"
 #include "absl/strings/strip.h"
@@ -95,6 +99,20 @@ template <typename T>
 }
 }  // namespace
 
+namespace {
+template <typename T>
+::util::StatusOr<T> LoadSymbolIfPresent(void* handle, const char* name) {
+  dlerror();  // Clear last error.
+  auto* symbol = reinterpret_cast<T>(dlsym(handle, name));
+  char* dl_err = dlerror();
+  if (dl_err == nullptr) { // symbol is present
+    return symbol;
+  } else { // symbol is not present
+    return nullptr;
+  }
+}
+}
+
 ::util::Status OnlpWrapper::Initialize() {
   LOG(INFO) << "Initializing ONLP.";
 
@@ -127,7 +145,18 @@ template <typename T>
   LOAD_SYMBOL(onlp_led_mode_set);
   LOAD_SYMBOL(onlp_led_char_set);
   LOAD_SYMBOL(onlp_psu_info_get);
+  LOAD_SYMBOL(onlp_i2c_writeb);
+  LOAD_SYMBOL(onlp_i2c_readb);
 #undef LOAD_SYMBOL
+
+#define LOAD_SYMBOL_IF_PRESENT(symbol)   \
+  ASSIGN_OR_RETURN(                      \
+      onlp_functions_.symbol,            \
+      LoadSymbolIfPresent<decltype(onlp_functions_.symbol)>(onlp_lib_handle_, #symbol))
+
+  LOAD_SYMBOL_IF_PRESENT(onlp_i2c_mux_mapping);
+  LOAD_SYMBOL_IF_PRESENT(set_sfp_frequency);
+#undef LOAD_SYMBOL_IF_PRESENT
 
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
       << "Failed to initialize ONLP.";
@@ -155,6 +184,26 @@ template <typename T>
         << "Failed to get SFP info for OID " << oid << ".";
   }
   return SfpInfo(sfp_info);
+}
+
+::util::Status OnlpWrapper::SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const {
+  // Check if SFP is present
+  if (!onlp_functions_.onlp_sfp_is_present(oid)) {
+      LOG(INFO) << "Optical module not present for OID " << oid << ".\n";
+      return ::util::OkStatus();
+  }
+
+  // TODO: Check if the symbol is present
+//  CHECK_RETURN_IF_FALSE(onlp_functions_.set_sfp_frequency(port_number, frequency) != nullptr)
+//      << "Symbol set_sfp_frequency does not exist.";
+
+  // Set the new frequency. If a failure occurs the function will still return TRUE
+  // but a LOG message will appear with the error.
+  CHECK_RETURN_IF_FALSE(
+       ONLP_SUCCESS(onlp_functions_.set_sfp_frequency(port_number, frequency)))
+       << "Failed to set SFP frequency.";
+
+  return ::util::OkStatus();
 }
 
 ::util::StatusOr<FanInfo> OnlpWrapper::GetFanInfo(OnlpOid oid) const {

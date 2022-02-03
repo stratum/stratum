@@ -66,7 +66,15 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   // TODO(unknown): Process Chassis Config here
-
+  for (const auto& singleton_port : config.singleton_ports()) {
+    uint32 port_id = singleton_port.id();
+    uint32 port_number = singleton_port.port();
+    OnlpOid sfp_oid_ = ONLP_SFP_ID_CREATE(port_number);
+    const auto& config_params = singleton_port.config_params();
+    if(config_params.frequency() != 0) {
+      RETURN_IF_ERROR(onlp_interface_->SetSfpFrequency(sfp_oid_, port_number, config_params.frequency()));
+    }
+  }
   return ::util::OkStatus();
 }
 

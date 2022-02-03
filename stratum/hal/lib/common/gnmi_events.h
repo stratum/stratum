@@ -206,6 +206,21 @@ class PortLoopbackStateChangedEvent
   LoopbackState new_state_;
 };
 
+// A Port's SFP frequency Has Changed event.
+class PortSfpFrequencyChangedEvent
+    : public PerPortGnmiEvent<PortSfpFrequencyChangedEvent> {
+ public:
+  PortSfpFrequencyChangedEvent(uint64 node_id, uint32 port_id,
+                                const uint64 frequency)
+      : PerPortGnmiEvent(node_id, port_id), frequency_(frequency) {}
+  ~PortSfpFrequencyChangedEvent() override {}
+
+  uint64 GetSfpFrequency() const { return frequency_; }
+
+ private:
+  uint64 frequency_;
+};
+
 // A Port's Speed expressed in Bits Per Second Has Changed event.
 class PortSpeedBpsChangedEvent
     : public PerPortGnmiEvent<PortSpeedBpsChangedEvent> {

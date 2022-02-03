@@ -117,6 +117,8 @@ class BfChassisManager {
     absl::optional<FecMode> fec_mode;  // empty if port add failed
     // empty if loopback mode configuration failed
     absl::optional<LoopbackState> loopback_mode;
+    // empty if frequency configuration failed
+    absl::optional<uint64> frequency;
     // empty if no shaping config given
     absl::optional<TofinoConfig::BfPortShapingConfig::BfPerPortShapingConfig>
         shaping_config;

@@ -48,6 +48,7 @@ class OnlpPhal final : public OnlpPhalInterface {
   OnlpPhal(const OnlpPhal&) = delete;
   OnlpPhal& operator=(const OnlpPhal&) = delete;
 
+
  private:
   friend class OnlpPhalCli;
   friend class OnlpPhalTest;

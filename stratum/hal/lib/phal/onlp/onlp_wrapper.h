@@ -13,6 +13,7 @@ extern "C" {
 #include <onlp/psu.h>
 #include <onlp/sfp.h>
 #include <onlp/thermal.h>
+#include <onlplib/i2c.h>
 }
 
 #include <bitset>
@@ -148,6 +149,8 @@ class OnlpInterface {
 
   // Given a OID object id, returns SFP info or failure.
   virtual ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const = 0;
+  // Given a OID object id, sets SFP frequency.
+  virtual ::util::Status SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const = 0;
 
   // Given a OID object id, returns FAN info or failure.
   virtual ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const = 0;
@@ -212,6 +215,7 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<OidInfo> GetOidInfo(OnlpOid oid) const override;
   ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const override;
   ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
+  ::util::Status SetSfpFrequency(OnlpOid oid, int port_number, int frequency) const override;
   ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const override;
   ::util::Status SetFanPercent(OnlpOid oid, int value) const override;
   ::util::Status SetFanRpm(OnlpOid oid, int val) const override;
@@ -250,6 +254,10 @@ class OnlpWrapper : public OnlpInterface {
     int (*onlp_led_mode_set)(onlp_oid_t oid, onlp_led_mode_t mode);
     int (*onlp_led_char_set)(onlp_oid_t oid, char c);
     int (*onlp_psu_info_get)(onlp_oid_t oid, onlp_psu_info_t* rv);
+    int (*onlp_i2c_mux_mapping)(int port_number, int reset);
+    int (*onlp_i2c_writeb)(int bus, uint8_t addr, uint8_t offset, uint8_t byte, uint32_t flags);
+    int (*onlp_i2c_readb)(int bus, uint8_t addr, uint8_t offset, uint32_t flags);
+    int (*set_sfp_frequency)(int port_number, int frequency);
     OnlpFunctions()
         : onlp_sw_init(nullptr),
           onlp_sw_denit(nullptr),
@@ -269,7 +277,11 @@ class OnlpWrapper : public OnlpInterface {
           onlp_led_info_get(nullptr),
           onlp_led_mode_set(nullptr),
           onlp_led_char_set(nullptr),
-          onlp_psu_info_get(nullptr) {}
+          onlp_psu_info_get(nullptr),
+          onlp_i2c_mux_mapping(nullptr),
+          onlp_i2c_writeb(nullptr),
+          onlp_i2c_readb(nullptr),
+	  set_sfp_frequency(nullptr) {}
   };
   // Private constructor. Use CreateInstance instead.
   OnlpWrapper();
