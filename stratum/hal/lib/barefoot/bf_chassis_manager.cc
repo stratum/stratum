@@ -684,6 +684,9 @@ BfChassisManager::~BfChassisManager() = default;
     RET_CHECK(singleton_port.id() != kCpuPortId)
         << "SingletonPort " << PrintSingletonPort(singleton_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
+    RET_CHECK(singleton_port.id() != kSdnCpuPortId)
+        << "SingletonPort " << PrintSingletonPort(singleton_port)
+        << " has the reserved CPU port ID (" << kSdnCpuPortId << ").";
     RET_CHECK(singleton_port.slot() > 0)
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
     RET_CHECK(singleton_port.port() > 0)

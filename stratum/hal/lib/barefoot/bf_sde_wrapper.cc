@@ -45,7 +45,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
-DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, true,
+DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, false,
             "Enables the legacy padded byte string format in P4Runtime "
             "responses for Stratum-bfrt. The strings are left unchanged from "
             "the underlying SDE.");
@@ -489,7 +489,8 @@ template <typename T>
   if (table_type == bfrt::BfRtTable::TableType::METER ||
       table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
+    defined(SDE_9_7_0)
     RETURN_IF_BFRT_ERROR(
         table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
 #else
@@ -1410,6 +1411,8 @@ namespace {
           PriorityToTofinoSchedulingPriority(queue_mapping.priority()));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_priority_set(
           device, sdk_port, queue_mapping.queue_id(), priority));
+      RETURN_IF_BFRT_ERROR(bf_tm_sched_q_remaining_bw_priority_set(
+          device, sdk_port, queue_mapping.queue_id(), priority));
       RETURN_IF_BFRT_ERROR(bf_tm_sched_q_dwrr_weight_set(
           device, sdk_port, queue_mapping.queue_id(), queue_mapping.weight()));
       // Set maximum shaping rate on queue, if requested.
@@ -1649,6 +1652,8 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   return "9.3.1";
 #elif defined(SDE_9_5_0)
   return "9.5.0";
+#elif defined(SDE_9_5_2)
+  return "9.5.2";
 #elif defined(SDE_9_7_0)
   return "9.7.0";
 #else
@@ -2090,7 +2095,8 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
+    defined(SDE_9_7_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
 #else
@@ -2753,7 +2759,8 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
+    defined(SDE_9_7_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
@@ -2890,7 +2897,8 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_7_0)
+#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
+    defined(SDE_9_7_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else

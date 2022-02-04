@@ -11,12 +11,15 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
+using test_utils::EqualsProto;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -28,13 +31,17 @@ class BfrtCounterManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<BfSdeMock>();
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
     bfrt_counter_manager_ = BfrtCounterManager::CreateInstance(
-        bf_sde_wrapper_mock_.get(), kDevice1);
+        bf_sde_wrapper_mock_.get(), bfrt_p4runtime_translator_mock_.get(),
+        kDevice1);
   }
 
   static constexpr int kDevice1 = 0;
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtCounterManager> bfrt_counter_manager_;
 };
 
@@ -62,6 +69,9 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateCounterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::CounterEntry>(entry)));
   EXPECT_OK(bfrt_counter_manager_->WriteIndirectCounterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
