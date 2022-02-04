@@ -56,8 +56,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
 ::util::Status BfrtTableManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
-  RET_CHECK(config.programs_size() == 1)
-      << "Only one P4 program is supported.";
+  RET_CHECK(config.programs_size() == 1) << "Only one P4 program is supported.";
   const auto& program = config.programs(0);
   const auto& p4_info = program.p4info();
   std::unique_ptr<P4InfoManager> p4_info_manager =

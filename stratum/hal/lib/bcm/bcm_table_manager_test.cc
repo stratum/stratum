@@ -162,8 +162,7 @@ class BcmTableManagerTest : public ::testing::Test {
       uint32 flow_ref_count,
       std::map<uint32, std::tuple<uint32, uint32, int>>
           member_id_to_weight_group_ref_count_port) {
-    RET_CHECK(
-        bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
+    RET_CHECK(bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
     const auto& groups = bcm_table_manager_->groups_;
     auto it = groups.find(group.group_id());
     RET_CHECK(it != groups.end());
@@ -174,15 +173,14 @@ class BcmTableManagerTest : public ::testing::Test {
     RET_CHECK(egress_intf_id == group_info.egress_intf_id);
     RET_CHECK(flow_ref_count == group_info.flow_ref_count);
     RET_CHECK(member_id_to_weight_group_ref_count_port.size() ==
-                          group_info.member_id_to_weight.size());
+              group_info.member_id_to_weight.size());
     for (const auto& e : member_id_to_weight_group_ref_count_port) {
       RET_CHECK(std::get<0>(e.second) ==
-                            group_info.member_id_to_weight[e.first]);
+                group_info.member_id_to_weight[e.first]);
       BcmNonMultipathNexthopInfo member_info;
       RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
           e.first, &member_info));
-      RET_CHECK(std::get<1>(e.second) ==
-                            member_info.group_ref_count);
+      RET_CHECK(std::get<1>(e.second) == member_info.group_ref_count);
       RET_CHECK(std::get<2>(e.second) == member_info.bcm_port);
       // If this is a logical port, check that there is a mapping to the set of
       // referencing groups.
