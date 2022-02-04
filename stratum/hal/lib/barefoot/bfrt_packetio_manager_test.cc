@@ -319,7 +319,7 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
     payload: "abcde"
     metadata {
       metadata_id: 1
-      value: "\000\001"
+      value: "\001"
     }
     metadata {
       metadata_id: 2
