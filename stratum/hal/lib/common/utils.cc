@@ -324,15 +324,15 @@ std::string MacAddressToYangString(const uint64& mac_address) {
 }
 
 ::util::StatusOr<uint64> YangStringToMacAddress(std::string yang_string) {
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       RE2::FullMatch(yang_string, R"#(^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$)#"))
       << "Provided string " << yang_string << " is not a valid MAC address.";
   // Remove colons.
   absl::StrReplaceAll({{":", ""}}, &yang_string);
   uint64 mac_address;
   // We rather use an absl internal function than strtoull.
-  CHECK_RETURN_IF_FALSE(absl::numbers_internal::safe_strtou64_base(
-      yang_string, &mac_address, 16));
+  RET_CHECK(absl::numbers_internal::safe_strtou64_base(yang_string,
+                                                       &mac_address, 16));
 
   return mac_address;
 }
