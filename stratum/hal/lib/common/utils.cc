@@ -431,6 +431,8 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
 
 uint64 ConvertHzToMHz(const uint64& val) { return val / 1000000; }
 
+uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
+
 ::util::Status ConvertStringToLogSeverity(const std::string& severity_string,
                                           LoggingConfig* logging_config) {
   if (severity_string == "CRITICAL") {
