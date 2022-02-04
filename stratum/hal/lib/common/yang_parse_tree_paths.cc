@@ -1696,9 +1696,9 @@ void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(uint64 node_id,
 // "&DataResponse::PortCounters::message", where message field in
 // DataResponse::Counters.
 TreeNodeEventHandler GetPollCounterFunctor(uint64 node_id, uint32 port_id,
-                                           YangParseTree* tree,
                                            uint64 (PortCounters::*func_ptr)()
-                                               const) {
+                                               const,
+                                           YangParseTree* tree) {
   return [tree, node_id, port_id, func_ptr](const GnmiEvent& event,
                                             const ::gnmi::Path& path,
                                             GnmiSubscribeStream* stream) {
@@ -1733,7 +1733,7 @@ void SetUpInterfacesInterfaceStateCountersInOctets(uint64 node_id,
                                                    TreeNode* node,
                                                    YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::in_octets);
+      GetPollCounterFunctor(node_id, port_id, &PortCounters::in_octets, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInOctets);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1756,7 +1756,7 @@ void SetUpInterfacesInterfaceStateCountersOutOctets(uint64 node_id,
                                                     TreeNode* node,
                                                     YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::out_octets);
+      GetPollCounterFunctor(node_id, port_id, &PortCounters::out_octets, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutOctets);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1778,8 +1778,8 @@ void SetUpInterfacesInterfaceStateCountersInUnicastPkts(uint64 node_id,
                                                         uint32 port_id,
                                                         TreeNode* node,
                                                         YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::in_unicast_pkts);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::in_unicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInUnicastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1801,8 +1801,8 @@ void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(uint64 node_id,
                                                          uint32 port_id,
                                                          TreeNode* node,
                                                          YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::out_unicast_pkts);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::out_unicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutUnicastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1824,8 +1824,8 @@ void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
                                                           uint32 port_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::in_broadcast_pkts);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::in_broadcast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInBroadcastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1845,8 +1845,8 @@ void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
 // /interfaces/interface[name=<name>]/state/counters/out-broadcast-pkts
 void SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
     uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::out_broadcast_pkts);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::out_broadcast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutBroadcastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1869,7 +1869,7 @@ void SetUpInterfacesInterfaceStateCountersInDiscards(uint64 node_id,
                                                      TreeNode* node,
                                                      YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::in_discards);
+      GetPollCounterFunctor(node_id, port_id, &PortCounters::in_discards, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInDiscards);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1891,8 +1891,8 @@ void SetUpInterfacesInterfaceStateCountersOutDiscards(uint64 node_id,
                                                       uint32 port_id,
                                                       TreeNode* node,
                                                       YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::out_discards);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id,
+                                            &PortCounters::out_discards, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutDiscards);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1914,8 +1914,8 @@ void SetUpInterfacesInterfaceStateCountersInUnknownProtos(uint64 node_id,
                                                           uint32 port_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::in_unknown_protos);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::in_unknown_protos, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInUnknownProtos);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1937,8 +1937,8 @@ void SetUpInterfacesInterfaceStateCountersInMulticastPkts(uint64 node_id,
                                                           uint32 port_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::in_multicast_pkts);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::in_multicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInMulticastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1961,7 +1961,7 @@ void SetUpInterfacesInterfaceStateCountersInErrors(uint64 node_id,
                                                    TreeNode* node,
                                                    YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::in_errors);
+      GetPollCounterFunctor(node_id, port_id, &PortCounters::in_errors, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInErrors);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -1984,7 +1984,7 @@ void SetUpInterfacesInterfaceStateCountersOutErrors(uint64 node_id,
                                                     TreeNode* node,
                                                     YangParseTree* tree) {
   auto poll_functor =
-      GetPollCounterFunctor(node_id, port_id, tree, &PortCounters::out_errors);
+      GetPollCounterFunctor(node_id, port_id, &PortCounters::out_errors, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutErrors);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -2006,8 +2006,8 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
                                                       uint32 port_id,
                                                       TreeNode* node,
                                                       YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::in_fcs_errors);
+  auto poll_functor = GetPollCounterFunctor(node_id, port_id,
+                                            &PortCounters::in_fcs_errors, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetInFcsErrors);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
@@ -2027,8 +2027,8 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
 // /interfaces/interface[name=<name>]/state/counters/out-multicast-pkts
 void SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
     uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
-  auto poll_functor = GetPollCounterFunctor(node_id, port_id, tree,
-                                            &PortCounters::out_multicast_pkts);
+  auto poll_functor = GetPollCounterFunctor(
+      node_id, port_id, &PortCounters::out_multicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortCountersChangedEvent::GetOutMulticastPkts);
   auto register_functor = RegisterFunc<PortCountersChangedEvent>();
