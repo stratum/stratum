@@ -74,11 +74,11 @@ OnlpEventHandler::~OnlpEventHandler() {
 ::util::Status OnlpEventHandler::RegisterEventCallback(
     OnlpEventCallback* callback) {
   absl::MutexLock lock(&monitor_lock_);
-  CHECK_RETURN_IF_FALSE(callback->handler_ == nullptr)
+  RET_CHECK(callback->handler_ == nullptr)
       << "Cannot register a callback that is already registered.";
   OidStatusMonitor& status_monitor =
       gtl::LookupOrInsert(&status_monitors_, callback->GetOid(), {});
-  CHECK_RETURN_IF_FALSE(status_monitor.callback == nullptr)
+  RET_CHECK(status_monitor.callback == nullptr)
       << "Cannot register two callbacks for the same OID.";
   status_monitor.callback = callback;
   callback->handler_ = this;
@@ -90,7 +90,7 @@ OnlpEventHandler::~OnlpEventHandler() {
 ::util::Status OnlpEventHandler::UnregisterEventCallback(
     OnlpEventCallback* callback) {
   absl::MutexLock lock(&monitor_lock_);
-  CHECK_RETURN_IF_FALSE(callback->handler_ == this)
+  RET_CHECK(callback->handler_ == this)
       << "Cannot unregister a callback that is not currently registered.";
   // We can't unregister this callback while it's running.
   while (executing_callback_ == callback)
@@ -98,7 +98,7 @@ OnlpEventHandler::~OnlpEventHandler() {
 
   OidStatusMonitor* status_monitor =
       gtl::FindOrNull(status_monitors_, callback->GetOid());
-  CHECK_RETURN_IF_FALSE(status_monitor != nullptr)
+  RET_CHECK(status_monitor != nullptr)
       << "Encountered an OnlpEventCallback with no matching status monitor.";
   callback->handler_ = nullptr;
   status_monitors_.erase(callback->GetOid());
@@ -114,9 +114,8 @@ void OnlpEventHandler::AddUpdateCallback(
 
 ::util::Status OnlpEventHandler::InitializePollingThread() {
   absl::MutexLock lock(&monitor_lock_);
-  CHECK_RETURN_IF_FALSE(!pthread_create(&monitor_loop_thread_id_, nullptr,
-                                        &OnlpEventHandler::RunPollingThread,
-                                        this))
+  RET_CHECK(!pthread_create(&monitor_loop_thread_id_, nullptr,
+                            &OnlpEventHandler::RunPollingThread, this))
       << "Failed to start the polling thread.";
   monitor_loop_running_ = true;
   return ::util::OkStatus();

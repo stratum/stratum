@@ -120,7 +120,7 @@ DEFINE_int32(max_num_linkscan_writers, 10,
              "Max number of linkscan event Writers supported.");
 DECLARE_string(bcm_sdk_checkpoint_dir);
 
-// TODO: There are many CHECK_RETURN_IF_FALSE in this file which will
+// TODO: There are many RET_CHECK in this file which will
 // need to be changed to return ERR_INTERNAL as opposed to ERR_INVALID_PARAM.
 
 namespace stratum {
@@ -1714,7 +1714,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   }
   // MTU
   if (options.max_frame_size() > 0) {
-    CHECK_RETURN_IF_FALSE(options.max_frame_size() > 0);
+    RET_CHECK(options.max_frame_size() > 0);
     RETURN_IF_BCM_ERROR(
         GetFieldMinMaxValue(unit, PC_PORTs, MAX_FRAME_SIZEs, &min, &max));
     if ((options.max_frame_size() > static_cast<int>(max)) ||
@@ -1928,7 +1928,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Check if port is valid
   RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port))
       << "Port " << port << " does not exit on unit " << unit << ".";
-  CHECK_RETURN_IF_FALSE(pc != nullptr);
+  RET_CHECK(pc != nullptr);
 
   uint64 value;
   // Read good counters
@@ -2037,7 +2037,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   absl::WriterMutexLock l(&data_lock_);
   // // Get logical ports for this unit
   auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
+  RET_CHECK(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
 
   // Set linkscan mode for all the ports
@@ -2109,7 +2109,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   absl::WriterMutexLock l(&data_lock_);
   auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
+  RET_CHECK(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
 
   // Disable linkscan mode for all the ports
@@ -2141,8 +2141,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 ::util::StatusOr<int> BcmSdkWrapper::RegisterLinkscanEventWriter(
     std::unique_ptr<ChannelWriter<LinkscanEvent>> writer, int priority) {
   absl::WriterMutexLock l(&linkscan_writers_lock_);
-  CHECK_RETURN_IF_FALSE(linkscan_event_writers_.size() <
-                        static_cast<size_t>(FLAGS_max_num_linkscan_writers))
+  RET_CHECK(linkscan_event_writers_.size() <
+            static_cast<size_t>(FLAGS_max_num_linkscan_writers))
       << "Can only support " << FLAGS_max_num_linkscan_writers
       << " linkscan event Writers.";
 
@@ -2159,7 +2159,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       break;
     }
   }
-  CHECK_RETURN_IF_FALSE(next_id != kInvalidWriterId)
+  RET_CHECK(next_id != kInvalidWriterId)
       << "Could not find a new ID for the Writer. next_id=" << next_id << ".";
 
   linkscan_event_writers_.insert({std::move(writer), priority, next_id});
@@ -2172,7 +2172,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   auto it = std::find_if(
       linkscan_event_writers_.begin(), linkscan_event_writers_.end(),
       [id](const BcmLinkscanEventWriter& h) { return h.id == id; });
-  CHECK_RETURN_IF_FALSE(it != linkscan_event_writers_.end())
+  RET_CHECK(it != linkscan_event_writers_.end())
       << "Could not find a linkscan event Writer with ID " << id << ".";
 
   linkscan_event_writers_.erase(it);
@@ -2229,9 +2229,9 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   absl::WriterMutexLock l(&data_lock_);
   auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
+  RET_CHECK(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
-  CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
+  RET_CHECK(unit_to_mtu_.count(unit));
   // Modify mtu for all the interfaces on this unit.
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
   for (const auto& port : *logical_ports_map) {
@@ -2255,10 +2255,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int mtu = 0;
   {
     absl::ReaderMutexLock l(&data_lock_);
-    CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
+    RET_CHECK(unit_to_mtu_.count(unit));
     mtu = unit_to_mtu_[unit];
   }
-  CHECK_RETURN_IF_FALSE(router_mac);
+  RET_CHECK(router_mac);
 
   // check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
@@ -2271,7 +2271,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   L3Interfaces entry(router_mac, vlan);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_l3_intf != nullptr)
+  RET_CHECK(unit_to_l3_intf != nullptr)
       << "Unit " << unit << "  is not found in l3_interface_ids. Have you "
       << "called InitializeUnit for this unit before?";
   l3_intf_t l3_interface = {0, router_mac, vlan, 0xff, mtu};
@@ -2339,7 +2339,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_l3_intf != nullptr)
+  RET_CHECK(unit_to_l3_intf != nullptr)
       << "Unit " << unit << "  is not found in l3_interface_ids. Have you "
       << "called InitializeUnit for this unit before?";
   const L3Interfaces* entry = FindIndexOrNull(*unit_to_l3_intf, router_intf_id);
@@ -2368,7 +2368,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr)
+  RET_CHECK(l3_intfs != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
   ASSIGN_OR_RETURN(
@@ -2398,8 +2398,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
 
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
@@ -2413,7 +2413,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
+  RET_CHECK(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if port is valid
   RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
@@ -2467,8 +2467,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t max;
   uint64_t min;
 
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
@@ -2487,7 +2487,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
+  RET_CHECK(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
   ASSIGN_OR_RETURN(
@@ -2528,7 +2528,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr)
+  RET_CHECK(l3_intfs != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
   ASSIGN_OR_RETURN(
@@ -2567,7 +2567,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -2630,8 +2630,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
@@ -2643,7 +2643,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr && unit_to_l3_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if port is valid
   RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
@@ -2701,8 +2701,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
@@ -2721,7 +2721,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr && unit_to_l3_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -2783,7 +2783,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -2843,7 +2843,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -2881,7 +2881,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -2932,7 +2932,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int members_count = static_cast<int>(member_ids.size());
 
   InUseMap* ecmp_intfs = gtl::FindOrNull(l3_ecmp_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(ecmp_intfs != nullptr)
+  RET_CHECK(ecmp_intfs != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
   ASSIGN_OR_RETURN(
@@ -2971,7 +2971,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int members_count = static_cast<int>(member_ids.size());
 
   InUseMap* ecmp_intfs = gtl::FindOrNull(l3_ecmp_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(ecmp_intfs != nullptr)
+  RET_CHECK(ecmp_intfs != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = ecmp_intfs->find(egress_intf_id);
@@ -3010,7 +3010,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   InUseMap* ecmp_intfs = gtl::FindOrNull(l3_ecmp_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(ecmp_intfs != nullptr)
+  RET_CHECK(ecmp_intfs != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = ecmp_intfs->find(egress_intf_id);
@@ -3047,7 +3047,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   InUseMap::iterator it;
   l3_route_t route = {false,  vrf,  class_id, egress_intf_id,
                       subnet, mask, "",       ""};
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
@@ -3069,7 +3069,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     }
   }
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -3124,14 +3124,12 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   InUseMap::iterator it;
   l3_route_t route = {true, vrf, class_id, egress_intf_id, 0, 0, "", ""};
 
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
 
-  CHECK_RETURN_IF_FALSE(subnet.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(subnet.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper = ByteStreamToUint<uint64>(subnet.substr(0, 8));
   uint64 ipv6_lower = ByteStreamToUint<uint64>(subnet.substr(8, 16));
-  CHECK_RETURN_IF_FALSE(mask.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(mask.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper_mask = ByteStreamToUint<uint64>(mask.substr(0, 8));
   uint64 ipv6_lower_mask = ByteStreamToUint<uint64>(mask.substr(8, 16));
 
@@ -3154,7 +3152,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     }
   }
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -3209,7 +3207,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bcmlt_entry_handle_t entry_hdl;
   uint64_t max;
   uint64_t min;
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   l3_host_t host = {false, vrf, class_id, egress_intf_id, ipv4};
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV4_UC_HOSTs, NHOP_IDs, &min, &max));
@@ -3257,11 +3255,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bcmlt_entry_handle_t entry_hdl;
   uint64_t max;
   uint64_t min;
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   l3_host_t host = {true, vrf, class_id, egress_intf_id, 0, ipv6};
 
-  CHECK_RETURN_IF_FALSE(ipv6.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(ipv6.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper = ByteStreamToUint<uint64>(ipv6.substr(0, 8));
   uint64 ipv6_lower = ByteStreamToUint<uint64>(ipv6.substr(8, 16));
 
@@ -3321,7 +3318,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   InUseMap::iterator it;
   l3_route_t route = {false,  vrf,  class_id, egress_intf_id,
                       subnet, mask, "",       ""};
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
@@ -3343,7 +3340,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     }
   }
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -3410,13 +3407,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   InUseMap::iterator it;
   // TODO(BRCM): fix ipv6, convert string to ipv6 address
   l3_route_t route = {true, vrf, class_id, egress_intf_id, 0, 0, subnet, mask};
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
-  CHECK_RETURN_IF_FALSE(subnet.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(egress_intf_id > 0);
+  RET_CHECK(subnet.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper = ByteStreamToUint<uint64>(subnet.substr(0, 8));
   uint64 ipv6_lower = ByteStreamToUint<uint64>(subnet.substr(8, 16));
-  CHECK_RETURN_IF_FALSE(mask.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(mask.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper_mask = ByteStreamToUint<uint64>(mask.substr(0, 8));
   uint64 ipv6_lower_mask = ByteStreamToUint<uint64>(mask.substr(8, 16));
   // Check if the unit is valid
@@ -3441,7 +3436,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     }
   }
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+  RET_CHECK(l3_egress_intf != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
@@ -3509,7 +3504,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bcmlt_entry_info_t entry_info;
   bcmlt_entry_handle_t entry_hdl;
   l3_host_t host = {false, vrf, class_id, egress_intf_id, ipv4};
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV4_UC_HOSTs, VRF_IDs, &min, &max));
@@ -3569,12 +3564,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bcmlt_entry_info_t entry_info;
   bcmlt_entry_handle_t entry_hdl;
   l3_host_t host = {true, vrf, class_id, egress_intf_id, 0, ipv6};
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
-  CHECK_RETURN_IF_FALSE(ipv6.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(ipv6.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper = ByteStreamToUint<uint64>(ipv6.substr(0, 8));
   uint64 ipv6_lower = ByteStreamToUint<uint64>(ipv6.substr(8, 16));
 
@@ -3694,12 +3688,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool entry_delete = false;
   // TODO(BRCM): fix ipv6, convert string to ipv6 address
   l3_route_t route = {true, vrf, 0, 0, 0, 0, subnet, mask};
-  CHECK_RETURN_IF_FALSE(subnet.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(subnet.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper = ByteStreamToUint<uint64>(subnet.substr(0, 8));
   uint64 ipv6_lower = ByteStreamToUint<uint64>(subnet.substr(8, 16));
-  CHECK_RETURN_IF_FALSE(mask.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(mask.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper_mask = ByteStreamToUint<uint64>(mask.substr(0, 8));
   uint64 ipv6_lower_mask = ByteStreamToUint<uint64>(mask.substr(8, 16));
 
@@ -3820,8 +3812,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // TODO(BRCM): fix ipv6, convert string to ipv6 address
   l3_host_t host = {true, vrf, 0, 0, 0, ipv6};
 
-  CHECK_RETURN_IF_FALSE(ipv6.size() ==
-                        16);  // TODO(max): is there a constant for that?
+  RET_CHECK(ipv6.size() == 16);  // TODO(max): is there a constant for that?
   uint64 ipv6_upper = ByteStreamToUint<uint64>(ipv6.substr(0, 8));
   uint64 ipv6_lower = ByteStreamToUint<uint64>(ipv6.substr(8, 16));
 
@@ -3914,7 +3905,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if entry already exists.
   MyStationEntry entry(vlan, vlan_mask, dst_mac, dst_mac_mask);
   auto unit_to_my_stations = gtl::FindOrNull(my_station_ids_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_my_stations != nullptr)
+  RET_CHECK(unit_to_my_stations != nullptr)
       << "Unit " << unit << "  is not found in unit_to_my_stations. Have you "
       << "called InitializeUnit for this unit before?";
   auto id = gtl::FindOrNull(*unit_to_my_stations, entry);
@@ -3963,7 +3954,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto unit_to_my_stations = gtl::FindOrNull(my_station_ids_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_my_stations != nullptr)
+  RET_CHECK(unit_to_my_stations != nullptr)
       << "Unit " << unit << "  is not found in unit_to_my_stations. Have you "
       << "called InitializeUnit for this unit before?";
   const MyStationEntry* entry =
@@ -4412,12 +4403,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 ::util::Status BcmSdkWrapper::CreateKnetIntf(int unit, int vlan,
                                              std::string* netif_name,
                                              int* netif_id) {
-  CHECK_RETURN_IF_FALSE(netif_name != nullptr && netif_id != nullptr)
+  RET_CHECK(netif_name != nullptr && netif_id != nullptr)
       << "Null netif_name or netif_id pointers.";
-  CHECK_RETURN_IF_FALSE(!netif_name->empty())
+  RET_CHECK(!netif_name->empty())
       << "Empty netif name for unit " << unit << ".";
-  CHECK_RETURN_IF_FALSE(netif_name->length() <=
-                        static_cast<size_t>(BCMPKT_DEV_NAME_MAX))
+  RET_CHECK(netif_name->length() <= static_cast<size_t>(BCMPKT_DEV_NAME_MAX))
       << "Oversize netif name for unit " << unit << ": " << *netif_name << ".";
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
@@ -4586,7 +4576,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                           &min, &max));
   // Sanity checking.
   for (const auto& e : rate_limit_config.per_cos_rate_limit_configs) {
-    CHECK_RETURN_IF_FALSE(e.first <= static_cast<int32_t>(max));
+    RET_CHECK(e.first <= static_cast<int32_t>(max));
   }
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TM_SHAPER_PORTs, &entry_hdl));
@@ -4657,7 +4647,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if port is valid
   RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
-  CHECK_RETURN_IF_FALSE(header != nullptr);
+  RET_CHECK(header != nullptr);
   header->clear();
 
   // TODO(max): update this comment
@@ -4716,7 +4706,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // The rest of the code is chip-dependent. Need to see which chip we are
   // talking about
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
-  CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK)
+  RET_CHECK(chip_type == BcmChip::TOMAHAWK)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
   uint32 meta[BCMPKT_TXPMD_SIZE_WORDS];
@@ -4745,7 +4735,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::GetKnetHeaderForIngressPipelineTx(
     int unit, uint64 smac, size_t packet_len, std::string* header) {
-  CHECK_RETURN_IF_FALSE(header != nullptr);
+  RET_CHECK(header != nullptr);
   header->clear();
 
   // Try to find the headers for the packet that goes to ingress pipeline.
@@ -4819,32 +4809,29 @@ static void dumpRxpmdHeaderRaw(const void* rxpmd) {
   //  ----------------------------------
   // Note that the total length of RX meta is fixed. The header passed to this
   // method will contain RCPU header + RX meta.
-  CHECK_RETURN_IF_FALSE(header.length() == sizeof(RcpuHeader) + kRcpuRxMetaSize)
+  RET_CHECK(header.length() == sizeof(RcpuHeader) + kRcpuRxMetaSize)
       << "Invalid KNET header size for RX (" << header.length()
       << " != " << sizeof(RcpuHeader) + kRcpuRxMetaSize << ").";
 
   // Valid RCPU header. We dont care about src/dst MACs in RCPU header here.
   const struct RcpuHeader* rcpu_header =
       reinterpret_cast<const struct RcpuHeader*>(header.data());
-  CHECK_RETURN_IF_FALSE(ntohs(rcpu_header->ether_header.ether_type) ==
-                        kRcpuVlanEthertype)
+  RET_CHECK(ntohs(rcpu_header->ether_header.ether_type) == kRcpuVlanEthertype)
       << ntohs(rcpu_header->ether_header.ether_type)
       << " != " << kRcpuVlanEthertype;
-  CHECK_RETURN_IF_FALSE((ntohs(rcpu_header->vlan_tag.vlan_id) & kVlanIdMask) ==
-                        kRcpuVlanId)
+  RET_CHECK((ntohs(rcpu_header->vlan_tag.vlan_id) & kVlanIdMask) == kRcpuVlanId)
       << (ntohs(rcpu_header->vlan_tag.vlan_id) & kVlanIdMask)
       << " != " << kRcpuVlanId;
-  CHECK_RETURN_IF_FALSE(ntohs(rcpu_header->vlan_tag.type) == kRcpuEthertype)
+  RET_CHECK(ntohs(rcpu_header->vlan_tag.type) == kRcpuEthertype)
       << ntohs(rcpu_header->vlan_tag.type) << " != " << kRcpuEthertype;
-  CHECK_RETURN_IF_FALSE(rcpu_header->rcpu_data.rcpu_opcode ==
-                        kRcpuOpcodeToCpuPkt)
+  RET_CHECK(rcpu_header->rcpu_data.rcpu_opcode == kRcpuOpcodeToCpuPkt)
       << rcpu_header->rcpu_data.rcpu_opcode << " != " << kRcpuOpcodeToCpuPkt;
-  CHECK_RETURN_IF_FALSE(rcpu_header->rcpu_data.rcpu_flags == kRcpuFlagModhdr)
+  RET_CHECK(rcpu_header->rcpu_data.rcpu_flags == kRcpuFlagModhdr)
       << rcpu_header->rcpu_data.rcpu_flags << " != " << kRcpuFlagModhdr;
 
   // Parse RX meta. The rest of the code is chip-dependent.
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
-  CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK)
+  RET_CHECK(chip_type == BcmChip::TOMAHAWK)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
   // TODO(max): this is broken the same way parseKnetHeaderForTx is/was
@@ -4916,7 +4903,7 @@ static void dumpRxpmdHeaderRaw(const void* rxpmd) {
   // add a check here to make sure this assumption is always correct. Second,
   // for the (dst_module, dst_port) the value received after parsing the header
   // depends on the op_code.
-  CHECK_RETURN_IF_FALSE(src_module == module)
+  RET_CHECK(src_module == module)
       << "Invalid src_module: (op_code=" << op_code
       << ", src_mod=" << src_module << ", dst_mod=" << dst_module
       << ", base_mod=" << module << ", src_port=" << src_port
@@ -4924,7 +4911,7 @@ static void dumpRxpmdHeaderRaw(const void* rxpmd) {
   switch (op_code) {
     // TODO(max): use the defines instead of numbers?
     case 1:  // BCMPKT_OPCODE_UC
-      CHECK_RETURN_IF_FALSE(dst_module == module)
+      RET_CHECK(dst_module == module)
           << "Invalid dst_module: (op_code=" << op_code
           << ", src_mod=" << src_module << ", dst_mod=" << dst_module
           << ", base_mod=" << module << ", src_port=" << src_port
@@ -5940,10 +5927,9 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
           // TODO(BRCM): for the below fields, 2 qualifiers
           // need to be configured, however this map returns only
           // one qualifier, need to address this
+          //{BcmField::IPV6_SRC, ??}, // QUAL_DST_IP6_BITMAP_UPPER,
+          // QUAL_DST_IP6_BITMAP_LOWER {BcmField::IPV6_DST, ??}, //
           // QUAL_DST_IP6_BITMAP_UPPER, QUAL_DST_IP6_BITMAP_LOWER
-          // {BcmField::IPV6_SRC, ??},
-          // QUAL_DST_IP6_BITMAP_UPPER, QUAL_DST_IP6_BITMAP_LOWER
-          // {BcmField::IPV6_DST, ??},
           {BcmField::IPV6_SRC_UPPER_64, QUAL_SRC_IP6_BITMAP_UPPERs},
           {BcmField::IPV6_DST_UPPER_64, QUAL_DST_IP6_BITMAP_UPPERs},
           {BcmField::VRF, QUAL_VRF_BITMAPs},
@@ -6189,8 +6175,8 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   }
   AclGroupIds* table_ids = gtl::FindPtrOrNull(fp_group_ids_, unit);
   auto it = unit_to_fp_groups_max_limit_.find(unit);
-  CHECK_RETURN_IF_FALSE(group_ids != nullptr && table_ids != nullptr &&
-                        it != unit_to_fp_groups_max_limit_.end())
+  RET_CHECK(group_ids != nullptr && table_ids != nullptr &&
+            it != unit_to_fp_groups_max_limit_.end())
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   int maxEntries = it->second;
   int requested_table_id = (table.id()) ? table.id() : -1;
@@ -6217,7 +6203,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   // check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto* table_ids = gtl::FindPtrOrNull(fp_group_ids_, unit);
-  CHECK_RETURN_IF_FALSE(table_ids != nullptr)
+  RET_CHECK(table_ids != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
 
   ASSIGN_OR_RETURN(found, FindAndReturnEntry(table_ids, table_id, &entry));
@@ -6250,7 +6236,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
            << "ACL table with invalid pipeline stage: "
            << BcmAclStage_Name(stage) << ".";
   }
-  CHECK_RETURN_IF_FALSE(group_ids != nullptr)
+  RET_CHECK(group_ids != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
 
   if (SlotExists(group_ids, stage_id)) {
@@ -7171,7 +7157,7 @@ namespace {
            << "ACL Table id " << flow.bcm_acl_table_id() << " not found.";
   }
   BcmAclStage stage = flow.acl_stage();
-  CHECK_RETURN_IF_FALSE(stage == entry.first)
+  RET_CHECK(stage == entry.first)
       << "Invalid valid group, stage used for group is "
       << BcmAclStage_Name(entry.first) << " stage used for the flow is "
       << BcmAclStage_Name(stage);
@@ -7549,8 +7535,7 @@ namespace {
   }
 
   BcmAclStage stage = flow.acl_stage();
-  CHECK_RETURN_IF_FALSE(stage == entry.first)
-      << "Stage used for the folw is not matching.";
+  RET_CHECK(stage == entry.first) << "Stage used for the folw is not matching.";
   int acl_entry_id = entry.second;
 
   auto* group_ids = gtl::FindPtrOrNull(fp_group_ids_, unit);
@@ -7561,7 +7546,7 @@ namespace {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "ACL Table id " << flow.bcm_acl_table_id() << " not found.";
   }
-  CHECK_RETURN_IF_FALSE(stage == entry.first)
+  RET_CHECK(stage == entry.first)
       << "Stage used for the group is not matching with the flow stage.";
 
   int group_id = entry.second;
@@ -7788,8 +7773,7 @@ namespace {
            << "Flow id " << flow_id << " not found.";
   }
   BcmAclStage stage = entry.first;
-  CHECK_RETURN_IF_FALSE((stage == BCM_ACL_STAGE_IFP) ||
-                        (stage == BCM_ACL_STAGE_EFP))
+  RET_CHECK((stage == BCM_ACL_STAGE_IFP) || (stage == BCM_ACL_STAGE_EFP))
       << "Meters can not be created/modified in the stage "
       << BcmAclStage_Name(stage) << ".";
 
@@ -7927,12 +7911,12 @@ namespace {
 ::util::Status BcmSdkWrapper::InsertPacketReplicationEntry(
     const BcmPacketReplicationEntry& entry) {
   // Check pre-conditions
-  CHECK_RETURN_IF_FALSE(entry.has_multicast_group_entry())
+  RET_CHECK(entry.has_multicast_group_entry())
       << "Bcm does only support multicast groups for now";
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(entry.unit()));
   auto mcast_entry = entry.multicast_group_entry();
-  CHECK_RETURN_IF_FALSE(!gtl::ContainsKey(multicast_group_id_to_replicas_,
-                                          mcast_entry.multicast_group_id()))
+  RET_CHECK(!gtl::ContainsKey(multicast_group_id_to_replicas_,
+                              mcast_entry.multicast_group_id()))
       << "multicast group already exists";
   std::vector<int> ports;
   for (auto const& port : mcast_entry.ports()) {
@@ -7948,12 +7932,12 @@ namespace {
 ::util::Status BcmSdkWrapper::DeletePacketReplicationEntry(
     const BcmPacketReplicationEntry& entry) {
   // Check pre-conditions
-  CHECK_RETURN_IF_FALSE(entry.has_multicast_group_entry());
+  RET_CHECK(entry.has_multicast_group_entry());
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(entry.unit()));
   auto mcast_entry = entry.multicast_group_entry();
   auto ports = gtl::FindOrNull(multicast_group_id_to_replicas_,
                                mcast_entry.multicast_group_id());
-  CHECK_RETURN_IF_FALSE(ports != nullptr);
+  RET_CHECK(ports != nullptr);
 
   multicast_group_id_to_replicas_.erase(mcast_entry.multicast_group_id());
   return ::util::OkStatus();
@@ -8050,7 +8034,7 @@ namespace {
   // check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto* table_ids = gtl::FindPtrOrNull(fp_group_ids_, unit);
-  CHECK_RETURN_IF_FALSE(table_ids != nullptr)
+  RET_CHECK(table_ids != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
   ASSIGN_OR_RETURN(found, FindAndReturnEntry(table_ids, table_id, &entry));
   if (!found) {
@@ -8107,7 +8091,7 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
                                                  std::vector<int>* flow_ids) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto* table_ids = gtl::FindPtrOrNull(fp_group_ids_, unit);
-  CHECK_RETURN_IF_FALSE(table_ids != nullptr)
+  RET_CHECK(table_ids != nullptr)
       << "Unit " << unit << " not initialized yet. Call InitializeUnit first.";
 
   std::pair<BcmAclStage, int> entry;

@@ -73,7 +73,7 @@ void ReadProtoIfValidFileExists(const std::string& path,
 }
 
 ::util::Status RemoveWatchHelper(int fd, int wd) {
-  CHECK_RETURN_IF_FALSE(fd > 0) << "Invalid fd: " << fd << ".";
+  RET_CHECK(fd > 0) << "Invalid fd: " << fd << ".";
   if (wd > 0) inotify_rm_watch(fd, wd);
 
   return ::util::OkStatus();
@@ -85,8 +85,8 @@ void ReadProtoIfValidFileExists(const std::string& path,
 // modify.
 ::util::StatusOr<int> AddWatchForFileChange(int ifd, const std::string& path) {
   std::string dir = DirName(path);
-  CHECK_RETURN_IF_FALSE(PathExists(dir)) << "Dir '" << dir << "' not found.";
-  CHECK_RETURN_IF_FALSE(IsDir(dir)) << "'" << dir << "' is not a directory.";
+  RET_CHECK(PathExists(dir)) << "Dir '" << dir << "' not found.";
+  RET_CHECK(IsDir(dir)) << "'" << dir << "' is not a directory.";
   ASSIGN_OR_RETURN(
       int wd,
       AddWatchHelper(ifd, dir, IN_CREATE | IN_DELETE | IN_MOVE | IN_MODIFY));

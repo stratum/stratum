@@ -104,7 +104,7 @@ struct PerNodeInstances {
   auto* hal = Hal::CreateSingleton(OPERATION_MODE_SIM, bcm_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
   // Sanity check, setup and start serving RPCs.
   RETURN_IF_ERROR(hal->SanityCheck());
   ::util::Status status = hal->Setup();

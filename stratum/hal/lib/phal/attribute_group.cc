@@ -64,9 +64,8 @@ class AttributeGroupQueryNode {
       const std::string& name) {
     const google::protobuf::FieldDescriptor* descriptor =
         node_->GetDescriptor()->FindFieldByName(name);
-    CHECK_RETURN_IF_FALSE(descriptor)
-        << node_->GetDescriptor()->name() << " has no such field: \"" << name
-        << "\".";
+    RET_CHECK(descriptor) << node_->GetDescriptor()->name()
+                          << " has no such field: \"" << name << "\".";
     return descriptor;
   }
 
@@ -285,25 +284,25 @@ class AttributeGroupInternal : public AttributeGroup,
 // macro can *only* be used in AddAttribute, since it pulls in variables
 // not explicitly declared as macro parameters (all of the variables captured by
 // the lambda). See usage below for context.
-#define ATTRIBUTE_SETTER_FUNCTION(proto_setter_function, type)               \
-  AttributeSetterFunction([this, field](Attribute value) -> ::util::Status { \
-    auto typed_value = absl::get_if<type>(&value);                           \
-    CHECK_RETURN_IF_FALSE(typed_value)                                       \
-        << "Found mismatched types for an attribute database field. "        \
-        << "This indicates serious attribute database corruption.";          \
-    reflection_->proto_setter_function(this->node_, field, *typed_value);    \
-    /* Lambda returns success. */                                            \
-    return ::util::OkStatus();                                               \
-  })
+#define ATTRIBUTE_SETTER_FUNCTION(proto_setter_function, type)                \
+  AttributeSetterFunction(                                                    \
+      [this, field](Attribute value) -> ::util::Status {                      \
+        auto typed_value = absl::get_if<type>(&value);                        \
+        RET_CHECK(typed_value)                                                \
+            << "Found mismatched types for an attribute database field. "     \
+            << "This indicates serious attribute database corruption.";       \
+        reflection_->proto_setter_function(this->node_, field, *typed_value); \
+        /* Lambda returns success. */                                         \
+        return ::util::OkStatus();                                            \
+      })
 
 ::util::StatusOr<AttributeSetterFunction> AttributeGroupQueryNode::AddAttribute(
     const std::string& name) {
   absl::MutexLock lock(&parent_query_->query_lock_);
   parent_query_->query_updated_ = true;
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
-  CHECK_RETURN_IF_FALSE(
-      field->cpp_type() !=
-      google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE)
+  RET_CHECK(field->cpp_type() !=
+            google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE)
       << "Attempted to query \"" << name
       << "\" as an attribute, but it's an attribute group. This shouldn't "
          "happen!";
@@ -341,10 +340,9 @@ AttributeGroupQueryNode::AddChildGroup(const std::string& name) {
   absl::MutexLock lock(&parent_query_->query_lock_);
   parent_query_->query_updated_ = true;
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
-  CHECK_RETURN_IF_FALSE(
-      field->cpp_type() ==
-          google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
-      !field->is_repeated())
+  RET_CHECK(field->cpp_type() ==
+                google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
+            !field->is_repeated())
       << "Called AddChildGroup for \"" << name
       << "\", which is not a singular child group. This shouldn't happen!";
   return AttributeGroupQueryNode(parent_query_,
@@ -357,10 +355,9 @@ AttributeGroupQueryNode::AddRepeatedChildGroup(const std::string& name,
   absl::MutexLock lock(&parent_query_->query_lock_);
   parent_query_->query_updated_ = true;
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
-  CHECK_RETURN_IF_FALSE(
-      field->cpp_type() ==
-          google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
-      field->is_repeated())
+  RET_CHECK(field->cpp_type() ==
+                google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
+            field->is_repeated())
       << "Called AddChildGroup for \"" << name
       << "\", which is not a repeated child group. This shouldn't happen!";
   // Add to the repeated child group until the given index is available.
@@ -898,36 +895,36 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
     for (unsigned int i = 0; i < path.size(); i++) {
       const PathEntry& entry = path[i];
       const FieldDescriptor* field = descriptor->FindFieldByName(entry.name);
-      CHECK_RETURN_IF_FALSE(field)
-          << "No such field \"" << entry.name << "\" in attribute group \""
-          << descriptor->name() << "\".";
+      RET_CHECK(field) << "No such field \"" << entry.name
+                       << "\" in attribute group \"" << descriptor->name()
+                       << "\".";
       bool field_is_child_group =
           field->cpp_type() == FieldDescriptor::CppType::CPPTYPE_MESSAGE;
       if (i == path.size() - 1) {
         if (field_is_child_group) {
-          CHECK_RETURN_IF_FALSE(entry.terminal_group)
+          RET_CHECK(entry.terminal_group)
               << "Encountered a query path ending in the attribute group \""
               << entry.name << "\", but not marked as a terminal group.";
         } else {
-          CHECK_RETURN_IF_FALSE(!entry.terminal_group)
+          RET_CHECK(!entry.terminal_group)
               << "Encountered a query path that marks the attribute \""
               << entry.name << "\" as a terminal group.";
         }
       } else {
-        CHECK_RETURN_IF_FALSE(field_is_child_group)
+        RET_CHECK(field_is_child_group)
             << "Encountered the attribute \"" << entry.name
             << "\" somewhere other than the last position of a query path.";
-        CHECK_RETURN_IF_FALSE(!entry.terminal_group)
+        RET_CHECK(!entry.terminal_group)
             << "Encountered the terminal attribute group \"" << entry.name
             << "\" somewhere other than the last position of a query path.";
         if (entry.indexed) {
-          CHECK_RETURN_IF_FALSE(field->is_repeated())
+          RET_CHECK(field->is_repeated())
               << "Query path entry is marked as indexed, but \"" << entry.name
               << "\" is a singular attribute group.";
-          CHECK_RETURN_IF_FALSE(entry.all || entry.index >= 0)
+          RET_CHECK(entry.all || entry.index >= 0)
               << "Encountered an indexed query path with a negative index.";
         } else {
-          CHECK_RETURN_IF_FALSE(!field->is_repeated())
+          RET_CHECK(!field->is_repeated())
               << "Query path entry  is not marked as indexed, but \""
               << entry.name << "\" is a repeated attribute group.";
         }
@@ -956,7 +953,7 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
   auto reader_lock = AcquireReadable();
   absl::ReaderMutexLock lock(&registered_query_lock_);
   auto query_info = gtl::FindOrNull(registered_queries_, query);
-  CHECK_RETURN_IF_FALSE(query_info)
+  RET_CHECK(query_info)
       << "Attempted to traverse a query that is not registered with this "
          "attribute group.";
   for (auto& child_group : query_info->registered_child_groups) {
@@ -998,12 +995,12 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
           },
           [&](ManagedAttribute* attribute, const Path& querying_path,
               const AttributeSetterFunction& setter) -> ::util::Status {
-            CHECK_RETURN_IF_FALSE(attribute->CanSet())
+            RET_CHECK(attribute->CanSet())
                 << "Attempted to set an unsettable attribute.";
             auto value = gtl::FindOrNull(values, querying_path);
-            CHECK_RETURN_IF_FALSE(value) << "Setting an attribute value, but "
-                                            "no corresponding value exists. "
-                                            "This is a bug.";
+            RET_CHECK(value) << "Setting an attribute value, but "
+                                "no corresponding value exists. "
+                                "This is a bug.";
             RETURN_IF_ERROR(attribute->Set(*value));
             datasources_to_flush.insert(attribute->GetDataSource());
             return ::util::OkStatus();

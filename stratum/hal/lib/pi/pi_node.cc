@@ -151,7 +151,7 @@ std::unique_ptr<PINode> PINode::CreateInstance(
     return MAKE_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
-  CHECK_RETURN_IF_FALSE(results != nullptr)
+  RET_CHECK(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
   auto status = device_mgr_->write(req);
@@ -166,8 +166,8 @@ std::unique_ptr<PINode> PINode::CreateInstance(
   if (!pipeline_initialized_) {
     return MAKE_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   ::p4::v1::ReadResponse response;
   auto status = device_mgr_->read(req, &response);

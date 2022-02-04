@@ -81,7 +81,7 @@ class ReaderWriterDataSource : public DataSource {
     T value;
     std::istringstream stream(string_value);
     stream >> value;
-    CHECK_RETURN_IF_FALSE(stream.eof())
+    RET_CHECK(stream.eof())
         << "Failed to parse requested type from input string \"" << string_value
         << "\".";
     return value;
@@ -94,7 +94,7 @@ class ReaderWriterDataSource : public DataSource {
     }
     std::ostringstream stream;
     stream << modded_value;
-    CHECK_RETURN_IF_FALSE(stream.good())
+    RET_CHECK(stream.good())
         << "Failed to write " << modded_value << " to output string.";
     RETURN_IF_ERROR(source_->SetString(stream.str()));
     attribute_.AssignValue(value);

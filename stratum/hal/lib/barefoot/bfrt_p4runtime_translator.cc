@@ -116,7 +116,7 @@ namespace barefoot {
         const auto& match_field_id = match_field.id();
         std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
         if (uri) {
-          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.count(*uri));
           table_to_field_to_type_uri[table_id][match_field_id] = *uri;
         }
         int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
@@ -268,8 +268,8 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
         case ::p4::v1::FieldMatch::kTernary: {
           // We only allow the "exact" type of ternary match, which means
           // all bits from mask must be one.
-          CHECK_RETURN_IF_FALSE(field_match.ternary().mask() ==
-                                AllOnesByteString(from_bit_width));
+          RET_CHECK(field_match.ternary().mask() ==
+                    AllOnesByteString(from_bit_width));
           // New mask with bit width.
           ASSIGN_OR_RETURN(const std::string& new_val,
                            TranslateValue(field_match.ternary().value(), *uri,
@@ -282,8 +282,7 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
         case ::p4::v1::FieldMatch::kLpm: {
           // Only accept "exact match" LPM value, which means the prefix
           // length must same as the bit width of the field.
-          CHECK_RETURN_IF_FALSE(field_match.lpm().prefix_len() ==
-                                from_bit_width);
+          RET_CHECK(field_match.lpm().prefix_len() == from_bit_width);
           ASSIGN_OR_RETURN(const std::string& new_val,
                            TranslateValue(field_match.lpm().value(), *uri,
                                           to_sdk, to_bit_width));
@@ -294,8 +293,7 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
         case ::p4::v1::FieldMatch::kRange: {
           // Only accept "exact match" range value, which means both low
           // and high value must be the same.
-          CHECK_RETURN_IF_FALSE(field_match.range().low() ==
-                                field_match.range().high());
+          RET_CHECK(field_match.range().low() == field_match.range().high());
           ASSIGN_OR_RETURN(const std::string& new_val,
                            TranslateValue(field_match.range().low(), *uri,
                                           to_sdk, to_bit_width));
@@ -393,12 +391,12 @@ BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
   if (uri == kUriTnaPortId) {
     ::p4::v1::Index translated_index;
     if (to_sdk) {
-      CHECK_RETURN_IF_FALSE(
+      RET_CHECK(
           singleton_port_to_sdk_port_.count(static_cast<uint32>(index_value)));
       translated_index.set_index(
           singleton_port_to_sdk_port_[static_cast<uint32>(index_value)]);
     } else {
-      CHECK_RETURN_IF_FALSE(
+      RET_CHECK(
           sdk_port_to_singleton_port_.count(static_cast<uint32>(index_value)));
       translated_index.set_index(
           sdk_port_to_singleton_port_[static_cast<uint32>(index_value)]);
@@ -461,13 +459,11 @@ BfrtP4RuntimeTranslator::TranslateRegisterEntry(
   // Since we know we are always translating the port number, we can simply
   // use the port map here.
   if (to_sdk) {
-    CHECK_RETURN_IF_FALSE(
-        singleton_port_to_sdk_port_.count(replica.egress_port()));
+    RET_CHECK(singleton_port_to_sdk_port_.count(replica.egress_port()));
     translated_replica.set_egress_port(
         singleton_port_to_sdk_port_[replica.egress_port()]);
   } else {
-    CHECK_RETURN_IF_FALSE(
-        sdk_port_to_singleton_port_.count(replica.egress_port()));
+    RET_CHECK(sdk_port_to_singleton_port_.count(replica.egress_port()));
     translated_replica.set_egress_port(
         sdk_port_to_singleton_port_[replica.egress_port()]);
   }
@@ -583,7 +579,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
         std::string* uri =
             gtl::FindOrNull(type_name_to_uri, match_field.type_name().name());
         if (uri) {
-          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.count(*uri));
           match_field.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         match_field.clear_type_name();
@@ -596,7 +592,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
         std::string* uri =
             gtl::FindOrNull(type_name_to_uri, param.type_name().name());
         if (uri) {
-          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.count(*uri));
           param.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         param.clear_type_name();
@@ -609,7 +605,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
         std::string* uri =
             gtl::FindOrNull(type_name_to_uri, metadata.type_name().name());
         if (uri) {
-          CHECK_RETURN_IF_FALSE(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.count(*uri));
           metadata.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         metadata.clear_type_name();
@@ -681,7 +677,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     // singleton port id(N-byte) -> singleton port id(uint32) -> sdk port
     // id(uint32) -> sdk port id(2-byte)
     const uint32 port_id = ByteStreamToUint<uint32>(value);
-    CHECK_RETURN_IF_FALSE(singleton_port_to_sdk_port_.count(port_id));
+    RET_CHECK(singleton_port_to_sdk_port_.count(port_id));
     const uint32 sdk_port_id = singleton_port_to_sdk_port_[port_id];
     std::string sdk_port_id_bytes = P4RuntimeByteStringToPaddedByteString(
         Uint32ToByteStream(sdk_port_id), NumBitsToNumBytes(bit_width));
@@ -689,10 +685,9 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
   } else {
     // sdk port id(2-byte) -> sdk port id(uint32) -> singleton port id(uint32)
     // -> singleton port id(N-byte)
-    CHECK_RETURN_IF_FALSE(value.size() ==
-                          NumBitsToNumBytes(kTnaPortIdBitWidth));
+    RET_CHECK(value.size() == NumBitsToNumBytes(kTnaPortIdBitWidth));
     const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
-    CHECK_RETURN_IF_FALSE(sdk_port_to_singleton_port_.count(sdk_port_id));
+    RET_CHECK(sdk_port_to_singleton_port_.count(sdk_port_id));
     const uint32 port_id = sdk_port_to_singleton_port_[sdk_port_id];
     std::string port_id_bytes = P4RuntimeByteStringToPaddedByteString(
         Uint32ToByteStream(port_id), NumBitsToNumBytes(bit_width));

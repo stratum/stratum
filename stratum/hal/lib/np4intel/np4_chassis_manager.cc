@@ -168,11 +168,11 @@ namespace {
     uint64 node_id, uint32 port_id) const {
   auto* port_id_to_singleton =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_singleton != nullptr)
+  RET_CHECK(port_id_to_singleton != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const SingletonPort* singleton =
       gtl::FindOrNull(*port_id_to_singleton, port_id);
-  CHECK_RETURN_IF_FALSE(singleton != nullptr)
+  RET_CHECK(singleton != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   return singleton;
@@ -281,11 +281,11 @@ namespace {
   }
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
+  RET_CHECK(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortState* port_state_ptr =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
-  CHECK_RETURN_IF_FALSE(port_state_ptr != nullptr)
+  RET_CHECK(port_state_ptr != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   if (*port_state_ptr != PORT_STATE_UNKNOWN) return *port_state_ptr;

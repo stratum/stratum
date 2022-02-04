@@ -50,7 +50,7 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
-    CHECK_RETURN_IF_FALSE(onlp_interface != nullptr);
+    RET_CHECK(onlp_interface != nullptr);
     onlp_interface_ = onlp_interface;
 
     // Create the OnlpEventHandler object
@@ -87,7 +87,7 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
 
 ::util::Status OnlpPhal::RegisterOnlpEventCallback(
     OnlpEventCallback* callback) {
-  CHECK_RETURN_IF_FALSE(onlp_event_handler_ != nullptr);
+  RET_CHECK(onlp_event_handler_ != nullptr);
 
   return onlp_event_handler_->RegisterEventCallback(callback);
 }

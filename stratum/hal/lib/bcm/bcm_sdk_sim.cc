@@ -88,8 +88,8 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
   {
     absl::WriterMutexLock l(&sim_lock_);
     BcmSimDeviceInfo* info = gtl::FindPtrOrNull(unit_to_dev_info_, unit);
-    CHECK_RETURN_IF_FALSE(info != nullptr) << "Unit " << unit << " not found!";
-    CHECK_RETURN_IF_FALSE(info->chip_type == chip_type)
+    RET_CHECK(info != nullptr) << "Unit " << unit << " not found!";
+    RET_CHECK(info->chip_type == chip_type)
         << "Inconsistent state. Unit " << unit << " must be " << chip_type
         << " but got " << info->chip_type;
     info->pci_bus = pci_bus;
@@ -197,7 +197,7 @@ BcmSdkSim* BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
 ::util::Status BcmSdkSim::GetPciInfo(int unit, uint32* bus, uint32* slot) {
   absl::ReaderMutexLock l(&sim_lock_);
   BcmSimDeviceInfo* info = gtl::FindPtrOrNull(unit_to_dev_info_, unit);
-  CHECK_RETURN_IF_FALSE(info != nullptr) << "Unit " << unit << " not found!";
+  RET_CHECK(info != nullptr) << "Unit " << unit << " not found!";
   *bus = static_cast<uint32>(info->pci_bus);
   *slot = static_cast<uint32>(info->pci_slot);
 
@@ -278,7 +278,7 @@ BcmSdkSim* BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
               << " and has PID " << pid << ".";
     // Keep track of the RPC port and PID for the simulator.
     absl::WriterMutexLock l(&sim_lock_);
-    CHECK_RETURN_IF_FALSE(unit_to_dev_info_.count(unit) == 0)
+    RET_CHECK(unit_to_dev_info_.count(unit) == 0)
         << "Unit " << unit << " already exists!";
     unit_to_dev_info_[unit] = new BcmSimDeviceInfo();
     unit_to_dev_info_[unit]->chip_type = chip_type;

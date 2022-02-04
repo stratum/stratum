@@ -40,7 +40,7 @@ class ManagedAttribute {
   ::util::StatusOr<T> ReadValue() const {
     Attribute value = GetValue();
     auto typed_value = absl::get_if<T>(&value);
-    CHECK_RETURN_IF_FALSE(typed_value)
+    RET_CHECK(typed_value)
         << "Attempted to read an attribute with the incorrect type.";
     return *typed_value;
   }
