@@ -51,13 +51,13 @@ BfrtCounterManager::~BfrtCounterManager() = default;
   ASSIGN_OR_RETURN(const auto& translated_counter_entry,
                    bfrt_p4runtime_translator_->TranslateCounterEntry(
                        counter_entry, /*to_sdk=*/true));
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of CounterEntry "
       << translated_counter_entry.ShortDebugString() << " must be MODIFY.";
-  CHECK_RETURN_IF_FALSE(translated_counter_entry.has_index())
+  RET_CHECK(translated_counter_entry.has_index())
       << "Modifying an indirect counter without counter index is currently not "
          "supported.";
-  CHECK_RETURN_IF_FALSE(translated_counter_entry.index().index() >= 0)
+  RET_CHECK(translated_counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
 
   // Find counter table.
@@ -86,9 +86,9 @@ BfrtCounterManager::~BfrtCounterManager() = default;
   ASSIGN_OR_RETURN(const auto& translated_counter_entry,
                    bfrt_p4runtime_translator_->TranslateCounterEntry(
                        counter_entry, /*to_sdk=*/true));
-  CHECK_RETURN_IF_FALSE(translated_counter_entry.counter_id() != 0)
+  RET_CHECK(translated_counter_entry.counter_id() != 0)
       << "Querying an indirect counter without counter id is not supported.";
-  CHECK_RETURN_IF_FALSE(translated_counter_entry.index().index() >= 0)
+  RET_CHECK(translated_counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
 
   // Index 0 is a valid value and not a wildcard.

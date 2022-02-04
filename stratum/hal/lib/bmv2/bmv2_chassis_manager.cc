@@ -105,14 +105,14 @@ namespace {
   for (auto singleton_port : config.singleton_ports()) {
     uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
-    CHECK_RETURN_IF_FALSE(node_id_to_bmv2_runner_.count(node_id) > 0)
+    RET_CHECK(node_id_to_bmv2_runner_.count(node_id) > 0)
         << "Node " << node_id << " is not known.";
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
     node_id_to_port_id_to_port_config[node_id][port_id] = singleton_port;
   }
 
-  CHECK_RETURN_IF_FALSE(static_cast<size_t>(config.nodes_size()) ==
-                        node_id_to_bmv2_runner_.size())
+  RET_CHECK(static_cast<size_t>(config.nodes_size()) ==
+            node_id_to_bmv2_runner_.size())
       << "Missing nodes in ChassisConfig";
 
   // Compare ports in old config and new config and perform the necessary
@@ -121,7 +121,7 @@ namespace {
     VLOG(1) << "Updating config for node " << node.id() << ".";
 
     auto* runner = gtl::FindOrNull(node_id_to_bmv2_runner_, node.id());
-    CHECK_RETURN_IF_FALSE(runner != nullptr)
+    RET_CHECK(runner != nullptr)
         << "Cannot find runner for node " << node.id() << ".";
     auto dev_mgr = (*runner)->get_dev_mgr();
 
@@ -210,11 +210,11 @@ namespace {
     uint64 node_id, uint32 port_id) const {
   auto* port_id_to_singleton =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_singleton != nullptr)
+  RET_CHECK(port_id_to_singleton != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const SingletonPort* singleton =
       gtl::FindOrNull(*port_id_to_singleton, port_id);
-  CHECK_RETURN_IF_FALSE(singleton != nullptr)
+  RET_CHECK(singleton != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   return singleton;
@@ -324,11 +324,11 @@ namespace {
   }
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
+  RET_CHECK(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortState* port_state_ptr =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
-  CHECK_RETURN_IF_FALSE(port_state_ptr != nullptr)
+  RET_CHECK(port_state_ptr != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   if (*port_state_ptr != PORT_STATE_UNKNOWN) return *port_state_ptr;
@@ -367,7 +367,7 @@ namespace {
     return ::util::OkStatus();
   }
   auto* runner = gtl::FindOrNull(node_id_to_bmv2_runner_, node_id);
-  CHECK_RETURN_IF_FALSE(runner != nullptr)
+  RET_CHECK(runner != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   auto dev_mgr = (*runner)->get_dev_mgr();
   auto port_stats = dev_mgr->get_port_stats(

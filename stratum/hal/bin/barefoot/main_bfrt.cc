@@ -80,7 +80,7 @@ namespace barefoot {
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
                                    bf_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
 
   // Setup and start serving RPCs.
   ::util::Status status = hal->Setup();

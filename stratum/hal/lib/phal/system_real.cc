@@ -107,8 +107,7 @@ UdevReal::EnumerateSubsystem(const std::string& subsystem) {
 }
 
 ::util::Status UdevMonitorReal::AddFilter(const std::string& subsystem) {
-  CHECK_RETURN_IF_FALSE(!receiving_)
-      << "Cannot add a filter to a receiving udev monitor.";
+  RET_CHECK(!receiving_) << "Cannot add a filter to a receiving udev monitor.";
   if (udev_monitor_filter_add_match_subsystem_devtype(
           monitor_, subsystem.c_str(), nullptr) != 0) {
     return ::util::PosixErrorToStatus(
@@ -119,7 +118,7 @@ UdevReal::EnumerateSubsystem(const std::string& subsystem) {
 }
 
 ::util::Status UdevMonitorReal::EnableReceiving() {
-  CHECK_RETURN_IF_FALSE(!receiving_) << "Udev monitor is already receiving.";
+  RET_CHECK(!receiving_) << "Udev monitor is already receiving.";
   if (udev_monitor_enable_receiving(monitor_) != 0) {
     return ::util::PosixErrorToStatus(errno,
                                       "udev_monitor_enable_receiving failed");
@@ -143,8 +142,7 @@ UdevReal::EnumerateSubsystem(const std::string& subsystem) {
       // We need to check that the subsytem matches the expected set of filters,
       // since udev allows spurious events.
       const char* subsystem_cstr = udev_device_get_subsystem(udev_event);
-      CHECK_RETURN_IF_FALSE(subsystem_cstr)
-          << "Could not get subsystem for udev device.";
+      RET_CHECK(subsystem_cstr) << "Could not get subsystem for udev device.";
       std::string subsystem = std::string(subsystem_cstr);
       if (filters_.count(subsystem) == 0)
         continue;  // This is a spurious event.

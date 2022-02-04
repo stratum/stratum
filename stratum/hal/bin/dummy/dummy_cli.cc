@@ -86,7 +86,7 @@ class DummyCli {
 
   ::util::StatusOr<OperStatus> ParseOperStatus(const std::string& arg) {
     PortState s;
-    CHECK_RETURN_IF_FALSE(PortState_Parse(arg, &s));
+    RET_CHECK(PortState_Parse(arg, &s));
     OperStatus os;
     os.set_state(s);
     return os;
@@ -94,14 +94,14 @@ class DummyCli {
 
   ::util::StatusOr<AdminStatus> ParseAdminStatus(const std::string& arg) {
     AdminState s;
-    CHECK_RETURN_IF_FALSE(AdminState_Parse(arg, &s));
+    RET_CHECK(AdminState_Parse(arg, &s));
     AdminStatus as;
     as.set_state(s);
     return as;
   }
 
   ::util::StatusOr<MacAddress> ParseMacAddress(const std::string& arg) {
-    CHECK_RETURN_IF_FALSE(IsMacAddressValid(arg));
+    RET_CHECK(IsMacAddressValid(arg));
     MacAddress ma;
     ma.set_mac_address(YangStringToMacAddress(arg));
     return ma;
@@ -109,7 +109,7 @@ class DummyCli {
 
   ::util::StatusOr<PortSpeed> ParsePortSpeed(const std::string& arg) {
     uint64 speed;
-    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(arg, &speed));
+    RET_CHECK(absl::SimpleAtoi(arg, &speed));
     PortSpeed ps;
     ps.set_speed_bps(speed);
     return ps;
@@ -121,7 +121,7 @@ class DummyCli {
     for (int i = 0; i < args.size() && i < pc.GetDescriptor()->field_count();
          ++i) {
       uint64 counter;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[i], &counter));
+      RET_CHECK(absl::SimpleAtoi(args[i], &counter));
       pc.GetReflection()->SetUInt64(&pc, pc.GetDescriptor()->field(i), counter);
     }
     return pc;
@@ -130,7 +130,7 @@ class DummyCli {
   ::util::StatusOr<ForwardingViability> ParseForwardingViability(
       const std::string& arg) {
     TrunkMemberBlockState s;
-    CHECK_RETURN_IF_FALSE(TrunkMemberBlockState_Parse(arg, &s));
+    RET_CHECK(TrunkMemberBlockState_Parse(arg, &s));
     ForwardingViability fv;
     fv.set_state(s);
     return fv;
@@ -139,7 +139,7 @@ class DummyCli {
   ::util::StatusOr<HealthIndicator> ParseHealthIndicator(
       const std::string& arg) {
     HealthState s;
-    CHECK_RETURN_IF_FALSE(HealthState_Parse(arg, &s));
+    RET_CHECK(HealthState_Parse(arg, &s));
     HealthIndicator hi;
     hi.set_state(s);
     return hi;
@@ -154,7 +154,7 @@ class DummyCli {
     Alarm a;
     if (args.size() > 0) {
       uint64 time_created;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[0], &time_created));
+      RET_CHECK(absl::SimpleAtoi(args[0], &time_created));
       a.set_time_created(time_created);
     }
     if (args.size() > 1) {
@@ -162,7 +162,7 @@ class DummyCli {
     }
     if (args.size() > 2) {
       Alarm::Severity s;
-      CHECK_RETURN_IF_FALSE(Alarm::Severity_Parse(args[2], &s));
+      RET_CHECK(Alarm::Severity_Parse(args[2], &s));
       a.set_severity(s);
     }
     if (args.size() > 3) {
@@ -177,22 +177,22 @@ class DummyCli {
     PortQosCounters pqc;
     if (args.size() > 0) {
       uint32 queue_id;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[0], &queue_id));
+      RET_CHECK(absl::SimpleAtoi(args[0], &queue_id));
       pqc.set_queue_id(queue_id);
     }
     if (args.size() > 1) {
       uint64 out_octets;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &out_octets));
+      RET_CHECK(absl::SimpleAtoi(args[1], &out_octets));
       pqc.set_out_octets(out_octets);
     }
     if (args.size() > 2) {
       uint64 out_pkts;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &out_pkts));
+      RET_CHECK(absl::SimpleAtoi(args[1], &out_pkts));
       pqc.set_out_pkts(out_pkts);
     }
     if (args.size() > 3) {
       uint64 out_dropped_pkts;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &out_dropped_pkts));
+      RET_CHECK(absl::SimpleAtoi(args[1], &out_dropped_pkts));
       pqc.set_out_dropped_pkts(out_dropped_pkts);
     }
 
@@ -288,40 +288,40 @@ class DummyCli {
       const std::vector<std::string>& args) {
     DeviceStatusUpdateRequest req;
 
-    CHECK_RETURN_IF_FALSE(args.size()) << "Invalid arguments. Missing state.";
+    RET_CHECK(args.size()) << "Invalid arguments. Missing state.";
     std::string state = args[0];
 
     if (gtl::ContainsKey(kNodePortStates, state)) {
-      CHECK_RETURN_IF_FALSE(args.size() >= 4)
+      RET_CHECK(args.size() >= 4)
           << "Invalid number of args. Expected node port value(s).";
       uint64 node;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &node));
+      RET_CHECK(absl::SimpleAtoi(args[1], &node));
       uint32 port;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[2], &port));
+      RET_CHECK(absl::SimpleAtoi(args[2], &port));
       req.mutable_source()->mutable_port()->set_node_id(node);
       req.mutable_source()->mutable_port()->set_port_id(port);
       ASSIGN_OR_RETURN(*req.mutable_state_update(), ParsePortNodeStates(args));
     } else if (gtl::ContainsKey(kNodeStates, state)) {
-      CHECK_RETURN_IF_FALSE(args.size() >= 3)
+      RET_CHECK(args.size() >= 3)
           << "Invalid number of args. Expected node value(s).";
       uint64 node;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &node));
+      RET_CHECK(absl::SimpleAtoi(args[1], &node));
       req.mutable_source()->mutable_node()->set_node_id(node);
       ASSIGN_OR_RETURN(*req.mutable_state_update(), ParseNodeStates(args));
     } else if (gtl::ContainsKey(kChassisStates, state)) {
-      CHECK_RETURN_IF_FALSE(args.size() >= 2)
+      RET_CHECK(args.size() >= 2)
           << "Invalid number of args. Expected value(s).";
       req.mutable_source()->mutable_chassis();
       ASSIGN_OR_RETURN(*req.mutable_state_update(), ParseChassisStates(args));
     } else if (gtl::ContainsKey(kPortQueueStates, state)) {
-      CHECK_RETURN_IF_FALSE(args.size() >= 5)
+      RET_CHECK(args.size() >= 5)
           << "Invalid number of args. Expected node port queue value(s).";
       uint64 node;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &node));
+      RET_CHECK(absl::SimpleAtoi(args[1], &node));
       uint32 port;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[2], &port));
+      RET_CHECK(absl::SimpleAtoi(args[2], &port));
       uint32 queue;
-      CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[3], &queue));
+      RET_CHECK(absl::SimpleAtoi(args[3], &queue));
       req.mutable_source()->mutable_port_queue()->set_node_id(node);
       req.mutable_source()->mutable_port_queue()->set_port_id(port);
       req.mutable_source()->mutable_port_queue()->set_queue_id(queue);
@@ -351,12 +351,12 @@ class DummyCli {
   }
 
   ::util::Status DoPortCounterSim(const std::vector<std::string>& args) {
-    CHECK_RETURN_IF_FALSE(args.size() == 2)
+    RET_CHECK(args.size() == 2)
         << "Invalid number of args. Expected node port.";
     uint64 node;
-    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[0], &node));
+    RET_CHECK(absl::SimpleAtoi(args[0], &node));
     uint32 port;
-    CHECK_RETURN_IF_FALSE(absl::SimpleAtoi(args[1], &port));
+    RET_CHECK(absl::SimpleAtoi(args[1], &port));
     DeviceStatusUpdateRequest req;
     req.mutable_source()->mutable_port()->set_node_id(node);
     req.mutable_source()->mutable_port()->set_port_id(port);

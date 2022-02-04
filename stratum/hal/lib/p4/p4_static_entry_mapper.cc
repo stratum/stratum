@@ -90,7 +90,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
                                        physical_request);
   RETURN_IF_ERROR(physical_differ.Compare(&physical_deletes, &physical_adds,
                                           &physical_mods, nullptr));
-  CHECK_RETURN_IF_FALSE(physical_deletes.updates_size() == 0)
+  RET_CHECK(physical_deletes.updates_size() == 0)
       << "Unexpected physical static table entry deletions - possible "
       << "P4StaticEntryMapper API misuse: "
       << physical_deletes.ShortDebugString();
@@ -104,7 +104,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   P4WriteRequestDiffer hidden_differ(hidden_static_entries_, hidden_request);
   RETURN_IF_ERROR(hidden_differ.Compare(&hidden_deletes, &hidden_adds,
                                         &hidden_mods, nullptr));
-  CHECK_RETURN_IF_FALSE(hidden_deletes.updates_size() == 0)
+  RET_CHECK(hidden_deletes.updates_size() == 0)
       << "Unexpected hidden static table entry deletions - possible "
       << "P4StaticEntryMapper API misuse: "
       << hidden_deletes.ShortDebugString();
@@ -124,7 +124,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
     ::p4::v1::WriteRequest* physical_request,
     ::p4::v1::WriteRequest* hidden_request) {
   for (const auto& update : new_request.updates()) {
-    CHECK_RETURN_IF_FALSE(update.entity().has_table_entry())
+    RET_CHECK(update.entity().has_table_entry())
         << "Static update in P4 WriteRequest has no table_entry: "
         << update.ShortDebugString();
     int table_id = update.entity().table_entry().table_id();

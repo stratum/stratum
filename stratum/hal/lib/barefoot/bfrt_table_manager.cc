@@ -56,8 +56,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
 ::util::Status BfrtTableManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
-      << "Only one P4 program is supported.";
+  RET_CHECK(config.programs_size() == 1) << "Only one P4 program is supported.";
   const auto& program = config.programs(0);
   const auto& p4_info = program.p4info();
   std::unique_ptr<P4InfoManager> p4_info_manager =
@@ -77,7 +76,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
 ::util::Status BfrtTableManager::BuildTableKey(
     const ::p4::v1::TableEntry& table_entry,
     BfSdeInterface::TableKeyInterface* table_key) {
-  CHECK_RETURN_IF_FALSE(table_key);
+  RET_CHECK(table_key);
   bool needs_priority = false;
   ASSIGN_OR_RETURN(auto table,
                    p4_info_manager_->FindTableByID(table_entry.table_id()));
@@ -98,11 +97,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
       auto mk = *it;
       switch (mk.field_match_type_case()) {
         case ::p4::v1::FieldMatch::kExact: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
-                                ::p4::config::v1::MatchField::EXACT)
+          RET_CHECK(expected_match_field.match_type() ==
+                    ::p4::config::v1::MatchField::EXACT)
               << "Found match field of type EXACT does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()))
+          RET_CHECK(!IsDontCareMatch(mk.exact()))
               << "Don't care match " << mk.ShortDebugString()
               << " must be omitted.";
           RETURN_IF_ERROR(
@@ -110,11 +109,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
           break;
         }
         case ::p4::v1::FieldMatch::kTernary: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
-                                ::p4::config::v1::MatchField::TERNARY)
+          RET_CHECK(expected_match_field.match_type() ==
+                    ::p4::config::v1::MatchField::TERNARY)
               << "Found match field of type TERNARY does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()))
+          RET_CHECK(!IsDontCareMatch(mk.ternary()))
               << "Don't care match " << mk.ShortDebugString()
               << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetTernary(
@@ -122,11 +121,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
           break;
         }
         case ::p4::v1::FieldMatch::kLpm: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
-                                ::p4::config::v1::MatchField::LPM)
+          RET_CHECK(expected_match_field.match_type() ==
+                    ::p4::config::v1::MatchField::LPM)
               << "Found match field of type LPM does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()))
+          RET_CHECK(!IsDontCareMatch(mk.lpm()))
               << "Don't care match " << mk.ShortDebugString()
               << " must be omitted.";
           RETURN_IF_ERROR(table_key->SetLpm(mk.field_id(), mk.lpm().value(),
@@ -134,11 +133,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
           break;
         }
         case ::p4::v1::FieldMatch::kRange: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
-                                ::p4::config::v1::MatchField::RANGE)
+          RET_CHECK(expected_match_field.match_type() ==
+                    ::p4::config::v1::MatchField::RANGE)
               << "Found match field of type Range does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(
+          RET_CHECK(
               !IsDontCareMatch(mk.range(), expected_match_field.bitwidth()))
               << "Don't care match " << mk.ShortDebugString()
               << " must be omitted.";
@@ -147,7 +146,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
           break;
         }
         case ::p4::v1::FieldMatch::kOptional:
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()))
+          RET_CHECK(!IsDontCareMatch(mk.optional()))
               << "Don't care match field " << mk.ShortDebugString()
               << " must be omitted.";
           ABSL_FALLTHROUGH_INTENDED;
@@ -246,7 +245,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
-  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+  RET_CHECK(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(const auto& translated_table_entry,
@@ -295,11 +294,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                << translated_table_entry.ShortDebugString() << ".";
     }
   } else {
-    CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+    RET_CHECK(type == ::p4::v1::Update::MODIFY)
         << "The table default entry can only be modified.";
-    CHECK_RETURN_IF_FALSE(translated_table_entry.match_size() == 0)
+    RET_CHECK(translated_table_entry.match_size() == 0)
         << "Default action must not contain match fields.";
-    CHECK_RETURN_IF_FALSE(translated_table_entry.priority() == 0)
+    RET_CHECK(translated_table_entry.priority() == 0)
         << "Default action must not contain a priority field.";
 
     if (translated_table_entry.has_action()) {
@@ -476,7 +475,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(table_entry.table_id())
+  RET_CHECK(table_entry.table_id())
       << "Missing table id on default action read "
       << table_entry.ShortDebugString() << ".";
 
@@ -511,15 +510,15 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
+  RET_CHECK(table_entry.match_size() == 0)
       << "Match filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
+  RET_CHECK(table_entry.priority() == 0)
       << "Priority filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.has_action() == false)
+  RET_CHECK(table_entry.has_action() == false)
       << "Action filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.metadata() == "")
+  RET_CHECK(table_entry.metadata() == "")
       << "Metadata filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.is_default_action() == false)
+  RET_CHECK(table_entry.is_default_action() == false)
       << "Default action filters on wildcard reads are not supported.";
 
   ASSIGN_OR_RETURN(uint32 table_id,
@@ -554,7 +553,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
+  RET_CHECK(writer) << "Null writer.";
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(const auto& translated_table_entry,
                    bfrt_p4runtime_translator_->TranslateTableEntry(
@@ -622,7 +621,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of DirectCounterEntry "
       << direct_counter_entry.ShortDebugString() << " must be MODIFY.";
   ASSIGN_OR_RETURN(const auto& translated_direct_counter_entry,
@@ -630,7 +629,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                        direct_counter_entry, /*to_sdk=*/true));
   // Read table entry first.
   const auto& table_entry = translated_direct_counter_entry.table_entry();
-  CHECK_RETURN_IF_FALSE(table_entry.action().action().action_id() == 0)
+  RET_CHECK(table_entry.action().action().action_id() == 0)
       << "Found action on DirectCounterEntry "
       << translated_direct_counter_entry.ShortDebugString();
   ASSIGN_OR_RETURN(uint32 table_id,
@@ -676,7 +675,7 @@ BfrtTableManager::ReadDirectCounterEntry(
                    bfrt_p4runtime_translator_->TranslateDirectCounterEntry(
                        direct_counter_entry, /*to_sdk=*/true));
   const auto& table_entry = translated_direct_counter_entry.table_entry();
-  CHECK_RETURN_IF_FALSE(table_entry.action().action().action_id() == 0)
+  RET_CHECK(table_entry.action().action().action_id() == 0)
       << "Found action on DirectCounterEntry "
       << translated_direct_counter_entry.ShortDebugString();
 
@@ -775,14 +774,13 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::RegisterEntry& register_entry) {
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of RegisterEntry " << register_entry.ShortDebugString()
       << " must be MODIFY.";
-  CHECK_RETURN_IF_FALSE(register_entry.has_data())
+  RET_CHECK(register_entry.has_data())
       << "RegisterEntry " << register_entry.ShortDebugString()
       << " must have data.";
-  CHECK_RETURN_IF_FALSE(register_entry.data().data_case() ==
-                        ::p4::v1::P4Data::kBitstring)
+  RET_CHECK(register_entry.data().data_case() == ::p4::v1::P4Data::kBitstring)
       << "Only bitstring registers data types are supported.";
 
   ASSIGN_OR_RETURN(uint32 table_id,
@@ -809,7 +807,7 @@ BfrtTableManager::ReadDirectCounterEntry(
   ASSIGN_OR_RETURN(const auto& translated_meter_entry,
                    bfrt_p4runtime_translator_->TranslateMeterEntry(
                        meter_entry, /*to_sdk=*/true));
-  CHECK_RETURN_IF_FALSE(translated_meter_entry.meter_id() != 0)
+  RET_CHECK(translated_meter_entry.meter_id() != 0)
       << "Wildcard MeterEntry reads are not supported.";
   ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
                                         translated_meter_entry.meter_id()));
@@ -882,13 +880,13 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::MeterEntry& meter_entry) {
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of MeterEntry " << meter_entry.ShortDebugString()
       << " must be MODIFY.";
   ASSIGN_OR_RETURN(const auto& translated_meter_entry,
                    bfrt_p4runtime_translator_->TranslateMeterEntry(
                        meter_entry, /*to_sdk=*/true));
-  CHECK_RETURN_IF_FALSE(translated_meter_entry.meter_id() != 0)
+  RET_CHECK(translated_meter_entry.meter_id() != 0)
       << "Missing meter id in MeterEntry "
       << translated_meter_entry.ShortDebugString() << ".";
 
@@ -940,7 +938,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
-  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+  RET_CHECK(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
   absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(const auto& translated_action_profile_member,
@@ -990,7 +988,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::ActionProfileMember& action_profile_member,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(action_profile_member.action_profile_id() != 0)
+  RET_CHECK(action_profile_member.action_profile_id() != 0)
       << "Reading all action profiles is not supported yet.";
 
   absl::ReaderMutexLock l(&lock_);
@@ -1051,7 +1049,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
-  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+  RET_CHECK(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
   absl::WriterMutexLock l(&lock_);
@@ -1065,12 +1063,10 @@ BfrtTableManager::ReadDirectCounterEntry(
   std::vector<uint32> member_ids;
   std::vector<bool> member_status;
   for (const auto& member : action_profile_group.members()) {
-    CHECK_RETURN_IF_FALSE(
-        member.watch_kind_case() ==
-        ::p4::v1::ActionProfileGroup::Member::WATCH_KIND_NOT_SET)
+    RET_CHECK(member.watch_kind_case() ==
+              ::p4::v1::ActionProfileGroup::Member::WATCH_KIND_NOT_SET)
         << "Watch ports are not supported.";
-    CHECK_RETURN_IF_FALSE(member.weight() != 0)
-        << "Zero member weights are not allowed.";
+    RET_CHECK(member.weight() != 0) << "Zero member weights are not allowed.";
     if (member.weight() != 1) {
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
              << "Member weights greater than 1 are not supported.";
@@ -1119,7 +1115,7 @@ BfrtTableManager::ReadDirectCounterEntry(
   ASSIGN_OR_RETURN(
       uint32 bfrt_act_sel_table_id,
       bf_sde_interface_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
-  CHECK_RETURN_IF_FALSE(action_profile_group.action_profile_id() != 0)
+  RET_CHECK(action_profile_group.action_profile_id() != 0)
       << "Reading all action profiles is not supported yet.";
 
   std::vector<int> group_ids;
