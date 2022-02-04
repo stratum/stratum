@@ -1196,6 +1196,7 @@ TEST_F(YangParseTreeTest,
       "00112233445566",        // No colon
       "11:22:333:44:55:66",    // Too many hex digits
       "11:22:3:44:55:66",      // Too few hex digits
+      "0:0:0:0:0:0",           // Too few hex digits
       "",                      // empty mac string
       "st:ra:tu:mr:oc:ks",     // None hex digits
   };
