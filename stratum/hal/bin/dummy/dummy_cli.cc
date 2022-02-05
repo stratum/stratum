@@ -101,9 +101,9 @@ class DummyCli {
   }
 
   ::util::StatusOr<MacAddress> ParseMacAddress(const std::string& arg) {
-    RET_CHECK(IsMacAddressValid(arg));
+    ASSIGN_OR_RETURN(uint64 mac_address, YangStringToMacAddress(arg));
     MacAddress ma;
-    ma.set_mac_address(YangStringToMacAddress(arg));
+    ma.set_mac_address(mac_address);
     return ma;
   }
 
