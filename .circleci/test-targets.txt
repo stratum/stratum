@@ -7,11 +7,11 @@
 //stratum/hal/lib/barefoot:bf_pipeline_utils_test
 //stratum/hal/lib/barefoot:bfrt_counter_manager_test
 //stratum/hal/lib/barefoot:bfrt_node_test
+//stratum/hal/lib/barefoot:bfrt_p4runtime_translator_test
 //stratum/hal/lib/barefoot:bfrt_packetio_manager_test
 //stratum/hal/lib/barefoot:bfrt_pre_manager_test
 //stratum/hal/lib/barefoot:bfrt_switch_test
 //stratum/hal/lib/barefoot:bfrt_table_manager_test
-//stratum/hal/lib/barefoot:bfrt_p4runtime_translator_test
 //stratum/hal/lib/barefoot:utils_test
 //stratum/hal/lib/bcm/...
 //stratum/hal/lib/common/...

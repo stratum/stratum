@@ -153,7 +153,19 @@ AuthPolicyChecker::~AuthPolicyChecker() {}
   return ::util::OkStatus();
 }
 
-::util::Status AuthPolicyChecker::Shutdown() { return ::util::OkStatus(); }
+::util::Status AuthPolicyChecker::Shutdown() {
+  {
+    absl::WriterMutexLock l(&shutdown_lock_);
+    if (shutdown_) return ::util::OkStatus();
+    shutdown_ = true;
+  }
+  if (watcher_thread_id_ && pthread_join(watcher_thread_id_, nullptr) != 0) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Failed to join file watcher thread.";
+  }
+  watcher_thread_id_ = pthread_t{};
+
+  return ::util::OkStatus();
+}
 
 std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
   auto instance = absl::WrapUnique(new AuthPolicyChecker());
@@ -167,7 +179,16 @@ std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
   return instance;
 }
 
-::util::Status AuthPolicyChecker::Initialize() { return ::util::OkStatus(); }
+::util::Status AuthPolicyChecker::Initialize() {
+  int ret =
+      pthread_create(&watcher_thread_id_, nullptr, WatcherThreadFunc, nullptr);
+  if (ret) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Failed to create file watcher thread with error " << ret << ".";
+  }
+
+  return ::util::OkStatus();
+}
 
 ::util::Status AuthPolicyChecker::AuthorizeUser(
     const std::string& service_name, const std::string& rpc_name,
