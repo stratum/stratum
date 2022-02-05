@@ -20,6 +20,12 @@ Supported gNMI paths
  - Get type: ALL, STATE
  - Set mode: Not valid
 
+`/interfaces/interface[name=*]/state/id`
+
+ - Subscription mode: ONCE, POLL
+ - Get type: ALL, STATE
+ - Set mode: Not valid
+
 `/interfaces/interface[name=*]/state/ifindex`
 
  - Subscription mode: ONCE, POLL
@@ -200,6 +206,12 @@ Supported gNMI paths
 `/interfaces/interface[name=port name]/state/loopback-mode`
 
  - Subscription mode: ONCE, POLL, SAMPLE, ON_CHANGE
+ - Get type: ALL, STATE
+ - Set mode: Not valid
+
+`/interfaces/interface[name=port name]/state/id`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
  - Get type: ALL, STATE
  - Set mode: Not valid
 

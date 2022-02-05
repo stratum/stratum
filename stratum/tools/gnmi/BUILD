@@ -21,8 +21,10 @@ stratum_cc_binary(
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
+        "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
+        "//stratum/lib/security:credentials_manager",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",

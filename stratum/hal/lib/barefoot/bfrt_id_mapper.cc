@@ -150,8 +150,7 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
   try {
     nlohmann::json context_json =
         nlohmann::json::parse(context_json_content, nullptr, false);
-    CHECK_RETURN_IF_FALSE(!context_json.is_discarded())
-        << "Failed to parse context.json";
+    RET_CHECK(!context_json.is_discarded()) << "Failed to parse context.json";
 
     // Builds mappings for ActionProfile and ActionSelector.
     for (const auto& table : context_json["tables"]) {
@@ -175,11 +174,11 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
       }
 
       const auto& action_selector_name = selection_table_refs[0]["name"];
-      CHECK_RETURN_IF_FALSE(!action_selector_name.empty())
+      RET_CHECK(!action_selector_name.empty())
           << "ActionSelector for ActionProfile " << action_profile_name
           << " name is empty, this should not happened";
-      CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
-          &prof_to_sel, action_profile_name, action_selector_name))
+      RET_CHECK(gtl::InsertIfNotPresent(&prof_to_sel, action_profile_name,
+                                        action_selector_name))
           << "Action profile with name " << action_profile_name
           << " already exists.";
     }
@@ -201,11 +200,11 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
     RETURN_IF_BFRT_ERROR(bfrt_table->tableIdGet(&table_id));
 
     if (table_type == bfrt::BfRtTable::TableType::ACTION_PROFILE) {
-      CHECK_RETURN_IF_FALSE(
+      RET_CHECK(
           gtl::InsertIfNotPresent(&act_prof_bfrt_ids, table_name, table_id))
           << "Action profile with name " << table_name << " already exists.";
     } else if (table_type == bfrt::BfRtTable::TableType::SELECTOR) {
-      CHECK_RETURN_IF_FALSE(
+      RET_CHECK(
           gtl::InsertIfNotPresent(&selector_bfrt_ids, table_name, table_id))
           << "Action selector with name " << table_name << " already exists.";
     }
@@ -235,10 +234,8 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
         break;
       }
     }
-    CHECK_RETURN_IF_FALSE(prof_id != 0)
-        << "Unable to find ID for action profile " << prof;
-    CHECK_RETURN_IF_FALSE(sel_id != 0)
-        << "Unable to find ID for action selector " << sel;
+    RET_CHECK(prof_id != 0) << "Unable to find ID for action profile " << prof;
+    RET_CHECK(sel_id != 0) << "Unable to find ID for action selector " << sel;
 
     act_profile_to_selector_mapping_[prof_id] = sel_id;
     act_selector_to_profile_mapping_[sel_id] = prof_id;
@@ -248,14 +245,14 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
 
 ::util::StatusOr<uint32> BfrtIdMapper::GetBfRtId(uint32 p4info_id) const {
   absl::ReaderMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(p4info_to_bfrt_id_, p4info_id))
+  RET_CHECK(gtl::ContainsKey(p4info_to_bfrt_id_, p4info_id))
       << "Unable to find bfrt id from p4info id: " << p4info_id;
   return gtl::FindOrDie(p4info_to_bfrt_id_, p4info_id);
 }
 
 ::util::StatusOr<uint32> BfrtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
   absl::ReaderMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(bfrt_to_p4info_id_, bfrt_id))
+  RET_CHECK(gtl::ContainsKey(bfrt_to_p4info_id_, bfrt_id))
       << "Unable to find p4info id from bfrt id: " << bfrt_id;
   return gtl::FindOrDie(bfrt_to_p4info_id_, bfrt_id);
 }
@@ -263,7 +260,7 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
 ::util::StatusOr<bf_rt_id_t> BfrtIdMapper::GetActionSelectorBfRtId(
     bf_rt_id_t action_profile_id) const {
   absl::ReaderMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       gtl::ContainsKey(act_profile_to_selector_mapping_, action_profile_id))
       << "Unable to find action selector of an action profile: "
       << action_profile_id;
@@ -273,7 +270,7 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
 ::util::StatusOr<bf_rt_id_t> BfrtIdMapper::GetActionProfileBfRtId(
     bf_rt_id_t action_selector_id) const {
   absl::ReaderMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       gtl::ContainsKey(act_selector_to_profile_mapping_, action_selector_id))
       << "Unable to find action profile of an action selector: "
       << action_selector_id;

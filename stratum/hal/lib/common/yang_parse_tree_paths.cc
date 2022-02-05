@@ -965,6 +965,19 @@ void SetUpInterfacesInterfaceStateName(const std::string& name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/state/id
+void SetUpInterfacesInterfaceStateId(uint32 id, TreeNode* node) {
+  auto on_change_functor = UnsupportedFunc();
+  auto on_poll_functor = [id](const GnmiEvent& event, const ::gnmi::Path& path,
+                              GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, id), stream);
+  };
+  node->SetOnTimerHandler(on_poll_functor)
+      ->SetOnPollHandler(on_poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/oper-status
 void SetUpInterfacesInterfaceStateOperStatus(uint64 node_id, uint32 port_id,
                                              TreeNode* node,
@@ -3273,7 +3286,7 @@ void SetUpSystemLoggingConsoleConfigSeverity(LoggingConfig logging_config,
         ConvertStringToLogSeverity(typed_val->string_val(), &logging_config));
 
     // Set the value.
-    CHECK_RETURN_IF_FALSE(SetLogLevel(logging_config))
+    RET_CHECK(SetLogLevel(logging_config))
         << "Could not set new log level (" << logging_config.first << ", "
         << logging_config.second << ").";
 
@@ -3347,6 +3360,9 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("name")());
   SetUpInterfacesInterfaceStateName(name, node);
+  node =
+      tree->AddNode(GetPath("interfaces")("interface", name)("state")("id")());
+  SetUpInterfacesInterfaceStateId(port_id, node);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("oper-status")());
@@ -3846,6 +3862,40 @@ void YangParseTreePaths::AddSubtreeSystem(YangParseTree* tree) {
 }
 
 void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
+  // Add support for "/interfaces/interface[name=*]/state/id".
+  tree->AddNode(GetPath("interfaces")("interface", "*")("state")("id")())
+      ->SetOnChangeRegistration(
+          [tree](const EventHandlerRecordPtr& record)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Subscribing to a wildcard node means that all matching nodes
+                // have to be registered for received events.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("id")(), [&record](const TreeNode& node) {
+                      return node.DoOnChangeRegistration(record);
+                    });
+                return status;
+              })
+      ->SetOnChangeHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream) { return ::util::OkStatus(); })
+      ->SetOnPollHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Polling a wildcard node means that all matching nodes have to
+                // be polled.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("id")(),
+                    [&event, &stream](const TreeNode& leaf) {
+                      return (leaf.GetOnPollHandler())(event, stream);
+                    });
+                // Notify the client that all nodes have been processed.
+                APPEND_STATUS_IF_ERROR(
+                    status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+                return status;
+              });
   // Add support for "/interfaces/interface[name=*]/state/ifindex".
   tree->AddNode(GetPath("interfaces")("interface", "*")("state")("ifindex")())
       ->SetOnChangeRegistration(

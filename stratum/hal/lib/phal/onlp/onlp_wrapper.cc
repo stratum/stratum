@@ -88,7 +88,7 @@ template <typename T>
   dlerror();  // Clear last error.
   auto* symbol = reinterpret_cast<T>(dlsym(handle, name));
   char* dl_err = dlerror();
-  CHECK_RETURN_IF_FALSE(dl_err == nullptr)
+  RET_CHECK(dl_err == nullptr)
       << "Failed to load symbol " << name << ": " << dl_err;
 
   return symbol;
@@ -99,7 +99,7 @@ template <typename T>
   LOG(INFO) << "Initializing ONLP.";
 
   onlp_lib_handle_ = dlopen(FLAGS_onlp_library_file.c_str(), RTLD_NOW);
-  CHECK_RETURN_IF_FALSE(onlp_lib_handle_ != nullptr)
+  RET_CHECK(onlp_lib_handle_ != nullptr)
       << "Failed to open shared library: " << dlerror();
 
 // Local macro to load a symbol and store it into its function pointer.
@@ -129,7 +129,7 @@ template <typename T>
   LOAD_SYMBOL(onlp_psu_info_get);
 #undef LOAD_SYMBOL
 
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_sw_init(nullptr)))
       << "Failed to initialize ONLP.";
 
   return ::util::OkStatus();
@@ -137,32 +137,29 @@ template <typename T>
 
 ::util::StatusOr<OidInfo> OnlpWrapper::GetOidInfo(OnlpOid oid) const {
   onlp_oid_hdr_t oid_info = {};
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_oid_hdr_get(oid, &oid_info)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_oid_hdr_get(oid, &oid_info)))
       << "Failed to get info for OID " << oid << ".";
   return OidInfo(oid_info);
 }
 
 ::util::StatusOr<SfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
+  RET_CHECK(ONLP_OID_IS_SFP(oid))
       << "Cannot get SFP info: OID " << oid << " is not an SFP.";
   // Default value of the SFP info.
   onlp_sfp_info_t sfp_info = {};
   sfp_info.hdr.id = oid;
   if (onlp_functions_.onlp_sfp_is_present(oid)) {
-    CHECK_RETURN_IF_FALSE(
-        ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
+    RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_sfp_info_get(oid, &sfp_info)))
         << "Failed to get SFP info for OID " << oid << ".";
   }
   return SfpInfo(sfp_info);
 }
 
 ::util::StatusOr<FanInfo> OnlpWrapper::GetFanInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+  RET_CHECK(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
   onlp_fan_info_t fan_info = {};
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_fan_info_get(oid, &fan_info)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_fan_info_get(oid, &fan_info)))
       << "Failed to get FAN info for OID " << oid << ".";
   return FanInfo(fan_info);
 }
@@ -172,66 +169,62 @@ template <typename T>
 }
 
 ::util::Status OnlpWrapper::SetFanPercent(OnlpOid oid, int value) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+  RET_CHECK(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_fan_percentage_set(oid, value)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_fan_percentage_set(oid, value)))
       << "Failed to set FAN percentage for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpWrapper::SetFanRpm(OnlpOid oid, int val) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+  RET_CHECK(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_fan_rpm_set(oid, val)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_fan_rpm_set(oid, val)))
       << "Failed to set FAN rpm for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpWrapper::SetFanDir(OnlpOid oid, FanDir dir) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+  RET_CHECK(ONLP_OID_IS_FAN(oid))
       << "Cannot set FAN info: OID " << oid << " is not an FAN.";
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(
+  RET_CHECK(ONLP_SUCCESS(
       onlp_functions_.onlp_fan_dir_set(oid, static_cast<onlp_fan_dir_t>(dir))))
       << "Failed to set FAN direction for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<ThermalInfo> OnlpWrapper::GetThermalInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_THERMAL(oid))
+  RET_CHECK(ONLP_OID_IS_THERMAL(oid))
       << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
   onlp_thermal_info_t thermal_info = {};
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       ONLP_SUCCESS(onlp_functions_.onlp_thermal_info_get(oid, &thermal_info)))
       << "Failed to get THERMAL info for OID " << oid << ".";
   return ThermalInfo(thermal_info);
 }
 
 ::util::StatusOr<LedInfo> OnlpWrapper::GetLedInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
+  RET_CHECK(ONLP_OID_IS_LED(oid))
       << "Cannot get LED info: OID " << oid << " is not an LED.";
   onlp_led_info_t led_info = {};
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_led_info_get(oid, &led_info)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_led_info_get(oid, &led_info)))
       << "Failed to get LED info for OID " << oid << ".";
   return LedInfo(led_info);
 }
 
 ::util::Status OnlpWrapper::SetLedMode(OnlpOid oid, LedMode mode) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
+  RET_CHECK(ONLP_OID_IS_LED(oid))
       << "Cannot set LED info: OID " << oid << " is not an LED.";
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_functions_.onlp_led_mode_set(
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_led_mode_set(
       oid, static_cast<onlp_led_mode_t>(mode))))
       << "Failed to set LED mode for OID " << oid << ".";
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpWrapper::SetLedCharacter(OnlpOid oid, char val) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
+  RET_CHECK(ONLP_OID_IS_LED(oid))
       << "Cannot get LED info: OID " << oid << " is not an LED.";
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_led_char_set(oid, val)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_led_char_set(oid, val)))
       << "Failed to set LED character for OID " << oid << ".";
   return ::util::OkStatus();
 }
@@ -244,7 +237,7 @@ template <typename T>
   OnlpPresentBitmap bitset;
   SfpBitmap presence;
   onlp_functions_.onlp_sfp_bitmap_t_init(&presence);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       ONLP_SUCCESS(onlp_functions_.onlp_sfp_presence_bitmap_get(&presence)))
       << "Failed to get presence bitmap ONLP.";
   int k = 0;
@@ -262,11 +255,10 @@ template <typename T>
 }
 
 ::util::StatusOr<PsuInfo> OnlpWrapper::GetPsuInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_PSU(oid))
+  RET_CHECK(ONLP_OID_IS_PSU(oid))
       << "Cannot get PSU info: OID " << oid << " is not an PSU.";
   onlp_psu_info_t psu_info = {};
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_psu_info_get(oid, &psu_info)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_psu_info_get(oid, &psu_info)))
       << "Failed to get PSU info for OID " << oid << ".";
   return PsuInfo(psu_info);
 }
@@ -281,7 +273,7 @@ template <typename T>
   biglist_t* oid_hdr_list = nullptr;
 
   OnlpOid root_oid = ONLP_CHASSIS_ID_CREATE(1);
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(
+  RET_CHECK(ONLP_SUCCESS(
       onlp_functions_.onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list)));
 
   // Iterate though the returned list and add the OIDs to oid_list
@@ -300,8 +292,7 @@ template <typename T>
 ::util::StatusOr<OnlpPortNumber> OnlpWrapper::GetSfpMaxPortNumber() const {
   SfpBitmap bitmap;
   onlp_functions_.onlp_sfp_bitmap_t_init(&bitmap);
-  CHECK_RETURN_IF_FALSE(
-      ONLP_SUCCESS(onlp_functions_.onlp_sfp_bitmap_get(&bitmap)))
+  RET_CHECK(ONLP_SUCCESS(onlp_functions_.onlp_sfp_bitmap_get(&bitmap)))
       << "Failed to get valid SFP port bitmap from ONLP.";
 
   OnlpPortNumber port_num = ONLP_MAX_FRONT_PORT_NUM;
@@ -404,7 +395,7 @@ void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {
 }
 
 ::util::StatusOr<const SffInfo*> SfpInfo::GetSffInfo() const {
-  CHECK_RETURN_IF_FALSE(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
+  RET_CHECK(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
       << "Cannot get SFF info: Invalid SFP type.";
   return &sfp_info_.sff;
 }

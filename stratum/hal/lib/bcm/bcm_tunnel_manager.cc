@@ -15,23 +15,19 @@ BcmTunnelManager::BcmTunnelManager()
     : bcm_sdk_interface_(nullptr),
       bcm_table_manager_(nullptr),
       node_id_(0),
-      unit_(-1) {
-}
+      unit_(-1) {}
 
-BcmTunnelManager::BcmTunnelManager(
-    BcmSdkInterface* bcm_sdk_interface,
-    BcmTableManager* bcm_table_manager, int unit)
+BcmTunnelManager::BcmTunnelManager(BcmSdkInterface* bcm_sdk_interface,
+                                   BcmTableManager* bcm_table_manager, int unit)
     : bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
       bcm_table_manager_(ABSL_DIE_IF_NULL(bcm_table_manager)),
       node_id_(0),
-      unit_(unit) {
-}
+      unit_(unit) {}
 
-BcmTunnelManager::~BcmTunnelManager() {
-}
+BcmTunnelManager::~BcmTunnelManager() {}
 
-::util::Status BcmTunnelManager::PushChassisConfig(
-    const ChassisConfig& config, uint64 node_id) {
+::util::Status BcmTunnelManager::PushChassisConfig(const ChassisConfig& config,
+                                                   uint64 node_id) {
   // TODO(teverman): Add implementation.
   return ::util::OkStatus();
 }

@@ -2,16 +2,15 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_DIAG_SHELL_H_
 #define STRATUM_HAL_LIB_BCM_BCM_DIAG_SHELL_H_
 
 #include <pthread.h>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -51,13 +50,19 @@ class BcmDiagShell {
   static constexpr unsigned char kTelnetEcho = 1;
   static constexpr unsigned char kTelnetSGA = 3;
   static constexpr unsigned char kTelnetWillSGA[] = {
-      kTelnetCmd, kTelnetWill, kTelnetSGA
+      kTelnetCmd,
+      kTelnetWill,
+      kTelnetSGA,
   };
   static constexpr unsigned char kTelnetWillEcho[] = {
-    kTelnetCmd, kTelnetWill, kTelnetEcho
+      kTelnetCmd,
+      kTelnetWill,
+      kTelnetEcho,
   };
   static constexpr unsigned char kTelnetDontEcho[] = {
-    kTelnetCmd, kTelnetDont, kTelnetEcho
+      kTelnetCmd,
+      kTelnetDont,
+      kTelnetEcho,
   };
   static constexpr int kNumberOfBytesRead = 82;
 

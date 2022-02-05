@@ -11,6 +11,8 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_constants.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -38,8 +40,11 @@ class BfrtTableManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<BfSdeMock>();
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
     bfrt_table_manager_ = BfrtTableManager::CreateInstance(
-        OPERATION_MODE_STANDALONE, bf_sde_wrapper_mock_.get(), kDevice1);
+        OPERATION_MODE_STANDALONE, bf_sde_wrapper_mock_.get(),
+        bfrt_p4runtime_translator_mock_.get(), kDevice1);
   }
 
   ::util::Status PushTestConfig() {
@@ -134,6 +139,7 @@ class BfrtTableManagerTest : public ::testing::Test {
   static constexpr int kDevice1 = 0;
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtTableManager> bfrt_table_manager_;
 };
 
@@ -173,11 +179,11 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
       table_id: 33583783
       match {
         field_id: 1
-        exact { value: "\000\001" }
+        exact { value: "\001" }
       }
       match {
         field_id: 2
-        ternary { value: "\x00\x00" mask: "\x0f\xff" }
+        ternary { value: "\x00" mask: "\x0f\xff" }
       }
       priority: 10
     }
@@ -189,6 +195,9 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
 
   ::p4::v1::DirectCounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kDirectCounterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateDirectCounterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::DirectCounterEntry>(entry)));
 
   EXPECT_OK(bfrt_table_manager_->WriteDirectCounterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
@@ -223,6 +232,42 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ResetIndirectMeterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4MeterId = 55555;
+  constexpr int kBfRtTableId = 11111;
+  constexpr int kMeterIndex = 12345;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4MeterId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              WriteIndirectMeter(
+                  kDevice1, _, kBfRtTableId, Optional(kMeterIndex), false,
+                  kUnsetMeterThresholdReset, kUnsetMeterThresholdReset,
+                  kUnsetMeterThresholdReset, kUnsetMeterThresholdReset))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kMeterEntryText = R"PROTO(
+    meter_id: 55555
+    index {
+      index: 12345
+    }
+  )PROTO";
+  ::p4::v1::MeterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
 
   EXPECT_OK(bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
@@ -246,6 +291,9 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryModifyWithoutMeterId) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
 
   ::util::Status ret = bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry);
@@ -272,7 +320,9 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDelete) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillRepeatedly(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
   ::util::Status ret = bfrt_table_manager_->WriteMeterEntry(
       session_mock, ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
@@ -309,6 +359,7 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
                         SetArgPointee<6>(cbursts), SetArgPointee<7>(pirs),
                         SetArgPointee<8>(pbursts), SetArgPointee<9>(in_pps),
                         Return(::util::OkStatus())));
+
     const std::string kMeterResponseText = R"PROTO(
       entities {
         meter_entry {
@@ -327,6 +378,10 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
     )PROTO";
     ::p4::v1::ReadResponse resp;
     ASSERT_OK(ParseProtoFromString(kMeterResponseText, &resp));
+    const auto& entry = resp.entities(0).meter_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateMeterEntry(EqualsProto(entry), false))
+        .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
     EXPECT_CALL(writer_mock, Write(EqualsProto(resp))).WillOnce(Return(true));
   }
 
@@ -338,6 +393,9 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
 
   EXPECT_OK(
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock));
@@ -362,6 +420,9 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutId) {
   )PROTO";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateMeterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
 
   ::util::Status ret =
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock);
@@ -399,6 +460,9 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
   )PROTO";
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateTableEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
 
   ::util::Status ret =
       bfrt_table_manager_->ReadTableEntry(session_mock, entry, &writer_mock);

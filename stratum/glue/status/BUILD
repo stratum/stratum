@@ -31,6 +31,7 @@ stratum_cc_library(
     deps = [
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "//stratum/glue:platform",
         "//stratum/glue/gtl:source_location",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",

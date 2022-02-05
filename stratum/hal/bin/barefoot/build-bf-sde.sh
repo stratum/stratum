@@ -24,9 +24,9 @@ Options:
 
 Examples:
 
-    $0 -t ~/bf-sde-9.3.2.tgz
-    $0 -t ~/bf-sde-9.3.2.tgz -j 4
-    $0 -t ~/bf-sde-9.3.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
+    $0 -t ~/bf-sde-9.5.2.tgz
+    $0 -t ~/bf-sde-9.5.2.tgz -j 4
+    $0 -t ~/bf-sde-9.5.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
 "
 }
 
@@ -139,13 +139,37 @@ export SDE_INSTALL=$SDE/install
 # Extract the SDE
 tar xf $SDE_TAR -C $SDE --strip-components 1
 
-# Patch stratum_profile.yaml in SDE
-cp -f $STRATUM_BF_DIR/stratum_profile.yaml $SDE/p4studio_build/profiles/
+# Get SDE version from bf-sde-[version].manifest
+SDE_VERSION=$(find "$SDE" -name 'bf-sde-*.manifest' -printf '%f')
+SDE_VERSION=${SDE_VERSION#bf-sde-} # Remove "bf-sde-"
+SDE_VERSION=${SDE_VERSION%.manifest} # Remove ".manifest"
+if [ -z "${SDE_VERSION}" ]; then
+    echo "Unknown SDE version, cannot find SDE manifest file"
+    exit 1
+else
+    echo "SDE version: ${SDE_VERSION}"
+fi
 
-# Build BF SDE
-pushd $SDE/p4studio_build
-./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
-popd
+if [[ $SDE_VERSION == "9.7.0" ]]; then
+    pushd "$SDE/p4studio"
+    $sudo ./install-p4studio-dependencies.sh
+    ./p4studio packages extract
+    # Patch SDE to build without kernel driver
+    sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
+    # Build BF SDE
+    ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
+    ./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
+    ./p4studio build --jobs $JOBS
+    popd
+else
+    # Patch stratum_profile.yaml in SDE
+    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
+    # Build BF SDE
+    pushd "$SDE/p4studio_build"
+    ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
+    popd
+fi
+
 echo "BF SDE build complete."
 
 # Strip shared libraries and fix permissions

@@ -2,17 +2,26 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 
 #include <memory>
-#include <vector>
 #include <string>
 #include <tuple>
+#include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/strip.h"
+#include "absl/strings/substitute.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/glue/gtl/source_location.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -21,16 +30,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -99,19 +98,15 @@ class BcmTableManagerTest : public ::testing::Test {
   }
 
   ::util::Status VerifyInternalState() {
-    CHECK_RETURN_IF_FALSE(kNodeId == bcm_table_manager_->node_id_);
-    CHECK_RETURN_IF_FALSE(2U ==
-                          bcm_table_manager_->port_id_to_logical_port_.size());
-    CHECK_RETURN_IF_FALSE(1U ==
-                          bcm_table_manager_->trunk_id_to_trunk_port_.size());
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->port_id_to_logical_port_[kPortId1] ==
-        kLogicalPort1);
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->port_id_to_logical_port_[kPortId2] ==
-        kLogicalPort2);
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->trunk_id_to_trunk_port_[kTrunkId1] == kTrunkPort1);
+    RET_CHECK(kNodeId == bcm_table_manager_->node_id_);
+    RET_CHECK(2U == bcm_table_manager_->port_id_to_logical_port_.size());
+    RET_CHECK(1U == bcm_table_manager_->trunk_id_to_trunk_port_.size());
+    RET_CHECK(bcm_table_manager_->port_id_to_logical_port_[kPortId1] ==
+              kLogicalPort1);
+    RET_CHECK(bcm_table_manager_->port_id_to_logical_port_[kPortId2] ==
+              kLogicalPort2);
+    RET_CHECK(bcm_table_manager_->trunk_id_to_trunk_port_[kTrunkId1] ==
+              kTrunkPort1);
 
     return ::util::OkStatus();
   }
@@ -123,22 +118,20 @@ class BcmTableManagerTest : public ::testing::Test {
         bcm_table_manager_->LookupTableEntry(entry);
     ::util::Status status = result.status();
     if (!table_id_exists) {
-      CHECK_RETURN_IF_FALSE(
-          !status.ok() && status.error_code() == ERR_ENTRY_NOT_FOUND &&
-          absl::StrContains(status.error_message(), "Table"))
+      RET_CHECK(!status.ok() && status.error_code() == ERR_ENTRY_NOT_FOUND &&
+                absl::StrContains(status.error_message(), "Table"))
           << "Did not expect table id to exist. Status: " << status;
       return ::util::OkStatus();
     }
     if (!key_match) {
-      CHECK_RETURN_IF_FALSE(
-          !status.ok() && absl::StrContains(status.error_message(),
-                                            "does not contain a matching flow"))
+      RET_CHECK(!status.ok() &&
+                absl::StrContains(status.error_message(),
+                                  "does not contain a matching flow"))
           << "Did not expect key match. Status: " << status;
       return ::util::OkStatus();
     }
     RETURN_IF_ERROR(status);
-    CHECK_RETURN_IF_FALSE(proto_match ==
-                          ProtoEqual(result.ValueOrDie(), entry));
+    RET_CHECK(proto_match == ProtoEqual(result.ValueOrDie(), entry));
     return ::util::OkStatus();
   }
 
@@ -146,20 +139,20 @@ class BcmTableManagerTest : public ::testing::Test {
       const ::p4::v1::ActionProfileMember& member,
       BcmNonMultipathNexthop::Type type, int egress_intf_id, int bcm_port,
       uint32 group_ref_count, uint32 flow_ref_count) {
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         bcm_table_manager_->ActionProfileMemberExists(member.member_id()));
     const auto& members = bcm_table_manager_->members_;
     auto it = members.find(member.member_id());
-    CHECK_RETURN_IF_FALSE(it != members.end());
-    CHECK_RETURN_IF_FALSE(ProtoEqual(member, it->second));
+    RET_CHECK(it != members.end());
+    RET_CHECK(ProtoEqual(member, it->second));
     BcmNonMultipathNexthopInfo info;
     RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
         member.member_id(), &info));
-    CHECK_RETURN_IF_FALSE(type == info.type);
-    CHECK_RETURN_IF_FALSE(egress_intf_id == info.egress_intf_id);
-    CHECK_RETURN_IF_FALSE(bcm_port == info.bcm_port);
-    CHECK_RETURN_IF_FALSE(group_ref_count == info.group_ref_count);
-    CHECK_RETURN_IF_FALSE(flow_ref_count == info.flow_ref_count);
+    RET_CHECK(type == info.type);
+    RET_CHECK(egress_intf_id == info.egress_intf_id);
+    RET_CHECK(bcm_port == info.bcm_port);
+    RET_CHECK(group_ref_count == info.group_ref_count);
+    RET_CHECK(flow_ref_count == info.flow_ref_count);
 
     return ::util::OkStatus();
   }
@@ -169,28 +162,26 @@ class BcmTableManagerTest : public ::testing::Test {
       uint32 flow_ref_count,
       std::map<uint32, std::tuple<uint32, uint32, int>>
           member_id_to_weight_group_ref_count_port) {
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
+    RET_CHECK(bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
     const auto& groups = bcm_table_manager_->groups_;
     auto it = groups.find(group.group_id());
-    CHECK_RETURN_IF_FALSE(it != groups.end());
-    CHECK_RETURN_IF_FALSE(ProtoEqual(group, it->second));
+    RET_CHECK(it != groups.end());
+    RET_CHECK(ProtoEqual(group, it->second));
     BcmMultipathNexthopInfo group_info;
     RETURN_IF_ERROR(bcm_table_manager_->GetBcmMultipathNexthopInfo(
         group.group_id(), &group_info));
-    CHECK_RETURN_IF_FALSE(egress_intf_id == group_info.egress_intf_id);
-    CHECK_RETURN_IF_FALSE(flow_ref_count == group_info.flow_ref_count);
-    CHECK_RETURN_IF_FALSE(member_id_to_weight_group_ref_count_port.size() ==
-                          group_info.member_id_to_weight.size());
+    RET_CHECK(egress_intf_id == group_info.egress_intf_id);
+    RET_CHECK(flow_ref_count == group_info.flow_ref_count);
+    RET_CHECK(member_id_to_weight_group_ref_count_port.size() ==
+              group_info.member_id_to_weight.size());
     for (const auto& e : member_id_to_weight_group_ref_count_port) {
-      CHECK_RETURN_IF_FALSE(std::get<0>(e.second) ==
-                            group_info.member_id_to_weight[e.first]);
+      RET_CHECK(std::get<0>(e.second) ==
+                group_info.member_id_to_weight[e.first]);
       BcmNonMultipathNexthopInfo member_info;
       RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
           e.first, &member_info));
-      CHECK_RETURN_IF_FALSE(std::get<1>(e.second) ==
-                            member_info.group_ref_count);
-      CHECK_RETURN_IF_FALSE(std::get<2>(e.second) == member_info.bcm_port);
+      RET_CHECK(std::get<1>(e.second) == member_info.group_ref_count);
+      RET_CHECK(std::get<2>(e.second) == member_info.bcm_port);
       // If this is a logical port, check that there is a mapping to the set of
       // referencing groups.
       auto* logical_port = gtl::FindOrNull(
@@ -198,8 +189,8 @@ class BcmTableManagerTest : public ::testing::Test {
       if (logical_port) {
         auto* group_ids = gtl::FindOrNull(
             bcm_table_manager_->port_to_group_ids_, *logical_port);
-        CHECK_RETURN_IF_FALSE(group_ids != nullptr);
-        CHECK_RETURN_IF_FALSE(gtl::ContainsKey(*group_ids, group.group_id()));
+        RET_CHECK(group_ids != nullptr);
+        RET_CHECK(gtl::ContainsKey(*group_ids, group.group_id()));
       }
     }
 
@@ -2681,8 +2672,7 @@ TEST_F(BcmTableManagerTest,
   }
 }
 
-TEST_F(BcmTableManagerTest,
-       CommonFlowEntryToBcmFlowEntry_Insert_ValidDecap) {
+TEST_F(BcmTableManagerTest, CommonFlowEntryToBcmFlowEntry_Insert_ValidDecap) {
   CommonFlowEntry source;
   BcmFlowEntry expected;
 
@@ -4564,11 +4554,11 @@ TEST_P(ConstConditionTest,
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmTableManagerTest, ConstConditionTest,
-                        ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
-                                          P4_HEADER_IPV6, P4_HEADER_TCP,
-                                          P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,
-                                          P4_HEADER_GRE, P4_HEADER_ICMP),
-                        ParamName);
+                         ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
+                                           P4_HEADER_IPV6, P4_HEADER_TCP,
+                                           P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,
+                                           P4_HEADER_GRE, P4_HEADER_ICMP),
+                         ParamName);
 
 }  // namespace bcm
 }  // namespace hal

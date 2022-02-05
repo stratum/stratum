@@ -1,0 +1,70 @@
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+component {
+  name: "dummy switch 1"
+  component {
+    chassis {
+      platform: OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC
+    }
+  }
+}
+component {
+  name: ":lc-1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    id {
+      value: "1"
+    }
+  }
+}
+component {
+  name: "1/2/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/2/1"
+    }
+    port {
+      port_id {
+        value: 2
+      }
+    }
+  }
+}
+interface {
+  name: "1/2/1"
+  interface {
+    enabled {
+      value: true
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10MB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 99
+    }
+  }
+}

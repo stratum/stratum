@@ -2,20 +2,21 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_H_
 
 #include <pthread.h>
 #include <time.h>
 
-#include <memory>
-#include <string>
 #include <algorithm>
 #include <map>
+#include <memory>
+#include <string>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.grpc.pb.h"
-// FIXME(boc) is this required?
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -23,9 +24,6 @@
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/lib/error.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/container/flat_hash_map.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

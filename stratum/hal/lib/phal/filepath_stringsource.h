@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_FILEPATH_STRINGSOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_FILEPATH_STRINGSOURCE_H_
 
@@ -50,9 +49,7 @@ class FilepathStringSource : public StringSourceInterface {
              << "Attempted to set an unsettable FilepathStringSource.";
     }
   }
-  bool CanSet() override {
-    return can_set_;
-  }
+  bool CanSet() override { return can_set_; }
 
  private:
   const SystemInterface* system_interface_;

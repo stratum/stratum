@@ -25,11 +25,11 @@
 #include <set>
 #include <vector>
 
-#include "stratum/public/proto/p4_annotation.pb.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "external/com_github_p4lang_p4c/ir/visitor.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

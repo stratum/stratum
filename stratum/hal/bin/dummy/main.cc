@@ -4,10 +4,10 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/phal/phal.h"
-#include "stratum/hal/lib/dummy/dummy_switch.h"
-#include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
+#include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
+#include "stratum/hal/lib/dummy/dummy_switch.h"
+#include "stratum/hal/lib/phal/phal.h"
 
 namespace stratum {
 namespace hal {
@@ -25,21 +25,19 @@ namespace dummy_switch {
   DummyChassisManager* chassis_mgr = DummyChassisManager::GetSingleton();
 
   std::unique_ptr<DummySwitch> dummy_switch =
-    DummySwitch::CreateInstance(phal, chassis_mgr);
+      DummySwitch::CreateInstance(phal, chassis_mgr);
 
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   ASSIGN_OR_RETURN(auto credentials_manager,
                    CredentialsManager::CreateInstance());
-  auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_SIM,
-                                   dummy_switch.get(),
-                                   auth_policy_checker.get(),
-                                   credentials_manager.get());
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Hal instance.";
+  auto* hal = Hal::CreateSingleton(
+      stratum::hal::OPERATION_MODE_SIM, dummy_switch.get(),
+      auth_policy_checker.get(), credentials_manager.get());
+  RET_CHECK(hal) << "Failed to create the Hal instance.";
   ::util::Status status = hal->Setup();
   if (!status.ok()) {
-    LOG(ERROR)
-        << "Error when setting up HAL (but we will continue running): "
-        << status.error_message();
+    LOG(ERROR) << "Error when setting up HAL (but we will continue running): "
+               << status.error_message();
   }
   RETURN_IF_ERROR(hal->Run());  // blocking
   dummy_box->Shutdown();

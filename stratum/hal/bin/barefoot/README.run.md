@@ -25,8 +25,8 @@ You can pull a nightly version of this container image from
 $ docker pull stratumproject/stratum-bfrt:[SDE version]
 ```
 
-For example, the container with BF SDE 9.3.2: <br/>
-`stratumproject/stratum-bfrt:9.3.2`
+For example, the container with BF SDE 9.5.2: <br/>
+`stratumproject/stratum-bfrt:9.5.2`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bfrt:9.3.2
-docker save stratumproject/stratum-bfrt:9.3.2 -o stratum-bfrt-9.3.2-docker.tar
+docker pull stratumproject/stratum-bfrt:9.5.2
+docker save stratumproject/stratum-bfrt:9.5.2 -o stratum-bfrt-9.5.2-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bfrt-9.3.2-docker.tar
+docker load -i stratum-bfrt-9.5.2-docker.tar
 ```
 
 ### Set up huge pages
@@ -198,7 +198,7 @@ In one terminal window, run `tofino-model` in one container:
 ```bash
 docker run --rm -it --privileged \
   --network=host \
-  stratumproject/tofino-model:9.3.2  # <SDE_VERSION>
+  stratumproject/tofino-model:9.5.2  # <SDE_VERSION>
 ```
 
 In another terminal window, run Stratum in its own container:
@@ -758,11 +758,10 @@ E20201207 20:44:53.612030 18416 error_buffer.cc:30] (p4_service.cc:422): Failed 
 
 This error occurs when the binary pipeline is not in the correct format.
 Make sure the pipeline config binary has been packed correctly for PI node, like
-so: [update_config.py](/stratum/hal/bin/barefoot/update_config.py#L39-L52).
-You cannot push the compiler output (e.g. `tofino.bin`) directly.
-
-Also, consider moving to the newer [protobuf](README.pipeline.md) based pipeline
-format.
+described in the [Bf Pipeline README](README.pipeline.md).
+You cannot push the compiler output (e.g. `tofino.bin`) directly. Also, consider
+moving to the newer [protobuf](/stratum/hal/lib/barefoot/bf.proto) based
+pipeline format.
 
 ### Checking the Switch or ASIC revision number
 
@@ -782,3 +781,26 @@ In a bash shell on the switch:
 lspci -d 1d1c:
 # 05:00.0 Unassigned class [ff00]: Device 1d1c:0010 (rev 10)
 ```
+
+### Experimental P4Runtime translation support
+
+The `stratum_bfrt` target supports P4Runtime translation which helps to translate
+between SDN port and the SDK port.
+
+To enable this, you need to create a new port type in you P4 code and use this type
+for match field and action parameter, for example:
+
+```p4
+@p4runtime_translation("tna/PortId_t", 32)
+type bit<9> FabricPortId_t;
+```
+
+To enable it on Stratum, add `--experimental_enable_p4runtime_translation` flag
+when starting Stratum.
+
+Note that `stratum_bfrt` also follows the PSA port spec, below are reserved ports
+when using `stratum_bfrt`:
+
+- `0x00000000`: Unspecified port.
+- `0xFFFFFFFD`: CPU port.
+- `0xFFFFFF00` - `0xFFFFFF03`: Recirculation ports for pipeline 0 - 3.

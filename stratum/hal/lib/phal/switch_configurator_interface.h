@@ -1,13 +1,12 @@
 // Copyright 2019 Dell EMC
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
 #define STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
 
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
 
 namespace stratum {
 namespace hal {

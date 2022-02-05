@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_READER_WRITER_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_READER_WRITER_DATASOURCE_H_
 
@@ -12,12 +11,12 @@
 #include <string>
 #include <utility>
 
-#include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/stringsource_interface.h"
-#include "stratum/lib/macros.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/stringsource_interface.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -82,7 +81,7 @@ class ReaderWriterDataSource : public DataSource {
     T value;
     std::istringstream stream(string_value);
     stream >> value;
-    CHECK_RETURN_IF_FALSE(stream.eof())
+    RET_CHECK(stream.eof())
         << "Failed to parse requested type from input string \"" << string_value
         << "\".";
     return value;
@@ -95,7 +94,7 @@ class ReaderWriterDataSource : public DataSource {
     }
     std::ostringstream stream;
     stream << modded_value;
-    CHECK_RETURN_IF_FALSE(stream.good())
+    RET_CHECK(stream.good())
         << "Failed to write " << modded_value << " to output string.";
     RETURN_IF_ERROR(source_->SetString(stream.str()));
     attribute_.AssignValue(value);

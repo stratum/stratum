@@ -1,7 +1,6 @@
 // Copyright 2019 Dell EMC
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SFP_CONFIGURATOR_H_
 #define STRATUM_HAL_LIB_PHAL_SFP_CONFIGURATOR_H_
 
@@ -15,11 +14,11 @@ namespace phal {
 
 class SfpConfigurator : public AttributeGroup::RuntimeConfiguratorInterface {
  public:
-    virtual ~SfpConfigurator() {}
-    virtual ::util::Status HandleEvent(HwState state) = 0;
+  virtual ~SfpConfigurator() {}
+  virtual ::util::Status HandleEvent(HwState state) = 0;
 
  protected:
-    SfpConfigurator() {}
+  SfpConfigurator() {}
 };
 
 }  // namespace phal

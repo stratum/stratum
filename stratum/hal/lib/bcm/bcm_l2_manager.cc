@@ -83,18 +83,17 @@ BcmL2Manager::~BcmL2Manager() {}
       for (const auto& vlan_config : node.config_params().vlan_configs()) {
         int vlan =
             (vlan_config.vlan_id() > 0 ? vlan_config.vlan_id() : kDefaultVlan);
-        CHECK_RETURN_IF_FALSE(vlan != kArpVlan)
+        RET_CHECK(vlan != kArpVlan)
             << "You specified config for the special ARP vlan " << kArpVlan
             << " on node " << node_id << ". This vlan is a special vlan with "
             << "fixed config which is added/removed based on whether L2 "
             << "learning is disabled for default vlan.";
-        CHECK_RETURN_IF_FALSE(vlans.insert(vlan).second)
+        RET_CHECK(vlans.insert(vlan).second)
             << "Config for vlan " << vlan
             << " has been given more than once for node " << node_id << ".";
       }
       if (node.config_params().has_l2_config()) {
-        CHECK_RETURN_IF_FALSE(
-            node.config_params().l2_config().l2_age_duration_sec() >= 0)
+        RET_CHECK(node.config_params().l2_config().l2_age_duration_sec() >= 0)
             << "Invalid l2_age_duration_sec for node " << node_id << ": "
             << node.config_params().l2_config().l2_age_duration_sec() << ".";
       }
@@ -292,16 +291,16 @@ std::unique_ptr<BcmL2Manager> BcmL2Manager::CreateInstance(
 BcmL2Manager::ValidateAndParseMyStationEntry(
     const BcmFlowEntry& bcm_flow_entry) const {
   // Initial validation.
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
-                        BcmFlowEntry::BCM_TABLE_MY_STATION)
+  RET_CHECK(bcm_flow_entry.bcm_table_type() ==
+            BcmFlowEntry::BCM_TABLE_MY_STATION)
       << "Invalid table_id for node " << node_id_ << ": "
       << BcmFlowEntry::BcmTableType_Name(bcm_flow_entry.bcm_table_type())
       << ", found in " << bcm_flow_entry.ShortDebugString() << ".";
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+  RET_CHECK(bcm_flow_entry.unit() == unit_)
       << "Received BcmFlowEntry for wrong unit " << unit_ << " on node "
       << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
   // We expect no action in bcm_flow_entry.
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.actions_size() == 0)
+  RET_CHECK(bcm_flow_entry.actions_size() == 0)
       << "Received entry with action for node " << node_id_ << ": "
       << bcm_flow_entry.ShortDebugString() << ".";
   // We do not expect any field other than vlan, dst_mac, and their masks.
@@ -315,7 +314,7 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
         dst_mac_mask = field.mask().u64();
       }
       // We do not expect broadcast MAC as an entry here.
-      CHECK_RETURN_IF_FALSE(dst_mac != kBroadcastMac)
+      RET_CHECK(dst_mac != kBroadcastMac)
           << "Received entry with ETH_DST set to broadcast MAC for node "
           << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
     } else if (field.type() == BcmField::VLAN_VID) {
@@ -351,16 +350,16 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
 ::util::StatusOr<BcmL2Manager::L2Entry> BcmL2Manager::ValidateAndParseL2Entry(
     const BcmFlowEntry& bcm_flow_entry) const {
   // Initial validation.
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
-                        BcmFlowEntry::BCM_TABLE_L2_UNICAST)
+  RET_CHECK(bcm_flow_entry.bcm_table_type() ==
+            BcmFlowEntry::BCM_TABLE_L2_UNICAST)
       << "Invalid table_id for node " << node_id_ << ": "
       << BcmFlowEntry::BcmTableType_Name(bcm_flow_entry.bcm_table_type())
       << ", found in " << bcm_flow_entry.ShortDebugString() << ".";
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+  RET_CHECK(bcm_flow_entry.unit() == unit_)
       << "Received BcmFlowEntry for wrong unit " << unit_ << " on node "
       << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
 
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.fields_size() <= 2)
+  RET_CHECK(bcm_flow_entry.fields_size() <= 2)
       << "Received BcmFlowEntry with missing fields: "
       << bcm_flow_entry.ShortDebugString() << ".";
 
@@ -370,7 +369,7 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
     if (field.type() == BcmField::ETH_DST) {
       dst_mac = field.value().u64();
       // L2 FDB is exact match
-      CHECK_RETURN_IF_FALSE(!field.has_mask())
+      RET_CHECK(!field.has_mask())
           << "Received entry with "
           << "ETH_DST mask for L2 FDB for node " << node_id_ << ": "
           << bcm_flow_entry.ShortDebugString() << ".";
@@ -378,7 +377,7 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
       // Note: we should not never translate vlan = 0 to vlan = kDefaultVlan.
       // We let the controller decide on the values.
       vlan = static_cast<int>(field.value().u32());
-      CHECK_RETURN_IF_FALSE(!field.has_mask())
+      RET_CHECK(!field.has_mask())
           << "Received entry with "
           << "VLAN_VID mask for L2 FDB for node " << node_id_ << ": "
           << bcm_flow_entry.ShortDebugString() << ".";
@@ -430,9 +429,8 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
         break;
       }
       case BcmAction::SET_VFP_DST_CLASS_ID: {
-        CHECK_RETURN_IF_FALSE(action.params_size() == 1 ||
-                              action.params(0).type() !=
-                                  BcmAction::Param::VFP_DST_CLASS_ID)
+        RET_CHECK(action.params_size() == 1 ||
+                  action.params(0).type() != BcmAction::Param::VFP_DST_CLASS_ID)
             << "Expected exactly one parameter of type VFP_DST_CLASS_ID for "
             << "action of type SET_VFP_DST_CLASS_ID: "
             << bcm_flow_entry.ShortDebugString() << ".";
@@ -454,18 +452,18 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
 BcmL2Manager::ValidateAndParseL2MulticastEntry(
     const BcmFlowEntry& bcm_flow_entry) const {
   // Initial validation.
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
-                        BcmFlowEntry::BCM_TABLE_L2_MULTICAST)
+  RET_CHECK(bcm_flow_entry.bcm_table_type() ==
+            BcmFlowEntry::BCM_TABLE_L2_MULTICAST)
       << "Invalid table_type for node " << node_id_ << ": "
       << BcmFlowEntry::BcmTableType_Name(bcm_flow_entry.bcm_table_type())
       << ", found in " << bcm_flow_entry.ShortDebugString() << ".";
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+  RET_CHECK(bcm_flow_entry.unit() == unit_)
       << "Received BcmFlowEntry for wrong unit " << unit_ << " on node "
       << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.fields_size() == 2)
+  RET_CHECK(bcm_flow_entry.fields_size() == 2)
       << "Received BcmFlowEntry with missing fields: "
       << bcm_flow_entry.ShortDebugString() << ".";
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.actions_size() <= 2)
+  RET_CHECK(bcm_flow_entry.actions_size() <= 2)
       << "Received entry with more than 2 actions for node " << node_id_ << ": "
       << bcm_flow_entry.ShortDebugString() << ".";
 
@@ -481,7 +479,7 @@ BcmL2Manager::ValidateAndParseL2MulticastEntry(
       } else {
         dst_mac_mask = kBroadcastMac;
       }
-      CHECK_RETURN_IF_FALSE(dst_mac_mask == kBroadcastMac)
+      RET_CHECK(dst_mac_mask == kBroadcastMac)
           << "Received invalid ethernet destination MAC address mask. "
           << "Current implementation of L2 multicast only allows exact "
           << "matches: " << bcm_flow_entry.ShortDebugString() << ".";
@@ -514,7 +512,7 @@ BcmL2Manager::ValidateAndParseL2MulticastEntry(
         break;
       }
       case BcmAction::COPY_TO_CPU: {
-        CHECK_RETURN_IF_FALSE(action.params_size() == 0)
+        RET_CHECK(action.params_size() == 0)
             << "Expected no parameters for action of type COPY_TO_CPU: "
             << bcm_flow_entry.ShortDebugString() << ".";
         copy_to_cpu = true;

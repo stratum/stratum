@@ -2,17 +2,16 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_ERROR_BUFFER_H_
 #define STRATUM_HAL_LIB_COMMON_ERROR_BUFFER_H_
 
 #include <string>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/source_location.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {

@@ -7,15 +7,15 @@
 #ifndef STRATUM_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
 #define STRATUM_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
 
-#include <utility>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "absl/strings/str_cat.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/strings/str_cat.h"
-#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace test_utils {

@@ -14,29 +14,110 @@ package(default_visibility = STRATUM_INTERNAL)
 
 licenses(["notice"])  # Apache v2
 
-platform_config_test("x86-64-accton-as7712-32x-r0", bcm_target=True)
-platform_config_test("x86-64-accton-as7716-24sc-r0", bcm_target=True)
-platform_config_test("x86-64-accton-as7716-24xc-r0", bcm_target=True)
-platform_config_test("x86-64-accton-as6712-32x-r0", bcm_target=True)
-platform_config_test("x86-64-dell-z9100-c2538-r0", bcm_target=True)
-platform_config_test("x86-64-inventec-d7032q28b-r0", bcm_target=True)
-platform_config_test("x86-64-inventec-d7054q28b-r0", bcm_target=True)
-platform_config_test("x86-64-inventec-d6254qs-r0", bcm_target=True)
-platform_config_test("x86-64-quanta-ix1-rangeley-r0", bcm_target=True)
+platform_config_test(
+    "x86-64-accton-as7712-32x-r0",
+    bcm_target = True,
+)
 
-platform_config_test("barefoot-tofino-model", sim_target=True)
+platform_config_test(
+    "x86-64-accton-as7716-24sc-r0",
+    bcm_target = True,
+)
 
-platform_config_test("x86-64-accton-wedge100bf-32x-r0", tofino_target=True)
-platform_config_test("x86-64-accton-wedge100bf-32qs-r0", tofino_target=True)
-platform_config_test("x86-64-accton-wedge100bf-65x-r0", tofino_target=True)
-platform_config_test("x86-64-delta-ag9064v1-r0", tofino_target=True)
-platform_config_test("x86-64-inventec-d5254-r0", tofino_target=True)
-platform_config_test("x86-64-inventec-d5264q28b-r0", tofino_target=True)
-platform_config_test("x86-64-netberg-aurora-610-r0", tofino_target=True)
-platform_config_test("x86-64-netberg-aurora-710-r0", tofino_target=True)
-platform_config_test("x86-64-netberg-aurora-750-r0", tofino_target=True)
-platform_config_test("x86-64-stordis-bf2556x-1t-r0", tofino_target=True)
-platform_config_test("x86-64-stordis-bf6064x-t-r0", tofino_target=True)
+platform_config_test(
+    "x86-64-accton-as7716-24xc-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "x86-64-accton-as6712-32x-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "x86-64-dell-z9100-c2538-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "x86-64-inventec-d7032q28b-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "x86-64-inventec-d7054q28b-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "x86-64-inventec-d6254qs-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "x86-64-quanta-ix1-rangeley-r0",
+    bcm_target = True,
+)
+
+platform_config_test(
+    "barefoot-tofino-model",
+    sim_target = True,
+)
+
+platform_config_test(
+    "x86-64-accton-wedge100bf-32x-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-accton-wedge100bf-32qs-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-accton-wedge100bf-65x-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-delta-ag9064v1-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-inventec-d5254-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-inventec-d5264q28b-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-netberg-aurora-610-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-netberg-aurora-710-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-netberg-aurora-750-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-stordis-bf2556x-1t-r0",
+    tofino_target = True,
+)
+
+platform_config_test(
+    "x86-64-stordis-bf6064x-t-r0",
+    tofino_target = True,
+)
 
 filegroup(
     name = "platform_configs",
