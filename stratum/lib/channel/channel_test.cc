@@ -9,7 +9,6 @@
 
 #include <set>
 #include <string>
-#include <thread>  // NOLINT
 
 #include "absl/synchronization/mutex.h"
 #include "gmock/gmock.h"
@@ -345,7 +344,8 @@ void* StressTestChannelWriterFunc(void* arg) {
         status = args->writer->TryWrite(data);
         // Prevent starvation of reader threads.
         // FIXME: this should already be guaranteed by absl::Mutex
-        if (status.error_code() == ERR_NO_RESOURCE) std::this_thread::yield();
+        if (status.error_code() == ERR_NO_RESOURCE)
+          absl::SleepFor(absl::Milliseconds(1));
       } while (status.error_code() == ERR_NO_RESOURCE);
       if (status.error_code() == ERR_CANCELLED) break;
     }
@@ -367,7 +367,7 @@ void* StressTestChannelReaderFunc(void* arg) {
       ::util::Status status;
       do {
         status = args->reader->TryRead(&data);
-        std::this_thread::yield();
+        absl::SleepFor(absl::Milliseconds(1));
       } while (status.error_code() == ERR_ENTRY_NOT_FOUND);
       if (status.error_code() == ERR_CANCELLED) break;
     }
