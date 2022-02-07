@@ -169,7 +169,7 @@ popd
 
 # Build Stratum BF runtime Docker image
 STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
-RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:$SDE_VERSION
+RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:latest-$SDE_VERSION
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
 docker build \

@@ -52,7 +52,7 @@ As part of CI, we publish Stratum with a pre-compiled binary and a set of defaul
 There are two versions, one for SDKLT (`:sdklt`) and one for OpenNSA (`:openNSA`).
 
 ```bash
-docker pull stratumproject/stratum-bcm:sdklt  # or :opennsa, to update the image
+docker pull stratumproject/stratum-bcm:latest-sdklt  # or :latest-opennsa, to update the image
 cd stratum/hal/bin/bcm/standalone/docker
 DOCKER_IMAGE_TAG=sdklt ./start-stratum-container.sh  # or =opennsa
 ```

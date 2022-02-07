@@ -142,7 +142,6 @@ for target in ${BCM_TARGETS[@]}; do
   docker tag stratumproject/stratum-bcm_$target_short:latest stratumproject/stratum-bcm:$target_short
   docker push stratumproject/stratum-bcm:${VERSION}-$target_short
   docker push stratumproject/stratum-bcm:latest-$target_short
-  docker push stratumproject/stratum-bcm:$target_short
   clean_up_after_build
   set +x
 done
@@ -167,7 +166,7 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
     mv -f ${target}_deb.deb $RELEASE_DIR/$target_dash-${VERSION}-$sde_version-amd64.deb
     docker tag stratumproject/$target_dash:$sde_version stratumproject/$target_dash:${VERSION}-$sde_version
     docker push stratumproject/$target_dash:${VERSION}-$sde_version
-    docker push stratumproject/$target_dash:$sde_version
+    docker push stratumproject/$target_dash:latest-$sde_version
     clean_up_after_build
     set +x
   done
