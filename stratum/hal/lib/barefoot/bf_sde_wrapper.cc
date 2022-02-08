@@ -489,13 +489,8 @@ template <typename T>
   if (table_type == bfrt::BfRtTable::TableType::METER ||
       table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(
         table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
-#else
-    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
     entries = table_size;
   } else {
     RETURN_IF_BFRT_ERROR(table->tableUsageGet(
@@ -1658,9 +1653,7 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
 }
 
 std::string BfSdeWrapper::GetSdeVersion() const {
-#if defined(SDE_9_3_1)
-  return "9.3.1";
-#elif defined(SDE_9_5_0)
+#if defined(SDE_9_5_0)
   return "9.5.0";
 #elif defined(SDE_9_5_2)
   return "9.5.2";
@@ -2107,13 +2100,8 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_8_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
-#else
-  RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
   uint32 usage;
   RETURN_IF_BFRT_ERROR(table->tableUsageGet(
       *real_session->bfrt_session_, bf_dev_tgt,
@@ -2771,13 +2759,8 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
-#else
-    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
     for (size_t i = 0; i < table_size; ++i) {
       // Register key: $REGISTER_INDEX
       RETURN_IF_ERROR(SetField(table_key.get(), kRegisterIndex, i));
@@ -2909,13 +2892,8 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
-#else
-    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
     for (size_t i = 0; i < table_size; ++i) {
       // Meter key: $METER_INDEX
       RETURN_IF_ERROR(SetField(table_key.get(), kMeterIndex, i));

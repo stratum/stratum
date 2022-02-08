@@ -112,13 +112,6 @@ string_setting(
 )
 
 config_setting(
-    name = "sde_version_9.3.1",
-    flag_values = {
-        ":sde_version_setting": "9.3.1",
-    },
-)
-
-config_setting(
     name = "sde_version_9.5.0",
     flag_values = {
         ":sde_version_setting": "9.5.0",

@@ -150,7 +150,7 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
-if [[ $SDE_VERSION == "9.3.1" ]] || [[ $SDE_VERSION == "9.5.0" ]]; then
+if [[ $SDE_VERSION == "9.5.0" ]] || [[ $SDE_VERSION == "9.5.2" ]]; then
     # Patch stratum_profile.yaml in SDE
     cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
     # Build BF SDE
