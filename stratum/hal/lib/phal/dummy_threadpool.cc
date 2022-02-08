@@ -2,11 +2,12 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/phal/dummy_threadpool.h"
+
 #include <utility>
 
-#include "stratum/hal/lib/phal/dummy_threadpool.h"
-#include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/phal/threadpool_interface.h"
 
 namespace stratum {
 namespace hal {

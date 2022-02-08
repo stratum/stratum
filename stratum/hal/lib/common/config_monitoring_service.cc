@@ -155,12 +155,11 @@ bool ContainsUniqueNames(const T& values) {
 ::util::Status ConfigMonitoringService::VerifyChassisConfig(
     const ChassisConfig& config) {
   // Validate the names of the components, if given.
-  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.nodes()));
-  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.singleton_ports()));
-  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.trunk_ports()));
-  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.port_groups()));
-  CHECK_RETURN_IF_FALSE(
-      ContainsUniqueNames(config.optical_network_interfaces()));
+  RET_CHECK(ContainsUniqueNames(config.nodes()));
+  RET_CHECK(ContainsUniqueNames(config.singleton_ports()));
+  RET_CHECK(ContainsUniqueNames(config.trunk_ports()));
+  RET_CHECK(ContainsUniqueNames(config.port_groups()));
+  RET_CHECK(ContainsUniqueNames(config.optical_network_interfaces()));
 
   return ::util::OkStatus();
 }

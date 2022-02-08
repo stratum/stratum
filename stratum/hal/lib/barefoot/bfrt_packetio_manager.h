@@ -17,6 +17,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/utils.h"
@@ -67,7 +68,8 @@ class BfrtPacketioManager {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtPacketioManager> CreateInstance(
-      BfSdeInterface* bf_sde_interface, int device);
+      BfSdeInterface* bf_sde_interface,
+      BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device);
 
   // BfrtPacketioManager is neither copyable nor movable.
   BfrtPacketioManager(const BfrtPacketioManager&) = delete;
@@ -80,7 +82,9 @@ class BfrtPacketioManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  explicit BfrtPacketioManager(BfSdeInterface* bf_sde_interface, int device);
+  explicit BfrtPacketioManager(
+      BfSdeInterface* bf_sde_interface,
+      BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device);
 
   // Builds the packet header structure for controller packets.
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info)
@@ -133,6 +137,10 @@ class BfrtPacketioManager {
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
+
+  // Pointer to a BfrtTranslator implementation that translate P4Runtime
+  // entities, not owned by this class.
+  BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_ = nullptr;
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.

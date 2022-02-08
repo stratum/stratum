@@ -44,14 +44,13 @@ SfpAdapter::~SfpAdapter() {
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
   // Get card
-  CHECK_RETURN_IF_FALSE(phaldb->cards_size() > card_id - 1)
-      << "cards[" << card_id << "]"
-      << " not found!";
+  RET_CHECK(phaldb->cards_size() > card_id - 1) << "cards[" << card_id << "]"
+                                                << " not found!";
 
   auto card = phaldb->cards(card_id - 1);
 
   // Get port
-  CHECK_RETURN_IF_FALSE(card.ports_size() > port_id - 1)
+  RET_CHECK(card.ports_size() > port_id - 1)
       << "cards[" << card_id << "]/ports[" << port_id << "]"
       << " not found!";
 
@@ -104,8 +103,7 @@ SfpAdapter::~SfpAdapter() {
   int id;
   {
     absl::WriterMutexLock l(&subscribers_lock_);
-    CHECK_RETURN_IF_FALSE(subscribers_.size() <
-                          FLAGS_max_num_transceiver_writers)
+    RET_CHECK(subscribers_.size() < FLAGS_max_num_transceiver_writers)
         << "Can only support " << FLAGS_max_num_transceiver_writers
         << " transceiver event Writers.";
     // Setup db subscription once on first subscriber.
@@ -127,8 +125,7 @@ SfpAdapter::~SfpAdapter() {
 
 ::util::Status SfpAdapter::UnregisterSfpEventSubscriber(int id) {
   absl::WriterMutexLock l(&subscribers_lock_);
-  CHECK_RETURN_IF_FALSE(id <= subscribers_.size())
-      << "Invalid subscriber id : " << id;
+  RET_CHECK(id <= subscribers_.size()) << "Invalid subscriber id : " << id;
 
   auto it =
       std::find_if(subscribers_.begin(), subscribers_.end(),

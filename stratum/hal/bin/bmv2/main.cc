@@ -125,8 +125,8 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   // blocks until a P4 pipeline is set
   {
     int status = runner->init_and_start(parser);
-    CHECK_RETURN_IF_FALSE(status == 0)
-        << "Error when starting bmv2 simple_switch, status: " << status;
+    RET_CHECK(status == 0) << "Error when starting bmv2 simple_switch, status: "
+                           << status;
   }
 
   int unit(0);
@@ -156,7 +156,7 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
                                    pi_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
 
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
 
   // Setup and start serving RPCs.
   // TODO(antonin): currently this fails because persistent_config_dir flag is

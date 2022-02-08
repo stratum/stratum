@@ -28,10 +28,19 @@ class CredentialsManager {
   virtual std::shared_ptr<::grpc::ServerCredentials>
   GenerateExternalFacingServerCredentials() const;
 
-  // Loads new credentials.
-  virtual ::util::Status LoadNewCredential(const std::string& ca_cert,
-                                           const std::string& cert,
-                                           const std::string& key);
+  // Generates client credentials for contacting an external facing gRPC server.
+  virtual std::shared_ptr<::grpc::ChannelCredentials>
+  GenerateExternalFacingClientCredentials() const;
+
+  // Loads new server credentials.
+  virtual ::util::Status LoadNewServerCredentials(const std::string& ca_cert,
+                                                  const std::string& cert,
+                                                  const std::string& key);
+
+  // Loads new client credentials.
+  virtual ::util::Status LoadNewClientCredentials(const std::string& ca_cert,
+                                                  const std::string& cert,
+                                                  const std::string& key);
 
   // Factory functions for creating the instance of the class.
   static ::util::StatusOr<std::unique_ptr<CredentialsManager>> CreateInstance();
@@ -46,12 +55,14 @@ class CredentialsManager {
   CredentialsManager();
 
  private:
+  static constexpr unsigned int kFileRefreshIntervalSeconds = 1;
+
   // Function to initialize the credentials manager.
   ::util::Status Initialize();
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
-  std::shared_ptr<::grpc::experimental::TlsServerCredentialsOptions> tls_opts_;
-  std::shared_ptr<::grpc::experimental::FileWatcherCertificateProvider>
-      certificate_provider_;
+  std::shared_ptr<::grpc::ChannelCredentials> client_credentials_;
+
+  friend class CredentialsManagerTest;
 };
 
 }  // namespace stratum

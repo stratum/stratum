@@ -19,5 +19,6 @@ stratum_cc_binary(
     deps = [
         "//stratum/lib:utils",
         "//stratum/lib/p4runtime:p4runtime_session",
+        "//stratum/lib/security:credentials_manager",
     ],
 )

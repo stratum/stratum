@@ -331,9 +331,9 @@ std::string FileSystemHelper::GetHashSum(
 }
 
 ::util::Status FileSystemHelper::RemoveDir(const std::string& path) const {
-  CHECK_RETURN_IF_FALSE(!path.empty());
-  CHECK_RETURN_IF_FALSE(PathExists(path)) << path << " does not exist.";
-  CHECK_RETURN_IF_FALSE(IsDir(path)) << path << " is not a dir.";
+  RET_CHECK(!path.empty());
+  RET_CHECK(PathExists(path)) << path << " does not exist.";
+  RET_CHECK(IsDir(path)) << path << " is not a dir.";
   // TODO(unknown): Is Dir Empty ?
   int ret = remove(path.c_str());
   if (ret != 0) {
