@@ -27,7 +27,7 @@ VERSION_LONG=${VERSION_LONG:-$(date +%Y-%m-%d)}  # 2021-03-31
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
-BF_SDE_VERSIONS=(9.5.0 9.5.2 9.7.0 9.7.1 9.8.0)
+BF_SDE_VERSIONS=(9.3.1 9.5.0 9.5.2 9.7.0 9.7.1 9.8.0)
 
 # ---------- Build Variables -------------
 JOBS=30
