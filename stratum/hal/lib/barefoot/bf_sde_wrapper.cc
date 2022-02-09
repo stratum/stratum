@@ -1659,6 +1659,8 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   return "9.5.2";
 #elif defined(SDE_9_7_0)
   return "9.7.0";
+#elif defined(SDE_9_7_1)
+  return "9.7.1";
 #elif defined(SDE_9_8_0)
   return "9.8.0";
 #else

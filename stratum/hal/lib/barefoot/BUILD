@@ -26,6 +26,7 @@ SDE_DEFINES = select(
         "@local_barefoot_bin//:sde_version_9.5.0": ["SDE_9_5_0"],
         "@local_barefoot_bin//:sde_version_9.5.2": ["SDE_9_5_2"],
         "@local_barefoot_bin//:sde_version_9.7.0": ["SDE_9_7_0"],
+        "@local_barefoot_bin//:sde_version_9.7.1": ["SDE_9_7_1"],
         "@local_barefoot_bin//:sde_version_9.8.0": ["SDE_9_8_0"],
     },
     no_match_error = "Unsupported SDE version",
