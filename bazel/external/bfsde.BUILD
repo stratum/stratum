@@ -49,7 +49,7 @@ cc_library(
         # TODO(bocon): PI needed when linking libdriver.so if/when pi is
         # enabled when building bf-drivers. This shouldn't hurt, but can
         # be excluded if/when PI is removed from the SDE build options.
-        "@//stratum/hal/lib/pi:pi_bf",
+        "@com_github_p4lang_PI_bf//proto/frontend:pifeproto",
     ],
 )
 
