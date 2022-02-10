@@ -19,7 +19,6 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.3.1 (Extended support for legacy switches)
  - 9.5.0 (LTS release)
  - 9.5.2 (Recommended; LTS release)
  - ~~9.6.0~~ (skipped)
@@ -32,18 +31,6 @@ environment variable that points to it:
 
 ```bash
 export SDE_TAR=<path to tar>/bf-sde-<SDE_VERSION>.tgz
-```
-
-__Extended support for 9.3.1__: SDE versions 9.3.2+ drop support for some
-pre-production Tofino switches that are used by the community. Tofino A0 is no
-longer support by Intel, but we plan to keep `9.3.1` for awhile for users who
-want to continue to use these devices.
-
-If you see error regarding the CPU port when starting Stratum, you should try
-downgrading to `9.3.1`.
-
-```
-2021-05-05 01:33:43 BF_PIPE ERROR - Error: Port <CPU port number> is stuck
 ```
 
 *__SDE Deprecation Policy:__ We support the latest SDE released by the Intel

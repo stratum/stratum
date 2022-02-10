@@ -19,12 +19,6 @@ GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
 TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
 TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
-BF_SDE_PI_VER = {
-    "9_3_1": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
-    "9_5_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
-    "9_5_2": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
-    "9_7_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
-}
 GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
 
@@ -95,16 +89,13 @@ def stratum_deps():
             sha256 = "7df38438f94d64c5005b890210d3f1b40e2402870295e21d44cceac67ebd1a1b",
         )
 
-    for sde_ver in BF_SDE_PI_VER:
-        dep_name = "com_github_p4lang_PI_bf_" + sde_ver
-        pi_commit = BF_SDE_PI_VER[sde_ver]
-        if dep_name not in native.existing_rules():
-            # ----- PI for Barefoot targets -----
-            remote_workspace(
-                name = dep_name,
-                remote = "https://github.com/p4lang/PI.git",
-                commit = pi_commit,
-            )
+    if "com_github_p4lang_PI_bf" not in native.existing_rules():
+        # ----- PI for Barefoot targets -----
+        remote_workspace(
+            name = "com_github_p4lang_PI_bf",
+            remote = "https://github.com/p4lang/PI.git",
+            commit = "4546038f5770e84dc0d2bba90f1ee7811c9955df",
+        )
 
     if "com_github_p4lang_PI_np4" not in native.existing_rules():
         # ----- PI for Netcope targets -----
