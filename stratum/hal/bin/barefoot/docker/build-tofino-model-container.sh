@@ -37,7 +37,7 @@ if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
   DOCKER_BUILD_OPTS+="--squash "
 fi
 
-MODEL_IMAGE=stratumproject/tofino-model:$SDE_VERSION
+MODEL_IMAGE=stratumproject/tofino-model:latest-$SDE_VERSION
 echo "Building Tofino model runtime image: $RUNTIME_IMAGE"
 set -x
 docker build \
