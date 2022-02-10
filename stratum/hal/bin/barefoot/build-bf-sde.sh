@@ -158,7 +158,7 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
-if [[ ! $(numeric_version "$SDE_VERSION") < $(numeric_version "9.7.0") ]]; then
+if [[ $(numeric_version "$SDE_VERSION") -ge $(numeric_version "9.7.0") ]]; then
     # SDE verison >= 9.7.0
     pushd "$SDE/p4studio"
     $sudo ./install-p4studio-dependencies.sh
