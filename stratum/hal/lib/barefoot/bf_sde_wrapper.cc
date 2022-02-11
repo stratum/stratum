@@ -490,7 +490,7 @@ template <typename T>
       table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(
         table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
 #else
@@ -1562,14 +1562,22 @@ std::string GetBfChipFamilyAndType(int device) {
       return "TOFINO_32Q";
     case BF_DEV_BFNT10032D:
       return "TOFINO_32D";
+#ifdef BF_DEV_BFNT10024D
     case BF_DEV_BFNT10024D:
       return "TOFINO_24D";
+#endif  // BF_DEV_BFNT10024D
+#ifdef BF_DEV_BFNT10018Q
     case BF_DEV_BFNT10018Q:
       return "TOFINO_18Q";
+#endif  // BF_DEV_BFNT10018Q
+#ifdef BF_DEV_BFNT10018D
     case BF_DEV_BFNT10018D:
       return "TOFINO_18D";
+#endif  // BF_DEV_BFNT10018D
+#ifdef BF_DEV_BFNT10017D
     case BF_DEV_BFNT10017D:
       return "TOFINO_17D";
+#endif  // BF_DEV_BFNT10017D
     case BF_DEV_BFNT20128Q:
       return "TOFINO2_128Q";
 #ifdef BF_DEV_BFNT20128QM
@@ -1580,8 +1588,10 @@ std::string GetBfChipFamilyAndType(int device) {
     case BF_DEV_BFNT20128QH:  // added in 9.3.0
       return "TOFINO2_128QH";
 #endif  // BF_DEV_BFNT20128QH
+#ifdef BF_DEV_BFNT20096T
     case BF_DEV_BFNT20096T:
       return "TOFINO2_96T";
+#endif  // BF_DEV_BFNT20096T
     case BF_DEV_BFNT20080T:
       return "TOFINO2_80T";
 #ifdef BF_DEV_BFNT20080TM
@@ -1654,6 +1664,10 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   return "9.5.2";
 #elif defined(SDE_9_7_0)
   return "9.7.0";
+#elif defined(SDE_9_7_1)
+  return "9.7.1";
+#elif defined(SDE_9_8_0)
+  return "9.8.0";
 #else
 #error Unsupported SDE version
 #endif
@@ -2094,7 +2108,7 @@ namespace {
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
 #else
@@ -2758,7 +2772,7 @@ namespace {
     // Wildcard write to all indices.
     size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
@@ -2896,7 +2910,7 @@ namespace {
     // Wildcard write to all indices.
     size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
