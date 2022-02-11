@@ -100,7 +100,7 @@ Core contributor candidates need to have a demonstrated proficiency with the
 Stratum codebase and a track record of code reviews.  Members of the Technical
 Steering Team (TST) and existing core contributors will regularly invite people
 to become new core contributors. Nominations can also be made (including
-self-nominations) to the TST at any time.
+self-nominations) to the Stratum TST (`stratum-tst@opennetworking.org`) at any time.
 
 A good nomination will include details about who the person is (including their
 Github username) and outline their experience with the Stratum codebase.
