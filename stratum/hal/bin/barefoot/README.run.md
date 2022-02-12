@@ -19,7 +19,7 @@ You can find Debian packages and Docker containers on the
 ### Nightly version
 
 You can pull a nightly version of this container image from
-[Dockerhub](https://hub.docker.com/repository/docker/stratumproject/stratum-bf/tags)
+[Dockerhub](https://hub.docker.com/r/stratumproject/stratum-bfrt/tags)
 
 ```bash
 $ docker pull stratumproject/stratum-bfrt:latest-[SDE version]
