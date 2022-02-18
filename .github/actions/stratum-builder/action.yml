@@ -1,0 +1,23 @@
+name: 'Stratum Builder'
+description: 'Run a command in the Stratum build container'
+inputs:
+  command:
+    description: 'Command to run'
+    required: true
+    default: 'exit 1'
+  continue-on-failure:
+    description: 'Action will always "exit 0" if true'
+    required: true
+    default: false
+outputs:
+  exit_code:
+    description: 'Exit code of the command'
+  status:
+    description: '"success" or "failure" depending on the exit code'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.continue-on-failure }}
+    - ${{ inputs.command }}

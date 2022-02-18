@@ -1,22 +1,50 @@
 on: [push]
 
 jobs:
-  hello_world_job:
+  lint-and-style:
+    name: Lint and Style Checks
     runs-on: ubuntu-latest
-    name: A job to say hello
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      - name: Hello world action step
-        id: hello
-        uses: ./.github/actions/lint-and-style
+      - name: fail
+        uses: ./.github/actions/stratum-builder
         with:
-          who-to-greet: 'Mona the Octocat'
-      # # Use the output from the `hello` step
-      # - name: Get the output time
-      #   run: echo "The time was ${{ steps.hello.outputs.time }}"
+          continue-on-failure: true
+
+      - name: success
+        uses: ./.github/actions/stratum-builder
+        if: ${{ always() }}
+        with:
+          command: 'exit 0'
+
+      - name: Run clang-format script
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: '.circleci/check-cpp-format.sh'
+
+      - name: Run cpplint script
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: '.circleci/check-cpplint.sh'
+
+      - name: Run buildifier script
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: '.circleci/check-bazel-format.sh'
+
+      - name: success
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: 'exit 0'
+      
+      - if: ${{ contains(steps.*.outputs.status, 'success') }}
+        run: exit 1
+      
+      - name: foo
+        run: echo "${{toJSON(steps)}}"
