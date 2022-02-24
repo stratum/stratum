@@ -124,13 +124,14 @@ std::string ByteStringToP4RuntimeByteString(std::string bytes) {
   RET_CHECK(meter_config.pir() >= 0)
       << "Meter configuration " << meter_config.ShortDebugString()
       << " is invalid: peak rate cannot be less than zero.";
-  RET_CHECK(meter_config.cburst() > 0)
+  // Note that we're deviating from the spec here, as we're allowing burst sizes
+  // equal to zero, while the spec mandates strictly greater than zero.
+  RET_CHECK(meter_config.cburst() >= 0)
       << "Meter configuration " << meter_config.ShortDebugString()
-      << " is invalid: committed burst size cannot be less than or equal to"
-      << " zero.";
-  RET_CHECK(meter_config.pburst() > 0)
+      << " is invalid: committed burst size cannot be less than zero.";
+  RET_CHECK(meter_config.pburst() >= 0)
       << "Meter configuration " << meter_config.ShortDebugString()
-      << " is invalid: peak burst size cannot be less than or equal to zero.";
+      << " is invalid: peak burst size cannot be less than zero.";
   RET_CHECK(meter_config.pir() >= meter_config.cir())
       << "Meter configuration " << meter_config.ShortDebugString()
       << " is invalid: committed rate cannot be greater than peak rate.";
