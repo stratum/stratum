@@ -772,9 +772,6 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   // TODO(max): P4Runtime spec says error_details should be empty in not flow
   // entry related failures.
   // EXPECT_TRUE(status.error_details().empty());
-  std::string s;
-  ASSERT_OK(ReadFileToString(FLAGS_write_req_log_file, &s));
-  EXPECT_THAT(s, HasSubstr(req.updates(0).ShortDebugString()));
 }
 
 TEST_P(P4ServiceTest, ReadSuccess) {

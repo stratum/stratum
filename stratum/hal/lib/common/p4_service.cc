@@ -210,13 +210,19 @@ namespace {
 
 // Helper to facilitate logging the write requests to the desired log file.
 void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
-                     const ::util::Status& status,
                      const std::vector<::util::Status>& results,
                      const absl::Time timestamp) {
   if (FLAGS_write_req_log_file.empty()) {
     return;
   }
-  if (!results.empty() && results.size() != req.updates_size()) {
+  if (results.empty()) {
+    // Nothing to log as the switch interface did not fill in any error details.
+    // TODO(max): Consider logging the requests with the overall status in this
+    //            case. But keep in mind that LogReadRequest will not be called
+    //            for auth errors or invalid device IDs.
+    return;
+  }
+  if (results.size() != req.updates_size()) {
     LOG(ERROR) << "Size mismatch: " << results.size()
                << " != " << req.updates_size() << ". Did not log anything!";
     return;
@@ -224,29 +230,34 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   std::string msg = "";
   std::string ts =
       absl::FormatTime("%Y-%m-%d %H:%M:%E6S", timestamp, absl::LocalTimeZone());
-  for (size_t i = 0; i < req.updates_size(); ++i) {
-    absl::StrAppend(
-        &msg, ts, ";", node_id, ";", req.updates(i).ShortDebugString(), ";",
-        results.empty() ? status.error_message() : results[i].error_message(),
-        "\n");
+  for (size_t i = 0; i < results.size(); ++i) {
+    absl::StrAppend(&msg, ts, ";", node_id, ";",
+                    req.updates(i).ShortDebugString(), ";",
+                    results[i].error_message(), "\n");
   }
-  ::util::Status ret =
+  ::util::Status status =
       WriteStringToFile(msg, FLAGS_write_req_log_file, /*append=*/true);
-  if (!ret.ok()) {
+  if (!status.ok()) {
     LOG_EVERY_N(ERROR, 50) << "Failed to log the write request: "
-                           << ret.error_message();
+                           << status.error_message();
   }
 }
 
 // Helper to facilitate logging the read requests to the desired log file.
 void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
-                    const ::util::Status& status,
                     const std::vector<::util::Status>& results,
                     const absl::Time timestamp) {
   if (FLAGS_read_req_log_file.empty()) {
     return;
   }
-  if (!results.empty() && results.size() != req.entities_size()) {
+  if (results.empty()) {
+    // Nothing to log as the switch interface did not fill in any error details.
+    // TODO(max): Consider logging the requests with the overall status in this
+    //            case. But keep in mind that LogReadRequest will not be called
+    //            for auth errors or invalid device IDs.
+    return;
+  }
+  if (results.size() != req.entities_size()) {
     LOG(ERROR) << "Size mismatch: " << results.size()
                << " != " << req.entities_size() << ". Did not log anything!";
     return;
@@ -254,17 +265,16 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   std::string msg = "";
   std::string ts =
       absl::FormatTime("%Y-%m-%d %H:%M:%E6S", timestamp, absl::LocalTimeZone());
-  for (size_t i = 0; i < req.entities_size(); ++i) {
-    absl::StrAppend(
-        &msg, ts, ";", node_id, ";", req.entities(i).ShortDebugString(), ";",
-        results.empty() ? status.error_message() : results[i].error_message(),
-        "\n");
+  for (size_t i = 0; i < results.size(); ++i) {
+    absl::StrAppend(&msg, ts, ";", node_id, ";",
+                    req.entities(i).ShortDebugString(), ";",
+                    results[i].error_message(), "\n");
   }
-  ::util::Status ret =
+  ::util::Status status =
       WriteStringToFile(msg, FLAGS_read_req_log_file, /*append=*/true);
-  if (!ret.ok()) {
+  if (!status.ok()) {
     LOG_EVERY_N(ERROR, 50) << "Failed to log the read request: "
-                           << ret.error_message();
+                           << status.error_message();
   }
 }
 
@@ -322,7 +332,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   // Log debug info for future debugging.
-  LogWriteRequest(node_id, *req, status, results, timestamp);
+  LogWriteRequest(node_id, *req, results, timestamp);
 
   return ToGrpcStatus(status, results);
 }
@@ -349,7 +359,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   // Log debug info for future debugging.
-  LogReadRequest(req->device_id(), *req, status, details, timestamp);
+  LogReadRequest(req->device_id(), *req, details, timestamp);
 
   return ToGrpcStatus(status, details);
 }
