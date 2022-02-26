@@ -769,8 +769,8 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(::grpc::StatusCode::FAILED_PRECONDITION, status.error_code());
   EXPECT_THAT(status.error_message(), HasSubstr(kAggrErrorMsg));
-  // TODO(max): P4Runtime spec says error_details should be empty in not flow
-  // entry related failures.
+  // TODO(max): P4Runtime spec says error_details should be empty for failures
+  // not related to the supplied flow entries.
   // EXPECT_TRUE(status.error_details().empty());
 }
 

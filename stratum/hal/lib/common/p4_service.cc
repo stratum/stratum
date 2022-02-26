@@ -218,7 +218,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   if (results.empty()) {
     // Nothing to log as the switch interface did not fill in any error details.
     // TODO(max): Consider logging the requests with the overall status in this
-    //            case. But keep in mind that LogReadRequest will not be called
+    //            case. But keep in mind that LogWriteRequest will not be called
     //            for auth errors or invalid device IDs.
     return;
   }
