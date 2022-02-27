@@ -113,7 +113,6 @@ jobs:
     steps:
       - checkout
       - *restore_bazel_cache
-      - *fetch_sde_tars
       - *set_bazelrc
       - run:
           name: Query all Stratum targets
