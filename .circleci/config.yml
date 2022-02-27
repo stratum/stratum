@@ -426,8 +426,8 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-stratum-bfrt:
-          # requires:
-          #   - publish-docker-build
+          requires:
+            - publish-docker-build
           matrix:
             parameters:
               sde_version: ["9.5.0", "9.5.2", "9.5.2", "9.7.0", "9.7.1", "9.8.0"]
