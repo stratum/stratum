@@ -74,6 +74,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bfrt_pre_manager",
         "//stratum/hal/lib/barefoot:bfrt_table_manager",
         "//stratum/hal/lib/barefoot:bfrt_counter_manager",
+        "//stratum/hal/lib/barefoot:bfrt_p4runtime_translator",
     ] + stratum_bf_common_deps,
 )
 

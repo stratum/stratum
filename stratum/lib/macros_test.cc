@@ -15,7 +15,7 @@ using ::testing::HasSubstr;
 class CommonMacrosTest : public ::testing::Test {
  protected:
   ::util::Status FuncWithCheckReturnIfFalse(bool cond, const std::string& msg) {
-    CHECK_RETURN_IF_FALSE(cond) << msg;
+    RET_CHECK(cond) << msg;
     return ::util::OkStatus();
   }
 

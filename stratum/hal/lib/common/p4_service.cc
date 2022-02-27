@@ -215,6 +215,13 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   if (FLAGS_write_req_log_file.empty()) {
     return;
   }
+  if (results.empty()) {
+    // Nothing to log as the switch interface did not fill in any error details.
+    // TODO(max): Consider logging the requests with the overall status in this
+    //            case. But keep in mind that LogWriteRequest will not be called
+    //            for auth errors or invalid device IDs.
+    return;
+  }
   if (results.size() != req.updates_size()) {
     LOG(ERROR) << "Size mismatch: " << results.size()
                << " != " << req.updates_size() << ". Did not log anything!";
@@ -241,6 +248,13 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                     const std::vector<::util::Status>& results,
                     const absl::Time timestamp) {
   if (FLAGS_read_req_log_file.empty()) {
+    return;
+  }
+  if (results.empty()) {
+    // Nothing to log as the switch interface did not fill in any error details.
+    // TODO(max): Consider logging the requests with the overall status in this
+    //            case. But keep in mind that LogReadRequest will not be called
+    //            for auth errors or invalid device IDs.
     return;
   }
   if (results.size() != req.entities_size()) {

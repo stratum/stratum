@@ -28,7 +28,7 @@ namespace onlp {
 OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
                              OnlpInterface* onlp_interface) {
   // Make sure we've got a valid Onlp Interface
-  CHECK_RETURN_IF_FALSE(onlp_interface != nullptr);
+  RET_CHECK(onlp_interface != nullptr);
 
   return absl::WrapUnique(
       new OnlpSwitchConfigurator(phal_interface, onlp_interface));
@@ -339,7 +339,7 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
   ASSIGN_OR_RETURN(auto fan, mutable_fan_tray->AddRepeatedChildGroup("fans"));
 
   // Check to make sure we haven't already added this id
-  CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(&fan_id_map_, id, true))
+  RET_CHECK(gtl::InsertIfNotPresent(&fan_id_map_, id, true))
       << "duplicate fan id: " << id;
 
   ASSIGN_OR_RETURN(OidInfo oid_info, GetOidInfo(fan, ONLP_FAN_ID_CREATE(id)));
@@ -421,7 +421,7 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
   ASSIGN_OR_RETURN(auto psu, mutable_psu_tray->AddRepeatedChildGroup("psus"));
 
   // Check to make sure we haven't already added this id
-  CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(&psu_id_map_, id, true))
+  RET_CHECK(gtl::InsertIfNotPresent(&psu_id_map_, id, true))
       << "duplicate psu id: " << id;
 
   ASSIGN_OR_RETURN(OidInfo oid_info, GetOidInfo(psu, ONLP_PSU_ID_CREATE(id)));
@@ -512,7 +512,7 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
   ASSIGN_OR_RETURN(auto led, mutable_group->AddRepeatedChildGroup("leds"));
 
   // Check to make sure we haven't already added this id
-  CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(&led_id_map_, id, true))
+  RET_CHECK(gtl::InsertIfNotPresent(&led_id_map_, id, true))
       << "duplicate led id: " << id;
 
   ASSIGN_OR_RETURN(OidInfo oid_info, GetOidInfo(led, ONLP_LED_ID_CREATE(id)));
@@ -595,7 +595,7 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
                    mutable_group->AddRepeatedChildGroup("thermals"));
 
   // Check to make sure we haven't already added this id
-  CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(&thermal_id_map_, id, true))
+  RET_CHECK(gtl::InsertIfNotPresent(&thermal_id_map_, id, true))
       << "duplicate thermal id: " << id;
 
   ASSIGN_OR_RETURN(OidInfo oid_info,

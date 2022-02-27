@@ -2,20 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_l3_manager.h"
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/source_location.h"
 
 namespace stratum {
 namespace hal {

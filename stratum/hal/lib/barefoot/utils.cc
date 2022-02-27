@@ -53,27 +53,31 @@ std::string RangeDefaultLow(size_t bitwidth) {
 }
 
 std::string RangeDefaultHigh(size_t bitwidth) {
-  const size_t nbytes = NumBitsToNumBytes(bitwidth);
-  std::string high(nbytes, '\xff');
-  size_t zero_nbits = (nbytes * 8) - bitwidth;
-  char mask = 0xff >> zero_nbits;
-  high[0] &= mask;
-  return high;
+  return AllOnesByteString(bitwidth);
 }
 
 ::util::StatusOr<uint64> ConvertPriorityFromP4rtToBfrt(int32 priority) {
-  CHECK_RETURN_IF_FALSE(priority >= 0);
-  CHECK_RETURN_IF_FALSE(priority <= kMaxPriority);
+  RET_CHECK(priority >= 0);
+  RET_CHECK(priority <= kMaxPriority);
   return kMaxPriority - priority;
 }
 
 ::util::StatusOr<int32> ConvertPriorityFromBfrtToP4rt(uint64 priority) {
-  CHECK_RETURN_IF_FALSE(priority <= kMaxPriority);
+  RET_CHECK(priority <= kMaxPriority);
   return static_cast<int32>(kMaxPriority - priority);
 }
 
 int NumBitsToNumBytes(int num_bits) {
   return (num_bits + 7) / 8;  // ceil(num_bits/8)
+}
+
+std::string AllOnesByteString(size_t bitwidth) {
+  const size_t nbytes = NumBitsToNumBytes(bitwidth);
+  std::string value(nbytes, '\xff');
+  size_t zero_nbits = (nbytes * 8) - bitwidth;
+  char mask = 0xff >> zero_nbits;
+  value[0] &= mask;
+  return value;
 }
 
 }  // namespace barefoot

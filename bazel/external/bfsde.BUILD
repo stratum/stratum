@@ -49,7 +49,7 @@ cc_library(
         # TODO(bocon): PI needed when linking libdriver.so if/when pi is
         # enabled when building bf-drivers. This shouldn't hurt, but can
         # be excluded if/when PI is removed from the SDE build options.
-        "@//stratum/hal/lib/pi:pi_bf",
+        "@com_github_p4lang_PI_bf//proto/frontend:pifeproto",
     ],
 )
 
@@ -112,13 +112,6 @@ string_setting(
 )
 
 config_setting(
-    name = "sde_version_9.3.1",
-    flag_values = {
-        ":sde_version_setting": "9.3.1",
-    },
-)
-
-config_setting(
     name = "sde_version_9.5.0",
     flag_values = {
         ":sde_version_setting": "9.5.0",
@@ -126,8 +119,29 @@ config_setting(
 )
 
 config_setting(
+    name = "sde_version_9.5.2",
+    flag_values = {
+        ":sde_version_setting": "9.5.2",
+    },
+)
+
+config_setting(
     name = "sde_version_9.7.0",
     flag_values = {
         ":sde_version_setting": "9.7.0",
+    },
+)
+
+config_setting(
+    name = "sde_version_9.7.1",
+    flag_values = {
+        ":sde_version_setting": "9.7.1",
+    },
+)
+
+config_setting(
+    name = "sde_version_9.8.0",
+    flag_values = {
+        ":sde_version_setting": "9.8.0",
     },
 )

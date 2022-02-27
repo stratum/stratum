@@ -6,14 +6,14 @@
 
 #include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 

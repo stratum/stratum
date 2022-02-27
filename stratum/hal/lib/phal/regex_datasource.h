@@ -57,11 +57,11 @@ class RegexDataSource : public DataSource {
   // Only one attribute may be requested for each capturing group.
   template <typename T>
   ::util::StatusOr<ManagedAttribute*> GetAttribute(int capturing_group) {
-    CHECK_RETURN_IF_FALSE(capturing_group > 0 &&
-                          capturing_group <= regex_.NumberOfCapturingGroups())
+    RET_CHECK(capturing_group > 0 &&
+              capturing_group <= regex_.NumberOfCapturingGroups())
         << "Capturing group " << capturing_group << " is not valid for regex \""
         << regex_.pattern() << "\".";
-    CHECK_RETURN_IF_FALSE(args_[capturing_group - 1] == &dummy_arg_)
+    RET_CHECK(args_[capturing_group - 1] == &dummy_arg_)
         << "Cannot create multiple attributes for a single regex capturing "
            "group.";
     fields_[capturing_group - 1] = absl::make_unique<TypedRegexField<T>>(this);

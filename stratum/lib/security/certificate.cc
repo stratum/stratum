@@ -23,12 +23,12 @@ namespace {
 util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
   // Returns a reference to the underlying key; no need to free.
   RSA* rsa = EVP_PKEY_get0_RSA(pkey);
-  CHECK_RETURN_IF_FALSE(rsa) << "Key is not an RSA key.";
+  RET_CHECK(rsa) << "Key is not an RSA key.";
 
   BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
-  CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
-  CHECK_RETURN_IF_FALSE(PEM_write_bio_RSAPrivateKey(
-      bio.get(), rsa, nullptr, nullptr, 0, nullptr, nullptr))
+  RET_CHECK(bio.get()) << "Failed to allocate string buffer.";
+  RET_CHECK(PEM_write_bio_RSAPrivateKey(bio.get(), rsa, nullptr, nullptr, 0,
+                                        nullptr, nullptr))
       << "Failed to write private key to buffer.";
 
   BUF_MEM* mem = nullptr;
@@ -44,8 +44,8 @@ util::StatusOr<std::string> GetRSAPrivateKeyAsString(EVP_PKEY* pkey) {
 
 util::StatusOr<std::string> GetCertAsString(X509* x509) {
   BIO_ptr bio(BIO_new(BIO_s_mem()), BIO_free);
-  CHECK_RETURN_IF_FALSE(bio.get()) << "Failed to allocate string buffer.";
-  CHECK_RETURN_IF_FALSE(PEM_write_bio_X509(bio.get(), x509))
+  RET_CHECK(bio.get()) << "Failed to allocate string buffer.";
+  RET_CHECK(PEM_write_bio_X509(bio.get(), x509))
       << "Failed to write certificate to buffer.";
 
   BUF_MEM* mem = nullptr;
@@ -63,7 +63,7 @@ util::Status GenerateRSAKeyPair(EVP_PKEY* evp, int bits) {
   BIGNUM_ptr exp(BN_new(), BN_free);
   BN_set_word(exp.get(), RSA_F4);
   RSA* rsa = RSA_new();
-  CHECK_RETURN_IF_FALSE(RSA_generate_key_ex(rsa, bits, exp.get(), nullptr))
+  RET_CHECK(RSA_generate_key_ex(rsa, bits, exp.get(), nullptr))
       << "Failed to generate RSA key.";
   // Store this keypair in evp
   // It will be freed when EVP is freed, so only free on failure.
@@ -80,17 +80,14 @@ util::Status GenerateUnsignedCert(X509* unsigned_cert,
                                   const std::string& common_name, int serial,
                                   absl::Time valid_after,
                                   absl::Time valid_until) {
-  CHECK_RETURN_IF_FALSE(
-      ASN1_INTEGER_set(X509_get_serialNumber(unsigned_cert), serial));
+  RET_CHECK(ASN1_INTEGER_set(X509_get_serialNumber(unsigned_cert), serial));
   time_t t = absl::ToTimeT(valid_after);
-  CHECK_RETURN_IF_FALSE(
-      X509_time_adj_ex(X509_getm_notBefore(unsigned_cert), 0, 0, &t));
+  RET_CHECK(X509_time_adj_ex(X509_getm_notBefore(unsigned_cert), 0, 0, &t));
   t = absl::ToTimeT(valid_until);
-  CHECK_RETURN_IF_FALSE(
-      X509_time_adj_ex(X509_getm_notAfter(unsigned_cert), 0, 0, &t));
-  CHECK_RETURN_IF_FALSE(X509_set_pubkey(unsigned_cert, unsigned_cert_key));
+  RET_CHECK(X509_time_adj_ex(X509_getm_notAfter(unsigned_cert), 0, 0, &t));
+  RET_CHECK(X509_set_pubkey(unsigned_cert, unsigned_cert_key));
   X509_NAME* name = X509_get_subject_name(unsigned_cert);
-  CHECK_RETURN_IF_FALSE(X509_NAME_add_entry_by_txt(
+  RET_CHECK(X509_NAME_add_entry_by_txt(
       name, "CN", MBSTRING_UTF8,
       reinterpret_cast<const unsigned char*>(common_name.c_str()), -1, -1, 0));
 
@@ -108,8 +105,8 @@ util::Status SignCert(X509* unsigned_cert, EVP_PKEY* unsigned_cert_key,
   } else {
     issuer_name = X509_get_subject_name(issuer);
   }
-  CHECK_RETURN_IF_FALSE(X509_set_issuer_name(unsigned_cert, issuer_name));
-  CHECK_RETURN_IF_FALSE(X509_sign(unsigned_cert, issuer_key, EVP_sha256()));
+  RET_CHECK(X509_set_issuer_name(unsigned_cert, issuer_name));
+  RET_CHECK(X509_sign(unsigned_cert, issuer_key, EVP_sha256()));
 
   return util::OkStatus();
 }

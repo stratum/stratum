@@ -143,7 +143,7 @@ std::string StringToHex(const std::string& str) {
 }
 
 ::util::Status RecursivelyCreateDir(const std::string& dir) {
-  CHECK_RETURN_IF_FALSE(!dir.empty());
+  RET_CHECK(!dir.empty());
   std::vector<std::string> dirs = absl::StrSplit(dir, '/');
   std::string path_to_make = "/";
   for (auto& dir_name : dirs) {
@@ -172,9 +172,9 @@ std::string StringToHex(const std::string& str) {
 }
 
 ::util::Status RemoveFile(const std::string& path) {
-  CHECK_RETURN_IF_FALSE(!path.empty());
-  CHECK_RETURN_IF_FALSE(PathExists(path)) << path << " does not exist.";
-  CHECK_RETURN_IF_FALSE(!IsDir(path)) << path << " is a dir.";
+  RET_CHECK(!path.empty());
+  RET_CHECK(PathExists(path)) << path << " does not exist.";
+  RET_CHECK(!IsDir(path)) << path << " is a dir.";
   int ret = remove(path.c_str());
   if (ret != 0) {
     return MAKE_ERROR(ERR_INTERNAL)
@@ -256,13 +256,13 @@ std::string Demangle(const char* mangled) {
                 "PIPE_BUF is smaller than the number of bytes that can be "
                 "written atomically to a pipe.");
   int pipe_fds[2];  // [0] is read side, [1] is write side.
-  CHECK_RETURN_IF_FALSE(pipe(pipe_fds) == 0)
+  RET_CHECK(pipe(pipe_fds) == 0)
       << "Could not create pipe: " << strerror(errno) << ".";
   // Set write side to non-blocking mode.
   int flags = fcntl(pipe_fds[1], F_GETFL);
-  CHECK_RETURN_IF_FALSE(flags != -1)
-      << "Could not read file descriptor flags: " << strerror(errno) << ".";
-  CHECK_RETURN_IF_FALSE(fcntl(pipe_fds[1], F_SETFL, flags | O_NONBLOCK) != -1)
+  RET_CHECK(flags != -1) << "Could not read file descriptor flags: "
+                         << strerror(errno) << ".";
+  RET_CHECK(fcntl(pipe_fds[1], F_SETFL, flags | O_NONBLOCK) != -1)
       << "Could not set file descriptor flags: " << strerror(errno) << ".";
   *read_fd = pipe_fds[0];
   *write_fd = pipe_fds[1];

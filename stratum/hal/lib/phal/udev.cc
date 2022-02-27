@@ -16,17 +16,17 @@ Udev::~Udev() { Shutdown().IgnoreError(); }
 
 ::util::Status Udev::Initialize(const std::string& filter) {
   absl::WriterMutexLock l(&data_lock_);
-  CHECK_RETURN_IF_FALSE(udev_ == nullptr && udev_monitor_ == nullptr)
+  RET_CHECK(udev_ == nullptr && udev_monitor_ == nullptr)
       << "Udev already initialized. Call Shutdown() first.";
   udev_ = udev_new();
-  CHECK_RETURN_IF_FALSE(udev_);
+  RET_CHECK(udev_);
   udev_monitor_ = udev_monitor_new_from_netlink(udev_, "udev");
-  CHECK_RETURN_IF_FALSE(udev_monitor_);
-  CHECK_RETURN_IF_FALSE(0 == udev_monitor_filter_add_match_subsystem_devtype(
-                                 udev_monitor_, filter.c_str(), nullptr));
-  CHECK_RETURN_IF_FALSE(0 == udev_monitor_enable_receiving(udev_monitor_));
+  RET_CHECK(udev_monitor_);
+  RET_CHECK(0 == udev_monitor_filter_add_match_subsystem_devtype(
+                     udev_monitor_, filter.c_str(), nullptr));
+  RET_CHECK(0 == udev_monitor_enable_receiving(udev_monitor_));
   fd_ = udev_monitor_get_fd(udev_monitor_);
-  CHECK_RETURN_IF_FALSE(fd_ > 0);
+  RET_CHECK(fd_ > 0);
 
   return ::util::OkStatus();
 }

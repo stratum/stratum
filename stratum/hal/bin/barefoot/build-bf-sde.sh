@@ -24,10 +24,18 @@ Options:
 
 Examples:
 
-    $0 -t ~/bf-sde-9.5.0.tgz
-    $0 -t ~/bf-sde-9.5.0.tgz -j 4
-    $0 -t ~/bf-sde-9.5.0.tgz -k ~/linux-4.14.49-ONL.tar.xz
+    $0 -t ~/bf-sde-9.5.2.tgz
+    $0 -t ~/bf-sde-9.5.2.tgz -j 4
+    $0 -t ~/bf-sde-9.5.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
 "
+}
+
+function numeric_version() {
+  # Get numeric version, for example 9.5.2 will become 90502.
+  sem_ver=$1
+  ver_arr=()
+  IFS='.' read -raver_arr<<<"$sem_ver"
+  echo $((ver_arr[0] * 10000 + ver_arr[1] * 100 + ver_arr[2]))
 }
 
 KERNEL_HEADERS_TARS=""
@@ -150,7 +158,8 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
-if [[ $SDE_VERSION == "9.7.0" ]]; then
+if [[ $(numeric_version "$SDE_VERSION") -ge $(numeric_version "9.7.0") ]]; then
+    # SDE verison >= 9.7.0
     pushd "$SDE/p4studio"
     $sudo ./install-p4studio-dependencies.sh
     ./p4studio packages extract

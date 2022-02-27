@@ -66,8 +66,7 @@ ls -1 stratum/hal/config/*/chassis_config.pb.txt | \
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
 
-  CHECK_RETURN_IF_FALSE(!FLAGS_chassis_config_file.empty())
-      << "No chassis config given.";
+  RET_CHECK(!FLAGS_chassis_config_file.empty()) << "No chassis config given.";
   ChassisConfig config;
   RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_chassis_config_file, &config));
   if (config.chassis().platform() != PLT_GENERIC_BAREFOOT_TOFINO &&

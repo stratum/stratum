@@ -75,15 +75,14 @@ Examples:
   }
 
   for (const auto& query_field : query_fields) {
-    CHECK_RETURN_IF_FALSE(query_field != "")
-        << "Encountered unexpected empty query field.";
+    RET_CHECK(query_field != "") << "Encountered unexpected empty query field.";
 
     PathQuery::PathEntry entry;  // Protobuf type
     RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
     RE2 bracket_regex(R"#(\[(\d+)\])#");
     std::string bracket_match;
     std::string name_match;
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         RE2::FullMatch(query_field, field_regex, &name_match, &bracket_match))
         << "Could not parse query field: " << query_field;
     entry.set_name(name_match);

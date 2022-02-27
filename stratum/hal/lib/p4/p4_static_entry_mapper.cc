@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file contains the implementation of P4StaticEntryMapper.
 
 #include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
@@ -22,10 +21,10 @@
 // actions from its const entries into the actions for the first table.
 // When the flag is false, the switch stack treats const entries in hidden
 // tables like any other const entry.
-DEFINE_bool(remap_hidden_table_const_entries, true, "Enables/disables "
-            "remapping of hidden table const entries.  When enabled, the "
-            "hidden const entry actions are integrated into the actions of "
-            "related physical tables.");
+DEFINE_bool(remap_hidden_table_const_entries, true,
+            "Enables/disables remapping of hidden table const entries.  When "
+            "enabled, the hidden const entry actions are integrated into the "
+            "actions of related physical tables.");
 
 namespace stratum {
 namespace hal {
@@ -49,10 +48,10 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   // modifications are not applicable during the pre-push step.
   ::p4::v1::WriteRequest physical_deletes;
   ::p4::v1::WriteRequest physical_unchanged;
-  P4WriteRequestDiffer physical_differ(
-      physical_static_entries_, physical_request);
-  RETURN_IF_ERROR(physical_differ.Compare(
-      &physical_deletes, nullptr, nullptr, &physical_unchanged));
+  P4WriteRequestDiffer physical_differ(physical_static_entries_,
+                                       physical_request);
+  RETURN_IF_ERROR(physical_differ.Compare(&physical_deletes, nullptr, nullptr,
+                                          &physical_unchanged));
 
   // Hidden static entries that have been deleted relative to the current
   // pipeline config are identified here.  Static entry additions and
@@ -60,8 +59,8 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   ::p4::v1::WriteRequest hidden_deletes;
   ::p4::v1::WriteRequest hidden_unchanged;
   P4WriteRequestDiffer hidden_differ(hidden_static_entries_, hidden_request);
-  RETURN_IF_ERROR(hidden_differ.Compare(
-      &hidden_deletes, nullptr, nullptr, &hidden_unchanged));
+  RETURN_IF_ERROR(hidden_differ.Compare(&hidden_deletes, nullptr, nullptr,
+                                        &hidden_unchanged));
 
   // TODO(unknown): Finish implementation - hidden_deletes need to be saved
   // with internal hidden tables.
@@ -87,11 +86,11 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   ::p4::v1::WriteRequest physical_deletes;
   ::p4::v1::WriteRequest physical_adds;
   ::p4::v1::WriteRequest physical_mods;
-  P4WriteRequestDiffer physical_differ(
-      physical_static_entries_, physical_request);
-  RETURN_IF_ERROR(physical_differ.Compare(
-      &physical_deletes, &physical_adds, &physical_mods, nullptr));
-  CHECK_RETURN_IF_FALSE(physical_deletes.updates_size() == 0)
+  P4WriteRequestDiffer physical_differ(physical_static_entries_,
+                                       physical_request);
+  RETURN_IF_ERROR(physical_differ.Compare(&physical_deletes, &physical_adds,
+                                          &physical_mods, nullptr));
+  RET_CHECK(physical_deletes.updates_size() == 0)
       << "Unexpected physical static table entry deletions - possible "
       << "P4StaticEntryMapper API misuse: "
       << physical_deletes.ShortDebugString();
@@ -103,9 +102,9 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   ::p4::v1::WriteRequest hidden_adds;
   ::p4::v1::WriteRequest hidden_mods;
   P4WriteRequestDiffer hidden_differ(hidden_static_entries_, hidden_request);
-  RETURN_IF_ERROR(hidden_differ.Compare(
-      &hidden_deletes, &hidden_adds, &hidden_mods, nullptr));
-  CHECK_RETURN_IF_FALSE(hidden_deletes.updates_size() == 0)
+  RETURN_IF_ERROR(hidden_differ.Compare(&hidden_deletes, &hidden_adds,
+                                        &hidden_mods, nullptr));
+  RET_CHECK(hidden_deletes.updates_size() == 0)
       << "Unexpected hidden static table entry deletions - possible "
       << "P4StaticEntryMapper API misuse: "
       << hidden_deletes.ShortDebugString();
@@ -125,7 +124,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
     ::p4::v1::WriteRequest* physical_request,
     ::p4::v1::WriteRequest* hidden_request) {
   for (const auto& update : new_request.updates()) {
-    CHECK_RETURN_IF_FALSE(update.entity().has_table_entry())
+    RET_CHECK(update.entity().has_table_entry())
         << "Static update in P4 WriteRequest has no table_entry: "
         << update.ShortDebugString();
     int table_id = update.entity().table_entry().table_id();
@@ -140,7 +139,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
       // post-push for adding new entries.
       continue;
     } else if (hidden_status == TRI_STATE_TRUE &&
-        FLAGS_remap_hidden_table_const_entries) {
+               FLAGS_remap_hidden_table_const_entries) {
       out_update = hidden_request->add_updates();
     } else {
       out_update = physical_request->add_updates();

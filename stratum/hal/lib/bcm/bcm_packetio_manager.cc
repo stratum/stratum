@@ -402,7 +402,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
     GoogleConfig::BcmKnetIntfPurpose purpose,
     const ::p4::v1::PacketOut& packet) {
   ASSIGN_OR_RETURN(const BcmKnetIntf* intf, GetBcmKnetIntf(purpose));
-  CHECK_RETURN_IF_FALSE(intf->tx_sock > 0)  // MUST NOT HAPPEN!
+  RET_CHECK(intf->tx_sock > 0)  // MUST NOT HAPPEN!
       << "KNET interface with purpose "
       << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << " on node with ID "
       << node_id_ << " mapped to unit " << unit_
@@ -497,10 +497,9 @@ BcmPacketioManager::~BcmPacketioManager() {}
     GoogleConfig::BcmKnetIntfPurpose purpose) const {
   absl::ReaderMutexLock l(&tx_stats_lock_);
   const BcmKnetTxStats* stats = gtl::FindOrNull(purpose_to_tx_stats_, purpose);
-  CHECK_RETURN_IF_FALSE(stats != nullptr)
-      << "TX stats for KNET intf "
-      << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << " not found on node "
-      << node_id_ << ".";
+  RET_CHECK(stats != nullptr) << "TX stats for KNET intf "
+                              << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
+                              << " not found on node " << node_id_ << ".";
 
   return *stats;
 }
@@ -509,10 +508,9 @@ BcmPacketioManager::~BcmPacketioManager() {}
     GoogleConfig::BcmKnetIntfPurpose purpose) const {
   absl::ReaderMutexLock l(&rx_stats_lock_);
   const BcmKnetRxStats* stats = gtl::FindOrNull(purpose_to_rx_stats_, purpose);
-  CHECK_RETURN_IF_FALSE(stats != nullptr)
-      << "RX stats for KNET intf "
-      << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << " not found on node "
-      << node_id_ << ".";
+  RET_CHECK(stats != nullptr) << "RX stats for KNET intf "
+                              << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
+                              << " not found on node " << node_id_ << ".";
 
   return *stats;
 }
@@ -639,7 +637,7 @@ int GetWithDefault(int value, int def) { return value > 0 ? value : def; }
       sdk_rx_config.dma_channel_configs[e.first].no_pkt_parsing =
           e.second.no_pkt_parsing();
       for (int c : e.second.cos_set()) {
-        CHECK_RETURN_IF_FALSE(c >= 0 && c <= kMaxCos)
+        RET_CHECK(c >= 0 && c <= kMaxCos)
             << "Invalid CoS in cos_set: " << bcm_rx_config.ShortDebugString();
         sdk_rx_config.dma_channel_configs[e.first].cos_set.insert(c);
       }
@@ -682,21 +680,21 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     std::set<int> cpu_queues = {};
     std::set<GoogleConfig::BcmKnetIntfPurpose> purposes = {};
     for (const auto& knet_intf_config : bcm_knet_config.knet_intf_configs()) {
-      CHECK_RETURN_IF_FALSE(knet_intf_config.cpu_queue() > 0 &&
-                            knet_intf_config.cpu_queue() <= kMaxCpuQueue)
+      RET_CHECK(knet_intf_config.cpu_queue() > 0 &&
+                knet_intf_config.cpu_queue() <= kMaxCpuQueue)
           << "Invalid KNET CPU queue: " << knet_intf_config.cpu_queue()
           << ", found in " << bcm_knet_config.ShortDebugString();
-      CHECK_RETURN_IF_FALSE(!cpu_queues.count(knet_intf_config.cpu_queue()))
+      RET_CHECK(!cpu_queues.count(knet_intf_config.cpu_queue()))
           << "Multiple KNET interface configs for CPU queue "
           << knet_intf_config.cpu_queue() << ", found in "
           << bcm_knet_config.ShortDebugString();
       cpu_queues.insert(knet_intf_config.cpu_queue());
-      CHECK_RETURN_IF_FALSE(!purposes.count(knet_intf_config.purpose()))
+      RET_CHECK(!purposes.count(knet_intf_config.purpose()))
           << "Multiple KNET interface configs for purpose "
           << GoogleConfig::BcmKnetIntfPurpose_Name(knet_intf_config.purpose())
           << ", found in " << bcm_knet_config.ShortDebugString();
       purposes.insert(knet_intf_config.purpose());
-      CHECK_RETURN_IF_FALSE(knet_intf_config.mtu() > 0)
+      RET_CHECK(knet_intf_config.mtu() > 0)
           << "Invalid KNET interface MTU: " << knet_intf_config.mtu()
           << ", found in " << bcm_knet_config.ShortDebugString();
       GoogleConfig::BcmKnetIntfPurpose purpose = knet_intf_config.purpose();
@@ -767,7 +765,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     return MAKE_ERROR(ERR_INTERNAL) << "Null intf!";
   }
 
-  CHECK_RETURN_IF_FALSE(intf->filter_ids.empty())
+  RET_CHECK(intf->filter_ids.empty())
       << "No KNET filter given for KNET intf (unit " << unit_ << " and purpose "
       << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << ").";
   // intf->netif_name contains the interface name template. This
@@ -874,7 +872,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
              << GoogleConfig::BcmKnetIntfPurpose_Name(purpose);
   }
 
-  CHECK_RETURN_IF_FALSE(intf->filter_ids.empty());
+  RET_CHECK(intf->filter_ids.empty());
   for (auto type : knet_filter_types) {
     ASSIGN_OR_RETURN(int filter_id, bcm_sdk_interface_->CreateKnetFilter(
                                         unit_, intf->netif_id, type));
@@ -977,11 +975,10 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
 ::util::StatusOr<BcmKnetIntf*> BcmPacketioManager::GetBcmKnetIntf(
     GoogleConfig::BcmKnetIntfPurpose purpose) {
   BcmKnetIntf* intf = gtl::FindOrNull(purpose_to_knet_intf_, purpose);
-  CHECK_RETURN_IF_FALSE(intf != nullptr)
-      << "KNET interface with purpose "
-      << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
-      << " does not exist for node with ID " << node_id_ << " mapped to unit "
-      << unit_ << ".";
+  RET_CHECK(intf != nullptr) << "KNET interface with purpose "
+                             << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
+                             << " does not exist for node with ID " << node_id_
+                             << " mapped to unit " << unit_ << ".";
 
   return intf;
 }
@@ -999,7 +996,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     ASSIGN_OR_RETURN(const BcmKnetIntf* intf, GetBcmKnetIntf(purpose));
     rx_sock = intf->rx_sock;
     netif_index = intf->netif_index;
-    CHECK_RETURN_IF_FALSE(rx_sock > 0)  // MUST NOT HAPPEN!
+    RET_CHECK(rx_sock > 0)  // MUST NOT HAPPEN!
         << "KNET interface with purpose "
         << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << " on node with ID "
         << node_id_ << " mapped to unit " << unit_
@@ -1167,7 +1164,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   iov[idx].iov_len = kMaxRxBufferSize;
   idx++;
 
-  CHECK_RETURN_IF_FALSE(idx <= kMaxIovLen);  // juts in case. Will never happen
+  RET_CHECK(idx <= kMaxIovLen);  // juts in case. Will never happen
 
   struct sockaddr_ll sa;
   memset(&sa, 0, sizeof(sa));
@@ -1327,7 +1324,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     GoogleConfig::BcmKnetIntfPurpose purpose, int sock, int vlan,
     int netif_index, bool direct_tx, const std::string& header,
     const std::string& payload) {
-  CHECK_RETURN_IF_FALSE(payload.length() >= sizeof(struct ether_header));
+  RET_CHECK(payload.length() >= sizeof(struct ether_header));
 
   constexpr size_t kMaxIovLen = 4;
   struct iovec iov[kMaxIovLen];
@@ -1345,7 +1342,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   tot_len += iov[idx].iov_len;
   idx++;
 
-  CHECK_RETURN_IF_FALSE(idx <= kMaxIovLen);  // just in case. Will never happen
+  RET_CHECK(idx <= kMaxIovLen);  // just in case. Will never happen
 
   // Here sa.sll_addr is left zeroed out, matching what's in rcpu_hdr.
   struct sockaddr_ll sa;

@@ -45,10 +45,10 @@ std::string Uint32ToLeByteStream(uint32 val) {
 
 ::util::Status BfPipelineConfigToPiConfig(const BfPipelineConfig& bf_config,
                                           std::string* pi_node_config) {
-  CHECK_RETURN_IF_FALSE(pi_node_config) << "null pointer.";
+  RET_CHECK(pi_node_config) << "null pointer.";
 
   // Validate restrictions.
-  CHECK_RETURN_IF_FALSE(bf_config.profiles_size() == 1)
+  RET_CHECK(bf_config.profiles_size() == 1)
       << "Only single pipeline P4 configs are supported.";
   const auto& profile = bf_config.profiles(0);
 

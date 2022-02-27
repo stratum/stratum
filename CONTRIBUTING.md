@@ -20,16 +20,17 @@ You generally only need to submit a CLA once, so if you've already submitted one
 (even if it was for a different project), you probably don't need to do it
 again.
 
-## Submitting Code
+## Guides, Rules and Best Practices
 
-### General Information
-
-Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/),
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/),
 [C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and
 [unit test rules](stratum/docs/testing.md). Use these documents as a guide when
-submitting code.
+writing, submitting or reviewing code. Also see Abseil's [Tip of the Week](abseil.io/tips/)
+series with in-depth information about select C++ topics.
 
-Some additional points:
+### Submitting Code
+
+Some additional points for developers:
 
  - Submit your changes early and often. GitHub has
    [Draft PRs](https://github.blog/2019-02-14-introducing-draft-pull-requests/)
@@ -44,7 +45,7 @@ Some additional points:
    [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords).
    This keeps code review and design discussions clean.
 
-### Steps to Follow
+#### Steps to successful PRs
 
 1. Fork Stratum into your personal or organization account via the fork button
    on GitHub.
@@ -58,10 +59,8 @@ Some additional points:
    to run all currently enabled tests:
    `xargs -a .circleci/test-targets.txt bazel test`
 
-4. Check code style compliance with `cpplint` and `clang-format`
-   (pre-installed in development docker container). If you're editing Bazel
-   files, consider [buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier)
-   as well (also pre-installed).
+4. Check code style compliance with the `check-*.sh` scripts in the `.circleci`
+   directory.
 
 5. Create a [Pull Request](https://github.com/stratum/stratum/compare). Consider
    [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork)
@@ -77,6 +76,67 @@ Some additional points:
    and above can give final review approval. **All changes must get at least one
    approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page)
    to request a review or to bring additional attention to your PR.
+
+## Core Contributors
+Anyone with a Github account can open new issues, comment on existing issues, or
+contribute code by opening a pull request from a fork.
+
+A **“core contributor”** is someone who can manage Github issues, approve and
+merge pull requests, and create new branches in the main repository.
+
+Core contributors are responsible for maintaining the quality of contributions
+to the codebase. The goal of this program is to have a diverse group of
+individuals whose expertise in aggregate covers the entire project.
+
+The benefits of being a core contributor include:
+- Increased influence of the direction of the project,
+- The ability to create branches in the main repository and merge your own code,
+  and
+- Community recognition and visibility for their contributions and expertise.
+
+### Becoming a Core Contributor
+
+Core contributor candidates need to have a demonstrated proficiency with the
+Stratum codebase and a track record of code reviews.  Members of the Technical
+Steering Team (TST) and existing core contributors will regularly invite people
+to become new core contributors. Nominations can also be made (including
+self-nominations) to the Stratum TST (`stratum-tst@opennetworking.org`) at any time.
+
+A good nomination will include details about who the person is (including their
+Github username) and outline their experience with the Stratum codebase.
+Nominations are intended to start a conversation that results in a decision to
+make the person a core contributor – anyone whose nomination is not initially
+approved is encouraged to gain more experience with code submission and code
+review in order to gain further mastery over the codebase. Partial approval is
+also possible (e.g. a person may be granted the ability to triage issues, but
+not merge pull requests), and full approval may be granted after the contributor
+has gained more experience.
+
+New core contributors will be assigned a mentor that is either a TST member or
+existing core contributor. The mentor will serve as the primary point of contact
+to help onboard the new core contributors and answer any questions they have
+with their new responsibilities. The mentor is not the only point of contact,
+and core contributors should feel free to reach out to others if and when they
+have questions or concerns.
+
+### Tips for Core Contributors
+For your own contributions, you now have the ability to approve and merge your
+own code. For larger or potentially controversial pull requests, please give the
+community an opportunity (at least a few business days) to review your
+contribution. **With great power comes great responsibility; please don't abuse
+this privilege.**
+
+For branches in the main repository, please try to use sensible names (which
+could include your username, issue number, and/or a short descriptive tag).
+
+Stratum follows [Google’s best practices for code review](https://google.github.io/eng-practices/review/reviewer/).
+You should apply these guidelines strictly and with confidence when reviewing
+pull requests.
+
+If you are unsure about something in an issue or pull request, leave a comment
+that outlines your concerns. If a resolution is difficult to reach in the
+comments section, the TST meetings are a good place to raise your concerns and
+have a discussion.
 
 ## Community Guidelines
 

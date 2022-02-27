@@ -33,7 +33,7 @@ namespace dummy_switch {
   auto* hal = Hal::CreateSingleton(
       stratum::hal::OPERATION_MODE_SIM, dummy_switch.get(),
       auth_policy_checker.get(), credentials_manager.get());
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Hal instance.";
   ::util::Status status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR) << "Error when setting up HAL (but we will continue running): "

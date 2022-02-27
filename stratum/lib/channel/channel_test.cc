@@ -2,21 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/lib/channel/channel.h"
 
 #include <pthread.h>
 #include <unistd.h>
 
 #include <set>
-#include <thread>  // NOLINT
 #include <string>
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/test_utils/matchers.h"
+#include "absl/synchronization/mutex.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 
 namespace stratum {
 
@@ -347,7 +345,7 @@ void* StressTestChannelWriterFunc(void* arg) {
         // Prevent starvation of reader threads.
         // FIXME: this should already be guaranteed by absl::Mutex
         if (status.error_code() == ERR_NO_RESOURCE)
-          std::this_thread::yield();
+          absl::SleepFor(absl::Milliseconds(1));
       } while (status.error_code() == ERR_NO_RESOURCE);
       if (status.error_code() == ERR_CANCELLED) break;
     }
@@ -369,7 +367,7 @@ void* StressTestChannelReaderFunc(void* arg) {
       ::util::Status status;
       do {
         status = args->reader->TryRead(&data);
-        std::this_thread::yield();
+        absl::SleepFor(absl::Milliseconds(1));
       } while (status.error_code() == ERR_ENTRY_NOT_FOUND);
       if (status.error_code() == ERR_CANCELLED) break;
     }
