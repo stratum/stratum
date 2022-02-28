@@ -299,7 +299,6 @@ jobs:
       sde_version:
         description: "BF SDE version to build with"
         type: string
-        default: "9.7.0"
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile
