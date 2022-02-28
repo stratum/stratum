@@ -109,7 +109,6 @@ jobs:
     environment:
       - CC: clang
       - CXX: clang++
-      - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-9.7.0-install.tgz
     steps:
       - checkout
       - *restore_bazel_cache
