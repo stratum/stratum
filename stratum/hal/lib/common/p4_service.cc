@@ -793,9 +793,10 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
     }
   }
 
-  LOG(INFO) << "Controller " << controller.Name() << " is connected as "
-            << (is_master ? "MASTER" : "SLAVE")
-            << " for node (aka device) with ID " << node_id << ".";
+  LOG_IF(INFO, is_master != was_master)
+      << "Controller " << controller.Name() << " is now connected as "
+      << (is_master ? "MASTER" : "SLAVE") << " for node (aka device) with ID "
+      << node_id << ".";
 
   return ::util::OkStatus();
 }
