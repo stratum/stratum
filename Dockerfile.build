@@ -108,6 +108,6 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
-# RUN apt install python-is-python3
-# RUN ln -s /usr/bin/python3 /usr/bin/python
+# Bazel uses "python" instead of "python3" for some cases.
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
