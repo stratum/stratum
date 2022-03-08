@@ -132,13 +132,6 @@ if [[ $EUID -ne 0 ]]; then
    sudo="sudo"
 fi
 
-# Install an older version of pyresistent before running the P4 studio
-# since the pip will try to install newer version of it when pip install
-# the jsonschema library. And the new version of pyresistent(0.17.x) requires
-# Python >= 3.5
-# TODO: Remove this once we move to Python3
-# $sudo pip install pyrsistent==0.14.0
-
 # Set up SDE build directory in /tmp
 tmpdir="$(mktemp -d /tmp/bf_sde.XXXXXX)"
 export SDE=$tmpdir

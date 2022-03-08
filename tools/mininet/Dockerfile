@@ -71,7 +71,7 @@ RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
 RUN pip install --root /output "grpcio<=${GRPC_VER}"
 
 # Final stage, runtime.
-FROM bitnami/minideb:stretch as runtime
+FROM bitnami/minideb:buster as runtime
 
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="Docker-based Mininet image that uses stratum_bmv2 as the default switch"
