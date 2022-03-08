@@ -745,6 +745,35 @@ TEST_P(P4ServiceTest, WriteFailureForAuthError) {
   EXPECT_TRUE(status.error_details().empty());
 }
 
+TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
+  ::grpc::ClientContext context;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
+  req.set_device_id(kNodeId1);
+  req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
+  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
+      .WillOnce(Return(::util::OkStatus()));
+  const std::vector<::util::Status> kExpectedResults = {};
+  EXPECT_CALL(*switch_mock_, WriteForwardingEntries(EqualsProto(req), _))
+      .WillOnce(
+          DoAll(SetArgPointee<1>(kExpectedResults),
+                Return(::util::Status(StratumErrorSpace(), ERR_NOT_INITIALIZED,
+                                      kAggrErrorMsg))));
+
+  // Invoke the RPC and validate the results.
+  ::grpc::Status status = stub_->Write(&context, req, &resp);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(::grpc::StatusCode::FAILED_PRECONDITION, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr(kAggrErrorMsg));
+  // TODO(max): P4Runtime spec says error_details should be empty for failures
+  // not related to the supplied flow entries.
+  // EXPECT_TRUE(status.error_details().empty());
+}
+
 TEST_P(P4ServiceTest, ReadSuccess) {
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;

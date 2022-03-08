@@ -90,18 +90,18 @@ TEST(ByteStringTest, ByteStringToP4RuntimeByteStringCorrect) {
                                         "\x00\x00\x00\x00\xab", 5)));
 }
 
-TEST(ValidMeterConfigTest, IsValidMeterConfigEmptyInvalid) {
+TEST(ValidMeterConfigTest, IsValidMeterConfigEmptyValid) {
   constexpr char kInvalidMeterConfigText[] = R"PROTO(
     # Empty MeterConfig, all fields zero.
   )PROTO";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
-  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+  EXPECT_OK(IsValidMeterConfig(config));
 }
 
 TEST(ValidMeterConfigTest, IsValidMeterConfigZeroBurstInvalid) {
   constexpr char kInvalidMeterConfigText[] = R"PROTO(
-    # Invalid, empty burst sizes.
+    # Zero burst sizes.
     cir: 100
     pir: 200
     cburst: 0
@@ -109,7 +109,7 @@ TEST(ValidMeterConfigTest, IsValidMeterConfigZeroBurstInvalid) {
   )PROTO";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
-  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+  EXPECT_OK(IsValidMeterConfig(config));
 }
 
 TEST(ValidMeterConfigTest, IsValidMeterConfigRatesInvalid) {

@@ -4,6 +4,7 @@
 version: 2.1
 
 orbs:
+  aws-s3: circleci/aws-s3@3.0.0
   codecov: codecov/codecov@3.2.2
 
 # Cache Bazel output root (see bazelrc) to speed up job execution time.
@@ -26,12 +27,19 @@ save_bazel_cache: &save_bazel_cache
     paths:
       - /tmp/bazel-cache
       - /tmp/bazel-disk-cache
+      - /tmp/bf-sde-tars
 
 clean_bazel_cache: &clean_bazel_cache
   run:
     name: Clean Bazel disk cache of files that have not been modified in 30 days
     # mtime is the only time preserved after untaring the cache.
     command: /usr/bin/find /tmp/bazel-disk-cache -mtime +30 -exec rm -v {} \;
+
+fetch_sde_tars: &fetch_sde_tars
+  aws-s3/sync:
+    arguments: '--exclude "*" --include "bf-sde-*-install.tgz"'
+    from: 's3://stratum-artifacts'
+    to: /tmp/bf-sde-tars
 
 # Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
@@ -284,6 +292,36 @@ jobs:
       - *docker_push
       - *save_bazel_cache
 
+  publish-docker-stratum-bfrt:
+    docker:
+      - image: stratumproject/build:build
+    parameters:
+      sde_version:
+        description: "BF SDE version to build with"
+        type: string
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-<< parameters.sde_version >>
+      - CC: clang
+      - CXX: clang++
+      - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *fetch_sde_tars
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bfrt
+          command: |
+            bazel build --config=release //stratum/hal/bin/barefoot:stratum_bfrt_deb
+            cp bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb $DOCKER_SCOPE/stratum_bfrt_deb.deb
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
+
   publish-docker-stratum-tools:
     docker:
       - image: stratumproject/build:build-deb10
@@ -385,6 +423,12 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
+      - publish-docker-stratum-bfrt:
+          requires:
+            - publish-docker-build
+          matrix:
+            parameters:
+              sde_version: ["9.5.0", "9.5.2", "9.7.0", "9.7.1", "9.8.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build
