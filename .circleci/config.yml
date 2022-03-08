@@ -97,7 +97,7 @@ jobs:
   # Build targets and run unit tests.
   unit_tests:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - CC: clang
       - CXX: clang++
@@ -122,7 +122,7 @@ jobs:
   # CDLang
   cdlang_tests:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - CC: clang
       - CXX: clang++
@@ -144,7 +144,7 @@ jobs:
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - CC: clang
       - CXX: clang++
@@ -168,7 +168,7 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: Dockerfile.build
-      - DOCKER_IMG: stratumproject/build:build
+      - DOCKER_IMG: stratumproject/build:build-deb10
     steps:
       - checkout
       - *docker_login
@@ -177,7 +177,7 @@ jobs:
 
   publish-docker-mininet:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
@@ -208,7 +208,7 @@ jobs:
 
   publish-docker-p4c-fpm:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - DOCKER_SCOPE: stratum/p4c_backends/fpm
       - DOCKER_FILE: Dockerfile
@@ -237,7 +237,7 @@ jobs:
 
   publish-docker-stratum-bcm-sdklt:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
@@ -262,7 +262,7 @@ jobs:
 
   publish-docker-stratum-bcm-opennsa:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
@@ -286,7 +286,7 @@ jobs:
 
   publish-docker-stratum-tools:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     environment:
       - DOCKER_SCOPE: stratum/tools
       - DOCKER_FILE: Dockerfile.stratum_tools
@@ -319,7 +319,7 @@ jobs:
 
   lint-and-style-checks:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:build-deb10
     steps:
       - checkout
       # We always continue with all steps, even on failures, to get the most
