@@ -140,8 +140,9 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     request.set_device_id(node_id);
     request.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     request.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
-    return p4_service_->node_id_to_controller_manager_[node_id]
-        .HandleArbitrationUpdate(request, controller);
+    auto p =
+        p4_service_->node_id_to_controller_manager_.emplace(node_id, node_id);
+    return p.first->second.HandleArbitrationUpdate(request, controller);
   }
 
   grpc::Status AddFakeMasterController3(uint64 node_id, uint64 connection_id,

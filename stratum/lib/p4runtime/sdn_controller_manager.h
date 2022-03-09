@@ -66,8 +66,7 @@ class SdnConnection {
 
 class SdnControllerManager {
  public:
-  // TODO(unknown): Set device ID through gNMI.
-  SdnControllerManager() : device_id_(183807201) {}
+  explicit SdnControllerManager(uint64_t device_id) : device_id_(device_id) {}
 
   grpc::Status HandleArbitrationUpdate(
       const p4::v1::MasterArbitrationUpdate& update, SdnConnection* controller)
@@ -94,6 +93,8 @@ class SdnControllerManager {
       ABSL_LOCKS_EXCLUDED(lock_);
 
  private:
+  SdnControllerManager() : device_id_(0) {}
+
   // Goes through the current list of active connections for a role and compares
   // their election ID values with the current primary election ID. If a new
   // primary ID is found it will return true. Otherwise it will return false.
