@@ -34,6 +34,9 @@ class SdnConnection {
   void SetRoleName(const absl::optional<std::string>& name);
   absl::optional<std::string> GetRoleName() const;
 
+  // A unique name string for the controller.
+  std::string GetName() const;
+
   // Sends back StreamMessageResponse to this controller.
   void SendStreamMessageResponse(const p4::v1::StreamMessageResponse& response);
 

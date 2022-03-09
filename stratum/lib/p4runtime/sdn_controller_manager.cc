@@ -5,6 +5,7 @@
 #include "stratum/lib/p4runtime/sdn_controller_manager.h"
 
 #include <algorithm>
+#include <sstream>
 
 #include "absl/numeric/int128.h"
 #include "absl/status/status.h"
@@ -72,10 +73,19 @@ absl::optional<std::string> SdnConnection::GetRoleName() const {
   return role_name_;
 }
 
+std::string SdnConnection::GetName() const {
+  // TODO(max): use absl::StrCat
+  std::stringstream ss;
+  ss << "(role_name: " << PrettyPrintRoleName(role_name_)
+     << ", election_id: " << PrettyPrintElectionId(election_id_)
+     << ", uri: " << grpc_context_->peer() << ")";
+  return ss.str();
+}
+
 void SdnConnection::SendStreamMessageResponse(
     const p4::v1::StreamMessageResponse& response) {
   if (!grpc_stream_->Write(response)) {
-    LOG(ERROR) << "Could not send arbitration update response to gRPC conext '"
+    LOG(ERROR) << "Could not send arbitration update response to gRPC context '"
                << grpc_context_ << "': " << response.ShortDebugString();
   }
 }

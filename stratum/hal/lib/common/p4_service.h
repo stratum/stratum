@@ -189,10 +189,6 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
       uint64 node_id, const p4::v1::MasterArbitrationUpdate& update,
       p4runtime::SdnConnection* controller) LOCKS_EXCLUDED(controller_lock_);
 
-  ::util::Status SetupStreamMessageChannelForNode(uint64 node_id)
-      SHARED_LOCKS_REQUIRED(controller_lock_)
-          LOCKS_EXCLUDED(stream_response_thread_lock_);
-
   // Removes an existing controller from the controllers_ set given its stream.
   // To be called after stream from an existing controller is broken (e.g.
   // controller is disconnected).
@@ -268,8 +264,6 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   //
   // It is possible for connections to be made for specific roles. In which case
   // one primary connection is allowed for each distinct role.
-  // std::unique_ptr<p4runtime::SdnControllerManager> controller_manager_
-  //     ABSL_GUARDED_BY(controller_lock_);
   std::map<uint64, p4runtime::SdnControllerManager>
       node_id_to_controller_manager_ ABSL_GUARDED_BY(controller_lock_);
 

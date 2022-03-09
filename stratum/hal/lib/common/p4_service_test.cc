@@ -795,7 +795,8 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
+  // AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
+  AddFakeMasterController3(kNodeId1, 1, kElectionId1, "some uri");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -1370,7 +1371,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
   EXPECT_FALSE(stream1->Read(&resp));
   ::grpc::Status status = stream1->Finish();
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(), HasSubstr("Duplicate election ID"));
+  EXPECT_THAT(status.error_message(), HasSubstr("Election ID is already used"));
   EXPECT_TRUE(status.error_details().empty());
 }
 
