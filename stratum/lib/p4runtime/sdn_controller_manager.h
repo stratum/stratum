@@ -5,6 +5,9 @@
 #ifndef STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
 #define STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
 
+#include <string>
+#include <vector>
+
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/numeric/int128.h"

@@ -112,9 +112,6 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
     const p4::v1::MasterArbitrationUpdate& update, SdnConnection* controller) {
   absl::MutexLock l(&lock_);
 
-  // TODO: arbitration should fail with invalid device id.
-  // device_id_ = update.device_id();
-
   // If the role name is not set then we assume the connection is a 'root'
   // connection.
   absl::optional<std::string> role_name;
