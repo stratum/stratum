@@ -57,7 +57,6 @@ P4Service::P4Service(OperationMode mode, SwitchInterface* switch_interface,
                      AuthPolicyChecker* auth_policy_checker,
                      ErrorBuffer* error_buffer)
     : node_id_to_controller_manager_(),
-      connection_ids_(),
       num_controller_connections_(),
       forwarding_pipeline_configs_(nullptr),
       mode_(mode),
@@ -85,7 +84,6 @@ P4Service::~P4Service() {}
   {
     absl::WriterMutexLock l(&controller_lock_);
     node_id_to_controller_manager_.clear();
-    connection_ids_.clear();
   }
   {
     absl::WriterMutexLock l(&stream_response_thread_lock_);
@@ -611,8 +609,8 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, sdn_connection->GetRoleName(),
                                 sdn_connection->GetElectionId())) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED).without_logging()
-                   << "Controller with connection ID "
-                   << sdn_connection->GetName() << " is not a master";
+                   << "Controller " << sdn_connection->GetName()
+                   << " is not a master";
         } else {
           // If master, try to transmit the packet.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
@@ -632,8 +630,8 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, sdn_connection->GetRoleName(),
                                 sdn_connection->GetElectionId())) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED).without_logging()
-                   << "Controller with connection ID "
-                   << sdn_connection->GetName() << " is not a master";
+                   << "Controller " << sdn_connection->GetName()
+                   << " is not a master";
         } else {
           // If master, try to ack the digest.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
