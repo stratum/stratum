@@ -13,6 +13,8 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 
+// TODO(max): version 1.3.0 of P4Runtime does not fully support roles yet.
+// Flip/remove once landed.
 #define P4RT_HAS_ROLES 0
 
 namespace stratum {

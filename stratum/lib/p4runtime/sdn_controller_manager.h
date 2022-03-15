@@ -12,10 +12,11 @@
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 
-#define P4RUNTIME_ROLE_SDN_CONTROLLER "sdn_controller"
-
 namespace stratum {
 namespace p4runtime {
+
+// Named role for a SDN controller.
+constexpr char kP4RuntimeRoleSdnController[] = "sdn_controller";
 
 // A connection between a controller and p4rt server.
 class SdnConnection {
@@ -157,7 +158,7 @@ class SdnControllerManager {
   // Contains the roles that will receive packet in messages.
   // A copy of the packet will be sent to the primary for each role.
   absl::flat_hash_set<absl::optional<std::string>> role_receives_packet_in_{
-      P4RUNTIME_ROLE_SDN_CONTROLLER,
+      kP4RuntimeRoleSdnController,
       absl::nullopt,  // default role
   };
 };

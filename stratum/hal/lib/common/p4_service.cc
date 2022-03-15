@@ -315,13 +315,6 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid election ID.");
   }
 
-  // // Make sure this node already has a master controller and the given
-  // // election_id and the uri of the client matches those of the master.
-  // if (!IsWritePermitted(node_id, election_id, context->peer())) {
-  //   return ::grpc::Status(::grpc::StatusCode::PERMISSION_DENIED,
-  //                         "Write from non-master is not permitted.");
-  // }
-
   // Verify the request comes from the primary connection.
   if (!IsWritePermitted(node_id, *req)) {
     return ::grpc::Status(::grpc::StatusCode::PERMISSION_DENIED,
@@ -384,7 +377,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid device ID.");
   }
 
-  // // We need valid election ID for SetForwardingPipelineConfig RPC
+  // We need valid election ID for SetForwardingPipelineConfig RPC
   absl::uint128 election_id =
       absl::MakeUint128(req->election_id().high(), req->election_id().low());
   if (election_id == 0) {
@@ -392,19 +385,11 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         ::grpc::StatusCode::INVALID_ARGUMENT,
         absl::StrCat("Invalid election ID for node ", node_id, "."));
   }
-  // // Make sure this node already has a master controller and the given
-  // // election_id and the uri of the client matches those of the
-  // // master. According to the P4Runtime specification, only master can
-  // perform
-  // // SetForwardingPipelineConfig RPC.
-  // if (!IsWritePermitted(node_id, election_id, context->peer())) {
-  //   return ::grpc::Status(
-  //       ::grpc::StatusCode::PERMISSION_DENIED,
-  //       absl::StrCat("SetForwardingPipelineConfig from non-master is not "
-  //                    "permitted for node ",
-  //                    node_id, "."));
-  // }
 
+  // Make sure this node already has a master controller and the given
+  // election_id and the uri of the client matches those of the master.
+  // According to the P4Runtime specification, only master can perform
+  // SetForwardingPipelineConfig RPC.
   if (!IsWritePermitted(node_id, *req)) {
     return ::grpc::Status(
         ::grpc::StatusCode::PERMISSION_DENIED,
@@ -605,15 +590,9 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
           return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                                 "Invalid election ID.");
         }
-#if 0
-        // Try to add the controller to controllers_.
-        auto status = AddOrModifyController(node_id, connection_id, election_id,
-                                            context->peer(), stream);
-#else
         // Try to add the controller to controllers_.
         auto status = AddOrModifyController(node_id, req.arbitration(),
                                             sdn_connection.get());
-#endif
         if (!status.ok()) {
           return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
                                 status.error_message());
