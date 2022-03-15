@@ -236,10 +236,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   }
   ::util::Status status =
       WriteStringToFile(msg, FLAGS_write_req_log_file, /*append=*/true);
-  if (!status.ok()) {
-    LOG_EVERY_N(ERROR, 50) << "Failed to log the write request: "
-                           << status.error_message();
-  }
+  LOG_IF_EVERY_N(ERROR, !status.ok(), 50)
+      << "Failed to log the write request: " << status.error_message();
 }
 
 // Helper to facilitate logging the read requests to the desired log file.
@@ -271,10 +269,8 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
   ::util::Status status =
       WriteStringToFile(msg, FLAGS_read_req_log_file, /*append=*/true);
-  if (!status.ok()) {
-    LOG_EVERY_N(ERROR, 50) << "Failed to log the read request: "
-                           << status.error_message();
-  }
+  LOG_IF_EVERY_N(ERROR, !status.ok(), 50)
+      << "Failed to log the read request: " << status.error_message();
 }
 
 // Helper function to generate a StreamMessageResponse from a failed Status.
@@ -813,11 +809,9 @@ void P4Service::StreamResponseReceiveHandler(
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return;
   absl::Status status = it->second.SendStreamMessageToPrimary(resp);
-  if (!status.ok()) {
-    LOG_EVERY_N(ERROR, 500)
-        << "Can't send StreamMessageResponse " << resp.ShortDebugString()
-        << " to primary controller: " << status.ToString() << ".";
-  }
+  LOG_IF_EVERY_N(ERROR, !status.ok(), 500)
+      << "Can't send StreamMessageResponse " << resp.ShortDebugString()
+      << " to primary controller: " << status.ToString();
 }
 
 }  // namespace hal
