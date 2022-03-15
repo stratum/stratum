@@ -6,6 +6,7 @@
 
 #include "absl/numeric/int128.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/types/optional.h"
@@ -14,7 +15,7 @@
 #include "stratum/glue/gtl/map_util.h"
 
 // TODO(max): version 1.3.0 of P4Runtime does not fully support roles yet.
-// Flip/remove once landed.
+// Flip and remove once landed.
 #define P4RT_HAS_ROLES 0
 
 namespace stratum {
@@ -91,12 +92,9 @@ absl::optional<std::string> SdnConnection::GetRoleName() const {
 }
 
 std::string SdnConnection::GetName() const {
-  // TODO(max): use absl::StrCat
-  std::stringstream ss;
-  ss << "(role_name: " << PrettyPrintRoleName(role_name_)
-     << ", election_id: " << PrettyPrintElectionId(election_id_)
-     << ", uri: " << grpc_context_->peer() << ")";
-  return ss.str();
+  return absl::StrCat("(role_name: ", PrettyPrintRoleName(role_name_),
+                      ", election_id: ", PrettyPrintElectionId(election_id_),
+                      ", uri: ", grpc_context_->peer(), ")");
 }
 
 void SdnConnection::SendStreamMessageResponse(
@@ -231,6 +229,7 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
                 << PrettyPrintElectionId(new_election_id_for_connection);
     }
   }
+
   return grpc::Status::OK;
 }
 
@@ -241,10 +240,15 @@ void SdnControllerManager::Disconnect(SdnConnection* connection) {
   // disconnect it.
   if (!connection->IsInitialized()) return;
 
+  bool was_primary = connection->GetElectionId().has_value() &&
+                     (connection->GetElectionId() ==
+                      election_id_past_by_role_[connection->GetRoleName()]);
+
   // Iterate through the list connections and remove this connection.
   for (auto iter = connections_.begin(); iter != connections_.end(); ++iter) {
     if (*iter == connection) {
-      LOG(INFO) << "Dropping SDN connection for role "
+      LOG(INFO) << "Dropping " << (was_primary ? "primary" : "backup")
+                << " SDN connection for role "
                 << PrettyPrintRoleName(connection->GetRoleName())
                 << " with election ID "
                 << PrettyPrintElectionId(connection->GetElectionId()) << ".";
@@ -255,9 +259,7 @@ void SdnControllerManager::Disconnect(SdnConnection* connection) {
 
   // If connection was the primary connection we need to inform all existing
   // connections.
-  if (connection->GetElectionId().has_value() &&
-      (connection->GetElectionId() ==
-       election_id_past_by_role_[connection->GetRoleName()])) {
+  if (was_primary) {
     InformConnectionsAboutPrimaryChange(connection->GetRoleName());
   }
 }
@@ -324,7 +326,6 @@ grpc::Status SdnControllerManager::AllowRequest(
 
 int SdnControllerManager::ActiveConnections() const {
   absl::MutexLock l(&lock_);
-  // TODO(max): filter by role, if requested.
   return connections_.size();
 }
 
@@ -407,8 +408,6 @@ absl::Status SdnControllerManager::SendPacketInToPrimary(
     LOG(WARNING) << "PacketIn stream message update has to be a packet: "
                  << response.DebugString();
     return absl::InvalidArgumentError("PacketIn message must use a packet.");
-    // return gutil::InvalidArgumentErrorBuilder()
-    //        << "PacketIn message must use a packet.";
   }
   return SendStreamMessageToPrimary(response);
 }
@@ -437,7 +436,7 @@ absl::Status SdnControllerManager::SendStreamMessageToPrimary(
                  << "active primary connection: " << response.DebugString();
     return absl::FailedPreconditionError(
         "No active role has a primary connection configured to receive "
-        "PacketIn messages.");
+        "StreamMessageResponse messages.");
   }
   return absl::OkStatus();
 }

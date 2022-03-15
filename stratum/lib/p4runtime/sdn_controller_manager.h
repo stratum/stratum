@@ -90,7 +90,7 @@ class SdnControllerManager {
       ABSL_LOCKS_EXCLUDED(lock_);
 
   // Returns the number of currently active connections.
-  int ActiveConnections() const;
+  int ActiveConnections() const ABSL_LOCKS_EXCLUDED(lock_);
 
   absl::Status SendPacketInToPrimary(
       const p4::v1::StreamMessageResponse& response) ABSL_LOCKS_EXCLUDED(lock_);
@@ -121,13 +121,13 @@ class SdnControllerManager {
 
   // Device ID is used to ensure all requests are connecting to the intended
   // place.
-  uint64_t device_id_;
+  const uint64_t device_id_;
 
   // We maintain a list of all active connections. The P4 runtime spec requires
   // a number of edge cases based on values existing or not that makes
   // maintaining these connections any other container difficult. However, we
   // don't expect a large number of connections so performance shouldn't be
-  // affected.
+  // affected. These are non-owning pointers.
   //
   // Requirements for roles:
   //  * Each role can have it's own set of primary & backup connections.
