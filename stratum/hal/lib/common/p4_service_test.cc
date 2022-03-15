@@ -165,7 +165,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   int GetNumberOfActiveConnections(uint64 node_id) {
     absl::WriterMutexLock l(&p4_service_->controller_lock_);
     return p4_service_->node_id_to_controller_manager_.at(node_id)
-        .ActiveConnections({});
+        .ActiveConnections();
   }
 
   static constexpr char kForwardingPipelineConfigsTemplate[] = R"(

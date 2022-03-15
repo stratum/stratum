@@ -325,8 +325,7 @@ grpc::Status SdnControllerManager::AllowRequest(
   return AllowRequest(role_name, election_id);
 }
 
-int SdnControllerManager::ActiveConnections(
-    const absl::optional<std::string>& role_name) const {
+int SdnControllerManager::ActiveConnections() const {
   absl::MutexLock l(&lock_);
   // TODO(max): filter by role, if requested.
   return connections_.size();

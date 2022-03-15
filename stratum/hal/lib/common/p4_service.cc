@@ -730,7 +730,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   // Need to check we do not go beyond the max number of connections per node.
-  if (it->second.ActiveConnections({}) >= FLAGS_max_num_controllers_per_node) {
+  if (it->second.ActiveConnections() >= FLAGS_max_num_controllers_per_node) {
     return MAKE_ERROR(ERR_NO_RESOURCE)
            << "Cannot have more than " << FLAGS_max_num_controllers_per_node
            << " controllers for node (aka device) with ID " << node_id << ".";

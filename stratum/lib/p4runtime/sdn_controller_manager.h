@@ -88,8 +88,8 @@ class SdnControllerManager {
       const p4::v1::SetForwardingPipelineConfigRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
 
-  // Returns the number of currently active connections for the given role.
-  int ActiveConnections(const absl::optional<std::string>& role_name) const;
+  // Returns the number of currently active connections.
+  int ActiveConnections() const;
 
   absl::Status SendPacketInToPrimary(
       const p4::v1::StreamMessageResponse& response) ABSL_LOCKS_EXCLUDED(lock_);
