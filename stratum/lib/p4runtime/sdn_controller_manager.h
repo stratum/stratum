@@ -5,13 +5,14 @@
 #ifndef STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
 #define STRATUM_LIB_P4RUNTIME_SDN_CONTROLLER_MANAGER_H_
 
-#include <string>
-#include <vector>
-
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/numeric/int128.h"
+#include "absl/status/status.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+
+#define P4RUNTIME_ROLE_SDN_CONTROLLER "sdn_controller"
 
 namespace stratum {
 namespace p4runtime {
@@ -79,6 +80,7 @@ class SdnControllerManager {
   grpc::Status AllowRequest(const absl::optional<std::string>& role_name,
                             const absl::optional<absl::uint128>& election_id)
       const ABSL_LOCKS_EXCLUDED(lock_);
+
   grpc::Status AllowRequest(const p4::v1::WriteRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
   grpc::Status AllowRequest(
@@ -88,19 +90,14 @@ class SdnControllerManager {
   // Returns the number of currently active connections for the given role.
   int ActiveConnections(const absl::optional<std::string>& role_name) const;
 
-  bool SendStreamMessageToPrimary(const absl::optional<std::string>& role_name,
-                                  const p4::v1::StreamMessageResponse& response)
-      ABSL_LOCKS_EXCLUDED(lock_);
+  absl::Status SendPacketInToPrimary(
+      const p4::v1::StreamMessageResponse& response) ABSL_LOCKS_EXCLUDED(lock_);
+
+  absl::Status SendStreamMessageToPrimary(
+      const p4::v1::StreamMessageResponse& response) ABSL_LOCKS_EXCLUDED(lock_);
 
  private:
   SdnControllerManager() : device_id_(0) {}
-
-  // Goes through the current list of active connections for a role and compares
-  // their election ID values with the current primary election ID. If a new
-  // primary ID is found it will return true. Otherwise it will return false.
-  bool UpdatePrimaryConnectionState(
-      const absl::optional<std::string>& role_name)
-      ABSL_EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
   // Goes through the current list of active connections, and returns if one of
   // them is currently the primary.
@@ -152,7 +149,17 @@ class SdnControllerManager {
   //                     connection)
   absl::flat_hash_map<absl::optional<std::string>,
                       absl::optional<absl::uint128>>
-      primary_election_id_map_ ABSL_GUARDED_BY(lock_);
+      election_id_past_by_role_ ABSL_GUARDED_BY(lock_);
+
+  // Placeholder for role_config which ideally would be passed
+  // via the MasterArbitration method.
+  //
+  // Contains the roles that will receive packet in messages.
+  // A copy of the packet will be sent to the primary for each role.
+  absl::flat_hash_set<absl::optional<std::string>> role_receives_packet_in_{
+      P4RUNTIME_ROLE_SDN_CONTROLLER,
+      absl::nullopt,  // default role
+  };
 };
 
 }  // namespace p4runtime

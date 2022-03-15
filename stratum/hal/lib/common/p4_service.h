@@ -247,20 +247,13 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // Channels and threads.
   mutable absl::Mutex stream_response_thread_lock_;
 
-  // Map from node ID to the set of Controller instances corresponding to the
-  // external controller clients connected to that node. The Controller
-  // instances for each node are sorted such that the master (Controller
-  // with highest election_id) is the first element.
-  std::map<uint64, std::set<Controller, ControllerComp>> node_id_to_controllers_
-      GUARDED_BY(controller_lock_);
-
   // List of threads which send received responses up to the controller.
   std::vector<pthread_t> stream_response_reader_tids_
       GUARDED_BY(stream_response_thread_lock_);
 
-  // P4RT can accept multiple connections to a single switch for redundancy.
-  // When there is >1 connection the switch chooses a primary which is used for
-  // PacketIO, and is the only connection allowed to write updates.
+  // P4Runtime can accept multiple connections to a single switch for
+  // redundancy. When there is >1 connection the switch chooses a primary which
+  // is used for PacketIO, and is the only connection allowed to write updates.
   //
   // It is possible for connections to be made for specific roles. In which case
   // one primary connection is allowed for each distinct role.

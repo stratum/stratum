@@ -1063,10 +1063,11 @@ void P4Service::StreamResponseReceiveHandler(
   // }
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return;
-  if (!it->second.SendStreamMessageToPrimary({}, resp)) {
+  absl::Status status = it->second.SendStreamMessageToPrimary(resp);
+  if (!status.ok()) {
     LOG_EVERY_N(ERROR, 500)
         << "Can't send StreamMessageResponse " << resp.ShortDebugString()
-        << " to primary controller because stream channel is closed.";
+        << " to primary controller: " << status.ToString() << ".";
   }
 }
 
