@@ -73,10 +73,8 @@ class SdnControllerManager {
   grpc::Status HandleArbitrationUpdate(
       const p4::v1::MasterArbitrationUpdate& update, SdnConnection* controller)
       ABSL_LOCKS_EXCLUDED(lock_);
-  // G3_WARN : ABSL_EXCLUSIVE_LOCKS_REQUIRED(P4RuntimeImpl::server_state_lock_);
 
   void Disconnect(SdnConnection* connection) ABSL_LOCKS_EXCLUDED(lock_);
-  // G3_WARN ABSL_EXCLUSIVE_LOCKS_REQUIRED(P4RuntimeImpl::server_state_lock_);
 
   grpc::Status AllowRequest(const absl::optional<std::string>& role_name,
                             const absl::optional<absl::uint128>& election_id)
