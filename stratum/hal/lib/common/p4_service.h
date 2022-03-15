@@ -164,10 +164,9 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // Specifies the max number of controllers that can connect for a node.
   static constexpr size_t kMaxNumControllerPerNode = 5;
 
-  // Finds a new connection ID for a newly connected controller and adds it to
-  // connection_ids_. Checks the number of active connections as well to make
-  // sure we do not end with so many dangling threads.
-  ::util::StatusOr<uint64> FindNewConnectionId()
+  // Checks the number of active connections as well to make sure we do not end
+  // with so many dangling threads.
+  ::util::Status CheckAndCountConnectionLimit()
       LOCKS_EXCLUDED(controller_lock_);
 
   // Adds a new controller to the controllers_ set. If the election_id in the
@@ -270,6 +269,10 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // the ID of the new connection. Also, whenever the connection is dropped
   // we remove the connection ID from connection_ids_.
   std::set<uint64> connection_ids_ GUARDED_BY(controller_lock_);
+
+  // Holds the number of currently connected controllers across all nodes. This
+  // is tracked for resource limiting.
+  int num_controller_connections_ GUARDED_BY(controller_lock_);
 
   // Forwarding pipeline configs of all the switching nodes. Updated as we push
   // forwarding pipeline configs for new or existing nodes.

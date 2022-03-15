@@ -58,6 +58,7 @@ P4Service::P4Service(OperationMode mode, SwitchInterface* switch_interface,
                      ErrorBuffer* error_buffer)
     : node_id_to_controller_manager_(),
       connection_ids_(),
+      num_controller_connections_(),
       forwarding_pipeline_configs_(nullptr),
       mode_(mode),
       switch_interface_(ABSL_DIE_IF_NULL(switch_interface)),
@@ -547,13 +548,11 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   // 3- At any point of time, only the master stream is capable of sending
   //    and receiving packets.
 
-  // First thing to do is to find a new ID for this connection.
-  auto ret = FindNewConnectionId();
+  // First thing to do is to check the connection limit and increment it.
+  auto ret = CheckAndCountConnectionLimit();
   if (!ret.ok()) {
-    return ::grpc::Status(ToGrpcCode(ret.status().CanonicalCode()),
-                          ret.status().error_message());
+    return ::grpc::Status(ToGrpcCode(ret.CanonicalCode()), ret.error_message());
   }
-  uint64 connection_id = ret.ValueOrDie();
 
   // We create a unique SDN connection object for every active connection.
   auto sdn_connection =
@@ -612,8 +611,8 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, sdn_connection->GetRoleName(),
                                 sdn_connection->GetElectionId())) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED).without_logging()
-                   << "Controller with connection ID " << connection_id
-                   << " is not a master";
+                   << "Controller with connection ID "
+                   << sdn_connection->GetName() << " is not a master";
         } else {
           // If master, try to transmit the packet.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
@@ -633,8 +632,8 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
         if (!IsMasterController(node_id, sdn_connection->GetRoleName(),
                                 sdn_connection->GetElectionId())) {
           status = MAKE_ERROR(ERR_PERMISSION_DENIED).without_logging()
-                   << "Controller with connection ID " << connection_id
-                   << " is not a master";
+                   << "Controller with connection ID "
+                   << sdn_connection->GetName() << " is not a master";
         } else {
           // If master, try to ack the digest.
           status = switch_interface_->HandleStreamMessageRequest(node_id, req);
@@ -669,23 +668,17 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   return ::grpc::Status::OK;
 }
 
-::util::StatusOr<uint64> P4Service::FindNewConnectionId() {
+::util::Status P4Service::CheckAndCountConnectionLimit() {
   absl::WriterMutexLock l(&controller_lock_);
-  if (static_cast<int>(connection_ids_.size()) >=
-      FLAGS_max_num_controller_connections) {
+
+  if (num_controller_connections_ >= FLAGS_max_num_controller_connections) {
     return MAKE_ERROR(ERR_NO_RESOURCE)
            << "Can have max " << FLAGS_max_num_controller_connections
            << " active/inactive streams for all the node.";
   }
-  uint64 max_connection_id =
-      connection_ids_.empty() ? 0 : *connection_ids_.end();
-  for (uint64 i = 1; i <= max_connection_id + 1; ++i) {
-    if (!connection_ids_.count(i)) {
-      connection_ids_.insert(i);
-      return i;
-    }
-  }
-  return MAKE_ERROR(ERR_NO_RESOURCE) << "No free connection id.";
+  ++num_controller_connections_;
+
+  return ::util::OkStatus();
 }
 
 ::util::Status P4Service::AddOrModifyController(
@@ -751,6 +744,7 @@ void P4Service::RemoveController(uint64 node_id,
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return;
   it->second.Disconnect(connection);
+  --num_controller_connections_;
 }
 
 bool P4Service::IsWritePermitted(uint64 node_id,
