@@ -234,7 +234,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
                                     const ::p4::v1::StreamMessageResponse& resp)
       LOCKS_EXCLUDED(controller_lock_);
 
-  // Mutex lock used to protect node_id_to_controllers_ which is updated
+  // Mutex lock used to protect node_id_to_controller_manager_ which is updated
   // every time mastership for any of the controllers connected to each node is
   // modified, or when a controller is disconnected.
   mutable absl::Mutex controller_lock_;

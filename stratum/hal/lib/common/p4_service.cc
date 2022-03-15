@@ -56,8 +56,7 @@ namespace hal {
 P4Service::P4Service(OperationMode mode, SwitchInterface* switch_interface,
                      AuthPolicyChecker* auth_policy_checker,
                      ErrorBuffer* error_buffer)
-    : /*node_id_to_controllers_(),*/
-      node_id_to_controller_manager_(),
+    : node_id_to_controller_manager_(),
       connection_ids_(),
       forwarding_pipeline_configs_(nullptr),
       mode_(mode),
@@ -84,7 +83,6 @@ P4Service::~P4Service() {}
 ::util::Status P4Service::Teardown() {
   {
     absl::WriterMutexLock l(&controller_lock_);
-    // node_id_to_controllers_.clear();
     node_id_to_controller_manager_.clear();
     connection_ids_.clear();
   }
@@ -768,200 +766,6 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   return ::util::OkStatus();
 }
 
-// ::util::Status P4Service::AddOrModifyController(
-//     uint64 node_id, uint64 connection_id, absl::uint128 election_id,
-//     const std::string& uri, ServerStreamChannelReaderWriter* stream) {
-//   // To be called by all the threads handling controller connections.
-//   absl::WriterMutexLock l(&controller_lock_);
-//   auto it = node_id_to_controllers_.find(node_id);
-//   if (it == node_id_to_controllers_.end()) {
-//     absl::WriterMutexLock l(&stream_response_thread_lock_);
-//     // This is the first time we are hearing about this node. Lets try to add
-//     // an RX response writer for it. If the node_id is invalid, registration
-//     // will fail.
-//     std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>> channel =
-//         Channel<::p4::v1::StreamMessageResponse>::Create(128);
-//     // Create the writer and register with the SwitchInterface.
-//     auto writer =
-//         std::make_shared<ChannelWriterWrapper<::p4::v1::StreamMessageResponse>>(
-//             ChannelWriter<::p4::v1::StreamMessageResponse>::Create(channel));
-//     RETURN_IF_ERROR(switch_interface_->RegisterStreamMessageResponseWriter(
-//         node_id, writer));
-//     // Create the reader and pass it to a new thread.
-//     auto reader =
-//         ChannelReader<::p4::v1::StreamMessageResponse>::Create(channel);
-//     pthread_t tid = 0;
-//     int ret = pthread_create(&tid, nullptr, StreamResponseReceiveThreadFunc,
-//                              new ReaderArgs<::p4::v1::StreamMessageResponse>{
-//                                  this, std::move(reader), node_id});
-//     if (ret) {
-//       // Clean up state and return error.
-//       RETURN_IF_ERROR(
-//           switch_interface_->UnregisterStreamMessageResponseWriter(node_id));
-//       return MAKE_ERROR(ERR_INTERNAL)
-//              << "Failed to create packet-in receiver thread for node "
-//              << node_id << " with error " << ret << ".";
-//     }
-//     // Store Channel and tid for Teardown().
-//     stream_response_reader_tids_.push_back(tid);
-//     stream_response_channels_[node_id] = channel;
-//     node_id_to_controllers_[node_id] = {};
-//     it = node_id_to_controllers_.find(node_id);
-//   }
-
-//   // Need to see if this controller was master before we process this new
-//   // request.
-//   bool was_master = (!it->second.empty() &&
-//                      connection_id == it->second.begin()->connection_id());
-
-//   // Need to check we do not go beyond the max number of connections per
-//   node. if (static_cast<int>(it->second.size()) >=
-//       FLAGS_max_num_controllers_per_node) {
-//     return MAKE_ERROR(ERR_NO_RESOURCE)
-//            << "Cannot have more than " << FLAGS_max_num_controllers_per_node
-//            << " controllers for node (aka device) with ID " << node_id <<
-//            ".";
-//   }
-
-//   // Next see if this is a new controller for this node, or this is an
-//   existing
-//   // one. If there exist a controller with this connection_id remove it
-//   first. auto cont = std::find_if(
-//       it->second.begin(), it->second.end(),
-//       [=](const Controller& c) { return c.connection_id() == connection_id;
-//       });
-//   if (cont != it->second.end()) {
-//     it->second.erase(cont);
-//   }
-
-//   // Now add the controller to the set of controllers for this node, if its
-//   // election ID is unique. The add will possibly lead to a new master.
-//   Controller controller(connection_id, election_id, uri, stream);
-//   if (!gtl::InsertIfNotPresent(&it->second, controller)) {
-//     return MAKE_ERROR(ERR_INVALID_PARAM)
-//            << "Duplicate election ID " << election_id << " for node " <<
-//            node_id
-//            << ".";
-//   }
-
-//   // Find the most updated master. Also find out if this controller is master
-//   // after this new Controller instance was inserted.
-//   auto master = it->second.begin();  // points to master
-//   bool is_master = (election_id == master->election_id());
-
-//   // Now we need to do the following:
-//   // - If this new controller is master (no matter if it was a master before
-//   //   or not), we need to send its election_id to all connected controllers
-//   //   for this node. The arbitration token sent back to all the connected
-//   //   controllers will have OK status for the master and non-OK for slaves.
-//   // - The controller was master but it is not master now, this means a
-//   master
-//   //   change. We need to notify all connected controllers in this case as
-//   well.
-//   // - If this new controller is not master now and it was not master before,
-//   //   we just need to send the arbitration token with non-OK status to this
-//   //   controller.
-//   ::p4::v1::StreamMessageResponse resp;
-//   resp.mutable_arbitration()->set_device_id(node_id);
-//   resp.mutable_arbitration()->mutable_election_id()->set_high(
-//       master->election_id_high());
-//   resp.mutable_arbitration()->mutable_election_id()->set_low(
-//       master->election_id_low());
-//   if (is_master || was_master) {
-//     resp.mutable_arbitration()->mutable_status()->set_code(::google::rpc::OK);
-//     for (const auto& c : it->second) {
-//       if (!c.stream()->Write(resp)) {
-//         return MAKE_ERROR(ERR_INTERNAL)
-//                << "Failed to write to a stream for node " << node_id << ".";
-//       }
-//       // For non masters.
-//       resp.mutable_arbitration()->mutable_status()->set_code(
-//           ::google::rpc::ALREADY_EXISTS);
-//       resp.mutable_arbitration()->mutable_status()->set_message(
-//           "You are not my master!");
-//     }
-//   } else {
-//     resp.mutable_arbitration()->mutable_status()->set_code(
-//         ::google::rpc::ALREADY_EXISTS);
-//     resp.mutable_arbitration()->mutable_status()->set_message(
-//         "You are not my master!");
-//     if (!stream->Write(resp)) {
-//       return MAKE_ERROR(ERR_INTERNAL)
-//              << "Failed to write to a stream for node " << node_id << ".";
-//     }
-//   }
-
-//   LOG(INFO) << "Controller " << controller.Name() << " is connected as "
-//             << (is_master ? "MASTER" : "SLAVE")
-//             << " for node (aka device) with ID " << node_id << ".";
-
-//   return ::util::OkStatus();
-// }
-
-// void P4Service::RemoveController(uint64 node_id, uint64 connection_id) {
-//   absl::WriterMutexLock l(&controller_lock_);
-//   connection_ids_.erase(connection_id);
-//   auto it = node_id_to_controllers_.find(node_id);
-//   if (it == node_id_to_controllers_.end()) return;
-//   auto controller = std::find_if(
-//       it->second.begin(), it->second.end(),
-//       [=](const Controller& c) { return c.connection_id() == connection_id;
-//       });
-//   if (controller != it->second.end()) {
-//     // Need to see if we are removing a master. Removing a master means
-//     // mastership change.
-//     bool is_master =
-//         controller->connection_id() == it->second.begin()->connection_id();
-//     // Get the name of the controller before removing it for logging
-//     purposes. std::string name = controller->Name();
-//     it->second.erase(controller);
-//     // Log the transition. Very useful for debugging. Also if there was a
-//     change
-//     // in mastership, let all other controller know.
-//     if (is_master) {
-//       if (it->second.empty()) {
-//         LOG(INFO) << "Controller " << name << " which was MASTER for node "
-//                   << "(aka device) with ID " << node_id
-//                   << " is disconnected. The node is "
-//                   << "now orphan :(";
-//       } else {
-//         LOG(INFO) << "Controller " << name << " which was MASTER for node "
-//                   << "(aka device) with ID " << node_id
-//                   << " is disconnected. New master is "
-//                   << it->second.begin()->Name();
-//         // We need to let all the connected controller know about this
-//         // mastership change.
-//         ::p4::v1::StreamMessageResponse resp;
-//         resp.mutable_arbitration()->set_device_id(node_id);
-//         resp.mutable_arbitration()->mutable_election_id()->set_high(
-//             it->second.begin()->election_id_high());
-//         resp.mutable_arbitration()->mutable_election_id()->set_low(
-//             it->second.begin()->election_id_low());
-//         resp.mutable_arbitration()->mutable_status()->set_code(
-//             ::google::rpc::OK);
-//         for (const auto& c : it->second) {
-//           c.stream()->Write(resp);  // Best effort.
-//           // For non masters.
-//           resp.mutable_arbitration()->mutable_status()->set_code(
-//               ::google::rpc::ALREADY_EXISTS);
-//           resp.mutable_arbitration()->mutable_status()->set_message(
-//               "You are not my master!");
-//         }
-//       }
-//     } else {
-//       if (it->second.empty()) {
-//         LOG(INFO) << "Controller " << name << " which was SLAVE for node "
-//                   << "(aka device) with ID " << node_id
-//                   << " is disconnected. The node is now orphan :(";
-//       } else {
-//         LOG(INFO) << "Controller " << name << " which was SLAVE for node "
-//                   << "(aka device) with ID " << node_id << " is
-//                   disconnected.";
-//       }
-//     }
-//   }
-// }
-
 void P4Service::RemoveController(uint64 node_id,
                                  p4runtime::SdnConnection* connection) {
   absl::WriterMutexLock l(&controller_lock_);
@@ -969,16 +773,6 @@ void P4Service::RemoveController(uint64 node_id,
   if (it == node_id_to_controller_manager_.end()) return;
   it->second.Disconnect(connection);
 }
-
-// bool P4Service::IsWritePermitted(uint64 node_id, absl::uint128 election_id,
-//                                  const std::string& uri) const {
-//   absl::ReaderMutexLock l(&controller_lock_);
-//   auto it = node_id_to_controllers_.find(node_id);
-//   if (it == node_id_to_controllers_.end() || it->second.empty()) return
-//   false;
-//   // TODO(unknown): Find a way to check for uri as well.
-//   return it->second.begin()->election_id() == election_id;
-// }
 
 bool P4Service::IsWritePermitted(uint64 node_id,
                                  const p4::v1::WriteRequest& req) const {
@@ -996,14 +790,6 @@ bool P4Service::IsWritePermitted(
   if (it == node_id_to_controller_manager_.end()) return false;
   return it->second.AllowRequest(req).ok();
 }
-
-// bool P4Service::IsMasterController(uint64 node_id, uint64 connection_id)
-// const {
-//   absl::ReaderMutexLock l(&controller_lock_);
-//   auto it = node_id_to_controllers_.find(node_id);
-//   if (it == node_id_to_controllers_.end() || it->second.empty()) return
-//   false; return it->second.begin()->connection_id() == connection_id;
-// }
 
 bool P4Service::IsMasterController(
     uint64 node_id, const absl::optional<std::string>& role_name,
@@ -1053,14 +839,6 @@ void P4Service::StreamResponseReceiveHandler(
   }
   // We send the responses only to the master controller stream for this node.
   absl::ReaderMutexLock l(&controller_lock_);
-  // auto it = node_id_to_controllers_.find(node_id);
-  // if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  // if (!it->second.begin()->stream()->Write(resp)) {
-  //   LOG_EVERY_N(ERROR, 500)
-  //       << "Can't send StreamMessageResponse " << resp.ShortDebugString()
-  //       << " to controller " << it->second.begin()->Name()
-  //       << " because stream channel is closed.";
-  // }
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return;
   absl::Status status = it->second.SendStreamMessageToPrimary(resp);
