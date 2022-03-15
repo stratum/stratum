@@ -387,7 +387,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   // Make sure this node already has a master controller and the given
-  // election_id and the uri of the client matches those of the master.
+  // election_id and the role of the client matches those of the master.
   // According to the P4Runtime specification, only master can perform
   // SetForwardingPipelineConfig RPC.
   if (!IsWritePermitted(node_id, *req)) {
@@ -695,7 +695,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   absl::WriterMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) {
-    absl::WriterMutexLock l(&stream_response_thread_lock_);
+    absl::WriterMutexLock lg(&stream_response_thread_lock_);
     // This is the first time we are hearing about this node. Lets try to add
     // an RX response writer for it. If the node_id is invalid, registration
     // will fail.
