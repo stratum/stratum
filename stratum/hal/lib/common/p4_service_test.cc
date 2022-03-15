@@ -978,7 +978,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   EXPECT_CALL(*switch_mock_,
               HandleStreamMessageRequest(kNodeId1, EqualsProto(req3)))
       .WillOnce(Return(::util::OkStatus()));
-  LOG(ERROR) << "0";
 
   //----------------------------------------------------------------------------
   // Before any connection, any PacketIn received from the CPU will be
@@ -1008,7 +1007,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
   ASSERT_TRUE(stream1->Write(req));
-  LOG(ERROR) << "1";
 
   // Read the mastership info back.
   ASSERT_TRUE(stream1->Read(&resp));
@@ -1017,7 +1015,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId1),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
-  LOG(ERROR) << "2";
 
   //----------------------------------------------------------------------------
   // Controller #2 connects and since it has higher election_id it becomes the
@@ -1037,7 +1034,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
-  LOG(ERROR) << "3";
 
   ASSERT_TRUE(stream2->Read(&resp));
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
@@ -1045,13 +1041,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
-  LOG(ERROR) << "4";
 
   //----------------------------------------------------------------------------
   // Controller #2 connects again with the same election_id. Controller #2 will
   // remain master.
   ASSERT_TRUE(stream2->Write(req));
-  LOG(ERROR) << "5";
 
   // Read the mastership info back. Similar to the previous case, it will be
   // sent to Controller #1 and #2.
@@ -1061,7 +1055,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
-  LOG(ERROR) << "6";
 
   ASSERT_TRUE(stream2->Read(&resp));
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
@@ -1069,7 +1062,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
-  LOG(ERROR) << "7";
 
   //----------------------------------------------------------------------------
   // Controller #1 connects again with the same election_id. Controller #2 will
@@ -1089,7 +1081,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
-  LOG(ERROR) << "8: " << resp.ShortDebugString();
   ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
@@ -1101,7 +1092,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1 - 1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1 - 1));
-  LOG(ERROR) << "9: " << req.ShortDebugString();
   ASSERT_TRUE(stream2->Write(req));
   absl::SleepFor(absl::Milliseconds(500));
   ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
@@ -1111,7 +1101,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   // master. The election ID will be the highest ever seen by the controller so
   // far, i.e. kElectionId2.
   ASSERT_TRUE(stream1->Read(&resp));
-  LOG(ERROR) << "10: " << resp.ShortDebugString();
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
@@ -1119,7 +1108,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
 
   ASSERT_TRUE(stream2->Read(&resp));
-  LOG(ERROR) << "11: " << resp.ShortDebugString();
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
@@ -1136,12 +1124,10 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128Low64(kElectionId2));
   ASSERT_TRUE(stream2->Write(req));
 
-  LOG(ERROR) << "12: " << req.ShortDebugString();
   // Read the mastership info back. It will be sent to Controller #1 and #2.
   // Status will be OK for Controller #2 and non-OK for Controller #1.
 
   ASSERT_TRUE(stream1->Read(&resp));
-  LOG(ERROR) << "13: " << resp.ShortDebugString();
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
@@ -1149,7 +1135,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
 
   ASSERT_TRUE(stream2->Read(&resp));
-  LOG(ERROR) << "14: " << resp.ShortDebugString();
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
@@ -1232,7 +1217,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
-  LOG(ERROR) << "15";
 
   //----------------------------------------------------------------------------
   // Controller #3 promotes itself to master again.
@@ -1266,7 +1250,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   OnPacketReceive(packet3);
 
   ASSERT_TRUE(stream3->Read(&resp));
-  LOG(ERROR) << "16";
   ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
 
   //----------------------------------------------------------------------------
@@ -1275,7 +1258,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   OnDigestListReceive(digest_list1);
 
   ASSERT_TRUE(stream3->Read(&resp));
-  LOG(ERROR) << "17";
   ASSERT_TRUE(ProtoEqual(resp.digest(), digest_list1));
 
   //----------------------------------------------------------------------------
