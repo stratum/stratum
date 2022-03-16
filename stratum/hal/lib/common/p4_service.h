@@ -138,7 +138,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
       uint64 node_id, const p4::v1::MasterArbitrationUpdate& update,
       p4runtime::SdnConnection* controller) LOCKS_EXCLUDED(controller_lock_);
 
-  // Removes an existing controller from the controllers manager given its
+  // Removes an existing controller from the controller manager given its
   // stream. To be called after stream from an existing controller is broken
   // (e.g. controller is disconnected).
   void RemoveController(uint64 node_id, p4runtime::SdnConnection* connection)
