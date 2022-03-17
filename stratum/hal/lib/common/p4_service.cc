@@ -712,6 +712,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
     // Store Channel and tid for Teardown().
     stream_response_reader_tids_.push_back(tid);
     stream_response_channels_[node_id] = channel;
+    // SdnControllerManager must be constructed in-place, as it's not moveable.
     node_id_to_controller_manager_.emplace(node_id, node_id);
     it = node_id_to_controller_manager_.find(node_id);
   }
