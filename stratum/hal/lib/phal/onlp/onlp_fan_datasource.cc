@@ -107,7 +107,7 @@ OnlpFanDataSource::OnlpFanDataSource(int fan_id, OnlpInterface* onlp_interface,
   // to squeeze a double into an 'int', with an error if
   // it doesn't fit.
   if (val > SHRT_MAX) {
-    RETURN_ERROR() << "Set Fan RPM bigger than an integer";
+    return MAKE_ERROR() << "Set Fan RPM bigger than an integer";
   }
   int onlp_val = static_cast<int>(val);
   return onlp_stub_->SetFanRpm(fan_oid_, onlp_val);

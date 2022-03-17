@@ -19,28 +19,18 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.3.1 (Extended support for legacy switches)
- - 9.5.0 (Recommended; LTS release)
+ - 9.5.0 (LTS release)
+ - 9.5.2 (Recommended; LTS release)
  - ~~9.6.0~~ (skipped)
  - 9.7.0 (experimental; stratum_bfrt only)
+ - 9.7.1 (experimental; stratum_bfrt only)
+ - 9.8.0 (experimental; stratum_bfrt only)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
 
 ```bash
 export SDE_TAR=<path to tar>/bf-sde-<SDE_VERSION>.tgz
-```
-
-__Extended support for 9.3.1__: SDE versions 9.3.2+ drop support for some
-pre-production Tofino switches that are used by the community. Tofino A0 is no
-longer support by Intel, but we plan to keep `9.3.1` for awhile for users who
-want to continue to use these devices.
-
-If you see error regarding the CPU port when starting Stratum, you should try
-downgrading to `9.3.1`.
-
-```
-2021-05-05 01:33:43 BF_PIPE ERROR - Error: Port <CPU port number> is stuck
 ```
 
 *__SDE Deprecation Policy:__ We support the latest SDE released by the Intel
@@ -183,9 +173,9 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.5.0
+export SDE_VERSION=9.5.2
 export STRATUM_TARGET=stratum_bfrt
-docker build -t stratumproject/stratum-bfrt:$SDE_VERSION \
+docker build -t stratumproject/stratum-bfrt:latest-$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f stratum/hal/bin/barefoot/docker/Dockerfile \
   bazel-bin/stratum/hal/bin/barefoot
@@ -206,7 +196,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bfrt:9.5.0 -o stratum-bfrt-9.5.0-docker.tar
+docker save stratumproject/stratum-bfrt:9.5.2 -o stratum-bfrt-9.5.2-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally

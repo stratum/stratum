@@ -45,7 +45,7 @@ OnlpSfpConfigurator::Make(std::shared_ptr<OnlpSfpDataSource> datasource,
 
 ::util::Status OnlpSfpConfigurator::HandleOidStatusChange(
     const OidInfo& oid_info) {
-  CHECK_RETURN_IF_FALSE(GetOid() == oid_info.GetHeader()->id)
+  RET_CHECK(GetOid() == oid_info.GetHeader()->id)
       << "Status change event oid " << oid_info.GetHeader()->id
       << " does not match configurator oid: " << GetOid();
 
@@ -66,7 +66,7 @@ OnlpSfpConfigurator::Make(std::shared_ptr<OnlpSfpDataSource> datasource,
       break;
 
     default:
-      RETURN_ERROR() << "Unknown SFP event state " << state << ".";
+      return MAKE_ERROR() << "Unknown SFP event state " << state << ".";
   }
 
   return ::util::OkStatus();

@@ -2,11 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/utils.h"
 
-#include "stratum/lib/constants.h"
 #include "gtest/gtest.h"
+#include "stratum/lib/constants.h"
 
 namespace stratum {
 namespace hal {

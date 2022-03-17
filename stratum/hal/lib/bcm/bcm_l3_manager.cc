@@ -2,16 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+
 #include <algorithm>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+#include "absl/memory/memory.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -71,7 +72,7 @@ BcmL3Manager::~BcmL3Manager() {}
 
 ::util::StatusOr<int> BcmL3Manager::FindOrCreateNonMultipathNexthop(
     const BcmNonMultipathNexthop& nexthop) {
-  CHECK_RETURN_IF_FALSE(nexthop.unit() == unit_)
+  RET_CHECK(nexthop.unit() == unit_)
       << "Received non-multipath nexthop for unit " << nexthop.unit()
       << " on unit " << unit_ << ".";
   int vlan = nexthop.vlan();
@@ -151,7 +152,7 @@ BcmL3Manager::~BcmL3Manager() {}
 
 ::util::StatusOr<int> BcmL3Manager::FindOrCreateMultipathNexthop(
     const BcmMultipathNexthop& nexthop) {
-  CHECK_RETURN_IF_FALSE(nexthop.unit() == unit_)
+  RET_CHECK(nexthop.unit() == unit_)
       << "Received multipath nexthop for unit " << nexthop.unit() << " on unit "
       << unit_ << ".";
   ASSIGN_OR_RETURN(std::vector<int> member_ids, FindEcmpGroupMembers(nexthop));
@@ -184,7 +185,7 @@ BcmL3Manager::~BcmL3Manager() {}
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid egress_intf_id: " << egress_intf_id << ".";
   }
-  CHECK_RETURN_IF_FALSE(nexthop.unit() == unit_)
+  RET_CHECK(nexthop.unit() == unit_)
       << "Received non-multipath nexthop for unit " << nexthop.unit()
       << " on unit " << unit_ << ".";
   int vlan = nexthop.vlan();
@@ -271,7 +272,7 @@ BcmL3Manager::~BcmL3Manager() {}
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid egress_intf_id: " << egress_intf_id << ".";
   }
-  CHECK_RETURN_IF_FALSE(nexthop.unit() == unit_)
+  RET_CHECK(nexthop.unit() == unit_)
       << "Received multipath nexthop for unit " << nexthop.unit() << " on unit "
       << unit_ << ".";
   ASSIGN_OR_RETURN(std::vector<int> member_ids, FindEcmpGroupMembers(nexthop));
@@ -334,7 +335,7 @@ BcmL3Manager::~BcmL3Manager() {}
 
 ::util::Status BcmL3Manager::InsertLpmOrHostFlow(
     const BcmFlowEntry& bcm_flow_entry) {
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+  RET_CHECK(bcm_flow_entry.unit() == unit_)
       << "Received L3 flow for unit " << bcm_flow_entry.unit() << " on unit "
       << unit_ << ".";
   const auto bcm_table_type = bcm_flow_entry.bcm_table_type();
@@ -438,7 +439,7 @@ BcmL3Manager::~BcmL3Manager() {}
 
 ::util::Status BcmL3Manager::DeleteLpmOrHostFlow(
     const BcmFlowEntry& bcm_flow_entry) {
-  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+  RET_CHECK(bcm_flow_entry.unit() == unit_)
       << "Received L3 flow for unit " << bcm_flow_entry.unit() << " on unit "
       << unit_ << ".";
   const auto bcm_table_type = bcm_flow_entry.bcm_table_type();
@@ -503,8 +504,8 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
         if (key->mask_ipv4 != 0 &&
             bcm_table_type == BcmFlowEntry::BCM_TABLE_IPV4_HOST) {
           return MAKE_ERROR(ERR_INVALID_PARAM)
-                  << "Must not specify mask on host dst routes "
-                  << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
+                 << "Must not specify mask on host dst routes "
+                 << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
         }
       }
       break;
@@ -703,10 +704,10 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
 
 ::util::Status BcmL3Manager::DecrementRefCount(int router_intf_id) {
   uint32* ref_count = gtl::FindOrNull(router_intf_ref_count_, router_intf_id);
-  CHECK_RETURN_IF_FALSE(ref_count != nullptr)
+  RET_CHECK(ref_count != nullptr)
       << "Inconsistent state. router_intf_id: " << router_intf_id
       << " not in router_intf_ref_count_ map.";
-  CHECK_RETURN_IF_FALSE(*ref_count > 0)
+  RET_CHECK(*ref_count > 0)
       << "Inconsistent state. router_intf_id: " << router_intf_id
       << " has zero ref count.";
   (*ref_count)--;

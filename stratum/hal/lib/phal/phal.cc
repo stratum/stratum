@@ -65,11 +65,9 @@ Phal* Phal::CreateSingleton() {
     // Set up ONLP plugin.
     if (FLAGS_enable_onlp) {
       auto* onlp_wrapper = onlp::OnlpWrapper::CreateSingleton();
-      CHECK_RETURN_IF_FALSE(onlp_wrapper != nullptr)
-          << "Failed to create ONLP wrapper.";
+      RET_CHECK(onlp_wrapper != nullptr) << "Failed to create ONLP wrapper.";
       auto* onlp_phal = onlp::OnlpPhal::CreateSingleton(onlp_wrapper);
-      CHECK_RETURN_IF_FALSE(onlp_phal != nullptr)
-          << "Failed to create ONLP plugin.";
+      RET_CHECK(onlp_phal != nullptr) << "Failed to create ONLP plugin.";
       phal_interfaces_.push_back(onlp_phal);
       ASSIGN_OR_RETURN(auto configurator, onlp::OnlpSwitchConfigurator::Make(
                                               onlp_phal, onlp_wrapper));

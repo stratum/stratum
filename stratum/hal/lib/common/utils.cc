@@ -6,9 +6,10 @@
 
 #include <cfenv>  // NOLINT
 #include <cmath>
-#include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
 
+#include "absl/strings/str_replace.h"
+#include "re2/re2.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
@@ -280,7 +281,7 @@ uint64 ConvertStringToSpeedBps(const std::string& speed_string) {
   } else if (speed_string == "SPEED_100GB") {
     return kHundredGigBps;
   } else {
-    return 0LL;
+    return 0ull;
   }
 }
 
@@ -316,23 +317,24 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
 }
 
 std::string MacAddressToYangString(const uint64& mac_address) {
-  return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
-                         (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
-                         (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
-                         mac_address & 0xFF);
+  return absl::StrFormat("%02x:%02x:%02x:%02x:%02x:%02x",
+                         (mac_address >> 40) & 0xFF, (mac_address >> 32) & 0xFF,
+                         (mac_address >> 24) & 0xFF, (mac_address >> 16) & 0xFF,
+                         (mac_address >> 8) & 0xFF, mac_address & 0xFF);
 }
 
-uint64 YangStringToMacAddress(const std::string& yang_string) {
-  std::string tmp_str = yang_string;
-  // Remove colons
-  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
-                tmp_str.end());
-  return strtoull(tmp_str.c_str(), NULL, 16);
-}
+::util::StatusOr<uint64> YangStringToMacAddress(
+    const std::string& yang_string) {
+  RET_CHECK(
+      RE2::FullMatch(yang_string, R"#(^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$)#"))
+      << "Provided string " << yang_string << " is not a valid MAC address.";
+  uint64 mac_address;
+  // Remove colons and parse as hex number.
+  // We'd rather use an Abseil internal function than std::strtoull.
+  RET_CHECK(absl::numbers_internal::safe_strtou64_base(
+      absl::StrReplaceAll(yang_string, {{":", ""}}), &mac_address, 16));
 
-bool IsMacAddressValid(const std::string& mac_address) {
-  const std::regex mac_address_regex(kMacAddressRegex);
-  return regex_match(mac_address, mac_address_regex);
+  return mac_address;
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
@@ -451,8 +453,8 @@ uint64 ConvertMHzToHz(const uint64& val) { return val * 1000000; }
     logging_config->first = "0";
     logging_config->second = "2";
   } else {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Invalid severity string \"" << severity_string << "\".";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Invalid severity string \"" << severity_string << "\".";
   }
 
   return ::util::OkStatus();

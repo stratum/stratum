@@ -15,22 +15,32 @@
 #include "stratum/glue/status/statusor.h"
 
 namespace stratum {
-using ::grpc::experimental::FileWatcherCertificateProvider;
-using ::grpc::experimental::TlsServerCredentials;
-using ::grpc::experimental::TlsServerCredentialsOptions;
 
 // CredentialsManager manages the server credentials for (external facing) gRPC
 // servers. It handles starting and shutting down TSI as well as generating the
-// server credentials. This class is supposed to be created
-// once for each binary.
+// server credentials. This class is supposed to be created once for each
+// binary.
 class CredentialsManager {
  public:
   virtual ~CredentialsManager();
 
-  // Generates server credentials for an external facing gRPC
-  // server.
+  // Generates server credentials for an external facing gRPC server.
   virtual std::shared_ptr<::grpc::ServerCredentials>
   GenerateExternalFacingServerCredentials() const;
+
+  // Generates client credentials for contacting an external facing gRPC server.
+  virtual std::shared_ptr<::grpc::ChannelCredentials>
+  GenerateExternalFacingClientCredentials() const;
+
+  // Loads new server credentials.
+  virtual ::util::Status LoadNewServerCredentials(const std::string& ca_cert,
+                                                  const std::string& cert,
+                                                  const std::string& key);
+
+  // Loads new client credentials.
+  virtual ::util::Status LoadNewClientCredentials(const std::string& ca_cert,
+                                                  const std::string& cert,
+                                                  const std::string& key);
 
   // Factory functions for creating the instance of the class.
   static ::util::StatusOr<std::unique_ptr<CredentialsManager>> CreateInstance();
@@ -39,22 +49,20 @@ class CredentialsManager {
   CredentialsManager(const CredentialsManager&) = delete;
   CredentialsManager& operator=(const CredentialsManager&) = delete;
 
-  // Loads new credentials
-  ::util::Status LoadNewCredential(const std::string ca_cert,
-                                   const std::string cert,
-                                   const std::string key);
-
  protected:
   // Default constructor. To be called by the Mock class instance as well as
   // CreateInstance().
   CredentialsManager();
 
  private:
+  static constexpr unsigned int kFileRefreshIntervalSeconds = 1;
+
   // Function to initialize the credentials manager.
   ::util::Status Initialize();
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
-  std::shared_ptr<TlsServerCredentialsOptions> tls_opts_;
-  std::shared_ptr<FileWatcherCertificateProvider> certificate_provider_;
+  std::shared_ptr<::grpc::ChannelCredentials> client_credentials_;
+
+  friend class CredentialsManagerTest;
 };
 
 }  // namespace stratum

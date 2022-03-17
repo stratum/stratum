@@ -59,13 +59,13 @@ Procmon::~Procmon() {
 }
 
 ::util::Status Procmon::Initialize(const ProcmonConfig& config) {
-  CHECK_RETURN_IF_FALSE(config.client_processes_size() > 0)
+  RET_CHECK(config.client_processes_size() > 0)
       << "Cannot start procmon with no managed processes.";
   config_ = config;
   // Start the monitor thread.
   absl::MutexLock lock(&monitor_thread_lock_);
-  CHECK_RETURN_IF_FALSE(!pthread_create(
-      &monitor_thread_id_, nullptr, &Procmon::StartMonitorThreadFunc, this));
+  RET_CHECK(!pthread_create(&monitor_thread_id_, nullptr,
+                            &Procmon::StartMonitorThreadFunc, this));
   monitor_thread_running_ = true;
   // Schedule starting the first process.
   AddEvent(ProcmonEvent(START_PROCESS, -1, 0));
@@ -79,9 +79,8 @@ Procmon::~Procmon() {
   int startup_sequence = event.affected_startup_sequence;
   switch (type) {
     case START_PROCESS:
-      CHECK_RETURN_IF_FALSE(startup_sequence <
-                                config_.client_processes_size() &&
-                            startup_sequence >= 0)
+      RET_CHECK(startup_sequence < config_.client_processes_size() &&
+                startup_sequence >= 0)
           << "Received START_PROCESS for invalid process #" << startup_sequence
           << ".";
       RETURN_IF_ERROR(StartProcess(config_.client_processes(startup_sequence)));
@@ -104,7 +103,7 @@ Procmon::~Procmon() {
     // Kill our forked process if setup failed.
     exit(1);
   } else {
-    CHECK_RETURN_IF_FALSE(new_pid != -1)
+    RET_CHECK(new_pid != -1)
         << "Failed to fork child process " << process.label() << ".";
     // We are the parent. Mark this process for monitoring.
     LOG(INFO) << "Starting process " << process.label() << " (pid " << new_pid
@@ -125,23 +124,21 @@ Procmon::~Procmon() {
   // ClientProcess.
   if (!process.directory().empty()) {
     RETURN_IF_ERROR(RecursivelyCreateDir(process.directory()));
-    CHECK_RETURN_IF_FALSE(chdir(process.directory().c_str()) == 0)
+    RET_CHECK(chdir(process.directory().c_str()) == 0)
         << "Failed to change to working directory " << process.directory()
         << ". Error code " << errno << ".";
   }
   // Close/redirect file descriptors.
   close(STDIN_FILENO);
-  CHECK_RETURN_IF_FALSE(dup2(open("/dev/null", O_WRONLY), STDOUT_FILENO) ==
-                        STDOUT_FILENO)
+  RET_CHECK(dup2(open("/dev/null", O_WRONLY), STDOUT_FILENO) == STDOUT_FILENO)
       << "Failed to redirect stdout to /dev/null.";
-  CHECK_RETURN_IF_FALSE(dup2(open("/dev/null", O_WRONLY), STDERR_FILENO) ==
-                        STDERR_FILENO)
+  RET_CHECK(dup2(open("/dev/null", O_WRONLY), STDERR_FILENO) == STDERR_FILENO)
       << "Failed to redirect stderr to /dev/null.";
   // Set the process priority.
-  CHECK_RETURN_IF_FALSE(setpriority(PRIO_PROCESS, 0, process.priority()) == 0)
+  RET_CHECK(setpriority(PRIO_PROCESS, 0, process.priority()) == 0)
       << "Failed to set new process priority to " << process.priority();
   // Check that the executable file exists.
-  CHECK_RETURN_IF_FALSE(PathExists(process.executable()))
+  RET_CHECK(PathExists(process.executable()))
       << "Cannot locate executable file " << process.executable() << " in "
       << "working directory " << process.directory() << ". Cannot run.";
   // Construct the argument list.
@@ -188,11 +185,11 @@ Procmon::~Procmon() {
               << process_info.configuration.label() << " (pid " << pid << ").";
     kill_ret = process_interface_->Kill(pid, SIGTERM);
   }
-  CHECK_RETURN_IF_FALSE(kill_ret == 0 || errno == ESRCH)
+  RET_CHECK(kill_ret == 0 || errno == ESRCH)
       // The process is still running, but we didn't send a signal.
       << "Failed to send a signal to pid " << pid << ". Unable to kill.";
   pid_t waitpid_ret = process_interface_->Waitpid(pid, nullptr, 0);
-  CHECK_RETURN_IF_FALSE(waitpid_ret != -1)
+  RET_CHECK(waitpid_ret != -1)
       << "Error in waitpid for process " << process_info.configuration.label()
       << " with pid " << pid << ".";
   return ::util::OkStatus();

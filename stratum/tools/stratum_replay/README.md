@@ -40,7 +40,7 @@ container we should access.
 
 ```
 $ docker ps | grep stratum-bf
-4c615277261d  stratumproject/stratum-bfrt:9.5.0-4.14.49-OpenNetworkLinux  "/usr/bin/stratum-st…"  5 days ago  Up 5 days
+4c615277261d  stratumproject/stratum-bfrt:9.5.2-4.14.49-OpenNetworkLinux  "/usr/bin/stratum-st…"  5 days ago  Up 5 days
 ```
 
 The `4c615277261d` is the container ID we need.
@@ -122,14 +122,6 @@ for a given pipeline config file.
 
 # Usage and available options:
 
-`stratum_replay [options] [p4runtime write log file]`
-
-```
--device_id: The device ID (default: 1)
--election_id: Election ID for arbitration update (high,low). (default: "0,1")
--grpc_addr: Stratum gRPC address (default: "127.0.0.1:9339")
--pipeline_cfg: The pipeline config file (default: "pipeline.pb.bin")
--ca_cert: CA certificate(optional), will use insecure credentials if empty (default: "")
--client_cert: Client certificate (optional) (default: "")
--client_key: Client key (optional) (default: "")
+```bash
+bazel run //stratum/tools/stratum_replay -- --helpshort
 ```

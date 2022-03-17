@@ -77,7 +77,7 @@ UdevEventHandler::~UdevEventHandler() {
   monitor_info.monitor = std::move(udev_monitor);
   auto ret = udev_monitors_.insert(
       std::make_pair(udev_filter, std::move(monitor_info)));
-  CHECK_RETURN_IF_FALSE(ret.second) << "Cannot add the same monitor twice.";
+  RET_CHECK(ret.second) << "Cannot add the same monitor twice.";
   return ::util::OkStatus();
 }
 
@@ -86,7 +86,7 @@ UdevEventHandler::~UdevEventHandler() {
   const std::string& dev_path = event.device_path;
   UdevSequenceNumber seqnum = event.sequence_number;
   const std::string& action = event.action_type;
-  CHECK_RETURN_IF_FALSE(!dev_path.empty() && !action.empty())
+  RET_CHECK(!dev_path.empty() && !action.empty())
       << "Encountered invalid udev event (" << dev_path << ", " << action
       << ").";
   auto prev_event =
@@ -107,7 +107,7 @@ void UdevEventHandler::AddUpdateCallback(
 ::util::Status UdevEventHandler::RegisterEventCallback(
     UdevEventCallback* callback) {
   absl::MutexLock lock(&udev_lock_);
-  CHECK_RETURN_IF_FALSE(callback->GetUdevEventHandler() == nullptr)
+  RET_CHECK(callback->GetUdevEventHandler() == nullptr)
       << "Cannot register a UdevEventCallback twice.";
   UdevMonitorInfo* found_monitor =
       gtl::FindOrNull(udev_monitors_, callback->GetUdevFilter());
@@ -115,12 +115,12 @@ void UdevEventHandler::AddUpdateCallback(
     // we must create a new udev monitor for this udev_filter.
     RETURN_IF_ERROR(AddNewUdevMonitor(callback->GetUdevFilter()));
     found_monitor = gtl::FindOrNull(udev_monitors_, callback->GetUdevFilter());
-    CHECK_RETURN_IF_FALSE(found_monitor)
+    RET_CHECK(found_monitor)
         << "Could not find udev monitor that was just added.";
   }
   auto ret = found_monitor->dev_path_to_callback.insert(
       std::make_pair(callback->GetDevPath(), callback));
-  CHECK_RETURN_IF_FALSE(ret.second)
+  RET_CHECK(ret.second)
       << "Cannot register multiple callbacks for a single filter/dev_path.";
   // Mark this device as updated so that we always receive an initial callback.
   found_monitor->dev_paths_to_update.insert(callback->GetDevPath());
@@ -139,7 +139,7 @@ void UdevEventHandler::AddUpdateCallback(
 
 ::util::Status UdevEventHandler::UnregisterEventCallback(
     UdevEventCallback* callback) {
-  CHECK_RETURN_IF_FALSE(callback->GetUdevEventHandler() == this)
+  RET_CHECK(callback->GetUdevEventHandler() == this)
       << "Attempted to unregister a callback that is registered with a "
       << "different UdevEventHandler.";
   absl::MutexLock lock(&udev_lock_);
@@ -151,10 +151,10 @@ void UdevEventHandler::AddUpdateCallback(
   callback->SetUdevEventHandler(nullptr);
   auto found_monitor =
       gtl::FindOrNull(udev_monitors_, callback->GetUdevFilter());
-  CHECK_RETURN_IF_FALSE(found_monitor)
-      << "Could not find udev monitor " << callback->GetUdevFilter() << ".";
-  CHECK_RETURN_IF_FALSE(
-      found_monitor->dev_path_to_callback.erase(callback->GetDevPath()) == 1)
+  RET_CHECK(found_monitor) << "Could not find udev monitor "
+                           << callback->GetUdevFilter() << ".";
+  RET_CHECK(found_monitor->dev_path_to_callback.erase(callback->GetDevPath()) ==
+            1)
       << "Could not find callback for dev_path " << callback->GetDevPath()
       << ".";
   return ::util::OkStatus();
@@ -178,9 +178,8 @@ UdevEventHandler::MakeUdevEventHandler(
 
 ::util::Status UdevEventHandler::StartMonitorThread() {
   absl::MutexLock lock(&udev_lock_);
-  CHECK_RETURN_IF_FALSE(!pthread_create(&udev_monitor_loop_thread_id_, nullptr,
-                                        &UdevEventHandler::RunUdevMonitorLoop,
-                                        this));
+  RET_CHECK(!pthread_create(&udev_monitor_loop_thread_id_, nullptr,
+                            &UdevEventHandler::RunUdevMonitorLoop, this));
   udev_monitor_loop_running_ = true;
   return ::util::OkStatus();
 }
@@ -220,8 +219,7 @@ void UdevEventHandler::UdevMonitorLoop() {
       Udev::Event event;
       ::util::StatusOr<bool> found_event =
           monitor_info->monitor->GetUdevEvent(&event);
-      CHECK_RETURN_IF_FALSE(found_event.ok())
-          << "Failed to get new udev event.";
+      RET_CHECK(found_event.ok()) << "Failed to get new udev event.";
       if (!found_event.ValueOrDie()) break;  // We have seen every new event.
       ASSIGN_OR_RETURN(bool update_performed,
                        UpdateUdevMonitorInfo(monitor_info, event));
@@ -246,8 +244,7 @@ void UdevEventHandler::UdevMonitorLoop() {
       if (!callback) continue;
       auto last_action =
           gtl::FindOrNull(monitor_info->dev_path_to_last_action, dev_path);
-      CHECK_RETURN_IF_FALSE(last_action)
-          << "An event occurred, but could not be found.";
+      RET_CHECK(last_action) << "An event occurred, but could not be found.";
       // We set executing_callback_ so that no other thread can delete
       // or unregister this callback until we're done running it.
       executing_callback_ = *callback_to_execute = *callback;
@@ -262,7 +259,7 @@ void UdevEventHandler::UdevMonitorLoop() {
 ::util::Status UdevEventHandler::SendCallbacks() {
   {
     absl::MutexLock lock(&udev_lock_);
-    CHECK_RETURN_IF_FALSE(executing_callback_ == nullptr)
+    RET_CHECK(executing_callback_ == nullptr)
         << "Encountered non-null executing_callback_, but no "
         << "callback is currently executing.";
   }
@@ -275,7 +272,7 @@ void UdevEventHandler::UdevMonitorLoop() {
         bool callback_found,
         FindCallbackToExecute(&callback_to_execute, &action_to_send));
     if (!callback_found) return ::util::OkStatus();  // No more callbacks!
-    CHECK_RETURN_IF_FALSE(callback_to_execute != nullptr)
+    RET_CHECK(callback_to_execute != nullptr)
         << "We should never reach this point if no callback is running.";
     // We release udev_lock_ while executing this callback. This enables
     // callbacks to register or unregister other callbacks (but not

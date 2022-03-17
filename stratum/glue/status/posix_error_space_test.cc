@@ -2,11 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/glue/status/posix_error_space.h"
 
 #include <errno.h>
 #include <stddef.h>
+
 #include <string>
 
 #include "gtest/gtest.h"

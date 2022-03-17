@@ -1,5 +1,6 @@
 // Copyright 2021-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
+
 #include "stratum/lib/security/credentials_manager.h"
 
 #include <fstream>
@@ -21,9 +22,11 @@
 #include "stratum/lib/security/test.grpc.pb.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_string(ca_cert);
-DECLARE_string(server_key);
-DECLARE_string(server_cert);
+DECLARE_string(ca_cert_file);
+DECLARE_string(server_key_file);
+DECLARE_string(server_cert_file);
+DECLARE_string(client_key_file);
+DECLARE_string(client_cert_file);
 DECLARE_string(test_tmpdir);
 
 namespace stratum {
@@ -38,134 +41,181 @@ class TestServiceImpl final : public ::testing::TestService::Service {
   }
 };
 
-constexpr char kCaCertFile[] = "ca.crt";
-constexpr char kServerCertFile[] = "stratum.crt";
-constexpr char kServerKeyFile[] = "stratum.key";
-constexpr char cert_common_name[] = "stratum.local";
+constexpr char kCaCertFile[] = "ca_server.crt";
+constexpr char kServerCertFile[] = "stratum_server.crt";
+constexpr char kServerKeyFile[] = "stratum_server.key";
+constexpr char kClientCertFile[] = "stratum_client.crt";
+constexpr char kClientKeyFile[] = "stratum_client.key";
+constexpr char kCertCommonName[] = "stratum.local";
 
 util::Status GenerateCerts(std::string* ca_crt, std::string* server_crt,
-                           std::string* server_key) {
+                           std::string* server_key, std::string* client_crt,
+                           std::string* client_key) {
   absl::Time valid_after = absl::Now();
   absl::Time valid_until = valid_after + absl::Hours(24);
   Certificate ca("Stratum CA", 1);
   EXPECT_OK(ca.GenerateKeyPair(1024));
   EXPECT_OK(ca.SignCertificate(ca, valid_after, valid_until));
 
-  Certificate stratum(cert_common_name, 1);
-  EXPECT_OK(stratum.GenerateKeyPair(1024));
-  EXPECT_OK(stratum.SignCertificate(ca, valid_after, valid_until));
+  Certificate stratum_server(kCertCommonName, 1);
+  EXPECT_OK(stratum_server.GenerateKeyPair(1024));
+  EXPECT_OK(stratum_server.SignCertificate(ca, valid_after, valid_until));
+
+  Certificate stratum_client(kCertCommonName, 1);
+  EXPECT_OK(stratum_client.GenerateKeyPair(1024));
+  EXPECT_OK(stratum_client.SignCertificate(ca, valid_after, valid_until));
 
   ASSIGN_OR_RETURN(*ca_crt, ca.GetCertificate());
-  ASSIGN_OR_RETURN(*server_crt, stratum.GetCertificate());
-  ASSIGN_OR_RETURN(*server_key, stratum.GetPrivateKey());
+  ASSIGN_OR_RETURN(*server_crt, stratum_server.GetCertificate());
+  ASSIGN_OR_RETURN(*server_key, stratum_server.GetPrivateKey());
+  ASSIGN_OR_RETURN(*client_crt, stratum_client.GetCertificate());
+  ASSIGN_OR_RETURN(*client_key, stratum_client.GetPrivateKey());
+
   return util::OkStatus();
 }
 
-void SetCerts(const std::string& ca_crt, const std::string& server_crt,
-              const std::string& server_key) {
-  ASSERT_OK(WriteStringToFile(ca_crt, FLAGS_ca_cert));
-  ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert));
-  ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key));
-}
+}  // namespace
 
 class CredentialsManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    FLAGS_ca_cert = absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kCaCertFile);
-    FLAGS_server_cert =
+    FLAGS_ca_cert_file =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kCaCertFile);
+    FLAGS_server_cert_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerCertFile);
-    FLAGS_server_key =
+    FLAGS_server_key_file =
         absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kServerKeyFile);
+    FLAGS_client_cert_file =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kClientCertFile);
+    FLAGS_client_key_file =
+        absl::StrFormat("%s/%s", FLAGS_test_tmpdir, kClientKeyFile);
 
-    std::string server_crt, server_key;
-    EXPECT_OK(GenerateCerts(&ca_crt_, &server_crt, &server_key));
-    SetCerts(ca_crt_, server_crt, server_key);
+    std::string ca_crt, server_crt, server_key, client_crt, client_key;
+    ASSERT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                            &client_key));
+    WriteServerCredentialsToDisk(ca_crt, server_crt, server_key);
+    WriteClientCredentialsToDisk(ca_crt, client_crt, client_key);
     credentials_manager_ =
         CredentialsManager::CreateInstance().ConsumeValueOrDie();
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
 
-    url_ = "localhost:" + std::to_string(stratum::PickUnusedPortOrDie());
+    std::string url =
+        "localhost:" + std::to_string(stratum::PickUnusedPortOrDie());
     test_service_ = absl::make_unique<TestServiceImpl>();
     ::grpc::ServerBuilder builder;
-    builder.AddListeningPort(url_, server_credentials);
+    builder.AddListeningPort(url, server_credentials);
     builder.RegisterService(test_service_.get());
     server_ = builder.BuildAndStart();
     ASSERT_NE(server_, nullptr);
-  }
-
-  void Connect(const std::string& ca_crt, bool expectSuccess = true) {
-    auto cert_provider =
-        std::make_shared<::grpc::experimental::StaticDataCertificateProvider>(
-            ca_crt);
-    auto tls_opts =
-        std::make_shared<::grpc::experimental::TlsChannelCredentialsOptions>(
-            cert_provider);
-    tls_opts->watch_root_certs();
-    auto channel_creds = ::grpc::experimental::TlsCredentials(*tls_opts);
 
     ::grpc::ChannelArguments args;
-    args.SetSslTargetNameOverride(cert_common_name);
-    auto channel = ::grpc::CreateCustomChannel(url_, channel_creds, args);
-    auto stub = ::testing::TestService::NewStub(channel);
+    args.SetSslTargetNameOverride(kCertCommonName);
+    auto channel = ::grpc::CreateCustomChannel(
+        url, credentials_manager_->GenerateExternalFacingClientCredentials(),
+        args);
+    stub_ = ::testing::TestService::NewStub(channel);
+    ASSERT_NE(stub_, nullptr);
+  }
 
+  ::util::Status Connect() {
     ::grpc::ClientContext context;
+    context.set_wait_for_ready(false);  // fail fast
     ::testing::Empty request;
     ::testing::Empty response;
-    ::grpc::Status status = stub->Test(&context, request, &response);
-    EXPECT_TRUE(status.ok() == expectSuccess);
+    auto status = stub_->Test(&context, request, &response);
+
+    return ::util::Status(static_cast<::util::error::Code>(status.error_code()),
+                          status.error_message());
   }
 
   void TearDown() override { server_->Shutdown(); }
 
-  const std::string& GetOriginalCaCert() { return ca_crt_; }
+  static void WriteServerCredentialsToDisk(const std::string& server_ca_crt,
+                                           const std::string& server_crt,
+                                           const std::string& server_key) {
+    ASSERT_OK(WriteStringToFile(server_ca_crt, FLAGS_ca_cert_file));
+    ASSERT_OK(WriteStringToFile(server_crt, FLAGS_server_cert_file));
+    ASSERT_OK(WriteStringToFile(server_key, FLAGS_server_key_file));
+    absl::SleepFor(
+        absl::Seconds(CredentialsManager::kFileRefreshIntervalSeconds + 1));
+  }
 
-  std::string url_;
-  std::string ca_crt_;
+  static void WriteClientCredentialsToDisk(const std::string& client_ca_crt,
+                                           const std::string& client_crt,
+                                           const std::string& client_key) {
+    ASSERT_OK(WriteStringToFile(client_ca_crt, FLAGS_ca_cert_file));
+    ASSERT_OK(WriteStringToFile(client_crt, FLAGS_client_cert_file));
+    ASSERT_OK(WriteStringToFile(client_key, FLAGS_client_key_file));
+    absl::SleepFor(
+        absl::Seconds(CredentialsManager::kFileRefreshIntervalSeconds + 1));
+  }
+
   std::unique_ptr<CredentialsManager> credentials_manager_;
   std::unique_ptr<::grpc::Server> server_;
   std::unique_ptr<TestServiceImpl> test_service_;
+  std::unique_ptr<::testing::TestService::Stub> stub_;
 };
 
-TEST_F(CredentialsManagerTest, ConnectSuccess) { Connect(GetOriginalCaCert()); }
+TEST_F(CredentialsManagerTest, ConnectSuccess) { EXPECT_OK(Connect()); }
 
-TEST_F(CredentialsManagerTest, ConnectFailWrongCert) {
-  std::string ca_crt, server_crt, server_key;
-  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
-  Connect(ca_crt, false);
+TEST_F(CredentialsManagerTest, ConnectAfterBothCertsChangeSuccess) {
+  std::string ca_crt, server_crt, server_key, client_crt, client_key;
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                          &client_key));
+  // Initial connect with old credentials succeeds.
+  EXPECT_OK(Connect());
+  // Now update the server and client credentials. The file watcher should pick
+  // those up and the connect should still work.
+  WriteServerCredentialsToDisk(ca_crt, server_crt, server_key);
+  WriteClientCredentialsToDisk(ca_crt, client_crt, client_key);
+  EXPECT_OK(Connect());
 }
 
-TEST_F(CredentialsManagerTest, ConnectAfterCertChange) {
-  std::string ca_crt, server_crt, server_key;
-  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
-  SetCerts(ca_crt, server_crt, server_key);
-  absl::SleepFor(absl::Seconds(2));  // Wait for file watcher to update certs...
-  Connect(ca_crt);
-  Connect(GetOriginalCaCert(), false);
+TEST_F(CredentialsManagerTest, ConnectWrongClientCaCertFailure) {
+  std::string ca_crt, server_crt, server_key, client_crt, client_key;
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                          &client_key));
+  WriteClientCredentialsToDisk(ca_crt, client_crt, client_key);
+  ::util::Status status = Connect();
+  EXPECT_FALSE(status.ok());
 }
 
-TEST_F(CredentialsManagerTest, LoadNewCredentials) {
-  std::string ca_crt, server_crt, server_key;
-  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key));
-  EXPECT_OK(
-      credentials_manager_->LoadNewCredential(ca_crt, server_crt, server_key));
-
-  // Read and verify the active key material files
+TEST_F(CredentialsManagerTest, LoadNewServerCredentialsSuccess) {
+  std::string ca_crt, server_crt, server_key, client_crt, client_key;
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                          &client_key));
+  EXPECT_OK(credentials_manager_->LoadNewServerCredentials(ca_crt, server_crt,
+                                                           server_key));
+  // Read and verify the active key material files.
   std::string ca_cert_actual;
   std::string cert_actual;
   std::string key_actual;
-  ASSERT_OK(ReadFileToString(FLAGS_ca_cert, &ca_cert_actual));
-  ASSERT_OK(ReadFileToString(FLAGS_server_cert, &cert_actual));
-  ASSERT_OK(ReadFileToString(FLAGS_server_key, &key_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_ca_cert_file, &ca_cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_server_cert_file, &cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_server_key_file, &key_actual));
   EXPECT_EQ(ca_cert_actual, ca_crt);
   EXPECT_EQ(cert_actual, server_crt);
   EXPECT_EQ(key_actual, server_key);
-
-  // Make sure connections work
-  absl::SleepFor(absl::Seconds(2));  // Wait for file watcher to update certs...
-  Connect(ca_crt);
-  Connect(GetOriginalCaCert(), false);
 }
 
-}  // namespace
+TEST_F(CredentialsManagerTest, LoadNewClientCredentialsSuccess) {
+  std::string ca_crt, server_crt, server_key, client_crt, client_key;
+  EXPECT_OK(GenerateCerts(&ca_crt, &server_crt, &server_key, &client_crt,
+                          &client_key));
+
+  EXPECT_OK(credentials_manager_->LoadNewClientCredentials(ca_crt, client_crt,
+                                                           client_key));
+  // Read and verify the active key material files.
+  std::string ca_cert_actual;
+  std::string cert_actual;
+  std::string key_actual;
+  ASSERT_OK(ReadFileToString(FLAGS_ca_cert_file, &ca_cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_client_cert_file, &cert_actual));
+  ASSERT_OK(ReadFileToString(FLAGS_client_key_file, &key_actual));
+  EXPECT_EQ(ca_cert_actual, ca_crt);
+  EXPECT_EQ(cert_actual, client_crt);
+  EXPECT_EQ(key_actual, client_key);
+}
+
 }  // namespace stratum

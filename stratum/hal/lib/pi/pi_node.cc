@@ -148,10 +148,10 @@ std::unique_ptr<PINode> PINode::CreateInstance(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {
-    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+    return MAKE_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
-  CHECK_RETURN_IF_FALSE(results != nullptr)
+  RET_CHECK(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
   auto status = device_mgr_->write(req);
@@ -164,10 +164,10 @@ std::unique_ptr<PINode> PINode::CreateInstance(
     std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {
-    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+    return MAKE_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   ::p4::v1::ReadResponse response;
   auto status = device_mgr_->read(req, &response);
@@ -196,7 +196,7 @@ std::unique_ptr<PINode> PINode::CreateInstance(
     const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&lock_);
   if (!pipeline_initialized_) {
-    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+    return MAKE_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
   }
   return toUtilStatus(device_mgr_->stream_message_request_handle(request));
 }

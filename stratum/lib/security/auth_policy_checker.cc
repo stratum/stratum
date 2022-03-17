@@ -73,7 +73,7 @@ void ReadProtoIfValidFileExists(const std::string& path,
 }
 
 ::util::Status RemoveWatchHelper(int fd, int wd) {
-  CHECK_RETURN_IF_FALSE(fd > 0) << "Invalid fd: " << fd << ".";
+  RET_CHECK(fd > 0) << "Invalid fd: " << fd << ".";
   if (wd > 0) inotify_rm_watch(fd, wd);
 
   return ::util::OkStatus();
@@ -85,8 +85,8 @@ void ReadProtoIfValidFileExists(const std::string& path,
 // modify.
 ::util::StatusOr<int> AddWatchForFileChange(int ifd, const std::string& path) {
   std::string dir = DirName(path);
-  CHECK_RETURN_IF_FALSE(PathExists(dir)) << "Dir '" << dir << "' not found.";
-  CHECK_RETURN_IF_FALSE(IsDir(dir)) << "'" << dir << "' is not a directory.";
+  RET_CHECK(PathExists(dir)) << "Dir '" << dir << "' not found.";
+  RET_CHECK(IsDir(dir)) << "'" << dir << "' is not a directory.";
   ASSIGN_OR_RETURN(
       int wd,
       AddWatchHelper(ifd, dir, IN_CREATE | IN_DELETE | IN_MOVE | IN_MODIFY));
@@ -153,7 +153,19 @@ AuthPolicyChecker::~AuthPolicyChecker() {}
   return ::util::OkStatus();
 }
 
-::util::Status AuthPolicyChecker::Shutdown() { return ::util::OkStatus(); }
+::util::Status AuthPolicyChecker::Shutdown() {
+  {
+    absl::WriterMutexLock l(&shutdown_lock_);
+    if (shutdown_) return ::util::OkStatus();
+    shutdown_ = true;
+  }
+  if (watcher_thread_id_ && pthread_join(watcher_thread_id_, nullptr) != 0) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Failed to join file watcher thread.";
+  }
+  watcher_thread_id_ = pthread_t{};
+
+  return ::util::OkStatus();
+}
 
 std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
   auto instance = absl::WrapUnique(new AuthPolicyChecker());
@@ -167,7 +179,16 @@ std::unique_ptr<AuthPolicyChecker> AuthPolicyChecker::CreateInstance() {
   return instance;
 }
 
-::util::Status AuthPolicyChecker::Initialize() { return ::util::OkStatus(); }
+::util::Status AuthPolicyChecker::Initialize() {
+  int ret =
+      pthread_create(&watcher_thread_id_, nullptr, WatcherThreadFunc, nullptr);
+  if (ret) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Failed to create file watcher thread with error " << ret << ".";
+  }
+
+  return ::util::OkStatus();
+}
 
 ::util::Status AuthPolicyChecker::AuthorizeUser(
     const std::string& service_name, const std::string& rpc_name,

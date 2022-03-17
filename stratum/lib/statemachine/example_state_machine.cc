@@ -25,18 +25,22 @@ void ExampleStateMachine::StartStateMachine(State initial_state) {
 
 // Warning: all callbacks must be used within the lifetime of the state machine.
 void ExampleStateMachine::AddCallbackFunctions() {
-  sm_->AddExitAction(STATE0,
-    [this] (Event event, State next_state, Event* recovery_event)
-    { return ExitState0(event, next_state, recovery_event); });
-  sm_->AddEntryAction(STATE1,
-    [this] (Event event, State next_state, Event* recovery_event)
-    { return EnterState1(event, next_state, recovery_event); });
-  sm_->AddEntryAction(STATE2,
-    [this] (Event event, State next_state, Event* recovery_event)
-    { return EnterState2(event, next_state, recovery_event); });
-  sm_->AddEntryAction(FAILED,
-    [this] (Event event, State next_state, Event* recovery_event)
-    { return EnterFailed(event, next_state, recovery_event); });
+  sm_->AddExitAction(
+      STATE0, [this](Event event, State next_state, Event* recovery_event) {
+        return ExitState0(event, next_state, recovery_event);
+      });
+  sm_->AddEntryAction(
+      STATE1, [this](Event event, State next_state, Event* recovery_event) {
+        return EnterState1(event, next_state, recovery_event);
+      });
+  sm_->AddEntryAction(
+      STATE2, [this](Event event, State next_state, Event* recovery_event) {
+        return EnterState2(event, next_state, recovery_event);
+      });
+  sm_->AddEntryAction(
+      FAILED, [this](Event event, State next_state, Event* recovery_event) {
+        return EnterFailed(event, next_state, recovery_event);
+      });
 }
 
 ::util::Status ExampleStateMachine::ProcessEvent(Event event,
