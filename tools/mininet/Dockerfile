@@ -10,8 +10,8 @@
 FROM stratumproject/build:build as builder
 
 ENV BUILD_DEPS \
-    python3-setuptools \
-    python3-pip \
+    python-setuptools \
+    python-pip \
     help2man
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ${BUILD_DEPS}
@@ -24,7 +24,7 @@ RUN curl -L https://github.com/mininet/mininet/tarball/master | \
 # Install in a special directory that we will copy to the runtime image.
 RUN mkdir -p /output
 RUN PREFIX=/output make install-mnexec install-manpages
-RUN python3 setup.py install --root /output
+RUN python setup.py install --root /output
 # Install `m` utility so user can attach to a mininet host directly
 RUN cp util/m /output/bin/m && sed -i 's#sudo##g' /output/bin/m
 
@@ -44,8 +44,7 @@ RUN bazel build @com_github_p4lang_p4runtime//:p4runtime_proto \
     @com_google_googleapis//google/rpc:code_cc_proto \
     @com_google_googleapis//google/rpc:code_proto \
     @com_github_grpc_grpc//src/compiler:grpc_python_plugin
-ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python3.5/dist-packages
-RUN mkdir -p $PYTHON_PACKAGE_BASE
+ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
 RUN ./bazel-out/host/bin/external/com_google_protobuf/protoc \
     ./bazel-stratum/external/com_github_p4lang_p4runtime/p4/v1/p4data.proto \
     ./bazel-stratum/external/com_github_p4lang_p4runtime/p4/v1/p4runtime.proto \
@@ -68,8 +67,8 @@ RUN touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
 # compatible to that used to generate the P4Runtime ones.
 ARG PROTOBUF_VER=3.14.0
 ARG GRPC_VER=1.33.2
-RUN pip3 install --root /output "protobuf<=${PROTOBUF_VER}"
-RUN pip3 install --root /output "grpcio<=${GRPC_VER}"
+RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
+RUN pip install --root /output "grpcio<=${GRPC_VER}"
 
 # Final stage, runtime.
 FROM bitnami/minideb:stretch as runtime
@@ -89,24 +88,10 @@ ENV RUNTIME_DEPS \
     iperf \
     arping \
     telnet \
-    python3 \
-    python3-pexpect \
+    python-pexpect \
     tcpdump \
-    screen \
-    libboost-filesystem1.62.0 \
-    libboost-program-options1.62.0 \
-    libboost-thread1.62.0 \
-    libjudydebian1 \
-    libgmp10 \
-    libpcap0.8 \
-    locales
-
+    screen
 RUN install_packages $RUNTIME_DEPS
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
 
 COPY --from=builder /output /
 

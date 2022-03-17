@@ -26,32 +26,16 @@ ARG JOBS
 # + libelf-dev to build the kernel modules
 # BF SDE dependecies
 # + libelf-dev to build the kernel modules
-# Python3 dependency
-# + libssl-dev to support ssl module
-# + libbz2-dev liblzma-dev to support additional format for tarfile module
-ENV PKG_DEPS pkg-config zip zlib1g-dev unzip wget ca-certificates \
+ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
-    libfl-dev libgmp-dev libi2c-dev libyaml-dev build-essential \
+    libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
-    gnupg2 software-properties-common \
-    apt-transport-https libelf-dev libssl-dev libbz2-dev liblzma-dev
+    gnupg2 software-properties-common python-pip python-dev python3-dev \
+    apt-transport-https libelf-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
-
-# Install Python3.8, required by newer Bazel python rule
-# Note that this part will be removed after moving to newer Debian version
-# Also we need to link python to python3 since some scripts from Bazel still trying to
-# use "python" for script.
-RUN wget --quiet -O /tmp/Python-3.8.12.tgz https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz && \
-    tar xf /tmp/Python-3.8.12.tgz -C /tmp && \
-    cd /tmp/Python-3.8.12 && \
-    ./configure && \
-    make -j $JOBS && \
-    make install && \
-    ln -s /usr/local/bin/python3 /usr/bin/python && \
-    ln -s /usr/local/bin/python3 /usr/local/bin/python
 
 # LLVM toolchain
 ARG LLVM_REPO_NAME
@@ -107,8 +91,8 @@ RUN wget --quiet https://github.com/bazelbuild/bazelisk/releases/download/v${BAZ
     bazel version
 
 # Tools for style and license checking
-RUN pip3 install setuptools wheel && \
-    pip3 install 'cpplint==1.*'
+RUN pip install setuptools wheel && \
+    pip install 'cpplint==1.*'
 RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
 RUN chmod +x /usr/local/bin/buildifier
 
