@@ -84,6 +84,7 @@ P4Service::~P4Service() {}
   {
     absl::WriterMutexLock l(&controller_lock_);
     node_id_to_controller_manager_.clear();
+    num_controller_connections_ = 0;
   }
   {
     absl::WriterMutexLock l(&stream_response_thread_lock_);

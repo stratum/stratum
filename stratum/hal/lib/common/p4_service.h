@@ -198,6 +198,12 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   std::map<uint64, p4runtime::SdnControllerManager>
       node_id_to_controller_manager_ ABSL_GUARDED_BY(controller_lock_);
 
+  // Holds the number of currently open StreamChannels across all nodes. This is
+  // tracked for resource limiting. Note that this count can be different from
+  // the number of connected controllers reported by all controller managers, as
+  // a P4Runtime client can connect, but never send a arbitration message.
+  int num_controller_connections_ GUARDED_BY(controller_lock_);
+
   // List of threads which send received responses up to the controller.
   std::vector<pthread_t> stream_response_reader_tids_
       GUARDED_BY(stream_response_thread_lock_);
@@ -206,10 +212,6 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // P4Service.
   std::map<uint64, std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>>>
       stream_response_channels_ GUARDED_BY(stream_response_thread_lock_);
-
-  // Holds the number of currently connected controllers across all nodes. This
-  // is tracked for resource limiting.
-  int num_controller_connections_ GUARDED_BY(controller_lock_);
 
   // Forwarding pipeline configs of all the switching nodes. Updated as we push
   // forwarding pipeline configs for new or existing nodes.
