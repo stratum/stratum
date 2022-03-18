@@ -189,7 +189,7 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
-      - DOCKER_IMG: opennetworking/mn-stratum:p4rt-server
+      - DOCKER_IMG: opennetworking/mn-stratum
       - CC: clang
       - CXX: clang++
     steps:
@@ -411,9 +411,9 @@ workflows:
           filters:
             branches:
               only: main
-      - publish-docker-mininet
-          # requires:
-          #   - publish-docker-build
+      - publish-docker-mininet:
+          requires:
+            - publish-docker-build
       - publish-docker-p4c-fpm:
           requires:
             - publish-docker-build
