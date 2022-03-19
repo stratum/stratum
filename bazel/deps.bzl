@@ -164,6 +164,13 @@ def stratum_deps():
             build_file = "@//bazel:external/json.BUILD",
         )
 
+    git_repository(
+        name = "bazel_clang_tidy",
+        commit = "c2fe98cfec0430e78bff4169e9ca0a43123e4c99",
+        remote = "https://github.com/erenon/bazel_clang_tidy.git",
+        shallow_since = "1641482001 +0100",
+    )
+
     # -----------------------------------------------------------------------------
     #        TAI library
     # -----------------------------------------------------------------------------

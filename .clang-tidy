@@ -1,0 +1,23 @@
+# Copyright 2022-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+# See: https://clang.llvm.org/extra/clang-tidy/
+
+UseColor: true
+
+Checks: >
+    abseil-*,
+    bugprone-*,
+    -bugprone-narrowing-conversions,
+    -bugprone-easily-swappable-parameters,
+    google-*,
+    -google-readability-braces-around-statements,
+    performance-*,
+    clang-analyzer-*,
+    concurrency-*,
+#    readability-*,
+#    cppcoreguidelines-*,
+
+# HeaderFilterRegex: ".*"
+
+WarningsAsErrors: "*"
