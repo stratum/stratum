@@ -174,7 +174,7 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
       SDE_INSTALL_TAR=$BF_SDE_INSTALL_TAR_PATH/bf-sde-$sde_version-install.tgz \
       stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh
     mv -f ${target}_deb.deb $RELEASE_DIR/$target_dash-${VERSION}-$sde_version-amd64.deb
-    docker tag stratumproject/$target_dash:$sde_version stratumproject/$target_dash:${VERSION}-$sde_version
+    docker tag stratumproject/$target_dash:latest-$sde_version stratumproject/$target_dash:${VERSION}-$sde_version
     docker push stratumproject/$target_dash:${VERSION}-$sde_version
     docker push stratumproject/$target_dash:latest-$sde_version
     clean_up_after_build
