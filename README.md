@@ -74,7 +74,7 @@ Also see the chapter about
 
 ### Other Documentation
 
-- [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
+- [SD-Fabric](https://docs.sd-fabric.org)
 - [Trellis + Stratum example](/tools/mininet/examples/trellis/README.md)
 - [Continuous Certification Program (CCP)](https://wiki.opennetworking.org/display/COM/Stratum+Continuous+Certification+Program)
 - [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)
