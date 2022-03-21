@@ -8,7 +8,7 @@ STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 
 STRATUM_BF_DIR=$( cd "$DOCKERFILE_DIR/.." >/dev/null 2>&1 && pwd )
 STRATUM_TARGET=${STRATUM_TARGET:-stratum_bfrt}
 JOBS=${JOBS:-4}
-DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build-deb10}
+DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
 print_help() {
 echo "
