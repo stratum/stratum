@@ -1097,7 +1097,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
-  // Status will be non-OK for Controller #1 and #2, as there is not active
+  // Status will be non-OK for Controller #1 and #2, as there is no active
   // master. The election ID will be the highest ever seen by the controller so
   // far, i.e. kElectionId2.
   ASSERT_TRUE(stream1->Read(&resp));
