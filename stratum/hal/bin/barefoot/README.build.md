@@ -19,12 +19,9 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.5.0 (LTS release)
- - 9.5.2 (Recommended; LTS release)
- - ~~9.6.0~~ (skipped)
- - 9.7.0 (experimental; stratum_bfrt only)
- - 9.7.1 (experimental; stratum_bfrt only)
- - 9.8.0 (experimental; stratum_bfrt only)
+ - 9.7.0 (LTS release)
+ - 9.7.1 (Recommended; LTS release)
+ - 9.8.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -143,11 +140,6 @@ First follow [Step 1 from Method 2](#step-1:-generate-the-sde-install-tarball)
 Make sure to export the path to the install tarball as an environment variable,
 then you can use Bazel to build the Stratum.
 
-#### To build `stratum_bf`:
-```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
-```
-
 #### To build `stratum_bfrt`:
 ```bash
 bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb
@@ -158,9 +150,7 @@ necessary configurations into a single Debian package (.deb file). The Debian
 package also includes systemd service definition so users can use systemd to
 start the Stratum as a system service.
 
-The resulting Debian package can be found here:
-`bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb` or
-`bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb`
+The resulting Debian package is located at `bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb`
 
 Copy this file over to the switch and follow the
 [running Stratum](./README.run.md) instructions.
@@ -173,7 +163,7 @@ below.
 If you want to create a Docker image from the Debian package,
 
 ```bash
-export SDE_VERSION=9.5.2
+export SDE_VERSION=9.7.1
 export STRATUM_TARGET=stratum_bfrt
 docker build -t stratumproject/stratum-bfrt:latest-$SDE_VERSION \
   --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
@@ -196,7 +186,7 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker save stratumproject/stratum-bfrt:9.5.2 -o stratum-bfrt-9.5.2-docker.tar
+docker save stratumproject/stratum-bfrt:9.7.1 -o stratum-bfrt-9.7.1-docker.tar
 ```
 
 ### Method 4: Build the SDE and Stratum locally

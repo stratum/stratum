@@ -25,8 +25,8 @@ You can pull a nightly version of this container image from
 $ docker pull stratumproject/stratum-bfrt:latest-[SDE version]
 ```
 
-For example, the container with BF SDE 9.5.2: <br/>
-`stratumproject/stratum-bfrt:latest-9.5.2`
+For example, the container with BF SDE 9.7.1: <br/>
+`stratumproject/stratum-bfrt:latest-9.7.1`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bfrt:latest-9.5.2
-docker save stratumproject/stratum-bfrt:latest-9.5.2 -o stratum-bfrt-9.5.2-docker.tar
+docker pull stratumproject/stratum-bfrt:latest-9.7.1
+docker save stratumproject/stratum-bfrt:latest-9.7.1 -o stratum-bfrt-9.7.1-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bfrt-9.5.2-docker.tar
+docker load -i stratum-bfrt-9.7.1-docker.tar
 ```
 
 ### Set up huge pages
@@ -158,17 +158,17 @@ Systemd provides service management and Stratum has been integrated into it.
 
 Start/stop Stratum service manually:
 ```bash
-systemctl start stratum_bf.service  # stop
+systemctl start stratum_bfrt.service  # stop
 ```
 
 Enable/disable auto-start of Stratum on boot:
 ```bash
-systemctl enable stratum_bf.service  # disable
+systemctl enable stratum_bfrt.service  # disable
 ```
 
 View logs:
 ```bash
-journalctl -u stratum_bf.service
+journalctl -u stratum_bfrt.service
 ```
 
 -----
@@ -198,7 +198,7 @@ In one terminal window, run `tofino-model` in one container:
 ```bash
 docker run --rm -it --privileged \
   --network=host \
-  stratumproject/tofino-model:9.5.2  # <SDE_VERSION>
+  stratumproject/tofino-model:9.7.1  # <SDE_VERSION>
 ```
 
 In another terminal window, run Stratum in its own container:

@@ -8,14 +8,6 @@ if [[ $EUID -eq 0 ]]; then
   exit 1
 fi
 
-function numeric_version() {
-  # Get numeric version, for example 9.5.2 will become 90502.
-  sem_ver=$1
-  ver_arr=()
-  IFS='.' read -raver_arr<<<"$sem_ver"
-  echo $((ver_arr[0] * 10000 + ver_arr[1] * 100 + ver_arr[2]))
-}
-
 # ---------- User Credentials -------------
 # DOCKER_USER=<FILL IN>
 # DOCKER_PASSWORD=<FILL IN>
@@ -26,8 +18,8 @@ VERSION=${VERSION:-$(date +%y.%m)}  # 21.03
 VERSION_LONG=${VERSION_LONG:-$(date +%Y-%m-%d)}  # 2021-03-31
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
-BF_TARGETS=(stratum_bf stratum_bfrt)
-BF_SDE_VERSIONS=(9.5.0 9.5.2 9.7.0 9.7.1 9.8.0)
+BF_TARGETS=(stratum_bfrt)
+BF_SDE_VERSIONS=(9.7.0 9.7.1 9.8.0)
 
 # ---------- Build Variables -------------
 JOBS=30
@@ -157,12 +149,6 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
-    # We will not build stratum_bf target when SDE version is same or later than 9.7.0.
-    if [[ "$target" == "stratum_bf" ]] && \
-      [[ $(numeric_version "$sde_version") -ge $(numeric_version "9.7.0") ]]; then
-      echo "Skipping $target with BF SDE $sde_version."
-      continue
-    fi
     target_dash=${target/_/-}
     echo "Building $target ($target_dash) with BF SDE $sde_version..."
     set -x

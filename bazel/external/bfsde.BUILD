@@ -46,10 +46,6 @@ cc_library(
     ],
     strip_include_prefix = "barefoot-bin/include",
     deps = [
-        # TODO(bocon): PI needed when linking libdriver.so if/when pi is
-        # enabled when building bf-drivers. This shouldn't hurt, but can
-        # be excluded if/when PI is removed from the SDE build options.
-        "@com_github_p4lang_PI_bf//proto/frontend:pifeproto",
     ],
 )
 
@@ -109,20 +105,6 @@ pkg_tar(
 string_setting(
     name = "sde_version_setting",
     build_setting_default = "{SDE_VERSION}",
-)
-
-config_setting(
-    name = "sde_version_9.5.0",
-    flag_values = {
-        ":sde_version_setting": "9.5.0",
-    },
-)
-
-config_setting(
-    name = "sde_version_9.5.2",
-    flag_values = {
-        ":sde_version_setting": "9.5.2",
-    },
 )
 
 config_setting(

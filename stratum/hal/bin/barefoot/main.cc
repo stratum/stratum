@@ -1,15 +1,18 @@
-// Copyright 2018-present Barefoot Networks, Inc.
-// Copyright 2019-present Open Networking Foundation
+// Copyright 2018-2019 Barefoot Networks, Inc.
+// Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "PI/frontends/proto/device_mgr.h"
-#include "PI/frontends/proto/logging.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_sde_wrapper.h"
-#include "stratum/hal/lib/barefoot/bf_switch.h"
+#include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_node.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
+#include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_switch.h"
+#include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
 #include "stratum/lib/security/auth_policy_checker.h"
@@ -21,78 +24,21 @@ DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
+DEFINE_bool(experimental_enable_p4runtime_translation, false,
+            "Enable experimental P4Runtime translation feature.");
 
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
-using ::pi::fe::proto::DeviceMgr;
-
-namespace {
-
-void registerDeviceMgrLogger() {
-  using ::pi::fe::proto::LoggerConfig;
-  using ::pi::fe::proto::LogWriterIface;
-  class P4RuntimeLogger : public LogWriterIface {
-    void write(Severity severity, const char* msg) override {
-      ::google::LogSeverity new_severity = INFO;
-      switch (severity) {
-        case Severity::TRACE:
-          if (!VLOG_IS_ON(3)) return;
-          new_severity = INFO;
-          break;
-        case Severity::DEBUG:
-          if (!VLOG_IS_ON(1)) return;
-          new_severity = INFO;
-          break;
-        case Severity::INFO:
-          new_severity = INFO;
-          break;
-        case Severity::WARN:
-          new_severity = WARNING;
-          break;
-        case Severity::ERROR:
-          new_severity = ERROR;
-          break;
-        case Severity::CRITICAL:
-          new_severity = FATAL;
-          break;
-      }
-
-      // we use google::LogMessage directly (instead of the LOG macro) so we can
-      // control the file name and line number displayed in the logs. Probably
-      // not ideal but stratum/glue/status/status.h already does the same thing.
-      constexpr char kDummyFile[] = "PI-device_mgr.cpp";
-      constexpr int kDummyLine = 0;
-      google::LogMessage log_message(kDummyFile, kDummyLine, new_severity);
-      log_message.stream() << msg;
-    }
-  };
-  LoggerConfig::set_writer(std::make_shared<P4RuntimeLogger>());
-}
-
-}  // namespace
-
 ::util::Status Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
-  // no longer done by the Barefoot SDE starting with 8.7.0
-  DeviceMgr::init(256 /* max devices */);
-  registerDeviceMgrLogger();
-
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
-  // components with "device_id" instead of "node_id". This works because
-  // DeviceMgr does not do any device id checks.
+  // components with "device_id" instead of "node_id".
   int device_id = 0;
 
-  std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(device_id));
-
-  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), device_id);
-  PhalInterface* phal = phal::Phal::CreateSingleton();
-  std::map<int, pi::PINode*> device_id_to_pi_node = {
-      {device_id, pi_node.get()},
-  };
   auto bf_sde_wrapper = BfSdeWrapper::CreateSingleton();
   RETURN_IF_ERROR(bf_sde_wrapper->InitializeSde(
       FLAGS_bf_sde_install, FLAGS_bf_switchd_cfg, FLAGS_bf_switchd_background));
@@ -102,10 +48,30 @@ void registerDeviceMgrLogger() {
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
+  VLOG(1) << "Switch SKU: " << bf_sde_wrapper->GetBfChipType(device_id);
+  auto bfrt_p4runtime_translator = BfrtP4RuntimeTranslator::CreateInstance(
+      FLAGS_experimental_enable_p4runtime_translation, bf_sde_wrapper,
+      device_id);
+  auto bfrt_table_manager = BfrtTableManager::CreateInstance(
+      mode, bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_pre_manager = BfrtPreManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_counter_manager = BfrtCounterManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_node = BfrtNode::CreateInstance(
+      bfrt_table_manager.get(), bfrt_packetio_manger.get(),
+      bfrt_pre_manager.get(), bfrt_counter_manager.get(),
+      bfrt_p4runtime_translator.get(), bf_sde_wrapper, device_id);
+  PhalInterface* phal = phal::Phal::CreateSingleton();
+  std::map<int, BfrtNode*> device_id_to_bfrt_node = {
+      {device_id, bfrt_node.get()},
+  };
   auto bf_chassis_manager =
       BfChassisManager::CreateInstance(mode, phal, bf_sde_wrapper);
-  auto bf_switch = BfSwitch::CreateInstance(
-      phal, bf_chassis_manager.get(), bf_sde_wrapper, device_id_to_pi_node);
+  auto bf_switch = BfrtSwitch::CreateInstance(
+      phal, bf_chassis_manager.get(), bf_sde_wrapper, device_id_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
