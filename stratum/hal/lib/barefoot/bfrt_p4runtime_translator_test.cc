@@ -543,7 +543,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_InvalidSize) {
                   .status(),
               DerivedFromStatus(::util::Status(
                   StratumErrorSpace(), ERR_INVALID_PARAM,
-                  "'value.size() == "
+                  "'value.size() <= "
                   "NumBitsToNumBytes(kTnaPortIdBitWidth)' is false.")));
 }
 
