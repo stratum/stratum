@@ -687,10 +687,10 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
     RET_CHECK(sdk_port_to_singleton_port_.count(sdk_port_id));
     const uint32 port_id = sdk_port_to_singleton_port_[sdk_port_id];
-    std::string port_id_bytes = P4RuntimeByteStringToPaddedByteString(
+    std::string port_id_bytes = Uint32ToByteStream(port_id);
+    if (FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
+      port_id_bytes = P4RuntimeByteStringToPaddedByteString(
         Uint32ToByteStream(port_id), NumBitsToNumBytes(bit_width));
-    if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-      port_id_bytes = ByteStringToP4RuntimeByteString(port_id_bytes);
     }
     return port_id_bytes;
   }
