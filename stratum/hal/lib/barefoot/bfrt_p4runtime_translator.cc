@@ -690,7 +690,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     std::string port_id_bytes = Uint32ToByteStream(port_id);
     if (FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
       port_id_bytes = P4RuntimeByteStringToPaddedByteString(
-        Uint32ToByteStream(port_id), NumBitsToNumBytes(bit_width));
+          port_id_bytes, NumBitsToNumBytes(bit_width));
     }
     return port_id_bytes;
   }
