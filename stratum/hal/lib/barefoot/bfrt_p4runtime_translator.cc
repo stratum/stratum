@@ -681,7 +681,8 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     const uint32 sdk_port_id = singleton_port_to_sdk_port_[port_id];
     return Uint32ToByteStream(sdk_port_id);
   } else {
-    // sdk port id(1 or 2 bytes) -> sdk port id(uint32) -> singleton port id(uint32)
+    // sdk port id(1 or 2 bytes) -> sdk port id(uint32) -> singleton port
+    // id(uint32)
     // -> singleton port id(N-byte)
     RET_CHECK(value.size() <= NumBitsToNumBytes(kTnaPortIdBitWidth));
     const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
