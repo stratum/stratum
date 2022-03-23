@@ -10,8 +10,8 @@ load(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//bazel:workspace_rule.bzl", "remote_workspace")
 
-P4RUNTIME_VER = "1.3.0"
-P4RUNTIME_SHA = "20b187a965fab78df9b8253da14166b8666938a82a2aeea16c6f9abaa934bdcb"
+P4RUNTIME_VER = "1.4.0-rc.1"
+P4RUNTIME_SHA = "3a32a4781c02e8aa36d998046b350c32c12abc27d62feeebff4e1554f29f37ef"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
