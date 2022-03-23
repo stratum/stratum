@@ -572,11 +572,6 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                                 "Invalid node (aka device) ID.");
         } else if (node_id == 0) {
           node_id = req.arbitration().device_id();
-        } else if (node_id != req.arbitration().device_id()) {
-          std::stringstream ss;
-          ss << "Node (aka device) ID for this stream has changed. Was "
-             << node_id << ", now is " << req.arbitration().device_id() << ".";
-          return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT, ss.str());
         }
         absl::uint128 election_id =
             absl::MakeUint128(req.arbitration().election_id().high(),
