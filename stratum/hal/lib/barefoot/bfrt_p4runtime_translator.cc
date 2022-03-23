@@ -675,24 +675,22 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
   // Translate type "tna/PortId_t"
   if (to_sdk) {
     // singleton port id(N-byte) -> singleton port id(uint32) -> sdk port
-    // id(uint32) -> sdk port id(2-byte)
+    // id(uint32) -> sdk port id(1 or 2 bytes)
     const uint32 port_id = ByteStreamToUint<uint32>(value);
     RET_CHECK(singleton_port_to_sdk_port_.count(port_id));
-    const uint32 sdk_port_id = singleton_port_to_sdk_port_[port_id];
-    std::string sdk_port_id_bytes = P4RuntimeByteStringToPaddedByteString(
-        Uint32ToByteStream(sdk_port_id), NumBitsToNumBytes(bit_width));
-    return sdk_port_id_bytes;
+    return Uint32ToByteStream(singleton_port_to_sdk_port_[port_id]);
   } else {
-    // sdk port id(2-byte) -> sdk port id(uint32) -> singleton port id(uint32)
+    // sdk port id(1 or 2 bytes) -> sdk port id(uint32) -> singleton port
+    // id(uint32)
     // -> singleton port id(N-byte)
-    RET_CHECK(value.size() == NumBitsToNumBytes(kTnaPortIdBitWidth));
+    RET_CHECK(value.size() <= NumBitsToNumBytes(kTnaPortIdBitWidth));
     const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
     RET_CHECK(sdk_port_to_singleton_port_.count(sdk_port_id));
     const uint32 port_id = sdk_port_to_singleton_port_[sdk_port_id];
-    std::string port_id_bytes = P4RuntimeByteStringToPaddedByteString(
-        Uint32ToByteStream(port_id), NumBitsToNumBytes(bit_width));
-    if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-      port_id_bytes = ByteStringToP4RuntimeByteString(port_id_bytes);
+    std::string port_id_bytes = Uint32ToByteStream(port_id);
+    if (FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
+      port_id_bytes = P4RuntimeByteStringToPaddedByteString(
+          port_id_bytes, NumBitsToNumBytes(bit_width));
     }
     return port_id_bytes;
   }

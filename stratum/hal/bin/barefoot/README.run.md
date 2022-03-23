@@ -151,6 +151,8 @@ You can safely ignore warnings like this:
 ```
 
 For more details on additional options, see [below](#stratum-runtime-options).
+Otherwise, continue with the [pipeline README](/stratum/hal/bin/barefoot/README.pipeline.md)
+on how to load a P4 pipeline into Stratum.
 
 ### Managing Stratum with systemd
 
