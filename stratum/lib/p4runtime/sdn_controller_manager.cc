@@ -12,7 +12,6 @@
 #include "absl/types/optional.h"
 #include "glog/logging.h"
 #include "p4/v1/p4runtime.pb.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4runtime {
@@ -407,12 +406,11 @@ absl::Status SdnControllerManager::SendStreamMessageToPrimary(
   bool found_at_least_one_primary = false;
 
   for (const auto& connection : connections_) {
-    auto role_name = connection->GetRoleName();
-    auto primary_id_by_role_name = gtl::FindWithDefault(
-        election_id_past_by_role_, role_name, absl::nullopt);
-    if (primary_id_by_role_name.has_value() &&
-        primary_id_by_role_name == connection->GetElectionId()) {
-      if (role_receives_packet_in_.contains(role_name)) {
+    absl::optional<absl::uint128> election_id_past_for_role =
+        election_id_past_by_role_[connection->GetRoleName()];
+    if (election_id_past_for_role.has_value() &&
+        election_id_past_for_role == connection->GetElectionId()) {
+      if (role_receives_packet_in_.contains(connection->GetRoleName())) {
         found_at_least_one_primary = true;
         connection->SendStreamMessageResponse(response);
       }

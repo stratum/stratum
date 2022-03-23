@@ -146,7 +146,7 @@ class SdnControllerManager {
   // primary connections for that role must use an election ID that is >= in
   // value.
   //
-  // key:   role_name   (no value indicaates the default/root role)
+  // key:   role_name   (no value indicates the default/root role)
   // value: election ID (no value indicates there has never been a primary
   //                     connection)
   absl::flat_hash_map<absl::optional<std::string>,
