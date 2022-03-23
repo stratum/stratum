@@ -543,8 +543,9 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   // 3- At any point of time, only the master stream is capable of sending
   //    and receiving packets.
 
-  // First thing to do is to check the connection limit and increment it.
-  auto ret = CheckAndCountConnectionLimit();
+  // First thing to do is to ensure that we're not already handling too many
+  // connections and increment the counter by one.
+  auto ret = CheckAndIncrementConnectionCount();
   if (!ret.ok()) {
     return ::grpc::Status(ToGrpcCode(ret.CanonicalCode()), ret.error_message());
   }
@@ -663,7 +664,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   return ::grpc::Status::OK;
 }
 
-::util::Status P4Service::CheckAndCountConnectionLimit() {
+::util::Status P4Service::CheckAndIncrementConnectionCount() {
   absl::WriterMutexLock l(&controller_lock_);
 
   if (num_controller_connections_ >= FLAGS_max_num_controller_connections) {

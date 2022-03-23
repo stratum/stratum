@@ -119,9 +119,10 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // Specifies the max number of controllers that can connect for a node.
   static constexpr size_t kMaxNumControllerPerNode = 5;
 
-  // Checks the number of active connections as well to make sure we do not end
-  // with so many dangling threads.
-  ::util::Status CheckAndCountConnectionLimit()
+  // Checks and increments the number of active connections to make sure we do
+  // not end with so many dangling threads. Called for every newly connected
+  // controller, and before `AddOrModifyController`.
+  ::util::Status CheckAndIncrementConnectionCount()
       LOCKS_EXCLUDED(controller_lock_);
 
   // Adds a new controller to the controller manager. If the election_id in the
