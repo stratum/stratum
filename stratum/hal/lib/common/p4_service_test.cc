@@ -435,12 +435,12 @@ TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigSuccess) {
       .WillRepeatedly(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::v1::SetForwardingPipelineConfigRequest request;
-  ::p4::v1::SetForwardingPipelineConfigResponse response;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&context, &stream);
   controller.SetElectionId(kElectionId1);
   AddFakeMasterController(kNodeId1, &controller);
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
@@ -565,11 +565,11 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigFailureWhenPushFails) {
 
   ::grpc::ServerContext context;
   StreamMessageReaderWriterMock stream;
-  ::p4::v1::SetForwardingPipelineConfigRequest request;
-  ::p4::v1::SetForwardingPipelineConfigResponse response;
   p4runtime::SdnConnection controller(&context, &stream);
   controller.SetElectionId(kElectionId1);
   AddFakeMasterController(kNodeId1, &controller);
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
@@ -592,12 +592,12 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
                                       "reboot required")));
 
   ::grpc::ServerContext context;
-  ::p4::v1::SetForwardingPipelineConfigRequest request;
-  ::p4::v1::SetForwardingPipelineConfigResponse response;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&context, &stream);
   controller.SetElectionId(kElectionId1);
   AddFakeMasterController(kNodeId1, &controller);
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
@@ -714,14 +714,14 @@ TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
-  ::grpc::ClientContext context;
-  ::p4::v1::WriteRequest req;
-  ::p4::v1::WriteResponse resp;
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
   controller.SetElectionId(kElectionId1);
   AddFakeMasterController(kNodeId1, &controller);
+  ::grpc::ClientContext context;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
@@ -778,14 +778,14 @@ TEST_P(P4ServiceTest, WriteFailureForAuthError) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
-  ::grpc::ClientContext context;
-  ::p4::v1::WriteRequest req;
-  ::p4::v1::WriteResponse resp;
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
   controller.SetElectionId(kElectionId1);
   AddFakeMasterController(kNodeId1, &controller);
+  ::grpc::ClientContext context;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
@@ -1530,12 +1530,12 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
       .WillRepeatedly(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::v1::SetForwardingPipelineConfigRequest setRequest;
-  ::p4::v1::SetForwardingPipelineConfigResponse setResponse;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&context, &stream);
   controller.SetElectionId(kElectionId1);
   AddFakeMasterController(kNodeId1, &controller);
+  ::p4::v1::SetForwardingPipelineConfigRequest setRequest;
+  ::p4::v1::SetForwardingPipelineConfigResponse setResponse;
   setRequest.set_device_id(kNodeId1);
   setRequest.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   setRequest.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
