@@ -185,6 +185,7 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
         field_id: 2
         ternary { value: "\x00" mask: "\x0f\xff" }
       }
+      action { action { action_id: 1 } }
       priority: 10
     }
     data {
