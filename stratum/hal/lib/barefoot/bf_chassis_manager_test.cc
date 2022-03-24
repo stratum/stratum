@@ -336,7 +336,7 @@ TEST_F(BfChassisManagerTest, SetPortLoopback) {
 }
 
 TEST_F(BfChassisManagerTest, ApplyPortShaping) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_port_shaping_config {
         key: 7654321
@@ -353,7 +353,7 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -386,7 +386,7 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
 }
 
 TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
         key: 7654321
@@ -402,7 +402,7 @@ TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -422,7 +422,7 @@ TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
 }
 
 TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_qos_config {
         key: 7654321  # kNodeId
@@ -467,7 +467,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -486,7 +486,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
 }
 
 TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_qos_config {
         key: 7654321  # kNodeId
@@ -526,7 +526,7 @@ TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -554,7 +554,7 @@ TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
 }
 
 TEST_F(BfChassisManagerTest, ReplayPorts) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
         key: 7654321
@@ -584,7 +584,7 @@ TEST_F(BfChassisManagerTest, ReplayPorts) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   constexpr int kCpuPort = 64;
 

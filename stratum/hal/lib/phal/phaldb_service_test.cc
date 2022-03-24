@@ -77,7 +77,7 @@ class PhalDbServiceTest : public ::testing::TestWithParam<OperationMode> {
   std::unique_ptr<PhalMock> phal_mock_;
   std::unique_ptr<AttributeDatabaseMock> database_mock_;
 
-  const std::string valid_request_path_proto = R"PROTO(
+  const std::string valid_request_path_proto = R"pb(
     entries {
       name: "cards"
       index: 0
@@ -92,17 +92,17 @@ class PhalDbServiceTest : public ::testing::TestWithParam<OperationMode> {
       name: "transceiver"
       terminal_group: true
     }
-  )PROTO";
+  )pb";
 
-  const std::string invalid_request_path_proto = R"PROTO(
+  const std::string invalid_request_path_proto = R"pb(
     entries {
       name: "does_not_exists"
       index: 0
       indexed: true
     }
-  )PROTO";
+  )pb";
 
-  const std::string phaldb_get_response_proto = R"PROTO(
+  const std::string phaldb_get_response_proto = R"pb(
     cards {
       ports {
         physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
@@ -121,7 +121,7 @@ class PhalDbServiceTest : public ::testing::TestWithParam<OperationMode> {
         }
       }
     }
-  )PROTO";
+  )pb";
 };
 
 TEST_P(PhalDbServiceTest, SetupWarm) {

@@ -28,13 +28,13 @@ using testing::HasSubstr;
 using testing::UnorderedElementsAre;
 using testing::UnorderedElementsAreArray;
 
-constexpr char kDefaultP4Table[] = R"PROTO(
+constexpr char kDefaultP4Table[] = R"pb(
   preamble { id: 1 name: "table_1" }
   match_fields { id: 100 }
   match_fields { id: 200 }
   match_fields { id: 300 }
   size: 10
-)PROTO";
+)pb";
 
 ::p4::config::v1::Table DefaultP4Table() {
   ::p4::config::v1::Table p4_table;

@@ -34,7 +34,7 @@ class OpticsAdapterTest : public ::testing::Test {
   std::unique_ptr<OpticsAdapter> optics_adapter_;
 };
 
-constexpr char phaldb_get_response_proto[] = R"PROTO(
+constexpr char phaldb_get_response_proto[] = R"pb(
   optical_modules {
     id: 0
     network_interfaces {
@@ -46,7 +46,7 @@ constexpr char phaldb_get_response_proto[] = R"PROTO(
       operational_mode: 1
     }
   }
-)PROTO";
+)pb";
 
 // Settable atrributes paths.
 const Path frequency_path = {PathEntry("optical_modules", 0),
