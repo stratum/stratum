@@ -4,7 +4,6 @@
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 
 #include <algorithm>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
