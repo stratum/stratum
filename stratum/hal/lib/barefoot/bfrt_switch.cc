@@ -4,7 +4,6 @@
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
 
 #include <algorithm>
-#include <map>
 #include <vector>
 
 #include "absl/memory/memory.h"
@@ -23,10 +22,10 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
-                       BfChassisManager* bf_chassis_manager,
-                       BfSdeInterface* bf_sde_interface,
-                       const std::map<int, BfrtNode*>& device_id_to_bfrt_node)
+BfrtSwitch::BfrtSwitch(
+    PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
+    BfSdeInterface* bf_sde_interface,
+    const absl::flat_hash_map<int, BfrtNode*>& device_id_to_bfrt_node)
     : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
@@ -259,7 +258,7 @@ BfrtSwitch::~BfrtSwitch() {}
 std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
     BfSdeInterface* bf_sde_interface,
-    const std::map<int, BfrtNode*>& device_id_to_bfrt_node) {
+    const absl::flat_hash_map<int, BfrtNode*>& device_id_to_bfrt_node) {
   return absl::WrapUnique(new BfrtSwitch(phal_interface, bf_chassis_manager,
                                          bf_sde_interface,
                                          device_id_to_bfrt_node));

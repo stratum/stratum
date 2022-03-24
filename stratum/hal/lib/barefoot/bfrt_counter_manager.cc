@@ -3,7 +3,6 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 
-#include <set>
 #include <vector>
 
 #include "absl/synchronization/notification.h"
