@@ -16,16 +16,16 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-static constexpr char bf_config_1pipe_str[] = R"PROTO(
+static constexpr char bf_config_1pipe_str[] = R"pb(
   p4_name: "prog1"
   bfruntime_info: "{json: true}"
   profiles {
     profile_name: "pipe1"
     context: "{json: true}"
     binary: "<raw bin>"
-  })PROTO";
+  })pb";
 
-static constexpr char bf_config_2pipe_str[] = R"PROTO(
+static constexpr char bf_config_2pipe_str[] = R"pb(
   p4_name: "prog1"
   bfruntime_info: "{json: true}"
   profiles {
@@ -37,7 +37,7 @@ static constexpr char bf_config_2pipe_str[] = R"PROTO(
     profile_name: "pipe2"
     context: "{json: true}"
     binary: "<raw bin>"
-  })PROTO";
+  })pb";
 
 TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProtoSuccess) {
   BfPipelineConfig bf_config;

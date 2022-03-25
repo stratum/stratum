@@ -202,7 +202,7 @@ class BfrtNodeTest : public ::testing::Test {
   static constexpr int kLogicalPortId = 35;
   static constexpr uint32 kPortId = 941;
   static constexpr uint32 kL2McastGroupId = 20;
-  static constexpr char kBfConfigPipelineString[] = R"PROTO(
+  static constexpr char kBfConfigPipelineString[] = R"pb(
     p4_name: "prog1"
     bfruntime_info: "{json: true}"
     profiles {
@@ -210,8 +210,8 @@ class BfrtNodeTest : public ::testing::Test {
       context: "{json: true}"
       binary: "<raw bin>"
     }
-  )PROTO";
-  static constexpr char kValidP4InfoString[] = R"PROTO(
+  )pb";
+  static constexpr char kValidP4InfoString[] = R"pb(
     pkg_info {
       arch: "tna"
     }
@@ -288,7 +288,7 @@ class BfrtNodeTest : public ::testing::Test {
       }
       size: 500
     }
-  )PROTO";
+  )pb";
 
   std::unique_ptr<BfrtTableManagerMock> bfrt_table_manager_mock_;
   std::unique_ptr<BfrtPacketioManagerMock> bfrt_packetio_manager_mock_;

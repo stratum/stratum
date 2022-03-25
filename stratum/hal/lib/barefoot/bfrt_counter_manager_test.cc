@@ -56,7 +56,7 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kCounterId))
       .WillOnce(Return(kBfRtCounterId));
 
-  const std::string kIndirectCounterEntryText = R"PROTO(
+  const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
     index {
       index: 100
@@ -65,7 +65,7 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
       byte_count: 100
       packet_count: 200
     }
-  )PROTO";
+  )pb";
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
 
