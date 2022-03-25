@@ -4,7 +4,6 @@
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 
 #include <algorithm>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -629,15 +628,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
                        direct_counter_entry, /*to_sdk=*/true));
   // Read table entry first.
   const auto& table_entry = translated_direct_counter_entry.table_entry();
-  RET_CHECK(table_entry.action().action().action_id() == 0)
-      << "Found action on DirectCounterEntry "
-      << translated_direct_counter_entry.ShortDebugString();
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   ASSIGN_OR_RETURN(auto table_key, bf_sde_interface_->CreateTableKey(table_id));
   ASSIGN_OR_RETURN(auto table_data,
-                   bf_sde_interface_->CreateTableData(
-                       table_id, table_entry.action().action().action_id()));
+                   bf_sde_interface_->CreateTableData(table_id, 0));
 
   absl::ReaderMutexLock l(&lock_);
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
@@ -675,16 +670,11 @@ BfrtTableManager::ReadDirectCounterEntry(
                    bfrt_p4runtime_translator_->TranslateDirectCounterEntry(
                        direct_counter_entry, /*to_sdk=*/true));
   const auto& table_entry = translated_direct_counter_entry.table_entry();
-  RET_CHECK(table_entry.action().action().action_id() == 0)
-      << "Found action on DirectCounterEntry "
-      << translated_direct_counter_entry.ShortDebugString();
-
   ASSIGN_OR_RETURN(uint32 table_id,
                    bf_sde_interface_->GetBfRtId(table_entry.table_id()));
   ASSIGN_OR_RETURN(auto table_key, bf_sde_interface_->CreateTableKey(table_id));
   ASSIGN_OR_RETURN(auto table_data,
-                   bf_sde_interface_->CreateTableData(
-                       table_id, table_entry.action().action().action_id()));
+                   bf_sde_interface_->CreateTableData(table_id, 0));
 
   {
     absl::ReaderMutexLock l(&lock_);
