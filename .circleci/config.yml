@@ -173,12 +173,16 @@ jobs:
 
   # Update images on Docker Hub
   publish-docker-build:
-    machine: true
+    docker:
+      - image: debian:9
+    # machine: true
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: Dockerfile.build
       - DOCKER_IMG: stratumproject/build:build
     steps:
+      - setup_remote_docker:
+          version: 20.10.11
       - checkout
       - *docker_login
       - *docker_build
@@ -398,14 +402,14 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
-    jobs:
-      - unit_tests
-      - cdlang_tests
-      - coverage
-      - lint-and-style-checks
-      - license-check
-      - markdown-style-check
+  # build_and_test:
+  #   jobs:
+  #     - unit_tests
+  #     - cdlang_tests
+  #     - coverage
+  #     - lint-and-style-checks
+  #     - license-check
+  #     - markdown-style-check
   docker-publish:
     jobs:
       - publish-docker-build
