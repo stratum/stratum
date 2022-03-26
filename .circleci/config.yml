@@ -174,7 +174,7 @@ jobs:
   # Update images on Docker Hub
   publish-docker-build:
     docker:
-      - image: debian:9
+      - image: stratumproject/build:build
     # machine: true
     environment:
       - DOCKER_SCOPE: .
