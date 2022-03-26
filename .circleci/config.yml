@@ -76,7 +76,7 @@ docker_build: &docker_build
     command: |
       docker pull $DOCKER_IMG || true
       cd $DOCKER_SCOPE
-      docker build -f $DOCKER_FILE -t $DOCKER_IMG \
+      docker build --squash -f $DOCKER_FILE -t $DOCKER_IMG \
         --cache-from $DOCKER_IMG \
         --label org.opencontainers.image.source=$CIRCLE_REPOSITORY_URL  \
         --label org.opencontainers.image.version=$CIRCLE_SHA1 \
@@ -84,6 +84,7 @@ docker_build: &docker_build
         --label build-timestamp=$(date +%FT%T%z) \
         --label build-machine=circle-ci \
         .
+      docker image ls stratumproject/build:build
 
 harbor_tag: &harbor_tag
   run:
@@ -181,7 +182,7 @@ jobs:
       - checkout
       - *docker_login
       - *docker_build
-      - *docker_push
+      # - *docker_push
 
   publish-docker-mininet:
     docker:
@@ -407,28 +408,28 @@ workflows:
       - markdown-style-check
   docker-publish:
     jobs:
-      - publish-docker-build:
-          filters:
-            branches:
-              only: main
-      - publish-docker-mininet:
-          requires:
-            - publish-docker-build
-      - publish-docker-p4c-fpm:
-          requires:
-            - publish-docker-build
-      - publish-docker-stratum-bcm-sdklt:
-          requires:
-            - publish-docker-build
-      - publish-docker-stratum-bcm-opennsa:
-          requires:
-            - publish-docker-build
-      - publish-docker-stratum-bfrt:
-          requires:
-            - publish-docker-build
-          matrix:
-            parameters:
-              sde_version: ["9.5.0", "9.5.2", "9.7.0", "9.7.1", "9.8.0"]
-      - publish-docker-stratum-tools:
-          requires:
-            - publish-docker-build
+      - publish-docker-build
+      #     filters:
+      #       branches:
+      #         only: main
+      # - publish-docker-mininet:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-p4c-fpm:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-stratum-bcm-sdklt:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-stratum-bcm-opennsa:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-stratum-bfrt:
+      #     requires:
+      #       - publish-docker-build
+      #     matrix:
+      #       parameters:
+      #         sde_version: ["9.5.0", "9.5.2", "9.7.0", "9.7.1", "9.8.0"]
+      # - publish-docker-stratum-tools:
+      #     requires:
+      #       - publish-docker-build
