@@ -183,6 +183,12 @@ jobs:
     steps:
       - setup_remote_docker:
           version: 20.10.11
+      - run: |
+          ssh remote-docker \<<EOF
+            sudo bash -c 'echo "{\"experimental\": true}" > /etc/docker/daemon.json'
+            sudo systemctl restart docker
+            sudo docker info
+          EOF
       - checkout
       - *docker_login
       - *docker_build
