@@ -116,7 +116,7 @@ namespace barefoot {
         const auto& match_field_id = match_field.id();
         std::string* uri = gtl::FindOrNull(type_name_to_uri, type_name);
         if (uri) {
-          RET_CHECK(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.contains(*uri));
           table_to_field_to_type_uri[table_id][match_field_id] = *uri;
         }
         int32* bit_width = gtl::FindOrNull(type_name_to_bit_width, type_name);
@@ -233,8 +233,8 @@ BfrtP4RuntimeTranslator::TranslateTableEntryInternal(
     const ::p4::v1::TableEntry& entry, bool to_sdk) {
   ::p4::v1::TableEntry translated_entry(entry);
   const auto& table_id = translated_entry.table_id();
-  if (table_to_field_to_type_uri_.count(table_id) &&
-      table_to_field_to_bit_width_.count(table_id)) {
+  if (table_to_field_to_type_uri_.contains(table_id) &&
+      table_to_field_to_bit_width_.contains(table_id)) {
     for (::p4::v1::FieldMatch& field_match :
          *translated_entry.mutable_match()) {
       const auto& field_id = field_match.field_id();
@@ -391,13 +391,13 @@ BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
   if (uri == kUriTnaPortId) {
     ::p4::v1::Index translated_index;
     if (to_sdk) {
-      RET_CHECK(
-          singleton_port_to_sdk_port_.count(static_cast<uint32>(index_value)));
+      RET_CHECK(singleton_port_to_sdk_port_.contains(
+          static_cast<uint32>(index_value)));
       translated_index.set_index(
           singleton_port_to_sdk_port_[static_cast<uint32>(index_value)]);
     } else {
-      RET_CHECK(
-          sdk_port_to_singleton_port_.count(static_cast<uint32>(index_value)));
+      RET_CHECK(sdk_port_to_singleton_port_.contains(
+          static_cast<uint32>(index_value)));
       translated_index.set_index(
           sdk_port_to_singleton_port_[static_cast<uint32>(index_value)]);
     }
@@ -459,11 +459,11 @@ BfrtP4RuntimeTranslator::TranslateRegisterEntry(
   // Since we know we are always translating the port number, we can simply
   // use the port map here.
   if (to_sdk) {
-    RET_CHECK(singleton_port_to_sdk_port_.count(replica.egress_port()));
+    RET_CHECK(singleton_port_to_sdk_port_.contains(replica.egress_port()));
     translated_replica.set_egress_port(
         singleton_port_to_sdk_port_[replica.egress_port()]);
   } else {
-    RET_CHECK(sdk_port_to_singleton_port_.count(replica.egress_port()));
+    RET_CHECK(sdk_port_to_singleton_port_.contains(replica.egress_port()));
     translated_replica.set_egress_port(
         sdk_port_to_singleton_port_[replica.egress_port()]);
   }
@@ -579,7 +579,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
         std::string* uri =
             gtl::FindOrNull(type_name_to_uri, match_field.type_name().name());
         if (uri) {
-          RET_CHECK(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.contains(*uri));
           match_field.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         match_field.clear_type_name();
@@ -592,7 +592,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
         std::string* uri =
             gtl::FindOrNull(type_name_to_uri, param.type_name().name());
         if (uri) {
-          RET_CHECK(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.contains(*uri));
           param.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         param.clear_type_name();
@@ -605,7 +605,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
         std::string* uri =
             gtl::FindOrNull(type_name_to_uri, metadata.type_name().name());
         if (uri) {
-          RET_CHECK(kUriToBitWidth.count(*uri));
+          RET_CHECK(kUriToBitWidth.contains(*uri));
           metadata.set_bitwidth(kUriToBitWidth.at(*uri));
         }
         metadata.clear_type_name();
@@ -636,8 +636,8 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
   ::p4::v1::Action translated_action;
   translated_action.CopyFrom(action);
   const auto& action_id = action.action_id();
-  if (action_to_param_to_type_uri_.count(action_id) &&
-      action_to_param_to_bit_width_.count(action_id)) {
+  if (action_to_param_to_type_uri_.contains(action_id) &&
+      action_to_param_to_bit_width_.contains(action_id)) {
     for (::p4::v1::Action_Param& param : *translated_action.mutable_params()) {
       const auto& param_id = param.param_id();
       std::string* uri =
@@ -677,7 +677,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     // singleton port id(N-byte) -> singleton port id(uint32) -> sdk port
     // id(uint32) -> sdk port id(1 or 2 bytes)
     const uint32 port_id = ByteStreamToUint<uint32>(value);
-    RET_CHECK(singleton_port_to_sdk_port_.count(port_id));
+    RET_CHECK(singleton_port_to_sdk_port_.contains(port_id));
     return Uint32ToByteStream(singleton_port_to_sdk_port_[port_id]);
   } else {
     // sdk port id(1 or 2 bytes) -> sdk port id(uint32) -> singleton port
@@ -685,7 +685,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     // -> singleton port id(N-byte)
     RET_CHECK(value.size() <= NumBitsToNumBytes(kTnaPortIdBitWidth));
     const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
-    RET_CHECK(sdk_port_to_singleton_port_.count(sdk_port_id));
+    RET_CHECK(sdk_port_to_singleton_port_.contains(sdk_port_id));
     const uint32 port_id = sdk_port_to_singleton_port_[sdk_port_id];
     std::string port_id_bytes = Uint32ToByteStream(port_id);
     if (FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {

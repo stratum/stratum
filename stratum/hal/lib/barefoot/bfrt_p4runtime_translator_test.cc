@@ -551,12 +551,13 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToSdk) {
   EXPECT_OK(PushChassisConfig());
   // No mapping from singleton port to sdk port
   auto singleton_port_id = Uint32ToBytes(10, kTnaPortIdBitWidth);
-  EXPECT_THAT(TranslateValue(singleton_port_id, kUriTnaPortId, /*to_sdk=*/true,
-                             kTnaPortIdBitWidth)
-                  .status(),
-              DerivedFromStatus(::util::Status(
-                  StratumErrorSpace(), ERR_INVALID_PARAM,
-                  "'singleton_port_to_sdk_port_.count(port_id)' is false. ")));
+  EXPECT_THAT(
+      TranslateValue(singleton_port_id, kUriTnaPortId, /*to_sdk=*/true,
+                     kTnaPortIdBitWidth)
+          .status(),
+      DerivedFromStatus(::util::Status(
+          StratumErrorSpace(), ERR_INVALID_PARAM,
+          "'singleton_port_to_sdk_port_.contains(port_id)' is false. ")));
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToPort) {
@@ -569,7 +570,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_MissingMappingToPort) {
           .status(),
       DerivedFromStatus(::util::Status(
           StratumErrorSpace(), ERR_INVALID_PARAM,
-          "'sdk_port_to_singleton_port_.count(sdk_port_id)' is false. ")));
+          "'sdk_port_to_singleton_port_.contains(sdk_port_id)' is false. ")));
 }
 
 TEST_F(BfrtP4RuntimeTranslatorTest, TranslateValue_ToSdk) {
@@ -1188,7 +1189,7 @@ TEST_F(BfrtP4RuntimeTranslatorTest, WritePRE_InvalidPort) {
           ->TranslatePacketReplicationEngineEntry(pre_entry, true)
           .status(),
       DerivedFromStatus(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
-                                       "'singleton_port_to_sdk_port_.count("
+                                       "'singleton_port_to_sdk_port_.contains("
                                        "replica.egress_port())' is false.")));
 }
 
