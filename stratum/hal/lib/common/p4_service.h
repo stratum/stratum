@@ -7,14 +7,15 @@
 
 #include <pthread.h>
 
-#include <map>
 #include <memory>
 #include <set>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"
@@ -195,7 +196,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   //
   // It is possible for connections to be made for specific roles. In which case
   // one primary connection is allowed for each distinct role.
-  std::map<uint64, p4runtime::SdnControllerManager>
+  std::unordered_map<uint64, p4runtime::SdnControllerManager>
       node_id_to_controller_manager_ ABSL_GUARDED_BY(controller_lock_);
 
   // Holds the number of currently open StreamChannels across all nodes. This is
@@ -210,7 +211,8 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
 
   // Map of per-node Channels which are used to forward received responses to
   // P4Service.
-  std::map<uint64, std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>>>
+  absl::flat_hash_map<uint64,
+                      std::shared_ptr<Channel<::p4::v1::StreamMessageResponse>>>
       stream_response_channels_ GUARDED_BY(stream_response_thread_lock_);
 
   // Forwarding pipeline configs of all the switching nodes. Updated as we push
