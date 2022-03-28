@@ -665,7 +665,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   if (num_controller_connections_ >= FLAGS_max_num_controller_connections) {
     return MAKE_ERROR(ERR_NO_RESOURCE)
            << "Can have max " << FLAGS_max_num_controller_connections
-           << " active/inactive streams for all the node.";
+           << " active/inactive streams for all the nodes.";
   }
   ++num_controller_connections_;
 

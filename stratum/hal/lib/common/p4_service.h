@@ -132,9 +132,8 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   // remote controller client(s), while it has the controller_lock_ lock. This
   // will make sure the response is sent back to the client (in case a packet
   // is received right at the same time) before StreamResponseReceiveHandler()
-  // takes the lock. After successful completion of this function, the first
-  // element in controllers_ set will have the master controller stream for
-  // packet I/O.
+  // takes the lock. After successful completion of this function, the
+  // SdnControllerManager will have the master controller stream for packet I/O.
   ::util::Status AddOrModifyController(
       uint64 node_id, const p4::v1::MasterArbitrationUpdate& update,
       p4runtime::SdnConnection* controller) LOCKS_EXCLUDED(controller_lock_);
@@ -201,7 +200,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
 
   // Holds the number of currently open StreamChannels across all nodes. This is
   // tracked for resource limiting. Note that this count can be different from
-  // the number of connected controllers reported by all controller managers, as
+  // the sum of connected controllers reported by all controller managers, as
   // a P4Runtime client can connect, but never send a arbitration message.
   int num_controller_connections_ GUARDED_BY(controller_lock_);
 
