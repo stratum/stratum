@@ -42,7 +42,6 @@ stratum_cc_library(
     srcs = ["sdn_controller_manager.cc"],
     hdrs = ["sdn_controller_manager.h"],
     deps = [
-        "//stratum/glue:logging",
         "@com_github_google_glog//:glog",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
