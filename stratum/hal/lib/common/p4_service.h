@@ -177,9 +177,10 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
                                     const ::p4::v1::StreamMessageResponse& resp)
       LOCKS_EXCLUDED(controller_lock_);
 
-  // Mutex lock used to protect node_id_to_controller_manager_ which is updated
-  // every time mastership for any of the controllers connected to each node is
-  // modified, or when a controller is disconnected.
+  // Mutex lock used to protect node_id_to_controller_manager_ which is accessed
+  // every time a controller connects, disconnects or wants to acquire
+  // mastership. Additionally we read it whenever we need to check for
+  // mastership authorization on a request.
   mutable absl::Mutex controller_lock_;
 
   // Mutex lock for protecting the internal forwarding pipeline configs pushed
