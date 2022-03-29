@@ -96,7 +96,7 @@ void SdnConnection::SendStreamMessageResponse(
     const p4::v1::StreamMessageResponse& response) {
   VLOG(2) << "Sending response: " << response.ShortDebugString();
   if (!grpc_stream_->Write(response)) {
-    LOG(ERROR) << "Could not send arbitration update response to gRPC context '"
+    LOG(ERROR) << "Could not send stream message response to gRPC context '"
                << grpc_context_ << "': " << response.ShortDebugString();
   }
 }
