@@ -46,17 +46,11 @@ analyze_bazel_profile: &analyze_bazel_profile
   run:
     name: Analyze Bazel profile
     command: |
-      bazel analyze-profile /tmp/bazel.profile.json
+      bazel --bazelrc .circleci/bazelrc analyze-profile /tmp/bazel.profile.json
 
 store_bazel_profile: &store_bazel_profile
   store_artifacts:
     path: /tmp/bazel.profile.json
-
-# Use a bazelrc file convenient for CI jobs.
-set_bazelrc: &set_bazelrc
-  run:
-    name: Set bazelrc
-    command: cat .circleci/bazelrc >> .bazelrc
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -112,18 +106,17 @@ jobs:
     steps:
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Query all Stratum targets
           command: bazel query '//...'
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build
+          command: xargs -a .circleci/build-targets.txt bazel --bazelrc .circleci/bazelrc build
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test
+          command: xargs -a .circleci/test-targets.txt bazel --bazelrc .circleci/bazelrc test
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -137,15 +130,14 @@ jobs:
     steps:
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Build CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel build
+          command: xargs -a .circleci/cdlang-targets.txt bazel --bazelrc .circleci/bazelrc build
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel test
+          command: xargs -a .circleci/cdlang-targets.txt bazel --bazelrc .circleci/bazelrc test
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -159,10 +151,9 @@ jobs:
     steps:
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Run test and collect coverage data
-          command: xargs -a .circleci/test-targets.txt bazel coverage
+          command: xargs -a .circleci/test-targets.txt bazel --bazelrc .circleci/bazelrc coverage
       - *analyze_bazel_profile
       - *store_bazel_profile
       - codecov/upload:
@@ -196,11 +187,10 @@ jobs:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Build stratum-bmv2
           command: |
-            bazel build --config=release //stratum/hal/bin/bmv2:stratum_bmv2_deb
+            bazel --bazelrc .circleci/bazelrc build --config=release //stratum/hal/bin/bmv2:stratum_bmv2_deb
             cp bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
@@ -227,11 +217,10 @@ jobs:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Build p4c-fpm
           command: |
-            bazel build --config=release //stratum/p4c_backends/fpm:p4c_fpm_deb
+            bazel --bazelrc .circleci/bazelrc build --config=release //stratum/p4c_backends/fpm:p4c_fpm_deb
             cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
@@ -256,11 +245,10 @@ jobs:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
+            bazel --bazelrc .circleci/bazelrc build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
       - *docker_build
@@ -281,11 +269,10 @@ jobs:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
+            bazel --bazelrc .circleci/bazelrc build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
       - *docker_build
@@ -336,11 +323,10 @@ jobs:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *set_bazelrc
       - run:
           name: Build stratum tools package
           command: |
-            bazel build --config=release //stratum/tools:stratum_tools_deb
+            bazel --bazelrc .circleci/bazelrc build --config=release //stratum/tools:stratum_tools_deb
             cp bazel-bin/stratum/tools/stratum_tools_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *harbor_login
