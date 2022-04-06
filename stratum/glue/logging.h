@@ -50,7 +50,8 @@ bool SetLogLevel(const LoggingConfig& logging_config);
 
 // ostream overload for std::nulptr_t for C++11
 // see: https://stackoverflow.com/a/46256849
-#if __cplusplus == 201103L
+// On MacOS this seems to be fixed after Mojave.
+#if __cplusplus == 201103L && !defined(__APPLE__)
 #include <cstddef>
 #include <iostream>
 namespace std {
