@@ -56,7 +56,9 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cat .circleci/bazelrc >> .bazelrc
+    command: |
+      cat .circleci/bazelrc >> .bazelrc
+      echo "build --remote_cache=http://$BAZEL_CACHE_USER:$BAZEL_CACHE_PASSWORD@bazel-cache.stratumproject.org:8080" >> .bazelrc
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -111,7 +113,7 @@ jobs:
       - CXX: clang++
     steps:
       - checkout
-      - *restore_bazel_cache
+      # - *restore_bazel_cache
       - *set_bazelrc
       - run:
           name: Query all Stratum targets
@@ -124,8 +126,8 @@ jobs:
       - run:
           name: Test Stratum targets
           command: xargs -a .circleci/test-targets.txt bazel test
-      - *clean_bazel_cache
-      - *save_bazel_cache
+      # - *clean_bazel_cache
+      # - *save_bazel_cache
 
   # CDLang
   cdlang_tests:
