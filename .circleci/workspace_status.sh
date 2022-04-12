@@ -18,6 +18,11 @@
 # and the output will be discarded.
 set -e -o pipefail
 
+# If not building from a git repository, we can't generate any stamping info.
+if [ ! -d ".git" ]; then
+  exit 0
+fi
+
 # The upstream git URL
 git_url=$(git config --get remote.origin.url)
 echo "GIT_URL ${git_url}"
