@@ -208,8 +208,7 @@ In another terminal window, run Stratum in its own container:
 ```bash
 PLATFORM=barefoot-tofino-model \
 stratum/hal/bin/barefoot/docker/start-stratum-container.sh \
-  -bf_switchd_background=false \
-  -enable_onlp=false
+  -bf_switchd_background=false
 ```
 
 ### Cleaning up `tofino-model` interfaces
@@ -569,12 +568,13 @@ On some supported platforms the BSP-based implementation is chosen by default.
 This selection can be overwritten with the `-bf_switchd_cfg` flag:
 
 ```bash
-start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf -enable_onlp=false
+start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf [-enable_onlp=false]
 ```
 
-The `-enable_onlp=false` flag tells Stratum not to use the ONLP PHAL plugin. Use
-this flag when you are using a vendor-provided BSP or running Stratum with the
-Tofino software model.
+The optional `-enable_onlp=false` flag tells Stratum not to use the ONLP PHAL
+plugin. ONLP is disabled by default, but you can explicitly override this flag
+when using a vendor-provided BSP or running Stratum with the Tofino software
+model.
 
 ### Running the binary in BSP-less mode
 

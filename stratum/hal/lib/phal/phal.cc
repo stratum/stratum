@@ -27,7 +27,7 @@
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_file);
-DEFINE_bool(enable_onlp, true, "Enable the ONLP PHAL plugin.");
+DEFINE_bool(enable_onlp, false, "Enable the ONLP PHAL plugin.");
 
 namespace stratum {
 namespace hal {
@@ -91,10 +91,12 @@ Phal* Phal::CreateSingleton() {
     PhalInitConfig phal_config;
     if (FLAGS_phal_config_file.empty()) {
       if (configurators.empty()) {
-        LOG(ERROR)
-            << "No phal_config_file specified and no switch configurator "
-               "found! This is probably not what you want. Did you forget to "
-               "specify any '--define phal_with_*=true' Bazel flags?";
+        LOG(INFO)
+            << "No phal_config_file specified and no switch configurator found!"
+            << " PHAL will start without any data source backend. "
+            << "You can specify '--define phal_with_tai=true' while building "
+            << "to enable TAI support, or '-enable_onlp' at runtime to enable "
+            << "th ONLP plugin.";
       }
       for (const auto& configurator : configurators) {
         RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
