@@ -96,7 +96,7 @@ Phal* Phal::CreateSingleton() {
             << " PHAL will start without any data source backend. "
             << "You can specify '--define phal_with_tai=true' while building "
             << "to enable TAI support, or '-enable_onlp' at runtime to enable "
-            << "th ONLP plugin.";
+            << "the ONLP plugin.";
       }
       for (const auto& configurator : configurators) {
         RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
