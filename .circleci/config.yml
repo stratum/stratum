@@ -56,7 +56,10 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cat .circleci/bazelrc >> .bazelrc
+    # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
+    command: |
+      cat .circleci/bazelrc >> .bazelrc
+      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
