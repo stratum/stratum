@@ -106,6 +106,7 @@ jobs:
   unit_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: medium+
     environment:
       - CC: clang
       - CXX: clang++
@@ -153,6 +154,7 @@ jobs:
   coverage:
     docker:
       - image: stratumproject/build:build
+    resource_class: medium+
     environment:
       - CC: clang
       - CXX: clang++
@@ -358,6 +360,7 @@ jobs:
   lint-and-style-checks:
     docker:
       - image: stratumproject/build:build
+    resource_class: small
     steps:
       - checkout
       # We always continue with all steps, even on failures, to get the most
@@ -378,6 +381,7 @@ jobs:
   license-check:
     docker:
       - image: fsfe/reuse:latest
+    resource_class: small
     steps:
       - checkout
       - run:
