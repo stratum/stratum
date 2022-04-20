@@ -18,7 +18,7 @@
 # and the output will be discarded.
 set -e -o pipefail
 
-# If not building from a git repository, we can't generate any stamping info.
+# When building outside the git repository we can't generate any stamping info.
 if [ ! -d ".git" ]; then
   exit 0
 fi
