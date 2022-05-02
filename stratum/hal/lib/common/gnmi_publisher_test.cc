@@ -49,7 +49,7 @@ class SubscriptionTestBase {
   virtual ~SubscriptionTestBase() {}
 
   void GetSampleHalConfig() {
-    constexpr char kHalConfig[] = R"proto(
+    constexpr char kHalConfig[] = R"pb(
       description: "Sample Generic Tomahawk config with 2x100G ports."
       chassis { platform: PLT_GENERIC_TOMAHAWK name: "device1.domain.net.com" }
       nodes {
@@ -83,7 +83,7 @@ class SubscriptionTestBase {
         port: 2
         speed_bps: 100000000000
         node: 1
-      })proto";
+      })pb";
     ASSERT_OK(ParseProtoFromString(kHalConfig, &hal_config_));
   }
 

@@ -3,6 +3,8 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
 
+#include <map>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
@@ -107,7 +109,7 @@ class BfrtSwitchTest : public ::testing::Test {
   std::unique_ptr<BfSdeMock> bf_sde_mock_;
   std::unique_ptr<BfChassisManagerMock> bf_chassis_manager_mock_;
   std::unique_ptr<BfrtNodeMock> bfrt_node_mock_;
-  std::map<int, BfrtNode*> device_to_bfrt_node_mock_;
+  absl::flat_hash_map<int, BfrtNode*> device_to_bfrt_node_mock_;
   std::unique_ptr<BfrtSwitch> bfrt_switch_;
 };
 

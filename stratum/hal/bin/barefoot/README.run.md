@@ -151,6 +151,8 @@ You can safely ignore warnings like this:
 ```
 
 For more details on additional options, see [below](#stratum-runtime-options).
+Otherwise, continue with the [pipeline README](/stratum/hal/bin/barefoot/README.pipeline.md)
+on how to load a P4 pipeline into Stratum.
 
 ### Managing Stratum with systemd
 
@@ -663,6 +665,30 @@ short, it requires that the binary strings must not contain redundant bytes,
 behavior. **This flag will be removed in a future release and canonical byte
 strings will be the default.**
 
+
+### Experimental P4Runtime translation support
+
+The `stratum_bfrt` target supports P4Runtime translation which helps to translate
+between SDN port and the SDK port.
+
+To enable this, you need to create a new port type in you P4 code and use this type
+for match field and action parameter, for example:
+
+```p4
+@p4runtime_translation("tna/PortId_t", 32)
+type bit<9> FabricPortId_t;
+```
+
+To enable it on Stratum, add `--experimental_enable_p4runtime_translation` flag
+when starting Stratum.
+
+Note that `stratum_bfrt` also follows the PSA port spec, below are reserved ports
+when using `stratum_bfrt`:
+
+- `0x00000000`: Unspecified port.
+- `0xFFFFFFFD`: CPU port.
+- `0xFFFFFF00` - `0xFFFFFF03`: Recirculation ports for pipeline 0 - 3.
+
 -----
 
 ## Troubleshooting
@@ -782,25 +808,12 @@ lspci -d 1d1c:
 # 05:00.0 Unassigned class [ff00]: Device 1d1c:0010 (rev 10)
 ```
 
-### Experimental P4Runtime translation support
+### SDE config mismatch and connection error
 
-The `stratum_bfrt` target supports P4Runtime translation which helps to translate
-between SDN port and the SDK port.
+`connect failed. Error: Connection refused`
 
-To enable this, you need to create a new port type in you P4 code and use this type
-for match field and action parameter, for example:
-
-```p4
-@p4runtime_translation("tna/PortId_t", 32)
-type bit<9> FabricPortId_t;
-```
-
-To enable it on Stratum, add `--experimental_enable_p4runtime_translation` flag
-when starting Stratum.
-
-Note that `stratum_bfrt` also follows the PSA port spec, below are reserved ports
-when using `stratum_bfrt`:
-
-- `0x00000000`: Unspecified port.
-- `0xFFFFFFFD`: CPU port.
-- `0xFFFFFF00` - `0xFFFFFF03`: Recirculation ports for pipeline 0 - 3.
+This error means that Stratum was started with the expectation of a BSP
+(`-bf_switchd_cfg=...`), but no BSP was actually found. Check that you are
+passing in the right config, depending on how you compiled the SDE:
+`tofino_skip_p4.conf` vs. `tofino_skip_p4_no_bsp.conf `. Normally the
+`start-stratum.sh` script will pick the right value.
