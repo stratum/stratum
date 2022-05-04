@@ -14,16 +14,16 @@ orbs:
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
     keys:
-      - v0-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
-      - v0-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
-      - v0-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
+      - v1-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v1-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v1-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
     # jobs where the bazel process was killed because it took too long or OOM.
     # Restart the job if you see the bazel server being terminated abruptly.
     when: always
-    key: v0-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+    key: v1-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
     paths:
       - /tmp/bazel-cache
       - /tmp/bazel-disk-cache
@@ -122,12 +122,12 @@ jobs:
           command: bazel query '//...'
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build --jobs=4
+          command: xargs -a .circleci/build-targets.txt bazel build --jobs=4 --local_cpu_resources=4
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test --jobs=4
+          command: xargs -a .circleci/test-targets.txt bazel test --jobs=4 --local_cpu_resources=4
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -168,7 +168,7 @@ jobs:
       - *set_bazelrc
       - run:
           name: Run test and collect coverage data
-          command: xargs -a .circleci/test-targets.txt bazel coverage --jobs=4
+          command: xargs -a .circleci/test-targets.txt bazel coverage --jobs=4 --local_cpu_resources=4
       - *analyze_bazel_profile
       - *store_bazel_profile
       - codecov/upload:
