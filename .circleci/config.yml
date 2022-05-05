@@ -134,6 +134,7 @@ jobs:
   cdlang_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: small  # 1 vCPU, 2GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -143,12 +144,12 @@ jobs:
       - *set_bazelrc
       - run:
           name: Build CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel build
+          command: xargs -a .circleci/cdlang-targets.txt bazel build --config=ci-small
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel test
+          command: xargs -a .circleci/cdlang-targets.txt bazel test --config=ci-small
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -361,6 +362,7 @@ jobs:
   lint-and-style-checks:
     docker:
       - image: stratumproject/build:build
+    resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
       # We always continue with all steps, even on failures, to get the most
@@ -381,6 +383,7 @@ jobs:
   license-check:
     docker:
       - image: fsfe/reuse:latest
+    resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
       - run:

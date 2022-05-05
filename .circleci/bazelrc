@@ -7,11 +7,23 @@ build --disk_cache=/tmp/bazel-disk-cache
 # Set convenient location for Bazel files to cache
 startup --output_user_root=/tmp/bazel-cache/output-root
 
-# Bazel doesn't calculate resource ceiling correctly when running under Docker.
-# Memory, CPU cores, disk I/O
+# Resource limits for different CI server sizes.
+# Memory, CPU cores, disk I/O.
+# Bazel doesn't calculate resource ceiling correctly when running under Docker,
+# that's why we set both `jobs`` and `local_cpu_resources`.
+# See: https://circleci.com/docs/2.0/configuration-reference/#resourceclass
+# Default config for medium. 
 build --local_cpu_resources=1
 build --local_ram_resources=3072
 build --jobs=1
+
+build:ci-small --local_cpu_resources=1
+build:ci-small --local_ram_resources=1500
+build:ci-small --jobs=1
+
+build:ci-large --local_cpu_resources=4
+build:ci-large --jobs=4
+build:ci-large --local_ram_resources=7196
 
 # Also limit memory allocated to the JVM
 startup --host_jvm_args=-Xmx3g --host_jvm_args=-Xms2g
