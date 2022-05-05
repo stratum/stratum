@@ -13,9 +13,9 @@ startup --output_user_root=/tmp/bazel-cache/output-root
 # that's why we set both `jobs`` and `local_cpu_resources`.
 # See: https://circleci.com/docs/2.0/configuration-reference/#resourceclass
 # Default config for medium. 
-build --local_cpu_resources=1
+build --local_cpu_resources=2
 build --local_ram_resources=3072
-build --jobs=1
+build --jobs=2
 
 build:ci-small --local_cpu_resources=1
 build:ci-small --local_ram_resources=1500
