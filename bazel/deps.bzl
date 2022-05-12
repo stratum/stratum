@@ -50,7 +50,7 @@ def stratum_deps():
             remote = "https://github.com/p4lang/p4c",
             commit = "28383eadc3fe5c7a6a04d6b0bc80b20e8b104cc7",
             build_file = "@//bazel:external/p4c.BUILD",
-            sha256 = "6f0c38ccc82a3876403843c67d2994bd66115c569d1ef11cbf8e23a0281266da",
+            sha256 = "c8a8320d7a6251db35ce6c1e979a0c5aeac6a0229cbc049b729afec6de4ae2a5",
         )
 
     if "judy" not in native.existing_rules():
