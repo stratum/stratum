@@ -113,7 +113,6 @@ class StratumTofinoModel(Switch):
             [
                 STRATUM_BIN,
                 f'-chassis_config_file={self.chassisConfigFile}',
-                '-enable_onlp=false',
                 '-bf_switchd_background=false',
                 '-v=2',
                 f'-bf_sde_install={self.sdeInstall}',
