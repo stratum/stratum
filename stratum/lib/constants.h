@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_LIB_CONSTANTS_H_
 #define STRATUM_LIB_CONSTANTS_H_
 
@@ -31,20 +30,18 @@ constexpr char kDefaultAuthPolicyFilePath[] =
 
 // This URL is used by a local Stratum stub binary running on the switch to
 // talk to Stratum process over an insecure connection.
-constexpr char kLocalStratumUrl[] = "localhost:28000";
+constexpr char kLocalStratumUrl[] = "localhost:9559";
 
 // This URL is used by external gNMI, gNOI and P4Runtime clients.
-// This TCP port 9339 is an IANA-reserve port for gNMI and gNOI.
-constexpr char kExternalStratumUrls[] = "0.0.0.0:28000,0.0.0.0:9339";
+// TCP port 9339 is an IANA-reserved port for gNMI and gNOI.
+// TCP port 9559 is an IANA-reserved port for P4Runtime.
+constexpr char kExternalStratumUrls[] = "0.0.0.0:9339,0.0.0.0:9559";
 
 // Default URLs for the Sandcastle services Stratum service will connect to
 // over gRPC.
 constexpr char kProcmonServiceUrl[] = "localhost:28001";
 constexpr char kHalServiceUrl[] = "localhost:28002";
 constexpr char kPhalDbServiceUrl[] = "localhost:28003";
-
-// Rexgex pattern for mac address in openconfig-yang-types.yang
-constexpr char kMacAddressRegex[] = "^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$";
 }  // namespace stratum
 
 #endif  // STRATUM_LIB_CONSTANTS_H_

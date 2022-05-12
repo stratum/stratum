@@ -2,15 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_UTILS_H_
 #define STRATUM_HAL_LIB_BCM_UTILS_H_
 
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -62,6 +61,9 @@ std::string PrintBcmPort(uint64 port_id, const BcmPort& p);
 
 // Prints BcmPortOptions message in a consistent and readable format.
 std::string PrintBcmPortOptions(const BcmPortOptions& options);
+
+// Returns the BCM chip number for a given chip. E.g. BCM56960 for Tomahawk.
+std::string PrintBcmChipNumber(const BcmChip::BcmChipType& chip_type);
 
 }  // namespace bcm
 }  // namespace hal

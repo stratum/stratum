@@ -6,14 +6,14 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
+#include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/bmv2/bmv2_chassis_manager.h"
-#include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/pi/pi_node.h"
 
 namespace stratum {
 namespace hal {
@@ -40,25 +40,26 @@ class Bmv2Switch : public SwitchInterface {
   ::util::Status Freeze() override;
   ::util::Status Unfreeze() override;
   ::util::Status WriteForwardingEntries(
-       const ::p4::v1::WriteRequest& req,
-       std::vector<::util::Status>* results) override;
+      const ::p4::v1::WriteRequest& req,
+      std::vector<::util::Status>* results) override;
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) override;
-  ::util::Status RegisterPacketReceiveWriter(
+  ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override;
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override;
-  ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet) override;
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
+      override;
+  ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override;
+  ::util::Status HandleStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request) override;
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;
   ::util::Status UnregisterEventNotifyWriter() override;
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details) override
-        LOCKS_EXCLUDED(chassis_lock);
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
                           std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
@@ -74,8 +75,7 @@ class Bmv2Switch : public SwitchInterface {
   // moment, note that each Stratum process is limited to a single bmv2 instance
   // anyway.
   static std::unique_ptr<Bmv2Switch> CreateInstance(
-      PhalInterface* phal_interface,
-      Bmv2ChassisManager* bmv2_chassis_manager,
+      PhalInterface* phal_interface, Bmv2ChassisManager* bmv2_chassis_manager,
       const std::map<uint64, pi::PINode*>& node_id_to_pi_node);
 
   // Bmv2Switch is neither copyable nor movable.

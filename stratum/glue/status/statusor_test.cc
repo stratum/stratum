@@ -2,26 +2,28 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Unit tests for StatusOr
 
 #include "stratum/glue/status/statusor.h"
 
 #include <errno.h>
+
+#include <algorithm>
 #include <memory>
 #include <vector>
-#include <algorithm>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/posix_error_space.h"
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/posix_error_space.h"
 
 namespace util {
 namespace {
 
+using ::testing::Pointee;
+using ::util::PosixErrorToStatus;
 using ::util::Status;
-using util::PosixErrorToStatus;
 
 class Base1 {
  public:
@@ -118,14 +120,16 @@ TEST(StatusOr, TestStatusCtor) {
 }
 
 TEST(StatusOrDeathTest, TestStatusCtorStatusOk) {
-  EXPECT_DEBUG_DEATH({
-    // This will DCHECK
-    StatusOr<int> thing(Status::OK);
-    // In optimized mode, we are actually going to get EINVAL for
-    // status here, rather than crashing, so check that.
-    EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "Status::OK is not a valid constructor argument");
+  EXPECT_DEBUG_DEATH(
+      {
+        // This will DCHECK
+        StatusOr<int> thing(Status::OK);
+        // In optimized mode, we are actually going to get EINVAL for
+        // status here, rather than crashing, so check that.
+        EXPECT_FALSE(thing.ok());
+        EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+      },
+      "Status::OK is not a valid constructor argument");
 }
 
 TEST(StatusOr, TestValueCtor) {
@@ -257,13 +261,15 @@ TEST(StatusOr, TestPointerStatusCtor) {
 }
 
 TEST(StatusOrDeathTest, TestPointerStatusCtorStatusOk) {
-  EXPECT_DEBUG_DEATH({
-    StatusOr<int*> thing(Status::OK);
-    // In optimized mode, we are actually going to get EINVAL for
-    // status here, rather than crashing, so check that.
-    EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "Status::OK is not a valid constructor argument");
+  EXPECT_DEBUG_DEATH(
+      {
+        StatusOr<int*> thing(Status::OK);
+        // In optimized mode, we are actually going to get EINVAL for
+        // status here, rather than crashing, so check that.
+        EXPECT_FALSE(thing.ok());
+        EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+      },
+      "Status::OK is not a valid constructor argument");
 }
 
 TEST(StatusOr, TestPointerValueCtor) {
@@ -274,13 +280,15 @@ TEST(StatusOr, TestPointerValueCtor) {
 }
 
 TEST(StatusOrDeathTest, TestPointerValueCtorNullValue) {
-  EXPECT_DEBUG_DEATH({
-    StatusOr<int*> thing(NULL);
-    // In optimized mode, we are actually going to get EINVAL for
-    // status here, rather than DCHECKing, so verify that
-    EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "NULL is not a valid constructor argument to StatusOr");
+  EXPECT_DEBUG_DEATH(
+      {
+        StatusOr<int*> thing(NULL);
+        // In optimized mode, we are actually going to get EINVAL for
+        // status here, rather than DCHECKing, so verify that
+        EXPECT_FALSE(thing.ok());
+        EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+      },
+      "NULL is not a valid constructor argument to StatusOr");
 }
 
 TEST(StatusOr, TestPointerCopyCtorStatusOk) {
@@ -377,6 +385,28 @@ TEST(StatusOrDeathTest, TestPointerValueNotOkConst) {
   const StatusOr<int*> thing(Status::CANCELLED);
   EXPECT_FALSE(thing.ok());
   EXPECT_DEATH(thing.ValueOrDie(), "generic::cancelled");
+}
+
+TEST(StatusOr, ValueOrOk) {
+  const StatusOr<int> status_or = 0;
+  EXPECT_EQ(status_or.ValueOr(-1), 0);
+}
+
+TEST(StatusOr, ValueOrDefault) {
+  const StatusOr<int> status_or(Status::CANCELLED);
+  EXPECT_EQ(status_or.ValueOr(-1), -1);
+}
+
+TEST(StatusOr, MoveOnlyValueOrOk) {
+  EXPECT_THAT(StatusOr<std::unique_ptr<int>>(absl::make_unique<int>(0))
+                  .ValueOr(absl::make_unique<int>(-1)),
+              Pointee(0));
+}
+
+TEST(StatusOr, MoveOnlyValueOrDefault) {
+  EXPECT_THAT(StatusOr<std::unique_ptr<int>>(Status::CANCELLED)
+                  .ValueOr(absl::make_unique<int>(-1)),
+              Pointee(-1));
 }
 
 #ifdef BENCHMARK

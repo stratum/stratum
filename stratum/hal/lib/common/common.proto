@@ -36,11 +36,13 @@ enum Platform {
   PLT_GENERIC_TRIDENT2 = 2;
   PLT_GENERIC_TOMAHAWK = 3;
   PLT_GENERIC_TOMAHAWK_PLUS = 4;
+  PLT_GENERIC_TOMAHAWK2 = 5;
+  PLT_GENERIC_TOMAHAWK3 = 6;
   PLT_MLNX_SN2700 = 9;
   PLT_P4_SOFT_SWITCH = 10;
-  PLT_BAREFOOT_TOFINO = 11;
-  PLT_BAREFOOT_TOFINO2 = 12;
   PLT_NP4_INTEL_N3000 = 13;
+  PLT_GENERIC_BAREFOOT_TOFINO = 14;
+  PLT_GENERIC_BAREFOOT_TOFINO2 = 15;
   // TODO(unknown): Add all the BCM and MLNX based platforms.
 }
 
@@ -271,7 +273,7 @@ message PortConfigParams {
   // FEC operational mode
   FecMode fec_mode = 6;
   // The configured mac address for this port.
-  uint64 mac_address = 7;
+  MacAddress mac_address = 7;
   // The configured loopback state for this port.
   LoopbackState loopback_mode = 8;
 }
@@ -503,8 +505,7 @@ message GoogleConfig {
     map<int32, BcmDmaChannelConfig> dma_channel_configs = 8;
   }
 
-  message BcmTxConfig {
-  }
+  message BcmTxConfig {}
 
   // BcmRateLimitConfig specifies rate limit settings for a unit. This is just
   // a proto wrapper around BcmSdkInterface::RateLimitConfig;
@@ -647,7 +648,7 @@ message GoogleConfig {
   // chassis map.
   string bcm_chassis_map_id = 1;
   // Maps from the index of the nodes (1-based) to all the configs related to
-  // hat specific node.
+  // that specific node.
   map<uint64, BcmKnetConfig> node_id_to_knet_config = 2;
   map<uint64, BcmRxConfig> node_id_to_rx_config = 3;
   map<uint64, BcmTxConfig> node_id_to_tx_config = 4;
@@ -656,8 +657,156 @@ message GoogleConfig {
   map<uint64, BcmRtag7HashConfig> node_id_to_rtag7_hash_config = 7;
 }
 
+// Config specific to Tofino chassis.
+message TofinoConfig {
+  message PacketShape {
+    uint64 rate_pps = 1;
+    uint32 burst_packets = 2;
+  }
+  message ByteShape {
+    uint64 rate_bps = 1;
+    uint32 burst_bytes = 2;
+  }
+  message BfPortShapingConfig {
+    message BfPerPortShapingConfig {
+      oneof shaping {
+        PacketShape packet_shaping = 1;
+        ByteShape byte_shaping = 2;
+      }
+    }
+    // Map from port id to its shaping config given by BfPerPortShapingConfig.
+    map<uint32, BfPerPortShapingConfig> per_port_shaping_configs = 1;
+  }
+
+  // DeflectOnPacketDropConfig specifies the port and queue where dropped
+  // packets will be deflected to.
+  message DeflectOnPacketDropConfig {
+    message DropTarget {
+      oneof port_type {  // required
+        uint32 port = 1;
+        uint32 sdk_port = 2;
+      }
+      uint32 queue = 3;
+    }
+    repeated DropTarget drop_targets = 1;
+  }
+
+  // QoS configuration for the traffic manager.
+  message TofinoQosConfig {
+    enum ApplicationPool {
+      UNKNOWN_APP_POOL = 0;
+      INGRESS_APP_POOL_0 = 1;
+      INGRESS_APP_POOL_1 = 2;
+      INGRESS_APP_POOL_2 = 3;
+      INGRESS_APP_POOL_3 = 4;
+      EGRESS_APP_POOL_0 = 5;
+      EGRESS_APP_POOL_1 = 6;
+      EGRESS_APP_POOL_2 = 7;
+      EGRESS_APP_POOL_3 = 8;
+    }
+    enum Baf {
+      UNKNOWN_BAF = 0;
+      BAF_1_POINT_5_PERCENT = 1;
+      BAF_3_PERCENT = 2;
+      BAF_6_PERCENT = 3;
+      BAF_11_PERCENT = 4;
+      BAF_20_PERCENT = 5;
+      BAF_33_PERCENT = 6;
+      BAF_50_PERCENT = 7;
+      BAF_66_PERCENT = 8;
+      BAF_80_PERCENT = 9;
+      DISABLE_BAF = 10;
+    }
+    enum SchedulingPriority {
+      UNKNOWN_PRIO = 0;
+      PRIO_0 = 1;
+      PRIO_1 = 2;
+      PRIO_2 = 3;
+      PRIO_3 = 4;
+      PRIO_4 = 5;
+      PRIO_5 = 6;
+      PRIO_6 = 7;
+      PRIO_7 = 8;
+    }
+    enum QueueColorLimit {
+      UNKNOWN_LIMIT = 0;
+      LIMIT_12_POINT_5_PERCENT = 1;
+      LIMIT_25_PERCENT = 2;
+      LIMIT_37_POINT_5_PERCENT = 3;
+      LIMIT_50_PERCENT = 4;
+      LIMIT_62_POINT_5_PERCENT = 5;
+      LIMIT_75_PERCENT = 6;
+      LIMIT_87_POINT_5_PERCENT = 7;
+      LIMIT_100_PERCENT = 8;
+    }
+    message PoolConfig {
+      ApplicationPool pool = 1;  // required
+      uint32 pool_size = 2;
+      bool enable_color_drop = 3;
+      uint32 color_drop_limit_green = 4;
+      uint32 color_drop_limit_yellow = 5;
+      uint32 color_drop_limit_red = 6;
+    }
+    message PpgConfig {
+      oneof port_type {  // required
+        uint32 port = 1;
+        uint32 sdk_port = 10;
+      }
+      bool is_default_ppg = 9;
+      uint32 minimum_guaranteed_cells = 2;
+      ApplicationPool pool = 3;
+      uint32 base_use_limit = 4;
+      Baf baf = 5;
+      uint32 hysteresis = 6;
+      uint32 ingress_drop_limit = 7;
+      uint32 icos_bitmap = 8;
+    }
+    message QueueConfig {
+      message QueueMapping {
+        int32 queue_id = 1;  // required
+        SchedulingPriority priority = 2;
+        uint32 weight = 3;
+        uint32 minimum_guaranteed_cells = 4;
+        ApplicationPool pool = 5;
+        uint32 base_use_limit = 6;
+        Baf baf = 7;
+        uint32 hysteresis = 8;
+        oneof max_rate {
+          PacketShape max_rate_packets = 9;
+          ByteShape max_rate_bytes = 10;
+        }
+        oneof min_rate {
+          PacketShape min_rate_packets = 11;
+          ByteShape min_rate_bytes = 12;
+        }
+        bool enable_color_drop = 13;
+        QueueColorLimit color_drop_limit_yellow = 14;
+        QueueColorLimit color_drop_limit_red = 15;
+      }
+      oneof port_type {  // required
+        uint32 port = 1;
+        uint32 sdk_port = 2;
+      }
+      repeated QueueMapping queue_mapping = 3;
+    }
+    repeated PoolConfig pool_configs = 1;
+    uint32 pool_color_drop_hysteresis_green = 2;
+    uint32 pool_color_drop_hysteresis_yellow = 3;
+    uint32 pool_color_drop_hysteresis_red = 4;
+    repeated PpgConfig ppg_configs = 5;
+    repeated QueueConfig queue_configs = 6;
+  }
+
+  // Maps from the index of the nodes (1-based) to all the configs related to
+  // that specific node.
+  map<uint64, BfPortShapingConfig> node_id_to_port_shaping_config = 1;
+  map<uint64, DeflectOnPacketDropConfig> node_id_to_deflect_on_drop_configs = 2;
+  map<uint64, TofinoQosConfig> node_id_to_qos_config = 3;
+}
+
 message VendorConfig {
   GoogleConfig google_config = 1;
+  TofinoConfig tofino_config = 2;
 }
 
 //------------------------------------------------------------------------------
@@ -883,19 +1032,19 @@ enum MediaType {
   MEDIA_TYPE_CFP_COPPER = 8;
   MEDIA_TYPE_BP_COPPER = 9;
   MEDIA_TYPE_QSFP_CSR4 = 11;
-  MEDIA_TYPE_QSFP_CLR4 = 12;    // IEEE LR4
-  MEDIA_TYPE_QSFP_CCR4 = 14;    // 100G copper
+  MEDIA_TYPE_QSFP_CLR4 = 12;  // IEEE LR4
+  MEDIA_TYPE_QSFP_CCR4 = 14;  // 100G copper
 }
 
 // TODO(unknown): revise these enum as needed per ASIC integration
 //       currently maps to sff_sfp_type_t defined in sff.h
 enum SfpType {
-  SFP_TYPE_UNKNOWN   = 0;
-  SFP_TYPE_SFP       = 1;
-  SFP_TYPE_QSFP      = 2;
+  SFP_TYPE_UNKNOWN = 0;
+  SFP_TYPE_SFP = 1;
+  SFP_TYPE_QSFP = 2;
   SFP_TYPE_QSFP_PLUS = 3;
-  SFP_TYPE_QSFP28    = 4;
-  SFP_TYPE_SFP28     = 5;
+  SFP_TYPE_QSFP28 = 4;
+  SFP_TYPE_SFP28 = 5;
 }
 
 // TODO(unknown): revise these enum as needed per ASIC integration
@@ -910,103 +1059,103 @@ enum SfpModuleType {
 // The module speed capability for a frontpanel port.
 // note: currently maps to sff_module_caps_t defined in sff.h
 message SfpModuleCaps {
-  bool f_100  = 1;
-  bool f_1g   = 2;
-  bool f_10g  = 3;
-  bool f_40g  = 4;
+  bool f_100 = 1;
+  bool f_1g = 2;
+  bool f_10g = 3;
+  bool f_40g = 4;
   bool f_100g = 5;
 }
 
 // Possible directions for a fan module.
 // currently maps to onlp_fan_info_t defined in fan.h
 enum FanDir {
-  FAN_DIR_UNKNOWN   = 0;
-  FAN_DIR_B2F       = 1;
-  FAN_DIR_F2B       = 2;
+  FAN_DIR_UNKNOWN = 0;
+  FAN_DIR_B2F = 1;
+  FAN_DIR_F2B = 2;
 }
 
 // Possible capabilities for a fan module.
 // currently maps to onlp_fan_info_t defined in fan.h
 message FanCaps {
-  bool set_dir        = 1;
-  bool get_dir        = 2;
-  bool set_rpm        = 3;
+  bool set_dir = 1;
+  bool get_dir = 2;
+  bool set_rpm = 3;
   bool set_percentage = 4;
-  bool get_rpm        = 5;
+  bool get_rpm = 5;
   bool get_percentage = 6;
 }
 
 // Possible types for a PSU.
 // currently maps to onlp_psu_type_t defined in psu.h
 enum PsuType {
-  PSU_TYPE_UNKNOWN   = 0;
-  PSU_TYPE_AC        = 1;
-  PSU_TYPE_DC12      = 2;
-  PSU_TYPE_DC48      = 3;
+  PSU_TYPE_UNKNOWN = 0;
+  PSU_TYPE_AC = 1;
+  PSU_TYPE_DC12 = 2;
+  PSU_TYPE_DC48 = 3;
 }
 
 // Possible Capabilities for a PSU.
 // currently maps to onlp_psu_caps_t defined in psu.h
 message PsuCaps {
   bool get_type = 1;
-  bool get_vin  = 2;
+  bool get_vin = 2;
   bool get_vout = 3;
-  bool get_iin  = 4;
+  bool get_iin = 4;
   bool get_iout = 5;
-  bool get_pin  = 6;
+  bool get_pin = 6;
   bool get_pout = 7;
 }
 
 // Possible capabilities for a thermal sensor module.
 // currently maps to onlp_thermal_info_t defined in thermal.h
 message ThermalCaps {
-  bool get_temperature        = 1;
-  bool get_warning_threshold  = 2;
-  bool get_error_threshold    = 3;
+  bool get_temperature = 1;
+  bool get_warning_threshold = 2;
+  bool get_error_threshold = 3;
   bool get_shutdown_threshold = 4;
 }
 
 // Possible capabilities for a LED module.
 // currently maps to onlp_led_info_t defined in led.h
 message LedCaps {
-  bool off             = 1;
-  bool auto            = 2;
-  bool auto_blinking   = 3;
-  bool char            = 4;
-  bool red             = 5;
-  bool red_blinking    = 6;
-  bool orange          = 7;
+  bool off = 1;
+  bool auto = 2;
+  bool auto_blinking = 3;
+  bool char = 4;
+  bool red = 5;
+  bool red_blinking = 6;
+  bool orange = 7;
   bool orange_blinking = 8;
-  bool yellow          = 9;
+  bool yellow = 9;
   bool yellow_blinking = 10;
-  bool green           = 11;
-  bool green_blinking  = 12;
-  bool blue            = 13;
-  bool blue_blinking   = 14;
-  bool purple          = 15;
+  bool green = 11;
+  bool green_blinking = 12;
+  bool blue = 13;
+  bool blue_blinking = 14;
+  bool purple = 15;
   bool purple_blinking = 16;
 }
 
 // Possible modes for a LED module.
 // currently maps to onlp_led_info_t defined in led.h
 enum LedMode {
-  LED_MODE_UNKNOWN          = 0;
-  LED_MODE_OFF              = 1;
-  LED_MODE_AUTO             = 2;
-  LED_MODE_AUTO_BLINKING    = 3;
-  LED_MODE_CHAR             = 4;
-  LED_MODE_RED              = 5;
-  LED_MODE_RED_BLINKING     = 6;
-  LED_MODE_ORANGE           = 7;
-  LED_MODE_ORANGE_BLINKING  = 8;
-  LED_MODE_YELLOW           = 9;
-  LED_MODE_YELLOW_BLINKING  = 10;
-  LED_MODE_GREEN            = 11;
-  LED_MODE_GREEN_BLINKING   = 12;
-  LED_MODE_BLUE             = 13;
-  LED_MODE_BLUE_BLINKING    = 14;
-  LED_MODE_PURPLE           = 15;
-  LED_MODE_PURPLE_BLINKING  = 16;
+  LED_MODE_UNKNOWN = 0;
+  LED_MODE_OFF = 1;
+  LED_MODE_AUTO = 2;
+  LED_MODE_AUTO_BLINKING = 3;
+  LED_MODE_CHAR = 4;
+  LED_MODE_RED = 5;
+  LED_MODE_RED_BLINKING = 6;
+  LED_MODE_ORANGE = 7;
+  LED_MODE_ORANGE_BLINKING = 8;
+  LED_MODE_YELLOW = 9;
+  LED_MODE_YELLOW_BLINKING = 10;
+  LED_MODE_GREEN = 11;
+  LED_MODE_GREEN_BLINKING = 12;
+  LED_MODE_BLUE = 13;
+  LED_MODE_BLUE_BLINKING = 14;
+  LED_MODE_PURPLE = 15;
+  LED_MODE_PURPLE_BLINKING = 16;
 }
 
 //------------------------------------------------------------------------------
@@ -1045,9 +1194,9 @@ message OpticalTransceiverInfo {
 
   // Optical channel frequency in Hz.
   uint64 frequency = 1;
-  // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
-  // If the port is an aggregate of multiple physical channels, this attribute
-  // is the total power or sum of all channels.
+  // The input/output optical power of this port in units of 0.01
+  // decibel-milliwatt. If the port is an aggregate of multiple physical
+  // channels, this attribute is the total power or sum of all channels.
   Power input_power = 2;
   Power output_power = 3;
   // Target output optical power level of the optical channel, expressed in
@@ -1063,7 +1212,8 @@ message OpticalTransceiverInfo {
 
 // Wrapper around oper state of a port.
 message OperStatus {
-  PortState state = 1;  // required
+  PortState state = 1;           // required
+  uint64 time_last_changed = 2;  // optional
 }
 
 // Wrapper around loopback state of a port.
@@ -1161,14 +1311,19 @@ message AutonegotiationStatus {
   TriState state = 1;
 }
 
-// Wrapper around the hardware port.
-message HardwarePort {
-  string name = 1;
-}
-
 // Wrapper around the FEC mode.
 message FecStatus {
   FecMode mode = 1;
+}
+
+// Wrapper around the SDN port ID.
+// The target is expected to accept requests from the controller
+// using the ID assigned by the SDN management system. If the target
+// cannot accept requests using the provided ID, it can provide
+// an alterate ID that should be used by the controller to address
+// the interface.
+message SdnPortId {
+  uint32 port_id = 1;
 }
 
 // DataRequest is a message used internally to request data about a component
@@ -1186,8 +1341,7 @@ message DataRequest {
       uint64 node_id = 1;
     }
     // Defined the data required to get a data for a chassis.
-    message Chassis {
-    }
+    message Chassis {}
     // Defined the data required to get a data for a queue of a port.
     message PortQueue {
       uint64 node_id = 1;
@@ -1216,11 +1370,11 @@ message DataRequest {
       Port health_indicator = 14;
       Port autoneg_status = 15;
       Port front_panel_port_info = 16;
-      Port hardware_port = 17;
       Port fec_status = 18;
       OpticalNetworkInterface optical_transceiver_info = 19;
       Port loopback_status = 20;
       Node node_info = 21;
+      Port sdn_port_id = 22;
     }
   }
   repeated Request requests = 1;
@@ -1248,11 +1402,11 @@ message DataResponse {
     HealthIndicator health_indicator = 14;
     AutonegotiationStatus autoneg_status = 15;
     FrontPanelPortInfo front_panel_port_info = 16;
-    HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
     OpticalTransceiverInfo optical_transceiver_info = 19;
     LoopbackStatus loopback_status = 20;
     NodeInfo node_info = 21;
+    SdnPortId sdn_port_id = 22;
   }
 }
 

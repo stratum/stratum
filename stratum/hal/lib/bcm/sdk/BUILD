@@ -4,10 +4,10 @@
 
 # We use some strip_prefix magic to make the SDKs look the same externally.
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
+    "stratum_cc_library",
 )
 
 licenses(["notice"])  # Apache v2
@@ -16,7 +16,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-cc_library(
+stratum_cc_library(
     name = "bcm_diag_shell",
     srcs = ["bcm_diag_shell.cc"],
     defines = ["NDEBUG"],
@@ -35,7 +35,7 @@ cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "bcm_sdk_wrapper",
     srcs = ["bcm_sdk_wrapper.cc"],
     hdrs = ["bcm_sdk_wrapper.h"],
@@ -47,7 +47,6 @@ cc_library(
         ":macros",
         ":sdk_build_flags",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/net_util:ipaddress",
@@ -74,7 +73,7 @@ cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     include_prefix = "stratum/hal/lib/bcm",
@@ -88,7 +87,7 @@ cc_library(
     ],
 )
 
-cc_library(
+stratum_cc_library(
     name = "sdk_build_flags",
     hdrs = ["sdk_build_flags.h"],
     includes = ["sdk"],

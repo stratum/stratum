@@ -2,14 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_NODE_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_NODE_MOCK_H_
 
+#include <memory>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 
 namespace stratum {
 namespace hal {
@@ -37,12 +37,11 @@ class BcmNodeMock : public BcmNode {
                ::util::Status(const ::p4::v1::ReadRequest& req,
                               WriterInterface<::p4::v1::ReadResponse>* writer,
                               std::vector<::util::Status>* details));
-  MOCK_METHOD1(
-      RegisterPacketReceiveHandler,
-      ::util::Status(
-          std::function<void(const ::p4::v1::PacketIn& packet)> callback));
-  MOCK_METHOD1(TransmitPacket,
-               ::util::Status(const ::p4::v1::PacketOut& packet));
+  MOCK_METHOD1(RegisterStreamMessageResponseWriter,
+               ::util::Status(const std::shared_ptr<WriterInterface<
+                                  ::p4::v1::StreamMessageResponse>>& writer));
+  MOCK_METHOD1(HandleStreamMessageRequest,
+               ::util::Status(const ::p4::v1::StreamMessageRequest& req));
   MOCK_METHOD1(UpdatePortState, ::util::Status(uint32 port_id));
 };
 

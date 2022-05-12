@@ -2,13 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 
 #include <memory>
 #include <vector>
 
+#include "absl/synchronization/mutex.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
@@ -18,8 +19,6 @@
 #include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -86,19 +85,20 @@ class BcmNode {
   // Registers a writer to be invoked on receipt of a packet on any port on this
   // node. The sent P4 PacketIn instance includes all the info on where
   // the packet was received on this node as well as its payload.
-  virtual ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
-      SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status RegisterStreamMessageResponseWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+          writer) SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(lock_);
 
-  // Unregisters writer registered in RegisterPacketReceiveWriter().
-  virtual ::util::Status UnregisterPacketReceiveWriter()
+  // Unregisters writer registered in RegisterStreamMessageResponseWriter().
+  virtual ::util::Status UnregisterStreamMessageResponseWriter()
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(lock_);
 
   // Transmits a packet received from controller directly to a port on this node
   // or to the ingress pipeline of the node to let the chip route the packet.
   // The given P4 PacketOut instance includes all the info on where to
   // transmit the packet as well as its payload.
-  virtual ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
+  virtual ::util::Status HandleStreamMessageRequest(
+      const ::p4::v1::StreamMessageRequest& request)
       SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(lock_);
 
   // Updates any managers which rely on current port state. This is generally

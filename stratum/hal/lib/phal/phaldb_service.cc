@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/memory/memory.h"
 #include "gflags/gflags.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -63,7 +63,7 @@ namespace {
 ::util::StatusOr<Path> ToPhalDBPath(PathQuery req_path) {
   // If no path entries return error
   if (req_path.entries_size() == 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "No Path";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "No Path";
   }
 
   // Create Attribute DB Path
@@ -179,7 +179,6 @@ namespace {
       }
       default: {
         return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown value type";
-        break;
       }
     }
   }
@@ -207,7 +206,7 @@ namespace {
     // Save channel to subscriber channel map
     subscriber_channels_[pthread_self()] = channel;
   }
-  auto _ = gtl::MakeCleanup([this, &channel] {
+  auto _ = absl::MakeCleanup([this, &channel] {
     absl::MutexLock l(&subscriber_thread_lock_);
     // Close the channel which will then cause the PhalDB writer
     // to close and exit
@@ -221,7 +220,8 @@ namespace {
   // Issue the subscribe
   auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
   ASSIGN_OR_RETURN(auto query, adapter->Subscribe(
-      {path}, std::move(writer), absl::Nanoseconds(req->polling_interval())));
+                                   {path}, std::move(writer),
+                                   absl::Nanoseconds(req->polling_interval())));
 
   // Loop around processing messages from the PhalDB writer
   // Note: if the client dies we'll only close the channel
@@ -253,11 +253,8 @@ namespace {
     *resp.mutable_phal_db() = phaldb_resp;
 
     // If Write fails then break out of the loop
-    CHECK_RETURN_IF_FALSE(stream->Write(resp))
-        << "Subscribe stream write failed";
+    RET_CHECK(stream->Write(resp)) << "Subscribe stream write failed";
   }
-
-  return ::util::OkStatus();
 }
 
 ::grpc::Status PhalDbService::Subscribe(

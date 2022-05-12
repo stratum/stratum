@@ -6,7 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 -->
 # Stratum on a Broadcom based switch
 
-The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. Tomahawk) using Broadcom SDKs.
+The following guide details how to build Stratum for Broadcom based switches
+(i.e. Tomahawk) using Broadcom SDKs.
+
+For additional information related to optical transponders like the Cassini, see
+the [TAI README](/stratum/docs/tai/README.md).
 
 ## ONLPv2 operating system on the switch
 Stratum requires an ONLPv2 operating system on the switch. ONF maintains a [fork](https://github.com/opennetworkinglab/OpenNetworkLinux) with additional platforms. Follow the [ONL](https://opennetlinux.org/doc-building.html) instructions to setup your device. Here is what your switch should look like:
@@ -44,11 +48,11 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 
 Stratum for Broadcom switches can be run inside Docker on the switch itself.
 Follow their instructions on how to setup [Docker](https://docs.docker.com/engine/install/).
-As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
+As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/r/stratumproject/stratum-bcm).
 There are two versions, one for SDKLT (`:sdklt`) and one for OpenNSA (`:openNSA`).
 
 ```bash
-docker pull stratumproject/stratum-bcm:sdklt  # or :opennsa, to update the image
+docker pull stratumproject/stratum-bcm:latest-sdklt  # or :latest-opennsa, to update the image
 cd stratum/hal/bin/bcm/standalone/docker
 DOCKER_IMAGE_TAG=sdklt ./start-stratum-container.sh  # or =opennsa
 ```
@@ -115,6 +119,13 @@ uses the correct ones for the platform.
 
 If you followed the build instructions, these should be on the switch under `/etc/stratum/stratum_configs`.
 Depending on your actual cabling, setup or hardware, you'll have to adjust the config files.
+
+### Pushing a Pipeline
+
+Before P4Runtime requests can be sent to program the data plane, a pipeline has
+to be pushed to the switch. We provide a reference pipeline for Broadcom based
+switches called [main.p4](/stratum/pipelines/main/main.p4). Refer to its
+[README](/stratum/pipelines/main/README.md) for further instructions.
 
 ### Manual SDK setup on the switch
 

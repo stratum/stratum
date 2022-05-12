@@ -2,30 +2,29 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
-#include <unistd.h>
+#include <linux/reboot.h>
+#include <openssl/md5.h>
+#include <openssl/sha.h>
+#include <sys/reboot.h>
 #include <sys/sysinfo.h>
 #include <sys/wait.h>
-#include <linux/reboot.h>
-#include <sys/reboot.h>
-#include <openssl/sha.h>
-#include <openssl/md5.h>
+#include <unistd.h>
 
 #include <cerrno>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
-#include <utility>
 #include <regex>  // NOLINT
 #include <sstream>
 #include <thread>  // NOLINT
+#include <utility>
 
-#include "stratum/hal/lib/common/admin_utils_interface.h"
+#include "absl/memory/memory.h"
 #include "stratum/glue/logging.h"
-#include "stratum/public/lib/error.h"
+#include "stratum/hal/lib/common/admin_utils_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
+#include "stratum/public/lib/error.h"
 
 namespace {
 
@@ -35,8 +34,7 @@ std::vector<std::string> splitLineByRegex(const std::string& s,
 
   std::vector<std::string> ret{
       std::sregex_token_iterator(s.begin(), s.end(), re, -1),
-      std::sregex_token_iterator()
-  };
+      std::sregex_token_iterator()};
 
   return ret;
 }
@@ -77,7 +75,7 @@ std::vector<std::string> AdminServiceShellHelper::FlushPipe(int pipe_fd) {
   std::array<char, buffer_size> buffer{};
 
   while (true) {
-    auto bytes_read = read(pipe_fd, buffer.data(), buffer_size-1);
+    auto bytes_read = read(pipe_fd, buffer.data(), buffer_size - 1);
     if (bytes_read <= 0) {
       break;
     }
@@ -119,8 +117,7 @@ bool AdminServiceShellHelper::LinkPipesToStreams() {
   stdout_back_up_ = dup(STDOUT_FILENO);
   stderr_back_up_ = dup(STDERR_FILENO);
 
-  if (stdout_fd_[1] != STDOUT_FILENO ||
-      close(stdout_fd_[0]) ||
+  if (stdout_fd_[1] != STDOUT_FILENO || close(stdout_fd_[0]) ||
       close(stdout_fd_[1])) {
     if (dup2(stdout_fd_[1], STDOUT_FILENO) != STDOUT_FILENO) {
       LOG(ERROR) << "Failed to link stdout pipe";
@@ -130,8 +127,7 @@ bool AdminServiceShellHelper::LinkPipesToStreams() {
     return false;
   }
 
-  if (stderr_fd_[1] != STDERR_FILENO ||
-      close(stderr_fd_[0]) ||
+  if (stderr_fd_[1] != STDERR_FILENO || close(stderr_fd_[0]) ||
       close(stderr_fd_[1])) {
     if (dup2(stderr_fd_[1], STDERR_FILENO) != STDERR_FILENO) {
       LOG(ERROR) << "Failed to link stderr pipe";
@@ -144,7 +140,7 @@ bool AdminServiceShellHelper::LinkPipesToStreams() {
   return true;
 }
 
-void AdminServiceShellHelper::UnlinkPipes()  {
+void AdminServiceShellHelper::UnlinkPipes() {
   if (stdout_back_up_ != STDOUT_FILENO || close(stdout_fd_[1])) {
     if (dup2(stdout_back_up_, STDOUT_FILENO) != STDOUT_FILENO) {
       LOG(ERROR) << "Failed to restore stdout descriptor";
@@ -190,9 +186,7 @@ std::vector<std::string> AdminServiceShellHelper::GetStderr() {
   return cmd_stderr_;
 }
 
-int AdminServiceShellHelper::GetReturnCode() {
-  return cmd_return_code_;
-}
+int AdminServiceShellHelper::GetReturnCode() { return cmd_return_code_; }
 
 std::shared_ptr<AdminServiceShellHelper>
 AdminServiceUtilsInterface::GetShellHelper(const std::string& command) {
@@ -234,18 +228,14 @@ std::string FileSystemHelper::TempFileName(std::string path) const {
 }
 
 bool FileSystemHelper::CheckHashSumFile(
-    const std::string& path,
-    const std::string& old_hash,
+    const std::string& path, const std::string& old_hash,
     ::gnoi::types::HashType_HashMethod method) const {
-
   std::ifstream istream(path, std::ios::binary);
   return old_hash == GetHashSum(istream, method);
 }
 
 std::string FileSystemHelper::GetHashSum(
-    std::istream& istream,
-    ::gnoi::types::HashType_HashMethod method) const {
-
+    std::istream& istream, ::gnoi::types::HashType_HashMethod method) const {
   const int BUFFER_SIZE = 1024;
   std::vector<char> buffer(BUFFER_SIZE, 0);
   unsigned char* hash = nullptr;
@@ -297,30 +287,27 @@ std::string FileSystemHelper::GetHashSum(
       LOG(WARNING) << "HashType_HashMethod_UNSPECIFIED";
       return std::string();
     }
-    default:break;
+    default:
+      break;
   }
 
   // conver char array to hexstring
   std::stringstream ss;
   for (uint i = 0; i < digest_len; i++) {
-    ss << std::hex << std::setw(2) << std::setfill('0') <<
-    static_cast<int>(hash[i]);
+    ss << std::hex << std::setw(2) << std::setfill('0')
+       << static_cast<int>(hash[i]);
   }
   return ss.str();
 }
 
-::util::Status FileSystemHelper::StringToFile(
-    const std::string& data,
-    const std::string& file_name,
-    bool append) const {
-
+::util::Status FileSystemHelper::StringToFile(const std::string& data,
+                                              const std::string& file_name,
+                                              bool append) const {
   return ::stratum::WriteStringToFile(data, file_name, append);
 }
 
-::util::Status FileSystemHelper::CopyFile(
-    const std::string& src,
-    const std::string& dst) const {
-
+::util::Status FileSystemHelper::CopyFile(const std::string& src,
+                                          const std::string& dst) const {
   std::ofstream outfile;
   std::ifstream infile;
 
@@ -344,14 +331,14 @@ std::string FileSystemHelper::GetHashSum(
 }
 
 ::util::Status FileSystemHelper::RemoveDir(const std::string& path) const {
-  CHECK_RETURN_IF_FALSE(!path.empty());
-  CHECK_RETURN_IF_FALSE(PathExists(path)) << path << " does not exist.";
-  CHECK_RETURN_IF_FALSE(IsDir(path)) << path << " is not a dir.";
+  RET_CHECK(!path.empty());
+  RET_CHECK(PathExists(path)) << path << " does not exist.";
+  RET_CHECK(IsDir(path)) << path << " is not a dir.";
   // TODO(unknown): Is Dir Empty ?
   int ret = remove(path.c_str());
   if (ret != 0) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Failed to remove '" << path << "'. Return value: " << ret << ".";
+           << "Failed to remove '" << path << "'. Return value: " << ret << ".";
   }
   return ::util::OkStatus();
 }
@@ -366,8 +353,8 @@ std::string FileSystemHelper::GetHashSum(
   // Return failure if reboot was not successful
   if (reboot_return_val != 0) {
     LOG(ERROR) << "Failed to reboot the system: " << strerror(errno);
-    MAKE_ERROR(ERR_INTERNAL)
-        << "Failed to reboot the system: " << strerror(errno);
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Failed to reboot the system: " << strerror(errno);
   }
   return ::util::OkStatus();
 }

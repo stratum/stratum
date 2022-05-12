@@ -91,10 +91,17 @@ class TaishClient final : public TaiInterface {
       const std::string& modulation_format);
   util::StatusOr<std::string> GetModulationFormatName(const uint64 id);
 
+  // Internal mutex lock for initializing the singleton instance.
   static absl::Mutex init_lock_;
+
+  // The singleton instance.
   static TaishClient* singleton_ GUARDED_BY(init_lock_);
-  std::unique_ptr<taish::TAI::Stub> taish_stub_;
+
+  // Determines if the taish client has been initialized.
   bool initialized_ GUARDED_BY(init_lock_);
+
+  // Pointer to the gRPC stub.
+  std::unique_ptr<taish::TAI::Stub> taish_stub_;
 
   // Caches TAI modules when we initialized the wrapper
   std::vector<taish::Module> modules_;

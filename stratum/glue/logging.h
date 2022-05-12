@@ -5,6 +5,15 @@
 #ifndef STRATUM_GLUE_LOGGING_H_
 #define STRATUM_GLUE_LOGGING_H_
 
+#include <string>
+#include <utility>
+
+// P4c lib/log.h already defines the ERROR macro.
+// Issue: https://github.com/p4lang/p4c/issues/2523
+#ifdef ERROR
+#undef ERROR
+#endif
+
 #include "gflags/gflags.h"
 #include "glog/logging.h"  // IWYU pragma: export
 
@@ -28,11 +37,21 @@ namespace stratum {
 // Initializes all Stratum specific changes to logging. This should be called
 // after InitGoogle by every Stratum binary.
 void InitStratumLogging();
+
+// An alias for the pair of (glog_severity, glog_verbosity).
+using LoggingConfig = std::pair<std::string, std::string>;
+
+// Returns the current glog logging configuration.
+LoggingConfig GetCurrentLogLevel();
+
+// Sets a new glog log level for the process. Returns true on success.
+bool SetLogLevel(const LoggingConfig& logging_config);
 }  // namespace stratum
 
 // ostream overload for std::nulptr_t for C++11
 // see: https://stackoverflow.com/a/46256849
-#if __cplusplus == 201103L
+// On MacOS this seems to be fixed after Mojave.
+#if __cplusplus == 201103L && !defined(__APPLE__)
 #include <cstddef>
 #include <iostream>
 namespace std {

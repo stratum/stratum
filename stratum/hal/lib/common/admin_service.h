@@ -39,8 +39,7 @@ class AdminService final : public ::gnoi::system::System::Service {
   // error_buffer: pointer to an ErrorBuffer for logging all critical errors.
   AdminService(OperationMode mode, SwitchInterface* switch_interface,
                AuthPolicyChecker* auth_policy_checker,
-               ErrorBuffer* error_buffer,
-               HalSignalHandle hal_signal_handle);
+               ErrorBuffer* error_buffer, HalSignalHandle hal_signal_handle);
   ~AdminService() override {}
 
   // Sets up the service in coldboot or warmboot mode.

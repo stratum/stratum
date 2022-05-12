@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_H_
 
@@ -12,28 +11,28 @@
 
 #include <functional>
 #include <map>
-#include <vector>
 #include <memory>
-#include <string>
 #include <set>
+#include <string>
+#include <vector>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/constants.h"
-#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -195,7 +194,7 @@ struct BcmKnetIntf {
         filter_ids(),
         tx_sock(-1),
         rx_sock(-1),
-        rx_thread_id(0) {}
+        rx_thread_id() {}
 };
 
 // Metadata we need to parse from each packet received from controller to

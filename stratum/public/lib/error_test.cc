@@ -2,10 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/public/lib/error.h"
+
 #include <string>
 #include <vector>
-
-#include "stratum/public/lib/error.h"
 
 #include "gmock/gmock.h"
 #include "google/rpc/code.pb.h"
@@ -54,6 +54,7 @@ TEST(ErrorTest, TestErrorCodes) {
                                                    ERR_OUT_OF_RANGE,
                                                    ERR_UNIMPLEMENTED,
                                                    ERR_INTERNAL,
+                                                   ERR_UNAVAILABLE,
                                                    ERR_DATA_LOSS,
                                                    ERR_UNAUTHENTICATED,
                                                    ERR_TABLE_FULL,
@@ -89,6 +90,7 @@ TEST(ErrorTest, TestMakeErrorMacro) {
                                                    ERR_OUT_OF_RANGE,
                                                    ERR_UNIMPLEMENTED,
                                                    ERR_INTERNAL,
+                                                   ERR_UNAVAILABLE,
                                                    ERR_DATA_LOSS,
                                                    ERR_UNAUTHENTICATED,
                                                    ERR_TABLE_FULL,
@@ -155,13 +157,13 @@ TEST(CommonUtilsTest, TestCanonicalCodes) {
                            ::google::rpc::UNIMPLEMENTED);
   TestCanonicalCodesHelper(ERR_DATA_LOSS, ::grpc::StatusCode::DATA_LOSS,
                            ::google::rpc::DATA_LOSS);
-// FIXME(boc)   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or
-// googleapi's code.proto
-//  TestCanonicalCodesHelper(ERR_UNAUTHENTICATED,
-//                           ::grpc::StatusCode::UNAUTHENTICATED,
-//                           ::google::rpc::UNAUTHENTICATED);
+  TestCanonicalCodesHelper(ERR_UNAUTHENTICATED,
+                           ::grpc::StatusCode::UNAUTHENTICATED,
+                           ::google::rpc::UNAUTHENTICATED);
   TestCanonicalCodesHelper(ERR_INTERNAL, ::grpc::StatusCode::INTERNAL,
                            ::google::rpc::INTERNAL);
+  TestCanonicalCodesHelper(ERR_UNAVAILABLE, ::grpc::StatusCode::UNAVAILABLE,
+                           ::google::rpc::UNAVAILABLE);
   TestCanonicalCodesHelper(ERR_HARDWARE_ERROR, ::grpc::StatusCode::INTERNAL,
                            ::google::rpc::INTERNAL);
   TestCanonicalCodesHelper(ERR_INVALID_PARAM,

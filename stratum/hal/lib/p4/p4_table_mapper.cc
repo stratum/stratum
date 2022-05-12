@@ -2,12 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 
 #include <set>
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/net_util/ipaddress.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -16,9 +18,6 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/map_util.h"
 
 // This is the bit width of an assigned constant for any case where the
 // compiler does not report a bit width in the action descriptor.
@@ -62,7 +61,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   // The p4_device_config byte stream in this case is nothing but the
   // serialized version of P4PipelineConfig.
   P4PipelineConfig p4_pipeline_config;
-  CHECK_RETURN_IF_FALSE(p4_pipeline_config.ParseFromString(p4_device_config))
+  RET_CHECK(p4_pipeline_config.ParseFromString(p4_device_config))
       << "Failed to parse p4_device_config byte stream to P4PipelineConfig.";
 
   // If there is no change in the forwarding pipeline config pushed to the node,
@@ -392,32 +391,6 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
 
 namespace {
 
-// These two functions take an unsigned 64/32 bit integer and encode it as a
-// byte stream in network order.
-std::string Uint64ToByteStream(uint64 val) {
-  uint64 tmp = (htonl(1) == 1)
-                   ? val
-                   : (static_cast<uint64>(htonl(val)) << 32) | htonl(val >> 32);
-  std::string bytes = "";
-  bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint64));
-  // Strip leading zeroes.
-  while (bytes.size() > 1 && bytes[0] == '\x00') {
-    bytes = bytes.substr(1);
-  }
-  return bytes;
-}
-
-std::string Uint32ToByteStream(uint32 val) {
-  uint32 tmp = htonl(val);
-  std::string bytes = "";
-  bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
-  // Strip leading zeroes.
-  while (bytes.size() > 1 && bytes[0] == '\x00') {
-    bytes = bytes.substr(1);
-  }
-  return bytes;
-}
-
 // TODO(unknown): If needed, add extra validation of the unsigned int values to
 // to be in range [1, 2^bitwidth -1].
 ::util::Status DeparseMetadataHelper(
@@ -712,21 +685,17 @@ std::string P4TableMapper::GetMapperNameKey(
     const ::p4::config::v1::Table& table_p4_info,
     const ::p4::v1::FieldMatch& match_field,
     CommonFlowEntry* flow_entry) const {
-  ::util::Status status = ::util::OkStatus();
-
   // This lookup in field_convert_by_table_ accomplishes two things:
   //  1) It confirms that the field is allowed in the table.
   //  2) It indicates how to map the field into the flow_entry output.
   P4FieldConvertKey key = MakeP4FieldConvertKey(table_p4_info, match_field);
   auto convert_iter = field_convert_by_table_.find(key);
   if (convert_iter == field_convert_by_table_.end()) {
-    ::util::Status field_error = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-                                 << "P4 TableEntry match field ID "
-                                 << PrintP4ObjectID(match_field.field_id())
-                                 << " is not recognized in table "
-                                 << table_p4_info.preamble().name();
-    APPEND_STATUS_IF_ERROR(status, field_error);
-    return status;  // No way to decode fields that don't go with the table.
+    // No way to decode fields that don't go with the table.
+    return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+           << "P4 TableEntry match field ID "
+           << PrintP4ObjectID(match_field.field_id())
+           << " is not recognized in table " << table_p4_info.preamble().name();
   }
 
   const auto& conversion_value = convert_iter->second;
@@ -736,8 +705,8 @@ std::string P4TableMapper::GetMapperNameKey(
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(match_field);
   auto mapped_field = flow_entry->add_fields();
-  status = match_key->Convert(conversion_entry, conversion_field.bit_width(),
-                              mapped_field);
+  ::util::Status status = match_key->Convert(
+      conversion_entry, conversion_field.bit_width(), mapped_field);
   if (status.ok()) {
     mapped_field->set_type(conversion_field.type());
     mapped_field->set_bit_width(conversion_field.bit_width());
@@ -1081,7 +1050,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
   // TODO(unknown): Should this enforce the same bitwidth in action parameter
   // and the header field info?  This could become a problem for constant
   // assignments, which are currently treated as 64 bits.
-  CHECK_RETURN_IF_FALSE(param_entry->param_descriptor != nullptr);
+  RET_CHECK(param_entry->param_descriptor != nullptr);
 
   // TODO(teverman): Complete deprecation of destination_field_names.
   std::string field_name =

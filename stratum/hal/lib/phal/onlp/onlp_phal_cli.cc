@@ -2,28 +2,25 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
-#include "gflags/gflags.h"
 #include "absl/strings/str_split.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
+#include "gflags/gflags.h"
+#include "re2/re2.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
 #include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
 #include "stratum/lib/macros.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
-#include "re2/re2.h"
-
-using namespace std;  // NOLINT
 
 namespace stratum {
 namespace hal {
@@ -34,8 +31,7 @@ namespace onlp {
 class OnlpPhalCli {
  public:
   // All CLI queries are run on the given attribute database.
-  explicit OnlpPhalCli(OnlpPhal* onlpphal)
-      : onlpphal_(onlpphal) {}
+  explicit OnlpPhalCli(OnlpPhal* onlpphal) : onlpphal_(onlpphal) {}
 
   // Reads the given string into a PHAL query. Returns a failure if the given
   // string uses invalid syntax. This does not guarantee that it is a valid path
@@ -67,7 +63,7 @@ class OnlpPhalCli {
 
     Path query_path;
     for (const auto& query_field : query_fields) {
-      CHECK_RETURN_IF_FALSE(query_field != "")
+      RET_CHECK(query_field != "")
           << "Encountered unexpected empty query field.";
       RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
       RE2 bracket_regex(R"#(\[(\d+)\])#");
@@ -75,7 +71,7 @@ class OnlpPhalCli {
       PathEntry entry;
 
       std::string bracket_match;
-      CHECK_RETURN_IF_FALSE(
+      RET_CHECK(
           RE2::FullMatch(query_field, field_regex, &entry.name, &bracket_match))
           << "Could not parse query field: " << query_field;
       if (!bracket_match.empty()) {
@@ -119,7 +115,7 @@ class OnlpPhalCli {
   }
 
   // Runs the main CLI loop.
-  ::util::Status  RunCli() {
+  ::util::Status RunCli() {
     while (true) {  // Grap input from std::cin and pass it to a OnlpPhalCli.
       std::string query;
       std::cout << "Enter a PHAL path: ";

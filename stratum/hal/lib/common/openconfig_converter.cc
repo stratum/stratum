@@ -31,7 +31,7 @@ using namespace openconfig::enums;  // NOLINT
 //   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<openconfig::Device::ComponentKey>> NodeToComponent(
-    const Node &in) {
+    const Node& in) {
   std::string linecard_name = absl::Substitute(":lc-$0", in.slot());
   std::string component_id = std::to_string(in.id());
 
@@ -55,13 +55,56 @@ using namespace openconfig::enums;  // NOLINT
 // to:
 //   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<openconfig::Component> ChassisToComponent(const Chassis &in) {
+::util::StatusOr<openconfig::Component> ChassisToComponent(const Chassis& in) {
   openconfig::Component component;
   auto chassis = component.mutable_chassis();
 
   // TODO(Yi Tseng): platform from yang model does not fit to platform from
   // the common.proto
   switch (in.platform()) {
+    case PLT_GENERIC_TRIDENT_PLUS:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT_PLUS);
+      break;
+    case PLT_GENERIC_TRIDENT2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT2);
+      break;
+    case PLT_GENERIC_TOMAHAWK:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK);
+      break;
+    case PLT_GENERIC_TOMAHAWK_PLUS:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK_PLUS);
+      break;
+    case PLT_GENERIC_TOMAHAWK2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK3);
+      break;
+    case PLT_MLNX_SN2700:
+      chassis->set_platform(OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700);
+      break;
+    case PLT_P4_SOFT_SWITCH:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_P4_SOFT_SWITCH);
+      break;
+    case PLT_NP4_INTEL_N3000:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_NP4_INTEL_N3000);
+      break;
+    case PLT_GENERIC_BAREFOOT_TOFINO:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO);
+      break;
+    case PLT_GENERIC_BAREFOOT_TOFINO2:
+      chassis->set_platform(
+          OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO2);
+      break;
     default:
       chassis->set_platform(OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC);
       break;
@@ -76,13 +119,13 @@ using namespace openconfig::enums;  // NOLINT
 //   oc::Bcm::Chassis::Config
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<oc::Bcm::Chassis::Config> VendorConfigToBcmConfig(
-    const VendorConfig &in) {
+    const VendorConfig& in) {
   oc::Bcm::Chassis::Config bcm_config;
-  for (const auto &entry : in.google_config().node_id_to_knet_config()) {
+  for (const auto& entry : in.google_config().node_id_to_knet_config()) {
     oc::Bcm::Chassis::Config::NodeIdToKnetConfig oc_knet_cfg;
     oc_knet_cfg.mutable_node_uid()->set_value(entry.first);
     int index = 0;
-    for (const auto &intf_config : entry.second.knet_intf_configs()) {
+    for (const auto& intf_config : entry.second.knet_intf_configs()) {
       oc::Bcm::Chassis::Config::NodeIdToKnetConfig::KnetIntfConfigs
           oc_intf_config;
       oc_intf_config.mutable_id()->set_value(index);
@@ -114,13 +157,13 @@ using namespace openconfig::enums;  // NOLINT
     (*bcm_config.mutable_node_id_to_knet_config())[entry.first] = oc_knet_cfg;
   }
 
-  for (const auto &entry : in.google_config().node_id_to_tx_config()) {
+  for (const auto& entry : in.google_config().node_id_to_tx_config()) {
     oc::Bcm::Chassis::Config::NodeIdToTxConfig oc_tx_cfg;
     // Nothing to do at the moment for TX config.
     (*bcm_config.mutable_node_id_to_tx_config())[entry.first] = oc_tx_cfg;
   }
 
-  for (const auto &entry : in.google_config().node_id_to_rx_config()) {
+  for (const auto& entry : in.google_config().node_id_to_rx_config()) {
     oc::Bcm::Chassis::Config::NodeIdToRxConfig oc_rx_cfg;
     oc_rx_cfg.mutable_node_uid()->set_value(entry.first);
     oc_rx_cfg.mutable_max_burst_pkts()->set_value(
@@ -135,7 +178,7 @@ using namespace openconfig::enums;  // NOLINT
     oc_rx_cfg.mutable_rx_pool_pkt_count()->set_value(
         entry.second.rx_pool_pkt_count());
     oc_rx_cfg.mutable_use_interrupt()->set_value(entry.second.use_interrupt());
-    for (const auto &limit : entry.second.dma_channel_configs()) {
+    for (const auto& limit : entry.second.dma_channel_configs()) {
       oc::Bcm::Chassis::Config::NodeIdToRxConfig::DmaChannelConfigs
           oc_dma_ch_cfg;
       oc_dma_ch_cfg.mutable_id()->set_value(limit.first);
@@ -154,10 +197,10 @@ using namespace openconfig::enums;  // NOLINT
     (*bcm_config.mutable_node_id_to_rx_config())[entry.first] = oc_rx_cfg;
   }
 
-  for (const auto &entry : in.google_config().node_id_to_rate_limit_config()) {
+  for (const auto& entry : in.google_config().node_id_to_rate_limit_config()) {
     oc::Bcm::Chassis::Config::NodeIdToRateLimitConfig oc_rate_limit_cfg;
     oc_rate_limit_cfg.mutable_node_uid()->set_value(entry.first);
-    for (const auto &limit : entry.second.per_cos_rate_limit_configs()) {
+    for (const auto& limit : entry.second.per_cos_rate_limit_configs()) {
       oc::Bcm::Chassis::Config::NodeIdToRateLimitConfig::PerCosRateLimitConfigs
           oc_per_cos_cfg;
       oc_per_cos_cfg.mutable_id()->set_value(limit.first);
@@ -187,7 +230,7 @@ using namespace openconfig::enums;  // NOLINT
 //   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<openconfig::Device::ComponentKey>>
-SingletonPortToComponents(const SingletonPort &in) {
+SingletonPortToComponents(const SingletonPort& in) {
   openconfig::Device::ComponentKey component_key;
   component_key.set_name(in.name());
   auto component = component_key.mutable_component();
@@ -219,7 +262,7 @@ SingletonPortToComponents(const SingletonPort &in) {
   auto subcomponent_key = component->add_subcomponent();
   subcomponent_key->set_name(in.name());
   auto port = component->mutable_port();
-  port->mutable_port_id()->set_value(in.id());
+  port->mutable_port_id()->set_value(in.port());
 
   // No slot-id from component.port or interface,
   // here we could store the linecard of this port
@@ -241,14 +284,13 @@ SingletonPortToComponents(const SingletonPort &in) {
 //   std::list<openconfig::InterfaceKey>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<openconfig::Device::InterfaceKey>>
-SingletonPortToInterfaces(const SingletonPort &in) {
+SingletonPortToInterfaces(const SingletonPort& in) {
   openconfig::Device::InterfaceKey interface_key;
   interface_key.set_name(in.name());
   auto interface = interface_key.mutable_interface();
 
-  // SingletonPort.id -> /interfaces/interface/state/id(ifindex)
+  // SingletonPort.id -> /interfaces/interface/config/id
   interface->mutable_id()->set_value(in.id());
-  interface->mutable_ifindex()->set_value(in.id());
 
   // SingletonPort.speed_bps -> /interfaces/interface/ethernet/config/port-speed
   switch (in.speed_bps()) {
@@ -285,8 +327,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
           OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100GB);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "unknown 'speed_bps' " << in.ShortDebugString();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "unknown 'speed_bps' " << in.ShortDebugString();
   }
 
   // SingletonPort.config_params.admin_state
@@ -323,7 +365,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 //   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<openconfig::Device::ComponentKey>>
-TrunkPortToComponents(const TrunkPort &in) {
+TrunkPortToComponents(const TrunkPort& in) {
   openconfig::Device::ComponentKey component_key;
   component_key.set_name(in.name());
   auto component = component_key.mutable_component();
@@ -338,14 +380,13 @@ TrunkPortToComponents(const TrunkPort &in) {
 //   std::list<openconfig::Device::InterfaceKey>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<openconfig::Device::InterfaceKey>>
-TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
+TrunkPortToInterfaces(const ChassisConfig& root, const TrunkPort& in) {
   openconfig::Device::InterfaceKey interface_key;
   interface_key.set_name(in.name());
   auto trunk = interface_key.mutable_interface();
 
-  // SingletonPort.id -> /interfaces/interface/state/id(ifindex)
+  // SingletonPort.id -> /interfaces/interface/config/id
   trunk->mutable_id()->set_value(in.id());
-  trunk->mutable_ifindex()->set_value(in.id());
 
   // SingletonPort.config_params.admin_state
   // -> /interfaces/interface/config/enabled
@@ -362,19 +403,20 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
           OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown trunk type " << in.type();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "unknown trunk type " << in.type();
   }
 
   std::map<int64, std::string> id_to_name;
-  for (const auto &hal_singleton : root.singleton_ports()) {
+  for (const auto& hal_singleton : root.singleton_ports()) {
     id_to_name[hal_singleton.id()] = hal_singleton.name();
   }
 
   for (int64 member_id : in.members()) {
-    std::string *name = gtl::FindOrNull(id_to_name, member_id);
+    std::string* name = gtl::FindOrNull(id_to_name, member_id);
     if (name == nullptr) {
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "unknown 'members' " << in.ShortDebugString();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "unknown 'members' " << in.ShortDebugString();
     }
 
     auto member = trunk->mutable_aggregation()->add_member();
@@ -390,21 +432,30 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 //   Chassis
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<Chassis> ComponentToChassis(
-    const openconfig::Device &device,
-    const openconfig::Device::ComponentKey &component_key) {
+    const openconfig::Device& device,
+    const openconfig::Device::ComponentKey& component_key) {
   Chassis to;
   to.set_name(component_key.name());
   auto component = component_key.component();
 
   switch (component.chassis().platform()) {
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT_PLUS:
-      to.set_platform(PLT_GENERIC_TRIDENT2);
+      to.set_platform(PLT_GENERIC_TRIDENT_PLUS);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT2:
-      to.set_platform(PLT_GENERIC_TOMAHAWK);
+      to.set_platform(PLT_GENERIC_TRIDENT2);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK:
-      to.set_platform(PLT_GENERIC_TRIDENT_PLUS);
+      to.set_platform(PLT_GENERIC_TOMAHAWK);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK_PLUS:
+      to.set_platform(PLT_GENERIC_TOMAHAWK_PLUS);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK2:
+      to.set_platform(PLT_GENERIC_TOMAHAWK2);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK3:
+      to.set_platform(PLT_GENERIC_TOMAHAWK3);
       break;
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700:
       to.set_platform(PLT_MLNX_SN2700);
@@ -412,11 +463,14 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
     case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_P4_SOFT_SWITCH:
       to.set_platform(PLT_P4_SOFT_SWITCH);
       break;
-    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO:
-      to.set_platform(PLT_BAREFOOT_TOFINO);
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_NP4_INTEL_N3000:
+      to.set_platform(PLT_NP4_INTEL_N3000);
       break;
-    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO2:
-      to.set_platform(PLT_BAREFOOT_TOFINO2);
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO:
+      to.set_platform(PLT_GENERIC_BAREFOOT_TOFINO);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_BAREFOOT_TOFINO2:
+      to.set_platform(PLT_GENERIC_BAREFOOT_TOFINO2);
       break;
     default:
       to.set_platform(PLT_UNKNOWN);
@@ -432,8 +486,8 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 //   Node
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<Node> ComponentToNode(
-    const openconfig::Device &device,
-    const openconfig::Device::ComponentKey &component_key) {
+    const openconfig::Device& device,
+    const openconfig::Device::ComponentKey& component_key) {
   Node to;
   auto component = component_key.component();
 
@@ -450,7 +504,7 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 
   // TODO(unknown): For now by default disable learning on default VLAN.
   // This will eventually come from gNMI.
-  auto *vlan_config = to.mutable_config_params()->add_vlan_configs();
+  auto* vlan_config = to.mutable_config_params()->add_vlan_configs();
   vlan_config->set_block_broadcast(false);
   vlan_config->set_block_known_multicast(false);
   vlan_config->set_block_unknown_multicast(true);
@@ -471,7 +525,7 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 //   GoogleConfig
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<GoogleConfig> ComponentToChassisBcmChipSpecific(
-    const openconfig::Device::ComponentKey &component_key) {
+    const openconfig::Device::ComponentKey& component_key) {
   auto component = component_key.component();
   GoogleConfig to;
 
@@ -483,9 +537,9 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
         bcm_specific.bcm_chassis_map_id().value();
 
     // map<int32, NodeIdToKnetConfig> node_id_to_knet_config
-    for (const auto &entry : bcm_specific.node_id_to_knet_config()) {
+    for (const auto& entry : bcm_specific.node_id_to_knet_config()) {
       GoogleConfig::BcmKnetConfig conf;
-      for (const auto &config : entry.second.knet_intf_configs()) {
+      for (const auto& config : entry.second.knet_intf_configs()) {
         GoogleConfig::BcmKnetConfig::BcmKnetIntfConfig intf;
 
         switch (config.second.purpose()) {
@@ -509,13 +563,13 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
     }
 
     // map<int32, NodeIdToTxConfig> node_id_to_tx_config
-    for (const auto &entry : bcm_specific.node_id_to_tx_config()) {
+    for (const auto& entry : bcm_specific.node_id_to_tx_config()) {
       GoogleConfig::BcmTxConfig config;
       (*to.mutable_node_id_to_tx_config())[entry.first] = config;
     }
 
     // map<int32, NodeIdToRxConfig> node_id_to_rx_config
-    for (const auto &entry : bcm_specific.node_id_to_rx_config()) {
+    for (const auto& entry : bcm_specific.node_id_to_rx_config()) {
       GoogleConfig::BcmRxConfig conf;
 
       conf.set_rx_pool_pkt_count(entry.second.rx_pool_pkt_count().value());
@@ -527,7 +581,7 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
       conf.set_max_burst_pkts(entry.second.max_burst_pkts().value());
       conf.set_use_interrupt(entry.second.use_interrupt().value());
 
-      for (const auto &config : entry.second.dma_channel_configs()) {
+      for (const auto& config : entry.second.dma_channel_configs()) {
         GoogleConfig::BcmRxConfig::BcmDmaChannelConfig a;
 
         a.set_chains(config.second.chains().value());
@@ -537,7 +591,7 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
             config.second.oversized_packets_ok().value());
         a.set_no_pkt_parsing(config.second.no_pkt_parsing().value());
 
-        for (const auto &cos_set : config.second.cos_set()) {
+        for (const auto& cos_set : config.second.cos_set()) {
           a.add_cos_set(cos_set.value());
         }
 
@@ -548,12 +602,12 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
     }
 
     // map<uint64, BcmRateLimitConfig> node_id_to_rate_limit_config
-    for (const auto &entry : bcm_specific.node_id_to_rate_limit_config()) {
+    for (const auto& entry : bcm_specific.node_id_to_rate_limit_config()) {
       GoogleConfig::BcmRateLimitConfig conf;
 
       conf.set_max_rate_pps(entry.second.max_rate_pps().value());
       conf.set_max_burst_pkts(entry.second.max_burst_pkts().value());
-      for (const auto &config : entry.second.per_cos_rate_limit_configs()) {
+      for (const auto& config : entry.second.per_cos_rate_limit_configs()) {
         GoogleConfig::BcmRateLimitConfig::BcmPerCosRateLimitConfig per_cos;
 
         per_cos.set_max_rate_pps(config.second.max_rate_pps().value());
@@ -575,8 +629,8 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 //   TrunkPort
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<TrunkPort> InterfaceToTrunkPort(
-    const openconfig::Device &device,
-    const openconfig::Device::InterfaceKey &interface_key) {
+    const openconfig::Device& device,
+    const openconfig::Device::InterfaceKey& interface_key) {
   TrunkPort to;
   auto interface = interface_key.interface();
 
@@ -595,13 +649,13 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
   }
 
   std::map<std::string, int64> name_to_id;
-  for (const auto &entry : device.interface()) {
-    const auto &interface_name = entry.name();
-    const auto &interface_id = entry.interface().id().value();
+  for (const auto& entry : device.interface()) {
+    const auto& interface_name = entry.name();
+    const auto& interface_id = entry.interface().id().value();
     name_to_id[interface_name] = interface_id;
   }
 
-  for (const auto &member_name : interface.aggregation().member()) {
+  for (const auto& member_name : interface.aggregation().member()) {
     auto id = gtl::FindOrNull(name_to_id, member_name.value());
     if (id == nullptr) {
       LOG(ERROR) << "unknown 'members' " << member_name.value();
@@ -620,15 +674,15 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 //   SingletonPort
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<SingletonPort> InterfaceToSingletonPort(
-    const openconfig::Device &device,
-    const openconfig::Device::InterfaceKey &interface_key) {
+    const openconfig::Device& device,
+    const openconfig::Device::InterfaceKey& interface_key) {
   SingletonPort to;
-  auto &interface = interface_key.interface();
+  auto& interface = interface_key.interface();
   to.set_id(interface.id().value());
   to.set_name(interface_key.name());
 
   openconfig::Device::ComponentKey if_component_key;
-  for (auto &component_key : device.component()) {
+  for (auto& component_key : device.component()) {
     if (component_key.name() == interface_key.name()) {
       if_component_key.CopyFrom(component_key);
       break;
@@ -636,11 +690,11 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
   }
 
   if (!if_component_key.has_component()) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Cannot find component for interface " << interface_key.name();
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Cannot find component for interface " << interface_key.name();
   }
 
-  const auto &if_component = if_component_key.component();
+  const auto& if_component = if_component_key.component();
 
   to.set_slot(std::stoi(if_component.linecard().slot_id().value()));
   to.set_port(if_component.port().port_id().value());
@@ -672,8 +726,8 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
       to.set_speed_bps(kHundredGigBps);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "Invalid interface speed " << interface.ethernet().port_speed();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Invalid interface speed " << interface.ethernet().port_speed();
   }
 
   auto config_params = to.mutable_config_params();
@@ -701,15 +755,15 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
   }
 
   if (interface.has_loopback_mode()) {
-    LoopbackState lpbk_mode = interface.loopback_mode().value() ?
-        LOOPBACK_STATE_MAC : LOOPBACK_STATE_NONE;
+    LoopbackState lpbk_mode = interface.loopback_mode().value()
+                                  ? LOOPBACK_STATE_MAC
+                                  : LOOPBACK_STATE_NONE;
     config_params->set_loopback_mode(lpbk_mode);
   }
 
   // FIXME(Yi Tseng): Should we use other field to store interface channel?
-  for (auto &channel : interface.physical_channel()) {
-    to.set_channel(channel.value());
-    break;
+  if (interface.physical_channel_size() > 0) {
+    to.set_channel(interface.physical_channel(0).value());
   }
 
   if (interface.has_enabled()) {
@@ -725,19 +779,19 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
 // Some useful macros used in the code.
 ////////////////////////////////////////////////////////////////////////////////
 #define MERGE_ALL_COMPONENTS(list)               \
-  for (const auto &component_key : (list)) {     \
+  for (const auto& component_key : (list)) {     \
     to.add_component()->CopyFrom(component_key); \
   }
 
 #define MERGE_ALL_INTERFACES(list)               \
-  for (const auto &interface_key : (list)) {     \
+  for (const auto& interface_key : (list)) {     \
     to.add_interface()->CopyFrom(interface_key); \
   }
 
 }  // namespace
 
 ::util::StatusOr<openconfig::Device>
-OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
+OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig& in) {
   openconfig::Device to;
 
   // Handle 'description' field.
@@ -760,13 +814,13 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
   //  LOG(INFO) << to.DebugString();
 
   // Handle 'nodes' repeated field.
-  for (const auto &hal_node : in.nodes()) {
+  for (const auto& hal_node : in.nodes()) {
     ASSIGN_OR_RETURN(auto nodes, NodeToComponent(hal_node));
     MERGE_ALL_COMPONENTS(nodes);
   }
 
   // Handle 'singleton_ports' repeated field.
-  for (const auto &hal_singleton : in.singleton_ports()) {
+  for (const auto& hal_singleton : in.singleton_ports()) {
     ASSIGN_OR_RETURN(auto components, SingletonPortToComponents(hal_singleton));
     MERGE_ALL_COMPONENTS(components);
     ASSIGN_OR_RETURN(auto interfaces, SingletonPortToInterfaces(hal_singleton));
@@ -774,7 +828,7 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
   }
 
   // Handle 'trunk_ports' repeated field.
-  for (const auto &hal_trunk : in.trunk_ports()) {
+  for (const auto& hal_trunk : in.trunk_ports()) {
     ASSIGN_OR_RETURN(auto components, TrunkPortToComponents(hal_trunk));
     MERGE_ALL_COMPONENTS(components);
     ASSIGN_OR_RETURN(auto interfaces, TrunkPortToInterfaces(in, hal_trunk));
@@ -784,21 +838,21 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
   // Handle 'port_groups' repeated field.
   // Nothing to do here.
 
-  VLOG(1) << "The convetred openconfig::Device proto:\n"
+  VLOG(1) << "The converted openconfig::Device proto:\n"
           << to.ShortDebugString();
 
   return to;
 }
 
 ::util::StatusOr<ChassisConfig> OpenconfigConverter::OcDeviceToChassisConfig(
-    const openconfig::Device &in) {
+    const openconfig::Device& in) {
   ChassisConfig to;
 
   // Validate the input before doing anything.
   RETURN_IF_ERROR(ValidateOcDeviceProto(in));
 
-  for (const auto &compoennt_key : in.component()) {
-    const auto &component = compoennt_key.component();
+  for (const auto& compoennt_key : in.component()) {
+    const auto& component = compoennt_key.component();
     if (component.has_chassis()) {
       // Set chassis field.
       ASSIGN_OR_RETURN(*to.mutable_chassis(),
@@ -816,8 +870,8 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
     }
   }
 
-  for (const auto &interface_key : in.interface()) {
-    const auto &interface = interface_key.interface();
+  for (const auto& interface_key : in.interface()) {
+    const auto& interface = interface_key.interface();
     if (interface.has_aggregation()) {
       // Trunk port
       ASSIGN_OR_RETURN(*to.add_trunk_ports(),
@@ -835,13 +889,13 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
 }
 
 ::util::Status OpenconfigConverter::ValidateOcDeviceProto(
-    const openconfig::Device &in) {
+    const openconfig::Device& in) {
   bool node_exists = false;
   bool chassis_exists = false;
 
   // Verify components.
-  for (const auto &component_key : in.component()) {
-    const auto &component = component_key.component();
+  for (const auto& component_key : in.component()) {
+    const auto& component = component_key.component();
 
     if (component.has_linecard() && !component.has_port()) {
       // A node exists
@@ -854,13 +908,13 @@ OpenconfigConverter::ChassisConfigToOcDevice(const ChassisConfig &in) {
     }
   }
 
-  CHECK_RETURN_IF_FALSE(node_exists);
-  CHECK_RETURN_IF_FALSE(chassis_exists);
+  RET_CHECK(node_exists);
+  RET_CHECK(chassis_exists);
 
   // Verify interfaces.
-  for (const auto &interface_key : in.interface()) {
+  for (const auto& interface_key : in.interface()) {
     // Every interface must stores an id
-    CHECK_RETURN_IF_FALSE(interface_key.interface().has_id());
+    RET_CHECK(interface_key.interface().has_id());
   }
 
   return ::util::OkStatus();

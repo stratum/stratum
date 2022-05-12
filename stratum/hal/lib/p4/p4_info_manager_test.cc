@@ -2,29 +2,28 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // P4InfoManager unit tests.
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 
 #include <memory>
 
-#include "gflags/gflags.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
+#include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 DECLARE_bool(skip_p4_min_objects_check);
 
-using ::testing::HasSubstr;
-using gflags::FlagSaver;
-
 namespace stratum {
 namespace hal {
+
+using gflags::FlagSaver;
+using ::testing::HasSubstr;
 
 // This class is the P4InfoManager test fixture.
 class P4InfoManagerTest : public testing::Test {
@@ -36,6 +35,8 @@ class P4InfoManagerTest : public testing::Test {
   static const int kFirstCounterID = 10000000;
   static const int kFirstMeterID = 20000000;
   static const int kFirstValueSetID = 30000000;
+  static const int kFirstRegisterID = 40000000;
+  static const int kFirstDirectCounterID = 50000000;
 
   // The default constructor creates p4_test_manager_ with empty p4_test_info_.
   P4InfoManagerTest() : p4_test_manager_(new P4InfoManager(p4_test_info_)) {}
@@ -44,9 +45,7 @@ class P4InfoManagerTest : public testing::Test {
   // set of objects.  To keep tests simple and allow then to define only the
   // objects relevant for test use, the skip flag is enabled, and individual
   // tests can choose to disable it.
-  void SetUp() override {
-    FLAGS_skip_p4_min_objects_check = true;
-  }
+  void SetUp() override { FLAGS_skip_p4_min_objects_check = true; }
 
   // Replaces the existing p4_test_manager_ with one constructed from the
   // current data in p4_test_info_.
@@ -81,10 +80,11 @@ class P4InfoManagerTest : public testing::Test {
     SetUpTestP4Counters();
     SetUpTestP4Meters();
     SetUpTestP4ValueSets();
+    SetUpTestP4Registers();
   }
 
   void SetUpTestP4Tables(bool need_actions = true) {
-    ::google::protobuf::int32 dummy_action_id = kFirstActionID;
+    int32 dummy_action_id = kFirstActionID;
 
     // Each table entry is assigned an ID and name in the preamble.  Each table
     // optionally gets a set of action IDs.
@@ -103,7 +103,7 @@ class P4InfoManagerTest : public testing::Test {
   void SetUpTestP4Actions() {
     const int kNumTestActions = kNumTestTables * kNumActionsPerTable;
     const int kNumParamsPerAction = 2;
-    ::google::protobuf::int32 dummy_param_id = 100000;
+    int32 dummy_param_id = 100000;
 
     for (int a = 0; a < kNumTestActions; ++a) {
       ::p4::config::v1::Action* new_action = p4_test_info_.add_actions();
@@ -154,16 +154,33 @@ class P4InfoManagerTest : public testing::Test {
     SetUpNewP4Info();
   }
 
+  void SetUpTestP4Registers() {
+    // TODO(unknown): Tests get only one basic register preamble at present.
+    auto new_register = p4_test_info_.add_registers();
+    new_register->mutable_preamble()->set_id(kFirstRegisterID);
+    new_register->mutable_preamble()->set_name("Register-1");
+    SetUpNewP4Info();
+  }
+
+  void SetUpTestP4DirectCounters() {
+    // TODO(unknown): Tests get only one basic direct counter preamble at
+    // present.
+    auto new_counter = p4_test_info_.add_direct_counters();
+    new_counter->mutable_preamble()->set_id(kFirstDirectCounterID);
+    new_counter->mutable_preamble()->set_name("Direct-Counter-1");
+    SetUpNewP4Info();
+  }
+
   // FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
   // Populates p4_test_info_ with all resources from the tor.p4 spec.  This
   // data provides assurance that P4InfoManager can handle real P4 compiler
   // output.
-//  void SetUpTorP4Info() {
-//    const std::string kTorP4File =
-//        "stratum/hal/lib/p4/testdata/tor_p4_info.pb.txt";
-//    ASSERT_TRUE(ReadProtoFromTextFile(kTorP4File, &p4_test_info_).ok());
-//    SetUpNewP4Info();
-//  }
+  //  void SetUpTorP4Info() {
+  //    const std::string kTorP4File =
+  //        "stratum/hal/lib/p4/testdata/tor_p4_info.pb.txt";
+  //    ASSERT_TRUE(ReadProtoFromTextFile(kTorP4File, &p4_test_info_).ok());
+  //    SetUpNewP4Info();
+  //  }
 
   ::p4::config::v1::P4Info p4_test_info_;           // Sets up test P4Info.
   std::unique_ptr<P4InfoManager> p4_test_manager_;  // P4InfoManager for tests.
@@ -609,8 +626,8 @@ TEST_F(P4InfoManagerTest, TestFindValueSet) {
   SetUpTestP4ValueSets();
   ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
   for (const auto& value_set : p4_test_info_.value_sets()) {
-    auto id_status = p4_test_manager_->FindValueSetByID(
-        value_set.preamble().id());
+    auto id_status =
+        p4_test_manager_->FindValueSetByID(value_set.preamble().id());
     EXPECT_TRUE(id_status.ok());
     EXPECT_TRUE(ProtoEqual(value_set, id_status.ValueOrDie()));
     auto name_status =
@@ -636,6 +653,86 @@ TEST_F(P4InfoManagerTest, TestFindValueSetUnknownName) {
   SetUpTestP4ValueSets();
   ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
   auto status = p4_test_manager_->FindValueSetByName("unknown-value-set");
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// All valid value sets in p4_test_info_ should have successful name/ID
+// lookups, and the returned data should match the value set's original
+// p4_test_info_ entry.
+TEST_F(P4InfoManagerTest, TestFindRegister) {
+  SetUpTestP4Registers();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  for (const auto& register_entry : p4_test_info_.registers()) {
+    auto id_status =
+        p4_test_manager_->FindRegisterByID(register_entry.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(register_entry, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindRegisterByName(register_entry.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(register_entry, name_status.ValueOrDie()));
+  }
+}
+
+// Verifies lookup failure with an unknown value set ID.
+TEST_F(P4InfoManagerTest, TestFindRegisterUnknownID) {
+  SetUpTestP4Registers();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindRegisterByID(0xfedcba);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// Verifies lookup failure with an unknown unknown meter name.
+TEST_F(P4InfoManagerTest, TestFindRegisterUnknownName) {
+  SetUpTestP4Registers();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindRegisterByName("unknown-register");
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// All valid direct counters in p4_test_info_ should have successful name/ID
+// lookups, and the returned data should match the counter's original
+// p4_test_info_ entry.
+TEST_F(P4InfoManagerTest, TestFindDirectCounter) {
+  SetUpTestP4DirectCounters();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  for (const auto& counter : p4_test_info_.direct_counters()) {
+    auto id_status =
+        p4_test_manager_->FindDirectCounterByID(counter.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(counter, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindDirectCounterByName(counter.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(counter, name_status.ValueOrDie()));
+  }
+}
+
+// Verifies lookup failure with an unknown counter ID.
+TEST_F(P4InfoManagerTest, TestFindDirectCounterUnknownID) {
+  SetUpTestP4DirectCounters();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindDirectCounterByID(0x9abcd);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// Verifies lookup failure with an unknown unknown direct counter name.
+TEST_F(P4InfoManagerTest, TestFindDirectCounterUnknownName) {
+  SetUpTestP4DirectCounters();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindDirectCounterByName("unknown-counter");
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
   EXPECT_FALSE(status.status().error_message().empty());

@@ -4,16 +4,16 @@
 #ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_SWITCH_H_
 #define STRATUM_HAL_LIB_DUMMY_DUMMY_SWITCH_H_
 
+#include <map>
 #include <memory>
 #include <string>
-#include <vector>
 #include <utility>
-#include <map>
+#include <vector>
 
-#include "absl/synchronization/mutex.h"
 #include "absl/container/flat_hash_map.h"
-#include "stratum/hal/lib/common/switch_interface.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/dummy/dummy_node.h"
@@ -28,68 +28,60 @@ class DummySwitch : public SwitchInterface {
 
   // Switch Interface methods
   ::util::Status PushChassisConfig(const ChassisConfig& config)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status VerifyChassisConfig(const ChassisConfig& config)
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status Shutdown()
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status Freeze()
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status Unfreeze()
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status Shutdown() LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status Freeze() LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status Unfreeze() LOCKS_EXCLUDED(chassis_lock) override;
 
   ::util::Status PushForwardingPipelineConfig(
-      uint64 node_id,
-      const ::p4::v1::ForwardingPipelineConfig& config)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config)
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status SaveForwardingPipelineConfig(
-      uint64 node_id,
-      const ::p4::v1::ForwardingPipelineConfig& config)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config)
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status CommitForwardingPipelineConfig(uint64 node_id)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status VerifyForwardingPipelineConfig(
-      uint64 node_id,
-      const ::p4::v1::ForwardingPipelineConfig& config)
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status WriteForwardingEntries(
-      const ::p4::v1::WriteRequest& req,
-      std::vector<::util::Status>* results)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config)
+      LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
+                                        std::vector<::util::Status>* results)
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details)
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status RegisterPacketReceiveWriter(
+      LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer)
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id)
-  LOCKS_EXCLUDED(chassis_lock) override;
-  ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
+      LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id)
+      LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status HandleStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request)
+      LOCKS_EXCLUDED(chassis_lock) override;
 
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status UnregisterEventNotifyWriter()
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details)
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
-                                  std::vector<::util::Status>* details)
-  LOCKS_EXCLUDED(chassis_lock) override;
+                          std::vector<::util::Status>* details)
+      LOCKS_EXCLUDED(chassis_lock) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState()
-  LOCKS_EXCLUDED(chassis_lock) override;
+      LOCKS_EXCLUDED(chassis_lock) override;
 
   // Factory function for creating the instance of the DummySwitch.
-  static std::unique_ptr<DummySwitch>
-    CreateInstance(PhalInterface* phal_interface,
-    DummyChassisManager* chassis_mgr);
+  static std::unique_ptr<DummySwitch> CreateInstance(
+      PhalInterface* phal_interface, DummyChassisManager* chassis_mgr);
 
   // Neither copyable nor movable.
   DummySwitch(const DummySwitch&) = delete;
@@ -103,14 +95,13 @@ class DummySwitch : public SwitchInterface {
 
   // Get a DummyNode based on the Id.
   ::util::StatusOr<DummyNode*> GetDummyNode(uint64 node_id)
-  SHARED_LOCKS_REQUIRED(chassis_lock);
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  std::vector<DummyNode*> GetDummyNodes()
-  SHARED_LOCKS_REQUIRED(chassis_lock);
+  std::vector<DummyNode*> GetDummyNodes() SHARED_LOCKS_REQUIRED(chassis_lock);
 
   PhalInterface* phal_interface_;
   DummyChassisManager* chassis_mgr_;
-  ::absl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
+  ::absl::flat_hash_map<uint64, std::unique_ptr<DummyNode>> dummy_nodes_;
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_;
 
   // gets slot number for a node_id + port_id pair

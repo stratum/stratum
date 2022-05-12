@@ -9,26 +9,26 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/status/status_test_util.h"
+
+namespace stratum {
+namespace hal {
 
 using ::testing::AnyNumber;
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::ReturnRef;
-
-namespace stratum {
-namespace hal {
 
 // This hidden namespace stores constants related to the test input file.
 namespace {
@@ -63,15 +63,16 @@ class P4ActionMapperTest : public testing::TestWithParam<std::string> {
     test_action_mapper_ =
         absl::make_unique<P4ActionMapper>(test_pipeline_config_);
     EXPECT_CALL(mock_p4info_manager_, p4_info())
-        .Times(AnyNumber()).WillRepeatedly(ReturnRef(test_p4_info_));
+        .Times(AnyNumber())
+        .WillRepeatedly(ReturnRef(test_p4_info_));
   }
 
   // Reads file_name with proto buffer text into test_pipeline_config_.
   void ReadP4PipelineConfig(const std::string& file_name) {
     const std::string test_pipeline_file =
         "stratum/hal/lib/p4/testdata/" + file_name;
-    ASSERT_OK(ReadProtoFromTextFile(
-        test_pipeline_file, &test_pipeline_config_));
+    ASSERT_OK(
+        ReadProtoFromTextFile(test_pipeline_file, &test_pipeline_config_));
   }
 
   // Creates a P4Info actions() entry in test_p4_info_.
@@ -161,8 +162,7 @@ class P4ActionMapperTest : public testing::TestWithParam<std::string> {
   int CountInternalActions() {
     int count = 0;
     for (const auto& table_map_entry : test_pipeline_config_.table_map()) {
-      if (table_map_entry.second.has_internal_action())
-        ++count;
+      if (table_map_entry.second.has_internal_action()) ++count;
     }
     return count;
   }
@@ -241,7 +241,7 @@ TEST_F(P4ActionMapperTest, TestMissingP4InfoTable) {
   constexpr uint32 kTestActionId = 1;
   SetUpP4InfoAction(kActionAppliedTable, kTestActionId);
   const ::util::Status table_error = MAKE_ERROR(ERR_INTERNAL)
-      << "Table not found";
+                                     << "Table not found";
   EXPECT_CALL(mock_p4info_manager_, FindTableByName(kAppliedTable))
       .WillOnce(Return(table_error));
   ::util::Status status =
@@ -258,7 +258,8 @@ TEST_F(P4ActionMapperTest, TestDuplicateAppliedTable) {
   ::p4::config::v1::Table applied_table_info;
   applied_table_info.mutable_preamble()->set_id(200);
   EXPECT_CALL(mock_p4info_manager_, FindTableByName(kDuplicateAppliedTable))
-      .Times(2).WillRepeatedly(Return(applied_table_info));
+      .Times(2)
+      .WillRepeatedly(Return(applied_table_info));
   ::util::Status status =
       test_action_mapper_->AddP4Actions(mock_p4info_manager_);
   EXPECT_FALSE(status.ok());
@@ -274,7 +275,8 @@ TEST_F(P4ActionMapperTest, TestDuplicateAppliedTableMultiLink) {
   ::p4::config::v1::Table applied_table_info;
   applied_table_info.mutable_preamble()->set_id(200);
   EXPECT_CALL(mock_p4info_manager_, FindTableByName(kDuplicateAppliedTable))
-      .Times(2).WillRepeatedly(Return(applied_table_info));
+      .Times(2)
+      .WillRepeatedly(Return(applied_table_info));
   ::util::Status status =
       test_action_mapper_->AddP4Actions(mock_p4info_manager_);
   EXPECT_FALSE(status.ok());
@@ -359,28 +361,13 @@ TEST_P(P4ActionMapperInvalidSequenceTest, TestInvalidSequences3) {
 // qualifier, and a 'U' indicates an unqualified internal action.  The
 // parameter string length is bounded by the number of internal actions
 // in the pipeline config test file.
-INSTANTIATE_TEST_CASE_P(
-  ValidAppliedTablesSequence,
-  P4ActionMapperTest,
-  ::testing::Values(
-    "Q",
-    "QQ",
-    "QQQ",
-    "QQU",
-    "U",
-    "UQ",
-    "UQQ",
-    "QU",
-    "QUQ"));
+INSTANTIATE_TEST_CASE_P(ValidAppliedTablesSequence, P4ActionMapperTest,
+                        ::testing::Values("Q", "QQ", "QQQ", "QQU", "U", "UQ",
+                                          "UQQ", "QU", "QUQ"));
 
-INSTANTIATE_TEST_CASE_P(
-  InvalidAppliedTablesSequence,
-  P4ActionMapperInvalidSequenceTest,
-  ::testing::Values(
-    "UU",
-    "UQU",
-    "UUQ",
-    "QUU"));
+INSTANTIATE_TEST_CASE_P(InvalidAppliedTablesSequence,
+                        P4ActionMapperInvalidSequenceTest,
+                        ::testing::Values("UU", "UQU", "UUQ", "QUU"));
 
 }  // namespace hal
 }  // namespace stratum

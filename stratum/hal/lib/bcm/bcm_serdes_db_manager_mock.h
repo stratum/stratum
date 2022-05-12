@@ -2,12 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SERDES_DB_MANAGER_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SERDES_DB_MANAGER_MOCK_H_
 
-#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 
 namespace stratum {
 namespace hal {

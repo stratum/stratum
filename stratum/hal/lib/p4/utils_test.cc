@@ -2,23 +2,23 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Unit tests for p4_utils.
 
 #include "stratum/hal/lib/p4/utils.h"
 
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
-#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_test_util.h"
-
-using ::testing::HasSubstr;
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
+namespace {
+
+using ::testing::HasSubstr;
 
 TEST(PrintP4ObjectIDTest, TestTableID) {
   const int kBaseID = 0x12345;
@@ -57,10 +57,110 @@ TEST(PrintP4ObjectIDTest, TestInvalidID) {
   const int kBaseID = 0x54321;
   const int kObjectId =
       ((::p4::config::v1::P4Ids_Prefix_OTHER_EXTERNS_START - 1) << 24) +
-       kBaseID;
+      kBaseID;
   const std::string print_id = PrintP4ObjectID(kObjectId);
   EXPECT_THAT(print_id, HasSubstr("0x54321"));
   EXPECT_THAT(print_id, HasSubstr("INVALID"));
+}
+
+TEST(ByteStringTest, P4RuntimeByteStringToPaddedByteStringCorrect) {
+  EXPECT_EQ(std::string("\xab", 1),
+            P4RuntimeByteStringToPaddedByteString("\xab", 1));
+  EXPECT_EQ(std::string("\x00\xab", 2),
+            P4RuntimeByteStringToPaddedByteString("\xab", 2));
+  EXPECT_EQ(std::string("\x00\x00\x00", 3),
+            P4RuntimeByteStringToPaddedByteString(std::string("\x00", 1), 3));
+  EXPECT_EQ(std::string("\x00\x00", 2),
+            P4RuntimeByteStringToPaddedByteString("", 2));
+  EXPECT_EQ(std::string("\xef", 1),
+            P4RuntimeByteStringToPaddedByteString("\xab\xcd\xef", 1));
+  EXPECT_EQ(std::string("", 0),
+            P4RuntimeByteStringToPaddedByteString("\xab", 0));
+}
+
+TEST(ByteStringTest, ByteStringToP4RuntimeByteStringCorrect) {
+  EXPECT_EQ(std::string("\xab", 1),
+            ByteStringToP4RuntimeByteString(std::string("\x00\xab", 2)));
+  EXPECT_EQ(std::string("\x00", 1),
+            ByteStringToP4RuntimeByteString(std::string("\x00", 1)));
+  EXPECT_EQ(std::string("\xab", 1),
+            ByteStringToP4RuntimeByteString(std::string("\xab", 1)));
+  EXPECT_EQ("", ByteStringToP4RuntimeByteString(""));
+  EXPECT_EQ(std::string("\xab", 1), ByteStringToP4RuntimeByteString(std::string(
+                                        "\x00\x00\x00\x00\xab", 5)));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigEmptyValid) {
+  constexpr char kInvalidMeterConfigText[] = R"pb(
+    # Empty MeterConfig, all fields zero.
+  )pb";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigZeroBurstInvalid) {
+  constexpr char kInvalidMeterConfigText[] = R"pb(
+    # Zero burst sizes.
+    cir: 100
+    pir: 200
+    cburst: 0
+    pburst: 0
+  )pb";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigRatesInvalid) {
+  constexpr char kInvalidMeterConfigText[] = R"pb(
+    # Commited rate greater peak rate.
+    cir: 500
+    pir: 400
+    cburst: 100
+    pburst: 100
+  )pb";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
+  EXPECT_FALSE(IsValidMeterConfig(config).ok());
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigValid) {
+  constexpr char kValidMeterConfigText[] = R"pb(
+    cir: 50
+    pir: 100
+    cburst: 400
+    pburst: 800
+  )pb";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigBurstsValid) {
+  constexpr char kValidMeterConfigText[] = R"pb(
+    # Commited burst size is allowed to be greater than peak burst size.
+    cir: 1000
+    pir: 2000
+    cburst: 800
+    pburst: 400
+  )pb";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
+}
+
+TEST(ValidMeterConfigTest, IsValidMeterConfigZeroRateValid) {
+  constexpr char kValidMeterConfigText[] = R"pb(
+    # Zero rates are allowed.
+    cir: 0
+    pir: 0
+    cburst: 400
+    pburst: 800
+  )pb";
+  ::p4::v1::MeterConfig config;
+  CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
+  EXPECT_OK(IsValidMeterConfig(config));
 }
 
 // This test fixture provides a common P4PipelineConfig for these tests.
@@ -71,20 +171,20 @@ class TableMapValueTest : public testing::Test {
   void SetUp() override {
     P4TableMapValue table_map_value;
     table_map_value.mutable_table_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "table", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "table",
+                     table_map_value);
     table_map_value.mutable_field_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "field", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "field",
+                     table_map_value);
     table_map_value.mutable_action_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "action", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "action",
+                     table_map_value);
     table_map_value.mutable_header_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "header", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "header",
+                     table_map_value);
     table_map_value.mutable_internal_action();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "internal", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "internal",
+                     table_map_value);
   }
 
   P4PipelineConfig test_pipeline_config_;
@@ -173,5 +273,6 @@ TEST_F(TableMapValueTest, FindFailValueWithWrongDescriptorCaseWithLogObject) {
   EXPECT_THAT(status.status().error_message(), HasSubstr("p4-object"));
 }
 
+}  // namespace
 }  // namespace hal
 }  // namespace stratum

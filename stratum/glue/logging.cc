@@ -5,9 +5,12 @@
 #include "stratum/glue/logging.h"
 
 #include <syslog.h>
+
 #include <memory>
 
+#include "absl/time/time.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/stamping.h"
 
 #ifdef STRATUM_ARCH_PPC
 
@@ -19,9 +22,9 @@ DEFINE_bool(logtostderr, false,
 DEFINE_bool(logtosyslog, false, "log messages also go to syslog.");
 
 using google::LogSeverity;
+using google::LogSink;
 using google::LogToStderr;
 using google::ProgramInvocationShortName;
-using google::LogSink;
 
 namespace stratum {
 namespace {
@@ -29,9 +32,8 @@ namespace {
 class SyslogSink : public LogSink {
  public:
   void send(LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct ::tm* tm_time,
-                    const char* message, size_t message_len) override {
+            const char* base_filename, int line, const struct ::tm* tm_time,
+            const char* message, size_t message_len) override {
     static const int kSeverityToLevel[] = {INFO, WARNING, ERROR, FATAL};
     static const char* const kSeverityToLabel[] = {"INFO", "WARNING", "ERROR",
                                                    "FATAL"};
@@ -57,6 +59,40 @@ void InitStratumLogging() {
   if (FLAGS_logtostderr) {
     LogToStderr();
   }
+
+  if (kBuildTimestamp > 0) {
+    LOG(INFO)
+        << "Stratum version: "
+        << kBuildScmRevision
+        // TODO(max): enable once CI does not modify the source tree anymore
+        // << " (" << kBuildScmStatus << ")"
+        << " built at " << absl::FromTimeT(kBuildTimestamp) << " on host "
+        << kBuildHost << " by user " << kBuildUser << ".";
+  } else {
+    LOG(INFO) << "Stratum version: not stamped.";
+  }
+}
+
+LoggingConfig GetCurrentLogLevel() {
+  std::string minloglevel = "UNKNOWN";
+  ::gflags::GetCommandLineOption("minloglevel", &minloglevel);
+  std::string verbosity = "UNKNOWN";
+  ::gflags::GetCommandLineOption("v", &verbosity);
+
+  return std::make_pair(minloglevel, verbosity);
+}
+
+bool SetLogLevel(const LoggingConfig& logging_config) {
+  // stderrthreshold is set in addition to minloglevel in case file logging is
+  // enabled by the user.
+  return !::gflags::SetCommandLineOption("stderrthreshold",
+                                         logging_config.first.c_str())
+              .empty() &&
+         !::gflags::SetCommandLineOption("minloglevel",
+                                         logging_config.first.c_str())
+              .empty() &&
+         !::gflags::SetCommandLineOption("v", logging_config.second.c_str())
+              .empty();
 }
 
 }  // namespace stratum
@@ -68,7 +104,7 @@ void InitStratumLogging() {
 #include <iostream>
 namespace std {
 ::std::ostream& operator<<(::std::ostream& s, ::std::nullptr_t) {
-    return s << static_cast<void *>(nullptr);
+  return s << static_cast<void*>(nullptr);
 }
-}
+}  // namespace std
 #endif  // __cplusplus

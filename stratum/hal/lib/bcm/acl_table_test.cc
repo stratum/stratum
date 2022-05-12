@@ -2,17 +2,18 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/acl_table.h"
+
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/acl_table.h"
+#include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -20,20 +21,20 @@ namespace bcm {
 namespace {
 
 using test_utils::EqualsProto;
+using test_utils::IsOkAndHolds;
+using test_utils::StatusIs;
 using testing::_;
 using testing::HasSubstr;
 using testing::UnorderedElementsAre;
 using testing::UnorderedElementsAreArray;
-using stratum::test_utils::IsOkAndHolds;
-using stratum::test_utils::StatusIs;
 
-constexpr char kDefaultP4Table[] = R"PROTO(
+constexpr char kDefaultP4Table[] = R"pb(
   preamble { id: 1 name: "table_1" }
   match_fields { id: 100 }
   match_fields { id: 200 }
   match_fields { id: 300 }
   size: 10
-)PROTO";
+)pb";
 
 ::p4::config::v1::Table DefaultP4Table() {
   ::p4::config::v1::Table p4_table;

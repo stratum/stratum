@@ -133,6 +133,7 @@ RUN mkdir /stratum_configs && \
     echo "nodev /mnt/huge hugetlbfs defaults 0 0" >> /etc/fstab && \
     echo "vm.nr_hugepages=8192" >> /etc/sysctl.conf
 
-EXPOSE 28000/tcp
+EXPOSE 9339/tcp
+EXPOSE 9559/tcp
 ENTRYPOINT ["/stratum-entrypoint.sh"]
 

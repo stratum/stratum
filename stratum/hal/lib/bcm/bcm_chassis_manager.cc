@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <pthread.h>
@@ -11,12 +10,14 @@
 #include <set>
 #include <sstream>  // IWYU pragma: keep
 
-#include "gflags/gflags.h"
-#include "google/protobuf/message.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "google/protobuf/message.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -26,8 +27,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");
@@ -57,6 +56,8 @@ constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsInXPipeline;
 constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkPlusMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk2MaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawk3MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
@@ -93,9 +94,11 @@ BcmChassisManager::BcmChassisManager(OperationMode mode,
       node_id_to_port_id_to_loopback_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
+      gnmi_event_writer_(nullptr),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
-      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)) {}
+      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)),
+      unit_to_bcm_node_() {}
 
 // Default constructor is called by the mock class only.
 BcmChassisManager::BcmChassisManager()
@@ -233,7 +236,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   const BcmChip* bcm_chip = gtl::FindPtrOrNull(unit_to_bcm_chip_, unit);
-  CHECK_RETURN_IF_FALSE(bcm_chip != nullptr) << "Unknown unit " << unit << ".";
+  RET_CHECK(bcm_chip != nullptr) << "Unknown unit " << unit << ".";
 
   return BcmChip(*bcm_chip);
 }
@@ -246,7 +249,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
   }
   const BcmPort* bcm_port =
       gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, singleton_port_key);
-  CHECK_RETURN_IF_FALSE(bcm_port != nullptr)
+  RET_CHECK(bcm_port != nullptr)
       << "Unknown singleton port key: " << singleton_port_key.ToString() << ".";
 
   return BcmPort(*bcm_port);
@@ -259,14 +262,14 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
   }
   const auto* port_id_to_port_key =
       gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_port_key != nullptr)
+  RET_CHECK(port_id_to_port_key != nullptr)
       << "Unknown node " << node_id << ".";
   const auto* port_key = gtl::FindOrNull(*port_id_to_port_key, port_id);
-  CHECK_RETURN_IF_FALSE(port_key != nullptr)
+  RET_CHECK(port_key != nullptr)
       << "Unknown port " << port_id << " on node " << node_id << ".";
   const auto* bcm_port =
       gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, *port_key);
-  CHECK_RETURN_IF_FALSE(bcm_port != nullptr)
+  RET_CHECK(bcm_port != nullptr)
       << "Unknown singleton port key: " << port_key->ToString() << ".";
   return *bcm_port;
 }
@@ -275,7 +278,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
     const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED).without_logging()
-        << "Not initialized!";
+           << "Not initialized!";
   }
 
   return node_id_to_unit_;
@@ -287,7 +290,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  CHECK_RETURN_IF_FALSE(unit != nullptr)
+  RET_CHECK(unit != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
   return *unit;
@@ -300,7 +303,7 @@ BcmChassisManager::GetPortIdToSdkPortMap(uint64 node_id) const {
   }
   const std::map<uint32, SdkPort>* port_id_to_sdk_port =
       gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_sdk_port != nullptr)
+  RET_CHECK(port_id_to_sdk_port != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
   return *port_id_to_sdk_port;
@@ -313,7 +316,7 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
   const std::map<uint32, SdkTrunk>* trunk_id_to_sdk_trunk =
       gtl::FindOrNull(node_id_to_trunk_id_to_sdk_trunk_, node_id);
-  CHECK_RETURN_IF_FALSE(trunk_id_to_sdk_trunk != nullptr)
+  RET_CHECK(trunk_id_to_sdk_trunk != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
   return *trunk_id_to_sdk_trunk;
@@ -326,11 +329,11 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
   const std::map<uint32, PortState>* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
+  RET_CHECK(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortState* port_state =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
-  CHECK_RETURN_IF_FALSE(port_state != nullptr)
+  RET_CHECK(port_state != nullptr)
       << "Port " << port_id << " is not known on node " << node_id << ".";
 
   return *port_state;
@@ -343,16 +346,16 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
 
   auto* node_id = gtl::FindOrNull(unit_to_node_id_, sdk_port.unit);
-  CHECK_RETURN_IF_FALSE(node_id != nullptr)
+  RET_CHECK(node_id != nullptr)
       << "Attempting to query state of port on unknown unit " << sdk_port.unit
       << ".";
   auto* sdk_port_to_port_id =
       gtl::FindOrNull(node_id_to_sdk_port_to_port_id_, *node_id);
-  CHECK_RETURN_IF_FALSE(sdk_port_to_port_id != nullptr)
+  RET_CHECK(sdk_port_to_port_id != nullptr)
       << "Inconsistent state! No sdk_port_to_port_id map for unit "
       << sdk_port.unit << ", node " << *node_id << ".";
   auto* port_id = gtl::FindOrNull(*sdk_port_to_port_id, sdk_port);
-  CHECK_RETURN_IF_FALSE(port_id != nullptr)
+  RET_CHECK(port_id != nullptr)
       << "Attempting to retrieve state of unknown SDK port "
       << sdk_port.ToString() << ".";
   return GetPortState(*node_id, *port_id);
@@ -365,11 +368,11 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
   const std::map<uint32, TrunkState>* trunk_id_to_trunk_state =
       gtl::FindOrNull(node_id_to_trunk_id_to_trunk_state_, node_id);
-  CHECK_RETURN_IF_FALSE(trunk_id_to_trunk_state != nullptr)
+  RET_CHECK(trunk_id_to_trunk_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const TrunkState* trunk_state =
       gtl::FindOrNull(*trunk_id_to_trunk_state, trunk_id);
-  CHECK_RETURN_IF_FALSE(trunk_state != nullptr)
+  RET_CHECK(trunk_state != nullptr)
       << "Trunk " << trunk_id << " is not known on node " << node_id << ".";
 
   return *trunk_state;
@@ -382,11 +385,11 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
   const std::map<uint32, std::set<uint32>>* trunk_id_to_members =
       gtl::FindOrNull(node_id_to_trunk_id_to_members_, node_id);
-  CHECK_RETURN_IF_FALSE(trunk_id_to_members != nullptr)
+  RET_CHECK(trunk_id_to_members != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const std::set<uint32>* members =
       gtl::FindOrNull(*trunk_id_to_members, trunk_id);
-  CHECK_RETURN_IF_FALSE(members != nullptr)
+  RET_CHECK(members != nullptr)
       << "Trunk " << trunk_id << " is not known on node " << node_id << ".";
 
   return *members;
@@ -400,16 +403,16 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   const std::map<uint32, TrunkMembershipInfo>*
       port_id_to_trunk_membership_info = gtl::FindOrNull(
           node_id_to_port_id_to_trunk_membership_info_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_trunk_membership_info != nullptr)
+  RET_CHECK(port_id_to_trunk_membership_info != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const TrunkMembershipInfo* membership_info =
       gtl::FindOrNull(*port_id_to_trunk_membership_info, port_id);
-  // We can't use CHECK_RETURN_IF_FALSE here, because we want without_logging()
+  // We can't use RET_CHECK here, because we want without_logging()
   if (membership_info == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM).without_logging()
-      << "Port " << port_id
-      << " is not known or does not belong to any trunk on node " << node_id
-      << ".";
+           << "Port " << port_id
+           << " is not known or does not belong to any trunk on node "
+           << node_id << ".";
   }
 
   return membership_info->parent_trunk_id;
@@ -422,10 +425,10 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
   const auto* port_id_to_admin_state =
       gtl::FindOrNull(node_id_to_port_id_to_admin_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_admin_state != nullptr)
+  RET_CHECK(port_id_to_admin_state != nullptr)
       << "Unknown node " << node_id << ".";
   const auto* admin_state = gtl::FindOrNull(*port_id_to_admin_state, port_id);
-  CHECK_RETURN_IF_FALSE(admin_state != nullptr)
+  RET_CHECK(admin_state != nullptr)
       << "Unknown port " << port_id << " on node " << node_id << ".";
   return *admin_state;
 }
@@ -437,11 +440,11 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   }
   const auto* port_id_to_loopback_state =
       gtl::FindOrNull(node_id_to_port_id_to_loopback_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_loopback_state != nullptr)
+  RET_CHECK(port_id_to_loopback_state != nullptr)
       << "Unknown node " << node_id << ".";
   const auto* loopback_state =
       gtl::FindOrNull(*port_id_to_loopback_state, port_id);
-  CHECK_RETURN_IF_FALSE(loopback_state != nullptr)
+  RET_CHECK(loopback_state != nullptr)
       << "Unknown port " << port_id << " on node " << node_id << ".";
   return *loopback_state;
 }
@@ -500,10 +503,9 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   // Update internal map.
   auto* port_id_to_loopback_state =
       gtl::FindOrNull(node_id_to_port_id_to_loopback_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_loopback_state)
-      << "Unknown node " << node_id << ".";
+  RET_CHECK(port_id_to_loopback_state) << "Unknown node " << node_id << ".";
   auto* loopback_state = gtl::FindOrNull(*port_id_to_loopback_state, port_id);
-  CHECK_RETURN_IF_FALSE(loopback_state)
+  RET_CHECK(loopback_state)
       << "Unknown port " << port_id << " on node " << node_id << ".";
   *loopback_state = state;
 
@@ -567,7 +569,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   }
 
   // Find the supported BCM chip types based on the given platform.
-  CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
+  RET_CHECK(config.has_chassis() && config.chassis().platform())
       << "Config needs a Chassis message with correct platform.";
   std::set<BcmChip::BcmChipType> supported_chip_types;
   switch (config.chassis().platform()) {
@@ -581,7 +583,13 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       supported_chip_types.insert(BcmChip::TOMAHAWK);
       break;
     case PLT_GENERIC_TOMAHAWK_PLUS:
-        supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      break;
+    case PLT_GENERIC_TOMAHAWK2:
+      supported_chip_types.insert(BcmChip::TOMAHAWK2);
+      break;
+    case PLT_GENERIC_TOMAHAWK3:
+      supported_chip_types.insert(BcmChip::TOMAHAWK3);
       break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
@@ -611,12 +619,10 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   // Validate Node messages. Make sure there is no two nodes with the same id.
   std::map<uint64, int> node_id_to_unit;
   for (const auto& node : config.nodes()) {
-    CHECK_RETURN_IF_FALSE(node.slot() > 0)
+    RET_CHECK(node.slot() > 0)
         << "No positive slot in " << node.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(node.id() > 0)
-        << "No positive ID in " << node.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(
-        gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+    RET_CHECK(node.id() > 0) << "No positive ID in " << node.ShortDebugString();
+    RET_CHECK(gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
         << "The id for Node " << PrintNode(node) << " was already recorded "
         << "for another Node in the config.";
   }
@@ -645,30 +651,30 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   std::map<PortKey, std::set<uint64>> port_group_key_to_speed_bps;
   std::map<PortKey, std::set<bool>> port_group_key_to_internal;
   for (const auto& singleton_port : config.singleton_ports()) {
-    CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
+    RET_CHECK(singleton_port.id() > 0)
         << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
+    RET_CHECK(singleton_port.id() != kCpuPortId)
         << "SingletonPort " << PrintSingletonPort(singleton_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
-    CHECK_RETURN_IF_FALSE(singleton_port.slot() > 0)
+    RET_CHECK(singleton_port.slot() > 0)
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
+    RET_CHECK(singleton_port.port() > 0)
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
+    RET_CHECK(singleton_port.speed_bps() > 0)
         << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
-    CHECK_RETURN_IF_FALSE(!singleton_port_keys.count(singleton_port_key))
+    RET_CHECK(!singleton_port_keys.count(singleton_port_key))
         << "The (slot, port, channel) tuple for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " was already recorded for another SingletonPort in the config.";
-    CHECK_RETURN_IF_FALSE(singleton_port.node() > 0)
+    RET_CHECK(singleton_port.node() > 0)
         << "No valid node ID in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(node_id_to_unit.count(singleton_port.node()))
+    RET_CHECK(node_id_to_unit.count(singleton_port.node()))
         << "Node ID " << singleton_port.node() << " given for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " has not been given to any Node in the config.";
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         !node_id_to_port_ids[singleton_port.node()].count(singleton_port.id()))
         << "The id for SingletonPort " << PrintSingletonPort(singleton_port)
         << " was already recorded for another SingletonPort for node with ID "
@@ -686,7 +692,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           // Make sure the (slot, port) for this port is not in
           // flex_port_group_keys. This is an invalid situation. We either have
           // all the channels of a transceiver port flex or all non-flex.
-          CHECK_RETURN_IF_FALSE(!flex_port_group_keys.count(port_group_key))
+          RET_CHECK(!flex_port_group_keys.count(port_group_key))
               << "The (slot, port) pair for the non-flex SingletonPort "
               << PrintSingletonPort(singleton_port)
               << " is in flex_port_group_keys.";
@@ -696,8 +702,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           // First time we are recording unit for this node.
           node_id_to_unit[singleton_port.node()] = bcm_port.unit();
         } else {
-          CHECK_RETURN_IF_FALSE(node_id_to_unit[singleton_port.node()] ==
-                                bcm_port.unit())
+          RET_CHECK(node_id_to_unit[singleton_port.node()] == bcm_port.unit())
               << "Inconsistent config. SingletonPort "
               << PrintSingletonPort(singleton_port) << " has Node ID "
               << singleton_port.node()
@@ -712,7 +717,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         break;
       }
     }
-    CHECK_RETURN_IF_FALSE(found)
+    RET_CHECK(found)
         << "Could not find any BcmPort in base_bcm_chassis_map whose (slot, "
         << "port, channel, speed_bps) tuple matches non-flex SingletonPort "
         << PrintSingletonPort(singleton_port) << ".";
@@ -725,7 +730,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   // found, it means there was no port for that unit in the config. This is
   // considered an error.
   for (const auto& e : node_id_to_unit) {
-    CHECK_RETURN_IF_FALSE(e.second >= 0)
+    RET_CHECK(e.second >= 0)
         << "No port found for Node with ID " << e.first << " in the config.";
   }
 
@@ -738,33 +743,30 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   //    ports.
   std::map<uint64, std::set<uint32>> node_id_to_trunk_ids;
   for (const auto& trunk_port : config.trunk_ports()) {
-    CHECK_RETURN_IF_FALSE(trunk_port.id() > 0)
+    RET_CHECK(trunk_port.id() > 0)
         << "No positive ID in " << PrintTrunkPort(trunk_port) << ".";
-    CHECK_RETURN_IF_FALSE(trunk_port.type() != TrunkPort::UNKNOWN_TRUNK)
+    RET_CHECK(trunk_port.type() != TrunkPort::UNKNOWN_TRUNK)
         << "No type in " << PrintTrunkPort(trunk_port) << ".";
-    CHECK_RETURN_IF_FALSE(trunk_port.id() != kCpuPortId)
+    RET_CHECK(trunk_port.id() != kCpuPortId)
         << "TrunkPort " << PrintTrunkPort(trunk_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
-    CHECK_RETURN_IF_FALSE(trunk_port.node() > 0)
+    RET_CHECK(trunk_port.node() > 0)
         << "No valid node ID in " << trunk_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(node_id_to_unit.count(trunk_port.node()))
+    RET_CHECK(node_id_to_unit.count(trunk_port.node()))
         << "Node ID " << trunk_port.node() << " given for TrunkPort "
         << PrintTrunkPort(trunk_port)
         << " has not been given to any Node in the config.";
-    CHECK_RETURN_IF_FALSE(
-        !node_id_to_trunk_ids[trunk_port.node()].count(trunk_port.id()))
+    RET_CHECK(!node_id_to_trunk_ids[trunk_port.node()].count(trunk_port.id()))
         << "The id for TrunkPort " << PrintTrunkPort(trunk_port)
         << " was already recorded for another TrunkPort for node with ID "
         << trunk_port.node() << ".";
-    CHECK_RETURN_IF_FALSE(
-        !node_id_to_port_ids[trunk_port.node()].count(trunk_port.id()))
+    RET_CHECK(!node_id_to_port_ids[trunk_port.node()].count(trunk_port.id()))
         << "The id for TrunkPort " << PrintTrunkPort(trunk_port)
         << " was already recorded for another SingletonPort for node with ID "
         << trunk_port.node() << ".";
     node_id_to_trunk_ids[trunk_port.node()].insert(trunk_port.id());
     for (uint32 port_id : trunk_port.members()) {
-      CHECK_RETURN_IF_FALSE(
-          node_id_to_port_ids[trunk_port.node()].count(port_id))
+      RET_CHECK(node_id_to_port_ids[trunk_port.node()].count(port_id))
           << "Unknown member SingletonPort " << port_id << " for TrunkPort "
           << PrintTrunkPort(trunk_port) << ".";
     }
@@ -778,7 +780,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     bool found = false;  // set to true when we find BcmChip for this node.
     for (const auto& bcm_chip : base_bcm_chassis_map->bcm_chips()) {
       if (unit == bcm_chip.unit()) {
-        CHECK_RETURN_IF_FALSE(supported_chip_types.count(bcm_chip.type()))
+        RET_CHECK(supported_chip_types.count(bcm_chip.type()))
             << "Chip type " << BcmChip::BcmChipType_Name(bcm_chip.type())
             << " is not supported on platform "
             << Platform_Name(config.chassis().platform()) << ".";
@@ -787,13 +789,13 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         break;
       }
     }
-    CHECK_RETURN_IF_FALSE(found) << "Could not find any BcmChip for unit "
-                                 << unit << " in base_bcm_chassis_map.";
+    RET_CHECK(found) << "Could not find any BcmChip for unit " << unit
+                     << " in base_bcm_chassis_map.";
   }
 
   // Validate internal ports if any.
   for (const auto& e : port_group_key_to_internal) {
-    CHECK_RETURN_IF_FALSE(e.second.size() == 1)
+    RET_CHECK(e.second.size() == 1)
         << "For SingletonPorts with " << e.first.ToString()
         << " found both internal and external BCM ports. This is invalid.";
   }
@@ -806,19 +808,19 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       {kTenGigBps, {1, 2, 3, 4}}};
   for (const auto& e : port_group_key_to_speed_bps) {
     const PortKey& port_group_key = e.first;
-    CHECK_RETURN_IF_FALSE(e.second.size() == 1)
+    RET_CHECK(e.second.size() == 1)
         << "For SingletonPorts with " << e.first.ToString() << " found "
         << e.second.size() << " different speed_bps. This is invalid.";
     uint64 speed_bps = *e.second.begin();
     const std::set<int>* expected_channels =
         gtl::FindOrNull(speed_bps_to_expected_channels, speed_bps);
-    CHECK_RETURN_IF_FALSE(expected_channels != nullptr)
+    RET_CHECK(expected_channels != nullptr)
         << "Unsupported speed_bps: " << speed_bps << ".";
     const std::set<int>& existing_channels =
         port_group_key_to_channels[port_group_key];
-    CHECK_RETURN_IF_FALSE(
-        std::includes(expected_channels->begin(), expected_channels->end(),
-                      existing_channels.begin(), existing_channels.end()))
+    RET_CHECK(std::includes(expected_channels->begin(),
+                            expected_channels->end(), existing_channels.begin(),
+                            existing_channels.end()))
         << "For SingletonPorts with " << e.first.ToString()
         << " and speed_bps = " << speed_bps << " found invalid channels.";
   }
@@ -835,7 +837,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         units.insert(bcm_port.unit());
       }
     }
-    CHECK_RETURN_IF_FALSE(units.size() == 1U)
+    RET_CHECK(units.size() == 1U)
         << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
         << port_group_key.port << ") that are on different chips.";
     int unit = *units.begin();
@@ -879,7 +881,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           break;
         }
       }
-      CHECK_RETURN_IF_FALSE(found)
+      RET_CHECK(found)
           << "Could not find any BcmPort in base_bcm_chassis_map whose (slot, "
           << "port, channel, speed_bps) tuple matches flex SingletonPort "
           << PrintSingletonPort(singleton_port);
@@ -913,10 +915,13 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
       {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
       {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip},
-      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip}};
+      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK2, kTomahawk2MaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK3, kTomahawk3MaxBcmPortsPerChip},
+  };
   for (const auto& e : unit_to_chip_type) {
-    CHECK_RETURN_IF_FALSE(unit_to_bcm_port_keys[e.first].size() <=
-                          chip_type_to_max_num_ports[e.second])
+    RET_CHECK(unit_to_bcm_port_keys[e.first].size() <=
+              chip_type_to_max_num_ports[e.second])
         << "Max num of BCM ports for a " << BcmChip::BcmChipType_Name(e.second)
         << " chip is " << chip_type_to_max_num_ports[e.second]
         << ", but we found " << unit_to_bcm_port_keys[e.first].size()
@@ -933,7 +938,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       PortKey bcm_port_key(bcm_port.slot(), bcm_port.port(),
                            bcm_port.channel());
       auto it = bcm_port_keys.find(bcm_port_key);
-      CHECK_RETURN_IF_FALSE(it != bcm_port_keys.end())
+      RET_CHECK(it != bcm_port_keys.end())
           << "Invalid state. " << bcm_port_key.ToString()
           << " is not found on unit " << bcm_port.unit() << ".";
       int idx = std::distance(bcm_port_keys.begin(), it);
@@ -966,7 +971,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           free_logical_ports.erase(p.logical_port());
         }
       }
-      CHECK_RETURN_IF_FALSE(!free_logical_ports.empty())
+      RET_CHECK(!free_logical_ports.empty())
           << "There is no empty logical_port in X pipeline of the T+ chip to "
           << "assign to GE port " << PrintBcmPort(bcm_port) << ".";
       bcm_port.set_logical_port(*free_logical_ports.rbegin());
@@ -985,15 +990,15 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   }
 
   for (const auto& bcm_port : target_bcm_chassis_map->bcm_ports()) {
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         !unit_to_bcm_phy_ports[bcm_port.unit()].count(bcm_port.physical_port()))
         << "Duplicate BCM physcial_port for unit " << bcm_port.unit() << ": "
         << bcm_port.physical_port();
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         !unit_to_bcm_diag_ports[bcm_port.unit()].count(bcm_port.diag_port()))
         << "Duplicate BCM diag_port for unit " << bcm_port.unit() << ": "
         << bcm_port.diag_port();
-    CHECK_RETURN_IF_FALSE(!unit_to_bcm_logical_ports[bcm_port.unit()].count(
+    RET_CHECK(!unit_to_bcm_logical_ports[bcm_port.unit()].count(
         bcm_port.logical_port()))
         << "Duplicate BCM logical_port for unit " << bcm_port.unit() << ": "
         << bcm_port.ShortDebugString();
@@ -1016,31 +1021,30 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
   // Need to make sure target_bcm_chassis_map given here is a pruned version of
   // the base_bcm_chassis_map.
-  CHECK_RETURN_IF_FALSE(base_bcm_chassis_map.id() ==
-                        target_bcm_chassis_map.id())
+  RET_CHECK(base_bcm_chassis_map.id() == target_bcm_chassis_map.id())
       << "The value of 'id' in base_bcm_chassis_map and "
       << "target_bcm_chassis_map must match (" << base_bcm_chassis_map.id()
       << " != " << target_bcm_chassis_map.id() << ").";
-  CHECK_RETURN_IF_FALSE(base_bcm_chassis_map.auto_add_logical_ports() ==
-                        target_bcm_chassis_map.auto_add_logical_ports())
+  RET_CHECK(base_bcm_chassis_map.auto_add_logical_ports() ==
+            target_bcm_chassis_map.auto_add_logical_ports())
       << "The value of 'auto_add_logical_ports' in base_bcm_chassis_map and "
       << "target_bcm_chassis_map must match.";
-  CHECK_RETURN_IF_FALSE(base_bcm_chassis_map.has_bcm_chassis() ==
-                        target_bcm_chassis_map.has_bcm_chassis())
+  RET_CHECK(base_bcm_chassis_map.has_bcm_chassis() ==
+            target_bcm_chassis_map.has_bcm_chassis())
       << "Both base_bcm_chassis_map and target_bcm_chassis_map must either "
       << "have 'bcm_chassis' or miss it.";
   if (target_bcm_chassis_map.has_bcm_chassis()) {
-    CHECK_RETURN_IF_FALSE(ProtoEqual(target_bcm_chassis_map.bcm_chassis(),
-                                     base_bcm_chassis_map.bcm_chassis()))
+    RET_CHECK(ProtoEqual(target_bcm_chassis_map.bcm_chassis(),
+                         base_bcm_chassis_map.bcm_chassis()))
         << "BcmChassis in base_bcm_chassis_map and target_bcm_chassis_map do "
         << "not match.";
   }
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
-    CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
+    RET_CHECK(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
                           base_bcm_chassis_map.bcm_chips().end(),
                           [&bcm_chip](const ::google::protobuf::Message& x) {
-                                        return ProtoEqual(x, bcm_chip);
-                                      }))
+                            return ProtoEqual(x, bcm_chip);
+                          }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
@@ -1053,11 +1057,11 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       // The base comes with no logical_port assigned.
       p.clear_logical_port();
     }
-    CHECK_RETURN_IF_FALSE(std::any_of(
-        base_bcm_chassis_map.bcm_ports().begin(),
-        base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) {
-          return ProtoEqual(x, p); }))
+    RET_CHECK(std::any_of(base_bcm_chassis_map.bcm_ports().begin(),
+                          base_bcm_chassis_map.bcm_ports().end(),
+                          [&p](const ::google::protobuf::Message& x) {
+                            return ProtoEqual(x, p);
+                          }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
     ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),
@@ -1208,8 +1212,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       if (IsSingletonPortMatchesBcmPort(singleton_port, bcm_port)) {
         PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                    singleton_port.channel());
-        CHECK_RETURN_IF_FALSE(
-            !singleton_port_key_to_bcm_port_.count(singleton_port_key))
+        RET_CHECK(!singleton_port_key_to_bcm_port_.count(singleton_port_key))
             << "The (slot, port, channel) tuple for SingletonPort "
             << PrintSingletonPort(singleton_port)
             << " already exists as a key in singleton_port_key_to_bcm_port_. "
@@ -1229,7 +1232,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
               break;
             }
           }
-          CHECK_RETURN_IF_FALSE(found)
+          RET_CHECK(found)
               << "Found no matching BcmPort in applied_bcm_chassis_map_ which "
               << "matches unit, physical_port and diag_port of BcmPort '"
               << p->ShortDebugString() << "'.";
@@ -1246,7 +1249,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         node_id_to_port_id_to_sdk_port_[node_id][port_id] = sdk_port;
         node_id_to_sdk_port_to_port_id_[node_id][sdk_port] = port_id;
         PortKey xcvr_port_key(singleton_port.slot(), singleton_port.port());
-        CHECK_RETURN_IF_FALSE(xcvr_port_key_to_xcvr_state_.count(xcvr_port_key))
+        RET_CHECK(xcvr_port_key_to_xcvr_state_.count(xcvr_port_key))
             << "Something is wrong. ChassisConfig contains a (slot, port) "
             << "which we dont know about: " << xcvr_port_key.ToString() << ".";
         // The xcvr_port_key can be also used as a key to identify the
@@ -1345,8 +1348,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
               new_loopback_state;
         }
-        APPEND_STATUS_IF_ERROR(
-            error, LoopbackPort(sdk_port, new_loopback_state));
+        APPEND_STATUS_IF_ERROR(error,
+                               LoopbackPort(sdk_port, new_loopback_state));
       }
     }
   }
@@ -1375,7 +1378,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
   // TODO(unknown): Update the LED of all the ports.
 
-  return ::util::OkStatus();
+  return error;
 }
 
 ::util::Status BcmChassisManager::RegisterEventWriters() {
@@ -1463,7 +1466,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     linkscan_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!linkscan_event_channel_ || !linkscan_event_channel_->Close()) {
-      APPEND_ERROR(status) << "Linkscan event Channel is already closed.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Linkscan event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     linkscan_event_channel_.reset();
   }
@@ -1474,7 +1479,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     xcvr_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
-      APPEND_ERROR(status) << "Transceiver event Channel is already closed.";
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Transceiver event Channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
     }
     xcvr_event_channel_.reset();
   }
@@ -1591,90 +1598,87 @@ void BcmChassisManager::CleanupInternalState() {
       break;
     }
   }
-  CHECK_RETURN_IF_FALSE(found)
-      << "Did not find a BcmChassisMap with id " << bcm_chassis_map_id << " in "
-      << FLAGS_base_bcm_chassis_map_file;
+  RET_CHECK(found) << "Did not find a BcmChassisMap with id "
+                   << bcm_chassis_map_id << " in "
+                   << FLAGS_base_bcm_chassis_map_file;
 
   // Verify the messages base_bcm_chassis_map.
   std::set<int> slots;
   std::set<int> units;
   std::set<int> modules;
   for (const auto& bcm_chip : base_bcm_chassis_map->bcm_chips()) {
-    CHECK_RETURN_IF_FALSE(bcm_chip.type())
+    RET_CHECK(bcm_chip.type())
         << "Invalid type in " << bcm_chip.ShortDebugString();
     if (base_bcm_chassis_map->auto_add_slot()) {
-      CHECK_RETURN_IF_FALSE(bcm_chip.slot() == 0)
+      RET_CHECK(bcm_chip.slot() == 0)
           << "auto_add_slot is True and slot is non-zero for chip "
           << bcm_chip.ShortDebugString();
     } else {
-      CHECK_RETURN_IF_FALSE(bcm_chip.slot() > 0)
+      RET_CHECK(bcm_chip.slot() > 0)
           << "Invalid slot in " << bcm_chip.ShortDebugString();
       slots.insert(bcm_chip.slot());
     }
-    CHECK_RETURN_IF_FALSE(bcm_chip.unit() >= 0 && !units.count(bcm_chip.unit()))
+    RET_CHECK(bcm_chip.unit() >= 0 && !units.count(bcm_chip.unit()))
         << "Invalid unit in " << bcm_chip.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_chip.module() >= 0 &&
-                          !modules.count(bcm_chip.module()))
+    RET_CHECK(bcm_chip.module() >= 0 && !modules.count(bcm_chip.module()))
         << "Invalid module in " << bcm_chip.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_chip.pci_bus() >= 0)
+    RET_CHECK(bcm_chip.pci_bus() >= 0)
         << "Invalid pci_bus in " << bcm_chip.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_chip.pci_slot() >= 0)
+    RET_CHECK(bcm_chip.pci_slot() >= 0)
         << "Invalid pci_slot in " << bcm_chip.ShortDebugString();
     units.insert(bcm_chip.unit());
     modules.insert(bcm_chip.module());
   }
   for (const auto& bcm_port : base_bcm_chassis_map->bcm_ports()) {
-    CHECK_RETURN_IF_FALSE(bcm_port.type())
+    RET_CHECK(bcm_port.type())
         << "Invalid type in " << bcm_port.ShortDebugString();
     if (base_bcm_chassis_map->auto_add_slot()) {
-      CHECK_RETURN_IF_FALSE(bcm_port.slot() == 0)
+      RET_CHECK(bcm_port.slot() == 0)
           << "auto_add_slot is True and slot is non-zero for port "
           << bcm_port.ShortDebugString();
     } else {
-      CHECK_RETURN_IF_FALSE(bcm_port.slot() > 0 && slots.count(bcm_port.slot()))
+      RET_CHECK(bcm_port.slot() > 0 && slots.count(bcm_port.slot()))
           << "Invalid slot in " << bcm_port.ShortDebugString();
     }
-    CHECK_RETURN_IF_FALSE(bcm_port.port() > 0)
+    RET_CHECK(bcm_port.port() > 0)
         << "Invalid port in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.channel() >= 0 && bcm_port.channel() <= 4)
+    RET_CHECK(bcm_port.channel() >= 0 && bcm_port.channel() <= 4)
         << "Invalid channel in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.unit() >= 0 && units.count(bcm_port.unit()))
+    RET_CHECK(bcm_port.unit() >= 0 && units.count(bcm_port.unit()))
         << "Invalid unit in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.speed_bps() > 0 &&
-                          bcm_port.speed_bps() % kBitsPerGigabit == 0)
+    RET_CHECK(bcm_port.speed_bps() > 0 &&
+              bcm_port.speed_bps() % kBitsPerGigabit == 0)
         << "Invalid speed_bps in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.physical_port() >= 0)
+    RET_CHECK(bcm_port.physical_port() >= 0)
         << "Invalid physical_port in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.diag_port() >= 0)
+    RET_CHECK(bcm_port.diag_port() >= 0)
         << "Invalid diag_port in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.module() >= 0 &&
-                          modules.count(bcm_port.module()))
+    RET_CHECK(bcm_port.module() >= 0 && modules.count(bcm_port.module()))
         << "Invalid module in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.serdes_core() >= 0)
+    RET_CHECK(bcm_port.serdes_core() >= 0)
         << "Invalid serdes_core in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.serdes_lane() >= 0 &&
-                          bcm_port.serdes_lane() <= 3)
+    RET_CHECK(bcm_port.serdes_lane() >= 0 && bcm_port.serdes_lane() <= 3)
         << "Invalid serdes_lane in " << bcm_port.ShortDebugString();
     if (bcm_port.type() != BcmPort::MGMT) {
-      CHECK_RETURN_IF_FALSE(bcm_port.num_serdes_lanes() >= 1 &&
-                            bcm_port.num_serdes_lanes() <= 4)
+      RET_CHECK(bcm_port.num_serdes_lanes() >= 1 &&
+                bcm_port.num_serdes_lanes() <= 4)
           << "Invalid num_serdes_lanes in " << bcm_port.ShortDebugString();
     }
-    CHECK_RETURN_IF_FALSE(bcm_port.tx_lane_map() >= 0)
+    RET_CHECK(bcm_port.tx_lane_map() >= 0)
         << "Invalid tx_lane_map in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.rx_lane_map() >= 0)
+    RET_CHECK(bcm_port.rx_lane_map() >= 0)
         << "Invalid rx_lane_map in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.tx_polarity_flip() >= 0)
+    RET_CHECK(bcm_port.tx_polarity_flip() >= 0)
         << "Invalid tx_polarity_flip in " << bcm_port.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(bcm_port.rx_polarity_flip() >= 0)
+    RET_CHECK(bcm_port.rx_polarity_flip() >= 0)
         << "Invalid rx_polarity_flip in " << bcm_port.ShortDebugString();
     if (base_bcm_chassis_map->auto_add_logical_ports() ||
         IsGePortOnTridentPlus(bcm_port, *base_bcm_chassis_map)) {
-      CHECK_RETURN_IF_FALSE(bcm_port.logical_port() == 0)
+      RET_CHECK(bcm_port.logical_port() == 0)
           << "auto_add_logical_ports is True and logical_port is non-zero: "
           << bcm_port.ShortDebugString();
     } else {
-      CHECK_RETURN_IF_FALSE(bcm_port.logical_port() > 0)
+      RET_CHECK(bcm_port.logical_port() > 0)
           << "auto_add_logical_ports is False and port is not a GE port, yet "
           << "logical_port is not positive: " << bcm_port.ShortDebugString();
     }
@@ -1692,7 +1696,7 @@ void BcmChassisManager::CleanupInternalState() {
   for (const auto& singleton_port : config.singleton_ports()) {
     slots.insert(singleton_port.slot());
   }
-  CHECK_RETURN_IF_FALSE(slots.size() == 1U)
+  RET_CHECK(slots.size() == 1U)
       << "Cannot support a case where auto_add_slot is true and we have more "
       << "than one slot number specified in the ChassisConfig.";
   int slot = *slots.begin();
@@ -1860,7 +1864,7 @@ void BcmChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   // the memory allocated to this event object once the event is handled by
   // the GnmiPublisher.
   if (!gnmi_event_writer_->Write(GnmiEventPtr(
-          new PortOperStateChangedEvent(node_id, port_id, new_state)))) {
+          new PortOperStateChangedEvent(node_id, port_id, new_state, 0)))) {
     // Remove WriterInterface if it is no longer operational.
     gnmi_event_writer_.reset();
   }
@@ -1977,7 +1981,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   // First check to see if this is a flex port group.
   const std::vector<BcmPort*>* bcm_ports =
       gtl::FindOrNull(port_group_key_to_flex_bcm_ports_, port_group_key);
-  CHECK_RETURN_IF_FALSE(bcm_ports != nullptr)
+  RET_CHECK(bcm_ports != nullptr)
       << "Ports with (slot, port) = (" << port_group_key.slot << ", "
       << port_group_key.port << ") is not a flex port.";
 
@@ -1990,7 +1994,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   for (const auto& bcm_port : applied_bcm_chassis_map_->bcm_ports()) {
     if (bcm_port.slot() == port_group_key.slot &&
         bcm_port.port() == port_group_key.port) {
-      CHECK_RETURN_IF_FALSE(bcm_port.flex_port())
+      RET_CHECK(bcm_port.flex_port())
           << "Detected unexpected non-flex SingletonPort: "
           << PrintBcmPort(bcm_port);
       units_set.insert(bcm_port.unit());
@@ -2005,21 +2009,20 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   }
 
   // Check to see everythin makes sense.
-  CHECK_RETURN_IF_FALSE(units_set.size() == 1U)
+  RET_CHECK(units_set.size() == 1U)
       << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
       << port_group_key.port << ") are on different chips.";
-  CHECK_RETURN_IF_FALSE(config_num_serdes_lanes_set.size() == 1U)
+  RET_CHECK(config_num_serdes_lanes_set.size() == 1U)
       << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
       << port_group_key.port << ") have different num_serdes_lanes.";
-  CHECK_RETURN_IF_FALSE(config_speed_bps_set.size() == 1U)
+  RET_CHECK(config_speed_bps_set.size() == 1U)
       << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
       << port_group_key.port << ") have different speed_bps.";
   int unit = *units_set.begin();
   int control_logical_port = *min_speed_logical_ports_set.begin();
   int config_num_serdes_lanes = *config_num_serdes_lanes_set.begin();
   uint64 config_speed_bps = *config_speed_bps_set.begin();
-  CHECK_RETURN_IF_FALSE(*config_speed_logical_ports_set.begin() ==
-                        control_logical_port)
+  RET_CHECK(*config_speed_logical_ports_set.begin() == control_logical_port)
       << "Control logical port mismatch: " << control_logical_port
       << " != " << *config_speed_logical_ports_set.begin() << ".";
 
@@ -2092,37 +2095,40 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // (read and parsed from the transceiver module EEPROM) we configure serdes
     // for all BCM ports.
     FrontPanelPortInfo fp_port_info;
-    RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(
-        port_group_key.slot, port_group_key.port, &fp_port_info));
-    for (const auto* bcm_port : bcm_ports) {
-      // Get the serdes config from serdes db for the given BCM port.
-      BcmSerdesLaneConfig bcm_serdes_lane_config;
-      if (bcm_serdes_db_manager_
-              ->LookupSerdesConfigForPort(*bcm_port, fp_port_info,
-                                          &bcm_serdes_lane_config)
-              .ok()) {
-        // Find the map from serdes register names to their values for this BCM
-        // port.
-        std::map<uint32, uint32> serdes_register_configs(
-            bcm_serdes_lane_config.bcm_serdes_register_configs().begin(),
-            bcm_serdes_lane_config.bcm_serdes_register_configs().end());
-        std::map<std::string, uint32> serdes_attr_configs(
-            bcm_serdes_lane_config.bcm_serdes_attribute_configs().begin(),
-            bcm_serdes_lane_config.bcm_serdes_attribute_configs().end());
-        // Config serdes for this BCM port.
-        RETURN_IF_ERROR(bcm_sdk_interface_->ConfigSerdesForPort(
-            bcm_port->unit(), bcm_port->logical_port(), bcm_port->speed_bps(),
-            bcm_port->serdes_core(), bcm_port->serdes_lane(),
-            bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
-            serdes_register_configs, serdes_attr_configs));
-        // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
-        // need to write some control values to the QSFP module control
-        // registers. Take care of that part too.
-        VLOG(1) << "Serdes setting done for SingletonPort "
-                << PrintBcmPort(*bcm_port) << ".";
-      } else {
-        LOG(WARNING) << "No SerDes setting found for SingletonPort "
-                     << PrintBcmPort(*bcm_port) << ".";
+    if (phal_interface_
+            ->GetFrontPanelPortInfo(port_group_key.slot, port_group_key.port,
+                                    &fp_port_info)
+            .ok()) {
+      for (const auto* bcm_port : bcm_ports) {
+        // Get the serdes config from serdes db for the given BCM port.
+        BcmSerdesLaneConfig bcm_serdes_lane_config;
+        if (bcm_serdes_db_manager_
+                ->LookupSerdesConfigForPort(*bcm_port, fp_port_info,
+                                            &bcm_serdes_lane_config)
+                .ok()) {
+          // Find the map from serdes register names to their values for this
+          // BCM port.
+          std::map<uint32, uint32> serdes_register_configs(
+              bcm_serdes_lane_config.bcm_serdes_register_configs().begin(),
+              bcm_serdes_lane_config.bcm_serdes_register_configs().end());
+          std::map<std::string, uint32> serdes_attr_configs(
+              bcm_serdes_lane_config.bcm_serdes_attribute_configs().begin(),
+              bcm_serdes_lane_config.bcm_serdes_attribute_configs().end());
+          // Config serdes for this BCM port.
+          RETURN_IF_ERROR(bcm_sdk_interface_->ConfigSerdesForPort(
+              bcm_port->unit(), bcm_port->logical_port(), bcm_port->speed_bps(),
+              bcm_port->serdes_core(), bcm_port->serdes_lane(),
+              bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
+              serdes_register_configs, serdes_attr_configs));
+          // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
+          // need to write some control values to the QSFP module control
+          // registers. Take care of that part too.
+          VLOG(1) << "Serdes setting done for SingletonPort "
+                  << PrintBcmPort(*bcm_port) << ".";
+        } else {
+          LOG(WARNING) << "No SerDes setting found for SingletonPort "
+                       << PrintBcmPort(*bcm_port) << ".";
+        }
       }
     }
   }
@@ -2131,23 +2137,21 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     BcmPortOptions applied_options = options;
     // Check if AdminState is set and override options.
     auto* node_id = gtl::FindOrNull(unit_to_node_id_, bcm_port->unit());
-    CHECK_RETURN_IF_FALSE(node_id)
-        << "Unable to find unit " << bcm_port->unit() << ".";
+    RET_CHECK(node_id) << "Unable to find unit " << bcm_port->unit() << ".";
     auto* sdk_port_to_port_id =
         gtl::FindOrNull(node_id_to_sdk_port_to_port_id_, *node_id);
-    CHECK_RETURN_IF_FALSE(sdk_port_to_port_id)
-        << "Unable to find node " << *node_id << ".";
+    RET_CHECK(sdk_port_to_port_id) << "Unable to find node " << *node_id << ".";
     SdkPort sdk_port(bcm_port->unit(), bcm_port->logical_port());
     auto* port_id = gtl::FindOrNull(*sdk_port_to_port_id, sdk_port);
-    CHECK_RETURN_IF_FALSE(port_id)
-        << "Unable to find SdkPort " << sdk_port.ToString() << ".";
+    RET_CHECK(port_id) << "Unable to find SdkPort " << sdk_port.ToString()
+                       << ".";
     const auto* port_id_to_admin_state =
         gtl::FindOrNull(node_id_to_port_id_to_admin_state_, *node_id);
-    CHECK_RETURN_IF_FALSE(port_id_to_admin_state != nullptr)
+    RET_CHECK(port_id_to_admin_state != nullptr)
         << "Unknown node " << node_id << ".";
     const auto* admin_state =
         gtl::FindOrNull(*port_id_to_admin_state, *port_id);
-    CHECK_RETURN_IF_FALSE(admin_state != nullptr)
+    RET_CHECK(admin_state != nullptr)
         << "Unknown port " << port_id << " on node " << node_id << ".";
     if (*admin_state == ADMIN_STATE_DISABLED) {
       applied_options.set_enabled(TRI_STATE_FALSE);
@@ -2189,7 +2193,7 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
   BcmPortOptions options;
   options.set_enabled(enable ? TRI_STATE_TRUE : TRI_STATE_FALSE);
   RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
-        sdk_port.unit, sdk_port.logical_port, options));
+      sdk_port.unit, sdk_port.logical_port, options));
 
   return ::util::OkStatus();
 }

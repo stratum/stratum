@@ -2,6 +2,8 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/common/config_monitoring_service.h"
+
 #include <memory>
 #include <string>
 
@@ -15,7 +17,6 @@
 #include "gtest/gtest.h"
 #include "openconfig/openconfig.pb.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -28,7 +29,11 @@
 #include "stratum/public/lib/error.h"
 
 DECLARE_string(chassis_config_file);
+DECLARE_string(gnmi_capabilities_file);
 DECLARE_string(test_tmpdir);
+
+namespace stratum {
+namespace hal {
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -40,9 +45,6 @@ using ::testing::SaveArg;
 using ::testing::SetArgPointee;
 using ::testing::WithArgs;
 
-namespace stratum {
-namespace hal {
-
 class Event;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
@@ -52,6 +54,7 @@ class ConfigMonitoringServiceTest
  protected:
   void SetUp() override {
     FLAGS_chassis_config_file = FLAGS_test_tmpdir + "/config.pb.txt";
+    FLAGS_gnmi_capabilities_file = "stratum/hal/lib/common/gnmi_caps.pb.txt";
     mode_ = GetParam();
     switch_mock_ = absl::make_unique<SwitchMock>();
     auth_policy_checker_mock_ = absl::make_unique<AuthPolicyCheckerMock>();
@@ -113,7 +116,7 @@ class ConfigMonitoringServiceTest
     return config_monitoring_service_->DoCapabilities(context, req, resp);
   }
 
-  static constexpr char kChassisConfigTemplate[] = R"PROTO(
+  static constexpr char kChassisConfigTemplate[] = R"pb(
       description: "Sample test config."
       nodes {
         id:  $0
@@ -139,7 +142,7 @@ class ConfigMonitoringServiceTest
         port: 2
         speed_bps: 100000000000
       }
-  )PROTO";
+  )pb";
   static constexpr char kErrorMsg[] = "Some error";
   static constexpr uint64 kNodeId1 = 123123123;
   static constexpr uint64 kNodeId2 = 456456456;
@@ -222,8 +225,8 @@ TEST_P(ConfigMonitoringServiceTest,
   FillTestChassisConfigAndSave(&config);
 
   EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   ::util::Status status = config_monitoring_service_->Setup(false);
@@ -246,8 +249,8 @@ TEST_P(ConfigMonitoringServiceTest, ColdbootSetupFailureWhenPushFails) {
   EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*switch_mock_, PushChassisConfig(EqualsProto(config)))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   ::util::Status status = config_monitoring_service_->Setup(false);
@@ -343,7 +346,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
 
   // Build a stream subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -355,7 +358,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
       sample_interval: 1
     }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -380,7 +383,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
 
   // Build a stream subscription request for subtree that is not supported.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -391,7 +394,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
       sample_interval: 1
     }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -427,7 +430,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
 
   // Build a stream subscription request for subtree that is not supported.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -446,7 +449,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
       sample_interval: 1
     }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -483,7 +486,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
 
   // Build a poll subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req1;
-  constexpr char kReq1[] = R"PROTO(
+  constexpr char kReq1[] = R"pb(
   subscribe {
     mode: POLL
     subscription {
@@ -493,16 +496,16 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
       }
     }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq1, &req1))
       << "Failed to parse proto from the following string: " << kReq1;
 
   // Build actual poll request.
   ::gnmi::SubscribeRequest req2;
-  constexpr char kReq2[] = R"PROTO(
+  constexpr char kReq2[] = R"pb(
   poll {
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq2, &req2))
       << "Failed to parse proto from the following string: " << kReq2;
 
@@ -533,7 +536,7 @@ TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
 
   // Build a stream subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -545,7 +548,7 @@ TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
       sample_interval: 1
     }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -583,7 +586,7 @@ TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
   // Build a stream subscription request for subtree that is supported.
   // Add another request for the same path. This is illeagal combination.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -603,7 +606,7 @@ TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
       sample_interval: 1
     }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -645,7 +648,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
 
   // Build a on_change subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -656,7 +659,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
       mode: ON_CHANGE
    }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -704,7 +707,7 @@ TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
   // This subscription request will be changed into an ON_CHANGE subscription
   // request.
   ::gnmi::SubscribeRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   subscribe {
     mode: STREAM
     subscription {
@@ -715,7 +718,7 @@ TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
       mode: TARGET_DEFINED
    }
   }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -768,12 +771,12 @@ TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
 TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfigBeforePush) {
   // Prepare a GET request.
   ::gnmi::GetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   path {
   }
   type: CONFIG
   encoding: PROTO
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -795,12 +798,12 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonConfig) {
 
   // Prepare a GET request.
   ::gnmi::GetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   path {
   }
   type: STATE
   encoding: PROTO
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -822,12 +825,12 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonProto) {
 
   // Prepare a GET request.
   ::gnmi::GetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   path {
   }
   type: CONFIG
   encoding: JSON
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -849,12 +852,12 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfig) {
 
   // Prepare a GET request.
   ::gnmi::GetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   path {
   }
   type: CONFIG
   encoding: PROTO
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -879,7 +882,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetBlah) {
 
   // Prepare a GET request.
   ::gnmi::GetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   path {
     elem { name: "interfaces" }
     elem { name: "interface"
@@ -890,7 +893,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetBlah) {
   }
   type: CONFIG
   encoding: PROTO
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -913,7 +916,7 @@ TEST_P(ConfigMonitoringServiceTest,
 
   // Prepare a GET request.
   ::gnmi::GetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
   path {
     elem { name: "interfaces" }
     elem { name: "interface"
@@ -924,7 +927,7 @@ TEST_P(ConfigMonitoringServiceTest,
   }
   type: CONFIG
   encoding: PROTO
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -934,10 +937,10 @@ TEST_P(ConfigMonitoringServiceTest,
   auto grpc_status = DoGet(&context, &req, &resp);
   EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
 
-  EXPECT_TRUE(
-      resp.notification(0).update(0).path() ==
-      GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/2")(
-          "state")("admin-status")());
+  EXPECT_TRUE(resp.notification(0).update(0).path() ==
+              GetPath("interfaces")(
+                  "interface",
+                  "device1.domain.net.com:ce-1/2")("state")("admin-status")());
 }
 
 // Successful DoSet() execution for simple leaf gNMI SET REPLACE message.
@@ -1000,9 +1003,9 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
 //
 //  // Prepare a SET request.
 //  ::gnmi::SetRequest req;
-//  constexpr char kReq[] = R"PROTO(
+//  constexpr char kReq[] = R"pb(
 //    update { val { bytes_val: "" } }
-//  )PROTO";
+//  )pb";
 //  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
 //      << "Failed to parse proto from the following string: " << kReq;
 //
@@ -1036,7 +1039,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
 //
 //  // Prepare a GET request.
 //  ::gnmi::SetRequest req;
-//  constexpr char kReq[] = R"PROTO(
+//  constexpr char kReq[] = R"pb(
 //    update {
 //      path {
 //        elem { name: "interfaces" }
@@ -1049,7 +1052,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
 //      }
 //      val { string_val: "BAD" }
 //    }
-//  )PROTO";
+//  )pb";
 //  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
 //      << "Failed to parse proto from the following string: " << kReq;
 //
@@ -1088,7 +1091,7 @@ TEST_P(ConfigMonitoringServiceTest,
 
   // Prepare a GET request.
   ::gnmi::SetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
     replace {
       path {
         elem { name: "interfaces" }
@@ -1101,7 +1104,7 @@ TEST_P(ConfigMonitoringServiceTest,
       }
       val { string_val: "BAD" }
     }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -1139,7 +1142,7 @@ TEST_P(ConfigMonitoringServiceTest,
 
   // Prepare a GET request.
   ::gnmi::SetRequest req;
-  constexpr char kReq[] = R"PROTO(
+  constexpr char kReq[] = R"pb(
     delete {
       elem { name: "interfaces" }
       elem {
@@ -1149,7 +1152,7 @@ TEST_P(ConfigMonitoringServiceTest,
       elem { name: "state" }
       elem { name: "health-indicator" }
     }
-  )PROTO";
+  )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
@@ -1172,8 +1175,8 @@ TEST_P(ConfigMonitoringServiceTest,
 
 TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
   ::gnmi::CapabilityResponse expected_resp;
-  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt",
-                        &expected_resp);
+  ASSERT_OK(
+      ReadProtoFromTextFile(FLAGS_gnmi_capabilities_file, &expected_resp));
 
   ::grpc::ServerContext context;
   ::gnmi::CapabilityRequest req;
@@ -1188,10 +1191,10 @@ TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
 // TODO(unknown): Finish the unit testing.
 
 INSTANTIATE_TEST_SUITE_P(ConfigMonitoringServiceTestWithMode,
-                        ConfigMonitoringServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ConfigMonitoringServiceTest,
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

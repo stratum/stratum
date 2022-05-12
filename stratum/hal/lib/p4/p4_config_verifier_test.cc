@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file contains unit tests for P4ConfigVerifier.
 
 #include "stratum/hal/lib/p4/p4_config_verifier.h"
@@ -11,27 +10,27 @@
 #include <string>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/lib/utils.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 
 // P4ConfigVerifier flags to override for some tests.
 DECLARE_string(match_field_error_level);
 DECLARE_string(action_field_error_level);
 
-using ::testing::HasSubstr;
-using ::gflags::FlagSaver;
-
 namespace stratum {
 namespace hal {
+
+using ::gflags::FlagSaver;
+using ::testing::HasSubstr;
 
 // This class is the P4ConfigVerifier test fixture.
 class P4ConfigVerifierTest : public testing::Test {
@@ -43,8 +42,8 @@ class P4ConfigVerifierTest : public testing::Test {
     const std::string kTestP4PipelineConfigFile =
         "stratum/hal/lib/p4/testdata/"
         "test_p4_pipeline_config.pb.txt";
-    ASSERT_OK(ReadProtoFromTextFile(
-        kTestP4PipelineConfigFile, &test_p4_pipeline_config_));
+    ASSERT_OK(ReadProtoFromTextFile(kTestP4PipelineConfigFile,
+                                    &test_p4_pipeline_config_));
 
     // P4ConfigVerifier assumes P4InfoManager pre-validation of P4Info.
     p4_info_manager_ = absl::make_unique<P4InfoManager>(test_p4_info_);
@@ -135,23 +134,23 @@ class P4ConfigVerifierTest : public testing::Test {
 
 TEST_F(P4ConfigVerifierTest, TestValidP4Config) {
   SetUpP4ConfigFromFiles();
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   EXPECT_OK(p4_verifier_->Verify());
 }
 
 TEST_F(P4ConfigVerifierTest, TestValidP4ConfigFirstCompare) {
   SetUpP4ConfigFromFiles();
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::p4::config::v1::P4Info empty_p4_info;
   P4PipelineConfig empty_p4_pipeline;
   EXPECT_OK(p4_verifier_->VerifyAndCompare(empty_p4_info, empty_p4_pipeline));
 }
 
 TEST_F(P4ConfigVerifierTest, TestEmptyPipelineConfig) {
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status = p4_verifier_->Verify();
   EXPECT_EQ(ERR_INTERNAL, status.error_code());
   EXPECT_THAT(status.ToString(), HasSubstr("missing object mapping"));
@@ -415,8 +414,8 @@ TEST_F(P4ConfigVerifierTest, TestMissingActionSourceFieldDescriptor) {
   P4ActionDescriptor::P4ActionInstructions* bad_assignment =
       bad_descriptor.mutable_action_descriptor()->add_assignments();
   const std::string kMissingFieldName = "unknown-header-field";
-  bad_assignment->mutable_assigned_value()->
-      set_source_field_name(kMissingFieldName);
+  bad_assignment->mutable_assigned_value()->set_source_field_name(
+      kMissingFieldName);
   const std::string kTestDestField = "test-header-field-32";
   bad_assignment->set_destination_field_name(kTestDestField);
   (*test_p4_pipeline_config_.mutable_table_map())[first_action_name] =
@@ -449,8 +448,8 @@ TEST_F(P4ConfigVerifierTest, TestMissingActionSourceFieldDescriptorOld) {
   P4ActionDescriptor::P4ActionInstructions* bad_assignment =
       bad_descriptor.mutable_action_descriptor()->add_assignments();
   const std::string kMissingFieldName = "unknown-header-field";
-  bad_assignment->mutable_assigned_value()->
-      set_source_field_name(kMissingFieldName);
+  bad_assignment->mutable_assigned_value()->set_source_field_name(
+      kMissingFieldName);
   const std::string kTestDestField = "test-header-field-32";
   bad_assignment->add_destination_field_names(kTestDestField);
   (*test_p4_pipeline_config_.mutable_table_map())[first_action_name] =
@@ -571,11 +570,12 @@ TEST_F(P4ConfigVerifierTest, TestActionInternalLink) {
 
   // This test creates a link from the first action descriptor to an
   // internal action.
-  P4TableMapValue link_descriptor = gtl::FindOrDie(
-      test_p4_pipeline_config_.table_map(), first_action_name);
+  P4TableMapValue link_descriptor =
+      gtl::FindOrDie(test_p4_pipeline_config_.table_map(), first_action_name);
   P4ActionDescriptor::P4InternalActionLink* internal_link =
-      link_descriptor.mutable_action_descriptor()->
-      add_action_redirects()->add_internal_links();
+      link_descriptor.mutable_action_descriptor()
+          ->add_action_redirects()
+          ->add_internal_links();
   const std::string kInternalAction = "internal-action";
   internal_link->set_internal_action_name(kInternalAction);
   gtl::InsertOrUpdate(test_p4_pipeline_config_.mutable_table_map(),
@@ -598,11 +598,12 @@ TEST_F(P4ConfigVerifierTest, TestActionBadInternalLink) {
 
   // This test creates a link from the first action descriptor to an
   // internal action that does not exist.
-  P4TableMapValue link_descriptor = gtl::FindOrDie(
-      test_p4_pipeline_config_.table_map(), first_action_name);
+  P4TableMapValue link_descriptor =
+      gtl::FindOrDie(test_p4_pipeline_config_.table_map(), first_action_name);
   P4ActionDescriptor::P4InternalActionLink* internal_link =
-      link_descriptor.mutable_action_descriptor()->
-      add_action_redirects()->add_internal_links();
+      link_descriptor.mutable_action_descriptor()
+          ->add_action_redirects()
+          ->add_internal_links();
   const std::string kInternalAction = "unknown-internal-action";
   internal_link->set_internal_action_name(kInternalAction);
   gtl::InsertOrUpdate(test_p4_pipeline_config_.mutable_table_map(),
@@ -626,11 +627,12 @@ TEST_F(P4ConfigVerifierTest, TestInternalActionWithRedirects) {
   // This test creates a link from the first action descriptor to an
   // internal action, then populates the internal action with another
   // level of indirection.
-  P4TableMapValue link_descriptor = gtl::FindOrDie(
-      test_p4_pipeline_config_.table_map(), first_action_name);
+  P4TableMapValue link_descriptor =
+      gtl::FindOrDie(test_p4_pipeline_config_.table_map(), first_action_name);
   P4ActionDescriptor::P4InternalActionLink* internal_link =
-      link_descriptor.mutable_action_descriptor()->
-      add_action_redirects()->add_internal_links();
+      link_descriptor.mutable_action_descriptor()
+          ->add_action_redirects()
+          ->add_internal_links();
   const std::string kInternalAction = "internal-action";
   internal_link->set_internal_action_name(kInternalAction);
   gtl::InsertOrUpdate(test_p4_pipeline_config_.mutable_table_map(),
@@ -660,11 +662,12 @@ TEST_F(P4ConfigVerifierTest, TestInternalActionWithBadAssignment) {
   // This test creates a link from the first action descriptor to an
   // internal action, then populates the internal action with invalid
   // assignment instructions.
-  P4TableMapValue link_descriptor = gtl::FindOrDie(
-      test_p4_pipeline_config_.table_map(), first_action_name);
+  P4TableMapValue link_descriptor =
+      gtl::FindOrDie(test_p4_pipeline_config_.table_map(), first_action_name);
   P4ActionDescriptor::P4InternalActionLink* internal_link =
-      link_descriptor.mutable_action_descriptor()->
-      add_action_redirects()->add_internal_links();
+      link_descriptor.mutable_action_descriptor()
+          ->add_action_redirects()
+          ->add_internal_links();
   const std::string kInternalAction = "internal-action";
   internal_link->set_internal_action_name(kInternalAction);
   gtl::InsertOrUpdate(test_p4_pipeline_config_.mutable_table_map(),
@@ -693,11 +696,12 @@ TEST_F(P4ConfigVerifierTest, TestActionInternalLinkWithAppliedTables) {
 
   // This test creates a link from the first action descriptor to an
   // internal action.  The link is constrained to the first P4 table.
-  P4TableMapValue link_descriptor = gtl::FindOrDie(
-      test_p4_pipeline_config_.table_map(), first_action_name);
+  P4TableMapValue link_descriptor =
+      gtl::FindOrDie(test_p4_pipeline_config_.table_map(), first_action_name);
   P4ActionDescriptor::P4InternalActionLink* internal_link =
-      link_descriptor.mutable_action_descriptor()->
-      add_action_redirects()->add_internal_links();
+      link_descriptor.mutable_action_descriptor()
+          ->add_action_redirects()
+          ->add_internal_links();
   const std::string kInternalAction = "internal-action";
   internal_link->set_internal_action_name(kInternalAction);
   ASSERT_TRUE(FirstTableHasDescriptor());
@@ -722,11 +726,12 @@ TEST_F(P4ConfigVerifierTest, TestActionInternalLinkWithUnknownAppliedTables) {
 
   // This test creates a link from the first action descriptor to an
   // internal action.  The link is constrained to a P4 table that doesn't exist.
-  P4TableMapValue link_descriptor = gtl::FindOrDie(
-      test_p4_pipeline_config_.table_map(), first_action_name);
+  P4TableMapValue link_descriptor =
+      gtl::FindOrDie(test_p4_pipeline_config_.table_map(), first_action_name);
   P4ActionDescriptor::P4InternalActionLink* internal_link =
-      link_descriptor.mutable_action_descriptor()->
-      add_action_redirects()->add_internal_links();
+      link_descriptor.mutable_action_descriptor()
+          ->add_action_redirects()
+          ->add_internal_links();
   const std::string kInternalAction = "internal-action";
   internal_link->set_internal_action_name(kInternalAction);
   internal_link->add_applied_tables("unknown-applied-table");
@@ -753,8 +758,8 @@ TEST_F(P4ConfigVerifierTest, TestActionInternalLinkWithUnknownAppliedTables) {
 TEST_F(P4ConfigVerifierTest, TestValidStaticTableEntry) {
   SetUpP4ConfigFromFiles();
   SetUpStaticTableEntry();
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   EXPECT_OK(p4_verifier_->Verify());
 }
 
@@ -765,8 +770,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryBadUpdateType) {
       test_p4_pipeline_config_.mutable_static_table_entries()->mutable_updates(
           0);
   test_update->set_type(::p4::v1::Update::DELETE);  // DELETE is unexpected.
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status = p4_verifier_->Verify();
   EXPECT_EQ(ERR_INTERNAL, status.error_code());
   EXPECT_THAT(status.ToString(), HasSubstr("unexpected type"));
@@ -781,8 +786,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryNotTableEntry) {
           ->mutable_updates(0)
           ->mutable_entity();
   test_entity->clear_table_entry();  // Clears the expected table_entry.
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status = p4_verifier_->Verify();
   EXPECT_EQ(ERR_INTERNAL, status.error_code());
   EXPECT_THAT(status.ToString(), HasSubstr("no TableEntry"));
@@ -796,8 +801,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryBadTableID) {
           ->mutable_updates(0)
           ->mutable_entity();
   test_entity->mutable_table_entry()->set_table_id(0xf123f);
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status = p4_verifier_->Verify();
   EXPECT_EQ(ERR_INTERNAL, status.error_code());
   EXPECT_THAT(status.ToString(), HasSubstr("table_id is not in P4Info"));
@@ -811,8 +816,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryNoFieldMatches) {
           ->mutable_updates(0)
           ->mutable_entity();
   test_entity->mutable_table_entry()->clear_match();  // Clears expected match.
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status = p4_verifier_->Verify();
   EXPECT_EQ(ERR_INTERNAL, status.error_code());
   EXPECT_THAT(status.ToString(), HasSubstr("0 match fields"));
@@ -823,8 +828,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryCompareNoChange) {
   SetUpP4ConfigFromFiles();
   SetUpStaticTableEntry();
   P4PipelineConfig old_p4_pipeline = test_p4_pipeline_config_;
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   EXPECT_OK(p4_verifier_->VerifyAndCompare(test_p4_info_, old_p4_pipeline));
 }
 
@@ -833,8 +838,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryCompareAddition) {
   SetUpStaticTableEntry();
   P4PipelineConfig old_p4_pipeline = test_p4_pipeline_config_;
   old_p4_pipeline.clear_static_table_entries();
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   EXPECT_OK(p4_verifier_->VerifyAndCompare(test_p4_info_, old_p4_pipeline));
 }
 
@@ -843,8 +848,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryCompareDeletion) {
   SetUpStaticTableEntry();
   P4PipelineConfig old_p4_pipeline = test_p4_pipeline_config_;
   test_p4_pipeline_config_.clear_static_table_entries();
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status =
       p4_verifier_->VerifyAndCompare(test_p4_info_, old_p4_pipeline);
   EXPECT_EQ(ERR_REBOOT_REQUIRED, status.error_code());
@@ -857,10 +862,13 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryCompareModification) {
   P4PipelineConfig old_p4_pipeline = test_p4_pipeline_config_;
   auto update =
       old_p4_pipeline.mutable_static_table_entries()->mutable_updates(0);
-  update->mutable_entity()->mutable_table_entry()->mutable_action()->
-      mutable_action()->set_action_id(1);
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  update->mutable_entity()
+      ->mutable_table_entry()
+      ->mutable_action()
+      ->mutable_action()
+      ->set_action_id(1);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status =
       p4_verifier_->VerifyAndCompare(test_p4_info_, old_p4_pipeline);
   EXPECT_EQ(ERR_REBOOT_REQUIRED, status.error_code());
@@ -878,19 +886,23 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryModifyAndDelete) {
   // SetUpStaticTableEntry puts the same ID in all entries.
   SetUpStaticTableEntry();
   auto deleted_table_entry =
-      test_p4_pipeline_config_.mutable_static_table_entries()->
-      mutable_updates(1)->mutable_entity()->mutable_table_entry();
+      test_p4_pipeline_config_.mutable_static_table_entries()
+          ->mutable_updates(1)
+          ->mutable_entity()
+          ->mutable_table_entry();
   ASSERT_LE(2, test_p4_info_.tables_size());
   deleted_table_entry->set_table_id(test_p4_info_.tables(1).preamble().id());
   auto modified_table_entry =
-      test_p4_pipeline_config_.mutable_static_table_entries()->
-      mutable_updates(0)->mutable_entity()->mutable_table_entry();
+      test_p4_pipeline_config_.mutable_static_table_entries()
+          ->mutable_updates(0)
+          ->mutable_entity()
+          ->mutable_table_entry();
   modified_table_entry->set_priority(100);
 
   // The error string from the ERR_REBOOT_REQUIRED status should report both
   // a modify and a delete.
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, p4_pipeline_one_static);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, p4_pipeline_one_static);
   ::util::Status status =
       p4_verifier_->VerifyAndCompare(test_p4_info_, test_p4_pipeline_config_);
   EXPECT_EQ(ERR_REBOOT_REQUIRED, status.error_code());
@@ -912,8 +924,8 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryVerifyVsRebootPrecedence) {
   // The old_p4_pipeline adjustment simulates a reboot-required deletion.
   P4PipelineConfig old_p4_pipeline = test_p4_pipeline_config_;
   test_p4_pipeline_config_.clear_static_table_entries();
-  p4_verifier_ = P4ConfigVerifier::CreateInstance(
-      test_p4_info_, test_p4_pipeline_config_);
+  p4_verifier_ =
+      P4ConfigVerifier::CreateInstance(test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status =
       p4_verifier_->VerifyAndCompare(test_p4_info_, old_p4_pipeline);
 
@@ -937,15 +949,15 @@ TEST_F(P4ConfigVerifierTest, TestNonErrorLevels) {
   ASSERT_TRUE(value != nullptr);
   value->mutable_field_descriptor()->clear_type();
   const std::vector<std::string> error_test_levels = {
-    "warn",
-    "vlog",
-    "xxxxxx"
+      "warn",
+      "vlog",
+      "xxxxxx",
   };
 
   for (const auto& level : error_test_levels) {
     FLAGS_action_field_error_level = level;
-    p4_verifier_ = P4ConfigVerifier::CreateInstance(
-        test_p4_info_, test_p4_pipeline_config_);
+    p4_verifier_ = P4ConfigVerifier::CreateInstance(test_p4_info_,
+                                                    test_p4_pipeline_config_);
     EXPECT_OK(p4_verifier_->Verify());
   }
 }

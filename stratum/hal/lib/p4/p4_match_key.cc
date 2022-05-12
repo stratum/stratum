@@ -2,17 +2,16 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file contains the implementation of P4MatchKey and its subclasses.
 
 #include "stratum/hal/lib/p4/p4_match_key.h"
 
 #include <string>
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
 
 // This flag determines whether P4MatchKey will enforce bytestring lengths
 // according to P4Runtime spec section 8.3.  When the flag is disabled,
@@ -93,8 +92,7 @@ P4MatchKey::P4MatchKey(
   conversion_entry.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U64);
   MappedField mapped_u64;
   ::util::Status status = Convert(conversion_entry, 64, &mapped_u64);
-  if (!status.ok())
-    return status;
+  if (!status.ok()) return status;
   return mapped_u64.value().u64();
 }
 
@@ -110,8 +108,8 @@ P4MatchKey::P4MatchKey(
     const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
     int bit_width, MappedField::Value* mapped_value) {
   ::util::Status status = ::util::OkStatus();
-  uint32_t value_32 = 0;
-  uint64_t value_64 = 0;
+  uint32 value_32 = 0;
+  uint64 value_64 = 0;
 
   switch (conversion_entry.conversion()) {
     case P4FieldDescriptor::P4_CONVERT_UNKNOWN:
@@ -128,12 +126,12 @@ P4MatchKey::P4MatchKey(
       break;
     case P4FieldDescriptor::P4_CONVERT_TO_U32:
     case P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK:
-      status = StringDataToU<uint32_t>(bytes_value, bit_width, &value_32);
+      status = StringDataToU<uint32>(bytes_value, bit_width, &value_32);
       if (status.ok()) mapped_value->set_u32(value_32);
       break;
     case P4FieldDescriptor::P4_CONVERT_TO_U64:
     case P4FieldDescriptor::P4_CONVERT_TO_U64_AND_MASK:
-      status = StringDataToU<uint64_t>(bytes_value, bit_width, &value_64);
+      status = StringDataToU<uint64>(bytes_value, bit_width, &value_64);
       if (status.ok()) mapped_value->set_u64(value_64);
       break;
     case P4FieldDescriptor::P4_CONVERT_TO_BYTES:
@@ -161,12 +159,10 @@ P4MatchKey::P4MatchKey(
 
   switch (conversion_entry.conversion()) {
     case P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK:
-      mapped_value->set_u32(
-          CreateUIntMask<uint32_t>(bit_width, prefix_length));
+      mapped_value->set_u32(CreateUIntMask<uint32>(bit_width, prefix_length));
       break;
     case P4FieldDescriptor::P4_CONVERT_TO_U64_AND_MASK:
-      mapped_value->set_u64(
-          CreateUIntMask<uint64_t>(bit_width, prefix_length));
+      mapped_value->set_u64(CreateUIntMask<uint64>(bit_width, prefix_length));
       break;
     case P4FieldDescriptor::P4_CONVERT_TO_BYTES_AND_MASK:
       mapped_value->set_b(CreateStringMask(bit_width, prefix_length));
@@ -177,7 +173,6 @@ P4MatchKey::P4MatchKey(
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
              << "Field descriptor " << conversion_entry.ShortDebugString()
              << " does not specify how to convert prefix in LPM match";
-      break;
   }
 
   return status;
@@ -189,7 +184,7 @@ void P4MatchKey::CopyRawMatchValue(MappedField::Value* mapped_value) {
 
 template <typename U>
 ::util::Status P4MatchKey::StringDataToU(const std::string& bytes,
-                                         int32_t bit_width, U* value) {
+                                         int32 bit_width, U* value) {
   const int kMaxWidth = sizeof(U) * 8;
 
   // Rules for binary byte-encoded value to unsigned integer conversion:
@@ -264,8 +259,7 @@ std::string P4MatchKey::CreateStringMask(int field_width, int mask_length) {
            << "Match key with " << bytes_value.size()
            << " bytes does not conform to P4Runtime-defined width of "
            << bit_width << " bits, which requires a match key field of "
-           << spec_bytes << " bytes: "
-           << p4_field_match_.ShortDebugString();
+           << spec_bytes << " bytes: " << p4_field_match_.ShortDebugString();
   }
 
   // If the P4Runtime client adds leading padding bytes beyond the P4-specified
@@ -293,8 +287,7 @@ std::string P4MatchKey::CreateStringMask(int field_width, int mask_length) {
   if (value_exceeds_bitwidth) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Match key value exceeds the P4Runtime-defined width of "
-           << bit_width << " bits: "
-           << p4_field_match_.ShortDebugString();
+           << bit_width << " bits: " << p4_field_match_.ShortDebugString();
   }
 
   return ::util::OkStatus();
@@ -342,7 +335,6 @@ std::unique_ptr<P4MatchKeyTernary> P4MatchKeyTernary::CreateInstance(
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
              << "Field descriptor " << conversion_entry.ShortDebugString()
              << " does not specify how to convert ternary mask";
-      break;
   }
   ::util::Status status =
       ConvertBytes(p4_field_match().ternary().value(), conversion_entry,

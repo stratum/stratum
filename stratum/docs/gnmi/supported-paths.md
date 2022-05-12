@@ -20,6 +20,12 @@ Supported gNMI paths
  - Get type: ALL, STATE
  - Set mode: Not valid
 
+`/interfaces/interface[name=*]/state/id`
+
+ - Subscription mode: ONCE, POLL
+ - Get type: ALL, STATE
+ - Set mode: Not valid
+
 `/interfaces/interface[name=*]/state/ifindex`
 
  - Subscription mode: ONCE, POLL
@@ -203,6 +209,12 @@ Supported gNMI paths
  - Get type: ALL, STATE
  - Set mode: Not valid
 
+`/interfaces/interface[name=port name]/state/id`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
+ - Get type: ALL, STATE
+ - Set mode: Not valid
+
 `/interfaces/interface[name=port name]/state/ifindex`
 
  - Subscription mode: ONCE, POLL, SAMPLE
@@ -364,6 +376,20 @@ Supported gNMI paths
  - Set mode: Not valid
 
 `/qos/interfaces/interface[name=port name]/output/queues/queue[name=queue name]/state/transmit-pkts`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
+ - Get type: ALL, STATE
+ - Set mode: Not valid
+
+### System
+
+`/system/logging/console/config/severity`
+
+ - Subscription mode: ONCE, POLL, SAMPLE
+ - Get type: ALL, STATE
+ - Set mode: REPLACE, UPDATE
+
+`/system/logging/console/state/severity`
 
  - Subscription mode: ONCE, POLL, SAMPLE
  - Get type: ALL, STATE

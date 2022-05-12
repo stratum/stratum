@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_BUFFER_TOOLS_H_
 #define STRATUM_HAL_LIB_PHAL_BUFFER_TOOLS_H_
 
@@ -45,7 +44,7 @@ static T ParseSignedIntegralBytes(const char* source, size_t num_bytes,
   if (num_bytes < sizeof(T) && value & (1 << (8 * num_bytes - 1))) {
     // This is an incomplete 1's complement value. Prepend 1's
     // up to the length of the type.
-    return value | (~0 << (8 * num_bytes));
+    return value | (~0U << (8 * num_bytes));
   } else {
     return value;
   }

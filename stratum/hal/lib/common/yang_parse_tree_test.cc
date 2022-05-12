@@ -2,10 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stratum/hal/lib/common/yang_parse_tree_mock.h"
-
-#include "google/protobuf/text_format.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
 #include "gnmi/gnmi.pb.h"
+#include "google/protobuf/text_format.h"
+#include "gtest/gtest.h"
 #include "openconfig/openconfig.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -14,16 +15,15 @@
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/common/writer_mock.h"
-#include "stratum/lib/utils.h"
+#include "stratum/hal/lib/common/yang_parse_tree_mock.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
 
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::DoAll;
@@ -33,7 +33,6 @@ using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::WithArg;
 using ::testing::WithArgs;
-using ::stratum::test_utils::StatusIs;
 
 class YangParseTreeTest : public ::testing::Test {
  protected:
@@ -119,7 +118,9 @@ class YangParseTreeTest : public ::testing::Test {
     singleton_ptr->set_node(kInterface1NodeId);
     singleton_ptr->set_id(kInterface1PortId);
     singleton_ptr->set_speed_bps(kTwentyFiveGigBps);
-    singleton_ptr->mutable_config_params()->set_mac_address(kInterfaceMac);
+    singleton_ptr->mutable_config_params()
+        ->mutable_mac_address()
+        ->set_mac_address(kInterfaceMac);
     // Add one per port per queue stat for this interface.
     NodeConfigParams node_config;
     {
@@ -172,6 +173,12 @@ class YangParseTreeTest : public ::testing::Test {
     parse_tree_.AddSubtreeNode(node);
   }
 
+  void AddSubtreeSystem() {
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
+    parse_tree_.AddSubtreeSystem();
+  }
+
   // A method helping testing if the OnXxx method of a leaf specified by 'path'.
   // It takes care of all the boiler plate code:
   // - adds an interface named "interface-1"
@@ -185,7 +192,8 @@ class YangParseTreeTest : public ::testing::Test {
                                  const OnEventAction& action,
                                  const GnmiEvent& event,
                                  ::gnmi::SubscribeResponse* resp) {
-    // After tree creation only two leafs are defined:
+    // After tree creation only three leafs are defined:
+    // /interfaces/interface[name=*]/state/id
     // /interfaces/interface[name=*]/state/ifindex
     // /interfaces/interface[name=*]/state/name
 
@@ -195,6 +203,8 @@ class YangParseTreeTest : public ::testing::Test {
     AddSubtreeNode("node-1", kInterface1NodeId);
     // The test requires one optical interface branch to be added.
     AddSubtreeOpticalInterface("optical-interface-1");
+    // The test requires the system branch to be added.
+    AddSubtreeSystem();
 
     // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
     // of the 'resp' variable is then checked.
@@ -245,7 +255,7 @@ class YangParseTreeTest : public ::testing::Test {
   // The caller can then check if the contents of 'resp' is the expected one
   // (assuming the returned status is ::util::OkStatus())
   ::util::Status ExecuteOnTimer(const ::gnmi::Path& path,
-                               ::gnmi::SubscribeResponse* resp) {
+                                ::gnmi::SubscribeResponse* resp) {
     return ExecuteOnAction(path, &TreeNode::GetOnTimerHandler, TimerEvent(),
                            resp);
   }
@@ -367,18 +377,20 @@ class YangParseTreeTest : public ::testing::Test {
                               const OnSetAction& action,
                               const ::google::protobuf::Message& val,
                               SetRequest* req, GnmiEventPtr* notification) {
-    // After tree creation only two leafs are defined:
+    // After tree creation only three leafs are defined:
+    // /interfaces/interface[name=*]/state/id
     // /interfaces/interface[name=*]/state/ifindex
     // /interfaces/interface[name=*]/state/name
 
     ChassisConfig chassis_config;
     // The test requires one interface branch to be added.
-    AddSubtreeInterface("interface-1",
-                        chassis_config.add_singleton_ports());
+    AddSubtreeInterface("interface-1", chassis_config.add_singleton_ports());
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
     // The test requires one optical interface branch to be added.
     AddSubtreeOpticalInterface("optical-interface-1");
+    // The test requires the system branch to be added.
+    AddSubtreeSystem();
     // Make a copy-on-write pointer to current chassis configuration.
     CopyOnWriteChassisConfig config(&chassis_config);
 
@@ -484,14 +496,14 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
       OpticalTransceiverInfo* optical_netif_info =
-            resp.mutable_optical_transceiver_info();
+          resp.mutable_optical_transceiver_info();
       ((optical_netif_info->*option_getter)()->*value_setter)(value);
       w->Write(resp);
     };
 
-    EXPECT_CALL(switch_, RetrieveValue(_, _, _, _)).WillOnce(DoAll(
-        WithArg<2>(Invoke(mockedRetrieve)),
-        Return(::util::OkStatus())));
+    EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+        .WillOnce(DoAll(WithArg<2>(Invoke(mockedRetrieve)),
+                        Return(::util::OkStatus())));
   }
 
   // Mock switch::RetrieveValue to return the desired value.
@@ -501,17 +513,19 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
       OpticalTransceiverInfo* optical_netif_info =
-            resp.mutable_optical_transceiver_info();
+          resp.mutable_optical_transceiver_info();
       (optical_netif_info->*value_setter)(value);
       w->Write(resp);
     };
 
-    EXPECT_CALL(switch_, RetrieveValue(_, _, _, _)).WillOnce(DoAll(
-        WithArg<2>(Invoke(mockedRetrieve)),
-        Return(::util::OkStatus())));
+    EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+        .WillOnce(DoAll(WithArg<2>(Invoke(mockedRetrieve)),
+                        Return(::util::OkStatus())));
   }
 };
 
+constexpr int YangParseTreeTest::kInterface1PortId;
+constexpr int YangParseTreeTest::kInterface1NodeId;
 constexpr char YangParseTreeTest::kInterface1QueueName[];
 constexpr char YangParseTreeTest::kAlarmDescription[];
 constexpr char YangParseTreeTest::kAlarmSeverityText[];
@@ -637,7 +651,8 @@ TEST_F(YangParseTreeTest, FindRoot) {
 }
 
 TEST_F(YangParseTreeTest, PerformActionForAllNodesNonePresent) {
-  // After tree creation only two leafs are defined:
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -660,7 +675,8 @@ TEST_F(YangParseTreeTest, PerformActionForAllNodesNonePresent) {
 
 // Check if the action is executed for all qualified leafs.
 TEST_F(YangParseTreeTest, PerformActionForAllNodesOnePresent) {
-  // After tree creation only two leafs are defined:
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -792,7 +808,8 @@ TEST_F(YangParseTreeTest, SendNotificationPass) {
 
 // Check if the action is executed for all qualified leafs.
 TEST_F(YangParseTreeTest, GetDataFromSwitchInterfaceDataConvertedCorrectly) {
-  // After tree creation only two leafs are defined:
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -907,11 +924,11 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateOperStatusOnChangeSuccess) {
                                     "interface-1")("state")("oper-status")();
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOperStateChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, PORT_STATE_UP),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOperStateChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                PORT_STATE_UP, 0),
+      &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
@@ -962,7 +979,8 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateAdminStatusOnChangeSuccess) {
 
 // Check if the action is executed correctly.
 TEST_F(YangParseTreeTest, InterfacesInterfaceStateNameOnPollSuccess) {
-  // After tree creation only two leafs are defined:
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -994,8 +1012,9 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateNameOnPollSuccess) {
 }
 
 // Check if the action is executed correctly.
-TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
-  // After tree creation only two leafs are defined:
+TEST_F(YangParseTreeTest, InterfacesInterfaceStateIdOnPollSuccess) {
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -1012,9 +1031,9 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
                     [&resp](const ::gnmi::SubscribeResponse& r) { resp = r; })),
                 Return(true)));
 
-  // Find the 'ifindex' leaf.
+  // Find the 'name' leaf.
   auto* node = GetRoot().FindNodeOrNull(
-      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")());
+      GetPath("interfaces")("interface", "interface-1")("state")("id")());
   ASSERT_NE(node, nullptr);
 
   // Get its OnPoll() handler and call it.
@@ -1023,7 +1042,32 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().uint_val(), 3);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kInterface1PortId);
+}
+
+// Check if the 'state/ifindex' OnPoll action is works correctly.
+TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
+  const uint32 kInterface1SdnPortId = 33;
+  auto path =
+      GetPath("interfaces")("interface", "interface-1")("state")("ifindex")();
+
+  // Mock implementation of RetrieveValue() that sends a response SDN port ID.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_sdn_port_id()->set_port_id(
+                            kInterface1SdnPortId);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
+  ::gnmi::SubscribeResponse resp;
+  EXPECT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kInterface1SdnPortId);
 }
 
 // Check if the 'state/mac-address' OnPoll action works correctly.
@@ -1139,7 +1183,7 @@ TEST_F(YangParseTreeTest,
       "interface", "interface-1")("ethernet")("config")("mac-address")();
 
   static constexpr char kMacAddressAsString[] = "11:22:33:44:55:66";
-  static constexpr char kMacStrings[][21] = {
+  static constexpr char kInvalidMacStrings[][21] = {
       "11:22:33:44:55",        // Too short string
       "11:22:33:44:55:66:77",  // Too long string
       "11;22;33;44;55;66",     // Incorrect delimiter
@@ -1152,9 +1196,10 @@ TEST_F(YangParseTreeTest,
       "00112233445566",        // No colon
       "11:22:333:44:55:66",    // Too many hex digits
       "11:22:3:44:55:66",      // Too few hex digits
+      "0:0:0:0:0:0",           // Too few hex digits
       "",                      // empty mac string
-      "st:ra:tu:mr:oc:ks"      // None hex digits
-    };
+      "st:ra:tu:mr:oc:ks",     // None hex digits
+  };
 
   // Set new value.
   ::gnmi::TypedValue invalid_val;
@@ -1167,13 +1212,14 @@ TEST_F(YangParseTreeTest,
                               /* Notification will not be called */ nullptr),
               StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 
-  for (auto mac_string : kMacStrings) {
+  for (const auto& mac_string : kInvalidMacStrings) {
     // Check reaction to wrong value.
     invalid_val.set_string_val(mac_string);
-    EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
-                                /* SetValue will not be called */ nullptr,
-                                /* Notification will not be called */ nullptr),
-                StatusIs(_, _, ContainsRegex("wrong value")));
+    EXPECT_THAT(
+        ExecuteOnUpdate(path, invalid_val,
+                        /* SetValue will not be called */ nullptr,
+                        /* Notification will not be called */ nullptr),
+        StatusIs(_, ERR_INVALID_PARAM, ContainsRegex("not a valid MAC")));
 
     // Check if mac_address remains unchanged.
     ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -2206,17 +2252,53 @@ TEST_F(YangParseTreeTest,
             kTrunkMemberBlockStateForwarding);
 }
 
-// Check if the '/interfaces/interface/state/last-change' OnPoll
-// action works correctly.
+// Check if the '/interfaces/interface/state/last-change' OnPoll action works
+// correctly.
 TEST_F(YangParseTreeTest, InterfacesInterfaceStateLastChangeOnPollSuccess) {
   auto path = GetPath("interfaces")("interface",
                                     "interface-1")("state")("last-change")();
-  static constexpr char kUnsupportedString[] = "unsupported yet";
+  static constexpr auto kLastChangeTime = 12345;
+
+  // Mock implementation of RetrieveValue() that sends a response set to
+  // kLastChangeTime.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_oper_status()->set_time_last_changed(
+                            kLastChangeTime);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
+
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
 
+  // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().string_val(), kUnsupportedString);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kLastChangeTime);
+}
+
+// Check if the '/interfaces/interface/state/last-change' OnChange action works
+// correctly.
+TEST_F(YangParseTreeTest, InterfacesInterfaceStateLastChangeOnChangeSuccess) {
+  auto path = GetPath("interfaces")("interface",
+                                    "interface-1")("state")("last-change")();
+  static constexpr auto kLastChangeTime = 12345;
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortOperStateChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                PORT_STATE_UP, kLastChangeTime),
+      &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), kLastChangeTime);
 }
 
 // Check if the '/interfaces/interface/ethernet/config/forwarding-viable'
@@ -2955,7 +3037,8 @@ TEST_F(YangParseTreeTest,
 // Check if all expected handlers are registered
 TEST_F(YangParseTreeTest,
        ExpectedRegistrationsTakePlaceInterfacesInterfaceElipsis) {
-  // After tree creation only two leafs are defined:
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -3017,7 +3100,8 @@ TEST_F(YangParseTreeTest,
 // Check if all expected handlers are registered
 TEST_F(YangParseTreeTest,
        ExpectedRegistrationsTakePlaceComponentsComponetChassisAlarms) {
-  // After tree creation only two leafs are defined:
+  // After tree creation only three leafs are defined:
+  // /interfaces/interface[name=*]/state/id
   // /interfaces/interface[name=*]/state/ifindex
   // /interfaces/interface[name=*]/state/name
 
@@ -3366,8 +3450,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface()
-        .optical_transceiver_info().frequency(), expected_value);
+  EXPECT_EQ(req.requests(0)
+                .optical_network_interface()
+                .optical_transceiver_info()
+                .frequency(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3385,8 +3472,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface()
-        .optical_transceiver_info().frequency(), expected_value);
+  EXPECT_EQ(req.requests(0)
+                .optical_network_interface()
+                .optical_transceiver_info()
+                .frequency(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3402,8 +3492,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const uint64 expected_val = kOpticalInterface1Frequency / 1000000;
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().uint_val(),
-            expected_val);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_val);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3420,8 +3509,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const uint64 expected_val = kOpticalInterface1Frequency / 1000000;
   // Check that we retrieve what we set.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().uint_val(),
-            expected_val);
+  EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_val);
 }
 
 // Check if the '/components/component/optical-channel/state/frequency'
@@ -3525,7 +3613,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -3588,7 +3676,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -3604,7 +3692,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -3623,7 +3711,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -3643,7 +3731,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power input_power;
   input_power.set_interval(expected_value);
 
@@ -3651,7 +3739,7 @@ TEST_F(
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
@@ -3712,7 +3800,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -3728,7 +3816,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -3747,7 +3835,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -3766,7 +3854,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power input_power;
   input_power.set_max_time(expected_value);
 
@@ -3774,7 +3862,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
@@ -3835,7 +3923,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -3851,7 +3939,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -3870,7 +3958,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_input_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -3889,7 +3977,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power input_power;
   input_power.set_min_time(expected_value);
 
@@ -3897,7 +3985,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalInputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                 kOpticalInterface1PortId, input_power),
+                                    kOpticalInterface1PortId, input_power),
       &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
@@ -3919,8 +4007,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).optical_network_interface()
-      .optical_transceiver_info().target_output_power();
+  float result = req.requests(0)
+                     .optical_network_interface()
+                     .optical_transceiver_info()
+                     .target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -3939,8 +4029,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).optical_network_interface()
-      .optical_transceiver_info().target_output_power();
+  float result = req.requests(0)
+                     .optical_network_interface()
+                     .optical_transceiver_info()
+                     .target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -4035,7 +4127,7 @@ TEST_F(
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -4098,7 +4190,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -4114,7 +4206,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -4134,7 +4226,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_interval, expected_value);
@@ -4154,7 +4246,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::OpticalTransceiverInfo::Power output_power;
   output_power.set_interval(expected_value);
 
@@ -4162,7 +4254,7 @@ TEST_F(
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
@@ -4223,7 +4315,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -4239,7 +4331,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -4258,7 +4350,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_max_time, expected_value);
@@ -4278,7 +4370,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::Power output_power;
   output_power.set_max_time(expected_value);
 
@@ -4286,7 +4378,7 @@ TEST_F(
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
@@ -4347,7 +4439,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
@@ -4363,7 +4455,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -4382,7 +4474,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalTransceiverInfo::mutable_output_power,
       &OpticalTransceiverInfo::Power::set_min_time, expected_value);
@@ -4402,7 +4494,7 @@ TEST_F(
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
-  const ::google::protobuf::uint64 expected_value = 100500;
+  const uint64 expected_value = 100500;
   OpticalTransceiverInfo::OpticalTransceiverInfo::Power output_power;
   output_power.set_min_time(expected_value);
 
@@ -4410,7 +4502,7 @@ TEST_F(
   EXPECT_OK(ExecuteOnChange(
       path,
       OpticalOutputPowerChangedEvent(kOpticalInterface1ModuleId,
-                                  kOpticalInterface1PortId, output_power),
+                                     kOpticalInterface1PortId, output_power),
       &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
@@ -4431,8 +4523,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface()
-      .optical_transceiver_info().operational_mode(), expected_value);
+  EXPECT_EQ(req.requests(0)
+                .optical_network_interface()
+                .optical_transceiver_info()
+                .operational_mode(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
@@ -4449,8 +4544,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface()
-      .optical_transceiver_info().operational_mode(), expected_value);
+  EXPECT_EQ(req.requests(0)
+                .optical_network_interface()
+                .optical_transceiver_info()
+                .operational_mode(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
@@ -4682,6 +4780,304 @@ TEST_F(YangParseTreeOpticalChannelTest,
   // Check that we retrieve the component name.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().string_val(), "OPTICAL_CHANNEL");
+}
+
+// Check if the '/system/logging/console/state/severity' OnPoll action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleStateSeverityOnPollSuccess) {
+  auto path = GetPath("system")("logging")("console")("state")("severity")();
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+}
+
+// Check if the '/system/logging/console/state/severity' OnChange action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleStateSeverityOnChangeSuccess) {
+  auto path = GetPath("system")("logging")("console")("state")("severity")();
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kSeverityInformationalString[] = "INFORMATIONAL";
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+  static constexpr char kSeverityWarningString[] = "WARNING";
+  static constexpr char kSeverityErrorString[] = "ERROR";
+  static constexpr char kSeverityCriticalString[] = "CRITICAL";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogSeverityWarningString[] = "1";
+  static constexpr char kGlogSeverityErrorString[] = "2";
+  static constexpr char kGlogSeverityFatalString[] = "3";
+  static constexpr char kGlogVerbosityZeroString[] = "0";
+  static constexpr char kGlogVerbosityOneString[] = "1";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('DEBUG' case).
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityTwoString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityDebugString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('INFORMATIONAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityOneString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityInformationalString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('NOTICE' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('WARNING' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityWarningString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityWarningString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('ERROR' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityErrorString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityErrorString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('CRITICAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityFatalString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityCriticalString);
+}
+
+// Check if the '/system/logging/console/config/severity' OnPoll action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnPollSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+}
+
+// Check if the '/system/logging/console/config/severity' OnChange action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnChangeSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kSeverityInformationalString[] = "INFORMATIONAL";
+  static constexpr char kSeverityNoticeString[] = "NOTICE";
+  static constexpr char kSeverityWarningString[] = "WARNING";
+  static constexpr char kSeverityErrorString[] = "ERROR";
+  static constexpr char kSeverityCriticalString[] = "CRITICAL";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogSeverityWarningString[] = "1";
+  static constexpr char kGlogSeverityErrorString[] = "2";
+  static constexpr char kGlogSeverityFatalString[] = "3";
+  static constexpr char kGlogVerbosityZeroString[] = "0";
+  static constexpr char kGlogVerbosityOneString[] = "1";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('DEBUG' case).
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityTwoString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityDebugString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('INFORMATIONAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityOneString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityInformationalString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('NOTICE' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityInfoString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityNoticeString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('WARNING' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityWarningString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityWarningString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('ERROR' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityErrorString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kSeverityErrorString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('CRITICAL' case).
+  resp.Clear();
+  ASSERT_OK(
+      ExecuteOnChange(path,
+                      ConsoleLogSeverityChangedEvent(kGlogSeverityFatalString,
+                                                     kGlogVerbosityZeroString),
+                      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kSeverityCriticalString);
+}
+
+// Check if the '/system/logging/console/config/severity' OnUpdate action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnUpdateSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeveritySomethingString[] = "SOMETHING";
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kSeverityDebugString);
+  ASSERT_OK(ExecuteOnUpdate(
+      path, val, /* SetValue will not be called */ nullptr, &notification));
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  ConsoleLogSeverityChangedEvent* event =
+      dynamic_cast<ConsoleLogSeverityChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetState(),
+            LoggingConfig(kGlogSeverityInfoString, kGlogVerbosityTwoString));
+
+  // Check reaction to wrong value.
+  val.set_string_val(kSeveritySomethingString);
+  EXPECT_THAT(ExecuteOnUpdate(path, val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("Invalid severity string")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+}
+
+// Check if the '/system/logging/console/config/severity' OnReplace action works
+// correctly.
+TEST_F(YangParseTreeTest, SystemLoggingConsoleConfigSeverityOnReplaceSuccess) {
+  auto path = GetPath("system")("logging")("console")("config")("severity")();
+  static constexpr char kSeveritySomethingString[] = "SOMETHING";
+  static constexpr char kSeverityDebugString[] = "DEBUG";
+  static constexpr char kGlogSeverityInfoString[] = "0";
+  static constexpr char kGlogVerbosityTwoString[] = "2";
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kSeverityDebugString);
+  ASSERT_OK(ExecuteOnReplace(
+      path, val, /* SetValue will not be called */ nullptr, &notification));
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  ConsoleLogSeverityChangedEvent* event =
+      dynamic_cast<ConsoleLogSeverityChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetState(),
+            LoggingConfig(kGlogSeverityInfoString, kGlogVerbosityTwoString));
+
+  // Check reaction to wrong value.
+  val.set_string_val(kSeveritySomethingString);
+  EXPECT_THAT(ExecuteOnReplace(path, val,
+                               /* SetValue will not be called */ nullptr,
+                               /* Notification will not be called */
+                               nullptr),
+              StatusIs(_, _, ContainsRegex("Invalid severity string")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnReplace(path, wrong_type_val,
+                               /* SetValue will not be called */ nullptr,
+                               /* Notification will not be called */
+                               nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 }
 
 }  // namespace hal

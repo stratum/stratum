@@ -34,10 +34,7 @@ using stratum::p4c_backends::SwitchP4cBackend;
 using stratum::p4c_backends::TableMapGenerator;
 using stratum::p4c_backends::TargetInfo;
 
-DECLARE_int32(stderrthreshold);
-
 int main(int argc, char** argv) {
-  FLAGS_stderrthreshold = 1;
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
   std::unique_ptr<BcmTargetInfo> bcm_target_info(new BcmTargetInfo);
@@ -46,14 +43,14 @@ int main(int argc, char** argv) {
       new BcmTunnelOptimizer);
   std::unique_ptr<AnnotationMapper> annotation_mapper(new AnnotationMapper);
   auto midend_callback = std::function<std::unique_ptr<MidEndInterface>(
-      CompilerOptions* p4c_options)>(&MidEnd::CreateInstance);
+      CompilerOptions * p4c_options)>(&MidEnd::CreateInstance);
   std::unique_ptr<P4cFrontMidReal> p4c_real_fe_me(
       new P4cFrontMidReal(midend_callback));
   std::unique_ptr<TableMapGenerator> table_mapper(new TableMapGenerator);
   std::unique_ptr<BackendExtensionInterface> extension(new SwitchP4cBackend(
       table_mapper.get(), p4c_real_fe_me.get(), annotation_mapper.get(),
       bcm_tunnel_optimizer.get()));
-  std::vector<BackendExtensionInterface*> extensions {extension.get()};
+  std::vector<BackendExtensionInterface*> extensions{extension.get()};
   std::unique_ptr<BackendPassManager> backend(
       new BackendPassManager(p4c_real_fe_me.get(), extensions));
   backend->Compile();

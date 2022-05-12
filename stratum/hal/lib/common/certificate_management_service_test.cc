@@ -166,10 +166,10 @@ TEST_P(CertificateManagementServiceTest, CanGenerateCSRSuccess) {
 }
 
 INSTANTIATE_TEST_SUITE_P(CertificateManagementServiceTestWithMode,
-                        CertificateManagementServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         CertificateManagementServiceTest,
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

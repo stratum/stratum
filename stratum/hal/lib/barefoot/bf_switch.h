@@ -11,7 +11,7 @@
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/barefoot/bf_pd_interface.h"
+#include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/pi/pi_node.h"
@@ -20,9 +20,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-class BFSwitch : public SwitchInterface {
+class BfSwitch : public SwitchInterface {
  public:
-  ~BFSwitch() override;
+  ~BfSwitch() override;
 
   // SwitchInterface public methods.
   ::util::Status PushChassisConfig(const ChassisConfig& config) override;
@@ -47,12 +47,13 @@ class BFSwitch : public SwitchInterface {
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) override;
-  ::util::Status RegisterPacketReceiveWriter(
+  ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override;
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override;
-  ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet) override;
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer)
+      override;
+  ::util::Status UnregisterStreamMessageResponseWriter(uint64 node_id) override;
+  ::util::Status HandleStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request) override;
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;
   ::util::Status UnregisterEventNotifyWriter() override;
@@ -65,27 +66,27 @@ class BFSwitch : public SwitchInterface {
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BFSwitch> CreateInstance(
-      PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
-      BFPdInterface* bf_pd_interface,
-      const std::map<int, pi::PINode*>& unit_to_pi_node);
+  static std::unique_ptr<BfSwitch> CreateInstance(
+      PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
+      BfSdeInterface* bf_sde_interface,
+      const std::map<int, pi::PINode*>& device_to_pi_node);
 
-  // BFSwitch is neither copyable nor movable.
-  BFSwitch(const BFSwitch&) = delete;
-  BFSwitch& operator=(const BFSwitch&) = delete;
-  BFSwitch(BFSwitch&&) = delete;
-  BFSwitch& operator=(BFSwitch&&) = delete;
+  // BfSwitch is neither copyable nor movable.
+  BfSwitch(const BfSwitch&) = delete;
+  BfSwitch& operator=(const BfSwitch&) = delete;
+  BfSwitch(BfSwitch&&) = delete;
+  BfSwitch& operator=(BfSwitch&&) = delete;
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFSwitch(PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
-           BFPdInterface* bf_pd_interface,
-           const std::map<int, pi::PINode*>& unit_to_pi_node);
+  BfSwitch(PhalInterface* phal_interface, BfChassisManager* bf_chassis_manager,
+           BfSdeInterface* bf_sde_interface,
+           const std::map<int, pi::PINode*>& device_to_pi_node);
 
-  // Helper to get PINode pointer from unit number or return error indicating
-  // invalid unit.
-  ::util::StatusOr<pi::PINode*> GetPINodeFromUnit(int unit) const;
+  // Helper to get PINode pointer from device number or return error indicating
+  // invalid device.
+  ::util::StatusOr<pi::PINode*> GetPINodeFromDevice(int device) const;
 
   // Helper to get PINode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
@@ -96,18 +97,18 @@ class BFSwitch : public SwitchInterface {
   // instance of this class per chassis.
   PhalInterface* phal_interface_;  // not owned by this class.
 
+  // Pointer to a BfSdeInterface implementation that wraps SDE API calls.
+  BfSdeInterface* bf_sde_interface_;  // not owned by this class.
+
   // Per chassis Managers. Note that there is only one instance of this class
   // per chassis.
-  BFChassisManager* bf_chassis_manager_;  // not owned by the class.
+  BfChassisManager* bf_chassis_manager_;  // not owned by the class.
 
-  // Pointer to a BFPdInterface implementation that wraps PD API calls.
-  BFPdInterface* bf_pd_interface_;  // not owned by this class.
-
-  // Map from zero-based unit number corresponding to a node/ASIC to a pointer
+  // Map from zero-based device number corresponding to a node/ASIC to a pointer
   // to PINode which contain all the per-node managers for that node/ASIC. This
   // map is initialized in the constructor and will not change during the
   // lifetime of the class.
-  const std::map<int, pi::PINode*> unit_to_pi_node_;  // pointers not owned.
+  const std::map<int, pi::PINode*> device_to_pi_node_;  // pointers not owned.
 
   // Map from the node ids to to a pointer to PINode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.

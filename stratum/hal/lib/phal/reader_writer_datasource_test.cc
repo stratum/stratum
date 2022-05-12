@@ -2,29 +2,28 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/reader_writer_datasource.h"
 
 #include <memory>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/filepath_stringsource.h"
 #include "stratum/hal/lib/phal/system_fake.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace {
 
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::HasSubstr;
-using stratum::test_utils::StatusIs;
 
 // Note that the filesystem is faked in all of these tests, so this file is
 // never actually created.

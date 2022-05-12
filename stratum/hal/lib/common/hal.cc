@@ -2,33 +2,30 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/hal.h"
 
-#include <chrono>  // NOLINT
+#include <limits.h>
+
 #include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/procmon/procmon.grpc.pb.h"
-#include "stratum/lib/utils.h"
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
 DEFINE_string(external_stratum_urls, stratum::kExternalStratumUrls,
-            "Comma-separated list of URLs for server to listen to for external"
-            " calls from SDN controller, etc.");
+              "Comma-separated list of URLs for server to listen to for "
+              "external calls from SDN controller, etc.");
 DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,
               "URL for listening to local calls from stratum stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
-DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
-              "URL of the procmon service to connect to.");
 DEFINE_string(persistent_config_dir, "/etc/stratum/",
               "The persistent dir where all the config files will be stored.");
 DEFINE_int32(grpc_keepalive_time_ms, 600000, "grpc keep alive time");
@@ -37,10 +34,10 @@ DEFINE_int32(grpc_keepalive_timeout_ms, 20000,
 DEFINE_int32(grpc_keepalive_min_ping_interval, 10000,
              "grpc keep alive minimum ping interval");
 DEFINE_int32(grpc_keepalive_permit, 1, "grpc keep alive permit");
-DEFINE_uint32(grpc_max_recv_msg_size, 256,
-              "grpc server max receive message size in MB");
+DEFINE_uint32(grpc_max_recv_msg_size, 256 * 1024 * 1024,
+              "grpc server max receive message size (0 = gRPC default).");
 DEFINE_uint32(grpc_max_send_msg_size, 0,
-              "grpc server max send message size in MB");
+              "grpc server max send message size (0 = gRPC default).");
 
 namespace stratum {
 namespace hal {
@@ -50,9 +47,15 @@ namespace {
 // Signal received callback which is registered as the handler for SIGINT and
 // SIGTERM signals using signal() system call.
 void SignalRcvCallback(int value) {
-  Hal* hal = Hal::GetSingleton();
-  if (hal == nullptr) return;
-  hal->HandleSignal(value);
+  static_assert(sizeof(value) <= PIPE_BUF,
+                "PIPE_BUF is smaller than the number of bytes that can be "
+                "written atomically to a pipe.");
+  // We must restore any changes made to errno at the end of the handler:
+  // https://www.gnu.org/software/libc/manual/html_node/POSIX-Safety-Concepts.html
+  int saved_errno = errno;
+  // No reasonable error handling possible.
+  write(Hal::pipe_write_fd_, &value, sizeof(value));
+  errno = saved_errno;
 }
 
 // Set the channel arguments to match the defualt keep-alive parameters set by
@@ -73,6 +76,8 @@ void SetGrpcServerKeepAliveArgs(::grpc::ServerBuilder* builder) {
 
 Hal* Hal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex Hal::init_lock_(absl::kConstInit);
+int Hal::pipe_read_fd_ = -1;
+int Hal::pipe_write_fd_ = -1;
 
 Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
          AuthPolicyChecker* auth_policy_checker,
@@ -89,7 +94,8 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       diag_service_(nullptr),
       file_service_(nullptr),
       external_server_(nullptr),
-      old_signal_handlers_() {}
+      old_signal_handlers_(),
+      signal_waiter_tid_() {}
 
 Hal::~Hal() {
   // TODO(unknown): Handle this error?
@@ -99,24 +105,17 @@ Hal::~Hal() {
 ::util::Status Hal::SanityCheck() {
   const std::vector<std::string> external_stratum_urls =
       absl::StrSplit(FLAGS_external_stratum_urls, ',', absl::SkipEmpty());
-  CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
+  RET_CHECK(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
 
-  auto it = std::find_if(external_stratum_urls.begin(),
-                         external_stratum_urls.end(),
-                         [](const std::string& url) {
-                           return (url == FLAGS_local_stratum_url ||
-                                   // FIXME(boc) google only url ==
-                                   // FLAGS_cmal_service_url ||
-                                   url == FLAGS_procmon_service_addr);
-                         });
-  CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
+  auto it = std::find_if(
+      external_stratum_urls.begin(), external_stratum_urls.end(),
+      [](const std::string& url) { return url == FLAGS_local_stratum_url; });
+  RET_CHECK(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_stratum_url << ", "
-      /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
-      << FLAGS_procmon_service_addr << ".";
+      << FLAGS_local_stratum_url << ".";
 
-  CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
+  RET_CHECK(!FLAGS_persistent_config_dir.empty())
       << "persistent_config_dir flag needs to be explicitly given.";
 
   LOG(INFO) << "HAL sanity checks all passed.";
@@ -187,7 +186,7 @@ Hal::~Hal() {
   // stratum_stub binary running on the switch, since local connections cannot
   // support auth.
   const std::vector<std::string> external_stratum_urls =
-          absl::StrSplit(FLAGS_external_stratum_urls, ',');
+      absl::StrSplit(FLAGS_external_stratum_urls, ',');
   {
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
@@ -199,14 +198,12 @@ Hal::~Hal() {
       builder.AddListeningPort(url, server_credentials);
     }
     if (FLAGS_grpc_max_recv_msg_size > 0) {
-      builder.SetMaxReceiveMessageSize(
-          FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
+      builder.SetMaxReceiveMessageSize(FLAGS_grpc_max_recv_msg_size);
       builder.AddChannelArgument<int>(GRPC_ARG_MAX_METADATA_SIZE,
-          FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
+                                      FLAGS_grpc_max_recv_msg_size);
     }
-    if (FLAGS_grpc_max_send_msg_size) {
-      builder.SetMaxSendMessageSize(
-          FLAGS_grpc_max_send_msg_size * 1024 * 1024);
+    if (FLAGS_grpc_max_send_msg_size > 0) {
+      builder.SetMaxSendMessageSize(FLAGS_grpc_max_send_msg_size);
     }
     builder.RegisterService(config_monitoring_service_.get());
     builder.RegisterService(p4_service_.get());
@@ -225,16 +222,6 @@ Hal::~Hal() {
                << FLAGS_local_stratum_url << "...";
   }
 
-  if (mode_ != OPERATION_MODE_SIM) {
-    // Try checking in with Procmon if we are not running in sim mode. Continue
-    // if checkin fails.
-    ::util::Status status = ProcmonCheckin();
-    if (!status.ok()) {
-      LOG(ERROR) << "Error when checking in with procmon: "
-                 << status.error_message() << ".";
-    }
-  }
-
   external_server_->Wait();  // blocking until external_server_->Shutdown()
                              // is called. We dont wait on internal_service.
   return Teardown();
@@ -247,7 +234,7 @@ void Hal::HandleSignal(int value) {
   // with no deadline will block forever, as it waits for all the active RPCs
   // to finish. To fix this, we give a deadline set to "now" so the call returns
   // immediately.
-  external_server_->Shutdown(std::chrono::system_clock::now());
+  external_server_->Shutdown(absl::ToChronoTime(absl::Now()));
 }
 
 Hal* Hal::CreateSingleton(OperationMode mode, SwitchInterface* switch_interface,
@@ -332,6 +319,12 @@ Hal* Hal::GetSingleton() {
     }
     old_signal_handlers_[s] = h;
   }
+  // Create the pipe to transfer signals.
+  RETURN_IF_ERROR(CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
+  // Start the signal waiter thread that initiates shutdown.
+  RET_CHECK(pthread_create(&signal_waiter_tid_, nullptr, SignalWaiterThreadFunc,
+                           nullptr) == 0)
+      << "Could not start the signal waiter thread.";
 
   return ::util::OkStatus();
 }
@@ -342,31 +335,32 @@ Hal* Hal::GetSingleton() {
     signal(e.first, e.second);
   }
   old_signal_handlers_.clear();
+  // Close pipe to unblock the waiter thread.
+  if (pipe_write_fd_ != -1) close(pipe_write_fd_);
+  if (pipe_read_fd_ != -1) close(pipe_read_fd_);
+  // Join thread.
+  if (signal_waiter_tid_ && pthread_join(signal_waiter_tid_, nullptr) != 0) {
+    LOG(ERROR) << "Failed to join signal waiter thread.";
+  }
 
   return ::util::OkStatus();
 }
 
-::util::Status Hal::ProcmonCheckin() {
-  // FIXME replace Procmon with gNOI
-  std::unique_ptr<procmon::ProcmonService::Stub> stub =
-      procmon::ProcmonService::NewStub(::grpc::CreateChannel(
-          FLAGS_procmon_service_addr, ::grpc::InsecureChannelCredentials()));
-  if (stub == nullptr) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Could not create stub for procmon gRPC service.";
+void* Hal::SignalWaiterThreadFunc(void*) {
+  int signal_value;
+  int ret = read(Hal::pipe_read_fd_, &signal_value, sizeof(signal_value));
+  if (ret == 0) {  // Pipe has been closed.
+    return nullptr;
+  } else if (ret != sizeof(signal_value)) {
+    LOG(ERROR) << "Error reading complete signal from pipe: " << ret << ": "
+               << strerror(errno);
+    return nullptr;
   }
+  Hal* hal = Hal::GetSingleton();
+  if (hal == nullptr) return nullptr;
+  hal->HandleSignal(signal_value);
 
-  procmon::CheckinRequest req;
-  procmon::CheckinResponse resp;
-  ::grpc::ClientContext context;
-  req.set_checkin_key(getpid());
-  ::grpc::Status status = stub->Checkin(&context, req, &resp);
-  if (!status.ok()) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Failed to check in with procmon: " << status.error_message();
-  }
-
-  return ::util::OkStatus();
+  return nullptr;
 }
 
 }  // namespace hal

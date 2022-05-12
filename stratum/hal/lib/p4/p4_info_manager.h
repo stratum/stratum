@@ -11,9 +11,9 @@
 #include <functional>
 #include <string>
 
-#include "google/protobuf/repeated_field.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "google/protobuf/repeated_field.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
@@ -84,6 +84,10 @@ class P4InfoManager {
       uint32 counter_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Counter> FindCounterByName(
       const std::string& counter_name) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::DirectCounter>
+  FindDirectCounterByID(uint32 counter_id) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::DirectCounter>
+  FindDirectCounterByName(const std::string& counter_name) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Meter> FindMeterByID(
       uint32 meter_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Meter> FindMeterByName(
@@ -92,6 +96,10 @@ class P4InfoManager {
       uint32 value_set_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::ValueSet> FindValueSetByName(
       const std::string& value_set_name) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::Register> FindRegisterByID(
+      uint32 register_id) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::Register> FindRegisterByName(
+      const std::string& register_name) const;
 
   // GetSwitchStackAnnotations attempts to parse any @switchstack annotations
   // in the input object's P4Info Preamble.  If the P4 object has multiple
@@ -109,6 +117,18 @@ class P4InfoManager {
   // TODO(unknown): Consider a method to verify the data in a TableWrite RPC,
   // i.e. doing a verification that all P4 resources referenced by the RPC
   // actually exist in the P4Info.
+
+  // Verifies that a P4 RegisterEntry is well formed according to the P4Info.
+  // TODO(max): Consider splitting this function into two versions, one for read
+  // and write requests each. A RegisterEntry without index and data is a valid
+  // read request, but not a valid write request or a read response.
+  virtual ::util::Status VerifyRegisterEntry(
+      const ::p4::v1::RegisterEntry& register_entry) const;
+
+  // Verifies that the given P4Data matches the given type spec.
+  virtual ::util::Status VerifyTypeSpec(
+      const ::p4::v1::P4Data& data,
+      const ::p4::config::v1::P4DataTypeSpec& type_spec) const;
 
   // Outputs LOG messages with name to ID translations for all p4_info_
   // entities.
@@ -249,8 +269,10 @@ class P4InfoManager {
   P4ResourceMap<::p4::config::v1::Action> action_map_;
   P4ResourceMap<::p4::config::v1::ActionProfile> action_profile_map_;
   P4ResourceMap<::p4::config::v1::Counter> counter_map_;
+  P4ResourceMap<::p4::config::v1::DirectCounter> direct_counter_map_;
   P4ResourceMap<::p4::config::v1::Meter> meter_map_;
   P4ResourceMap<::p4::config::v1::ValueSet> value_set_map_;
+  P4ResourceMap<::p4::config::v1::Register> register_map_;
 
   // These containers verify that all P4 names and IDs are unique across all
   // types of resources that have an embedded Preamble.

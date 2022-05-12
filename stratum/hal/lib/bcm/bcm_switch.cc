@@ -158,8 +158,8 @@ BcmSwitch::~BcmSwitch() {}
 ::util::Status BcmSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
-  CHECK_RETURN_IF_FALSE(results != nullptr)
+  RET_CHECK(req.device_id()) << "No device_id in WriteRequest.";
+  RET_CHECK(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
   absl::ReaderMutexLock l(&chassis_lock);
@@ -175,9 +175,9 @@ BcmSwitch::~BcmSwitch() {}
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(req.device_id()) << "No device_id in ReadRequest.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
@@ -188,37 +188,38 @@ BcmSwitch::~BcmSwitch() {}
   return bcm_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BcmSwitch::RegisterPacketReceiveWriter(
+::util::Status BcmSwitch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->RegisterPacketReceiveWriter(writer);
+  return bcm_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status BcmSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BcmSwitch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->UnregisterPacketReceiveWriter();
+  return bcm_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status BcmSwitch::TransmitPacket(uint64 node_id,
-                                         const ::p4::v1::PacketOut& packet) {
+::util::Status BcmSwitch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   // Get BcmNode which the node_id is associated with.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
-  return bcm_node->TransmitPacket(packet);
+  return bcm_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status BcmSwitch::RegisterEventNotifyWriter(
@@ -305,7 +306,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.lacp_router_mac().node_id()
         // - port_id: req.lacp_router_mac().port_id()
         // and then write it into the response.
-        resp.mutable_lacp_router_mac()->set_mac_address(0x112233445566ull);
+        resp.mutable_lacp_router_mac()->set_mac_address(kDummyMacAddress);
         break;
       case DataRequest::Request::kLacpSystemPriority:
         // Find LACP System priority of port located at:
@@ -327,7 +328,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.mac_address().node_id()
         // - port_id: req.mac_address().port_id()
         // and then write it into the response.
-        resp.mutable_mac_address()->set_mac_address(0x112233445566ull);
+        resp.mutable_mac_address()->set_mac_address(kDummyMacAddress);
         break;
       case DataRequest::Request::kPortCounters: {
         // Find current port counters for port located at:
@@ -344,7 +345,7 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.health_indicator().node_id()
         // - port_id: req.health_indicator().port_id()
         // and then write it into the response.
-        resp.mutable_health_indicator()->set_state(HEALTH_STATE_GOOD);
+        resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
         break;
       case DataRequest::Request::kForwardingViability:
         // Find current port forwarding viable state for port located at:
@@ -352,7 +353,7 @@ BcmSwitch::~BcmSwitch() {}
         // - port_id: req.forwarding_viable().port_id()
         // and then write it into the response.
         resp.mutable_forwarding_viability()->set_state(
-            TRUNK_MEMBER_BLOCK_STATE_FORWARDING);
+            TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
         break;
       case DataRequest::Request::kMemoryErrorAlarm: {
         // Find current state of memory-error alarm
@@ -414,7 +415,7 @@ BcmSwitch::~BcmSwitch() {}
             auto* node_info = resp.mutable_node_info();
             node_info->set_vendor_name("Broadcom");
             node_info->set_chip_name(
-                BcmChip::BcmChipType_Name(bcm_chip.ValueOrDie().type()));
+                PrintBcmChipNumber(bcm_chip.ValueOrDie().type()));
           }
         }
         break;
@@ -425,6 +426,10 @@ BcmSwitch::~BcmSwitch() {}
             req.optical_transceiver_info().module(),
             req.optical_transceiver_info().network_interface(),
             resp.mutable_optical_transceiver_info()));
+        break;
+      case DataRequest::Request::kSdnPortId:
+        // Return the requested port ID because port translation is performed.
+        resp.mutable_sdn_port_id()->set_port_id(req.sdn_port_id().port_id());
         break;
       default:
         status =
@@ -479,7 +484,8 @@ BcmSwitch::~BcmSwitch() {}
         break;
       case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
         switch (req.optical_network_interface().value_case()) {
-          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalTransceiverInfo: {  // NOLINT
+          case SetRequest::Request::OpticalNetworkInterface::ValueCase::
+              kOpticalTransceiverInfo: {
             status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.optical_network_interface().module(),
                 req.optical_network_interface().network_interface(),

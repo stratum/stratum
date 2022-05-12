@@ -125,8 +125,8 @@ NP4Switch::~NP4Switch() {}
 ::util::Status NP4Switch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
-  CHECK_RETURN_IF_FALSE(results != nullptr)
+  RET_CHECK(req.device_id()) << "No device_id in WriteRequest.";
+  RET_CHECK(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(req.device_id()));
@@ -137,30 +137,31 @@ NP4Switch::~NP4Switch() {}
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(req.device_id()) << "No device_id in ReadRequest.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(req.device_id()));
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status NP4Switch::RegisterPacketReceiveWriter(
+::util::Status NP4Switch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterPacketReceiveWriter(writer);
+  return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status NP4Switch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status NP4Switch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterPacketReceiveWriter();
+  return pi_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status NP4Switch::TransmitPacket(uint64 node_id,
-                                         const ::p4::v1::PacketOut& packet) {
+::util::Status NP4Switch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->TransmitPacket(packet);
+  return pi_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status NP4Switch::RegisterEventNotifyWriter(
@@ -182,15 +183,23 @@ NP4Switch::~NP4Switch() {}
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
+      case DataRequest::Request::kLacpRouterMac:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kForwardingViability:
+      case DataRequest::Request::kHealthIndicator:
       case DataRequest::Request::kAutonegStatus:
+      case DataRequest::Request::kSdnPortId:
         resp = np4_chassis_manager_->GetPortData(req);
         break;
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
+        resp =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "DataRequest field "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
     if (resp.ok()) {

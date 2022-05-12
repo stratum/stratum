@@ -2,24 +2,22 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_REGEX_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_REGEX_DATASOURCE_H_
 
 #include <map>
 #include <memory>
-#include <utility>
 #include <string>
+#include <utility>
 #include <vector>
 
-// FIXME(boc) google only #include "base/basictypes.h"
+#include "absl/memory/memory.h"
+#include "re2/re2.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/hal/lib/phal/stringsource_interface.h"
 #include "stratum/lib/macros.h"
-#include "absl/memory/memory.h"
-#include "re2/re2.h"
 
 namespace stratum {
 namespace hal {
@@ -59,11 +57,11 @@ class RegexDataSource : public DataSource {
   // Only one attribute may be requested for each capturing group.
   template <typename T>
   ::util::StatusOr<ManagedAttribute*> GetAttribute(int capturing_group) {
-    CHECK_RETURN_IF_FALSE(capturing_group > 0 &&
-                          capturing_group <= regex_.NumberOfCapturingGroups())
+    RET_CHECK(capturing_group > 0 &&
+              capturing_group <= regex_.NumberOfCapturingGroups())
         << "Capturing group " << capturing_group << " is not valid for regex \""
         << regex_.pattern() << "\".";
-    CHECK_RETURN_IF_FALSE(args_[capturing_group - 1] == &dummy_arg_)
+    RET_CHECK(args_[capturing_group - 1] == &dummy_arg_)
         << "Cannot create multiple attributes for a single regex capturing "
            "group.";
     fields_[capturing_group - 1] = absl::make_unique<TypedRegexField<T>>(this);
@@ -100,9 +98,7 @@ class RegexDataSource : public DataSource {
         : attribute_(parent), arg_(&arg_val_) {}
     ManagedAttribute* GetAttribute() override { return &attribute_; }
     RE2::Arg* GetArg() override { return &arg_; }
-    void Update() override {
-      attribute_.AssignValue(arg_val_);
-    }
+    void Update() override { attribute_.AssignValue(arg_val_); }
 
    protected:
     TypedAttribute<T> attribute_;
@@ -117,7 +113,7 @@ class RegexDataSource : public DataSource {
   // A dummy argument that we pass to RE2 for capture groups the user hasn't
   // requested. This can normally be done by passing nullptr directly, but this
   // doesn't work for RE2::FullMatchN.
-  RE2::Arg dummy_arg_ {static_cast<void*>(nullptr)};
+  RE2::Arg dummy_arg_{static_cast<void*>(nullptr)};
 };
 
 }  // namespace phal

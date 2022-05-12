@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_EVENT_HANDLER_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_EVENT_HANDLER_H_
 
@@ -90,7 +89,7 @@ class UdevEventHandler {
 
  protected:
   explicit UdevEventHandler(const SystemInterface* system_interface)
-      : system_interface_(system_interface) {}
+      : system_interface_(system_interface), udev_monitor_loop_thread_id_() {}
 
  private:
   friend class UdevEventHandlerTest;

@@ -2,20 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // P4InfoManager implementation.
-
-#include <utility>
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 
-#include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
+#include <utility>
+
 #include "absl/strings/ascii.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 // This flag allows unit tests to simplify their P4Info setup.  For example,
 // a test that only wants to verify something about a Counter can enable this
@@ -33,16 +32,20 @@ P4InfoManager::P4InfoManager(const ::p4::config::v1::P4Info& p4_info)
       action_map_("Action"),
       action_profile_map_("Action-Profile"),
       counter_map_("Counter"),
+      direct_counter_map_("Direct-Counter"),
       meter_map_("Meter"),
-      value_set_map_("ValueSet") {}
+      value_set_map_("ValueSet"),
+      register_map_("Register") {}
 
 P4InfoManager::P4InfoManager()
     : table_map_("Table"),
       action_map_("Action"),
       action_profile_map_("Action-Profile"),
       counter_map_("Counter"),
+      direct_counter_map_("Direct-Counter"),
       meter_map_("Meter"),
-      value_set_map_("ValueSet") {}
+      value_set_map_("ValueSet"),
+      register_map_("Register") {}
 
 P4InfoManager::~P4InfoManager() {}
 
@@ -67,10 +70,14 @@ P4InfoManager::~P4InfoManager() {}
                                      p4_info_.action_profiles(), preamble_cb));
   APPEND_STATUS_IF_ERROR(
       status, counter_map_.BuildMaps(p4_info_.counters(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(status, direct_counter_map_.BuildMaps(
+                                     p4_info_.direct_counters(), preamble_cb));
   APPEND_STATUS_IF_ERROR(status,
                          meter_map_.BuildMaps(p4_info_.meters(), preamble_cb));
   APPEND_STATUS_IF_ERROR(
       status, value_set_map_.BuildMaps(p4_info_.value_sets(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(
+      status, register_map_.BuildMaps(p4_info_.registers(), preamble_cb));
 
   APPEND_STATUS_IF_ERROR(status, VerifyTableXrefs());
 
@@ -117,6 +124,16 @@ P4InfoManager::FindCounterByName(const std::string& counter_name) const {
   return counter_map_.FindByName(counter_name);
 }
 
+::util::StatusOr<const ::p4::config::v1::DirectCounter>
+P4InfoManager::FindDirectCounterByID(uint32 counter_id) const {
+  return direct_counter_map_.FindByID(counter_id);
+}
+
+::util::StatusOr<const ::p4::config::v1::DirectCounter>
+P4InfoManager::FindDirectCounterByName(const std::string& counter_name) const {
+  return direct_counter_map_.FindByName(counter_name);
+}
+
 ::util::StatusOr<const ::p4::config::v1::Meter> P4InfoManager::FindMeterByID(
     uint32 meter_id) const {
   return meter_map_.FindByID(meter_id);
@@ -126,6 +143,7 @@ P4InfoManager::FindCounterByName(const std::string& counter_name) const {
     const std::string& meter_name) const {
   return meter_map_.FindByName(meter_name);
 }
+
 ::util::StatusOr<const ::p4::config::v1::ValueSet>
 P4InfoManager::FindValueSetByID(uint32 value_set_id) const {
   return value_set_map_.FindByID(value_set_id);
@@ -134,6 +152,16 @@ P4InfoManager::FindValueSetByID(uint32 value_set_id) const {
 ::util::StatusOr<const ::p4::config::v1::ValueSet>
 P4InfoManager::FindValueSetByName(const std::string& value_set_name) const {
   return value_set_map_.FindByName(value_set_name);
+}
+
+::util::StatusOr<const ::p4::config::v1::Register>
+P4InfoManager::FindRegisterByID(uint32 register_id) const {
+  return register_map_.FindByID(register_id);
+}
+
+::util::StatusOr<const ::p4::config::v1::Register>
+P4InfoManager::FindRegisterByName(const std::string& register_name) const {
+  return register_map_.FindByName(register_name);
 }
 
 ::util::StatusOr<P4Annotation> P4InfoManager::GetSwitchStackAnnotations(
@@ -174,13 +202,79 @@ P4InfoManager::FindValueSetByName(const std::string& value_set_name) const {
   return p4_annotation;
 }
 
+::util::Status P4InfoManager::VerifyRegisterEntry(
+    const ::p4::v1::RegisterEntry& register_entry) const {
+  ASSIGN_OR_RETURN(auto reg, FindRegisterByID(register_entry.register_id()));
+
+  // Check the register index, if it's not a wildcard read/write.
+  if (register_entry.has_index()) {
+    RET_CHECK(register_entry.index().index() >= 0);
+    RET_CHECK(register_entry.index().index() < reg.size());
+  }
+
+  // Check the type spec, if the entry carries data.
+  if (register_entry.has_data()) {
+    RETURN_IF_ERROR(VerifyTypeSpec(register_entry.data(), reg.type_spec()));
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status P4InfoManager::VerifyTypeSpec(
+    const ::p4::v1::P4Data& data,
+    const ::p4::config::v1::P4DataTypeSpec& type_spec) const {
+  switch (data.data_case()) {
+    case ::p4::v1::P4Data::kBitstring: {
+      RET_CHECK(type_spec.has_bitstring())
+          << "The type spec does not specify a bitstring type for P4Data "
+          << data.ShortDebugString() << ".";
+      int bit_width;
+      switch (type_spec.bitstring().type_spec_case()) {
+        case ::p4::config::v1::P4BitstringLikeTypeSpec::kBit:
+          bit_width = type_spec.bitstring().bit().bitwidth();
+          break;
+        case ::p4::config::v1::P4BitstringLikeTypeSpec::kInt:
+          bit_width = type_spec.bitstring().int_().bitwidth();
+          break;
+        case ::p4::config::v1::P4BitstringLikeTypeSpec::kVarbit:
+          bit_width = type_spec.bitstring().varbit().max_bitwidth();
+          break;
+        default:
+          return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not implemented.";
+      }
+      RET_CHECK(data.bitstring().size() * 8 <= bit_width);
+      break;
+    }
+    case ::p4::v1::P4Data::kTuple: {
+      RET_CHECK(type_spec.has_tuple())
+          << "The type spec does not specify a tuple type for P4Data "
+          << data.ShortDebugString() << ".";
+      RET_CHECK(data.tuple().members_size() ==
+                type_spec.tuple().members_size());
+      for (size_t i = 0; i < data.tuple().members_size(); ++i) {
+        RETURN_IF_ERROR(VerifyTypeSpec(data.tuple().members(i),
+                                       type_spec.tuple().members(i)));
+      }
+      break;
+    }
+    default:
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
+             << "P4data type " << data.data_case() << " in P4Data "
+             << data.ShortDebugString() << " is not supported.";
+  }
+
+  return ::util::OkStatus();
+}
+
 void P4InfoManager::DumpNamesToIDs() const {
   table_map_.DumpNamesToIDs();
   action_map_.DumpNamesToIDs();
   action_profile_map_.DumpNamesToIDs();
   counter_map_.DumpNamesToIDs();
+  direct_counter_map_.DumpNamesToIDs();
   meter_map_.DumpNamesToIDs();
   value_set_map_.DumpNamesToIDs();
+  register_map_.DumpNamesToIDs();
 }
 
 ::util::Status P4InfoManager::VerifyRequiredObjects() {

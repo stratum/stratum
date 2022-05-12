@@ -2,17 +2,19 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
 #include "gnmi/gnmi.pb.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/synchronization/mutex.h"
+
+namespace stratum {
+namespace hal {
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -22,10 +24,6 @@ using ::testing::Not;
 using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::WithArgs;
-using ::testing::DoAll;
-
-namespace stratum {
-namespace hal {
 
 // There are two types of tests in this file, namely: ones that can be executed
 // multiple times with different paths and ones that should be executed once. To
@@ -51,7 +49,7 @@ class SubscriptionTestBase {
   virtual ~SubscriptionTestBase() {}
 
   void GetSampleHalConfig() {
-    constexpr char kHalConfig[] = R"proto(
+    constexpr char kHalConfig[] = R"pb(
       description: "Sample Generic Tomahawk config with 2x100G ports."
       chassis { platform: PLT_GENERIC_TOMAHAWK name: "device1.domain.net.com" }
       nodes {
@@ -85,7 +83,7 @@ class SubscriptionTestBase {
         port: 2
         speed_bps: 100000000000
         node: 1
-      })proto";
+      })pb";
     ASSERT_OK(ParseProtoFromString(kHalConfig, &hal_config_));
   }
 
@@ -210,9 +208,8 @@ TEST_F(SubscriptionTest, HandleTimer) {
   SubscribeReaderWriterMock stream;
 
   SubscriptionHandle h;
-  ::gnmi::Path path =
-      GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
-          "state")("admin-status")();
+  ::gnmi::Path path = GetPath("interfaces")(
+      "interface", "device1.domain.net.com:ce-1/1")("state")("admin-status")();
   EXPECT_OK(
       gnmi_publisher_->SubscribePeriodic(Periodic(1000), path, &stream, &h));
 
@@ -333,18 +330,17 @@ TEST_F(SubscriptionTest, PromisedOnChangeOnlyLeafsAreSupported) {
       GetPath("interfaces")("interface")("...")(), &stream, &h));
 }
 
-// FIXME(boc) google only (using new path)
 // Some of the paths support only OnPoll mode, so, they cannot be tested by
 // the parametrized test below.
-// TEST_F(SubscriptionTest, PromisedOnPollOnlyLeafsAreSupported) {
-//  SubscribeReaderWriterMock stream;
-//  SubscriptionHandle h;
-//
-//  EXPECT_OK(gnmi_publisher_->SubscribePoll(
-//      GetPath("debug")("nodes")(
-//          "node", "xy1switch.prod.google.com")("packet-io")("debug-string")(),
-//      &stream, &h));
-// }
+TEST_F(SubscriptionTest, PromisedOnPollOnlyLeafsAreSupported) {
+  SubscribeReaderWriterMock stream;
+  SubscriptionHandle h;
+
+  EXPECT_OK(gnmi_publisher_->SubscribePoll(
+      GetPath("debug")("nodes")(
+          "node", "xy1switch.domain.net.com")("packet-io")("debug-string")(),
+      &stream, &h));
+}
 
 // All remaining paths support all modes and can be tested by this parametrized
 // test that takes the path as a parameter.
@@ -352,61 +348,53 @@ class SubscriptionSupportedPathsTest
     : public SubscriptionTestBase,
       public ::testing::TestWithParam<::gnmi::Path> {};
 
-// FIXME(boc) google only
-// TEST_P(SubscriptionSupportedPathsTest, PromisedLeafsAreSupported) {
-//  SubscribeReaderWriterMock stream;
-//  SubscriptionHandle h;
-//
-//  ::gnmi::Path path = GetParam();
-//
-//  EXPECT_OK(gnmi_publisher_->SubscribeOnChange(path, &stream, &h));
-//  EXPECT_OK(
-//      gnmi_publisher_->SubscribePeriodic(Periodic(1000), path, &stream, &h));
-//  EXPECT_OK(gnmi_publisher_->SubscribePoll(path, &stream, &h));
-// }
+TEST_P(SubscriptionSupportedPathsTest, PromisedLeafsAreSupported) {
+  SubscribeReaderWriterMock stream;
+  SubscriptionHandle h;
+
+  ::gnmi::Path path = GetParam();
+
+  EXPECT_OK(gnmi_publisher_->SubscribeOnChange(path, &stream, &h));
+  EXPECT_OK(
+      gnmi_publisher_->SubscribePeriodic(Periodic(1000), path, &stream, &h));
+  EXPECT_OK(gnmi_publisher_->SubscribePoll(path, &stream, &h));
+}
 
 // TODO(unknown): add all supported paths here!
 INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedOtherPathsTestWithPath, SubscriptionSupportedPathsTest,
     ::testing::Values(
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "oper-status")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "admin-status")(),
-        GetPath("interfaces")("interface",
-                              "ju1u1t1.xyz99.net.google.com:ce-1/1")("state")(
-            "health-indicator")(),
-        GetPath("interfaces")("interface",
-                              "ju1u1t1.xyz99.net.google.com:ce-1/1")("config")(
-            "health-indicator")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")(
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("oper-status")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("admin-status")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("loopback-mode")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("hardware-port")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("health-indicator")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "config")("health-indicator")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("config")("port-speed")(),
         GetPath("lacp")("interfaces")("interface",
-                                      "device1.domain.net.com:ce-1/1")(
-            "state")("system-id-mac")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")(
+                                      "device1.domain.net.com:ce-1/1")("state")(
+            "system-id-mac")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("state")("port-speed")(),
         GetPath("lacp")("interfaces")("interface",
-                                      "device1.domain.net.com:ce-1/1")(
-            "state")("system-priority")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")(
+                                      "device1.domain.net.com:ce-1/1")("state")(
+            "system-priority")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("config")("mac-address")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")(
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("state")("mac-address")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")(
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("state")("forwarding-viable")(),
-        GetPath("interfaces")("interface",
-                              "ju1u1t1.xyz99.net.google.com:ce-1/1")(
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("config")("forwarding-viable")(),
-        GetPath("interfaces")("interface",
-                              "ju1u1t1.xyz99.net.google.com:ce-1/1")(
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
             "ethernet")("state")("negotiated-port-speed")()));
 
 // Due to Google's restriction on the size of a function frame, this automation
@@ -414,27 +402,26 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedAlarmPathsTestWithPath, SubscriptionSupportedPathsTest,
     ::testing::Values(
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("memory-error")("status")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("memory-error")("time-created")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("memory-error")("info")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("memory-error")("severity")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("memory-error")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("flow-programming-exception")("status")(),
-        GetPath("components")("component",
-                              "device1.domain.net.com")("chassis")(
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("memory-error")("status")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("memory-error")("time-created")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("memory-error")("info")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("memory-error")("severity")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("memory-error")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("flow-programming-exception")("status")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
             "alarms")("flow-programming-exception")("time-created")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("flow-programming-exception")("info")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("flow-programming-exception")("severity")(),
-        GetPath("components")("component", "device1.domain.net.com")(
-            "chassis")("alarms")("flow-programming-exception")()));
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("flow-programming-exception")("info")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("flow-programming-exception")("severity")(),
+        GetPath("components")("component", "device1.domain.net.com")("chassis")(
+            "alarms")("flow-programming-exception")()));
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
@@ -442,48 +429,34 @@ INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedCounterPathsTestWithPath,
     SubscriptionSupportedPathsTest,
     ::testing::Values(
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-octets")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("out-octets")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-unicast-pkts")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("out-unicast-pkts")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-discards")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("out-discards")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-unknown-protos")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-errors")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("out-errors")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-fcs-errors")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-broadcast-pkts")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("out-broadcast-pkts")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("in-multicast-pkts")(),
-        GetPath("interfaces")("interface",
-                              "device1.domain.net.com:ce-1/1")("state")(
-            "counters")("out-multicast-pkts")()));
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-octets")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("out-octets")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-unicast-pkts")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("out-unicast-pkts")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-discards")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("out-discards")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-unknown-protos")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-errors")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("out-errors")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-fcs-errors")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-broadcast-pkts")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("out-broadcast-pkts")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("in-multicast-pkts")(),
+        GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/1")(
+            "state")("counters")("out-multicast-pkts")()));
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
@@ -492,20 +465,29 @@ INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedPathsTest,
     ::testing::Values(
         GetPath("qos")("interfaces")("interface",
-                                     "device1.domain.net.com:ce-1/1")(
-            "output")("queues")("queue", "BE1")("state")("name")(),
+                                     "device1.domain.net.com:ce-1/1")("output")(
+            "queues")("queue", "BE1")("state")("name")(),
         GetPath("qos")("interfaces")("interface",
-                                     "device1.domain.net.com:ce-1/1")(
-            "output")("queues")("queue", "BE1")("state")("id")(),
+                                     "device1.domain.net.com:ce-1/1")("output")(
+            "queues")("queue", "BE1")("state")("id")(),
         GetPath("qos")("interfaces")("interface",
-                                     "device1.domain.net.com:ce-1/1")(
-            "output")("queues")("queue", "BE1")("state")("transmit-pkts")(),
+                                     "device1.domain.net.com:ce-1/1")("output")(
+            "queues")("queue", "BE1")("state")("transmit-pkts")(),
         GetPath("qos")("interfaces")("interface",
-                                     "device1.domain.net.com:ce-1/1")(
-            "output")("queues")("queue", "BE1")("state")("transmit-octets")(),
+                                     "device1.domain.net.com:ce-1/1")("output")(
+            "queues")("queue", "BE1")("state")("transmit-octets")(),
         GetPath("qos")("interfaces")("interface",
-                                     "device1.domain.net.com:ce-1/1")(
-            "output")("queues")("queue", "BE1")("state")("dropped-pkts")()));
+                                     "device1.domain.net.com:ce-1/1")("output")(
+            "queues")("queue", "BE1")("state")("dropped-pkts")()));
+
+// Due to Google's restriction on the size of a function frame, this automation
+// had to be split into separate calls.
+INSTANTIATE_TEST_SUITE_P(
+    SubscriptionSupportedSystemPathsTestWithPath,
+    SubscriptionSupportedPathsTest,
+    ::testing::Values(
+        GetPath("system")("logging")("console")("config")("severity")(),
+        GetPath("system")("logging")("console")("state")("severity")()));
 
 // All paths that support OnReplace only be tested by this parametrized
 // test that takes the path as a parameter.
@@ -513,26 +495,25 @@ class ReplaceSupportedPathsTest
     : public SubscriptionTestBase,
       public ::testing::TestWithParam<::gnmi::Path> {};
 
-// FIXME(boc) google only
-// TEST_P(ReplaceSupportedPathsTest, PromisedLeafsAreSupported) {
-//  SubscribeReaderWriterMock stream;
-//  SubscriptionHandle h;
-//
-//  ::gnmi::Path path = GetParam();
-//  ::gnmi::TypedValue val;
-//  CopyOnWriteChassisConfig config(&hal_config_);
-//
-//  auto status = gnmi_publisher_->HandleReplace(path, val, &config);
-//  if (!status.ok()) {
-//    EXPECT_THAT(status.ToString(), Not(HasSubstr("unsupported")));
-//  }
-// }
+TEST_P(ReplaceSupportedPathsTest, PromisedLeafsAreSupported) {
+  SubscribeReaderWriterMock stream;
+  SubscriptionHandle h;
+
+  ::gnmi::Path path = GetParam();
+  ::gnmi::TypedValue val;
+  CopyOnWriteChassisConfig config(&hal_config_);
+
+  auto status = gnmi_publisher_->HandleReplace(path, val, &config);
+  if (!status.ok()) {
+    EXPECT_THAT(status.ToString(), Not(HasSubstr("unsupported")));
+  }
+}
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
 INSTANTIATE_TEST_SUITE_P(ReplaceSupportedPathsTestWithPath,
-                        ReplaceSupportedPathsTest,
-                        ::testing::Values(GetPath()()));
+                         ReplaceSupportedPathsTest,
+                         ::testing::Values(GetPath()()));
 
 }  // namespace hal
 }  // namespace stratum

@@ -23,7 +23,7 @@ The output tarball can be located by running: `bazel aquery //stratum/pipelines/
 
 ## Docker `p4c-fpm`
 
-We also publish the `p4c-fpm` compiler as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/p4c-fpm). Have a look at the code of our ONF Connect 2019 [demo](https://github.com/opennetworkinglab/stratum-onos-demo/blob/b709e579592f5c7b3293357376c811690e0bec34/p4src/Makefile#L63-L80).
+We also publish the `p4c-fpm` compiler as a [Docker container](https://hub.docker.com/r/stratumproject/p4c-fpm). Have a look at the code of our ONF Connect 2019 [demo](https://github.com/opennetworkinglab/stratum-onos-demo/blob/b709e579592f5c7b3293357376c811690e0bec34/p4src/Makefile#L63-L80).
 
 ## Debian package
 
@@ -40,6 +40,13 @@ dpkg -i bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb
 In a production setup this is the job of a SDN controller like [ONOS](https://github.com/opennetworkinglab/onos/).
 
 For testing and exploration purposes a tool like [p4runtime-shell](https://github.com/p4lang/p4runtime-shell) is useful.
+
+```
+./p4runtime-sh-docker \
+  --grpc-addr <switch ip>:9339 \
+  --device-id 1 --election-id 0,1 \
+  --config <path to main.p4info>,<path to main.pb.bin>
+```
 
 ## More information on the p4c-fpm compiler
 

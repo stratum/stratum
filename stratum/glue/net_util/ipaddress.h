@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Various classes for storing Internet addresses:
 //
 //  * IPAddress:      An IPv4 or IPv6 address. Fundamentally represents a host
@@ -31,23 +30,20 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/socket.h>
+
 #include <ostream>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "absl/base/port.h"
 #include "absl/numeric/int128.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/platform.h"
 
 namespace stratum {
-
-#ifdef __APPLE__
-#define s6_addr16 __u6_addr.__u6_addr16
-#define s6_addr32 __u6_addr.__u6_addr32
-#endif  // __APPLE__
 
 // Forward declaration for IPAddress::ipv4_address() -- see the full
 // explanation below.
@@ -80,18 +76,15 @@ class IPAddress {
   // serialization, of IsAnyIPAddress() and friends.
   //
   // Also see the default constructor for SocketAddress, below.
-  IPAddress() : address_family_(AF_UNSPEC) {
-  }
+  IPAddress() : address_family_(AF_UNSPEC) {}
 
   // Constructors from standard BSD socket address structures.
   // For conversions from uint32 (for legacy Google3 code) and from strings,
   // see under "Free utility functions", below.
-  explicit IPAddress(const in_addr& addr)
-      : address_family_(AF_INET) {
+  explicit IPAddress(const in_addr& addr) : address_family_(AF_INET) {
     addr_.addr4 = addr;
   }
-  explicit IPAddress(const in6_addr& addr)
-      : address_family_(AF_INET6) {
+  explicit IPAddress(const in6_addr& addr) : address_family_(AF_INET6) {
     addr_.addr6 = addr;
   }
 
@@ -100,9 +93,7 @@ class IPAddress {
   // recent (>= 4.1) gcc is just as fast as using an output parameter.
 
   // The address family; either AF_UNSPEC, AF_INET or AF_INET6.
-  int address_family() const {
-    return address_family_;
-  }
+  int address_family() const { return address_family_; }
 
   // The address as an in_addr structure; CHECK-fails if address_family() is
   // not AF_INET (ie. the held address is not an IPv4 address).
@@ -130,7 +121,7 @@ class IPAddress {
   // Returns the same as ToString().
   // <buffer> must have room for at least INET6_ADDRSTRLEN bytes,
   // including the final NUL.
-  void ToCharBuf(char *buffer) const;
+  void ToCharBuf(char* buffer) const;
 
   // Returns the address as a sequence of bytes in network-byte-order.
   // This is suitable for writing onto the wire or into a protocol buffer
@@ -150,9 +141,7 @@ class IPAddress {
   // are defined. For using IPAddress elements as keys in STL containers,
   // see IPAddressOrdering, below.
   bool operator==(const IPAddress& other) const;
-  bool operator!=(const IPAddress& other) const {
-    return !(*this == other);
-  }
+  bool operator!=(const IPAddress& other) const { return !(*this == other); }
 
   // POD type, so no DISALLOW_COPY_AND_ASSIGN:
   // IPAddress(const IPAddress&) = default;
@@ -162,19 +151,19 @@ class IPAddress {
   friend H AbslHashValue(H h, const IPAddress& a) {
     auto state = H::combine(std::move(h), a.address_family_);
     switch (a.address_family_) {
-    case AF_INET:
-      return H::combine(std::move(state), a.addr_.addr4.s_addr);
-    case AF_INET6:
-      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[0]);
-      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[1]);
-      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[2]);
-      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[3]);
-      return state;
-    case AF_UNSPEC:
-      // Additional hash input to differentiate AF_UNSPEC from IPAddress::Any4
-      return H::combine(std::move(state), "AF_UNSPEC");
-    default:
-      LOG(FATAL) << "Unknown address family " << a.address_family_;
+      case AF_INET:
+        return H::combine(std::move(state), a.addr_.addr4.s_addr);
+      case AF_INET6:
+        state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[0]);
+        state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[1]);
+        state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[2]);
+        state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[3]);
+        return state;
+      case AF_UNSPEC:
+        // Additional hash input to differentiate AF_UNSPEC from IPAddress::Any4
+        return H::combine(std::move(state), "AF_UNSPEC");
+      default:
+        LOG(FATAL) << "Unknown address family " << a.address_family_;
     }
   }
 
@@ -210,14 +199,11 @@ class SocketAddress {
   //
   // Note that you can also arrive at the empty state by construction
   // from a struct sockaddr, below.
-  SocketAddress()
-      : port_(0) {
-  }
+  SocketAddress() : port_(0) {}
 
   // Constructor with IP address and port (in host byte order).
   SocketAddress(const IPAddress& host, uint16 port)
-      : host_(host), port_(port) {
-  }
+      : host_(host), port_(port) {}
 
   // Constructors from standard BSD socket address structures.
   explicit SocketAddress(const struct sockaddr_in& sin)
@@ -245,9 +231,7 @@ class SocketAddress {
   // recent (>= 4.1) gcc is just as fast as using an output parameter.
 
   // The individual parts of the socket address.
-  IPAddress host() const {
-    return host_;
-  }
+  IPAddress host() const { return host_; }
 
   // Port in host byte order.
   uint16 port() const {
@@ -359,7 +343,7 @@ IPAddress TruncateIPAndLength(const IPAddress& addr, int* length_io);
 // with a suitable ToString() method).  See also //strings/join.h.
 // TODO(unknown): Replace with calls to something better in //strings:join, once
 // something better is available.
-template<typename T>
+template <typename T>
 struct ToStringJoinFormatter {
   void operator()(std::string* out, const T& t) const {
     out->append(t.ToString());
@@ -383,8 +367,7 @@ class IPRange {
   //
   // In particular, no guarantees are made about the behavior of the
   // of string conversions and serialization, or any other accessors.
-  IPRange() : length_(-1) {
-  }
+  IPRange() : length_(-1) {}
 
   // Constructs an IPRange from an address and a length. Properly zeroes out
   // bits and adjusts length as required, but CHECK-fails on negative lengths
@@ -403,8 +386,7 @@ class IPRange {
   //
   IPRange(const IPAddress& host, int length)
       : host_(net_util_internal::TruncateIPAndLength(host, &length)),
-        length_(length) {
-  }
+        length_(length) {}
 
   // Unsafe constructor from a host and prefix length.
   //
@@ -425,8 +407,7 @@ class IPRange {
 
   // Construct an IPRange from just an IPAddress, applying the
   // address-family-specific maximum netmask length.
-  explicit IPRange(const IPAddress& host)
-      : host_(host) {
+  explicit IPRange(const IPAddress& host) : host_(host) {
     switch (host.address_family()) {
       case AF_INET:
         length_ = 32;
@@ -448,12 +429,8 @@ class IPRange {
   // recent (>= 4.1) gcc is just as fast as using an output parameter.
 
   // The individual parts of the subnet.
-  IPAddress host() const {
-    return host_;
-  }
-  int length() const {
-    return length_;
-  }
+  IPAddress host() const { return host_; }
+  int length() const { return length_; }
 
   // The bounding IPAddresses in this IPRange.  The "network address"
   // is the "all zeroes" address, or lower bound.  The "broadcast address"
@@ -527,8 +504,7 @@ class IPRange {
       : host_(host), length_(length) {
     DCHECK_EQ(host_, net_util_internal::TruncateIPAndLength(host, &length))
         << "Host has bits set beyond the prefix length.";
-    DCHECK_EQ(length_, length)
-        << "Length is inconsistent with address family.";
+    DCHECK_EQ(length_, length) << "Length is inconsistent with address family.";
   }
 
   IPAddress host_;
@@ -568,7 +544,7 @@ inline IPAddress HostUInt32ToIPAddress(uint32 address) {
 //   IPAddressToHostUInt32(addr);  // Yields 0x01020304
 //
 // Will CHECK-fail if addr does not contain an IPv4 address.
-inline uint32 IPAddressToHostUInt32(const IPAddress &addr) {
+inline uint32 IPAddressToHostUInt32(const IPAddress& addr) {
   return ntohl(addr.ipv4_address().s_addr);
 }
 
@@ -673,9 +649,9 @@ bool PTRStringToIPAddress(const std::string& ptr_address,
 
 // Specific JoinFormatters for IPAddress, SocketAddress, and IPRange.
 typedef net_util_internal::ToStringJoinFormatter<IPAddress>
-        IPAddressJoinFormatter;
+    IPAddressJoinFormatter;
 typedef net_util_internal::ToStringJoinFormatter<SocketAddress>
-        SocketAddressJoinFormatter;
+    SocketAddressJoinFormatter;
 typedef net_util_internal::ToStringJoinFormatter<IPRange> IPRangeJoinFormatter;
 
 // Boolean convenience checks.
@@ -698,7 +674,7 @@ bool IsLoopbackIPAddress(const IPAddress& ip);
 IPAddress ChooseRandomAddress(const hostent* hp);
 
 // Choose a random IPAddress from vector of same.
-IPAddress ChooseRandomIPAddress(const std::vector<IPAddress> *ipvec);
+IPAddress ChooseRandomIPAddress(const std::vector<IPAddress>* ipvec);
 
 // Returns whether the address is initialized or not.
 inline bool IsInitializedAddress(const IPAddress& addr) {
@@ -709,16 +685,15 @@ inline bool IsInitializedAddress(const IPAddress& addr) {
 // IPAddress object.  A debug-fatal error is logged if the address family
 // is not of the Internet variety, i.e. not one of set(AF_INET, AF_INET6);
 // the caller is responsible for verifying IsInitializedAddress(ip).
-inline int IPAddressLength(const IPAddress &ip) {
+inline int IPAddressLength(const IPAddress& ip) {
   switch (ip.address_family()) {
     case AF_INET:
       return 32;
     case AF_INET6:
       return 128;
     default:
-      LOG(DFATAL)
-          << "IPAddressLength() of object with invalid address family: "
-          << ip.address_family();
+      LOG(DFATAL) << "IPAddressLength() of object with invalid address family: "
+                  << ip.address_family();
       return -1;
   }
 }
@@ -731,7 +706,7 @@ inline int IPAddressLength(const IPAddress &ip) {
 // addresses. Internally, the addresses are ordered lexically by
 // network byte order (so they go 0.0.0.0, 0.0.0.1, 0.0.0.2, etc.).
 struct IPAddressOrdering {
-  bool operator() (const IPAddress& lhs, const IPAddress& rhs) const;
+  bool operator()(const IPAddress& lhs, const IPAddress& rhs) const;
 };
 
 // A functor for using SocketAddress objects as members of a set<>, map<>, etc..
@@ -740,7 +715,7 @@ struct IPAddressOrdering {
 // The ordering defined by this functor is:
 // First the IPAddress, then the port number.
 struct SocketAddressOrdering {
-  bool operator() (const SocketAddress& lhs, const SocketAddress& rhs) const;
+  bool operator()(const SocketAddress& lhs, const SocketAddress& rhs) const;
 };
 
 // A functor for using IPRange objects as members of a set<>, map<>, etc..
@@ -750,7 +725,7 @@ struct SocketAddressOrdering {
 // First the network address (as defined by IPAddressOrdering),
 // then the prefix length.
 struct IPRangeOrdering {
-  bool operator() (const IPRange& lhs, const IPRange& rhs) const;
+  bool operator()(const IPRange& lhs, const IPRange& rhs) const;
 };
 
 // IPv6-specific functions for different classes of addresses. These
@@ -818,7 +793,7 @@ bool GetTeredoInfo(const IPAddress& ip6, IPAddress* server, uint16* flags,
 // false otherwise.  Due to the spoof-ability of these addresses on the
 // wire this should NEVER be used in a security context (e.g. to evaluate
 // or elevate privileges).  ISATAP addresses are explicitly excluded.
-bool GetEmbeddedIPv4ClientAddress(const IPAddress& ip6, IPAddress *ip4);
+bool GetEmbeddedIPv4ClientAddress(const IPAddress& ip6, IPAddress* ip4);
 
 inline IPAddress GetCoercedIPv4Address(const IPAddress& ip6) {
   // Do NOT implement this in depot3.
@@ -895,9 +870,9 @@ bool StringToSocketAddressWithDefaultPort(
 // Normalizes the host part of an IPv6 SocketAddress.  All other values are left
 // unchanged.  See NormalizeIPAddress for more information.
 inline SocketAddress NormalizeSocketAddress(const SocketAddress& addr) {
-  return addr.host().address_family() == AF_INET6 ?
-      SocketAddress(NormalizeIPAddress(addr.host()), addr.port()) :
-      addr;
+  return addr.host().address_family() == AF_INET6
+             ? SocketAddress(NormalizeIPAddress(addr.host()), addr.port())
+             : addr;
 }
 
 // Normalize and construct a SocketAddress from a sockaddr_* in one step.
@@ -1074,7 +1049,7 @@ inline bool IsWithinSubnet(const IPRange& haystack, const IPAddress& needle) {
 // within an IPv6 range, and vice versa.
 inline bool IsProperSubRange(const IPRange& haystack, const IPRange& needle) {
   return haystack.length() < needle.length() &&
-      IsWithinSubnet(haystack, needle.host());
+         IsWithinSubnet(haystack, needle.host());
 }
 
 // Returns true if and only if the IP range is initialized and valid, i.e. its
@@ -1088,7 +1063,7 @@ inline bool IsValidRange(const IPRange& range) {
   // memory corruption, or improper use of UnsafeConstruct().
   const int max_len = IPAddressLength(range.host());
   return 0 <= range.length() && range.length() <= max_len &&
-      range == IPRange(range.host(), range.length());
+         range == IPRange(range.host(), range.length());
 }
 
 // Computes the non-overlapping adjacent IP subnet ranges that cover the IP
@@ -1182,8 +1157,7 @@ bool IPAddressPlusN(const IPAddress& addr, int n,
 //               b7  b6  b5  b4  b3 ~b2  --  -- /6
 //               b7  b6  b5  b4 ~b3  --  --  -- /5
 //
-bool SubtractIPRange(const IPRange& range,
-                     const IPRange& sub_range,
+bool SubtractIPRange(const IPRange& range, const IPRange& sub_range,
                      std::vector<IPRange>* diff_range);
 
 // Returns a human-readable representaion of the address family.

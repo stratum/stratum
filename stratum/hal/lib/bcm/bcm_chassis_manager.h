@@ -56,7 +56,7 @@ class BcmChassisManager : public BcmChassisRoInterface {
     TrunkMemberBlockState block_state;
   };
 
-  virtual ~BcmChassisManager();
+  ~BcmChassisManager() override;
 
   // Pushes the chassis config. If the class is not initialized, this function
   // calls Initialize() to initialize the SDK and attach all the units. Then it
@@ -223,6 +223,8 @@ class BcmChassisManager : public BcmChassisRoInterface {
   static constexpr int kTrident2MaxBcmPortsPerChip = 104;
   static constexpr int kTomahawkMaxBcmPortsPerChip = 128;
   static constexpr int kTomahawkPlusMaxBcmPortsPerChip = 128;
+  static constexpr int kTomahawk2MaxBcmPortsPerChip = 128;
+  static constexpr int kTomahawk3MaxBcmPortsPerChip = 128;
   // Maximum depth of transceiver event Channel.
   static constexpr int kMaxXcvrEventDepth = 256;
   // Maximum depth of linkscan event channel.

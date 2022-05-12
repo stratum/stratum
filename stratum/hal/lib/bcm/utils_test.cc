@@ -2,11 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/utils.h"
 
-#include "stratum/lib/constants.h"
 #include "gtest/gtest.h"
+#include "stratum/lib/constants.h"
 
 namespace stratum {
 namespace hal {
@@ -98,6 +97,11 @@ TEST(BcmUtilsTest, PrintBcmPortOptionsForNonEmptyOption) {
   options.set_loopback_mode(LOOPBACK_STATE_MAC);
   EXPECT_EQ("(loopback_mode: LOOPBACK_STATE_MAC)",
             PrintBcmPortOptions(options));
+}
+
+TEST(BcmUtilsTest, PrintBcmChipNumber) {
+  BcmChip::BcmChipType chip_type = BcmChip::TOMAHAWK;
+  EXPECT_EQ("BCM56960", PrintBcmChipNumber(chip_type));
 }
 
 }  // namespace bcm

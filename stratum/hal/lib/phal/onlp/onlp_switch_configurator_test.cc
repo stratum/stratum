@@ -54,7 +54,7 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
     return ::util::OkStatus();
   }
 
-  static constexpr char kPhalInitConfig[] = R"PROTO(
+  static constexpr char kPhalInitConfig[] = R"pb(
     cards {
       slot: 1
       ports { port: 1 physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE }
@@ -84,7 +84,7 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
         cache_policy { type: TIMED_CACHE timed_value: 2 }
       }
     }
-  )PROTO";
+  )pb";
 };
 
 constexpr char OnlpSwitchConfiguratorTest::kPhalInitConfig[];

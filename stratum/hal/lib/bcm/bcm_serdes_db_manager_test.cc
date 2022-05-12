@@ -2,24 +2,25 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
+
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 DECLARE_string(test_tmpdir);
 DECLARE_string(bcm_serdes_db_proto_file);
 
-using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
 namespace bcm {
+
+using ::testing::HasSubstr;
 
 class BcmSerdesDbManagerTest : public ::testing::Test {
  protected:

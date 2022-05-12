@@ -39,6 +39,10 @@ DECLARE_string(bcm_sdk_shell_log_file);
 DECLARE_string(bcm_sdk_checkpoint_dir);
 DECLARE_string(test_tmpdir);
 
+namespace stratum {
+namespace hal {
+namespace bcm {
+
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
@@ -47,10 +51,6 @@ using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 static constexpr uint64 kNodeId = 7654321ULL;
 static constexpr uint32 kPortId = 12345;
@@ -113,53 +113,38 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
   }
 
   ::util::Status CheckCleanInternalState() {
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->unit_to_bcm_chip_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->singleton_port_key_to_bcm_port_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->port_group_key_to_flex_bcm_ports_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(bcm_chassis_manager_->unit_to_bcm_chip_.empty());
+    RET_CHECK(bcm_chassis_manager_->singleton_port_key_to_bcm_port_.empty());
+    RET_CHECK(bcm_chassis_manager_->port_group_key_to_flex_bcm_ports_.empty());
+    RET_CHECK(
         bcm_chassis_manager_->port_group_key_to_non_flex_bcm_ports_.empty());
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->node_id_to_unit_.empty());
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->unit_to_node_id_.empty());
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->node_id_to_port_ids_.empty());
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->node_id_to_trunk_ids_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_port_id_to_singleton_port_key_
-            .empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_port_id_to_sdk_port_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_trunk_id_to_sdk_trunk_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_sdk_port_to_port_id_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_sdk_trunk_to_trunk_id_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->xcvr_port_key_to_xcvr_state_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_unit_.empty());
+    RET_CHECK(bcm_chassis_manager_->unit_to_node_id_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_port_ids_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_trunk_ids_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_port_id_to_singleton_port_key_
+                  .empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_port_id_to_sdk_port_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_trunk_id_to_sdk_trunk_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_sdk_port_to_port_id_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_sdk_trunk_to_trunk_id_.empty());
+    RET_CHECK(bcm_chassis_manager_->xcvr_port_key_to_xcvr_state_.empty());
 
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(bcm_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
+    RET_CHECK(
         bcm_chassis_manager_->node_id_to_trunk_id_to_trunk_state_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_trunk_id_to_members_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_port_id_to_trunk_membership_info_
-            .empty());
-    CHECK_RETURN_IF_FALSE(
-        bcm_chassis_manager_->node_id_to_port_id_to_admin_state_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(bcm_chassis_manager_->node_id_to_trunk_id_to_members_.empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_port_id_to_trunk_membership_info_
+                  .empty());
+    RET_CHECK(bcm_chassis_manager_->node_id_to_port_id_to_admin_state_.empty());
+    RET_CHECK(
         bcm_chassis_manager_->node_id_to_port_id_to_health_state_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         bcm_chassis_manager_->node_id_to_port_id_to_loopback_state_.empty());
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->base_bcm_chassis_map_ ==
-                          nullptr);
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->applied_bcm_chassis_map_ ==
-                          nullptr);
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->xcvr_event_channel_ == nullptr);
-    CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->linkscan_event_channel_ ==
-                          nullptr);
+    RET_CHECK(bcm_chassis_manager_->base_bcm_chassis_map_ == nullptr);
+    RET_CHECK(bcm_chassis_manager_->applied_bcm_chassis_map_ == nullptr);
+    RET_CHECK(bcm_chassis_manager_->xcvr_event_channel_ == nullptr);
+    RET_CHECK(bcm_chassis_manager_->linkscan_event_channel_ == nullptr);
 
     return ::util::OkStatus();
   }
@@ -457,11 +442,9 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
     RETURN_IF_ERROR(ParseProtoFromString(kConfigText, config));
 
     // Call PushChassisConfig() verify the results.
-    CHECK_RETURN_IF_FALSE(!Initialized())
-        << "Class is initialized before push!";
+    RET_CHECK(!Initialized()) << "Class is initialized before push!";
     RETURN_IF_ERROR(PushChassisConfig(*config));
-    CHECK_RETURN_IF_FALSE(Initialized())
-        << "Class is not initialized after push!";
+    RET_CHECK(Initialized()) << "Class is not initialized after push!";
 
     return ::util::OkStatus();
   }
@@ -4522,9 +4505,9 @@ TEST_P(BcmChassisManagerTest, GetPortStateAfterConfigPushAndLinkEvent) {
   // WriterInterface for reporting gNMI events.
   auto gnmi_event_writer = std::make_shared<WriterMock<GnmiEventPtr>>();
   GnmiEventPtr link_up(
-      new PortOperStateChangedEvent(kNodeId, kPortId, PORT_STATE_UP));
+      new PortOperStateChangedEvent(kNodeId, kPortId, PORT_STATE_UP, 0));
   GnmiEventPtr link_down(
-      new PortOperStateChangedEvent(kNodeId, kPortId, PORT_STATE_DOWN));
+      new PortOperStateChangedEvent(kNodeId, kPortId, PORT_STATE_DOWN, 0));
 
   // Expectations for the mock objects.
   EXPECT_CALL(*bcm_serdes_db_manager_mock_, Load());
@@ -5201,7 +5184,7 @@ TEST_P(BcmChassisManagerTest, TestSendTransceiverGnmiEvent) {
 
   // Test successful Write() with new state to writer.
   GnmiEventPtr event(
-      new PortOperStateChangedEvent(kNodeId, 1234, PORT_STATE_UP));
+      new PortOperStateChangedEvent(kNodeId, 1234, PORT_STATE_UP, 0));
   EXPECT_CALL(*writer, Write(Matcher<const GnmiEventPtr&>(GnmiEventEq(event))))
       .WillOnce(Return(true));
   SendPortOperStateGnmiEvent(kNodeId, 1234, PORT_STATE_UP);

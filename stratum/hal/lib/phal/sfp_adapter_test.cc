@@ -26,7 +26,7 @@ namespace phal {
 
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
-using stratum::test_utils::StatusIs;
+using test_utils::StatusIs;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::ByMove;
@@ -47,7 +47,7 @@ class SfpAdapterTest : public ::testing::Test {
   std::unique_ptr<AttributeDatabaseMock> database_;
   std::unique_ptr<SfpAdapter> sfp_adapter_;
 
-  const std::string phaldb_get_response_proto = R"PROTO(
+  const std::string phaldb_get_response_proto = R"pb(
     cards {
       ports {
         physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
@@ -66,7 +66,7 @@ class SfpAdapterTest : public ::testing::Test {
         }
       }
     }
-  )PROTO";
+  )pb";
 };
 
 namespace {

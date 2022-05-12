@@ -2,17 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <algorithm>
-
 #include "stratum/hal/lib/bcm/pipeline_processor.h"
 
-#include "stratum/lib/macros.h"
-#include "stratum/public/lib/error.h"
-#include "stratum/public/proto/p4_annotation.pb.h"
+#include <algorithm>
+
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/lib/error.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
 namespace stratum {
 
@@ -111,10 +111,9 @@ std::string PipelineProcessor::PipelineNodeAsString(const PipelineNode& node) {
   std::string subtables = absl::StrJoin(subtable_strings, ", ");
 
   return absl::StrCat("Table: (", node.table.table_name(), ") ",
-                      "Conditions: (", valid_conditions, ") ",
-                      "Parent: (", node.parent.ShortDebugString(), ") ",
-                      "Priority: (", node.priority, ") ",
-                      "Subtables: (", subtables, ")");
+                      "Conditions: (", valid_conditions, ") ", "Parent: (",
+                      node.parent.ShortDebugString(), ") ", "Priority: (",
+                      node.priority, ") ", "Subtables: (", subtables, ")");
 }
 
 std::string PipelineProcessor::PhysicalPipelineAsString() {
@@ -233,7 +232,7 @@ PipelineProcessor::CreateInstance(const P4ControlBlock& control_block) {
   VLOG(1) << "ControlBlock: \n" << block.DebugString();
   for (const P4ControlStatement& statement : block.statements()) {
     std::string error = absl::StrCat(" Failed to process statement (",
-                                statement.ShortDebugString(), ").");
+                                     statement.ShortDebugString(), ").");
     switch (statement.statement_case()) {
       case P4ControlStatement::kApply:
         RETURN_IF_ERROR_WITH_APPEND(ApplyTable(statement.apply(), base_node))

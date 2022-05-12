@@ -2,9 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_node.h"
+
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_node.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager_mock.h"
@@ -16,10 +21,10 @@
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
+
+namespace stratum {
+namespace hal {
+namespace bcm {
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -29,10 +34,6 @@ using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
@@ -95,15 +96,16 @@ class BcmNodeTest : public ::testing::Test {
     return bcm_node_->WriteForwardingEntries(req, results);
   }
 
-  ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+  ::util::Status RegisterStreamMessageResponseWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
+          writer) {
     absl::ReaderMutexLock l(&chassis_lock);
-    return bcm_node_->RegisterPacketReceiveWriter(writer);
+    return bcm_node_->RegisterStreamMessageResponseWriter(writer);
   }
 
-  ::util::Status UnregisterPacketReceiveWriter() {
+  ::util::Status UnregisterStreamMessageResponseWriter() {
     absl::ReaderMutexLock l(&chassis_lock);
-    return bcm_node_->UnregisterPacketReceiveWriter();
+    return bcm_node_->UnregisterStreamMessageResponseWriter();
   }
 
   ::util::Status UpdatePortState(uint32 port_id) {
@@ -595,8 +597,8 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenMultiManagerVerifyFails) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
@@ -1568,8 +1570,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteCloneSessionEntry) {
   clone->add_replicas()->set_egress_port(kCpuPortId);
   std::vector<::util::Status> results = {};
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              DeleteCloneSession(EqualsProto(*clone)))
+  EXPECT_CALL(*bcm_table_manager_mock_, DeleteCloneSession(EqualsProto(*clone)))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1589,8 +1590,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertMulticastGroupEntry) {
   mcast->set_multicast_group_id(kL2McastGroupId);
   std::vector<::util::Status> results = {};
 
-  EXPECT_CALL(*bcm_packetio_manager_mock_,
-              InsertPacketReplicationEntry(_))
+  EXPECT_CALL(*bcm_packetio_manager_mock_, InsertPacketReplicationEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
@@ -1613,34 +1613,33 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteMulticastGroupEntry) {
   EXPECT_CALL(*bcm_table_manager_mock_,
               DeleteMulticastGroup(EqualsProto(*mcast)))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_packetio_manager_mock_,
-              DeletePacketReplicationEntry(_))
+  EXPECT_CALL(*bcm_packetio_manager_mock_, DeletePacketReplicationEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
-// RegisterPacketReceiveWriter() should forward the call to BcmPacketioManager
-// and return success or error based on the returned result.
-TEST_F(BcmNodeTest, RegisterPacketReceiveWriter) {
+// RegisterStreamMessageResponseWriter() should forward the call to
+// BcmPacketioManager and return success or error based on the returned result.
+TEST_F(BcmNodeTest, RegisterStreamMessageResponseWriter) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
+  auto writer = std::make_shared<WriterMock<::p4::v1::StreamMessageResponse>>();
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               RegisterPacketReceiveWriter(
-                  GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, Eq(writer)))
+                  GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, _))
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_OK(RegisterPacketReceiveWriter(writer));
-  EXPECT_THAT(RegisterPacketReceiveWriter(writer),
+  EXPECT_OK(RegisterStreamMessageResponseWriter(writer));
+  EXPECT_THAT(RegisterStreamMessageResponseWriter(writer),
               DerivedFromStatus(DefaultError()));
 }
 
-// UnregisterPacketReceiveWriter() should forward the call to BcmPacketioManager
-// and return success or error based on the returned result.
-TEST_F(BcmNodeTest, UnregisterPacketReceiveWriter) {
+// UnregisterStreamMessageResponseWriter() should forward the call to
+// BcmPacketioManager and return success or error based on the returned result.
+TEST_F(BcmNodeTest, UnregisterStreamMessageResponseWriter) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
   EXPECT_CALL(*bcm_packetio_manager_mock_,
@@ -1649,8 +1648,8 @@ TEST_F(BcmNodeTest, UnregisterPacketReceiveWriter) {
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_OK(UnregisterPacketReceiveWriter());
-  EXPECT_THAT(UnregisterPacketReceiveWriter(),
+  EXPECT_OK(UnregisterStreamMessageResponseWriter());
+  EXPECT_THAT(UnregisterStreamMessageResponseWriter(),
               DerivedFromStatus(DefaultError()));
 }
 

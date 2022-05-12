@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file contains unit tests for P4StaticEntryMapper.
 
 #include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
@@ -10,25 +9,25 @@
 #include <memory>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "p4/v1/p4runtime.pb.h"
 
 DECLARE_bool(remap_hidden_table_const_entries);
+
+namespace stratum {
+namespace hal {
 
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::HasSubstr;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
 
 // This unnamed namespace hides the text strings that parse into static table
 // update entries for testing.  The tested updates don't need to have complete
@@ -109,8 +108,8 @@ void P4StaticEntryMapperTest::SetUpTestRequest(
   pipeline_static_entries_.Clear();
   for (auto update_text : updates_text) {
     ::p4::v1::Update update;
-    ASSERT_OK(ParseProtoFromString(
-        update_text, pipeline_static_entries_.add_updates()));
+    ASSERT_OK(ParseProtoFromString(update_text,
+                                   pipeline_static_entries_.add_updates()));
   }
 }
 
@@ -135,18 +134,18 @@ void P4StaticEntryMapperTest::SetUpFirstPipelinePush(
     const std::vector<const char*>& updates_text) {
   SetUpTestRequest(updates_text);
   SetUpHiddenTableExpectations();
-  ASSERT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
-  ASSERT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  ASSERT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
+  ASSERT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
 }
 
 // Verifies that the output P4 WriteRequest is cleared when no static
 // entry deletions are needed.
 TEST_F(P4StaticEntryMapperTest, TestClearDelete) {
   test_request_out_.add_updates();
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
@@ -154,8 +153,8 @@ TEST_F(P4StaticEntryMapperTest, TestClearDelete) {
 // entry additions are needed.
 TEST_F(P4StaticEntryMapperTest, TestClearAdd) {
   test_request_out_.add_updates();
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
@@ -170,15 +169,15 @@ TEST_F(P4StaticEntryMapperTest, TestFirstPipelinePush) {
   EXPECT_CALL(mock_p4_table_mapper_, IsTableStageHidden(_))
       .Times(AnyNumber())
       .WillRepeatedly(Return(TRI_STATE_UNKNOWN));
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 
   // According to the standard pipeline push sequence, the table mapper should
   // now be ready, so set normal expectations.
   SetUpHiddenTableExpectations();
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(2, test_request_out_.updates_size());
 }
 
@@ -186,11 +185,11 @@ TEST_F(P4StaticEntryMapperTest, TestFirstPipelinePush) {
 // empty write requests.
 TEST_F(P4StaticEntryMapperTest, TestUnchangedPipelinePush) {
   SetUpFirstPipelinePush({kTestUpdatePhysical1, kTestUpdateHidden1});
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
@@ -201,11 +200,11 @@ TEST_F(P4StaticEntryMapperTest, TestPipelinePushPhysicalAddition) {
 
   SetUpTestRequest(  // Adds kTestUpdatePhysical1.
       {kTestUpdatePhysical1, kTestUpdatePhysical2, kTestUpdateHidden1});
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(1, test_request_out_.updates_size());
 }
 
@@ -216,11 +215,11 @@ TEST_F(P4StaticEntryMapperTest, TestPipelinePushHiddenAddition) {
 
   SetUpTestRequest(  // Adds kTestUpdateHidden1.
       {kTestUpdatePhysical1, kTestUpdateHidden1, kTestUpdateHidden2});
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
@@ -232,11 +231,11 @@ TEST_F(P4StaticEntryMapperTest, TestPipelinePushPhysicalDeletion) {
 
   // Deletes kTestUpdatePhysical2.
   SetUpTestRequest({kTestUpdatePhysical1, kTestUpdateHidden1});
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(1, test_request_out_.updates_size());
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
@@ -248,11 +247,11 @@ TEST_F(P4StaticEntryMapperTest, TestPipelinePushHiddenDeletion) {
 
   // Deletes kTestUpdateHidden2.
   SetUpTestRequest({kTestUpdatePhysical1, kTestUpdateHidden1});
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
@@ -308,11 +307,11 @@ TEST_F(P4StaticEntryMapperTest, TestNoHiddenRemap) {
 
   // Adds kTestUpdateHidden2.
   SetUpTestRequest({kTestUpdatePhysical1, kTestUpdateHidden2});
-  EXPECT_OK(test_mapper_->HandlePrePushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePrePushChanges(pipeline_static_entries_,
+                                               &test_request_out_));
   EXPECT_EQ(0, test_request_out_.updates_size());
-  EXPECT_OK(test_mapper_->HandlePostPushChanges(
-      pipeline_static_entries_, &test_request_out_));
+  EXPECT_OK(test_mapper_->HandlePostPushChanges(pipeline_static_entries_,
+                                                &test_request_out_));
   EXPECT_EQ(1, test_request_out_.updates_size());
 }
 

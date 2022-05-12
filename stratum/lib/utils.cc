@@ -4,26 +4,29 @@
 
 #include "stratum/lib/utils.h"
 
+#include <cxxabi.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <cerrno>
-#include <cstring>
-#include <cstdio>
+#include <unistd.h>
 
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
 #include <fstream>  // IWYU pragma: keep
 #include <string>
 
+#include "absl/strings/str_split.h"
+#include "absl/strings/substitute.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "absl/strings/substitute.h"
-#include "absl/strings/str_split.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 
-using ::google::protobuf::util::MessageDifferencer;
-
 namespace stratum {
+
+using ::google::protobuf::util::MessageDifferencer;
 
 ::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
                                    const std::string& filename) {
@@ -140,7 +143,7 @@ std::string StringToHex(const std::string& str) {
 }
 
 ::util::Status RecursivelyCreateDir(const std::string& dir) {
-  CHECK_RETURN_IF_FALSE(!dir.empty());
+  RET_CHECK(!dir.empty());
   std::vector<std::string> dirs = absl::StrSplit(dir, '/');
   std::string path_to_make = "/";
   for (auto& dir_name : dirs) {
@@ -152,13 +155,13 @@ std::string StringToHex(const std::string& str) {
     if (PathExists(path_to_make)) {
       if (!IsDir(path_to_make)) {
         return MAKE_ERROR(ERR_INVALID_PARAM)
-            << path_to_make << " is not a dir.";
+               << path_to_make << " is not a dir.";
       }
     } else {
       int ret = mkdir(path_to_make.c_str(), 0755);
       if (ret != 0) {
-        return MAKE_ERROR(ERR_INTERNAL)
-            << "Can not make dir " << path_to_make << ": " << strerror(errno);
+        return MAKE_ERROR(ERR_INTERNAL) << "Can not make dir " << path_to_make
+                                        << ": " << strerror(errno);
       }
     }
 
@@ -169,9 +172,9 @@ std::string StringToHex(const std::string& str) {
 }
 
 ::util::Status RemoveFile(const std::string& path) {
-  CHECK_RETURN_IF_FALSE(!path.empty());
-  CHECK_RETURN_IF_FALSE(PathExists(path)) << path << " does not exist.";
-  CHECK_RETURN_IF_FALSE(!IsDir(path)) << path << " is a dir.";
+  RET_CHECK(!path.empty());
+  RET_CHECK(PathExists(path)) << path << " does not exist.";
+  RET_CHECK(!IsDir(path)) << path << " is a dir.";
   int ret = remove(path.c_str());
   if (ret != 0) {
     return MAKE_ERROR(ERR_INTERNAL)
@@ -220,8 +223,8 @@ bool ProtoLess(const google::protobuf::Message& m1,
 
 // FIXME this are redefinitions of inline methods in the .h file
 /* START GOOGLE ONLY
-bool ProtoEqual(const google::protobuf::Message& m1, const google::protobuf::Message& m2) {
-  MessageDifferencer differencer;
+bool ProtoEqual(const google::protobuf::Message& m1, const
+google::protobuf::Message& m2) { MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
 }
@@ -234,6 +237,37 @@ size_t ProtoHash(const google::protobuf::Message& m) {
   std::string s;
   m.SerializeToString(&s);
   return string_hasher(s);
+}
+
+std::string Demangle(const char* mangled) {
+  int status;
+  char* demangled = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
+  if (demangled) {
+    std::string d(demangled);
+    free(demangled);
+    return d;
+  } else {
+    return mangled;
+  }
+}
+
+::util::Status CreatePipeForSignalHandling(int* read_fd, int* write_fd) {
+  static_assert(sizeof(int) <= PIPE_BUF,
+                "PIPE_BUF is smaller than the number of bytes that can be "
+                "written atomically to a pipe.");
+  int pipe_fds[2];  // [0] is read side, [1] is write side.
+  RET_CHECK(pipe(pipe_fds) == 0)
+      << "Could not create pipe: " << strerror(errno) << ".";
+  // Set write side to non-blocking mode.
+  int flags = fcntl(pipe_fds[1], F_GETFL);
+  RET_CHECK(flags != -1) << "Could not read file descriptor flags: "
+                         << strerror(errno) << ".";
+  RET_CHECK(fcntl(pipe_fds[1], F_SETFL, flags | O_NONBLOCK) != -1)
+      << "Could not set file descriptor flags: " << strerror(errno) << ".";
+  *read_fd = pipe_fds[0];
+  *write_fd = pipe_fds[1];
+
+  return ::util::OkStatus();
 }
 
 }  // namespace stratum

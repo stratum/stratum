@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include <chrono>  // NOLINT
 #include <functional>
 #include <ostream>
@@ -245,6 +246,19 @@ inline U ByteStreamToUint(const std::string& bytes) {
   }
   return val;
 }
+
+// Demangles a symbol name, if possible. If it fails, the mangled name is
+// returned instead.
+// Not async-safe, do not use this function inside a signal handler!
+std::string Demangle(const char* mangled);
+
+// Creates a POSIX pipe suitable for use in a signal handler. The write side is
+// in non-blocking mode.
+// Rationale: handling signals safely is complicated as the number of async-safe
+// functions that can be called withing a signal handler is limited (cf. `man
+// signal-safety`). We use a pipe to transfer the signal value out of the
+// handler and into, e.g., a waiter thread where it can be properly processed.
+::util::Status CreatePipeForSignalHandling(int* read_fd, int* write_fd);
 
 }  // namespace stratum
 

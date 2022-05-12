@@ -102,7 +102,7 @@ class StratumBmv2Switch(Switch):
 
     def __init__(self, name, json=STRATUM_INIT_PIPELINE, loglevel="warn",
                  cpuport=DEFAULT_CPU_PORT, pipeconf=DEFAULT_PIPECONF,
-                 onosdevid=None,
+                 onosdevid=None, adminstate=True,
                  **kwargs):
         Switch.__init__(self, name, **kwargs)
         self.grpcPort = StratumBmv2Switch.nextGrpcPort
@@ -129,6 +129,7 @@ class StratumBmv2Switch(Switch):
         # In case of exceptions, mininet removes *.out files from /tmp. We use
         # this as a signal to terminate the switch instance (if active).
         self.keepaliveFile = '/tmp/%s-watchdog.out' % self.name
+        self.adminState = "ENABLED" if adminstate else "DISABLED"
 
         # Remove files from previous executions
         self.cleanupTmpFiles()
@@ -181,10 +182,10 @@ nodes {{
   channel: 1
   speed_bps: 10000000000
   config_params {{
-    admin_state: ADMIN_STATE_ENABLED
+    admin_state: ADMIN_STATE_{adminState}
   }}
   node: {nodeId}
-}}\n""".format(intfName=intf_name, intfNumber=intf_number, nodeId=self.nodeId)
+}}\n""".format(intfName=intf_name, intfNumber=intf_number, nodeId=self.nodeId, adminState=self.adminState)
             intf_number += 1
 
         return config
@@ -207,13 +208,12 @@ nodes {{
             '-chassis_config_file=%s' % self.chassisConfigFile,
             '-forwarding_pipeline_configs_file=%s/pipe.txt' % self.tmpDir,
             '-persistent_config_dir=%s' % self.tmpDir,
-            '-initial_pipeline=%s' % STRATUM_INIT_PIPELINE,
+            '-initial_pipeline=%s' % self.json,
             '-cpu_port=%s' % self.cpuPort,
             '-external_stratum_urls=0.0.0.0:%d' % self.grpcPort,
             '-local_stratum_url=localhost:%d' % pickUnusedPort(),
             '-max_num_controllers_per_node=%d' % MAX_CONTROLLERS_PER_NODE,
             '-write_req_log_file=%s/write-reqs.txt' % self.tmpDir,
-            '-logtostderr=true',
             '-bmv2_log_level=%s' % self.loglevel,
         ]
 
@@ -226,7 +226,7 @@ nodes {{
             self.logfd.flush()
 
             self.bmv2popen = self.popen(cmd_string, stdout=self.logfd, stderr=self.logfd)
-            print "⚡️ %s @ %d" % (STRATUM_BMV2, self.grpcPort)
+            print("⚡️ %s @ %d" % (STRATUM_BMV2, self.grpcPort))
 
             # We want to be notified if stratum_bmv2 quits prematurely...
             self.stopped = False
@@ -240,14 +240,14 @@ nodes {{
 
     def printLog(self):
         if os.path.isfile(self.logfile):
-            print "-" * 80
-            print "%s log (from %s):" % (self.name, self.logfile)
+            print("-" * 80)
+            print("%s log (from %s):" % (self.name, self.logfile))
             with open(self.logfile, 'r') as f:
                 lines = f.readlines()
                 if len(lines) > BMV2_LOG_LINES:
-                    print "..."
+                    print("...")
                 for line in lines[-BMV2_LOG_LINES:]:
-                    print line.rstrip()
+                    print(line.rstrip())
 
     def cleanupTmpFiles(self):
         self.cmd("rm -rf %s" % self.tmpDir)
@@ -278,8 +278,20 @@ class NoOffloadHost(Host):
             self.cmd(cmd)
         return r
 
+class NoIpv6OffloadHost(NoOffloadHost):
+    def __init__(self, name, inNamespace=True, **params):
+        NoOffloadHost.__init__(self, name, inNamespace=inNamespace, **params)
+
+    def config(self, **params):
+        r = super(NoOffloadHost, self).config(**params)
+        self.cmd("sysctl net.ipv6.conf.%s.disable_ipv6=1" % (self.defaultIntf()))
+        return r
+
 
 # Exports for bin/mn
 switches = {'stratum-bmv2': StratumBmv2Switch}
 
-hosts = {'no-offload-host': NoOffloadHost}
+hosts = {
+    'no-offload-host': NoOffloadHost,
+    'no-ipv6-host': NoIpv6OffloadHost
+}

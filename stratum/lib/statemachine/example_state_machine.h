@@ -7,10 +7,10 @@
 
 #include <memory>
 
-#include "stratum/lib/statemachine/state_machine.h"
-#include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/lib/statemachine/state_machine.h"
 
 namespace stratum {
 

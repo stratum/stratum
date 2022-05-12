@@ -2,23 +2,23 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/common/yang_parse_tree_paths.h"
+
 #include <utility>
 #include <vector>
 
-#include "stratum/hal/lib/common/yang_parse_tree_paths.h"
-
-#include "gnmi/gnmi.pb.h"
-#include "openconfig/openconfig.pb.h"
-#include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/common/utils.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/hal/lib/common/openconfig_converter.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/utils.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/time/clock.h"
+#include "gnmi/gnmi.pb.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -84,9 +84,9 @@ template <class T>
                                       const ::gnmi::Decimal64& contents) {
   ::gnmi::SubscribeResponse resp = GetResponse(path);
   *resp.mutable_update()
-    ->mutable_update(0)
-    ->mutable_val()
-    ->mutable_decimal_val() = contents;
+       ->mutable_update(0)
+       ->mutable_val()
+       ->mutable_decimal_val() = contents;
   return resp;
 }
 
@@ -643,8 +643,7 @@ TreeNodeEventHandler GetOnPollFunctor(
         node_id, port_id, tree, data_response_get_inner_message_func,
         data_response_has_inner_message_func, get_mutable_inner_message_func,
         inner_message_has_inner_message_func,
-        inner_message_get_inner_message_func,
-        inner_message_get_field_func);
+        inner_message_get_inner_message_func, inner_message_get_field_func);
     return SendResponse(GetResponse(path, value), stream);
   };
 }
@@ -749,8 +748,7 @@ TreeNodeEventHandler GetOnPollFunctor(
         node_id, port_id, tree, data_response_get_inner_message_func,
         data_response_has_inner_message_func, get_mutable_inner_message_func,
         inner_message_has_inner_message_func,
-        inner_message_get_inner_message_func,
-        inner_message_get_field_func);
+        inner_message_get_inner_message_func, inner_message_get_field_func);
     return SendResponse(GetResponse(path, (*process_func)(value)), stream);
   };
 }
@@ -900,7 +898,7 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
     if (in.ParseFromString(typed_value->bytes_val())) {
       // Convert the input proto into the internal format.
       ASSIGN_OR_RETURN(*config->writable(),
-          OpenconfigConverter::OcDeviceToChassisConfig(in));
+                       OpenconfigConverter::OcDeviceToChassisConfig(in));
     } else {
       // Try parse it with ChassisConfig format.
       RETURN_IF_ERROR(
@@ -916,28 +914,35 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/last-change
-void SetUpInterfacesInterfaceStateLastChange(TreeNode* node) {
-  auto poll_functor = UnsupportedFunc();
-  auto on_change_functor = UnsupportedFunc();
+void SetUpInterfacesInterfaceStateLastChange(uint64 node_id, uint32 port_id,
+                                             TreeNode* node,
+                                             YangParseTree* tree) {
+  auto poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree, &DataResponse::oper_status,
+                       &DataResponse::has_oper_status,
+                       &DataRequest::Request::mutable_oper_status,
+                       &OperStatus::time_last_changed);
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOperStateChangedEvent::GetTimeLastChanged);
+  auto register_functor = RegisterFunc<PortOperStateChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/ifindex
-void SetUpInterfacesInterfaceStateIfindex(uint32 port_id, TreeNode* node) {
+void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
+                                          TreeNode* node, YangParseTree* tree) {
+  // Returns the port ID for the interface to be used by P4Runtime.
+  auto on_poll_functor = GetOnPollFunctor(
+      node_id, port_id, tree, &DataResponse::sdn_port_id,
+      &DataResponse::has_sdn_port_id,
+      &DataRequest::Request::mutable_sdn_port_id, &SdnPortId::port_id);
   auto on_change_functor = UnsupportedFunc();
-  node->SetOnTimerHandler([port_id](const GnmiEvent& event,
-                                    const ::gnmi::Path& path,
-                                    GnmiSubscribeStream* stream) {
-        return SendResponse(GetResponse(path, port_id), stream);
-      })
-      ->SetOnPollHandler([port_id](const GnmiEvent& event,
-                                   const ::gnmi::Path& path,
-                                   GnmiSubscribeStream* stream) {
-        return SendResponse(GetResponse(path, port_id), stream);
-      })
+  node->SetOnTimerHandler(on_poll_functor)
+      ->SetOnPollHandler(on_poll_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -956,6 +961,19 @@ void SetUpInterfacesInterfaceStateName(const std::string& name,
                                 GnmiSubscribeStream* stream) {
         return SendResponse(GetResponse(path, name), stream);
       })
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/state/id
+void SetUpInterfacesInterfaceStateId(uint32 id, TreeNode* node) {
+  auto on_change_functor = UnsupportedFunc();
+  auto on_poll_functor = [id](const GnmiEvent& event, const ::gnmi::Path& path,
+                              GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, id), stream);
+  };
+  node->SetOnTimerHandler(on_poll_functor)
+      ->SetOnPollHandler(on_poll_functor)
       ->SetOnChangeHandler(on_change_functor);
 }
 
@@ -1003,8 +1021,8 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 // /interfaces/interface[name=<name>]/state/loopback-mode
 //
 void SetUpInterfacesInterfaceStateLoopbackMode(uint64 node_id, uint32 port_id,
-                                                 TreeNode* node,
-                                                 YangParseTree* tree) {
+                                               TreeNode* node,
+                                               YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
                        &DataResponse::has_loopback_status,
@@ -1022,36 +1040,14 @@ void SetUpInterfacesInterfaceStateLoopbackMode(uint64 node_id, uint32 port_id,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/hardware-port
-void SetUpInterfacesInterfaceStateHardwarePort(uint64 node_id, uint32 port_id,
+void SetUpInterfacesInterfaceStateHardwarePort(const std::string& name,
                                                TreeNode* node,
                                                YangParseTree* tree) {
-  // Regular method using a template cannot be used to get the OnPoll functor as
-  // std::string fields are treated differently by the PROTO-to-C++ generator:
-  // the getter returns "const std::string&" instead of "string" which leads to
-  // the template compilation error.
-  auto poll_functor = [node_id, port_id, tree](const GnmiEvent& event,
-                                      const ::gnmi::Path& path,
-                                      GnmiSubscribeStream* stream) {
-    // Create a data retrieval request.
-    DataRequest req;
-    auto* request = req.add_requests()->mutable_hardware_port();
-    request->set_node_id(node_id);
-    request->set_port_id(port_id);
-    // In-place definition of method retrieving data from generic response
-    // and saving into 'resp' local variable.
-    std::string resp{};
-    DataResponseWriter writer([&resp](const DataResponse& in) {
-      if (!in.has_hardware_port()) return false;
-      resp = in.hardware_port().name();
-      return true;
-    });
-    // Query the switch. The returned status is ignored as there is no way to
-    // notify the controller that something went wrong. The error is logged when
-    // it is created.
-    tree->GetSwitchInterface()
-        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
-        .IgnoreError();
-    return SendResponse(GetResponse(path, resp), stream);
+  // This leaf is a reference to the /components/component[name=<name>]/name
+  // leaf. We return the name directly here, as it is the same.
+  auto poll_functor = [name](const GnmiEvent& event, const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, name), stream);
   };
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(poll_functor)
@@ -1106,11 +1102,11 @@ void SetUpInterfacesInterfaceConfigHealthIndicator(const std::string& state,
     }
     std::string state_string = typed_val->string_val();
     HealthState typed_state;
-    if (state_string.compare("BAD") == 0) {
+    if (state_string == "BAD") {
       typed_state = HealthState::HEALTH_STATE_BAD;
-    } else if (state_string.compare("GOOD") == 0) {
+    } else if (state_string == "GOOD") {
       typed_state = HealthState::HEALTH_STATE_GOOD;
-    } else if (state_string.compare("UNKNOWN") == 0) {
+    } else if (state_string == "UNKNOWN") {
       typed_state = HealthState::HEALTH_STATE_UNKNOWN;
     } else {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
@@ -1155,9 +1151,8 @@ void SetUpInterfacesInterfaceConfigHealthIndicator(const std::string& state,
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/config/enabled
 //
-void SetUpInterfacesInterfaceConfigEnabled(const bool state,
-                                           uint64 node_id, uint32 port_id,
-                                           TreeNode* node,
+void SetUpInterfacesInterfaceConfigEnabled(const bool state, uint64 node_id,
+                                           uint32 port_id, TreeNode* node,
                                            YangParseTree* tree) {
   auto poll_functor = [state](const GnmiEvent& event, const ::gnmi::Path& path,
                               GnmiSubscribeStream* stream) {
@@ -1175,8 +1170,8 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     bool state_bool = typed_val->bool_val();
-    AdminState typed_state = state_bool ? AdminState::ADMIN_STATE_ENABLED:
-                                          AdminState::ADMIN_STATE_DISABLED;
+    AdminState typed_state = state_bool ? AdminState::ADMIN_STATE_ENABLED
+                                        : AdminState::ADMIN_STATE_DISABLED;
 
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
@@ -1186,7 +1181,8 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
+    // TODO(max): use std::find to handle lookup failures.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1197,14 +1193,13 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
 
     // Update the YANG parse tree.
     auto poll_functor = [state_bool](const GnmiEvent& event,
-                                       const ::gnmi::Path& path,
-                                       GnmiSubscribeStream* stream) {
+                                     const ::gnmi::Path& path,
+                                     GnmiSubscribeStream* stream) {
       // This leaf represents configuration data. Return what was known when
       // it was configured!
       return SendResponse(GetResponse(path, state_bool), stream);
     };
-    node->SetOnTimerHandler(poll_functor)
-        ->SetOnPollHandler(poll_functor);
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
     return ::util::OkStatus();
   };
@@ -1255,7 +1250,7 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1345,25 +1340,19 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
                         stream);
   };
   auto on_change_functor = UnsupportedFunc();
-
   auto on_set_functor =
       [node_id, port_id, node, tree](
-          const ::gnmi::Path& path,
-          const ::google::protobuf::Message& val,
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
           CopyOnWriteChassisConfig* config) -> ::util::Status {
     const gnmi::TypedValue* typed_val =
         dynamic_cast<const gnmi::TypedValue*>(&val);
     if (typed_val == nullptr) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
-
     std::string mac_address_string = typed_val->string_val();
-    if (!IsMacAddressValid(mac_address_string)) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
-    }
+    ASSIGN_OR_RETURN(uint64 mac_address,
+                     YangStringToMacAddress(mac_address_string));
 
-    ::google::protobuf::uint64 mac_address =
-        YangStringToMacAddress(mac_address_string);
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_mac_address,
@@ -1372,11 +1361,13 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
-        singleton_port.mutable_config_params()->set_mac_address(mac_address);
+        singleton_port.mutable_config_params()
+            ->mutable_mac_address()
+            ->set_mac_address(mac_address);
         break;
       }
     }
@@ -1390,8 +1381,7 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
       return SendResponse(
           GetResponse(path, MacAddressToYangString(mac_address)), stream);
     };
-    node->SetOnTimerHandler(poll_functor)
-        ->SetOnPollHandler(poll_functor);
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
     // Trigger change notification.
     tree->SendNotification(GnmiEventPtr(
@@ -1399,7 +1389,6 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
 
     return ::util::OkStatus();
   };
-
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
       ->SetOnChangeHandler(on_change_functor)
@@ -1432,8 +1421,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     std::string speed_string = typed_val->string_val();
-    ::google::protobuf::uint64 speed_bps =
-        ConvertStringToSpeedBps(speed_string);
+    uint64 speed_bps = ConvertStringToSpeedBps(speed_string);
     if (speed_bps == 0) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
@@ -1446,7 +1434,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1463,8 +1451,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       // it was configured!
       return SendResponse(GetResponse(path, speed_string), stream);
     };
-    node->SetOnTimerHandler(poll_functor)
-        ->SetOnPollHandler(poll_functor);
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
     return ::util::OkStatus();
   };
@@ -1504,9 +1491,8 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     bool autoneg_bool = typed_val->bool_val();
-    TriState autoneg_status = autoneg_bool ?
-                                TriState::TRI_STATE_TRUE :
-                                TriState::TRI_STATE_FALSE;
+    TriState autoneg_status =
+        autoneg_bool ? TriState::TRI_STATE_TRUE : TriState::TRI_STATE_FALSE;
 
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
@@ -1516,7 +1502,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
       return status;
     }
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
@@ -1533,26 +1519,26 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
       // it was configured!
       return SendResponse(GetResponse(path, autoneg_bool), stream);
     };
-    node->SetOnTimerHandler(poll_functor)
-        ->SetOnPollHandler(poll_functor);
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
     return ::util::OkStatus();
   };
   auto register_functor = RegisterFunc<PortAutonegChangedEvent>();
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortAutonegChangedEvent::GetState,
-      IsPortAutonegEnabled);
+  auto on_change_functor =
+      GetOnChangeFunctor(node_id, port_id, &PortAutonegChangedEvent::GetState,
+                         IsPortAutonegEnabled);
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/forwarding-viable
-void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id,
-        uint32 port_id, bool forwarding_viability, TreeNode* node,
-        YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetConfigForwardingViability(
+    uint64 node_id, uint32 port_id, bool forwarding_viability, TreeNode* node,
+    YangParseTree* tree) {
   auto poll_functor = [forwarding_viability](const GnmiEvent& event,
                                              const ::gnmi::Path& path,
                                              GnmiSubscribeStream* stream) {
@@ -1564,33 +1550,34 @@ void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id,
       [node_id, port_id, node, tree](
           const ::gnmi::Path& path, const ::google::protobuf::Message& val,
           CopyOnWriteChassisConfig* config) -> ::util::Status {
-        const gnmi::TypedValue* typed_val =
-            dynamic_cast<const gnmi::TypedValue*>(&val);
-        if (typed_val == nullptr) {
-          return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
-        }
-        TrunkMemberBlockState new_forwarding_viability = typed_val->bool_val() ?
-            TRUNK_MEMBER_BLOCK_STATE_FORWARDING :
-                TRUNK_MEMBER_BLOCK_STATE_BLOCKED;
-        auto status = SetValue(node_id, port_id, tree,
-            &SetRequest::Request::Port::mutable_forwarding_viability,
-            &ForwardingViability::set_state, new_forwarding_viability);
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    TrunkMemberBlockState new_forwarding_viability =
+        typed_val->bool_val() ? TRUNK_MEMBER_BLOCK_STATE_FORWARDING
+                              : TRUNK_MEMBER_BLOCK_STATE_BLOCKED;
+    auto status =
+        SetValue(node_id, port_id, tree,
+                 &SetRequest::Request::Port::mutable_forwarding_viability,
+                 &ForwardingViability::set_state, new_forwarding_viability);
 
-        if (status != ::util::OkStatus()) {
-          return status;
-        }
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
 
-        // Update the YANG parse tree.
-        auto poll_functor = [new_forwarding_viability](const GnmiEvent& event,
-                                           const ::gnmi::Path& path,
-                                           GnmiSubscribeStream* stream) {
-          return SendResponse(GetResponse(path,
-                  ConvertTrunkMemberBlockStateToBool(new_forwarding_viability)),
-                  stream);
-        };
-        node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+    // Update the YANG parse tree.
+    auto poll_functor = [new_forwarding_viability](
+                            const GnmiEvent& event, const ::gnmi::Path& path,
+                            GnmiSubscribeStream* stream) {
+      return SendResponse(GetResponse(path, ConvertTrunkMemberBlockStateToBool(
+                                                new_forwarding_viability)),
+                          stream);
+    };
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
-        return ::util::OkStatus();
+    return ::util::OkStatus();
   };
 
   auto on_change_functor = UnsupportedFunc();
@@ -1683,16 +1670,18 @@ void SetUpInterfacesInterfaceEthernetStateForwardingViability(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/state/auto-negotiate
-void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
-  auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::autoneg_status,
-      &DataResponse::has_autoneg_status,
-      &DataRequest::Request::mutable_autoneg_status,
-      &AutonegotiationStatus::state, IsPortAutonegEnabled);
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortAutonegChangedEvent::GetState,
-      IsPortAutonegEnabled);
+void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(uint64 node_id,
+                                                        uint32 port_id,
+                                                        TreeNode* node,
+                                                        YangParseTree* tree) {
+  auto poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree, &DataResponse::autoneg_status,
+                       &DataResponse::has_autoneg_status,
+                       &DataRequest::Request::mutable_autoneg_status,
+                       &AutonegotiationStatus::state, IsPortAutonegEnabled);
+  auto on_change_functor =
+      GetOnChangeFunctor(node_id, port_id, &PortAutonegChangedEvent::GetState,
+                         IsPortAutonegEnabled);
   auto register_functor = RegisterFunc<PortAutonegChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
@@ -1706,10 +1695,10 @@ void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(
 // data from the DataResponse proto received from SwitchInterface, i.e.,
 // "&DataResponse::PortCounters::message", where message field in
 // DataResponse::Counters.
-TreeNodeEventHandler GetPollCounterFunctor(
-    uint64 node_id, uint32 port_id,
-    ::google::protobuf::uint64 (PortCounters::*func_ptr)() const,
-    YangParseTree* tree) {
+TreeNodeEventHandler GetPollCounterFunctor(uint64 node_id, uint32 port_id,
+                                           uint64 (PortCounters::*func_ptr)()
+                                               const,
+                                           YangParseTree* tree) {
   return [tree, node_id, port_id, func_ptr](const GnmiEvent& event,
                                             const ::gnmi::Path& path,
                                             GnmiSubscribeStream* stream) {
@@ -2260,13 +2249,15 @@ void SetUpComponentsComponentChassisAlarmsFlowProgrammingExceptionSeverity(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/present
-void SetUpComponentsComponentTransceiverStatePresent(
-        TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStatePresent(TreeNode* node,
+                                                     YangParseTree* tree,
+                                                     uint64 node_id,
+                                                     uint32 port_id) {
   auto poll_functor = GetOnPollFunctor(
-          node_id, port_id, tree, &DataResponse::front_panel_port_info,
-          &DataResponse::has_front_panel_port_info,
-          &DataRequest::Request::mutable_front_panel_port_info,
-          &FrontPanelPortInfo::hw_state, ConvertHwStateToPresentString);
+      node_id, port_id, tree, &DataResponse::front_panel_port_info,
+      &DataResponse::has_front_panel_port_info,
+      &DataRequest::Request::mutable_front_panel_port_info,
+      &FrontPanelPortInfo::hw_state, ConvertHwStateToPresentString);
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
@@ -2275,34 +2266,35 @@ void SetUpComponentsComponentTransceiverStatePresent(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/serial-no
-void SetUpComponentsComponentTransceiverStateSerialNo(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStateSerialNo(TreeNode* node,
+                                                      YangParseTree* tree,
+                                                      uint64 node_id,
+                                                      uint32 port_id) {
+  auto poll_functor = [tree, node_id, port_id](const GnmiEvent& event,
+                                               const ::gnmi::Path& path,
+                                               GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_front_panel_port_info();
+    request->set_node_id(node_id);
+    request->set_port_id(port_id);
 
-  auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
-                               GnmiSubscribeStream* stream) {
-        // Create a data retrieval request.
-        DataRequest req;
-        auto* request = req.add_requests()->mutable_front_panel_port_info();
-        request->set_node_id(node_id);
-        request->set_port_id(port_id);
-
-        // In-place definition of method retrieving data from generic response
-        // and saving into 'resp' local variable.
-        std::string resp{};
-        DataResponseWriter writer([&resp](const DataResponse& in) {
-          if (!in.has_front_panel_port_info()) return false;
-          resp = in.front_panel_port_info().serial_number();
-          return true;
-        });
-        // Query the switch. The returned status is ignored as there is no
-        // way to notify the controller that something went wrong.
-        // The error is logged when it is created.
-        tree->GetSwitchInterface()
-            ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
-            .IgnoreError();
-        return SendResponse(GetResponse(path, resp), stream);
-      };
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_front_panel_port_info()) return false;
+      resp = in.front_panel_port_info().serial_number();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no
+    // way to notify the controller that something went wrong.
+    // The error is logged when it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
 
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(poll_functor)
@@ -2312,13 +2304,13 @@ void SetUpComponentsComponentTransceiverStateSerialNo(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/vendor
-void SetUpComponentsComponentTransceiverStateVendor(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
-
-  auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event,
-                              const ::gnmi::Path& path,
-                              GnmiSubscribeStream* stream) {
+void SetUpComponentsComponentTransceiverStateVendor(TreeNode* node,
+                                                    YangParseTree* tree,
+                                                    uint64 node_id,
+                                                    uint32 port_id) {
+  auto poll_functor = [tree, node_id, port_id](const GnmiEvent& event,
+                                               const ::gnmi::Path& path,
+                                               GnmiSubscribeStream* stream) {
     // Create a data retrieval request.
     DataRequest req;
     auto* request = req.add_requests()->mutable_front_panel_port_info();
@@ -2350,34 +2342,35 @@ void SetUpComponentsComponentTransceiverStateVendor(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/vendor-part
-void SetUpComponentsComponentTransceiverStateVendorPart(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
-  auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event,
-                                const ::gnmi::Path& path,
-                                GnmiSubscribeStream* stream) {
-        // Create a data retrieval request.
-        DataRequest req;
-        auto* request = req.add_requests()->mutable_front_panel_port_info();
-        request->set_node_id(node_id);
-        request->set_port_id(port_id);
+void SetUpComponentsComponentTransceiverStateVendorPart(TreeNode* node,
+                                                        YangParseTree* tree,
+                                                        uint64 node_id,
+                                                        uint32 port_id) {
+  auto poll_functor = [tree, node_id, port_id](const GnmiEvent& event,
+                                               const ::gnmi::Path& path,
+                                               GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_front_panel_port_info();
+    request->set_node_id(node_id);
+    request->set_port_id(port_id);
 
-        // In-place definition of method retrieving data from generic response
-        // and saving into 'resp' local variable.
-        std::string resp{};
-        DataResponseWriter writer([&resp](const DataResponse& in) {
-          if (!in.has_front_panel_port_info()) return false;
-          resp = in.front_panel_port_info().part_number();
-          return true;
-        });
-        // Query the switch. The returned status is ignored as there is no
-        // way to notify the controller that something went wrong.
-        // The error is logged when it is created.
-        tree->GetSwitchInterface()
-            ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
-            .IgnoreError();
-        return SendResponse(GetResponse(path, resp), stream);
-      };
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_front_panel_port_info()) return false;
+      resp = in.front_panel_port_info().part_number();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no
+    // way to notify the controller that something went wrong.
+    // The error is logged when it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
@@ -2386,8 +2379,10 @@ void SetUpComponentsComponentTransceiverStateVendorPart(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/form-factor
-void SetUpComponentsComponentTransceiverStateFormFactor(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStateFormFactor(TreeNode* node,
+                                                        YangParseTree* tree,
+                                                        uint64 node_id,
+                                                        uint32 port_id) {
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::front_panel_port_info,
       &DataResponse::has_front_panel_port_info,
@@ -2407,7 +2402,10 @@ void SetUpComponentsComponentOpticalChannelStateFrequency(
   auto poll_functor =
       GetOnPollFunctor(module, network_interface, tree,
                        &OpticalTransceiverInfo::frequency, &ConvertHzToMHz);
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2440,7 +2438,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(
     RETURN_IF_ERROR(SetValue(module, network_interface, tree,
                              &OpticalTransceiverInfo::set_frequency, uint_val));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2459,9 +2457,10 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(
     node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
     return ::util::OkStatus();
   };
-
+  auto on_change_functor = UnsupportedFunc();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2801,7 +2800,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
                              &OpticalTransceiverInfo::set_target_output_power,
                              output_power));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2821,9 +2820,10 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 
     return ::util::OkStatus();
   };
-
+  auto on_change_functor = UnsupportedFunc();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2836,7 +2836,10 @@ void SetUpComponentsComponentOpticalChannelStateOperationalMode(
   auto poll_functor = GetOnPollFunctor(
       module, network_interface, tree,
       &OpticalTransceiverInfo::operational_mode, &DontProcess<uint64>);
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2866,7 +2869,7 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
                              &OpticalTransceiverInfo::set_operational_mode,
                              uint_val));
 
-    // Update the chassis config
+    // Update the chassis config.
     ChassisConfig* new_config = config->writable();
     for (auto& optical_port :
          *new_config->mutable_optical_network_interfaces()) {
@@ -2886,9 +2889,10 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
 
     return ::util::OkStatus();
   };
-
+  auto on_change_functor = UnsupportedFunc();
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2902,8 +2906,10 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
                                   GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, line_port), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2915,8 +2921,10 @@ void SetUpComponentsComponentOpticalChannelStateLinePort(
                                   GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, line_port), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2932,8 +2940,10 @@ void SetUpComponentsComponentConfigName(const std::string& name,
   // This /config node represents the component name in the configuration tree,
   // so it doesn't support OnChange/OnUpdate/OnReplace until the yang tree
   // supports nodes renaming.
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2944,8 +2954,10 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
                              GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, name), stream);
   };
-
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2957,8 +2969,25 @@ void SetUpComponentsComponentStateType(const std::string& type,
                              GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, type), stream);
   };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
 
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/state/description
+void SetUpComponentsComponentStateDescription(const std::string& description,
+                                              TreeNode* node) {
+  auto poll_functor = [description](const GnmiEvent& /*event*/,
+                                    const ::gnmi::Path& path,
+                                    GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, description), stream);
+  };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2988,7 +3017,10 @@ void SetUpComponentsComponentStatePartNo(uint64 node_id, TreeNode* node,
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3018,7 +3050,10 @@ void SetUpComponentsComponentStateMfgName(uint64 node_id, TreeNode* node,
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
-  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3185,7 +3220,10 @@ void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
-  node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3219,6 +3257,86 @@ void SetUpComponentsComponentIntegratedCircuitStateNodeId(uint64 node_id,
       ->SetOnChangeHandler(on_change_functor);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// /system/logging/console/config/severity
+void SetUpSystemLoggingConsoleConfigSeverity(LoggingConfig logging_config,
+                                             TreeNode* node,
+                                             YangParseTree* tree) {
+  auto poll_functor = [logging_config](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when it
+    // was configured!
+    return SendResponse(
+        GetResponse(path, ConvertLogSeverityToString(logging_config)), stream);
+  };
+
+  auto on_set_functor =
+      [node, tree](const ::gnmi::Path& path,
+                   const ::google::protobuf::Message& val,
+                   CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    LoggingConfig logging_config;
+    RETURN_IF_ERROR(
+        ConvertStringToLogSeverity(typed_val->string_val(), &logging_config));
+
+    // Set the value.
+    RET_CHECK(SetLogLevel(logging_config))
+        << "Could not set new log level (" << logging_config.first << ", "
+        << logging_config.second << ").";
+
+    // Update the YANG parse tree.
+    auto poll_functor = [logging_config](const GnmiEvent& event,
+                                         const ::gnmi::Path& path,
+                                         GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when it
+      // was configured!
+      return SendResponse(
+          GetResponse(path, ConvertLogSeverityToString(logging_config)),
+          stream);
+    };
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+
+    // Trigger change notification.
+    tree->SendNotification(GnmiEventPtr(new ConsoleLogSeverityChangedEvent(
+        logging_config.first, logging_config.second)));
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<ConsoleLogSeverityChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      &ConsoleLogSeverityChangedEvent::GetState, ConvertLogSeverityToString);
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /system/logging/console/state/severity
+void SetUpSystemLoggingConsoleStateSeverity(TreeNode* node,
+                                            YangParseTree* tree) {
+  auto poll_functor = [](const GnmiEvent& event, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) -> ::util::Status {
+    return SendResponse(
+        GetResponse(path, ConvertLogSeverityToString(GetCurrentLogLevel())),
+        stream);
+  };
+  auto register_functor = RegisterFunc<ConsoleLogSeverityChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      &ConsoleLogSeverityChangedEvent::GetState, ConvertLogSeverityToString);
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
 }  // namespace
 
 // Path of leafs created by this method are defined 'manualy' by analysing
@@ -3232,15 +3350,18 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   // No need to lock the mutex - it is locked by method calling this one.
   TreeNode* node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("last-change")());
-  SetUpInterfacesInterfaceStateLastChange(node);
+  SetUpInterfacesInterfaceStateLastChange(node_id, port_id, node, tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("ifindex")());
-  SetUpInterfacesInterfaceStateIfindex(port_id, node);
+  SetUpInterfacesInterfaceStateIfindex(node_id, port_id, node, tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("name")());
   SetUpInterfacesInterfaceStateName(name, node);
+  node =
+      tree->AddNode(GetPath("interfaces")("interface", name)("state")("id")());
+  SetUpInterfacesInterfaceStateId(port_id, node);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("oper-status")());
@@ -3254,9 +3375,9 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
       GetPath("interfaces")("interface", name)("state")("loopback-mode")());
   SetUpInterfacesInterfaceStateLoopbackMode(node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "interface", name)("state")("hardware-port")());
-  SetUpInterfacesInterfaceStateHardwarePort(node_id, port_id, node, tree);
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("state")("hardware-port")());
+  SetUpInterfacesInterfaceStateHardwarePort(name, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("port-speed")());
@@ -3357,7 +3478,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("forwarding-viable")());
   // TODO(tmadejski): Fix this value once common.proto has corresponding field.
-  SetUpInterfacesInterfaceEthernetConfigForwardingViability(node_id, port_id,
+  SetUpInterfacesInterfaceEthernetConfigForwardingViability(
+      node_id, port_id,
       /* forwarding-viable */ true, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
@@ -3367,8 +3489,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("auto-negotiate")());
-  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(node_id, port_id,
-                                                      node, tree);
+  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(node_id, port_id, node,
+                                                     tree);
 
   absl::flat_hash_map<uint32, uint32> internal_priority_to_q_num;
   absl::flat_hash_map<uint32, TrafficClass> q_num_to_trafic_class;
@@ -3415,12 +3537,12 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
         node_id, port_id, queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)(
-           "config")("id")());
+    node = tree->AddNode(
+        GetPath("qos")("queues")("queue", queue_name)("config")("id")());
     SetUpQusQueuesQueueConfigId(queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)(
-           "state")("id")());
+    node = tree->AddNode(
+        GetPath("qos")("queues")("queue", queue_name)("state")("id")());
     SetUpQusQueuesQueueStateId(queue_id, node, tree);
   }
 
@@ -3437,12 +3559,26 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
     const SingletonPort& singleton, const NodeConfigParams& node_config,
     YangParseTree* tree) {
   const std::string& name =
-      !singleton.name().empty()
-          ? singleton.name()
-          : absl::StrFormat("%d/%d/%d", singleton.slot(), singleton.port(),
-                            singleton.channel());
+      singleton.name().empty()
+          ? absl::StrFormat("%d/%d/%d", singleton.slot(), singleton.port(),
+                            singleton.channel())
+          : singleton.name();
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
+  bool port_auto_neg_enabled = false;
+  bool port_enabled = false;
+  bool loopback_enabled = false;
+  uint64 mac_address = kDummyMacAddress;
+  if (singleton.has_config_params()) {
+    port_auto_neg_enabled =
+        IsPortAutonegEnabled(singleton.config_params().autoneg());
+    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
+    if (singleton.config_params().has_mac_address()) {
+      mac_address = singleton.config_params().mac_address().mac_address();
+    }
+    loopback_enabled =
+        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
+  }
   TreeNode* node =
       AddSubtreeInterface(name, node_id, port_id, node_config, tree);
 
@@ -3456,28 +3592,16 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("port-speed")());
-  SetUpInterfacesInterfaceEthernetConfigPortSpeed(node_id, port_id,
-                                                  singleton.speed_bps(), node,
-                                                  tree);
-  bool port_auto_neg_enabled = false;
-  bool port_enabled = false;
-  bool loopback_enabled = false;
-  uint64 mac_address = 0;
-  if (singleton.has_config_params()) {
-    port_auto_neg_enabled =
-        IsPortAutonegEnabled(singleton.config_params().autoneg());
-    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
-    mac_address = singleton.config_params().mac_address();
-    loopback_enabled =
-        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
-  }
+  SetUpInterfacesInterfaceEthernetConfigPortSpeed(
+      node_id, port_id, singleton.speed_bps(), node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
   SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(
       node_id, port_id, port_auto_neg_enabled, node, tree);
-  node = tree->AddNode(GetPath("interfaces")(
-      "interface", name)("config")("enabled")());
+
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node,
                                         tree);
 
@@ -3495,6 +3619,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("present")());
   SetUpComponentsComponentTransceiverStatePresent(node, tree, node_id, port_id);
+
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("serial-no")());
   SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id,
@@ -3513,14 +3638,18 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "component", name)("transceiver")("state")("form-factor")());
   SetUpComponentsComponentTransceiverStateFormFactor(node, tree, node_id,
                                                      port_id);
+
+  node = tree->AddNode(
+      GetPath("components")("component", name)("state")("description")());
+  SetUpComponentsComponentStateDescription(singleton.name(), node);
 }
 
 void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
     const OpticalNetworkInterface& optical_port, YangParseTree* tree) {
   const std::string& name =
-      !optical_port.name().empty()
-          ? optical_port.name()
-          : absl::StrFormat("netif-%d", optical_port.network_interface());
+      optical_port.name().empty()
+          ? absl::StrFormat("netif-%d", optical_port.network_interface())
+          : optical_port.name();
   int32 module = optical_port.module();
   int32 network_interface = optical_port.network_interface();
   TreeNode* node{nullptr};
@@ -3619,8 +3748,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
   // 16-bit uint type among the types which are supported by gNMI protocol.
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("operational-mode")());
-  SetUpComponentsComponentOpticalChannelStateOperationalMode(
-      node, tree, module, network_interface);
+  SetUpComponentsComponentOpticalChannelStateOperationalMode(node, tree, module,
+                                                             network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("config")("operational-mode")());
@@ -3646,13 +3775,16 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
   node = tree->AddNode(
       GetPath("components")("component", name)("state")("type")());
   SetUpComponentsComponentStateType("OPTICAL_CHANNEL", node);
+
+  node = tree->AddNode(
+      GetPath("components")("component", name)("state")("description")());
+  SetUpComponentsComponentStateDescription(optical_port.name(), node);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   // No need to lock the mutex - it is locked by method calling this one.
-  const std::string& name = !node.name().empty()
-                                ? node.name()
-                                : absl::StrFormat("node-%d", node.id());
+  const std::string& name =
+      node.name().empty() ? absl::StrFormat("node-%d", node.id()) : node.name();
   TreeNode* tree_node = tree->AddNode(
       GetPath("debug")("nodes")("node", name)("packet-io")("debug-string")());
   SetUpDebugNodesNodePacketIoDebugString(node.id(), tree_node, tree);
@@ -3673,12 +3805,14 @@ void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   tree_node = tree->AddNode(
       GetPath("components")("component", name)("state")("mfg-name")());
   SetUpComponentsComponentStateMfgName(node.id(), tree_node, tree);
+  tree_node = tree->AddNode(
+      GetPath("components")("component", name)("state")("description")());
+  SetUpComponentsComponentStateDescription(node.name(), tree_node);
 }
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
                                            YangParseTree* tree) {
-  const std::string& name =
-      !chassis.name().empty() ? chassis.name() : "chassis";
+  const std::string& name = chassis.name().empty() ? "chassis" : chassis.name();
   TreeNode* node = tree->AddNode(GetPath("components")(
       "component", name)("chassis")("alarms")("memory-error")());
   SetUpComponentsComponentChassisAlarmsMemoryError(node, tree);
@@ -3713,9 +3847,56 @@ void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
       "alarms")("flow-programming-exception")("severity")());
   SetUpComponentsComponentChassisAlarmsFlowProgrammingExceptionSeverity(node,
                                                                         tree);
+  node = tree->AddNode(GetPath("components")(
+      "component", name)("chassis")("state")("description")());
+  SetUpComponentsComponentStateDescription(chassis.name(), node);
+}
+
+void YangParseTreePaths::AddSubtreeSystem(YangParseTree* tree) {
+  LoggingConfig log_level = GetCurrentLogLevel();
+  TreeNode* node = tree->AddNode(
+      GetPath("system")("logging")("console")("config")("severity")());
+  SetUpSystemLoggingConsoleConfigSeverity(log_level, node, tree);
+  node = tree->AddNode(
+      GetPath("system")("logging")("console")("state")("severity")());
+  SetUpSystemLoggingConsoleStateSeverity(node, tree);
 }
 
 void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
+  // Add support for "/interfaces/interface[name=*]/state/id".
+  tree->AddNode(GetPath("interfaces")("interface", "*")("state")("id")())
+      ->SetOnChangeRegistration(
+          [tree](const EventHandlerRecordPtr& record)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Subscribing to a wildcard node means that all matching nodes
+                // have to be registered for received events.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("id")(), [&record](const TreeNode& node) {
+                      return node.DoOnChangeRegistration(record);
+                    });
+                return status;
+              })
+      ->SetOnChangeHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream) { return ::util::OkStatus(); })
+      ->SetOnPollHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Polling a wildcard node means that all matching nodes have to
+                // be polled.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("id")(),
+                    [&event, &stream](const TreeNode& leaf) {
+                      return (leaf.GetOnPollHandler())(event, stream);
+                    });
+                // Notify the client that all nodes have been processed.
+                APPEND_STATUS_IF_ERROR(
+                    status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+                return status;
+              });
   // Add support for "/interfaces/interface[name=*]/state/ifindex".
   tree->AddNode(GetPath("interfaces")("interface", "*")("state")("ifindex")())
       ->SetOnChangeRegistration(
@@ -3839,34 +4020,35 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
                 return status;
               });
 
-  auto interfaces_on_chage_reg = [tree](const EventHandlerRecordPtr& record)
-  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
-    // Subscribing to a wildcard node means that all matching nodes
-    // have to be registered for received events.
-    auto status = tree->PerformActionForAllNonWildcardNodes(
-        GetPath("interfaces")("interface")(), gnmi::Path(),
-        [&record](const TreeNode& node) {
-          return node.DoOnChangeRegistration(record);
-        });
-    return status;
-  };  // NOLINT(readability/braces)
+  auto interfaces_on_chage_reg =
+      [tree](const EventHandlerRecordPtr& record)
+          EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+            // Subscribing to a wildcard node means that all matching nodes
+            // have to be registered for received events.
+            auto status = tree->PerformActionForAllNonWildcardNodes(
+                GetPath("interfaces")("interface")(), gnmi::Path(),
+                [&record](const TreeNode& node) {
+                  return node.DoOnChangeRegistration(record);
+                });
+            return status;
+          };  // NOLINT(readability/braces)
 
-  auto interfaces_on_poll = [tree](const GnmiEvent& event,
-                                   const ::gnmi::Path& path,
-                                   GnmiSubscribeStream* stream)
-  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
-    // Polling a wildcard node means that all matching nodes have to
-    // be polled.
-    auto status = tree->PerformActionForAllNonWildcardNodes(
-        GetPath("interfaces")("interface")(), gnmi::Path(),
-        [&event, &stream](const TreeNode& node) {
-          return (node.GetOnPollHandler())(event, stream);
-        });
-    // Notify the client that all nodes have been processed.
-    APPEND_STATUS_IF_ERROR(
-        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
-    return status;
-  };  // NOLINT(readability/braces)
+  auto interfaces_on_poll =
+      [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream)
+          EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+            // Polling a wildcard node means that all matching nodes have to
+            // be polled.
+            auto status = tree->PerformActionForAllNonWildcardNodes(
+                GetPath("interfaces")("interface")(), gnmi::Path(),
+                [&event, &stream](const TreeNode& node) {
+                  return (node.GetOnPollHandler())(event, stream);
+                });
+            // Notify the client that all nodes have been processed.
+            APPEND_STATUS_IF_ERROR(
+                status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+            return status;
+          };  // NOLINT(readability/braces)
 
   // Add support for "/interfaces/interface/...".
   tree->AddNode(GetPath("interfaces")("interface")("...")())
@@ -3886,25 +4068,26 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
 }
 
 void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
-  auto on_poll_names = [tree](const GnmiEvent& event,
-                              const ::gnmi::Path& path,
-                              GnmiSubscribeStream* stream)
-  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
-    // Execute OnPollHandler and send to the stream.
-    auto execute_poll = [&event, &stream](const TreeNode& leaf) {
-      return (leaf.GetOnPollHandler())(event, stream);
-    };
+  auto on_poll_names =
+      [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream)
+          EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+            // Execute OnPollHandler and send to the stream.
+            auto execute_poll = [&event, &stream](const TreeNode& leaf) {
+              return (leaf.GetOnPollHandler())(event, stream);
+            };
 
-    // Recursively process on-poll.
-    auto status = tree->PerformActionForAllNonWildcardNodes(
-        GetPath("components")("component")(), GetPath("name")(), execute_poll);
+            // Recursively process on-poll.
+            auto status = tree->PerformActionForAllNonWildcardNodes(
+                GetPath("components")("component")(), GetPath("name")(),
+                execute_poll);
 
-    // Notify the client that all nodes have been processed.
-    APPEND_STATUS_IF_ERROR(
-        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+            // Notify the client that all nodes have been processed.
+            APPEND_STATUS_IF_ERROR(
+                status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
 
-    return status;
-  };  // NOLINT(readability/braces)
+            return status;
+          };  // NOLINT(readability/braces)
   auto on_change_functor = UnsupportedFunc();
 
   // Add support for "/components/component[name=*]/name".
@@ -3912,25 +4095,26 @@ void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
       ->SetOnPollHandler(on_poll_names)
       ->SetOnChangeHandler(on_change_functor);
 
-  auto on_poll_all_components = [tree](const GnmiEvent& event,
-                                       const ::gnmi::Path& path,
-                                       GnmiSubscribeStream* stream)
-  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
-    // Execute OnPollHandler and send to the stream.
-    auto execute_poll = [&event, &stream](const TreeNode& leaf) {
-      return (leaf.GetOnPollHandler())(event, stream);
-    };
+  auto on_poll_all_components =
+      [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream)
+          EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+            // Execute OnPollHandler and send to the stream.
+            auto execute_poll = [&event, &stream](const TreeNode& leaf) {
+              return (leaf.GetOnPollHandler())(event, stream);
+            };
 
-    // Recursively process on-poll.
-    auto status = tree->PerformActionForAllNonWildcardNodes(
-        GetPath("components")("component")(), gnmi::Path(), execute_poll);
+            // Recursively process on-poll.
+            auto status = tree->PerformActionForAllNonWildcardNodes(
+                GetPath("components")("component")(), gnmi::Path(),
+                execute_poll);
 
-    // Notify the client that all nodes have been processed.
-    APPEND_STATUS_IF_ERROR(
-        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+            // Notify the client that all nodes have been processed.
+            APPEND_STATUS_IF_ERROR(
+                status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
 
-    return status;
-  };  // NOLINT(readability/braces)
+            return status;
+          };  // NOLINT(readability/braces)
 
   // Add support for "/components/component/*".
   tree->AddNode(GetPath("components")("component")("*")())

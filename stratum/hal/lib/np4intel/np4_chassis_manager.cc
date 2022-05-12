@@ -168,11 +168,11 @@ namespace {
     uint64 node_id, uint32 port_id) const {
   auto* port_id_to_singleton =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_singleton != nullptr)
+  RET_CHECK(port_id_to_singleton != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const SingletonPort* singleton =
       gtl::FindOrNull(*port_id_to_singleton, port_id);
-  CHECK_RETURN_IF_FALSE(singleton != nullptr)
+  RET_CHECK(singleton != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   return singleton;
@@ -201,6 +201,15 @@ namespace {
           singleton->config_params().admin_state());
       break;
     }
+    case Request::kMacAddress: {
+      // TODO(unknown) Find out why the controller needs it.
+      // Find MAC address of port located at:
+      // - node_id: req.mac_address().node_id()
+      // - port_id: req.mac_address().port_id()
+      // and then write it into the response.
+      resp.mutable_mac_address()->set_mac_address(kDummyMacAddress);
+      break;
+    }
     case Request::kPortSpeed: {
       ASSIGN_OR_RETURN(auto* singleton,
                        GetSingletonPort(request.port_speed().node_id(),
@@ -217,10 +226,35 @@ namespace {
           singleton->speed_bps());
       break;
     }
+    case DataRequest::Request::kLacpRouterMac: {
+      // Find LACP System ID MAC address of port located at:
+      // - node_id: req.lacp_router_mac().node_id()
+      // - port_id: req.lacp_router_mac().port_id()
+      // and then write it into the response.
+      resp.mutable_lacp_router_mac()->set_mac_address(kDummyMacAddress);
+      break;
+    }
     case Request::kPortCounters: {
       RETURN_IF_ERROR(GetPortCounters(request.port_counters().node_id(),
                                       request.port_counters().port_id(),
                                       resp.mutable_port_counters()));
+      break;
+    }
+    case Request::kForwardingViability: {
+      // Find current port forwarding viable state for port located at:
+      // - node_id: req.forwarding_viable().node_id()
+      // - port_id: req.forwarding_viable().port_id()
+      // and then write it into the response.
+      resp.mutable_forwarding_viability()->set_state(
+          TRUNK_MEMBER_BLOCK_STATE_UNKNOWN);
+      break;
+    }
+    case DataRequest::Request::kHealthIndicator: {
+      // Find current port health indicator (LED) for port located at:
+      // - node_id: req.health_indicator().node_id()
+      // - port_id: req.health_indicator().port_id()
+      // and then write it into the response.
+      resp.mutable_health_indicator()->set_state(HEALTH_STATE_UNKNOWN);
       break;
     }
     case Request::kAutonegStatus: {
@@ -231,8 +265,11 @@ namespace {
           singleton->config_params().autoneg());
       break;
     }
+    case DataRequest::Request::kSdnPortId:
+      resp.mutable_sdn_port_id()->set_port_id(request.sdn_port_id().port_id());
+      break;
     default:
-      RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
+      return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
   return resp;
 }
@@ -244,11 +281,11 @@ namespace {
   }
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
+  RET_CHECK(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortState* port_state_ptr =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
-  CHECK_RETURN_IF_FALSE(port_state_ptr != nullptr)
+  RET_CHECK(port_state_ptr != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   if (*port_state_ptr != PORT_STATE_UNKNOWN) return *port_state_ptr;
@@ -299,7 +336,7 @@ void NP4ChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
   // the memory allocated to this event object once the event is handled by
   // the GnmiPublisher.
   if (!gnmi_event_writer_->Write(GnmiEventPtr(
-          new PortOperStateChangedEvent(node_id, port_id, new_state)))) {
+          new PortOperStateChangedEvent(node_id, port_id, new_state, 0)))) {
     // Remove WriterInterface if it is no longer operational.
     gnmi_event_writer_.reset();
   }
@@ -375,8 +412,10 @@ void NP4ChassisManager::ReadPortStatusChangeEvents() {
   absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
   if (!port_status_change_event_channel_->Close()) {
-    APPEND_ERROR(status)
-        << "Error when closing port status change event channel.";
+    ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                           << "Error when closing port status change"
+                           << " event channel.";
+    APPEND_STATUS_IF_ERROR(status, error);
   }
   port_status_change_event_thread_.join();
   // Once the thread is joined, it is safe to reset these pointers.

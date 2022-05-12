@@ -2,14 +2,13 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_package",
-    "stratum_platform_select",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -30,6 +29,16 @@ config_setting(
         "crosstool_top": "//unsupported_toolchains/crosstoolng_planetx86",
         "copt": "-DSTRATUM_ARCH_X86",
     },
+)
+
+config_setting(
+    name = "llvm_compiler",
+    flag_values = {"@bazel_tools//tools/cpp:compiler": "clang"},
+)
+
+config_setting(
+    name = "gcc_compiler",
+    flag_values = {"@bazel_tools//tools/cpp:compiler": "gcc"},
 )
 
 stratum_package(

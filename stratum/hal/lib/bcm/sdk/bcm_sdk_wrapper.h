@@ -32,13 +32,17 @@
 #include "stratum/hal/lib/common/constants.h"
 
 extern "C" {
+// The include order here is significant. First, we undefine symbols clashing
+// with the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+// Then we add the defines from the SDK.
 #include "sdk_build_flags.h"  // NOLINT
+// Finally, the regular SDK includes.
 #include "bcm/field.h"
 #include "bcm/port.h"
 #include "bcm/types.h"
-#include "ibde.h"             // NOLINT
-#include "linux-bde.h"        // NOLINT
+#include "ibde.h"       // NOLINT
+#include "linux-bde.h"  // NOLINT
 #include "soc/cmext.h"
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 }
@@ -138,7 +142,6 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status StartDiagShellServer() override;
   ::util::Status StartLinkscan(int unit) override;
   ::util::Status StopLinkscan(int unit) override;
-  void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
       int priority) override LOCKS_EXCLUDED(linkscan_writers_lock_);

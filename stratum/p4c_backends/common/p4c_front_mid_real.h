@@ -10,11 +10,11 @@
 #include <functional>
 #include <memory>
 
-#include "stratum/p4c_backends/common/midend_interface.h"
-#include "stratum/p4c_backends/common/p4c_front_mid_interface.h"
 #include "external/com_github_p4lang_p4c/frontends/common/options.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/frontend.h"
 #include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "stratum/p4c_backends/common/midend_interface.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_interface.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -33,7 +33,8 @@ class P4cFrontMidReal : public P4cFrontMidInterface {
   // callback runs during RunMidEndPass to create a custom midend.  This class
   // takes ownership of the callback's returned MidEndInterface pointer.
   typedef std::function<std::unique_ptr<MidEndInterface>(
-      CompilerOptions* p4c_options)> MidEndCreateCallback;
+      CompilerOptions* p4c_options)>
+      MidEndCreateCallback;
 
   P4cFrontMidReal();
   explicit P4cFrontMidReal(MidEndCreateCallback callback);

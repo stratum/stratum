@@ -9,15 +9,16 @@
 #include <memory>
 #include <utility>
 
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/public/proto/error.pb.h"
 
 constexpr char kDefaultDummyBoxUrl[] = "localhost:28010";
 const ::absl::Duration kDefaultEventWriteTimeout = absl::Seconds(10);
 
-DEFINE_string(dummy_box_url, kDefaultDummyBoxUrl,
-             "External URL for dummmy box server to listen to external calls.");
+DEFINE_string(
+    dummy_box_url, kDefaultDummyBoxUrl,
+    "External URL for dummmy box server to listen to external calls.");
 DEFINE_int32(dummy_test_grpc_keepalive_time_ms, 600000, "grpc keep alive time");
 DEFINE_int32(dummy_test_grpc_keepalive_timeout_ms, 20000,
              "grpc keep alive timeout period");
@@ -28,7 +29,6 @@ DEFINE_int32(dummy_test_grpc_keepalive_permit, 1, "grpc keep alive permit");
 namespace stratum {
 namespace hal {
 namespace dummy_switch {
-
 
 std::unique_ptr<::grpc::Server> external_server_;
 
@@ -42,12 +42,9 @@ void* ExternalServerWaitingFunc(void* arg) {
   return nullptr;
 }
 
-::grpc::Status
-DummyBox::DeviceStatusUpdate(::grpc::ServerContext* context,
-                             const DeviceStatusUpdateRequest* request,
-                             DeviceStatusUpdateResponse* response) {
-  // The response is always an empty message
-  response = new DeviceStatusUpdateResponse();
+::grpc::Status DummyBox::DeviceStatusUpdate(
+    ::grpc::ServerContext* context, const DeviceStatusUpdateRequest* request,
+    DeviceStatusUpdateResponse* response) {
   switch (request->source().source_case()) {
     case DeviceStatusUpdateRequest::Source::kPort:
       return HandlePortStatusUpdate(request->source().port().node_id(),
@@ -62,12 +59,10 @@ DummyBox::DeviceStatusUpdate(::grpc::ServerContext* context,
   }
 }
 
-::grpc::Status
-DummyBox::TransceiverEventUpdate(::grpc::ServerContext* context,
-                 const TransceiverEventRequest* request,
-                 TransceiverEventResponse* response) {
+::grpc::Status DummyBox::TransceiverEventUpdate(
+    ::grpc::ServerContext* context, const TransceiverEventRequest* request,
+    TransceiverEventResponse* response) {
   absl::ReaderMutexLock l(&sdk_lock_);
-  response = new TransceiverEventResponse();
   for (auto& writer_elem : xcvr_event_writers_) {
     PhalInterface::TransceiverEvent event;
     event.slot = request->slot();
@@ -78,17 +73,15 @@ DummyBox::TransceiverEventUpdate(::grpc::ServerContext* context,
   return ::grpc::Status();
 }
 
-::grpc::Status
-DummyBox::HandlePortStatusUpdate(uint64 node_id,
-                                 uint64 port_id,
-                                 ::stratum::hal::DataResponse state_update) {
+::grpc::Status DummyBox::HandlePortStatusUpdate(
+    uint64 node_id, uint64 port_id, ::stratum::hal::DataResponse state_update) {
   absl::ReaderMutexLock l(&sdk_lock_);
   auto event_writer_elem = node_event_notify_writers_.find(node_id);
   if (event_writer_elem == node_event_notify_writers_.end()) {
     // No event writer for this device can handle the event.
     LOG(WARNING) << "Receives device status update event, however"
-      << " there is no event writer for device id " << node_id
-      << " found, drop event.";
+                 << " there is no event writer for device id " << node_id
+                 << " found, drop event.";
     return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
                           "Event writer not found");
   }
@@ -102,10 +95,9 @@ DummyBox::HandlePortStatusUpdate(uint64 node_id,
   return ::grpc::Status();
 }
 
-::util::StatusOr<int>
-DummyBox::RegisterTransceiverEventWriter(
-  std::unique_ptr<ChannelWriter<PhalInterface::TransceiverEvent>> writer,
-  int priority) {
+::util::StatusOr<int> DummyBox::RegisterTransceiverEventWriter(
+    std::unique_ptr<ChannelWriter<PhalInterface::TransceiverEvent>> writer,
+    int priority) {
   absl::WriterMutexLock l(&sdk_lock_);
   // Generate new transceiver writer ID
   ++xcvr_writer_id_;
@@ -115,27 +107,24 @@ DummyBox::RegisterTransceiverEventWriter(
   xcvr_event_writer.id = xcvr_writer_id_;
   xcvr_event_writers_.push_back(std::move(xcvr_event_writer));
 
-  std::sort(xcvr_event_writers_.begin(),
-            xcvr_event_writers_.end(),
+  std::sort(xcvr_event_writers_.begin(), xcvr_event_writers_.end(),
             TransceiverEventWriterComp());
   return ::util::StatusOr<int>(xcvr_writer_id_);
 }
 
 ::util::Status DummyBox::UnregisterTransceiverEventWriter(int id) {
   absl::WriterMutexLock l(&sdk_lock_);
-  std::remove_if(xcvr_event_writers_.begin(),
-                 xcvr_event_writers_.end(),
+  std::remove_if(xcvr_event_writers_.begin(), xcvr_event_writers_.end(),
                  FindXcvrById(id));
   return ::util::OkStatus();
 }
 
-::util::Status
-DummyBox::RegisterNodeEventNotifyWriter(
-  uint64 node_id,
-  std::shared_ptr<WriterInterface<DummyNodeEventPtr>> writer) {
+::util::Status DummyBox::RegisterNodeEventNotifyWriter(
+    uint64 node_id,
+    std::shared_ptr<WriterInterface<DummyNodeEventPtr>> writer) {
   absl::WriterMutexLock l(&sdk_lock_);
   if (node_event_notify_writers_.find(node_id) !=
-        node_event_notify_writers_.end()) {
+      node_event_notify_writers_.end()) {
     return ::util::Status(::util::error::ALREADY_EXISTS,
                           "Writer already exists");
   }
@@ -147,16 +136,15 @@ DummyBox::RegisterNodeEventNotifyWriter(
 ::util::Status DummyBox::UnregisterNodeEventNotifyWriter(uint64 node_id) {
   absl::WriterMutexLock l(&sdk_lock_);
   if (node_event_notify_writers_.find(node_id) ==
-        node_event_notify_writers_.end()) {
-    return ::util::Status(::util::error::NOT_FOUND,
-                          "Writer not found");
+      node_event_notify_writers_.end()) {
+    return ::util::Status(::util::error::NOT_FOUND, "Writer not found");
   }
   node_event_notify_writers_.erase(node_id);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyBox::RegisterChassisEventNotifyWriter(
-      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
+    std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   absl::WriterMutexLock l(&sdk_lock_);
   if (chassis_event_notify_writer_) {
     return MAKE_ERROR(ERR_INTERNAL) << "Chassis event writer already exists";
@@ -200,19 +188,18 @@ DummyBox* DummyBox::GetSingleton() {
   external_server_ = builder.BuildAndStart();
   if (external_server_ == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL)
-            << "Failed to start DummyBox test service to listen "
-            << "to " << FLAGS_dummy_box_url << ".";
+           << "Failed to start DummyBox test service to listen "
+           << "to " << FLAGS_dummy_box_url << ".";
   }
 
   // Create another thread to run "external_server_->Wait()" since we can not
   // block the main thread here
-  pthread_t external_server_thread_;
-  int ret = pthread_create(&external_server_thread_, nullptr,
+  int ret = pthread_create(&external_server_tid_, nullptr,
                            ExternalServerWaitingFunc, nullptr);
 
   if (ret != 0) {
     return MAKE_ERROR(ERR_INTERNAL)
-            << "Failed to create server listen thread. Err: " << ret << ".";
+           << "Failed to create server listen thread. Err: " << ret << ".";
   }
 
   initialized_ = true;
@@ -223,14 +210,14 @@ DummyBox* DummyBox::GetSingleton() {
   absl::WriterMutexLock l(&sdk_lock_);
   LOG(INFO) << "Shutting down the DummyBox.";
   external_server_->Shutdown(std::chrono::system_clock::now());
+  if (external_server_tid_) pthread_join(external_server_tid_, nullptr);
   initialized_ = false;
   return ::util::OkStatus();
 }
 
 DummyBox::~DummyBox() {}
 DummyBox::DummyBox()
-: initialized_(false),
-  xcvr_writer_id_(0) {}
+    : initialized_(false), xcvr_writer_id_(0), external_server_tid_() {}
 
 }  // namespace dummy_switch
 }  // namespace hal

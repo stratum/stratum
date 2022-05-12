@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <csignal>
 #include <iomanip>
 #include <sstream>  // IWYU pragma: keep
 #include <string>
@@ -32,8 +33,11 @@
 #include <utility>
 
 extern "C" {
+// The include order here is significant. First, we undefine symbols clashing
+// with the SDK.
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-#include "sdk_build_flags.h"                      // NOLINT
+// Then we add the defines from the SDK.
+#include "sdk_build_flags.h"  // NOLINT
 // TODO(bocon) we might be able to prune some of these includes
 #include "appl/diag/bslmgmt.h"
 #include "appl/diag/opennsa_diag.h"
@@ -159,7 +163,6 @@ extern int bcm_field_qualify_IcmpTypeCode_get(int unit, bcm_field_entry_t entry,
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
@@ -180,14 +183,14 @@ DEFINE_int32(max_num_linkscan_writers, 10,
              "Max number of linkscan event Writers supported.");
 DECLARE_string(bcm_sdk_checkpoint_dir);
 
-using ::google::protobuf::util::MessageDifferencer;
-
-// TODO(unknown): There are many CHECK_RETURN_IF_FALSE in this file which will
+// TODO(unknown): There are many RET_CHECK in this file which will
 // need to be changed to return ERR_INTERNAL as opposed to ERR_INVALID_PARAM.
 
 namespace stratum {
 namespace hal {
 namespace bcm {
+
+using ::google::protobuf::util::MessageDifferencer;
 
 constexpr absl::Duration BcmSdkWrapper::kWriteTimeout;
 constexpr int BcmSdkWrapper::kUdfChunkSize;
@@ -508,8 +511,7 @@ extern "C" void sdk_linkscan_callback(int unit, bcm_port_t port,
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
     return;
   }
-  LOG(INFO) << "Unit: " << unit << " Port: " << port << " Link: "
-            << "changed.";
+  VLOG(1) << "Link on unit: " << unit << " Port: " << port << " changed.";
   // Forward the event.
   bcm_sdk_wrapper->OnLinkscanEvent(unit, port, info);
 }
@@ -1018,12 +1020,11 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
         }
       }
       if (bcm_port.flex_port()) {
-        CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
-                              chip_type == BcmChip::TRIDENT2)
+        RET_CHECK(chip_type == BcmChip::TOMAHAWK ||
+                  chip_type == BcmChip::TRIDENT2)
             << "Un-supported BCM chip type: "
             << BcmChip::BcmChipType_Name(chip_type);
-        CHECK_RETURN_IF_FALSE(bcm_port.channel() >= 1 &&
-                              bcm_port.channel() <= 4)
+        RET_CHECK(bcm_port.channel() >= 1 && bcm_port.channel() <= 4)
             << "Flex-port with no channel: " << bcm_port.ShortDebugString();
         speed_bps =
             flex_chip_to_channel_to_speed[chip_type][bcm_port.channel()];
@@ -1031,8 +1032,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
         speed_bps = bcm_port.speed_bps();
       }
     } else if (bcm_port.type() == BcmPort::MGMT) {
-      CHECK_RETURN_IF_FALSE(!bcm_port.flex_port())
-          << "Mgmt ports cannot be flex.";
+      RET_CHECK(!bcm_port.flex_port()) << "Mgmt ports cannot be flex.";
       speed_bps = bcm_port.speed_bps();
     } else {
       return MAKE_ERROR(ERR_INTERNAL)
@@ -1134,8 +1134,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
 ::util::Status BcmSdkWrapper::FindUnit(int unit, int pci_bus, int pci_slot,
                                        BcmChip::BcmChipType chip_type) {
-  CHECK_RETURN_IF_FALSE(bde_)
-      << "BDE not initialized yet. Call InitializeSdk() first.";
+  RET_CHECK(bde_) << "BDE not initialized yet. Call InitializeSdk() first.";
 
   // see: sysconf_probe()
   int num_devices = bde_->num_devices(BDE_ALL_DEVICES);
@@ -1163,7 +1162,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
             dev->device, dev->rev,
             reinterpret_cast<void*>(&unit_to_soc_device_[unit]->dev_num), unit);
       }
-      CHECK_RETURN_IF_FALSE(handle == unit)
+      RET_CHECK(handle == unit)
           << "Unit " << unit << " was not assigned to SOC device " << dev_name
           << " found on PCI bus " << pci_bus << ", PCI slot " << pci_slot
           << ". The device handle for this SOC device (" << handle
@@ -1181,17 +1180,16 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkWrapper::InitializeUnit(int unit, bool warm_boot) {
-  CHECK_RETURN_IF_FALSE(bde_)
-      << "BDE not initialized yet. Call InitializeSdk() first.";
+  RET_CHECK(bde_) << "BDE not initialized yet. Call InitializeSdk() first.";
 
   // SOC device init.
   {
     absl::WriterMutexLock l(&data_lock_);
-    CHECK_RETURN_IF_FALSE(unit_to_soc_device_.count(unit))
+    RET_CHECK(unit_to_soc_device_.count(unit))
         << "Unit " << unit << " has not been assigned to any SOC device.";
-    CHECK_RETURN_IF_FALSE(!unit_to_soc_device_[unit]->dev_vec)
+    RET_CHECK(!unit_to_soc_device_[unit]->dev_vec)
         << "Unit " << unit << " has been already initialized.";
-    CHECK_RETURN_IF_FALSE(unit_to_soc_device_[unit]->dev_num == unit)
+    RET_CHECK(unit_to_soc_device_[unit]->dev_num == unit)
         << "dev_num does not match unit";
     soc_cm_device_vectors_t* dev_vec = new soc_cm_device_vectors_t();
     bde_->pci_bus_features(
@@ -1346,12 +1344,12 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                              : BCM_STG_STP_FORWARD));
   }
   if (options.speed_bps() > 0) {
-    CHECK_RETURN_IF_FALSE(options.speed_bps() % kBitsPerMegabit == 0);
+    RET_CHECK(options.speed_bps() % kBitsPerMegabit == 0);
     RETURN_IF_BCM_ERROR(
         bcm_port_speed_set(unit, port, options.speed_bps() / kBitsPerMegabit));
   }
   if (options.max_frame_size() > 0) {
-    CHECK_RETURN_IF_FALSE(options.max_frame_size() > 0);
+    RET_CHECK(options.max_frame_size() > 0);
     RETURN_IF_BCM_ERROR(
         bcm_port_frame_max_set(unit, port, options.max_frame_size()));
   }
@@ -1401,7 +1399,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                              BcmPortOptions* options) {
   int speed_mbps = 0;
   RETURN_IF_BCM_ERROR(bcm_port_speed_get(unit, port, &speed_mbps));
-  CHECK_RETURN_IF_FALSE(speed_mbps > 0);
+  RET_CHECK(speed_mbps > 0);
   options->set_speed_bps(speed_mbps * kBitsPerMegabit);
 
   int loopback_mode = BCM_PORT_LOOPBACK_NONE;
@@ -1428,7 +1426,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
 ::util::Status BcmSdkWrapper::GetPortCounters(int unit, int port,
                                               PortCounters* pc) {
-  CHECK_RETURN_IF_FALSE(pc);
+  RET_CHECK(pc);
   pc->Clear();
   uint64 val;
   // in
@@ -1508,8 +1506,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 ::util::StatusOr<int> BcmSdkWrapper::RegisterLinkscanEventWriter(
     std::unique_ptr<ChannelWriter<LinkscanEvent>> writer, int priority) {
   absl::WriterMutexLock l(&linkscan_writers_lock_);
-  CHECK_RETURN_IF_FALSE(linkscan_event_writers_.size() <
-                        static_cast<size_t>(FLAGS_max_num_linkscan_writers))
+  RET_CHECK(linkscan_event_writers_.size() <
+            static_cast<size_t>(FLAGS_max_num_linkscan_writers))
       << "Can only support " << FLAGS_max_num_linkscan_writers
       << " linkscan event Writers.";
 
@@ -1526,7 +1524,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       break;
     }
   }
-  CHECK_RETURN_IF_FALSE(next_id != kInvalidWriterId)
+  RET_CHECK(next_id != kInvalidWriterId)
       << "Could not find a new ID for the Writer. next_id=" << next_id << ".";
 
   linkscan_event_writers_.insert({std::move(writer), priority, next_id});
@@ -1539,7 +1537,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   auto it = std::find_if(
       linkscan_event_writers_.begin(), linkscan_event_writers_.end(),
       [id](const BcmLinkscanEventWriter& h) { return h.id == id; });
-  CHECK_RETURN_IF_FALSE(it != linkscan_event_writers_.end())
+  RET_CHECK(it != linkscan_event_writers_.end())
       << "Could not find a linkscan event Writer with ID " << id << ".";
 
   linkscan_event_writers_.erase(it);
@@ -1554,7 +1552,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::SetMtu(int unit, int mtu) {
   absl::WriterMutexLock l(&data_lock_);
-  CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
+  RET_CHECK(unit_to_mtu_.count(unit));
   // TODO(unknown): Modify mtu for all the interfaces on this unit.
   unit_to_mtu_[unit] = mtu;
 
@@ -1567,10 +1565,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int mtu = 0;
   {
     absl::ReaderMutexLock l(&data_lock_);
-    CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
+    RET_CHECK(unit_to_mtu_.count(unit));
     mtu = unit_to_mtu_[unit];
   }
-  CHECK_RETURN_IF_FALSE(router_mac);
+  RET_CHECK(router_mac);
   bcm_l3_intf_t l3_intf;
   bcm_l3_intf_t_init(&l3_intf);
   l3_intf.l3a_vid = vlan > 0 ? vlan : BCM_VLAN_DEFAULT;
@@ -1578,7 +1576,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_intf.l3a_mtu = mtu;
   Uint64ToBcmMac(router_mac, &l3_intf.l3a_mac_addr);
   RETURN_IF_BCM_ERROR(FindOrCreateL3RouterIntfHelper(unit, &l3_intf));
-  CHECK_RETURN_IF_FALSE(l3_intf.l3a_intf_id > 0);
+  RET_CHECK(l3_intf.l3a_intf_id > 0);
 
   return l3_intf.l3a_intf_id;
 }
@@ -1606,15 +1604,15 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int egress_intf_id = 0;
   RETURN_IF_BCM_ERROR(
       FindOrCreateL3EgressIntfHelper(unit, &l3_egress, &egress_intf_id));
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
 
   return egress_intf_id;
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3PortEgressIntf(
     int unit, uint64 nexthop_mac, int port, int vlan, int router_intf_id) {
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   bcm_l3_egress_t l3_egress;
   bcm_l3_egress_t_init(&l3_egress);
   Uint64ToBcmMac(nexthop_mac, &l3_egress.mac_addr);
@@ -1626,15 +1624,15 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int egress_intf_id = 0;
   RETURN_IF_BCM_ERROR(
       FindOrCreateL3EgressIntfHelper(unit, &l3_egress, &egress_intf_id));
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
 
   return egress_intf_id;
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3TrunkEgressIntf(
     int unit, uint64 nexthop_mac, int trunk, int vlan, int router_intf_id) {
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   bcm_l3_egress_t l3_egress;
   bcm_l3_egress_t_init(&l3_egress);
   Uint64ToBcmMac(nexthop_mac, &l3_egress.mac_addr);
@@ -1646,7 +1644,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int egress_intf_id = 0;
   RETURN_IF_BCM_ERROR(
       FindOrCreateL3EgressIntfHelper(unit, &l3_egress, &egress_intf_id));
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
 
   return egress_intf_id;
 }
@@ -1661,7 +1659,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   int egress_intf_id = 0;
   RETURN_IF_BCM_ERROR(
       FindOrCreateL3EgressIntfHelper(unit, &l3_egress, &egress_intf_id));
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
 
   return egress_intf_id;
 }
@@ -1686,8 +1684,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                      uint64 nexthop_mac,
                                                      int port, int vlan,
                                                      int router_intf_id) {
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   bcm_l3_egress_t l3_egress;
   bcm_l3_egress_t_init(&l3_egress);
   Uint64ToBcmMac(nexthop_mac, &l3_egress.mac_addr);
@@ -1707,8 +1705,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                       uint64 nexthop_mac,
                                                       int trunk, int vlan,
                                                       int router_intf_id) {
-  CHECK_RETURN_IF_FALSE(nexthop_mac);
-  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  RET_CHECK(nexthop_mac);
+  RET_CHECK(router_intf_id > 0);
   bcm_l3_egress_t l3_egress;
   bcm_l3_egress_t_init(&l3_egress);
   Uint64ToBcmMac(nexthop_mac, &l3_egress.mac_addr);
@@ -1768,7 +1766,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_egress_ecmp.max_paths = members_count;
   RETURN_IF_BCM_ERROR(FindOrCreateEcmpEgressIntfHelper(
       unit, &l3_egress_ecmp, members_count, members_array));
-  CHECK_RETURN_IF_FALSE(l3_egress_ecmp.ecmp_intf > 0);
+  RET_CHECK(l3_egress_ecmp.ecmp_intf > 0);
 
   return l3_egress_ecmp.ecmp_intf;
 }
@@ -1866,7 +1864,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                                              uint32 mask, int class_id,
                                              int egress_intf_id,
                                              bool is_intf_multipath) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_route_t route;
   bcm_l3_route_t_init(&route);
   PopulateL3RouteKeyIpv4(vrf, subnet, mask, &route);
@@ -1886,7 +1884,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                                              const std::string& mask,
                                              int class_id, int egress_intf_id,
                                              bool is_intf_multipath) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_route_t route;
   bcm_l3_route_t_init(&route);
   PopulateL3RouteKeyIpv6(vrf, subnet, mask, &route);
@@ -1903,7 +1901,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 
 ::util::Status BcmSdkWrapper::AddL3HostIpv4(int unit, int vrf, uint32 ipv4,
                                             int class_id, int egress_intf_id) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_host_t host;
   bcm_l3_host_t_init(&host);
   PopulateL3HostKeyIpv4(vrf, ipv4, &host);
@@ -1921,7 +1919,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 ::util::Status BcmSdkWrapper::AddL3HostIpv6(int unit, int vrf,
                                             const std::string& ipv6,
                                             int class_id, int egress_intf_id) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_host_t host;
   bcm_l3_host_t_init(&host);
   PopulateL3HostKeyIpv6(vrf, ipv6, &host);
@@ -1941,7 +1939,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                                                 int class_id,
                                                 int egress_intf_id,
                                                 bool is_intf_multipath) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_route_t route;
   bcm_l3_route_t_init(&route);
   PopulateL3RouteKeyIpv4(vrf, subnet, mask, &route);
@@ -1960,7 +1958,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 ::util::Status BcmSdkWrapper::ModifyL3RouteIpv6(
     int unit, int vrf, const std::string& subnet, const std::string& mask,
     int class_id, int egress_intf_id, bool is_intf_multipath) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_route_t route;
   bcm_l3_route_t_init(&route);
   PopulateL3RouteKeyIpv6(vrf, subnet, mask, &route);
@@ -1979,7 +1977,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 ::util::Status BcmSdkWrapper::ModifyL3HostIpv4(int unit, int vrf, uint32 ipv4,
                                                int class_id,
                                                int egress_intf_id) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_host_t host;
   bcm_l3_host_t_init(&host);
   PopulateL3HostKeyIpv4(vrf, ipv4, &host);
@@ -1999,7 +1997,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                                                const std::string& ipv6,
                                                int class_id,
                                                int egress_intf_id) {
-  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  RET_CHECK(egress_intf_id > 0);
   bcm_l3_host_t host;
   bcm_l3_host_t_init(&host);
   PopulateL3HostKeyIpv6(vrf, ipv6, &host);
@@ -2100,7 +2098,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   }
   int station_id = -1;
   RETURN_IF_BCM_ERROR(bcm_l2_station_add(unit, &station_id, &l2_station));
-  CHECK_RETURN_IF_FALSE(station_id > 0);
+  RET_CHECK(station_id > 0);
 
   VLOG(1) << "Added dst MAC " << BcmMacToStr(l2_station.dst_mac) << " & VLAN "
           << vlan << " to my station TCAM with priority " << priority
@@ -2258,11 +2256,11 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
     int serdes_num_lanes, const std::string& intf_type,
     const SerdesRegisterConfigs& serdes_register_configs,
     const SerdesAttrConfigs& serdes_attr_configs) {
-  CHECK_RETURN_IF_FALSE(!intf_type.empty());
+  RET_CHECK(!intf_type.empty());
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
-  CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
-                        chip_type == BcmChip::TOMAHAWK_PLUS ||
-                        chip_type == BcmChip::TRIDENT2)
+  RET_CHECK(chip_type == BcmChip::TOMAHAWK ||
+            chip_type == BcmChip::TOMAHAWK_PLUS ||
+            chip_type == BcmChip::TRIDENT2)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
   // First disable linkscan and the port. But first save the state to be able
@@ -2316,13 +2314,13 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 ::util::Status BcmSdkWrapper::CreateKnetIntf(int unit, int vlan,
                                              std::string* netif_name,
                                              int* netif_id) {
-  CHECK_RETURN_IF_FALSE(netif_name != nullptr && netif_id != nullptr)
+  RET_CHECK(netif_name != nullptr && netif_id != nullptr)
       << "Null netif_name or netif_id pointers.";
-  CHECK_RETURN_IF_FALSE(!netif_name->empty())
+  RET_CHECK(!netif_name->empty())
       << "Empty netif name for unit " << unit << ".";
-  CHECK_RETURN_IF_FALSE(netif_name->length() <= static_cast<size_t>(IFNAMSIZ) &&
-                        netif_name->length() <=
-                            static_cast<size_t>(BCM_KNET_NETIF_NAME_MAX))
+  RET_CHECK(netif_name->length() <= static_cast<size_t>(IFNAMSIZ) &&
+            netif_name->length() <=
+                static_cast<size_t>(BCM_KNET_NETIF_NAME_MAX))
       << "Oversize netif name for unit " << unit << ": " << *netif_name << ".";
   bcm_knet_netif_t netif;
   bcm_knet_netif_t_init(&netif);
@@ -2402,17 +2400,17 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
 
 ::util::Status BcmSdkWrapper::StartRx(int unit, const RxConfig& rx_config) {
   // Sanity checking.
-  CHECK_RETURN_IF_FALSE(rx_config.rx_pool_pkt_count > 0);
-  CHECK_RETURN_IF_FALSE(rx_config.rx_pool_bytes_per_pkt > 0);
-  CHECK_RETURN_IF_FALSE(rx_config.max_pkt_size_bytes > 0);
-  CHECK_RETURN_IF_FALSE(rx_config.pkts_per_chain > 0);
-  CHECK_RETURN_IF_FALSE(!rx_config.dma_channel_configs.empty());
+  RET_CHECK(rx_config.rx_pool_pkt_count > 0);
+  RET_CHECK(rx_config.rx_pool_bytes_per_pkt > 0);
+  RET_CHECK(rx_config.max_pkt_size_bytes > 0);
+  RET_CHECK(rx_config.pkts_per_chain > 0);
+  RET_CHECK(!rx_config.dma_channel_configs.empty());
   for (const auto& e : rx_config.dma_channel_configs) {
-    CHECK_RETURN_IF_FALSE(e.first <= BCM_RX_CHANNELS);
-    CHECK_RETURN_IF_FALSE(e.second.chains > 0);
-    CHECK_RETURN_IF_FALSE(!e.second.cos_set.empty());
+    RET_CHECK(e.first <= BCM_RX_CHANNELS);
+    RET_CHECK(e.second.chains > 0);
+    RET_CHECK(!e.second.cos_set.empty());
     for (int c : e.second.cos_set) {
-      CHECK_RETURN_IF_FALSE(c <= 48);  // Maximum number of cos values
+      RET_CHECK(c <= 48);  // Maximum number of cos values
     }
   }
 
@@ -2487,7 +2485,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
     int unit, const RateLimitConfig& rate_limit_config) {
   // Sanity checking.
   for (const auto& e : rate_limit_config.per_cos_rate_limit_configs) {
-    CHECK_RETURN_IF_FALSE(e.first <= 48);  // Maximum number of cos values
+    RET_CHECK(e.first <= 48);  // Maximum number of cos values
   }
 
   // Apply global and per cos rate limiting.
@@ -2509,7 +2507,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
                                                        int cos, uint64 smac,
                                                        size_t packet_len,
                                                        std::string* header) {
-  CHECK_RETURN_IF_FALSE(header != nullptr);
+  RET_CHECK(header != nullptr);
   header->clear();
 
   // Try to find the headers for the packet that goes to a port directly. The
@@ -2552,9 +2550,9 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
   // The rest of the code is chip-dependent. Need to see which chip we are
   // talking about
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
-  CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
-                        chip_type == BcmChip::TOMAHAWK_PLUS ||
-                        chip_type == BcmChip::TRIDENT2)
+  RET_CHECK(chip_type == BcmChip::TOMAHAWK ||
+            chip_type == BcmChip::TOMAHAWK_PLUS ||
+            chip_type == BcmChip::TRIDENT2)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
   cos = (cos >= 0 ? cos : BCM_COS_DEFAULT);
@@ -2589,7 +2587,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
     ok &= SetSobField<2, 14, 14>(meta, 1);     // UNICAST: yes
     ok &= SetSobField<2, 7, 0>(meta, module);  // SRC_MODID
   }
-  CHECK_RETURN_IF_FALSE(ok) << "Failed to set SOBMH fields.";
+  RET_CHECK(ok) << "Failed to set SOBMH fields.";
   header->append(meta, sizeof(meta));
 
   return ::util::OkStatus();
@@ -2597,7 +2595,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
 
 ::util::Status BcmSdkWrapper::GetKnetHeaderForIngressPipelineTx(
     int unit, uint64 smac, size_t packet_len, std::string* header) {
-  CHECK_RETURN_IF_FALSE(header != nullptr);
+  RET_CHECK(header != nullptr);
   header->clear();
 
   // Try to find the headers for the packet that goes to ingress pipeline.
@@ -2650,34 +2648,31 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   //  ----------------------------------
   // Note that the total length of RX meta is fixed. The header passed to this
   // method will contain RCPU header + RX meta.
-  CHECK_RETURN_IF_FALSE(header.length() == sizeof(RcpuHeader) + kRcpuRxMetaSize)
+  RET_CHECK(header.length() == sizeof(RcpuHeader) + kRcpuRxMetaSize)
       << "Invalid KNET header size for RX (" << header.length()
       << " != " << sizeof(RcpuHeader) + kRcpuRxMetaSize << ").";
 
   // Valid RCPU header. We dont care about src/dst MACs in RCPU header here.
   const struct RcpuHeader* rcpu_header =
       reinterpret_cast<const struct RcpuHeader*>(header.data());
-  CHECK_RETURN_IF_FALSE(ntohs(rcpu_header->ether_header.ether_type) ==
-                        kRcpuVlanEthertype)
+  RET_CHECK(ntohs(rcpu_header->ether_header.ether_type) == kRcpuVlanEthertype)
       << ntohs(rcpu_header->ether_header.ether_type)
       << " != " << kRcpuVlanEthertype;
-  CHECK_RETURN_IF_FALSE((ntohs(rcpu_header->vlan_tag.vlan_id) & kVlanIdMask) ==
-                        kRcpuVlanId)
+  RET_CHECK((ntohs(rcpu_header->vlan_tag.vlan_id) & kVlanIdMask) == kRcpuVlanId)
       << (ntohs(rcpu_header->vlan_tag.vlan_id) & kVlanIdMask)
       << " != " << kRcpuVlanId;
-  CHECK_RETURN_IF_FALSE(ntohs(rcpu_header->vlan_tag.type) == kRcpuEthertype)
+  RET_CHECK(ntohs(rcpu_header->vlan_tag.type) == kRcpuEthertype)
       << ntohs(rcpu_header->vlan_tag.type) << " != " << kRcpuEthertype;
-  CHECK_RETURN_IF_FALSE(rcpu_header->rcpu_data.rcpu_opcode ==
-                        kRcpuOpcodeToCpuPkt)
+  RET_CHECK(rcpu_header->rcpu_data.rcpu_opcode == kRcpuOpcodeToCpuPkt)
       << rcpu_header->rcpu_data.rcpu_opcode << " != " << kRcpuOpcodeToCpuPkt;
-  CHECK_RETURN_IF_FALSE(rcpu_header->rcpu_data.rcpu_flags == kRcpuFlagModhdr)
+  RET_CHECK(rcpu_header->rcpu_data.rcpu_flags == kRcpuFlagModhdr)
       << rcpu_header->rcpu_data.rcpu_flags << " != " << kRcpuFlagModhdr;
 
   // Parse RX meta. The rest of the code is chip-dependent.
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
-  CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
-                        chip_type == BcmChip::TOMAHAWK_PLUS ||
-                        chip_type == BcmChip::TRIDENT2)
+  RET_CHECK(chip_type == BcmChip::TOMAHAWK ||
+            chip_type == BcmChip::TOMAHAWK_PLUS ||
+            chip_type == BcmChip::TRIDENT2)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
   const char* meta = header.data() + sizeof(RcpuHeader);
@@ -2711,14 +2706,14 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   // add a check here to make sure this assumption is always correct. Second,
   // for the (dst_module, dst_port) the value received after parsing the header
   // depends on the op_code.
-  CHECK_RETURN_IF_FALSE(src_module == module)
+  RET_CHECK(src_module == module)
       << "Invalid src_module: (op_code=" << op_code
       << ", src_mod=" << src_module << ", dst_mod=" << dst_module
       << ", base_mod=" << module << ", src_port=" << src_port
       << ", dst_port=" << dst_port << ", cos=" << *cos << ").";
   switch (op_code) {
     case 1:  // BCM_PKT_OPCODE_UC
-      CHECK_RETURN_IF_FALSE(dst_module == module)
+      RET_CHECK(dst_module == module)
           << "Invalid dst_module: (op_code=" << op_code
           << ", src_mod=" << src_module << ", dst_mod=" << dst_module
           << ", base_mod=" << module << ", src_port=" << src_port
@@ -3074,9 +3069,9 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   // Set pipeline stage for table.
   bcm_field_qualify_t bcm_stage = HalAclStageToBcm(table.stage());
   if (bcm_stage == bcmFieldQualifyCount) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Attempted to create ACL table with invalid pipeline stage: "
-        << BcmAclStage_Name(table.stage()) << ".";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Attempted to create ACL table with invalid pipeline stage: "
+           << BcmAclStage_Name(table.stage()) << ".";
   }
   BCM_FIELD_QSET_ADD(group_config.qset, bcm_stage);
   // Add qualifier fields to group config.
@@ -3090,9 +3085,10 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     bcm_field_qualify_t bcm_field =
         HalAclFieldToBcm(table.stage(), field.type());
     if (bcm_field == bcmFieldQualifyCount) {
-      RETURN_ERROR(ERR_INVALID_PARAM)
-          << "Attempted to create ACL table with invalid predefined qualifier: "
-          << field.ShortDebugString() << ".";
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Attempted to create ACL table with invalid predefined "
+                "qualifier: "
+             << field.ShortDebugString() << ".";
     }
     BCM_FIELD_QSET_ADD(group_config.qset, bcm_field);
   }
@@ -3185,9 +3181,9 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
                                   const BcmField& field) {
   if ((field.type() != BcmField::ETH_DST) &&
       (field.type() != BcmField::ETH_SRC)) {
-    RETURN_ERROR()
-        << "Attempted to add MAC address qualifier with wrong field type: "
-        << BcmField::Type_Name(field.type()) << ".";
+    return MAKE_ERROR()
+           << "Attempted to add MAC address qualifier with wrong field type: "
+           << BcmField::Type_Name(field.type()) << ".";
   }
 
   // Copy over value and mask from field to BCM types.
@@ -3220,9 +3216,9 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
         (field.type() != BcmField::IPV6_DST) ||
         (field.type() != BcmField::IPV6_SRC_UPPER_64) ||
         (field.type() != BcmField::IPV6_DST_UPPER_64))) {
-    RETURN_ERROR()
-        << "Attempted to add IPv6 address qualifier with wrong field type: "
-        << BcmField::Type_Name(field.type()) << ".";
+    return MAKE_ERROR()
+           << "Attempted to add IPv6 address qualifier with wrong field type: "
+           << BcmField::Type_Name(field.type()) << ".";
   }
 
   // Copy over value and mask from field to BCM types.
@@ -3253,7 +3249,7 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
           bcm_field_qualify_DstIp6High(unit, entry, value, mask));
       break;
     default:
-      RETURN_ERROR() << "Control flow is broken.";
+      return MAKE_ERROR() << "Control flow is broken.";
   }
   return ::util::OkStatus();
 }
@@ -3441,8 +3437,9 @@ inline int bcm_add_field_u32(F func, int unit, int flow_id,
           bcm_field_qualify_IcmpTypeCode, unit, entry, field));
       break;
     default:
-      RETURN_ERROR() << "Attempted to translate unsupported BcmField::Type: "
-                     << BcmField::Type_Name(field.type()) << ".";
+      return MAKE_ERROR()
+             << "Attempted to translate unsupported BcmField::Type: "
+             << BcmField::Type_Name(field.type()) << ".";
   }
   return ::util::OkStatus();
 }
@@ -3895,9 +3892,9 @@ inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
       retval = bcm_field_qualify_SrcMac_get(unit, entry, &value, &mask);
       break;
     default:
-      RETURN_ERROR()
-          << "Attempted to get MAC address qualifier with wrong field type: "
-          << BcmField::Type_Name(field->type()) << ".";
+      return MAKE_ERROR()
+             << "Attempted to get MAC address qualifier with wrong field type: "
+             << BcmField::Type_Name(field->type()) << ".";
   }
 
   // Check success and copy over value and mask
@@ -3943,9 +3940,9 @@ inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
       retval = bcm_field_qualify_DstIp6High_get(unit, entry, &value, &mask);
       break;
     default:
-      RETURN_ERROR()
-          << "Attempted to get IPv6 address qualifier with wrong field type: "
-          << BcmField::Type_Name(field->type()) << ".";
+      return MAKE_ERROR() << "Attempted to get IPv6 address qualifier with "
+                             "wrong field type: "
+                          << BcmField::Type_Name(field->type()) << ".";
   }
 
   // Check success and copy over value and mask.
@@ -4538,9 +4535,10 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
               hw_field.mask().b() == ExactMatchMaskBytes(field.type());
           break;
         default:
-          RETURN_ERROR() << "Invalid mask type: " << hw_field.mask().data_case()
-                         << " for retrieved qualifier of type "
-                         << BcmField::Type_Name(hw_field.type()) << ".";
+          return MAKE_ERROR()
+                 << "Invalid mask type: " << hw_field.mask().data_case()
+                 << " for retrieved qualifier of type "
+                 << BcmField::Type_Name(hw_field.type()) << ".";
       }
       if (!exact_match) {
         return std::string(absl::Substitute(
@@ -4606,9 +4604,9 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
   RETURN_IF_BCM_ERROR(
       bcm_field_entry_multi_get(unit, table_id, 0, nullptr, &num_entries));
   if (num_entries < 0) {
-    RETURN_ERROR()
-        << "bcm_field_entry_multi_get() returned negative flow count for table "
-        << table_id << " on unit " << unit << ".";
+    return MAKE_ERROR() << "bcm_field_entry_multi_get() returned negative flow "
+                           "count for table "
+                        << table_id << " on unit " << unit << ".";
   } else if (!num_entries) {
     return ::util::OkStatus();
   }
@@ -4618,9 +4616,9 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
   RETURN_IF_BCM_ERROR(bcm_field_entry_multi_get(
       unit, table_id, num_entries, flow_ids->data(), &num_entries));
   if (num_entries != static_cast<int>(flow_ids->size())) {
-    RETURN_ERROR() << "Consecutive bcm_field_entry_multi_get() for table "
-                   << table_id << " on unit " << unit
-                   << " return different flow counts.";
+    return MAKE_ERROR() << "Consecutive bcm_field_entry_multi_get() for table "
+                        << table_id << " on unit " << unit
+                        << " return different flow counts.";
   }
   return ::util::OkStatus();
 }
@@ -4641,9 +4639,9 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
         unit, table_id, kUncoloredStatCount, stat_entry, &stat_id));
   }
   if (stat_id < 0) {
-    RETURN_ERROR(ERR_INTERNAL)
-        << "Received invalid stat_id " << stat_id << " for new stats object for"
-        << " flow " << flow_id << ".";
+    return MAKE_ERROR(ERR_INTERNAL) << "Received invalid stat_id " << stat_id
+                                    << " for new stats object for"
+                                    << " flow " << flow_id << ".";
   }
   // Attach stat to flow.
   RETURN_IF_BCM_ERROR(bcm_field_entry_stat_attach(unit, flow_id, stat_id));
@@ -4714,8 +4712,8 @@ inline util::Status GetAclStatCounters(int unit, int stat_id,
     green->set_packets(counter_data[kGreenCounterIndex]);
     green->set_bytes(counter_data[kGreenCounterIndex + 1]);
   } else {
-    RETURN_ERROR() << "Invalid stat count for stat id " << stat_id
-                   << " on unit " << unit << ".";
+    return MAKE_ERROR() << "Invalid stat count for stat id " << stat_id
+                        << " on unit " << unit << ".";
   }
   return ::util::OkStatus();
 }
@@ -4738,9 +4736,9 @@ BcmSdkWrapper* BcmSdkWrapper::GetSingleton() {
   absl::ReaderMutexLock l(&data_lock_);
   const BcmSocDevice* soc_device =
       gtl::FindPtrOrNull(unit_to_soc_device_, unit);
-  CHECK_RETURN_IF_FALSE(soc_device != nullptr)
+  RET_CHECK(soc_device != nullptr)
       << "Unit " << unit << " has not been assigned to any SOC device.";
-  CHECK_RETURN_IF_FALSE(soc_device->sdk_checkpoint_fd != -1)
+  RET_CHECK(soc_device->sdk_checkpoint_fd != -1)
       << "SDK checkpoint file for unit " << unit << " is not open.";
 
   return soc_device->sdk_checkpoint_fd;
@@ -4806,25 +4804,24 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 
   {
     absl::WriterMutexLock l(&data_lock_);
-    CHECK_RETURN_IF_FALSE(unit_to_soc_device_.count(unit))
+    RET_CHECK(unit_to_soc_device_.count(unit))
         << "Unit " << unit << " has not been assigned to any SOC device.";
-    CHECK_RETURN_IF_FALSE(unit_to_soc_device_[unit]->sdk_checkpoint_fd == -1)
+    RET_CHECK(unit_to_soc_device_[unit]->sdk_checkpoint_fd == -1)
         << "SDK checkpoint FD for unit " << unit << " already set.";
 
     // First check to make sure file is non-empty for the case of warmboot.
     struct stat filestat;
-    CHECK_RETURN_IF_FALSE(stat(checkpoint_file_path.c_str(), &filestat) == 0)
+    RET_CHECK(stat(checkpoint_file_path.c_str(), &filestat) == 0)
         << "stat() failed on SDK checkpoint file '" << checkpoint_file_path
         << "' for unit " << unit << ".";
-    CHECK_RETURN_IF_FALSE(filestat.st_size > 0)
+    RET_CHECK(filestat.st_size > 0)
         << "SDK checkpoint file '" << checkpoint_file_path << "' for unit "
         << unit << " is empty.";
 
     // Open the file now.
     int fd = open(checkpoint_file_path.c_str(), O_RDWR);
-    CHECK_RETURN_IF_FALSE(fd != -1)
-        << "open() failed on SDK checkpoint file '" << checkpoint_file_path
-        << "' for unit " << unit << ".";
+    RET_CHECK(fd != -1) << "open() failed on SDK checkpoint file '"
+                        << checkpoint_file_path << "' for unit " << unit << ".";
     unit_to_soc_device_[unit]->sdk_checkpoint_fd = fd;
   }
 
@@ -4835,8 +4832,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 }
 
 ::util::Status BcmSdkWrapper::CreateSdkCheckpointFile(int unit) {
-  CHECK_RETURN_IF_FALSE(bde_)
-      << "BDE not initialized yet. Call InitializeSdk() first.";
+  RET_CHECK(bde_) << "BDE not initialized yet. Call InitializeSdk() first.";
 
   // Find the checkpoint file path for this unit.
   ASSIGN_OR_RETURN(const std::string& checkpoint_file_path,
@@ -4844,17 +4840,16 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 
   {
     absl::WriterMutexLock l(&data_lock_);
-    CHECK_RETURN_IF_FALSE(unit_to_soc_device_.count(unit))
+    RET_CHECK(unit_to_soc_device_.count(unit))
         << "Unit " << unit << " has not been assigned to any SOC device.";
-    CHECK_RETURN_IF_FALSE(unit_to_soc_device_[unit]->sdk_checkpoint_fd == -1)
+    RET_CHECK(unit_to_soc_device_[unit]->sdk_checkpoint_fd == -1)
         << "SDK checkpoint FD for unit " << unit << " already set.";
 
     // Open a new SDK checkpoint file.
     int fd = open(checkpoint_file_path.c_str(), O_RDWR | O_CREAT | O_TRUNC,
                   S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    CHECK_RETURN_IF_FALSE(fd != -1)
-        << "open() failed on SDK checkpoint file '" << checkpoint_file_path
-        << "' for unit " << unit << ".";
+    RET_CHECK(fd != -1) << "open() failed on SDK checkpoint file '"
+                        << checkpoint_file_path << "' for unit " << unit << ".";
     unit_to_soc_device_[unit]->sdk_checkpoint_fd = fd;
   }
 
@@ -4890,6 +4885,8 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
     case BcmChip::TOMAHAWK:
     case BcmChip::TOMAHAWK_PLUS:
     case BcmChip::TRIDENT2:
+    case BcmChip::TOMAHAWK2:
+    case BcmChip::TOMAHAWK3:
       return kSdkCheckpointFileSize;
     default:
       return MAKE_ERROR(ERR_INTERNAL) << "Un-supported BCM chip type: "
@@ -4900,7 +4897,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 ::util::StatusOr<BcmChip::BcmChipType> BcmSdkWrapper::GetChipType(int unit) {
   absl::ReaderMutexLock l(&data_lock_);
   auto it = unit_to_chip_type_.find(unit);
-  CHECK_RETURN_IF_FALSE(it != unit_to_chip_type_.end())
+  RET_CHECK(it != unit_to_chip_type_.end())
       << "Unit " << unit << "  is not found in unit_to_chip_type_. Have you "
       << "called FindUnit for this unit before?";
   return it->second;
@@ -5100,7 +5097,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
       uint32 idriver = (value & 0x0f00) >> 8;
       uint32 ipredriver = (value & 0x00f0) >> 4;
       uint32 ifir = (value & 0x000e) >> 1;
-      CHECK_RETURN_IF_FALSE(ifir == 0)
+      RET_CHECK(ifir == 0)
           << "Detected non-zero IFIR field for (unit, port, reg, value) = ("
           << unit << ", " << port << ", " << reg << ", " << value << ").";
       // Set the pre, current, and post current drivers for all serdes lanes
@@ -5131,27 +5128,6 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
     uint32 value) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
-}
-
-void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
-  /* Create LinkscanEvent message. */
-  PortState state;
-  if (linkstatus == PORT_STATE_UP) {
-    state = PORT_STATE_UP;
-  } else if (linkstatus == PORT_STATE_DOWN) {
-    state = PORT_STATE_DOWN;
-  } else {
-    state = PORT_STATE_UNKNOWN;
-  }
-  LinkscanEvent event = {unit, port, state};
-
-  {
-    absl::ReaderMutexLock l(&linkscan_writers_lock_);
-    // Invoke the Writers based on priority.
-    for (const auto& w : linkscan_event_writers_) {
-      w.writer->Write(event, kWriteTimeout).IgnoreError();
-    }
-  }
 }
 
 }  // namespace bcm

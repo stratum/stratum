@@ -7,24 +7,28 @@
 #include <functional>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "stratum/lib/utils.h"
-#include "stratum/lib/libcproxy/passthrough_proxy.h"
 #include "stratum/lib/libcproxy/libcwrapper.h"
+#include "stratum/lib/libcproxy/passthrough_proxy.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
 
 // #include "util/libcproxy/libcproxy.h"
 // #include "util/libcproxy/libcwrapper.h"
 // #include "util/libcproxy/passthrough_proxy.h"
+
+namespace stratum {
+namespace hal {
+namespace bcm {
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -34,10 +38,6 @@ using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::WithArgs;
-
-namespace stratum {
-namespace hal {
-namespace bcm {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
@@ -626,11 +626,13 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode1) {
       .WillOnce(Return(kSocket2))
       .WillOnce(Return(kSocket2));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket2, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
@@ -820,8 +822,10 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode2) {
       .WillOnce(Return(kSocket1))
       .WillOnce(Return(kSocket1));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
@@ -986,11 +990,13 @@ TEST_P(BcmPacketioManagerTest,
       .WillOnce(Return(kSocket2))
       .WillOnce(Return(kSocket2));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket2, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
@@ -1128,8 +1134,10 @@ TEST_P(BcmPacketioManagerTest,
       .Times(1)
       .WillOnce(Return(kSocket1));
 
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
 
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1))
@@ -1214,8 +1222,10 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*LibcProxyMock::Instance(), Socket(_, _, _))
       .Times(3)
       .WillRepeatedly(Return(kSocket1));
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), SetSockOpt(kSocket1, _, _, _, _))
@@ -1400,8 +1410,10 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*LibcProxyMock::Instance(), Socket(_, _, _))
       .Times(3)
       .WillRepeatedly(Return(kSocket1));
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), SetSockOpt(kSocket1, _, _, _, _))
@@ -1611,8 +1623,10 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   EXPECT_CALL(*LibcProxyMock::Instance(), Socket(_, _, _))
       .Times(3)
       .WillRepeatedly(Return(kSocket1));
+  // TODO(max): the ioctl call for SIOCSIFMTU is currently disabled because
+  // SDKLT doesn't support it. See the comment in SetupSingleKnetIntf.
   EXPECT_CALL(*LibcProxyMock::Instance(), Ioctl(kSocket1, _, _))
-      .Times(5)
+      .Times(4)
       .WillRepeatedly(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), Close(kSocket1)).WillOnce(Return(0));
   EXPECT_CALL(*LibcProxyMock::Instance(), SetSockOpt(kSocket1, _, _, _, _))
@@ -1933,9 +1947,9 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmPacketioManagerTestWithMode, BcmPacketioManagerTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace bcm
 }  // namespace hal

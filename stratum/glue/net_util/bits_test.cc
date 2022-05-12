@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Copyright (C) 2002 and onwards Google, Inc.
 // Author: Paul Haahr
 //
@@ -11,22 +10,23 @@
 #include "stratum/glue/net_util/bits.h"
 
 #include <string.h>
+
 #include <algorithm>
 #include <iostream>
-#include <random>
-#include <vector>
 #include <limits>
+#include <random>
 #include <utility>
+#include <vector>
 
-#include "stratum/glue/logging.h"
+#include "absl/numeric/int128.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/integral_types.h"
-#include "absl/numeric/int128.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 
 int32 num_iterations = 10000;  // Number of test iterations to run.
-int32 max_bytes = 100;  // Maximum number of bytes to use in tests.
+int32 max_bytes = 100;         // Maximum number of bytes to use in tests.
 
 static const int kMaxBytes = 128;
 static const int kNumReverseBitsRandomTests = 10;
@@ -36,7 +36,7 @@ class BitsTest : public testing::Test {
   BitsTest() {}
 
  protected:
-  template<typename T>
+  template <typename T>
   static void CheckUnsignedType() {
     typedef typename Bits::UnsignedType<T>::Type UnsignedT;
     EXPECT_EQ(sizeof(T), sizeof(UnsignedT));
@@ -44,21 +44,19 @@ class BitsTest : public testing::Test {
   }
 
   // Generate a random number of type T with the same range as that of T.
-  template<typename T>
+  template <typename T>
   T RandomBits() {
     std::uniform_int_distribution<T> distribution;
     return distribution(random_);
   }
 
-  template<typename T>
+  template <typename T>
   T RandomUniform(T min, T max) {
     std::uniform_int_distribution<T> distribution(min, max - 1);
     return distribution(random_);
   }
 
-  bool RandomOneIn(int max) {
-    return RandomUniform<int>(0, max) == 0;
-  }
+  bool RandomOneIn(int max) { return RandomUniform<int>(0, max) == 0; }
 
   // generate a uniformly distributed float between 0 and 1
   float RandomFloat() {
@@ -69,26 +67,24 @@ class BitsTest : public testing::Test {
   // Wrapper for Bits::SetBits with a slightly different interface for
   // testing.  Instead of modifying a scalar, it returns a new value
   // with some bits replaced.
-  template<typename T>
-  static T SetBits(T dest,
-                   const typename Bits::UnsignedType<T>::Type src,
-                   const int offset,
-                   const int nbits) {
+  template <typename T>
+  static T SetBits(T dest, const typename Bits::UnsignedType<T>::Type src,
+                   const int offset, const int nbits) {
     Bits::SetBits(src, offset, nbits, &dest);
     return dest;
   }
 
-  template<typename DestType, typename SrcType>
+  template <typename DestType, typename SrcType>
   void RandomCopyBitsTestTwoTypes();
 
-  template<typename DestType>
+  template <typename DestType>
   void RandomCopyBitsTestDestType();
 
   std::default_random_engine random_;
 };
 
 // Randomly test Bits::CopyBits of two scalar types.
-template<typename DestType, typename SrcType>
+template <typename DestType, typename SrcType>
 void BitsTest::RandomCopyBitsTestTwoTypes() {
   const int kNumIterations = 2000;
   const int dest_bits = sizeof(DestType) * 8;
@@ -100,8 +96,8 @@ void BitsTest::RandomCopyBitsTestTwoTypes() {
     const int dest_offset = RandomBits<int>() % dest_bits;
     const SrcType src = RandomBits<SrcType>();
     const int src_offset = RandomBits<int>() % src_bits;
-    const int nbits_max = std::min(dest_bits - dest_offset,
-                                      src_bits - src_offset);
+    const int nbits_max =
+        std::min(dest_bits - dest_offset, src_bits - src_offset);
     const int nbits = RandomBits<int>() % (nbits_max + 1);
 
     Bits::CopyBits(&dest, dest_offset, src, src_offset, nbits);
@@ -113,10 +109,10 @@ void BitsTest::RandomCopyBitsTestTwoTypes() {
     typedef typename Bits::UnsignedType<DestType>::Type DestUnsignedType;
     const SrcUnsignedType unsigned_src = static_cast<SrcUnsignedType>(src);
     for (int j = 0; j < nbits; ++j) {
-      const SrcUnsignedType src_bit =
-          static_cast<SrcUnsignedType>(1) << (src_offset + j);
-      const DestUnsignedType dest_bit =
-          static_cast<DestUnsignedType>(1) << (dest_offset + j);
+      const SrcUnsignedType src_bit = static_cast<SrcUnsignedType>(1)
+                                      << (src_offset + j);
+      const DestUnsignedType dest_bit = static_cast<DestUnsignedType>(1)
+                                        << (dest_offset + j);
       if ((unsigned_src & src_bit) != 0) {
         dest2 |= dest_bit;
       } else {
@@ -129,7 +125,7 @@ void BitsTest::RandomCopyBitsTestTwoTypes() {
 }
 
 // Helper template to test all 8 scalar source types.
-template<typename DestType>
+template <typename DestType>
 void BitsTest::RandomCopyBitsTestDestType() {
   RandomCopyBitsTestTwoTypes<DestType, int8>();
   RandomCopyBitsTestTwoTypes<DestType, uint8>();
@@ -160,7 +156,7 @@ TEST_F(BitsTest, BitCountingEdgeCases) {
 
   for (int i = 0; i < 64; i++) {
     EXPECT_EQ(1, Bits::CountOnes64(1LLU << i));
-    EXPECT_EQ(63, Bits::CountOnes64(static_cast<uint64> (~(1LLU << i))));
+    EXPECT_EQ(63, Bits::CountOnes64(static_cast<uint64>(~(1LLU << i))));
   }
 
   EXPECT_EQ(0, Bits::CountOnes128(absl::uint128(0)));
@@ -367,8 +363,8 @@ TEST_F(BitsTest, BitDifferenceRandom) {
 }
 
 static bool SlowBytesContainByte(uint32 x, uint8 b) {
-  return (x & 0xff) == b || ((x >> 8) & 0xff) == b ||
-      ((x >> 16) & 0xff) == b || ((x >> 24) & 0xff) == b;
+  return (x & 0xff) == b || ((x >> 8) & 0xff) == b || ((x >> 16) & 0xff) == b ||
+         ((x >> 24) & 0xff) == b;
 }
 
 static bool SlowBytesContainByte(uint64 x, uint8 b) {
@@ -378,15 +374,15 @@ static bool SlowBytesContainByte(uint64 x, uint8 b) {
 }
 
 static bool SlowBytesContainByteLessThan(uint32 x, uint8 b) {
-  return (x & 0xff) < b || ((x >> 8) & 0xff) < b ||
-      ((x >> 16) & 0xff) < b || ((x >> 24) & 0xff) < b;
+  return (x & 0xff) < b || ((x >> 8) & 0xff) < b || ((x >> 16) & 0xff) < b ||
+         ((x >> 24) & 0xff) < b;
 }
 
 static bool SlowBytesContainByteLessThan(uint64 x, uint8 b) {
   uint32 u = x;
   uint32 v = x >> 32;
   return SlowBytesContainByteLessThan(u, b) ||
-      SlowBytesContainByteLessThan(v, b);
+         SlowBytesContainByteLessThan(v, b);
 }
 
 TEST_F(BitsTest, BytesContainByte) {
@@ -394,8 +390,8 @@ TEST_F(BitsTest, BytesContainByte) {
   for (int i = 0; i < num_iterations; i++) {
     uint32 u32 = RandomBits<uint32>();
     uint64 u64 = RandomBits<uint64>();
-    int64  s64 = u64;
-    uint8    b = RandomBits<uint8>();
+    int64 s64 = u64;
+    uint8 b = RandomBits<uint8>();
 
     EXPECT_EQ(Bits::BytesContainByte<uint32>(u32, b),
               SlowBytesContainByte(u32, b));
@@ -420,7 +416,7 @@ static bool ByteInRange(uint8 x, uint8 lo, uint8 hi) {
 // True if all bytes in x are in [lo, hi].
 static bool SlowBytesAllInRange(uint32 x, uint8 lo, uint8 hi) {
   return ByteInRange(x, lo, hi) && ByteInRange(x >> 8, lo, hi) &&
-      ByteInRange(x >> 16, lo, hi) && ByteInRange(x >> 24, lo, hi);
+         ByteInRange(x >> 16, lo, hi) && ByteInRange(x >> 24, lo, hi);
 }
 
 // True if all bytes in x are in [lo, hi].
@@ -435,9 +431,9 @@ TEST_F(BitsTest, BytesAllInRange) {
   for (int i = 0; i < num_iterations; i++) {
     uint32 u32 = RandomBits<uint32>();
     uint64 u64 = RandomBits<uint64>();
-    int64  s64 = u64;
-    uint8   lo = RandomBits<uint32>() >> 13;
-    uint8   hi = RandomBits<uint32>() >> 13;
+    int64 s64 = u64;
+    uint8 lo = RandomBits<uint32>() >> 13;
+    uint8 hi = RandomBits<uint32>() >> 13;
     if (i > 5 && lo > hi) {
       std::swap(lo, hi);
     }
@@ -546,10 +542,10 @@ TEST_F(BitsTest, Log2EdgeCases) {
     EXPECT_EQ(i, Bits::Log2Ceiling(n));
     if (n > 2) {
       EXPECT_EQ(i - 1, Bits::Log2Floor(n - 1));
-      EXPECT_EQ(i,     Bits::Log2Floor(n + 1));
+      EXPECT_EQ(i, Bits::Log2Floor(n + 1));
       EXPECT_EQ(i - 1, Bits::Log2FloorNonZero(n - 1));
-      EXPECT_EQ(i,     Bits::Log2FloorNonZero(n + 1));
-      EXPECT_EQ(i,     Bits::Log2Ceiling(n - 1));
+      EXPECT_EQ(i, Bits::Log2FloorNonZero(n + 1));
+      EXPECT_EQ(i, Bits::Log2Ceiling(n - 1));
       EXPECT_EQ(i + 1, Bits::Log2Ceiling(n + 1));
     }
   }
@@ -561,10 +557,10 @@ TEST_F(BitsTest, Log2EdgeCases) {
     EXPECT_EQ(i, Bits::Log2Ceiling64(n));
     if (n > 2) {
       EXPECT_EQ(i - 1, Bits::Log2Floor64(n - 1));
-      EXPECT_EQ(i,     Bits::Log2Floor64(n + 1));
+      EXPECT_EQ(i, Bits::Log2Floor64(n + 1));
       EXPECT_EQ(i - 1, Bits::Log2FloorNonZero64(n - 1));
-      EXPECT_EQ(i,     Bits::Log2FloorNonZero64(n + 1));
-      EXPECT_EQ(i,     Bits::Log2Ceiling64(n - 1));
+      EXPECT_EQ(i, Bits::Log2FloorNonZero64(n + 1));
+      EXPECT_EQ(i, Bits::Log2Ceiling64(n - 1));
       EXPECT_EQ(i + 1, Bits::Log2Ceiling64(n + 1));
     }
   }
@@ -575,8 +571,8 @@ TEST_F(BitsTest, Log2EdgeCases) {
     EXPECT_EQ(i, Bits::Log2Ceiling128(n));
     if (n > 2) {
       EXPECT_EQ(i - 1, Bits::Log2Floor128(n - 1));
-      EXPECT_EQ(i,     Bits::Log2Floor128(n + 1));
-      EXPECT_EQ(i,     Bits::Log2Ceiling128(n - 1));
+      EXPECT_EQ(i, Bits::Log2Floor128(n + 1));
+      EXPECT_EQ(i, Bits::Log2Ceiling128(n - 1));
       EXPECT_EQ(i + 1, Bits::Log2Ceiling128(n + 1));
     }
   }
@@ -776,21 +772,23 @@ TEST(Bits, Port32) {
       const uint32 v = (static_cast<uint32>(1) << shift) + delta;
       EXPECT_EQ(Bits::Log2Floor_Portable(v), Bits::Log2Floor(v)) << v;
       if (v != 0) {
-        EXPECT_EQ(Bits::Log2FloorNonZero_Portable(v),
-                  Bits::Log2FloorNonZero(v)) << v;
+        EXPECT_EQ(Bits::Log2FloorNonZero_Portable(v), Bits::Log2FloorNonZero(v))
+            << v;
         EXPECT_EQ(Bits::FindLSBSetNonZero_Portable(v),
-                  Bits::FindLSBSetNonZero(v)) << v;
+                  Bits::FindLSBSetNonZero(v))
+            << v;
         EXPECT_EQ(Bits::CountLeadingZeros32_Portable(v),
-                  Bits::CountLeadingZeros32(v)) << v;
+                  Bits::CountLeadingZeros32(v))
+            << v;
       }
     }
   }
   static const uint32 M32 = kuint32max;
   EXPECT_EQ(Bits::Log2Floor_Portable(M32), Bits::Log2Floor(M32)) << M32;
-  EXPECT_EQ(Bits::Log2FloorNonZero_Portable(M32),
-            Bits::Log2FloorNonZero(M32)) << M32;
-  EXPECT_EQ(Bits::FindLSBSetNonZero_Portable(M32),
-            Bits::FindLSBSetNonZero(M32)) << M32;
+  EXPECT_EQ(Bits::Log2FloorNonZero_Portable(M32), Bits::Log2FloorNonZero(M32))
+      << M32;
+  EXPECT_EQ(Bits::FindLSBSetNonZero_Portable(M32), Bits::FindLSBSetNonZero(M32))
+      << M32;
   EXPECT_EQ(32, Bits::CountLeadingZeros32_Portable(static_cast<uint32>(0)));
   EXPECT_EQ(0, Bits::CountLeadingZeros32_Portable(~static_cast<uint32>(0)));
 }
@@ -802,20 +800,25 @@ TEST(Bits, Port64) {
       EXPECT_EQ(Bits::Log2Floor64_Portable(v), Bits::Log2Floor64(v)) << v;
       if (v != 0) {
         EXPECT_EQ(Bits::Log2FloorNonZero64_Portable(v),
-                  Bits::Log2FloorNonZero64(v)) << v;
+                  Bits::Log2FloorNonZero64(v))
+            << v;
         EXPECT_EQ(Bits::FindLSBSetNonZero64_Portable(v),
-                  Bits::FindLSBSetNonZero64(v)) << v;
+                  Bits::FindLSBSetNonZero64(v))
+            << v;
         EXPECT_EQ(Bits::CountLeadingZeros64_Portable(v),
-                  Bits::CountLeadingZeros64(v)) << v;
+                  Bits::CountLeadingZeros64(v))
+            << v;
       }
     }
   }
   static const uint64 M64 = kuint64max;
   EXPECT_EQ(Bits::Log2Floor64_Portable(M64), Bits::Log2Floor64(M64)) << M64;
   EXPECT_EQ(Bits::Log2FloorNonZero64_Portable(M64),
-            Bits::Log2FloorNonZero64(M64)) << M64;
+            Bits::Log2FloorNonZero64(M64))
+      << M64;
   EXPECT_EQ(Bits::FindLSBSetNonZero64_Portable(M64),
-            Bits::FindLSBSetNonZero64(M64)) << M64;
+            Bits::FindLSBSetNonZero64(M64))
+      << M64;
   EXPECT_EQ(64, Bits::CountLeadingZeros64_Portable(static_cast<uint64>(0)));
   EXPECT_EQ(0, Bits::CountLeadingZeros64_Portable(~static_cast<uint64>(0)));
 }
@@ -828,7 +831,7 @@ TEST(CountOnes, InByte) {
       expected += (c & (1 << pos)) ? 1 : 0;
     }
     EXPECT_EQ(expected, Bits::CountOnesInByte(c))
-      << std::hex << static_cast<int>(c);
+        << std::hex << static_cast<int>(c);
   }
 }
 
@@ -982,7 +985,7 @@ BENCHMARK_WITH_ARG(BM_FindMSBSetNonZero64, 63);
 template <class T>
 static T ExpectedReverseBits(T n) {
   T r = 0;
-  for (size_t i = 0; i < sizeof(T) << 3 ; ++i) {
+  for (size_t i = 0; i < sizeof(T) << 3; ++i) {
     r = (r << 1) | (n & 1);
     n >>= 1;
   }
@@ -1061,8 +1064,7 @@ TEST_F(BitsTest, ReverseBitsIn128BitWord) {
     const absl::uint128 r = Bits::ReverseBits128(n);
     EXPECT_EQ(n, Bits::ReverseBits128(r)) << n;
     EXPECT_EQ(ExpectedReverseBits<absl::uint128>(n), r) << n;
-    EXPECT_EQ(Bits::CountOnes128(n),
-              Bits::CountOnes128(r)) << n;
+    EXPECT_EQ(Bits::CountOnes128(n), Bits::CountOnes128(r)) << n;
   }
 }
 
@@ -1208,8 +1210,8 @@ BENCHMARK(BM_CountLeadingZeros32);
 BENCHMARK(BM_CountLeadingZeros64);
 
 int main(int argc, char **argv) {
-  LogToStderr();
   InitGoogle("", &argc, &argv, true);
+  InitStratumLogging();
   RunSpecifiedBenchmarks();
 
   CHECK_LE(max_bytes, kMaxBytes);

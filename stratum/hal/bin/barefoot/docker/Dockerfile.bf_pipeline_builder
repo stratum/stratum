@@ -1,0 +1,12 @@
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+FROM bitnami/minideb:stretch as runtime
+
+LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
+LABEL description="Docker-based distribution of the Stratum-bf pipeline builder"
+
+ADD ./bf_pipeline_builder /usr/local/bin
+
+ENTRYPOINT ["bf_pipeline_builder"]
+CMD ["-help"]

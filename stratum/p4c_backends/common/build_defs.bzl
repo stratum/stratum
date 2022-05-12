@@ -2,7 +2,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-
 """P4c configuration generation rules."""
 
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
@@ -73,10 +72,6 @@ def _generate_p4c_stratum_config(ctx):
             "--p4c_annotation_map_files=" + annotation_map_files,
             "--slice_map_file=" + ctx.file.slice_map.path,
             "--target_parser_map_file=" + ctx.file.parser_map.path,
-            "--colorlogtostderr",
-            "--stderrthreshold=1",
-            "--logtostderr",
-            "--v=0",
         ],
         inputs = ([p4_preprocessed_file] + [ctx.file.parser_map] +
                   [ctx.file.slice_map] + ctx.files.annotation_maps),

@@ -20,28 +20,24 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 
 // PhalDb is 0-based indexed, while arguments are 1-based.
 ::util::Status OpticsAdapter::GetOpticalTransceiverInfo(
-    int module, int network_interface,
-    OpticalTransceiverInfo* ot_info) {
+    int module, int network_interface, OpticalTransceiverInfo* ot_info) {
   if (module <= 0 || network_interface <= 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
   }
 
-  std::vector<Path> paths = {
-    {
+  std::vector<Path> paths = {{
       PathEntry("optical_modules", module - 1),
       PathEntry("network_interfaces", network_interface - 1, true, false, true),
-    }
-  };
+  }};
 
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
-  CHECK_RETURN_IF_FALSE(phaldb->optical_modules_size() > module - 1)
+  RET_CHECK(phaldb->optical_modules_size() > module - 1)
       << "optical module in module " << module - 1 << " not found!";
 
   auto optical_module = phaldb->optical_modules(module - 1);
 
-  CHECK_RETURN_IF_FALSE(
-      optical_module.network_interfaces_size() > network_interface - 1)
+  RET_CHECK(optical_module.network_interfaces_size() > network_interface - 1)
       << "optical port in port " << network_interface - 1 << " not found";
 
   auto optical_port = optical_module.network_interfaces(network_interface - 1);
@@ -56,10 +52,9 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 }
 
 ::util::Status OpticsAdapter::SetOpticalTransceiverInfo(
-    int module, int network_interface,
-    const OpticalTransceiverInfo& ot_info) {
+    int module, int network_interface, const OpticalTransceiverInfo& ot_info) {
   if (module <= 0 || network_interface <= 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
   }
 
   AttributeValueMap attrs;

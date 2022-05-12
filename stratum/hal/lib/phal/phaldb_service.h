@@ -32,7 +32,7 @@ class PhalDbService final : public PhalDb::Service {
  public:
   explicit PhalDbService(AttributeDatabaseInterface* attribute_db_interface);
 
-  virtual ~PhalDbService();
+  ~PhalDbService() override;
 
   // Sets up the service in coldboot and warmboot mode.
   ::util::Status Setup(bool warmboot);
@@ -57,7 +57,8 @@ class PhalDbService final : public PhalDb::Service {
   // PhalDbService is neither copyable nor movable.
   PhalDbService(const PhalDbService&) = delete;
   PhalDbService& operator=(const PhalDbService&) = delete;
-  PhalDbService& operator=(PhalDbService&&) = default;
+  PhalDbService(PhalDbService&&) = delete;
+  PhalDbService& operator=(PhalDbService&&) = delete;
 
  private:
   // Actual implementations of the calls. To be moved into an impl.

@@ -2,24 +2,22 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 
 #include <iterator>
-#include <utility>
 #include <set>
+#include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/hal/lib/bcm/acl_table.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/hal/lib/bcm/acl_table.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
-DEFINE_string(bcm_hardware_specs_file,
-              "/etc/stratum/bcm_hardware_specs.pb.txt",
+DEFINE_string(bcm_hardware_specs_file, "/etc/stratum/bcm_hardware_specs.pb.txt",
               "Path to the file containing the Broadcom hardware map proto.");
 
 namespace stratum {
@@ -30,15 +28,15 @@ namespace {
 
 constexpr BcmSdkInterface::AclControl kDefaultAclControl = {
     // Enable all for external ports.
-    {true, true, true, true},     // extern_port_flags.{vfp, ifp, efp, apply}
+    {true, true, true, true},  // extern_port_flags.{vfp, ifp, efp, apply}
     // Disable all for internal ports.
     {false, false, false, true},  // intern_port_flags.{vfp, ifp, efp, apply}
     // Disable EFP for CPU ports.
-    {true, true, false, true},    // cpu_port_flags.{vfp, ifp, efp, apply}
+    {true, true, false, true},  // cpu_port_flags.{vfp, ifp, efp, apply}
     // Enable instra-slice double wide tables.
-    {true, true},                 // intra_double_wide_enable.{enable, apply}
+    {true, true},  // intra_double_wide_enable.{enable, apply}
     // Enable stats read through.
-    {true, true}                  // stats_read_through_enable.{enable, apply}
+    {true, true}  // stats_read_through_enable.{enable, apply}
 };
 
 BcmChip::BcmChipType PlatformChip(Platform platform) {
@@ -51,6 +49,10 @@ BcmChip::BcmChipType PlatformChip(Platform platform) {
       return BcmChip::TOMAHAWK;
     case PLT_GENERIC_TOMAHAWK_PLUS:
       return BcmChip::TOMAHAWK_PLUS;
+    case PLT_GENERIC_TOMAHAWK2:
+      return BcmChip::TOMAHAWK2;
+    case PLT_GENERIC_TOMAHAWK3:
+      return BcmChip::TOMAHAWK3;
     case PLT_UNKNOWN:
     default:
       return BcmChip::UNKNOWN;

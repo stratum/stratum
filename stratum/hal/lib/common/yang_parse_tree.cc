@@ -174,6 +174,8 @@ void YangParseTree::ProcessPushedConfig(
   }
   // Add all chassis-related gNMI paths.
   AddSubtreeChassis(change.new_config_.chassis());
+  // Add all system-related gNMI paths.
+  AddSubtreeSystem();
   // Add all node-related gNMI paths.
   for (const auto& node : change.new_config_.nodes()) {
     AddSubtreeNode(node);
@@ -181,8 +183,8 @@ void YangParseTree::ProcessPushedConfig(
 }
 
 bool YangParseTree::IsWildcard(const std::string& name) const {
-  if (name.compare("*") == 0) return true;
-  if (name.compare("...") == 0) return true;
+  if (name == "*") return true;
+  if (name == "...") return true;
   return false;
 }
 
@@ -190,7 +192,7 @@ bool YangParseTree::IsWildcard(const std::string& name) const {
     const gnmi::Path& path, const gnmi::Path& subpath,
     const std::function<::util::Status(const TreeNode& leaf)>& action) const {
   const auto* root = root_.FindNodeOrNull(path);
-  CHECK_RETURN_IF_FALSE(root);
+  RET_CHECK(root);
   ::util::Status ret = ::util::OkStatus();
   for (const auto& entry : root->children_) {
     if (IsWildcard(entry.first)) {
@@ -317,6 +319,10 @@ void YangParseTree::AddSubtreeChassis(const Chassis& chassis) {
   YangParseTreePaths::AddSubtreeChassis(chassis, this);
 }
 
+void YangParseTree::AddSubtreeSystem() {
+  YangParseTreePaths::AddSubtreeSystem(this);
+}
+
 void YangParseTree::AddSubtreeAllInterfaces() {
   // No need to lock the mutex - it is locked by method calling this one.
 
@@ -324,11 +330,11 @@ void YangParseTree::AddSubtreeAllInterfaces() {
   YangParseTreePaths::AddSubtreeAllInterfaces(this);
 }
 
-  // Setup
-  // * the /components/component[name="*"]/name path to make possible all
-  //   components' names retrieval.
-  // * the /components/component/* path to retrieve all the nodes for the
-  //   specific component.
+// Setup
+// * the /components/component[name="*"]/name path to make possible all
+//   components' names retrieval.
+// * the /components/component/* path to retrieve all the nodes for the
+//   specific component.
 void YangParseTree::AddSubtreeAllComponents() {
   // No need to lock the mutex - it is locked by method calling this one.
   YangParseTreePaths::AddSubtreeAllComponents(this);

@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file include all the internal messages used internally by the managers
 // in this folder.
 syntax = "proto3";
@@ -60,11 +59,13 @@ message BcmChassis {
 message BcmChip {
   // Enumerates all the BCM chips in use.
   enum BcmChipType {
-    UNKNOWN = 0;       // default
-    TRIDENT_PLUS = 1;  // BCM56846
-    TRIDENT2 = 2;      // BCM56850
-    TOMAHAWK = 3;      // BCM56960
-    TOMAHAWK_PLUS = 4; // BCM56965
+    UNKNOWN = 0;        // default
+    TRIDENT_PLUS = 1;   // BCM56846
+    TRIDENT2 = 2;       // BCM56850
+    TOMAHAWK = 3;       // BCM56960
+    TOMAHAWK_PLUS = 4;  // BCM56965
+    TOMAHAWK2 = 5;      // BCM56970
+    TOMAHAWK3 = 6;      // BCM56980
   }
   // The BCM chip type.
   BcmChipType type = 1;
@@ -219,9 +220,9 @@ message BcmHardwareSpecs {
       uint32 set_count = 3;       // The number of UDF sets.
     };
 
-    BcmChip.BcmChipType chip_type = 1;   // The chip this profile describes.
-    AclSpec acl = 2;  // ACL description.
-    UdfSpec udf = 3;  // UDF description.
+    BcmChip.BcmChipType chip_type = 1;  // The chip this profile describes.
+    AclSpec acl = 2;                    // ACL description.
+    UdfSpec udf = 3;                    // UDF description.
   }
 
   // Hardware specifications for each known BCM chip model.
@@ -535,7 +536,7 @@ message BcmPacketReplicationEntry {
     repeated int32 ports = 2;
     uint32 cos = 3;
   }
-  int32 unit = 1; // required
+  int32 unit = 1;  // required
   oneof type {
     MulticastGroupEntry multicast_group_entry = 2;
     BcmCloneSessionEntry clone_session_entry = 3;

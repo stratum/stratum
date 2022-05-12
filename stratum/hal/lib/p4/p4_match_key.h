@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // A P4MatchKey class instance processes one FieldMatch entry in a P4 runtime
 // TableEntry.  P4MatchKey has subclasses which handle table map conversion
 // specifications for different types of matches, i.e. exact vs. ternary vs.
@@ -16,13 +15,13 @@
 #include <set>
 #include <string>
 
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/macros.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -116,12 +115,14 @@ class P4MatchKey {
   // converts it to the desired unsigned type.  The bytes in the string are
   // assumed to be in network byte order.  If the number of input bytes is too
   // large for the output type, the status contains ERR_INVALID_PARAM.
-  template <typename U> ::util::Status StringDataToU(
-      const std::string& bytes, int32_t bit_width, U* value);
+  template <typename U>
+  ::util::Status StringDataToU(const std::string& bytes, int32 bit_width,
+                               U* value);
 
   // This function encodes an unsigned integer containing a bit mask of the
   // specified length.
-  template <typename U> U CreateUIntMask(int field_width, int mask_length);
+  template <typename U>
+  U CreateUIntMask(int field_width, int mask_length);
 
   // This function encodes a string containing the bits in a mask of the
   // specified length.

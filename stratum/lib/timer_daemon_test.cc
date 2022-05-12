@@ -2,12 +2,11 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/lib/timer_daemon.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status_test_util.h"
 
 namespace stratum {
 namespace hal {
@@ -40,15 +39,14 @@ class TimerDaemonTest : public ::testing::Test {
   void TearDown() override { ASSERT_OK(TimerDaemon::Stop()); }
 
   TimerDaemon::DescriptorPtr GetTimerDescriptorPtr(const absl::Time when) {
-    TimerDaemon::DescriptorPtr desc =
-        std::make_shared<TimerDaemon::Descriptor>(
-            /* repeat = */ false, []() { return ::util::OkStatus(); });
+    TimerDaemon::DescriptorPtr desc = std::make_shared<TimerDaemon::Descriptor>(
+        /* repeat = */ false, []() { return ::util::OkStatus(); });
     desc->due_time_ = when;
     return desc;
   }
 
   TimerDaemon::DescriptorWeakPtr GetTimerDescriptorWeakPtr(
-      const TimerDaemon::DescriptorPtr &desc) {
+      const TimerDaemon::DescriptorPtr& desc) {
     return TimerDaemon::DescriptorWeakPtr(desc);
   }
 
@@ -119,41 +117,53 @@ TEST_F(TimerDaemonTest, CompareBiggerSmaller) {
 TEST_F(TimerDaemonTest, CreateOneShot) {
   // This test verifies that TimerDaemon does create one-shot timer.
   TimerDaemon::DescriptorPtr desc;
-  ASSERT_OK(TimerDaemon::RequestOneShotTimer(1000,
-                                             [&]() {
-                                               absl::WriterMutexLock l(
-                                                   &access_lock_);
-                                               EXPECT_EQ(count_++, 0);
-                                               return ::util::OkStatus();
-                                             },
-                                             &desc));
+  ASSERT_OK(TimerDaemon::RequestOneShotTimer(
+      1000,
+      [&]() {
+        absl::WriterMutexLock l(&access_lock_);
+        EXPECT_EQ(count_++, 0);
+        return ::util::OkStatus();
+      },
+      &desc));
   usleep(1100000);
 }
 
 TEST_F(TimerDaemonTest, CreateTwoOneShots) {
   // This test verifies that TimerDaemon does create two one-shot timers.
   TimerDaemon::DescriptorPtr desc1, desc2;
-  ASSERT_OK(TimerDaemon::RequestOneShotTimer(1000,
-                                             [&]() {
-                                               absl::WriterMutexLock l(
-                                                   &access_lock_);
-                                               EXPECT_EQ(count_++, 1);
-                                               return ::util::OkStatus();
-                                             },
-                                             &desc1));
-  ASSERT_OK(TimerDaemon::RequestOneShotTimer(100,
-                                             [&]() {
-                                               absl::WriterMutexLock l(
-                                                   &access_lock_);
-                                               EXPECT_EQ(count_++, 0);
-                                               return ::util::OkStatus();
-                                             },
-                                             &desc2));
+  ASSERT_OK(TimerDaemon::RequestOneShotTimer(
+      1000,
+      [&]() {
+        absl::WriterMutexLock l(&access_lock_);
+        EXPECT_EQ(count_++, 1);
+        return ::util::OkStatus();
+      },
+      &desc1));
+  ASSERT_OK(TimerDaemon::RequestOneShotTimer(
+      100,
+      [&]() {
+        absl::WriterMutexLock l(&access_lock_);
+        EXPECT_EQ(count_++, 0);
+        return ::util::OkStatus();
+      },
+      &desc2));
   usleep(1500000);
 }
 
 TEST_F(TimerDaemonTest, CreatePeriodic) {
   // This test verifies that TimerDaemon does create periodic timer.
+}
+
+TEST_F(TimerDaemonTest, StartIdempotent) {
+  // This test verifies that starting the TimerDaemon is idempotent.
+  EXPECT_OK(TimerDaemon::Start());
+  EXPECT_OK(TimerDaemon::Start());
+}
+
+TEST_F(TimerDaemonTest, StopIdempotent) {
+  // This test verifies that stopping the TimerDaemon is idempotent.
+  EXPECT_OK(TimerDaemon::Stop());
+  EXPECT_OK(TimerDaemon::Stop());
 }
 
 }  // namespace hal

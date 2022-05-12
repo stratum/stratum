@@ -7,12 +7,12 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "85...100"
+  range: "70...100"
 
   status:
     project:
       default:
-        target: 80%
+        target: 77%
     patch: false
 
 parsers:

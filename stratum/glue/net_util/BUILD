@@ -2,14 +2,14 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -40,11 +40,11 @@ stratum_cc_test(
     srcs = ["bits_test.cc"],
     deps = [
         ":bits",
-        "@com_google_googletest//:gtest_main",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
-        "//stratum/glue:logging",
-        "//stratum/glue:integral_types",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -58,11 +58,12 @@ stratum_cc_library(
     ],
     deps = [
         ":bits",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue:platform",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
-        "//stratum/glue:logging",
-        "//stratum/glue:integral_types",
     ],
 )
 
@@ -72,14 +73,14 @@ stratum_cc_test(
     srcs = ["ipaddress_test.cc"],
     deps = [
         ":ipaddress",
-        "@com_google_googletest//:gtest_main",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:node_hash_set",
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
-        "//stratum/glue:logging",
-        "//stratum/glue:integral_types",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -96,11 +97,11 @@ stratum_cc_library(
     ],
 )
 
-cc_test(
-  name = "absl_test",
-  srcs = ["absl_test.cc"],
-  deps = [
-      "@com_google_absl//absl/strings",
-      "@com_google_googletest//:gtest_main",
-  ],
+stratum_cc_test(
+    name = "absl_test",
+    srcs = ["absl_test.cc"],
+    deps = [
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
 )

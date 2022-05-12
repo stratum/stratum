@@ -1,28 +1,28 @@
 // Copyright 2018-present Barefoot Networks, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bmv2/bmv2_switch.h"
 
 #include <algorithm>
 #include <map>
-#include <vector>
 #include <set>
+#include <vector>
 
-#include "stratum/hal/lib/bmv2/bmv2_switch.h"
-#include "stratum/hal/lib/pi/pi_node.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
-
-using ::stratum::hal::pi::PINode;
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/pi/pi_node.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
 namespace bmv2 {
+
+using ::stratum::hal::pi::PINode;
 
 Bmv2Switch::Bmv2Switch(PhalInterface* phal_interface,
                        Bmv2ChassisManager* bmv2_chassis_manager,
@@ -41,7 +41,7 @@ Bmv2Switch::~Bmv2Switch() {}
   for (auto& node : config.nodes()) new_node_ids.insert(node.id());
   if (known_node_ids != new_node_ids) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "The Bmv2Switch expects constant node ids";
+           << "The Bmv2Switch expects constant node ids";
   }
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bmv2_chassis_manager_->PushChassisConfig(config));
@@ -110,19 +110,15 @@ Bmv2Switch::~Bmv2Switch() {}
   return status;
 }
 
-::util::Status Bmv2Switch::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status Bmv2Switch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status Bmv2Switch::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status Bmv2Switch::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status Bmv2Switch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
-  CHECK_RETURN_IF_FALSE(results != nullptr)
+  RET_CHECK(req.device_id()) << "No device_id in WriteRequest.";
+  RET_CHECK(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(req.device_id()));
@@ -133,30 +129,31 @@ Bmv2Switch::~Bmv2Switch() {}
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(req.device_id()) << "No device_id in ReadRequest.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(req.device_id()));
   return pi_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status Bmv2Switch::RegisterPacketReceiveWriter(
+::util::Status Bmv2Switch::RegisterStreamMessageResponseWriter(
     uint64 node_id,
-    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->RegisterPacketReceiveWriter(writer);
+  return pi_node->RegisterStreamMessageResponseWriter(writer);
 }
 
-::util::Status Bmv2Switch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status Bmv2Switch::UnregisterStreamMessageResponseWriter(
+    uint64 node_id) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->UnregisterPacketReceiveWriter();
+  return pi_node->UnregisterStreamMessageResponseWriter();
 }
 
-::util::Status Bmv2Switch::TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) {
+::util::Status Bmv2Switch::HandleStreamMessageRequest(
+    uint64 node_id, const ::p4::v1::StreamMessageRequest& request) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
-  return pi_node->TransmitPacket(packet);
+  return pi_node->HandleStreamMessageRequest(request);
 }
 
 ::util::Status Bmv2Switch::RegisterEventNotifyWriter(
@@ -178,15 +175,23 @@ Bmv2Switch::~Bmv2Switch() {}
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kMacAddress:
       case DataRequest::Request::kPortSpeed:
       case DataRequest::Request::kNegotiatedPortSpeed:
+      case DataRequest::Request::kLacpRouterMac:
       case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kHealthIndicator:
+      case DataRequest::Request::kForwardingViability:
       case DataRequest::Request::kAutonegStatus:
+      case DataRequest::Request::kSdnPortId:
         resp = bmv2_chassis_manager_->GetPortData(req);
         break;
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
+        resp =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "DataRequest field "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet!";
         break;
     }
     if (resp.ok()) {
@@ -199,7 +204,7 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 ::util::Status Bmv2Switch::SetValue(uint64 node_id, const SetRequest& request,
-                        std::vector<::util::Status>* details) {
+                                    std::vector<::util::Status>* details) {
   VLOG(1) << "Bmv2Switch::SetValue\n";
   LOG(INFO) << "Bmv2Switch::SetValue is not implemented yet, but changes will "
             << "be peformed when ChassisConfig is pushed again.";
@@ -212,11 +217,10 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 std::unique_ptr<Bmv2Switch> Bmv2Switch::CreateInstance(
-    PhalInterface* phal_interface,
-    Bmv2ChassisManager* bmv2_chassis_manager,
+    PhalInterface* phal_interface, Bmv2ChassisManager* bmv2_chassis_manager,
     const std::map<uint64, PINode*>& node_id_to_pi_node) {
-  return absl::WrapUnique(new Bmv2Switch(
-      phal_interface, bmv2_chassis_manager, node_id_to_pi_node));
+  return absl::WrapUnique(
+      new Bmv2Switch(phal_interface, bmv2_chassis_manager, node_id_to_pi_node));
 }
 
 ::util::StatusOr<PINode*> Bmv2Switch::GetPINodeFromNodeId(

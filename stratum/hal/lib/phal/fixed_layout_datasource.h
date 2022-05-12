@@ -2,23 +2,22 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_FIXED_LAYOUT_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_FIXED_LAYOUT_DATASOURCE_H_
 
 #include <ctime>
 #include <map>
 #include <memory>
-#include <vector>
-#include <utility>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "absl/memory/memory.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/hal/lib/phal/stringsource_interface.h"
 #include "stratum/lib/macros.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
@@ -149,7 +148,7 @@ class BitmapBooleanField : public FixedLayoutField {
   ManagedAttribute* GetAttribute() override { return attribute_.get(); }
   size_t GetRequiredBufferSize() const override { return offset_; }
   ::util::Status UpdateAttribute(const char* buffer) override {
-    CHECK_RETURN_IF_FALSE(attribute_ != nullptr)
+    RET_CHECK(attribute_ != nullptr)
         << "Called UpdateAttribute before RegisterDataSource";
     bool value = buffer[offset_] & bitmask_;
     if (invert_)
@@ -309,7 +308,7 @@ class UnsignedBitField : public FixedLayoutField {
   ManagedAttribute* GetAttribute() override { return attribute_.get(); }
   size_t GetRequiredBufferSize() const override { return byte_offset_ + 1; }
   ::util::Status UpdateAttribute(const char* buffer) override {
-    CHECK_RETURN_IF_FALSE(attribute_ != nullptr)
+    RET_CHECK(attribute_ != nullptr)
         << "Called UpdateAttribute before RegisterDataSource";
     uint32 value = 0;
     for (size_t i = 0; i < length_; i++) {
@@ -343,16 +342,16 @@ class TimestampField : public FixedLayoutField {
   ManagedAttribute* GetAttribute() override { return attribute_.get(); }
   size_t GetRequiredBufferSize() const override { return offset_ + length_; }
   ::util::Status UpdateAttribute(const char* buffer) override {
-    CHECK_RETURN_IF_FALSE(attribute_ != nullptr)
+    RET_CHECK(attribute_ != nullptr)
         << "Called UpdateAttribute before RegisterDataSource";
     struct tm temp_tm = {};
     // strptime should return a pointer off the end of the timestamp.
     char* after_timestamp =
         strptime(buffer + offset_, format_.c_str(), &temp_tm);
-    CHECK_RETURN_IF_FALSE(after_timestamp == buffer + length_ + offset_)
+    RET_CHECK(after_timestamp == buffer + length_ + offset_)
         << "Failed to parse contents of timestamp field.";
     time_t timestamp = mktime(&temp_tm);
-    CHECK_RETURN_IF_FALSE(timestamp != -1)
+    RET_CHECK(timestamp != -1)
         << "Failed to convert contents of timestamp field into a timestamp.";
     attribute_->AssignValue(timestamp);
     return ::util::OkStatus();
@@ -390,7 +389,7 @@ class EnumField : public FixedLayoutField {
   ManagedAttribute* GetAttribute() override { return attribute_.get(); }
   size_t GetRequiredBufferSize() const override { return offset_; }
   ::util::Status UpdateAttribute(const char* buffer) override {
-    CHECK_RETURN_IF_FALSE(attribute_ != nullptr)
+    RET_CHECK(attribute_ != nullptr)
         << "Called UpdateAttribute before RegisterDataSource";
     auto found = byte_to_enum_value_.find(buffer[offset_]);
     if (found == byte_to_enum_value_.end()) {

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
-load("@rules_cc//cc:defs.bzl", "cc_proto_library", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load(
     "//bazel:rules.bzl",
@@ -28,20 +28,6 @@ package(
 # different parts of the attribute database.
 
 config_setting(
-    name = "with_onlp",
-    define_values = {
-        "phal_with_onlp": "true",
-    },
-)
-
-config_setting(
-    name = "without_onlp",
-    define_values = {
-        "phal_with_onlp": "false",
-    },
-)
-
-config_setting(
     name = "with_tai",
     define_values = {
         "phal_with_tai": "true",
@@ -54,10 +40,6 @@ config_setting(
         "phal_with_tai": "false",
     },
 )
-
-onlp_defines = [
-    "WITH_ONLP",
-]
 
 onlp_deps = [
     "//stratum/hal/lib/phal/onlp:onlp_phal",
@@ -74,20 +56,14 @@ tai_deps = [
 # Default Phal selection (the absence of both with_* and without_*) is done by
 # filling the //conditions:default" or leaving it empty.
 phal_defines = select({
-    ":with_onlp": onlp_defines,
-    ":without_onlp": [],
-    "//conditions:default": onlp_defines,
-}) + select({
     ":with_tai": tai_defines,
     ":without_tai": [],
     "//conditions:default": [],
 })
 
-phal_deps = select({
-    ":with_onlp": onlp_deps,
-    ":without_onlp": [],
-    "//conditions:default": onlp_deps,
-}) + select({
+phal_deps = [
+    "//stratum/hal/lib/phal/onlp:onlp_phal",
+] + select({
     ":with_tai": tai_deps,
     ":without_tai": [],
     "//conditions:default": [],
@@ -478,7 +454,6 @@ stratum_cc_library(
         ":db_cc_proto",
         ":managed_attribute",
         "//stratum/glue:logging",
-        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/status",
         "//stratum/hal/lib/common:channel_writer_wrapper",
         "//stratum/hal/lib/common:error_buffer",
@@ -493,6 +468,7 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
@@ -602,7 +578,7 @@ stratum_cc_library(
     ],
 )
 
-cc_test(
+stratum_cc_test(
     name = "reader_writer_datasource_test",
     srcs = ["reader_writer_datasource_test.cc"],
     deps = [

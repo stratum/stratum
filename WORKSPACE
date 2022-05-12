@@ -66,12 +66,6 @@ np4_configure(name = "local_np4_bin")
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
 
-load("@rules_python//python:repositories.bzl", "py_repositories")
-py_repositories()
-
-load("@rules_python//python:pip.bzl", "pip_repositories")
-pip_repositories()
-
 load("//stratum/hal/lib/phal/onlp:onlp.bzl", "onlp_configure")
 onlp_configure(name = "local_onlp_bin")
 
@@ -80,7 +74,6 @@ switched_rules_by_language(
     name = "com_google_googleapis_imports",
     grpc = True,
     cc = True,
-    python = True,
 )
 
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
@@ -111,16 +104,3 @@ cdlang_rules_dependencies()
 load("@bazel_latex//:repositories.bzl", "latex_repositories")
 
 latex_repositories()
-
-# ---------------------------------------------------------------------------
-#       Load dependencies for pipeline PTF rules
-# ---------------------------------------------------------------------------
-load("@rules_python//python:pip.bzl", "pip_import")
-pip_import(
-    name = "ptf_deps",
-    requirements = "//stratum/pipelines/ptf:requirements.txt",
-)
-
-load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
-
-ptf_pip_install()

@@ -7,15 +7,15 @@
 #include <algorithm>
 #include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/lib/macros.h"
 
 // Note: We want to keep this polling interval relatively short. Unlike with
 // with udev, it's possible for us to miss state changes entirely if they occur
@@ -74,11 +74,11 @@ OnlpEventHandler::~OnlpEventHandler() {
 ::util::Status OnlpEventHandler::RegisterEventCallback(
     OnlpEventCallback* callback) {
   absl::MutexLock lock(&monitor_lock_);
-  CHECK_RETURN_IF_FALSE(callback->handler_ == nullptr)
+  RET_CHECK(callback->handler_ == nullptr)
       << "Cannot register a callback that is already registered.";
   OidStatusMonitor& status_monitor =
       gtl::LookupOrInsert(&status_monitors_, callback->GetOid(), {});
-  CHECK_RETURN_IF_FALSE(status_monitor.callback == nullptr)
+  RET_CHECK(status_monitor.callback == nullptr)
       << "Cannot register two callbacks for the same OID.";
   status_monitor.callback = callback;
   callback->handler_ = this;
@@ -90,7 +90,7 @@ OnlpEventHandler::~OnlpEventHandler() {
 ::util::Status OnlpEventHandler::UnregisterEventCallback(
     OnlpEventCallback* callback) {
   absl::MutexLock lock(&monitor_lock_);
-  CHECK_RETURN_IF_FALSE(callback->handler_ == this)
+  RET_CHECK(callback->handler_ == this)
       << "Cannot unregister a callback that is not currently registered.";
   // We can't unregister this callback while it's running.
   while (executing_callback_ == callback)
@@ -98,7 +98,7 @@ OnlpEventHandler::~OnlpEventHandler() {
 
   OidStatusMonitor* status_monitor =
       gtl::FindOrNull(status_monitors_, callback->GetOid());
-  CHECK_RETURN_IF_FALSE(status_monitor != nullptr)
+  RET_CHECK(status_monitor != nullptr)
       << "Encountered an OnlpEventCallback with no matching status monitor.";
   callback->handler_ = nullptr;
   status_monitors_.erase(callback->GetOid());
@@ -114,9 +114,8 @@ void OnlpEventHandler::AddUpdateCallback(
 
 ::util::Status OnlpEventHandler::InitializePollingThread() {
   absl::MutexLock lock(&monitor_lock_);
-  CHECK_RETURN_IF_FALSE(!pthread_create(&monitor_loop_thread_id_, nullptr,
-                                        &OnlpEventHandler::RunPollingThread,
-                                        this))
+  RET_CHECK(!pthread_create(&monitor_loop_thread_id_, nullptr,
+                            &OnlpEventHandler::RunPollingThread, this))
       << "Failed to start the polling thread.";
   monitor_loop_running_ = true;
   return ::util::OkStatus();
@@ -128,10 +127,9 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
   absl::Time last_polling_time = absl::InfinitePast();
   while (true) {
     // We keep the polling time as consistent as possible.
-    absl::SleepFor(
-        last_polling_time +
-        absl::Milliseconds(FLAGS_onlp_polling_interval_ms) -
-        absl::Now());
+    absl::SleepFor(last_polling_time +
+                   absl::Milliseconds(FLAGS_onlp_polling_interval_ms) -
+                   absl::Now());
     last_polling_time = absl::Now();
     {
       absl::MutexLock lock(&handler->monitor_lock_);

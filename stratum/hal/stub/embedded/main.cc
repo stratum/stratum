@@ -36,6 +36,7 @@
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -212,45 +213,6 @@ class GetPath {
   ::gnmi::Path path_;
 };
 
-// Helper to convert a gRPC status with error details to a string. Assumes
-// ::grpc::Status includes a binary error detail which is encoding a serialized
-// version of ::google::rpc::Status proto in which the details are captured
-// using proto any messages.
-// TODO(unknown): As soon as we can use internal libraries here,
-// move to common/lib.
-std::string ToString(const ::grpc::Status& status) {
-  std::stringstream ss;
-  if (!status.error_details().empty()) {
-    ss << "(overall error code: "
-       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
-       << ", overall error message: "
-       << (status.error_message().empty() ? "None" : status.error_message())
-       << "). Error details: ";
-    ::google::rpc::Status details;
-    if (!details.ParseFromString(status.error_details())) {
-      ss << "Failed to parse ::google::rpc::Status from GRPC status details.";
-    } else {
-      for (int i = 0; i < details.details_size(); ++i) {
-        ::google::rpc::Status detail;
-        if (details.details(i).UnpackTo(&detail)) {
-          ss << "\n(error #" << i + 1 << ": error code: "
-             << ::google::rpc::Code_Name(ToGoogleRpcCode(detail.code()))
-             << ", error message: "
-             << (detail.message().empty() ? "None" : detail.message()) << ") ";
-        }
-      }
-    }
-  } else {
-    ss << "(error code: "
-       << ::google::rpc::Code_Name(ToGoogleRpcCode(status.error_code()))
-       << ", error message: "
-       << (status.error_message().empty() ? "None" : status.error_message())
-       << ").";
-  }
-
-  return ss.str();
-}
-
 }  // namespace
 
 class HalServiceClient {
@@ -277,7 +239,7 @@ class HalServiceClient {
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
     oc_device.SerializeToString(replace->mutable_val()->mutable_bytes_val());
     CALL_RPC_AND_CHECK_RESULTS(config_monitoring_service_stub_, Set, context,
-                               req, resp, ToString);
+                               req, resp, P4RuntimeGrpcStatusToString);
   }
 
   void SetForwardingPipelineConfig(uint64 node_id, absl::uint128 election_id,
@@ -303,7 +265,7 @@ class HalServiceClient {
         ReadFileToString(p4_pipeline_config_file,
                          req.mutable_config()->mutable_p4_device_config()));
     CALL_RPC_AND_CHECK_RESULTS(p4_service_stub_, SetForwardingPipelineConfig,
-                               context, req, resp, ToString);
+                               context, req, resp, P4RuntimeGrpcStatusToString);
   }
 
   void WriteForwardingEntries(uint64 node_id, absl::uint128 election_id,
@@ -322,7 +284,7 @@ class HalServiceClient {
     req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
     CALL_RPC_AND_CHECK_RESULTS(p4_service_stub_, Write, context, req, resp,
-                               ToString);
+                               P4RuntimeGrpcStatusToString);
   }
 
   void ReadForwardingEntries(uint64 node_id) {
@@ -346,13 +308,12 @@ class HalServiceClient {
     ::grpc::Status status = reader->Finish();
     if (!status.ok()) {
       LOG(ERROR) << "Failed to read the forwarding entries with the following "
-                 << "error details: " << ToString(status);
+                 << "error details: " << P4RuntimeGrpcStatusToString(status);
     }
   }
 
   static void* TxPacket(void* arg) {
     TxThreadData* data = static_cast<TxThreadData*>(arg);
-    // FIXME(boc) might use CHECK_NOTNULL instead of ABSL_DIE_IF_NULL
     ClientStreamChannelReaderWriter* stream = ABSL_DIE_IF_NULL(data->stream);
     P4TableMapper* p4_table_mapper = ABSL_DIE_IF_NULL(data->p4_table_mapper);
     ::p4::v1::StreamMessageRequest req;
@@ -601,8 +562,8 @@ class HalServiceClient {
           const auto& path = update.path();
           int len = path.elem_size();
           // Is this /interfaces/interface[name=<name>/status/ifindex?
-          if (len > 1 && path.elem(len - 1).name().compare("ifindex") == 0 &&
-              path.elem(1).name().compare("interface") == 0 &&
+          if (len > 1 && path.elem(len - 1).name() == "ifindex" &&
+              path.elem(1).name() == "interface" &&
               path.elem(1).key().count("name")) {
             // Save mapping between 'ifindex' and 'name'
             id_to_name[update.val().uint_val()] = path.elem(1).key().at("name");
@@ -739,7 +700,7 @@ class HalServiceClient {
 
 ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
 
-int Main(int argc, char** argv) {
+::util::Status Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
   HalServiceClient client(FLAGS_url);
@@ -763,10 +724,10 @@ int Main(int argc, char** argv) {
   } else if (FLAGS_start_gnmi_subscription_session) {
     client.StartGnmiSubscriptionSession();
   } else {
-    LOG(ERROR) << "Invalid command.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid command.";
   }
 
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace stub
@@ -774,6 +735,5 @@ int Main(int argc, char** argv) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  FLAGS_logtostderr = true;
-  return stratum::hal::stub::Main(argc, argv);
+  return stratum::hal::stub::Main(argc, argv).error_code();
 }

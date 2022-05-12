@@ -16,15 +16,15 @@
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
 
+namespace stratum {
+namespace hal {
+namespace np4intel {
+
 using ::testing::_;
 using ::testing::AtMost;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
-
-namespace stratum {
-namespace hal {
-namespace np4intel {
 
 namespace {
 
@@ -96,12 +96,10 @@ class NP4ChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status CheckCleanInternalState() {
-    CHECK_RETURN_IF_FALSE(
-        np4_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
-    CHECK_RETURN_IF_FALSE(
-        np4_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
-    CHECK_RETURN_IF_FALSE(
-        np4_chassis_manager_->port_status_change_event_channel_ == nullptr);
+    RET_CHECK(np4_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
+    RET_CHECK(np4_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
+    RET_CHECK(np4_chassis_manager_->port_status_change_event_channel_ ==
+              nullptr);
     return ::util::OkStatus();
   }
 
@@ -118,7 +116,7 @@ class NP4ChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status PushBaseChassisConfig(ChassisConfigBuilder* builder) {
-    CHECK_RETURN_IF_FALSE(!Initialized())
+    RET_CHECK(!Initialized())
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED);
 
@@ -131,8 +129,7 @@ class NP4ChassisManagerTest : public ::testing::Test {
     //     .WillOnce(Return(::util::OkStatus()));
 
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
-    CHECK_RETURN_IF_FALSE(Initialized())
-        << "Class is not initialized after push!";
+    RET_CHECK(Initialized()) << "Class is not initialized after push!";
     return ::util::OkStatus();
   }
 

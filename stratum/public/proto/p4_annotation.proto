@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file describes protobufs used in P4 annotations accepted by the Stratum
 // SwitchStack.
 syntax = "proto3";

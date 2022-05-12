@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_CONSTANTS_H_
 #define STRATUM_HAL_LIB_COMMON_CONSTANTS_H_
 
@@ -36,6 +35,8 @@ constexpr uint16 kArpVlan = 4050;
 // This value must match CPU_PORT in
 // TODO(fix path to parser): p4/spec/parser.p4
 // constexpr uint64 kCpuPortId = 0xFFFFFFFD;
+constexpr uint64 kSdnUnspecifiedPortId = 0;
+constexpr uint64 kSdnCpuPortId = 0xFFFFFFFD;
 constexpr uint64 kCpuPortId = 0xFD;
 
 // Constant broadcast MAC.
@@ -67,6 +68,9 @@ constexpr uint8 kIpProtoGre = 47;
 
 // Precision for converting floating point to ::gnmi::Decimal64
 constexpr uint32 kDefaultPrecision = 2;
+
+// Dummy MAC address used for unsupported DataRequests.
+constexpr uint64 kDummyMacAddress = 0x112233445566ull;
 
 }  // namespace hal
 }  // namespace stratum

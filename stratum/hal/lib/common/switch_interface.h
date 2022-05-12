@@ -2,21 +2,20 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 
-#include <vector>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -94,7 +93,7 @@ class SwitchInterface {
   // PushForwardingPipelineConfig() calls VerifyForwardingPipelineConfig() to
   // verify the forwarding config before pushing anything to the hardware. Also,
   // this funcation can be called at any point before/after the switch is
-  // initialize or the chassis config is pushed.
+  // initialized or the chassis config is pushed.
   virtual ::util::Status VerifyForwardingPipelineConfig(
       uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) = 0;
 
@@ -150,25 +149,33 @@ class SwitchInterface {
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) = 0;
 
-  // Registers a writer to be invoked when we receive a packet on any port on
-  // the specified node which are destined for the controller. The sent
-  // ::p4::PacketIn instance includes all the info on where the packet was
-  // received on this node as well as its payload.
-  virtual ::util::Status RegisterPacketReceiveWriter(
+  // Registers a writer to be invoked when we receive a StreamMessageResponse on
+  // the specified node which are destined for the controller. A
+  // StreamMessageResponse can carry many different types of sub-messages, such
+  // as PacketIns, digests or idle timeout notifications.
+  // PacketIns: The sent ::p4::PacketIn instance includes all the info on
+  //      where the packet was received on this node as well as its payload.
+  virtual ::util::Status RegisterStreamMessageResponseWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) = 0;
+      std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>
+          writer) = 0;
 
   // Unregisters the writer registered to this node by
-  // RegisterPacketReceiveWriter().
-  virtual ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) = 0;
+  // RegisterStreamMessageResponseWriter().
+  virtual ::util::Status UnregisterStreamMessageResponseWriter(
+      uint64 node_id) = 0;
 
-  // Transmits a packet received from controller directly to a port on a given
-  // node (specified by 'node_id') or to the ingress pipeline of the node
-  // to let the chip route the packet. The given ::p4::PacketOut instance
-  // includes all the info on where to transmit the packet as well as its
-  // payload.
-  virtual ::util::Status TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) = 0;
+  // Handles a request received from the controller on the given node. A
+  // StreamMessageRequest can carry PacketOuts, digest acks, or other
+  // platform-specific requests.
+  // PacketOuts: Transmits a packet received from controller directly to a
+  //      port on a given node (specified by 'node_id') or to the ingress
+  //      pipeline of the node to let the chip route the packet. The given
+  //      ::p4::PacketOut instance includes all the info on where to transmit
+  //      the packet as well as its payload.
+  // DigestListAck: Acknowledges the receipt of a previously sent DigestList.
+  virtual ::util::Status HandleStreamMessageRequest(
+      uint64 node_id, const ::p4::v1::StreamMessageRequest& request) = 0;
 
   // Registers a writer for sending gNMI events.
   virtual ::util::Status RegisterEventNotifyWriter(

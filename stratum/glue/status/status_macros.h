@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This library contains helper macros and methods to make returning errors
 // and propagating statuses easier.
 //
@@ -13,13 +12,14 @@
 //   ::util::StatusOr<ValueType> Method(arg, ...);
 //
 // Inside the method, to return errors, use the macros
-//   RETURN_ERROR() << "Message with ::util::error::UNKNOWN code";
-//   RETURN_ERROR(code_enum)
-//       << "Message with an error code, in that error_code's ErrorSpace "
-//       << "(See ErrorCodeOptions below)";
-//   RETURN_ERROR(error_space, code_int)
-//       << "Message with integer error code in specified ErrorSpace "
-//       << "(Not recommended - use previous form with an enum code instead)";
+//   return MAKE_ERROR() << "Message with ::util::error::UNKNOWN code";
+//   return MAKE_ERROR(code_enum)
+//          << "Message with an error code, in that error_code's ErrorSpace "
+//          << "(See ErrorCodeOptions below)";
+//   return MAKE_ERROR(error_space, code_int)
+//          << "Message with integer error code in specified ErrorSpace "
+//          << "(Not recommended - use previous form with an enum code "
+//          << "instead)";
 //
 // When calling another method, use this to propagate status easily.
 //   RETURN_IF_ERROR(method(args));
@@ -46,11 +46,7 @@
 // WARNING: ASSIGN_OR_RETURN expands into multiple statements; it cannot be used
 //  in a single statement (e.g. as the body of an if statement without {})!
 //
-// This can optionally be used to return ::util::Status::OK.
-//   RETURN_OK();
-//
-// To construct an error without immediately returning it, use MAKE_ERROR,
-// which supports the same argument types as RETURN_ERROR.
+// To construct an error without immediately returning it, use MAKE_ERROR.
 //   ::util::Status status = MAKE_ERROR(...) << "Message";
 //
 // To add additional text onto an existing error, use
@@ -62,7 +58,7 @@
 // They can also be used to return from a function that returns
 // ::util::StatusOr:
 //   ::util::StatusOr<T> MyFunction() {
-//     RETURN_ERROR(...) << "Message";
+//     return MAKE_ERROR(...) << "Message";
 //   }
 //
 //
@@ -79,16 +75,16 @@
 //
 // Logging:
 //
-// RETURN_ERROR and MAKE_ERROR log the error to LOG(ERROR) by default.
+// MAKE_ERROR logs the error to LOG(ERROR) by default.
 //
 // Logging can be turned on or off for a specific error by using
-//   RETURN_ERROR().with_logging() << "Message logged to LOG(ERROR)";
-//   RETURN_ERROR().without_logging() << "Message not logged";
-//   RETURN_ERROR().set_logging(false) << "Message not logged";
-//   RETURN_ERROR().severity(INFO) << "Message logged to LOG(INFO)";
+//   return MAKE_ERROR().with_logging() << "Message logged to LOG(ERROR)";
+//   return MAKE_ERROR().without_logging() << "Message not logged";
+//   return MAKE_ERROR().set_logging(false) << "Message not logged";
+//   return MAKE_ERROR().severity(INFO) << "Message logged to LOG(INFO)";
 //
 // If logging is enabled, this will make an error also log a stack trace.
-//   RETURN_ERROR().with_log_stack_trace() << "Message";
+//   return MAKE_ERROR().with_log_stack_trace() << "Message";
 //
 // Logging can also be controlled within a scope using
 // ScopedErrorLogSuppression.
@@ -121,11 +117,10 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/optimization.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-
-#include "absl/base/optimization.h"
 
 namespace util {
 
@@ -196,9 +191,7 @@ class MakeErrorStream {
 
     // Implicit cast operators to ::util::Status and ::util::StatusOr.
     // Exactly one of these must be called exactly once before destruction.
-    operator ::util::Status() {
-      return wrapped_error_stream_->GetStatus();
-    }
+    operator ::util::Status() { return wrapped_error_stream_->GetStatus(); }
     template <typename T>
     operator ::util::StatusOr<T>() {
       return wrapped_error_stream_->GetStatus();
@@ -215,8 +208,7 @@ class MakeErrorStream {
 
   // Make an error with ::util::error::UNKNOWN.
   MakeErrorStream(const char* file, int line)
-      : impl_(new Impl(file, line,
-                       ::util::Status::canonical_space(),
+      : impl_(new Impl(file, line, ::util::Status::canonical_space(),
                        ::util::error::UNKNOWN, this)) {}
 
   // Make an error with the given error code and error_space.
@@ -232,11 +224,10 @@ class MakeErrorStream {
   // code's type using the specialized ErrorCodeOptions.
   template <typename ERROR_CODE_TYPE>
   MakeErrorStream(const char* file, int line, ERROR_CODE_TYPE code)
-    : impl_(new Impl(
-          file, line,
-          ErrorCodeOptions<ERROR_CODE_TYPE>().GetErrorSpace(),
-          code, this,
-          ErrorCodeOptions<ERROR_CODE_TYPE>().IsLoggedByDefault(code))) {}
+      : impl_(new Impl(
+            file, line, ErrorCodeOptions<ERROR_CODE_TYPE>().GetErrorSpace(),
+            code, this,
+            ErrorCodeOptions<ERROR_CODE_TYPE>().IsLoggedByDefault(code))) {}
 
   template <typename T>
   MakeErrorStreamWithOutput& operator<<(const T& value) {
@@ -291,7 +282,7 @@ class MakeErrorStream {
   // Adds RET_CHECK failure text to error message.
   MakeErrorStreamWithOutput& add_ret_check_failure(const char* condition) {
     return *this << "RET_CHECK failure (" << impl_->file_ << ":" << impl_->line_
-                 << ") " << condition << " ";
+                 << ") '" << condition << "' is false. ";
   }
 
   // Adds RET_CHECK_FAIL text to error message.
@@ -307,9 +298,8 @@ class MakeErrorStream {
  private:
   class Impl {
    public:
-    Impl(const char* file, int line,
-         const ::util::ErrorSpace* error_space, int  code,
-         MakeErrorStream* error_stream,
+    Impl(const char* file, int line, const ::util::ErrorSpace* error_space,
+         int code, MakeErrorStream* error_stream,
          bool is_logged_by_default = true);
     Impl(const ::util::Status& status, const char* file, int line,
          MakeErrorStream* error_stream);
@@ -379,16 +369,6 @@ class MakeErrorStream {
 //   return APPEND_ERROR(status) << ", more details";
 #define APPEND_ERROR(status) \
   ::util::status_macros::MakeErrorStream((status), __FILE__, __LINE__)
-
-// Shorthand to make an error (with MAKE_ERROR) and return it.
-//   if (error) {
-//     RETURN_ERROR() << "Message";
-//   }
-#define RETURN_ERROR return MAKE_ERROR
-
-// Return success.
-#define RETURN_OK() \
-  return ::util::Status::OK
 
 // Wraps a ::util::Status so it can be assigned and used in an if-statement.
 // Implicitly converts from status and to bool.
@@ -483,11 +463,11 @@ class UtilStatusConvertibleToBool {
 // WARNING: ASSIGN_OR_RETURN expands into multiple statements; it cannot be used
 //  in a single statement (e.g. as the body of an if statement without {})!
 #define ASSIGN_OR_RETURN(lhs, rexpr) \
-  ASSIGN_OR_RETURN_IMPL( \
+  ASSIGN_OR_RETURN_IMPL(             \
       STATUS_MACROS_CONCAT_NAME(_status_or_value, __COUNTER__), lhs, rexpr);
 
 // If condition is false, this macro returns, from the current function, a
-// ::util::Status with the ::util::error::INTERNAL code.
+// ::util::Status with the ERR_INVALID_PARAM code.
 // For example:
 //   RET_CHECK(condition) << message;
 // is equivalent to:
@@ -499,12 +479,12 @@ class UtilStatusConvertibleToBool {
 //
 // Intended to be used as a replacement for CHECK where crashes are
 // unacceptable. The containing function must return a ::util::Status.
-#define RET_CHECK(condition)                                             \
-  while (ABSL_PREDICT_FALSE(!(condition)))                               \
-    while (::util::status_macros::helper_log_always_return_true())       \
-  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__,      \
-                                                ::util::error::INTERNAL) \
-      .with_log_stack_trace()                                            \
+// The error code return here is the one that matches the most of the uses.
+#define RET_CHECK(condition)                                        \
+  while (ABSL_PREDICT_FALSE(!(condition)))                          \
+  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+                                                ERR_INVALID_PARAM)  \
+      .with_log_stack_trace()                                       \
       .add_ret_check_failure(#condition)
 
 ///////
@@ -515,7 +495,7 @@ class UtilStatusConvertibleToBool {
 // after the error message is logged.
 namespace internal {
 struct ErrorDeleteStringHelper {
-  explicit ErrorDeleteStringHelper(std::string* str_in) : str(str_in) { }
+  explicit ErrorDeleteStringHelper(std::string* str_in) : str(str_in) {}
   ~ErrorDeleteStringHelper() { delete str; }
   std::string* str;
 
@@ -535,9 +515,9 @@ struct ErrorDeleteStringHelper {
 // Unlike google3 version of status_macros.h, we don't use the error string
 // building macros from logging.h, since the depot3 versions have a memory leak.
 // b/19991103
-template<class t1, class t2>
-std::string* MakeRetCheckOpString(
-    const t1& v1, const t2& v2, const char* names) {
+template <class t1, class t2>
+std::string* MakeRetCheckOpString(const t1& v1, const t2& v2,
+                                  const char* names) {
   std::stringstream ss;
   ss << names << " (" << v1 << " vs. " << v2 << ")";
   return new std::string(ss.str());
@@ -561,44 +541,41 @@ std::string* MakeRetCheckOpString(
 DEFINE_RET_CHECK_OP_IMPL(_EQ, ==)
 DEFINE_RET_CHECK_OP_IMPL(_NE, !=)
 DEFINE_RET_CHECK_OP_IMPL(_LE, <=)
-DEFINE_RET_CHECK_OP_IMPL(_LT, < )
+DEFINE_RET_CHECK_OP_IMPL(_LT, <)
 DEFINE_RET_CHECK_OP_IMPL(_GE, >=)
-DEFINE_RET_CHECK_OP_IMPL(_GT, > )
+DEFINE_RET_CHECK_OP_IMPL(_GT, >)
 #undef DEFINE_RET_CHECK_OP_IMPL
 
 #if defined(STATIC_ANALYSIS)
 // Only for static analysis tool to know that it is equivalent to comparison.
-#define RET_CHECK_OP(name, op, val1, val2) RET_CHECK((val1) op (val2))
+#define RET_CHECK_OP(name, op, val1, val2) RET_CHECK((val1)op(val2))
 #elif !defined(NDEBUG)
 // In debug mode, avoid constructing CheckOpStrings if possible,
 // to reduce the overhead of RET_CHECK statements.
-#define RET_CHECK_OP(name, op, val1, val2) \
-  while (std::string* _result = \
-         ::util::status_macros::RetCheck##name##Impl(      \
-              google::GetReferenceableValue(val1),         \
-              google::GetReferenceableValue(val2),         \
-              #val1 " " #op " " #val2))                               \
-    return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                  ::util::error::INTERNAL) \
-        .with_log_stack_trace() \
-        .add_ret_check_failure( \
-             ::util::status_macros::internal::ErrorDeleteStringHelper( \
-                 _result).str->c_str())
+#define RET_CHECK_OP(name, op, val1, val2)                                   \
+  while (std::string* _result = ::util::status_macros::RetCheck##name##Impl( \
+             google::GetReferenceableValue(val1),                            \
+             google::GetReferenceableValue(val2), #val1 " " #op " " #val2))  \
+  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__,          \
+                                                ::util::error::INTERNAL)     \
+      .with_log_stack_trace()                                                \
+      .add_ret_check_failure(                                                \
+          ::util::status_macros::internal::ErrorDeleteStringHelper(_result)  \
+              .str->c_str())
 #else
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
-#define RET_CHECK_OP(name, op, val1, val2) \
-  while (CheckOpString _result = \
-         ::util::status_macros::RetCheck##name##Impl(      \
-              google::GetReferenceableValue(val1),         \
-              google::GetReferenceableValue(val2),         \
-              #val1 " " #op " " #val2))                               \
-    return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
-                                                  ::util::error::INTERNAL) \
-        .with_log_stack_trace() \
-        .add_ret_check_failure( \
-             ::util::status_macros::internal::ErrorDeleteStringHelper( \
-                 _result.str_).str->c_str())
+#define RET_CHECK_OP(name, op, val1, val2)                                    \
+  while (CheckOpString _result = ::util::status_macros::RetCheck##name##Impl( \
+             google::GetReferenceableValue(val1),                             \
+             google::GetReferenceableValue(val2), #val1 " " #op " " #val2))   \
+  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__,           \
+                                                ::util::error::INTERNAL)      \
+      .with_log_stack_trace()                                                 \
+      .add_ret_check_failure(                                                 \
+          ::util::status_macros::internal::ErrorDeleteStringHelper(           \
+              _result.str_)                                                   \
+              .str->c_str())
 #endif  // STATIC_ANALYSIS, !NDEBUG
 
 // End of implementation code for RET_CHECK_EQ, RET_CHECK_NE, etc.
@@ -620,9 +597,9 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 #define RET_CHECK_EQ(val1, val2) RET_CHECK_OP(_EQ, ==, val1, val2)
 #define RET_CHECK_NE(val1, val2) RET_CHECK_OP(_NE, !=, val1, val2)
 #define RET_CHECK_LE(val1, val2) RET_CHECK_OP(_LE, <=, val1, val2)
-#define RET_CHECK_LT(val1, val2) RET_CHECK_OP(_LT, < , val1, val2)
+#define RET_CHECK_LT(val1, val2) RET_CHECK_OP(_LT, <, val1, val2)
 #define RET_CHECK_GE(val1, val2) RET_CHECK_OP(_GE, >=, val1, val2)
-#define RET_CHECK_GT(val1, val2) RET_CHECK_OP(_GT, > , val1, val2)
+#define RET_CHECK_GT(val1, val2) RET_CHECK_OP(_GT, >, val1, val2)
 
 // Unconditionally returns an error.  Use in place of RET_CHECK(false).
 // Example:
@@ -633,12 +610,12 @@ DEFINE_RET_CHECK_OP_IMPL(_GT, > )
 //   } else {
 //     RET_CHECK_FAIL() << "Failed to satisfy a or b";
 //   }
-#define RET_CHECK_FAIL() \
-  LOG(ERROR) << "Return Error: " << " at "                          \
-             << __FILE__ << ":" << __LINE__;                        \
-  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__, \
+#define RET_CHECK_FAIL()                                                 \
+  LOG(ERROR) << "Return Error: "                                         \
+             << " at " << __FILE__ << ":" << __LINE__;                   \
+  return ::util::status_macros::MakeErrorStream(__FILE__, __LINE__,      \
                                                 ::util::error::INTERNAL) \
-      .with_log_stack_trace() \
+      .with_log_stack_trace()                                            \
       .add_ret_check_fail_failure()
 
 }  // namespace status_macros

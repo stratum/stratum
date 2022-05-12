@@ -110,14 +110,18 @@ fi
 if [ ! -z "$GIT_EDITOR" ]; then
     DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR=\"$GIT_EDITOR\""
 fi
-eval docker build $DOCKER_BUILD_OPTIONS -f $DOCKER_FILE $THIS_DIR
+eval docker build $DOCKER_BUILD_OPTIONS - < $DOCKER_FILE
 ERR=$?
 if [ $ERR -ne 0 ]; then
     >&2 echo "ERROR: Error while building dockering development image"
     exit $ERR
 fi
 
-DOCKER_RUN_OPTIONS="--rm -v $THIS_DIR:/stratum"
+DOCKER_RUN_OPTIONS="--rm -ti -v $THIS_DIR:/stratum -w /stratum"
+DOCKER_GID=$(id -g $USER)
+if [ -n "$DOCKER_GID" ]; then
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS --user $USER:$DOCKER_GID"
+fi
 if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi
@@ -132,4 +136,4 @@ if [ "$NP4_INTEL" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v /dev/intel-fpga-fme.0:/dev/intel-fpga-fme.0"
 fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS $@"
-docker run $DOCKER_RUN_OPTIONS -w /stratum --user $USER -ti $IMAGE_NAME bash
+docker run $DOCKER_RUN_OPTIONS $IMAGE_NAME bash

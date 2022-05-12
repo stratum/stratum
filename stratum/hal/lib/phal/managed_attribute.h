@@ -2,18 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_MANAGED_ATTRIBUTE_H_
 #define STRATUM_HAL_LIB_PHAL_MANAGED_ATTRIBUTE_H_
 
 #include <functional>
 #include <memory>
 
+#include "google/protobuf/descriptor.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/lib/macros.h"
-#include "google/protobuf/descriptor.h"
 
 namespace stratum {
 namespace hal {
@@ -37,10 +36,11 @@ class ManagedAttribute {
  public:
   virtual ~ManagedAttribute() {}
   virtual Attribute GetValue() const = 0;
-  template <typename T> ::util::StatusOr<T> ReadValue() const {
+  template <typename T>
+  ::util::StatusOr<T> ReadValue() const {
     Attribute value = GetValue();
     auto typed_value = absl::get_if<T>(&value);
-    CHECK_RETURN_IF_FALSE(typed_value)
+    RET_CHECK(typed_value)
         << "Attempted to read an attribute with the incorrect type.";
     return *typed_value;
   }
@@ -93,11 +93,12 @@ class EnumAttribute
   // Does not transfer ownership of datasource.
   explicit EnumAttribute(const ::google::protobuf::EnumDescriptor* descriptor,
                          DataSource* datasource)
-  : TypedAttribute<const ::google::protobuf::EnumValueDescriptor*>(datasource) {
+      : TypedAttribute<const ::google::protobuf::EnumValueDescriptor*>(
+            datasource) {
     value_ = descriptor->FindValueByNumber(0);  // Default enum value.
   }
   ::util::Status AssignValue(
-    const google::protobuf::EnumValueDescriptor* value) {
+      const google::protobuf::EnumValueDescriptor* value) {
     if (value->type() != value_->type()) {
       return MAKE_ERROR() << "Attempted to assign incorrect enum type "
                           << value->type()->name()

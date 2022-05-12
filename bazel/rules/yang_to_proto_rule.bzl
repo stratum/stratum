@@ -14,7 +14,6 @@ def yang_to_proto(
         pkg_name = "",
         exclude_modules = [],
         base_import_path = ""):
-
     if pkg_name == "":
         pkg_name = name
 
@@ -41,6 +40,6 @@ def yang_to_proto(
         outs = outs,
         cmd = cmd,
         tools = [
-            "@com_github_openconfig_ygot//proto_generator:proto_generator"
-        ]
+            "@com_github_openconfig_ygot//proto_generator:proto_generator",
+        ],
     )

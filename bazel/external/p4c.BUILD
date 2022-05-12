@@ -78,7 +78,7 @@ genrule(
     name = "p4lexer_lex",
     srcs = ["frontends/parsers/p4/p4lexer.ll"],
     outs = ["frontends/parsers/p4/p4lexer.lex"],
-    cmd = ("sed '/%option outfile=\"lex.yy.c\"/d' $< > $@"),
+    cmd = "sed '/%option outfile=\"lex.yy.c\"/d' $< > $@",
     visibility = ["//visibility:private"],
 )
 
@@ -94,7 +94,7 @@ genrule(
     name = "v1lexer_lex",
     srcs = ["frontends/parsers/v1/v1lexer.ll"],
     outs = ["frontends/parsers/v1/v1lexer.lex"],
-    cmd = ("sed '/%option outfile=\"lex.yy.c\"/d' $< > $@"),
+    cmd = "sed '/%option outfile=\"lex.yy.c\"/d' $< > $@",
     visibility = ["//visibility:private"],
 )
 
@@ -401,7 +401,7 @@ genrule(
     name = "p4c_bmv2_version",
     srcs = ["backends/bmv2/simple_switch/version.h.cmake"],
     outs = ["backends/bmv2/simple_switch/version.h"],
-    cmd = ("sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@"),
+    cmd = "sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@",
     visibility = ["//visibility:private"],
 )
 
@@ -435,7 +435,7 @@ genrule(
     name = "p4c_p4test_version",
     srcs = ["backends/p4test/version.h.cmake"],
     outs = ["backends/p4test/version.h"],
-    cmd = ("sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@"),
+    cmd = "sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@",
     #visibility = ["//visibility:private"],
 )
 

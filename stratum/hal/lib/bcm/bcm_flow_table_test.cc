@@ -2,14 +2,15 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/bcm/bcm_flow_table.h"
+
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_flow_table.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 
 namespace stratum {
 namespace hal {
@@ -19,7 +20,7 @@ namespace {
 using test_utils::EqualsProto;
 using test_utils::IsOkAndHolds;
 
-constexpr char kMockTableEntry[] = R"PROTO(
+constexpr char kMockTableEntry[] = R"pb(
     table_id: 1
     match {
       field_id: 1
@@ -42,7 +43,7 @@ constexpr char kMockTableEntry[] = R"PROTO(
     priority: 10
     action {
       action_profile_member_id: 11
-    })PROTO";
+    })pb";
 
 const ::p4::v1::TableEntry& MockTableEntry() {
   static const ::p4::v1::TableEntry* entry = []() {

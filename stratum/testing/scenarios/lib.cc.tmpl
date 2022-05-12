@@ -65,9 +65,9 @@
   {{- $txtp:=.Protobuf.GetTextproto}}
   {{- range $i, $s := $txtp}}
   {{$.Protobuf.Namespace}}::{{if $s.Meta}}{{$s.Meta.Type}}{{else}}{{$.Protobuf.TypeName}}{{end}} req_{{$i}};
-  std::string kReq_{{$i}} = R"proto(
+  std::string kReq_{{$i}} = R"pb(
    {{$s.Text}}
-  )proto";
+  )pb";
 
   {{- range $.Protobuf.Vars}}
   // Replace `${{.Name}}` with contents of variable `{{.Name}}`.

@@ -22,7 +22,7 @@ namespace onlp {
 
 class OnlpSfpConfigurator : public OnlpEventCallback, public SfpConfigurator {
  public:
-  ~OnlpSfpConfigurator() = default;
+  ~OnlpSfpConfigurator() override = default;
 
   // Make a new OnlpSfpConfigurator
   static ::util::StatusOr<std::unique_ptr<OnlpSfpConfigurator>> Make(

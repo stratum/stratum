@@ -4,9 +4,12 @@ Copyright 2020-present Open Networking Foundation
 
 SPDX-License-Identifier: Apache-2.0
 -->
-# Transponder Abstraction Interface(TAI) support
+# Transponder Abstraction Interface (TAI) support
 
 This document provides an overview of the [TAI library](https://github.com/Telecominfraproject/oopt-tai) and interaction with TAI library wrapper and Stratum.
+
+For instructions on a specific platform or chip, refer to their
+[docs](/README.md#platforms).
 
 ## The Overview
 
@@ -32,7 +35,7 @@ To build PHAL with the TAI backend, add the following define to all Bazel build 
 
 `bazel build --define phal_with_tai=true //stratum/...`
 
-Follow the relevant build instructions for [Broadcom chips](stratum/hal/bin/bcm/standalone/README.md) as usual.
+Follow the relevant build instructions for [Broadcom chips](/stratum/hal/bin/bcm/standalone/README.md#compile-from-source) as usual.
 
 ### Additional TAI Switch Setup
 
@@ -48,13 +51,13 @@ The TAI package itself depends on Docker, so you might want to
 
 TAI is managed by systemd, so use the usual commands to manage that:
 
-- `systemctl start taish-server.service` # status|stop
+- `systemctl start taish-server.service # status|stop`
 - `systemctl enable taish-server.service`
 - `journalctl -feu taish-server`
 
-### TAI Troubleshooting on Cassini
+## TAI Troubleshooting on Cassini
 
-#### Optical ports (host interfaces) do not come up in the SDK
+### Optical ports (host interfaces) do not come up in the SDK
 Occasionally the host interfaces will stop coming up in the SDK, but did so
 before and the configuration did not change.
 
@@ -71,6 +74,17 @@ DEBUG [int tai::nel::HW::controller_status()@1872] [module(1)] RXI-LOSI: false, 
 ```
 6. Start Stratum
 7. Check port status: `ps`
+
+### Basic link verification
+To verify basic packet transmission over the optical link, we can use a simple
+test setup:
+
+1. Connect two Cassinis
+2. Start Stratum
+3. Enable ports: `port all en=1`
+4. Check port status: `ps`, two 100G ports per card should be up
+5. Send packets from CPU on one device: `tx 200 pbm=ce16`, replace with correct port
+6. Check counters: `show counters`, tx/rx counts should have increased
 
 ## Stratum TAI Interface and TAI Wrapper
 
@@ -166,7 +180,7 @@ message PhalDB {
 ```
 > Note that we are not supprting configuring the Hoet Interface in TAI for now. This may be a future task that contributed by the community.
 
-## Supported OpenConfig models(gNMI paths)
+## Supported OpenConfig models (gNMI paths)
 
 The OpenConfig model provides an optical channel configuration. Below are YANG models on GitHub we are using for TAI support:
 
@@ -262,7 +276,7 @@ Find the full TAI attributes' list here:
 | 2         | `MODULATION_FORMAT_DP_16_QAM` |
 | 3         | `MODULATION_FORMAT_DP_8_QAM`  |
 
-## Todos
+## TODOs
 
 ### ChasisConfig to OpenConfig conversion and vise versa
 

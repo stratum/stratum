@@ -30,8 +30,9 @@ def pkg_tar_with_symlinks(
         cmd = cmd + """
             dir=%s
             for f in $(SRCS); do
-                symlink_target=$$(readlink $$f | xargs -I{} find {} -type l | xargs readlink || true)
-                if [[ -n $$symlink_target ]]; then
+                symlink=$$(readlink "$$f" | xargs -I{} find {} -type l)
+                if [[ -n "$$symlink" ]]; then
+                    symlink_target=$$(readlink "$$symlink")
                     echo "--link=$${dir#*/}/$${f#*%s/}:$$symlink_target" >> "$@"
                 else
                     echo "--file=$$f=$${f#*%s}" >> "$@"

@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/phal/attribute_database.h"
 
 #include <memory>
@@ -59,7 +58,7 @@ DatabaseQuery::~DatabaseQuery() {
     ASSIGN_OR_RETURN(auto polling_result, Get());
     if (last_polling_result_ == nullptr ||
         !google::protobuf::util::MessageDifferencer::Equals(
-                                    *last_polling_result_, *polling_result)) {
+            *last_polling_result_, *polling_result)) {
       query_.MarkUpdated();
       last_polling_result_ = std::move(polling_result);
     }
@@ -132,20 +131,15 @@ absl::Time DatabaseQuery::GetNextPollingTime() {
 ::util::StatusOr<std::unique_ptr<AttributeDatabase>> AttributeDatabase::Make(
     std::unique_ptr<AttributeGroup> root,
     std::unique_ptr<ThreadpoolInterface> threadpool, bool run_polling_thread) {
+  RET_CHECK((root.get() != nullptr)) << "root group pointer is null";
+  RET_CHECK((threadpool.get() != nullptr)) << "threadpool pointer is null";
 
-  CHECK_RETURN_IF_FALSE((root.get() != nullptr))
-    << "root group pointer is null";
-  CHECK_RETURN_IF_FALSE((threadpool.get() != nullptr))
-    << "threadpool pointer is null";
-
-  CHECK_RETURN_IF_FALSE(root->AcquireReadable()->GetDescriptor() ==
-                        PhalDB::descriptor())
+  RET_CHECK(root->AcquireReadable()->GetDescriptor() == PhalDB::descriptor())
       << "The root group of a AttributeDatabase must use "
       << "PhalDB as its schema.";
   std::unique_ptr<AttributeDatabase> database = absl::WrapUnique(
       new AttributeDatabase(std::move(root), std::move(threadpool)));
-  if (run_polling_thread)
-    RETURN_IF_ERROR(database->SetupPolling());
+  if (run_polling_thread) RETURN_IF_ERROR(database->SetupPolling());
   return std::move(database);
 }
 
@@ -234,11 +228,11 @@ AttributeDatabase::MakePhalDb(std::unique_ptr<AttributeGroup> root_group) {
 
 ::util::Status AttributeDatabase::SetupPolling() {
   absl::MutexLock lock(&polling_lock_);
-  CHECK_RETURN_IF_FALSE(!polling_thread_running_) <<
-      "Called SetupPolling(), but the polling thread is already running!";
+  RET_CHECK(!polling_thread_running_)
+      << "Called SetupPolling(), but the polling thread is already running!";
   polling_thread_running_ = true;
   if (pthread_create(&polling_thread_id_, nullptr,
-                      &AttributeDatabase::RunPollingThread, this)) {
+                     &AttributeDatabase::RunPollingThread, this)) {
     polling_thread_running_ = false;
     return MAKE_ERROR()
            << "Failed to initalize the AttributeDatabase polling thread.";

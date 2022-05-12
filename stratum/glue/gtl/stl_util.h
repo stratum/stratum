@@ -19,6 +19,7 @@ limitations under the License.
 #define STRATUM_GLUE_GTL_STL_UTIL_H_
 
 #include <stddef.h>
+
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -46,18 +47,6 @@ inline T* vector_as_array(std::vector<T, Allocator>* v) {
 template <typename T, typename Allocator>
 inline const T* vector_as_array(const std::vector<T, Allocator>* v) {
   return v->data();
-}
-
-// Like str->resize(new_size), except any new characters added to "*str" as a
-// result of resizing may be left uninitialized, rather than being filled with
-// '0' bytes. Typically used when code is then going to overwrite the backing
-// store of the string with known data. Uses a Google extension to ::string.
-inline void STLStringResizeUninitialized(std::string* s, size_t new_size) {
-#if __google_stl_resize_uninitialized_string
-  s->resize_uninitialized(new_size);
-#else
-  s->resize(new_size);
-#endif
 }
 
 // Calls delete (non-array version) on the SECOND item (pointer) in each pair in
