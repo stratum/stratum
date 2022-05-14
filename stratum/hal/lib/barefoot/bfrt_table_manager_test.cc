@@ -373,6 +373,7 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
 }
 
 TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
+<<<<<<< HEAD
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
   constexpr int kBfRtTableId = 20;
@@ -405,6 +406,50 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::INSERT, entry));
+=======
+    ASSERT_OK(PushTestConfig());
+    constexpr int kP4TableId = 33583783;
+    constexpr int kBfRtTableId = 20;
+    auto table_key_mock = absl::make_unique<TableKeyMock>();
+    auto table_data_mock = absl::make_unique<TableDataMock>();
+    auto session_mock = std::make_shared<SessionMock>();
+    WriterMock<::p4::v1::ReadResponse> writer_mock;
+
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+                .WillOnce(Return(kBfRtTableId));
+    EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+                .WillOnce(Return(ByMove(
+                        ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+                                std::move(table_key_mock)))));
+    EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
+                .WillOnce(Return(ByMove(
+                        ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+                                std::move(table_data_mock)))));
+    
+    const std::string kTableEntryText = R"pb(
+    table_id: 33583783
+      match {
+        field_id: 2
+        ternary {
+          value: "\211B"
+          mask: "\377\377"
+        }
+      }
+      action {
+        action {
+          action_id: 16794911
+        }
+      }
+      priority: 10
+    )pb";
+    ::p4::v1::TableEntry entry;
+    ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateTableEntry(EqualsProto(entry), true))
+            .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+    EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
+                session_mock, ::p4::v1::Update::INSERT, entry));
+>>>>>>> 0b3511b9f355979ff857fd96aead490689581a69
 }
 
 }  // namespace barefoot
