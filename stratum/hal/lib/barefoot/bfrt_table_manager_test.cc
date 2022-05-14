@@ -494,7 +494,7 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
     const std::string kTableEntryText = R"pb(
     table_id: 33583783
       match {
-        field_id: 4
+        field_id: 2
         ternary {
           value: "\211B"
           mask: "\377\377"
@@ -502,7 +502,7 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
       }
       action {
         action {
-          action_id: 16783057
+          action_id: 16794911
         }
       }
       priority: 10
