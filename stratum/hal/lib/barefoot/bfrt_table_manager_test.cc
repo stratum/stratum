@@ -263,7 +263,6 @@ TEST_F(BfrtTableManagerTest, ResetIndirectMeterEntryTest) {
     index {
       index: 12345
     }
-
   )pb";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
