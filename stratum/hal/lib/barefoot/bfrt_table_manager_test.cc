@@ -221,8 +221,6 @@ TEST_F(BfrtTableManagerTest, WriteIndirectMeterEntryTest) {
 
   const std::string kMeterEntryText = R"pb(
     meter_id: 55555
-    index {index: 12345}
-    config {cir: 1 cburst: 100 pir: 2 pburst: 200 meter_id: 55555
     index {
       index: 12345
     }
