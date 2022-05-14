@@ -102,10 +102,7 @@ TEST(ValidMeterConfigTest, IsValidMeterConfigEmptyValid) {
 TEST(ValidMeterConfigTest, IsValidMeterConfigZeroBurstInvalid) {
   constexpr char kInvalidMeterConfigText[] = R"pb(
     # Zero burst sizes.
-    cir: 100
-    pir: 200
-    cburst: 0
-    pburst: 0
+    cir: 100 pir: 200 cburst: 0 pburst: 0
   )pb";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
@@ -115,10 +112,7 @@ TEST(ValidMeterConfigTest, IsValidMeterConfigZeroBurstInvalid) {
 TEST(ValidMeterConfigTest, IsValidMeterConfigRatesInvalid) {
   constexpr char kInvalidMeterConfigText[] = R"pb(
     # Commited rate greater peak rate.
-    cir: 500
-    pir: 400
-    cburst: 100
-    pburst: 100
+    cir: 500 pir: 400 cburst: 100 pburst: 100
   )pb";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kInvalidMeterConfigText, &config));
@@ -126,11 +120,9 @@ TEST(ValidMeterConfigTest, IsValidMeterConfigRatesInvalid) {
 }
 
 TEST(ValidMeterConfigTest, IsValidMeterConfigValid) {
-  constexpr char kValidMeterConfigText[] = R"pb(
-    cir: 50
-    pir: 100
-    cburst: 400
-    pburst: 800
+  constexpr char kValidMeterConfigText[] =
+      R"pb(
+    cir: 50 pir: 100 cburst: 400 pburst: 800
   )pb";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
@@ -140,10 +132,7 @@ TEST(ValidMeterConfigTest, IsValidMeterConfigValid) {
 TEST(ValidMeterConfigTest, IsValidMeterConfigBurstsValid) {
   constexpr char kValidMeterConfigText[] = R"pb(
     # Commited burst size is allowed to be greater than peak burst size.
-    cir: 1000
-    pir: 2000
-    cburst: 800
-    pburst: 400
+    cir: 1000 pir: 2000 cburst: 800 pburst: 400
   )pb";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));
@@ -153,10 +142,7 @@ TEST(ValidMeterConfigTest, IsValidMeterConfigBurstsValid) {
 TEST(ValidMeterConfigTest, IsValidMeterConfigZeroRateValid) {
   constexpr char kValidMeterConfigText[] = R"pb(
     # Zero rates are allowed.
-    cir: 0
-    pir: 0
-    cburst: 400
-    pburst: 800
+    cir: 0 pir: 0 cburst: 400 pburst: 800
   )pb";
   ::p4::v1::MeterConfig config;
   CHECK_OK(ParseProtoFromString(kValidMeterConfigText, &config));

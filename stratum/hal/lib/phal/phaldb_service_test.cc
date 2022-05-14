@@ -78,49 +78,32 @@ class PhalDbServiceTest : public ::testing::TestWithParam<OperationMode> {
   std::unique_ptr<AttributeDatabaseMock> database_mock_;
 
   const std::string valid_request_path_proto = R"pb(
-    entries {
-      name: "cards"
-      index: 0
-      indexed: true
-    }
-    entries {
-      name: "ports"
-      index: 0
-      indexed: true
-    }
-    entries {
-      name: "transceiver"
-      terminal_group: true
-    }
+    entries {name: "cards" index: 0 indexed: true}
+    entries {name: "ports" index: 0 indexed: true}
+    entries {name: "transceiver" terminal_group: true}
   )pb";
 
   const std::string invalid_request_path_proto = R"pb(
-    entries {
-      name: "does_not_exists"
-      index: 0
-      indexed: true
-    }
+    entries {name: "does_not_exists" index: 0 indexed: true}
   )pb";
 
   const std::string phaldb_get_response_proto = R"pb(
-    cards {
-      ports {
-        physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
-        transceiver {
-          id: 0
-          description: "port-0"
-          hardware_state: HW_STATE_PRESENT
-          media_type: MEDIA_TYPE_SFP
-          connector_type: SFP_TYPE_SFP
-          module_type: SFP_MODULE_TYPE_10G_BASE_CR
-          info {
-            mfg_name: "test_vendor"
-            part_no: "test part #"
-            serial_no: "test1234"
-          }
+    cards {ports {
+      physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+      transceiver {
+        id: 0
+        description: "port-0"
+        hardware_state: HW_STATE_PRESENT
+        media_type: MEDIA_TYPE_SFP
+        connector_type: SFP_TYPE_SFP
+        module_type: SFP_MODULE_TYPE_10G_BASE_CR
+        info {
+          mfg_name: "test_vendor"
+          part_no: "test part #"
+          serial_no: "test1234"
         }
       }
-    }
+    }}
   )pb";
 };
 

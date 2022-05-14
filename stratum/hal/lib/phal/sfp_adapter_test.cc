@@ -48,24 +48,22 @@ class SfpAdapterTest : public ::testing::Test {
   std::unique_ptr<SfpAdapter> sfp_adapter_;
 
   const std::string phaldb_get_response_proto = R"pb(
-    cards {
-      ports {
-        physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
-        transceiver {
-          id: 0
-          description: "port-0"
-          hardware_state: HW_STATE_PRESENT
-          media_type: MEDIA_TYPE_SFP
-          connector_type: SFP_TYPE_SFP
-          module_type: SFP_MODULE_TYPE_10G_BASE_CR
-          info {
-            mfg_name: "test_vendor"
-            part_no: "test part #"
-            serial_no: "test1234"
-          }
+    cards {ports {
+      physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+      transceiver {
+        id: 0
+        description: "port-0"
+        hardware_state: HW_STATE_PRESENT
+        media_type: MEDIA_TYPE_SFP
+        connector_type: SFP_TYPE_SFP
+        module_type: SFP_MODULE_TYPE_10G_BASE_CR
+        info {
+          mfg_name: "test_vendor"
+          part_no: "test part #"
+          serial_no: "test1234"
         }
       }
-    }
+    }}
   )pb";
 };
 

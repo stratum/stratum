@@ -117,31 +117,23 @@ class ConfigMonitoringServiceTest
   }
 
   static constexpr char kChassisConfigTemplate[] = R"pb(
-      description: "Sample test config."
-      nodes {
-        id:  $0
-        slot: 1
-        index: $1
-      }
-      nodes {
-        id:  $2
-        slot: 1
-        index: $3
-      }
-      singleton_ports {
-        id: 1
-        name: "device1.domain.net.com:ce-1/1"
-        slot: 1
-        port: 1
-        speed_bps: 100000000000
-      }
-      singleton_ports {
-        id: 2
-        name: "device1.domain.net.com:ce-1/2"
-        slot: 1
-        port: 2
-        speed_bps: 100000000000
-      }
+    description: "Sample test config."
+    nodes {id: $0 slot: 1 index: $1}
+    nodes {id: $2 slot: 1 index: $3}
+    singleton_ports {
+      id: 1
+      name: "device1.domain.net.com:ce-1/1"
+      slot: 1
+      port: 1
+      speed_bps: 100000000000
+    }
+    singleton_ports {
+      id: 2
+      name: "device1.domain.net.com:ce-1/2"
+      slot: 1
+      port: 2
+      speed_bps: 100000000000
+    }
   )pb";
   static constexpr char kErrorMsg[] = "Some error";
   static constexpr uint64 kNodeId1 = 123123123;
@@ -347,17 +339,15 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
   // Build a stream subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+    subscribe {
+      mode: STREAM
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: SAMPLE
+        sample_interval: 1
       }
-      mode: SAMPLE
-      sample_interval: 1
     }
-  }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -384,16 +374,10 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
   // Build a stream subscription request for subtree that is not supported.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "blah" }
-      }
-      mode: SAMPLE
-      sample_interval: 1
+    subscribe {
+      mode: STREAM
+      subscription {path {elem {name: "blah"}} mode: SAMPLE sample_interval: 1}
     }
-  }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -431,24 +415,16 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
   // Build a stream subscription request for subtree that is not supported.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+    subscribe {
+      mode: STREAM
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: SAMPLE
+        sample_interval: 1
       }
-      mode: SAMPLE
-      sample_interval: 1
+      subscription {path {elem {name: "blah"}} mode: SAMPLE sample_interval: 1}
     }
-    subscription {
-      path {
-        elem { name: "blah" }
-      }
-      mode: SAMPLE
-      sample_interval: 1
-    }
-  }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -487,15 +463,12 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
   // Build a poll subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req1;
   constexpr char kReq1[] = R"pb(
-  subscribe {
-    mode: POLL
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
-      }
+    subscribe {
+      mode: POLL
+      subscription {
+          path {elem {name: "interfaces"}
+                elem {name: "interface" key {key: "name" value: "*"}}}}
     }
-  }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq1, &req1))
       << "Failed to parse proto from the following string: " << kReq1;
@@ -503,8 +476,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
   // Build actual poll request.
   ::gnmi::SubscribeRequest req2;
   constexpr char kReq2[] = R"pb(
-  poll {
-  }
+    poll {}
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq2, &req2))
       << "Failed to parse proto from the following string: " << kReq2;
@@ -537,17 +509,15 @@ TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
   // Build a stream subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+    subscribe {
+      mode: STREAM
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: SAMPLE
+        sample_interval: 1
       }
-      mode: SAMPLE
-      sample_interval: 1
     }
-  }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -587,25 +557,21 @@ TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
   // Add another request for the same path. This is illeagal combination.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+    subscribe {
+      mode: STREAM
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: SAMPLE
+        sample_interval: 1
       }
-      mode: SAMPLE
-      sample_interval: 1
-    }
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: SAMPLE
+        sample_interval: 1
       }
-      mode: SAMPLE
-      sample_interval: 1
     }
-  }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -649,16 +615,14 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
   // Build a on_change subscription request for subtree that is supported.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+    subscribe {
+      mode: STREAM
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: ON_CHANGE
       }
-      mode: ON_CHANGE
-   }
-  }
+    }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -708,16 +672,14 @@ TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
   // request.
   ::gnmi::SubscribeRequest req;
   constexpr char kReq[] = R"pb(
-  subscribe {
-    mode: STREAM
-    subscription {
-      path {
-        elem { name: "interfaces" }
-        elem { name: "interface" key { key: "name" value: "*" } }
+    subscribe {
+      mode: STREAM
+      subscription {
+        path {elem {name: "interfaces"}
+              elem {name: "interface" key {key: "name" value: "*"}}}
+        mode: TARGET_DEFINED
       }
-      mode: TARGET_DEFINED
-   }
-  }
+    }
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -772,10 +734,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfigBeforePush) {
   // Prepare a GET request.
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"pb(
-  path {
-  }
-  type: CONFIG
-  encoding: PROTO
+    path {} type: CONFIG encoding: PROTO
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -799,10 +758,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonConfig) {
   // Prepare a GET request.
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"pb(
-  path {
-  }
-  type: STATE
-  encoding: PROTO
+    path {} type: STATE encoding: PROTO
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -826,10 +782,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonProto) {
   // Prepare a GET request.
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"pb(
-  path {
-  }
-  type: CONFIG
-  encoding: JSON
+    path {} type: CONFIG encoding: JSON
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -853,10 +806,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfig) {
   // Prepare a GET request.
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"pb(
-  path {
-  }
-  type: CONFIG
-  encoding: PROTO
+    path {} type: CONFIG encoding: PROTO
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -883,16 +833,14 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetBlah) {
   // Prepare a GET request.
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"pb(
-  path {
-    elem { name: "interfaces" }
-    elem { name: "interface"
-           key { key: "name" value: "device1.domain.net.com:ce-1/2" }
-         }
-    elem { name: "state" }
-    elem { name: "blah" }
-  }
-  type: CONFIG
-  encoding: PROTO
+    path {elem {name: "interfaces"} elem {
+      name: "interface"
+      key {key: "name" value: "device1.domain.net.com:ce-1/2"}
+    }
+          elem {name: "state"}
+          elem {name: "blah"}}
+    type: CONFIG
+    encoding: PROTO
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -917,16 +865,14 @@ TEST_P(ConfigMonitoringServiceTest,
   // Prepare a GET request.
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"pb(
-  path {
-    elem { name: "interfaces" }
-    elem { name: "interface"
-           key { key: "name" value: "device1.domain.net.com:ce-1/2" }
-         }
-    elem { name: "state" }
-    elem { name: "admin-status" }
-  }
-  type: CONFIG
-  encoding: PROTO
+    path {elem {name: "interfaces"} elem {
+      name: "interface"
+      key {key: "name" value: "device1.domain.net.com:ce-1/2"}
+    }
+          elem {name: "state"}
+          elem {name: "admin-status"}}
+    type: CONFIG
+    encoding: PROTO
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -1092,18 +1038,13 @@ TEST_P(ConfigMonitoringServiceTest,
   // Prepare a GET request.
   ::gnmi::SetRequest req;
   constexpr char kReq[] = R"pb(
-    replace {
-      path {
-        elem { name: "interfaces" }
-        elem {
-          name: "interface"
-          key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
-        }
-        elem { name: "state" }
-        elem { name: "health-indicator" }
-      }
-      val { string_val: "BAD" }
-    }
+    replace {path {elem {name: "interfaces"} elem {
+               name: "interface"
+               key {key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2"}
+             }
+                   elem {name: "state"}
+                   elem {name: "health-indicator"}}
+             val {string_val: "BAD"}}
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
@@ -1143,15 +1084,12 @@ TEST_P(ConfigMonitoringServiceTest,
   // Prepare a GET request.
   ::gnmi::SetRequest req;
   constexpr char kReq[] = R"pb(
-    delete {
-      elem { name: "interfaces" }
-      elem {
-        name: "interface"
-        key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
-      }
-      elem { name: "state" }
-      elem { name: "health-indicator" }
+    delete {elem {name: "interfaces"} elem {
+      name: "interface"
+      key {key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2"}
     }
+            elem {name: "state"}
+            elem {name: "health-indicator"}}
   )pb";
   ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;

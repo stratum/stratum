@@ -19,25 +19,13 @@ namespace barefoot {
 static constexpr char bf_config_1pipe_str[] = R"pb(
   p4_name: "prog1"
   bfruntime_info: "{json: true}"
-  profiles {
-    profile_name: "pipe1"
-    context: "{json: true}"
-    binary: "<raw bin>"
-  })pb";
+  profiles {profile_name: "pipe1" context: "{json: true}" binary: "<raw bin>"})pb";
 
 static constexpr char bf_config_2pipe_str[] = R"pb(
   p4_name: "prog1"
   bfruntime_info: "{json: true}"
-  profiles {
-    profile_name: "pipe1"
-    context: "{json: true}"
-    binary: "<raw bin>"
-  }
-  profiles {
-    profile_name: "pipe2"
-    context: "{json: true}"
-    binary: "<raw bin>"
-  })pb";
+  profiles {profile_name: "pipe1" context: "{json: true}" binary: "<raw bin>"}
+  profiles {profile_name: "pipe2" context: "{json: true}" binary: "<raw bin>"})pb";
 
 TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProtoSuccess) {
   BfPipelineConfig bf_config;

@@ -58,13 +58,8 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index {
-      index: 100
-    }
-    data {
-      byte_count: 100
-      packet_count: 200
-    }
+    index {index: 100}
+    data {byte_count: 100 packet_count: 200}
   )pb";
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));

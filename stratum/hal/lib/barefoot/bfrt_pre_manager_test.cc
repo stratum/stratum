@@ -61,18 +61,9 @@ TEST_F(BfrtPreManagerTest, InsertMulticastGroupSuccess) {
   const std::string kMulticastGroupEntryText = R"pb(
     multicast_group_entry {
       multicast_group_id: 55
-      replicas {
-        egress_port: 1
-        instance: 789
-      }
-      replicas {
-        egress_port: 2
-        instance: 789
-      }
-      replicas {
-        egress_port: 3
-        instance: 654
-      }
+      replicas {egress_port: 1 instance: 789}
+      replicas {egress_port: 2 instance: 789}
+      replicas {egress_port: 3 instance: 654}
     }
   )pb";
   constexpr int kGroupId = 55;
@@ -111,18 +102,9 @@ TEST_F(BfrtPreManagerTest, ModifyMulticastGroupSuccess) {
   const std::string kMulticastGroupEntryText = R"pb(
     multicast_group_entry {
       multicast_group_id: 55
-      replicas {
-        egress_port: 5
-        instance: 432
-      }
-      replicas {
-        egress_port: 6
-        instance: 432
-      }
-      replicas {
-        egress_port: 7
-        instance: 987
-      }
+      replicas {egress_port: 5 instance: 432}
+      replicas {egress_port: 6 instance: 432}
+      replicas {egress_port: 7 instance: 987}
     }
   )pb";
   constexpr int kGroupId = 55;
@@ -167,9 +149,7 @@ TEST_F(BfrtPreManagerTest, ModifyMulticastGroupSuccess) {
 
 TEST_F(BfrtPreManagerTest, DeleteMulticastGroupSuccess) {
   const std::string kMulticastGroupEntryText = R"pb(
-    multicast_group_entry {
-      multicast_group_id: 55
-    }
+    multicast_group_entry {multicast_group_id: 55}
   )pb";
   constexpr int kGroupId = 55;
   const std::vector<uint32> nodes = {1, 2, 3};
@@ -200,34 +180,16 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
   const std::string kMulticastGroupRequestText = R"pb(
-    multicast_group_entry {
-      multicast_group_id: 55
-    }
+    multicast_group_entry {multicast_group_id: 55}
   )pb";
   const std::string kMulticastGroupResponseText = R"pb(
-    entities {
-      packet_replication_engine_entry {
-        multicast_group_entry {
-          multicast_group_id: 55
-          replicas {
-            instance: 111
-            egress_port: 1
-          }
-          replicas {
-            instance: 111
-            egress_port: 2
-          }
-          replicas {
-            instance: 222
-            egress_port: 3
-          }
-          replicas {
-            instance: 222
-            egress_port: 4
-          }
-        }
-      }
-    }
+    entities {packet_replication_engine_entry {multicast_group_entry {
+                multicast_group_id: 55
+                replicas {instance: 111 egress_port: 1}
+                replicas {instance: 111 egress_port: 2}
+                replicas {instance: 222 egress_port: 3}
+                replicas {instance: 222 egress_port: 4}
+              }}}
   )pb";
   const int kMcNodeId1 = 100;
   const int kReplicationId1 = 111;
@@ -286,41 +248,19 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupWildcardSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
   const std::string kMulticastGroupRequestText = R"pb(
-    multicast_group_entry {
-      multicast_group_id: 0
-    }
+    multicast_group_entry {multicast_group_id: 0}
   )pb";
   const std::string kMulticastGroupResponseText = R"pb(
-    entities {
-      packet_replication_engine_entry {
-        multicast_group_entry {
-          multicast_group_id: 55
-          replicas {
-            instance: 111
-            egress_port: 1
-          }
-          replicas {
-            instance: 111
-            egress_port: 2
-          }
-        }
-      }
-    }
-    entities {
-      packet_replication_engine_entry {
-        multicast_group_entry {
-          multicast_group_id: 88
-          replicas {
-            instance: 222
-            egress_port: 3
-          }
-          replicas {
-            instance: 222
-            egress_port: 4
-          }
-        }
-      }
-    }
+    entities {packet_replication_engine_entry {multicast_group_entry {
+                multicast_group_id: 55
+                replicas {instance: 111 egress_port: 1}
+                replicas {instance: 111 egress_port: 2}
+              }}}
+    entities {packet_replication_engine_entry {multicast_group_entry {
+                multicast_group_id: 88
+                replicas {instance: 222 egress_port: 3}
+                replicas {instance: 222 egress_port: 4}
+              }}}
   )pb";
   const int kMcNodeId1 = 100;
   const int kReplicationId1 = 111;
@@ -381,10 +321,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
   const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
-      replicas {
-        egress_port: 123
-        instance: 0
-      }
+      replicas {egress_port: 123 instance: 0}
       class_of_service: 2
       packet_length_bytes: 1500
     }
@@ -414,12 +351,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidSessionIdFail) {
   const std::string kCloneSessionEntryText = R"pb(
-    clone_session_entry {
-      session_id: 1016
-      replicas {
-        egress_port: 123
-      }
-    }
+    clone_session_entry {session_id: 1016 replicas {egress_port: 123}}
   )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
@@ -442,9 +374,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidPacketLengthFail) {
   const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
-      replicas {
-        egress_port: 123
-      }
+      replicas {egress_port: 123}
       packet_length_bytes: 65536
     }
   )pb";
@@ -470,12 +400,8 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionMultipleReplicasFail) {
   const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
-      replicas {
-        egress_port: 123
-      }
-      replicas {
-        egress_port: 456
-      }
+      replicas {egress_port: 123}
+      replicas {egress_port: 456}
     }
   )pb";
   auto session_mock = std::make_shared<SessionMock>();
@@ -498,13 +424,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionMultipleReplicasFail) {
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInstanceSetFail) {
   const std::string kCloneSessionEntryText = R"pb(
-    clone_session_entry {
-      session_id: 55
-      replicas {
-        egress_port: 123
-        instance: 1
-      }
-    }
+    clone_session_entry {session_id: 55 replicas {egress_port: 123 instance: 1}}
   )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
@@ -526,12 +446,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInstanceSetFail) {
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidEgressPortFail) {
   const std::string kCloneSessionEntryText = R"pb(
-    clone_session_entry {
-      session_id: 55
-      replicas {
-        egress_port: 0
-      }
-    }
+    clone_session_entry {session_id: 55 replicas {egress_port: 0}}
   )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
@@ -554,9 +469,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidCosFail) {
   const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
-      replicas {
-        egress_port: 123
-      }
+      replicas {egress_port: 123}
       class_of_service: 9
     }
   )pb";
@@ -582,10 +495,7 @@ TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
   const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
-      replicas {
-        egress_port: 654
-        instance: 0
-      }
+      replicas {egress_port: 654 instance: 0}
       class_of_service: 4
       packet_length_bytes: 510
     }
@@ -615,9 +525,7 @@ TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
 
 TEST_F(BfrtPreManagerTest, DeleteCloneSessionSuccess) {
   const std::string kCloneSessionEntryText = R"pb(
-    clone_session_entry {
-      session_id: 55
-    }
+    clone_session_entry {session_id: 55}
   )pb";
   constexpr uint32 kSessionId = 55;
   auto session_mock = std::make_shared<SessionMock>();
@@ -642,24 +550,15 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
   const std::string kCloneSessionEntryRequestText = R"pb(
-    clone_session_entry {
-      session_id: 55
-    }
+    clone_session_entry {session_id: 55}
   )pb";
   const std::string kCloneSessionEntryResponseText = R"pb(
-    entities {
-      packet_replication_engine_entry {
-        clone_session_entry {
-          session_id: 55
-          replicas {
-            egress_port: 123
-            instance: 0
-          }
-          class_of_service: 2
-          packet_length_bytes: 1500
-        }
-      }
-    }
+    entities {packet_replication_engine_entry {clone_session_entry {
+                session_id: 55
+                replicas {egress_port: 123 instance: 0}
+                class_of_service: 2
+                packet_length_bytes: 1500
+              }}}
   )pb";
   const int kSessionId = 55;
   std::vector<uint32> session_ids = {kSessionId};
@@ -701,37 +600,21 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionWildcardSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
   const std::string kCloneSessionEntryRequestText = R"pb(
-    clone_session_entry {
-      session_id: 0
-    }
+    clone_session_entry {session_id: 0}
   )pb";
   const std::string kCloneSessionEntryResponseText = R"pb(
-    entities {
-      packet_replication_engine_entry {
-        clone_session_entry {
-          session_id: 55
-          replicas {
-            egress_port: 123
-            instance: 0
-          }
-          class_of_service: 2
-          packet_length_bytes: 1500
-        }
-      }
-    }
-    entities {
-      packet_replication_engine_entry {
-        clone_session_entry {
-          session_id: 88
-          replicas {
-            egress_port: 456
-            instance: 0
-          }
-          class_of_service: 6
-          packet_length_bytes: 510
-        }
-      }
-    }
+    entities {packet_replication_engine_entry {clone_session_entry {
+                session_id: 55
+                replicas {egress_port: 123 instance: 0}
+                class_of_service: 2
+                packet_length_bytes: 1500
+              }}}
+    entities {packet_replication_engine_entry {clone_session_entry {
+                session_id: 88
+                replicas {egress_port: 456 instance: 0}
+                class_of_service: 6
+                packet_length_bytes: 510
+              }}}
   )pb";
   const int kSessionId1 = 55;
   const int kSessionId2 = 88;

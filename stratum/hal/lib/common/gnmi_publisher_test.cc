@@ -51,22 +51,19 @@ class SubscriptionTestBase {
   void GetSampleHalConfig() {
     constexpr char kHalConfig[] = R"pb(
       description: "Sample Generic Tomahawk config with 2x100G ports."
-      chassis { platform: PLT_GENERIC_TOMAHAWK name: "device1.domain.net.com" }
+      chassis {platform: PLT_GENERIC_TOMAHAWK name: "device1.domain.net.com"}
       nodes {
         id: 1
         name: "xy1switch.domain.net.com"
         slot: 1
         index: 1
-        config_params {
-          qos_config {
-            traffic_class_mapping { internal_priority: 0 traffic_class: BE1 }
-            traffic_class_mapping { internal_priority: 1 traffic_class: AF1 }
-            traffic_class_mapping { internal_priority: 2 traffic_class: AF2 }
-            cosq_mapping { internal_priority: 2 q_num: 0 }
-            cosq_mapping { internal_priority: 1 q_num: 1 }
-            cosq_mapping { internal_priority: 0 q_num: 2 }
-          }
-        }
+        config_params {qos_config {
+            traffic_class_mapping {internal_priority: 0 traffic_class: BE1}
+            traffic_class_mapping {internal_priority: 1 traffic_class: AF1}
+            traffic_class_mapping {internal_priority: 2 traffic_class: AF2}
+            cosq_mapping {internal_priority: 2 q_num: 0}
+            cosq_mapping {internal_priority: 1 q_num: 1}
+            cosq_mapping {internal_priority: 0 q_num: 2}}}
       }
       singleton_ports {
         id: 1

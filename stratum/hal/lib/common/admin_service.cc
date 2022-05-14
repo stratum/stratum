@@ -85,13 +85,12 @@ AdminService::AdminService(OperationMode mode,
   switch (req->method()) {
     case gnoi::system::RebootMethod::COLD: {
       ++reboot_count_;
-      TimerDaemon::RequestOneShotTimer(
-          delay,
-          [this]() {
-            hal_signal_handle_(SIGINT);
-            return ::util::OkStatus();
-          },
-          &reboot_timer_);
+      TimerDaemon::RequestOneShotTimer(delay,
+                                       [this]() {
+                                         hal_signal_handle_(SIGINT);
+                                         return ::util::OkStatus();
+                                       },
+                                       &reboot_timer_);
       LOG(INFO) << "Rebooting in " << delay << " ms.";
       break;
     }

@@ -177,9 +177,7 @@ namespace {
         attribute_map[path] = update.value().bytes_val();
         break;
       }
-      default: {
-        return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown value type";
-      }
+      default: { return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown value type"; }
     }
   }
   auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);

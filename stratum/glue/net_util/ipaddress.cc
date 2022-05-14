@@ -406,9 +406,7 @@ bool IPAddressOrdering::operator()(const IPAddress& lhs,
       // Unspecified address families are considered equal.
       return false;
     }
-    default: {
-      LOG(FATAL) << "Unknown address family " << lhs.address_family_;
-    }
+    default: { LOG(FATAL) << "Unknown address family " << lhs.address_family_; }
   }
 }
 
@@ -668,9 +666,7 @@ SocketAddress::SocketAddress(const struct sockaddr& saddr) {
       port_ = 0;
       break;
     }
-    default: {
-      LOG(FATAL) << "Unknown address family " << saddr.sa_family;
-    }
+    default: { LOG(FATAL) << "Unknown address family " << saddr.sa_family; }
   }
 }
 
@@ -699,9 +695,7 @@ SocketAddress::SocketAddress(const struct sockaddr_storage& saddr) {
       port_ = 0;
       break;
     }
-    default: {
-      LOG(FATAL) << "Unknown address family " << saddr.ss_family;
-    }
+    default: { LOG(FATAL) << "Unknown address family " << saddr.ss_family; }
   }
 }
 

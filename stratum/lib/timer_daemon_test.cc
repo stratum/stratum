@@ -117,36 +117,36 @@ TEST_F(TimerDaemonTest, CompareBiggerSmaller) {
 TEST_F(TimerDaemonTest, CreateOneShot) {
   // This test verifies that TimerDaemon does create one-shot timer.
   TimerDaemon::DescriptorPtr desc;
-  ASSERT_OK(TimerDaemon::RequestOneShotTimer(
-      1000,
-      [&]() {
-        absl::WriterMutexLock l(&access_lock_);
-        EXPECT_EQ(count_++, 0);
-        return ::util::OkStatus();
-      },
-      &desc));
+  ASSERT_OK(TimerDaemon::RequestOneShotTimer(1000,
+                                             [&]() {
+                                               absl::WriterMutexLock l(
+                                                   &access_lock_);
+                                               EXPECT_EQ(count_++, 0);
+                                               return ::util::OkStatus();
+                                             },
+                                             &desc));
   usleep(1100000);
 }
 
 TEST_F(TimerDaemonTest, CreateTwoOneShots) {
   // This test verifies that TimerDaemon does create two one-shot timers.
   TimerDaemon::DescriptorPtr desc1, desc2;
-  ASSERT_OK(TimerDaemon::RequestOneShotTimer(
-      1000,
-      [&]() {
-        absl::WriterMutexLock l(&access_lock_);
-        EXPECT_EQ(count_++, 1);
-        return ::util::OkStatus();
-      },
-      &desc1));
-  ASSERT_OK(TimerDaemon::RequestOneShotTimer(
-      100,
-      [&]() {
-        absl::WriterMutexLock l(&access_lock_);
-        EXPECT_EQ(count_++, 0);
-        return ::util::OkStatus();
-      },
-      &desc2));
+  ASSERT_OK(TimerDaemon::RequestOneShotTimer(1000,
+                                             [&]() {
+                                               absl::WriterMutexLock l(
+                                                   &access_lock_);
+                                               EXPECT_EQ(count_++, 1);
+                                               return ::util::OkStatus();
+                                             },
+                                             &desc1));
+  ASSERT_OK(TimerDaemon::RequestOneShotTimer(100,
+                                             [&]() {
+                                               absl::WriterMutexLock l(
+                                                   &access_lock_);
+                                               EXPECT_EQ(count_++, 0);
+                                               return ::util::OkStatus();
+                                             },
+                                             &desc2));
   usleep(1500000);
 }
 

@@ -3990,10 +3990,9 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   auto _ = absl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, DEST_TYPEs,
-                                                   logical_port ? PORTs
-                                                   : trunk_port ? TRUNKs
-                                                                : L2_MC_GRPs));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(
+      entry_hdl, DEST_TYPEs,
+      logical_port ? PORTs : trunk_port ? TRUNKs : L2_MC_GRPs));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, TRUNK_IDs, trunk_port));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODIDs, 0));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODPORTs, logical_port));

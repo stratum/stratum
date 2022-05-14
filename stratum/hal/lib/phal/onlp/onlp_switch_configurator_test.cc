@@ -57,33 +57,15 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
   static constexpr char kPhalInitConfig[] = R"pb(
     cards {
       slot: 1
-      ports { port: 1 physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE }
+      ports {port: 1 physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE}
     }
-    fan_trays {
-      slot: 1
-      fans {
-        slot: 1
-        cache_policy { type: FETCH_ONCE }
-      }
-    }
-    psu_trays {
-      psus {
-        slot: 1
-        cache_policy { type: NO_CACHE }
-      }
-    }
-    led_groups {
-      leds {
-        led_index: 1
-        cache_policy { type: NO_CACHE }
-      }
-    }
-    thermal_groups {
-      thermals {
-        thermal_index: 1
-        cache_policy { type: TIMED_CACHE timed_value: 2 }
-      }
-    }
+    fan_trays {slot: 1 fans {slot: 1 cache_policy {type: FETCH_ONCE}}}
+    psu_trays {psus {slot: 1 cache_policy {type: NO_CACHE}}}
+    led_groups {leds {led_index: 1 cache_policy {type: NO_CACHE}}}
+    thermal_groups {thermals {
+      thermal_index: 1
+      cache_policy {type: TIMED_CACHE timed_value: 2}
+    }}
   )pb";
 };
 

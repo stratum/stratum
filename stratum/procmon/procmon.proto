@@ -49,7 +49,8 @@ message CheckinRequest {
   int32 checkin_key = 1;
 }
 
-message CheckinResponse {}
+message CheckinResponse {
+}
 
 // This service is in charge of handling Checkin, etc requests from all the
 // processes managed by procmon.

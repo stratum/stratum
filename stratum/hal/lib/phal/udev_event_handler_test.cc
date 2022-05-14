@@ -326,16 +326,16 @@ TEST_F(ConcurrentUdevEventHandlerTest, ManyConcurrentCallbacksExecute) {
   std::vector<pthread_t> test_threads;
   for (int i = 0; i < kNumTestThreads; i++) {
     pthread_t test_thread;
-    ASSERT_EQ(0, pthread_create(
-                     &test_thread, nullptr,
-                     +[](void* t) -> void* {
-                       if (!static_cast<ConcurrentUdevEventHandlerTest*>(t)
-                                ->TriggerSomeCallbacks()
-                                .ok())
-                         return t;  // Error, non-zero return.
-                       return nullptr;
-                     },
-                     this));
+    ASSERT_EQ(
+        0, pthread_create(&test_thread, nullptr,
+                          +[](void* t) -> void* {
+                            if (!static_cast<ConcurrentUdevEventHandlerTest*>(t)
+                                     ->TriggerSomeCallbacks()
+                                     .ok())
+                              return t;  // Error, non-zero return.
+                            return nullptr;
+                          },
+                          this));
     test_threads.push_back(test_thread);
   }
   {

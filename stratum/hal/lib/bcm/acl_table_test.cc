@@ -29,10 +29,10 @@ using testing::UnorderedElementsAre;
 using testing::UnorderedElementsAreArray;
 
 constexpr char kDefaultP4Table[] = R"pb(
-  preamble { id: 1 name: "table_1" }
-  match_fields { id: 100 }
-  match_fields { id: 200 }
-  match_fields { id: 300 }
+  preamble {id: 1 name: "table_1"}
+  match_fields {id: 100}
+  match_fields {id: 200}
+  match_fields {id: 300}
   size: 10
 )pb";
 

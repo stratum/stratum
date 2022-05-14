@@ -505,7 +505,8 @@ message GoogleConfig {
     map<int32, BcmDmaChannelConfig> dma_channel_configs = 8;
   }
 
-  message BcmTxConfig {}
+  message BcmTxConfig {
+  }
 
   // BcmRateLimitConfig specifies rate limit settings for a unit. This is just
   // a proto wrapper around BcmSdkInterface::RateLimitConfig;
@@ -1341,7 +1342,8 @@ message DataRequest {
       uint64 node_id = 1;
     }
     // Defined the data required to get a data for a chassis.
-    message Chassis {}
+    message Chassis {
+    }
     // Defined the data required to get a data for a queue of a port.
     message PortQueue {
       uint64 node_id = 1;

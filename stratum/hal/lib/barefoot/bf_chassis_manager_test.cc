@@ -337,22 +337,16 @@ TEST_F(BfChassisManagerTest, SetPortLoopback) {
 
 TEST_F(BfChassisManagerTest, ApplyPortShaping) {
   const std::string kVendorConfigText = R"pb(
-    tofino_config {
-      node_id_to_port_shaping_config {
-        key: 7654321
-        value {
-          per_port_shaping_configs {
-            key: 12345
-            value {
-              byte_shaping {
-                rate_bps: 10000000000 # 10G
-                burst_bytes: 16384 # 2x jumbo frame
-              }
-            }
-          }
-        }
-      }
-    }
+    tofino_config {node_id_to_port_shaping_config {
+      key: 7654321
+      value {per_port_shaping_configs {
+        key: 12345
+        value {byte_shaping {
+          rate_bps: 10000000000  # 10G
+          burst_bytes: 16384     # 2x jumbo frame
+        }}
+      }}
+    }}
   )pb";
 
   VendorConfig vendor_config;
@@ -387,21 +381,11 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
 
 TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
   const std::string kVendorConfigText = R"pb(
-    tofino_config {
-      node_id_to_deflect_on_drop_configs {
-        key: 7654321
-        value {
-          drop_targets {
-            port: 12345
-            queue: 4
-          }
-          drop_targets {
-            sdk_port: 56789
-            queue: 1
-          }
-        }
-      }
-    }
+    tofino_config {node_id_to_deflect_on_drop_configs {
+      key: 7654321
+      value {drop_targets {port: 12345 queue: 4}
+             drop_targets {sdk_port: 56789 queue: 1}}
+    }}
   )pb";
 
   VendorConfig vendor_config;
@@ -423,50 +407,40 @@ TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
 
 TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
   const std::string kVendorConfigText = R"pb(
-    tofino_config {
-      node_id_to_qos_config {
-        key: 7654321  # kNodeId
-        value {
-          pool_configs {
-            pool: INGRESS_APP_POOL_0
-            pool_size: 30000
-            enable_color_drop: false
-          }
-          ppg_configs {
-            sdk_port: 912345
-            is_default_ppg: true
-            minimum_guaranteed_cells: 200
-            pool: INGRESS_APP_POOL_0
-            base_use_limit: 400
-            baf: BAF_80_PERCENT
-            hysteresis: 50
-            ingress_drop_limit: 4000
-            icos_bitmap: 0xfd
-          }
-          queue_configs {
-            sdk_port: 912345
-            queue_mapping {
-              queue_id: 0
-              priority: PRIO_0
-              weight: 1
-              minimum_guaranteed_cells: 100
-              pool: EGRESS_APP_POOL_0
-              base_use_limit: 200
-              baf: BAF_80_PERCENT
-              hysteresis: 50
-              max_rate_bytes {
-                rate_bps: 100000000
-                burst_bytes: 9000
-              }
-              min_rate_bytes {
-                rate_bps: 1000000
-                burst_bytes: 4500
-              }
-            }
-          }
-        }
+    tofino_config {node_id_to_qos_config {
+      key: 7654321  # kNodeId
+      value {pool_configs {
+        pool: INGRESS_APP_POOL_0
+        pool_size: 30000
+        enable_color_drop: false
       }
-    }
+             ppg_configs {
+               sdk_port: 912345
+               is_default_ppg: true
+               minimum_guaranteed_cells: 200
+               pool: INGRESS_APP_POOL_0
+               base_use_limit: 400
+               baf: BAF_80_PERCENT
+               hysteresis: 50
+               ingress_drop_limit: 4000
+               icos_bitmap: 0xfd
+             }
+             queue_configs {
+               sdk_port: 912345
+               queue_mapping {
+                 queue_id: 0
+                 priority: PRIO_0
+                 weight: 1
+                 minimum_guaranteed_cells: 100
+                 pool: EGRESS_APP_POOL_0
+                 base_use_limit: 200
+                 baf: BAF_80_PERCENT
+                 hysteresis: 50
+                 max_rate_bytes {rate_bps: 100000000 burst_bytes: 9000}
+                 min_rate_bytes {rate_bps: 1000000 burst_bytes: 4500}
+               }
+             }}
+    }}
   )pb";
 
   VendorConfig vendor_config;
@@ -487,45 +461,35 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
 
 TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
   const std::string kVendorConfigText = R"pb(
-    tofino_config {
-      node_id_to_qos_config {
-        key: 7654321  # kNodeId
-        value {
-          ppg_configs {
-            port: 12345  # kPortId
-            is_default_ppg: true
-            minimum_guaranteed_cells: 200
-            pool: INGRESS_APP_POOL_0
-            base_use_limit: 400
-            baf: BAF_80_PERCENT
-            hysteresis: 50
-            ingress_drop_limit: 4000
-            icos_bitmap: 0xfd
-          }
-          queue_configs {
-            port: 12345  # kPortId
-            queue_mapping {
-              queue_id: 0
-              priority: PRIO_0
-              weight: 1
-              minimum_guaranteed_cells: 100
-              pool: EGRESS_APP_POOL_0
-              base_use_limit: 200
-              baf: BAF_80_PERCENT
-              hysteresis: 50
-              max_rate_bytes {
-                rate_bps: 100000000
-                burst_bytes: 9000
-              }
-              min_rate_bytes {
-                rate_bps: 1000000
-                burst_bytes: 4500
-              }
-            }
-          }
-        }
+    tofino_config {node_id_to_qos_config {
+      key: 7654321  # kNodeId
+      value {ppg_configs {
+        port: 12345  # kPortId
+        is_default_ppg: true
+        minimum_guaranteed_cells: 200
+        pool: INGRESS_APP_POOL_0
+        base_use_limit: 400
+        baf: BAF_80_PERCENT
+        hysteresis: 50
+        ingress_drop_limit: 4000
+        icos_bitmap: 0xfd
       }
-    }
+             queue_configs {
+               port: 12345  # kPortId
+               queue_mapping {
+                 queue_id: 0
+                 priority: PRIO_0
+                 weight: 1
+                 minimum_guaranteed_cells: 100
+                 pool: EGRESS_APP_POOL_0
+                 base_use_limit: 200
+                 baf: BAF_80_PERCENT
+                 hysteresis: 50
+                 max_rate_bytes {rate_bps: 100000000 burst_bytes: 9000}
+                 min_rate_bytes {rate_bps: 1000000 burst_bytes: 4500}
+               }
+             }}
+    }}
   )pb";
 
   VendorConfig vendor_config;
@@ -556,34 +520,18 @@ TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
 TEST_F(BfChassisManagerTest, ReplayPorts) {
   const std::string kVendorConfigText = R"pb(
     tofino_config {
-      node_id_to_deflect_on_drop_configs {
-        key: 7654321
-        value {
-          drop_targets {
-            port: 12345
-            queue: 4
-          }
-          drop_targets {
-            sdk_port: 56789
-            queue: 1
-          }
+        node_id_to_deflect_on_drop_configs {
+          key: 7654321
+          value {drop_targets {port: 12345 queue: 4}
+                 drop_targets {sdk_port: 56789 queue: 1}}
         }
-      }
-      node_id_to_port_shaping_config {
-        key: 7654321
-        value {
-          per_port_shaping_configs {
+        node_id_to_port_shaping_config {
+          key: 7654321
+          value {per_port_shaping_configs {
             key: 12345
-            value {
-              byte_shaping {
-                rate_bps: 10000000000
-                burst_bytes: 16384
-              }
-            }
-          }
-        }
-      }
-    }
+            value {byte_shaping {rate_bps: 10000000000 burst_bytes: 16384}}
+          }}
+        }}
   )pb";
 
   constexpr int kCpuPort = 64;

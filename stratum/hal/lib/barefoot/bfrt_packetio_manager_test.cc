@@ -96,52 +96,25 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   static constexpr int kDevice1 = 0;
   static constexpr char kP4Info[] = R"pb(
     controller_packet_metadata {
-      preamble {
-        id: 67146229
-        name: "packet_in"
-        alias: "packet_in"
-        annotations: "@controller_header(\"packet_in\")"
-      }
-      metadata {
-        id: 1
-        name: "ingress_port"
-        bitwidth: 9
-      }
-      metadata {
-        id: 2
-        name: "_pad0"
-        bitwidth: 7
-      }
-    }
+        preamble {
+          id: 67146229
+          name: "packet_in"
+          alias: "packet_in"
+          annotations: "@controller_header(\"packet_in\")"
+        }
+        metadata {id: 1 name: "ingress_port" bitwidth: 9}
+        metadata {id: 2 name: "_pad0" bitwidth: 7}}
     controller_packet_metadata {
-      preamble {
-        id: 67121543
-        name: "packet_out"
-        alias: "packet_out"
-        annotations: "@controller_header(\"packet_out\")"
-      }
-      metadata {
-        id: 1
-        name: "egress_port"
-        bitwidth: 9
-      }
-      metadata {
-        id: 2
-        name: "cpu_loopback_mode"
-        bitwidth: 2
-      }
-      metadata {
-        id: 3
-        name: "pad0"
-        annotations: "@padding"
-        bitwidth: 85
-      }
-      metadata {
-        id: 4
-        name: "ether_type"
-        bitwidth: 16
-      }
-    }
+        preamble {
+          id: 67121543
+          name: "packet_out"
+          alias: "packet_out"
+          annotations: "@controller_header(\"packet_out\")"
+        }
+        metadata {id: 1 name: "egress_port" bitwidth: 9}
+        metadata {id: 2 name: "cpu_loopback_mode" bitwidth: 2}
+        metadata {id: 3 name: "pad0" annotations: "@padding" bitwidth: 85}
+        metadata {id: 4 name: "ether_type" bitwidth: 16}}
   )pb";
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
@@ -168,18 +141,13 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
   // The total length of packet-in metadata is not byte aligned
   const char invalid_packet_in[] = R"pb(
     controller_packet_metadata {
-      preamble {
-        id: 67146229
-        name: "packet_in"
-        alias: "packet_in"
-        annotations: "@controller_header(\"packet_in\")"
-      }
-      metadata {
-        id: 1
-        name: "ingress_port"
-        bitwidth: 9
-      }
-    }
+        preamble {
+          id: 67146229
+          name: "packet_in"
+          alias: "packet_in"
+          annotations: "@controller_header(\"packet_in\")"
+        }
+        metadata {id: 1 name: "ingress_port" bitwidth: 9}}
   )pb";
   auto status = PushPipelineConfig(invalid_packet_in, false);
   EXPECT_THAT(
@@ -193,18 +161,13 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
   // The total length of packet-out metadata is not byte aligned
   const char invalid_packet_out[] = R"pb(
     controller_packet_metadata {
-      preamble {
-        id: 67121543
-        name: "packet_out"
-        alias: "packet_out"
-        annotations: "@controller_header(\"packet_out\")"
-      }
-      metadata {
-        id: 1
-        name: "egress_port"
-        bitwidth: 9
-      }
-    }
+        preamble {
+          id: 67121543
+          name: "packet_out"
+          alias: "packet_out"
+          annotations: "@controller_header(\"packet_out\")"
+        }
+        metadata {id: 1 name: "egress_port" bitwidth: 9}}
   )pb";
   auto status = PushPipelineConfig(invalid_packet_out, false);
   EXPECT_THAT(
@@ -219,27 +182,20 @@ TEST_F(BfrtPacketioManagerTest,
        PushUnknownControllerPacketMetadataConfigAndShutdown) {
   // The unknown
   const char p4info_with_known[] = R"pb(
+    controller_packet_metadata {preamble {
+      id: 1234567
+      name: "unknown"
+      alias: "unknown"
+      annotations: "@controller_header(\"unknown\")"
+    }}
     controller_packet_metadata {
-      preamble {
-        id: 1234567
-        name: "unknown"
-        alias: "unknown"
-        annotations: "@controller_header(\"unknown\")"
-      }
-    }
-    controller_packet_metadata {
-      preamble {
-        id: 67121543
-        name: "packet_out"
-        alias: "packet_out"
-        annotations: "@controller_header(\"packet_out\")"
-      }
-      metadata {
-        id: 1
-        name: "egress_port"
-        bitwidth: 8
-      }
-    }
+        preamble {
+          id: 67121543
+          name: "packet_out"
+          alias: "packet_out"
+          annotations: "@controller_header(\"packet_out\")"
+        }
+        metadata {id: 1 name: "egress_port" bitwidth: 8}}
   )pb";
   EXPECT_OK(PushPipelineConfig(p4info_with_known));
   EXPECT_OK(Shutdown());
@@ -250,22 +206,10 @@ TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
   p4::v1::PacketOut packet_out;
   const char packet_out_str[] = R"pb(
     payload: "abcde"
-    metadata {
-      metadata_id: 1
-      value: "\x1"
-    }
-    metadata {
-      metadata_id: 2
-      value: "\x0"
-    }
-    metadata {
-      metadata_id: 3
-      value: "\x0"
-    }
-    metadata {
-      metadata_id: 4
-      value: "\xbf\x01"
-    }
+    metadata {metadata_id: 1 value: "\x1"}
+    metadata {metadata_id: 2 value: "\x0"}
+    metadata {metadata_id: 3 value: "\x0"}
+    metadata {metadata_id: 4 value: "\xbf\x01"}
   )pb";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
   const std::string expected_packet(
@@ -287,18 +231,9 @@ TEST_F(BfrtPacketioManagerTest, TransmitInvalidPacketAfterPipelineConfigPush) {
   // Missing the third metadata.
   const char packet_out_str[] = R"pb(
     payload: "abcde"
-    metadata {
-      metadata_id: 1
-      value: "\x1"
-    }
-    metadata {
-      metadata_id: 2
-      value: "\x0"
-    }
-    metadata {
-      metadata_id: 3
-      value: "\x0"
-    }
+    metadata {metadata_id: 1 value: "\x1"}
+    metadata {metadata_id: 2 value: "\x0"}
+    metadata {metadata_id: 3 value: "\x0"}
   )pb";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
@@ -317,14 +252,8 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
   EXPECT_OK(bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer));
   const char expected_packet_in_str[] = R"pb(
     payload: "abcde"
-    metadata {
-      metadata_id: 1
-      value: "\001"
-    }
-    metadata {
-      metadata_id: 2
-      value: "\000"
-    }
+    metadata {metadata_id: 1 value: "\001"}
+    metadata {metadata_id: 2 value: "\000"}
   )pb";
   ::p4::v1::PacketIn expected_packet_in;
   EXPECT_OK(ParseProtoFromString(expected_packet_in_str, &expected_packet_in));

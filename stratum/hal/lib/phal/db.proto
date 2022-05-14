@@ -197,13 +197,16 @@ message TemperatureData {
 // Attribute DB (i.e. Phal DB) services
 service PhalDb {
   // Get one or more attributes
-  rpc Get(GetRequest) returns (GetResponse) {}
+  rpc Get(GetRequest) returns (GetResponse) {
+  }
 
   // Set one or more attributes
-  rpc Set(SetRequest) returns (SetResponse) {}
+  rpc Set(SetRequest) returns (SetResponse) {
+  }
 
   // Subscribe to one or more attributes
-  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {}
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {
+  }
 }
 
 message PathQuery {
@@ -270,7 +273,8 @@ message SetRequest {
   repeated Update updates = 1;
 }
 
-message SetResponse {}
+message SetResponse {
+}
 
 // Error message used to report a single update error for a Set RPC.
 message Error {
