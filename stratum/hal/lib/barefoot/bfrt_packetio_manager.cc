@@ -66,31 +66,28 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 
 ::util::Status BfrtPacketioManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
+  absl::WriterMutexLock l(&data_lock_);
   RET_CHECK(config.programs_size() == 1) << "Only one program is supported.";
   const auto& program = config.programs(0);
-  {
-    absl::WriterMutexLock l(&data_lock_);
-    ASSIGN_OR_RETURN(
-        const auto& p4info,
-        bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
-    RETURN_IF_ERROR(BuildMetadataMapping(p4info));
-    // PushForwardingPipelineConfig resets the bf_pkt driver.
-    RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
-    if (!initialized_) {
-      packet_receive_channel_ = Channel<std::string>::Create(128);
-      if (sde_rx_thread_id_ == 0) {
-        int ret = pthread_create(&sde_rx_thread_id_, nullptr,
-                                 &BfrtPacketioManager::SdeRxThreadFunc, this);
-        if (ret != 0) {
-          return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for "
-                                             "SDE wrapper for device with ID "
-                                          << device_ << ". Err: " << ret << ".";
-        }
+  ASSIGN_OR_RETURN(
+      const auto& p4info,
+      bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
+  RETURN_IF_ERROR(BuildMetadataMapping(p4info));
+  // PushForwardingPipelineConfig resets the bf_pkt driver.
+  RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
+  if (!initialized_) {
+    packet_receive_channel_ = Channel<std::string>::Create(128);
+    if (sde_rx_thread_id_ == 0) {
+      int ret = pthread_create(&sde_rx_thread_id_, nullptr,
+                               &BfrtPacketioManager::SdeRxThreadFunc, this);
+      if (ret != 0) {
+        return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for SDE "
+                                        << "wrapper for device with ID "
+                                        << device_ << ". Err: " << ret << ".";
       }
-      RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
-          device_,
-          ChannelWriter<std::string>::Create(packet_receive_channel_)));
     }
+    RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
+        device_, ChannelWriter<std::string>::Create(packet_receive_channel_)));
     initialized_ = true;
   }
 
