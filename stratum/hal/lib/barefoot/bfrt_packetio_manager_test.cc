@@ -27,6 +27,7 @@ using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
+using ::testing::ReturnArg;
 
 class BfrtPacketioManagerTest : public ::testing::Test {
  protected:
@@ -165,7 +166,7 @@ TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfigAndShutdown) {
 }
 
 TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
-  // The total length of packet-in metadata is not byte aligned
+  // The total length of packet-in metadata is not byte aligned.
   const char invalid_packet_in[] = R"pb(
     controller_packet_metadata {
       preamble {
@@ -190,7 +191,7 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
 }
 
 TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
-  // The total length of packet-out metadata is not byte aligned
+  // The total length of packet-out metadata is not byte aligned.
   const char invalid_packet_out[] = R"pb(
     controller_packet_metadata {
       preamble {
@@ -217,7 +218,7 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
 
 TEST_F(BfrtPacketioManagerTest,
        PushUnknownControllerPacketMetadataConfigAndShutdown) {
-  // The unknown
+  // The controller_packet_metadata has an unknown name.
   const char p4info_with_known[] = R"pb(
     controller_packet_metadata {
       preamble {
@@ -269,7 +270,7 @@ TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
   )pb";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
   const std::string expected_packet(
-      "\0\x80\0\0\0\0\0\0\0\0\0\0\xBF\x1"
+      "\0\x80\0\0\0\0\0\0\0\0\0\0\xBF\x01"
       "abcde",
       19);
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
@@ -354,6 +355,46 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
 
   // Here we need to wait until we receive and verify the packet from the mock
   // packet-in writer.
+  EXPECT_TRUE(
+      write_notifier->WaitForNotificationWithTimeout(absl::Milliseconds(100)));
+  EXPECT_OK(bfrt_packetio_manager_->UnregisterPacketReceiveWriter());
+  EXPECT_OK(Shutdown());
+}
+
+TEST_F(BfrtPacketioManagerTest, MalformedPacketInShouldNotStopRxThread) {
+  EXPECT_OK(PushPipelineConfig());
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
+  EXPECT_OK(bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer));
+  auto write_notifier = std::make_shared<absl::Notification>();
+  std::weak_ptr<absl::Notification> weak_ref(write_notifier);
+  EXPECT_CALL(*writer, Write(_))
+      .WillOnce(Invoke([weak_ref](::p4::v1::PacketIn actual) {
+        if (auto notifier = weak_ref.lock()) {
+          notifier->Notify();
+          return true;
+        } else {
+          LOG(ERROR) << "Write notifier expired.";
+          return false;
+        }
+      }));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_, TranslatePacketIn(_))
+      .WillRepeatedly(ReturnArg<0>());
+  const std::string malformed_packet_from_asic("\0",  // metadata too short
+                                               1);
+  const std::string valid_packet_from_asic(
+      "\0\x80"  // metadata
+      "abcde",  // payload
+      7);
+
+  // Send malformed packet first, then a valid one. This verifies that
+  // processing continues after previous errors.
+  EXPECT_OK(packet_rx_writer->Write(malformed_packet_from_asic,
+                                    absl::Milliseconds(100)));
+  EXPECT_OK(
+      packet_rx_writer->Write(valid_packet_from_asic, absl::Milliseconds(100)));
+
+  // Here we wait until we receive the valid packet from the mock packet-in
+  // writer.
   EXPECT_TRUE(
       write_notifier->WaitForNotificationWithTimeout(absl::Milliseconds(100)));
   EXPECT_OK(bfrt_packetio_manager_->UnregisterPacketReceiveWriter());
