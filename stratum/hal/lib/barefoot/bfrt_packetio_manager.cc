@@ -307,7 +307,6 @@ class BitBuffer {
   return ::util::OkStatus();
 }
 
-// TODO(max): drop Sde in name?
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {
@@ -327,14 +326,20 @@ class BitBuffer {
     }
 
     ::p4::v1::PacketIn packet_in;
-    // FIXME: returning here in case of parsing errors might not be the best
-    // solution.
-    RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
-    ASSIGN_OR_RETURN(const auto& translated_packet_in,
-                     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in));
+    ::util::Status status = ParsePacketIn(buffer, &packet_in);
+    if (!status.ok()) {
+      LOG(ERROR) << "ParsePacketIn failed: " << status;
+      continue;
+    }
+    const auto& translated_packet_in =
+        bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
+    if (!translated_packet_in.ok()) {
+      LOG(ERROR) << "TranslatePacketIn failed: " << status;
+      continue;
+    }
     {
       absl::WriterMutexLock l(&rx_writer_lock_);
-      rx_writer_->Write(translated_packet_in);
+      rx_writer_->Write(translated_packet_in.ValueOrDie());
     }
     VLOG(1) << "Handled PacketIn: " << packet_in.ShortDebugString();
   }
