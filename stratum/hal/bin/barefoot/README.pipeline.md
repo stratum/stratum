@@ -5,7 +5,7 @@ Copyright 2018-present Open Networking Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# P4Runtime p4_device_config formats
+# Pushing a Pipeline to a Barefoot Tofino based switch
 
 Stratum-bfrt uses a protobuf based format ([bf.proto](/stratum/hal/lib/barefoot/bf.proto))
 to push a pipeline over P4Runtime for Barefoot Tofino devices. Use the
