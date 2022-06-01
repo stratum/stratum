@@ -54,7 +54,7 @@ Also see the chapter about
   - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
   - [Running Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.run.md)
   - [Testing Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.test.md)
-  - [P4Runtime p4_device_config formats](/stratum/hal/bin/barefoot/README.pipeline.md)
+  - [Pushing a pipeline to a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.pipeline.md)
 - [Broadcom](/stratum/hal/bin/bcm/standalone/README.md)
   - [How to Add a Dataplane Feature to Stratum (BCM)](/stratum/docs/extenting_stratum_bcm.md)
 - [Intel NP4](/stratum/hal/bin/np4intel/docker/README.md)
