@@ -5,7 +5,7 @@ Copyright 2018-present Open Networking Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# P4Runtime p4_device_config formats
+# Pushing a pipeline to a Barefoot Tofino based switch
 
 Stratum-bfrt uses a protobuf based format ([bf.proto](/stratum/hal/lib/barefoot/bf.proto))
 to push a pipeline over P4Runtime for Barefoot Tofino devices. Use the
@@ -50,7 +50,7 @@ bazel run //stratum/hal/bin/barefoot:bf_pipeline_builder -- \
     -unpack_dir=$PWD
 ```
 
-## Pushing the Pipeline with p4_pipeline_pusher
+## Pushing the pipeline with p4_pipeline_pusher
 
 Once the pipeline has been packed into the aforementioned format, it can be
 pushed to Stratum over P4Runtime with the `p4_pipeline_pusher` tool. It is part
