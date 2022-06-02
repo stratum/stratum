@@ -3,20 +3,17 @@
 
 #include "stratum/p4c_backends/fpm/parser_decoder.h"
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/fpm/field_name_inspector.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/field_name_inspector.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
 
-ParserDecoder::ParserDecoder()
-    : ref_map_(nullptr),
-      type_map_(nullptr) {
-}
+ParserDecoder::ParserDecoder() : ref_map_(nullptr), type_map_(nullptr) {}
 
 // TODO(unknown): The Stratum p4c backend needs a consistent approach for
 // handling errors.  Errors can occur in several ways:
@@ -54,7 +51,7 @@ bool ParserDecoder::DecodeParser(const IR::P4Parser& p4_parser,
   for (const auto ir_parser_state : p4_parser.states) {
     // We can't use externalName() here. See pull request #182
     const std::string state_name =
-                            std::string(ir_parser_state->getName().toString());
+        std::string(ir_parser_state->getName().toString());
     VLOG(2) << "ParserState: " << state_name;
     ParserState* decoded_state =
         &(*parser_states_.mutable_parser_states())[state_name];
@@ -137,8 +134,8 @@ bool ParserDecoder::DecodeStatements(
               path_inspector.field_name());
         } else {
           for (const auto& stacked : path_inspector.stacked_header_names()) {
-            decoded_state->mutable_extracted_header()->
-                add_header_paths(stacked);
+            decoded_state->mutable_extracted_header()->add_header_paths(
+                stacked);
           }
         }
       } else {
@@ -233,8 +230,8 @@ bool ParserDecoder::DecodePathExpression(const IR::PathExpression& expression,
 // This code is adapted from p4c's bmv2 backend JsonConverter::convertSimpleKey.
 // It figures out the value and mask for the input key_set and stores them
 // in the decoded_case output.
-void ParserDecoder::DecodeSimpleSelectKeySet(
-    const IR::Expression& key_set, ParserSelectCase* decoded_case) {
+void ParserDecoder::DecodeSimpleSelectKeySet(const IR::Expression& key_set,
+                                             ParserSelectCase* decoded_case) {
   mpz_class value;
   mpz_class mask;
   if (key_set.is<IR::Mask>()) {
@@ -273,9 +270,9 @@ void ParserDecoder::DecodeSimpleSelectKeySet(
 // fields, and the expression lists the key values for each field.  The
 // size of the key_set list must match the number of fields in the
 // select component list.
-void ParserDecoder::DecodeComplexSelectKeySet(
-    const IR::ListExpression& key_set, const IR::ListExpression& select,
-    ParserSelectCase* decoded_case) {
+void ParserDecoder::DecodeComplexSelectKeySet(const IR::ListExpression& key_set,
+                                              const IR::ListExpression& select,
+                                              ParserSelectCase* decoded_case) {
   if (key_set.components.size() != select.components.size()) {
     // TODO(unknown): Should the compiler catch this?
     LOG(ERROR) << "Number of values in select case key set does not match "
@@ -288,8 +285,8 @@ void ParserDecoder::DecodeComplexSelectKeySet(
   }
 }
 
-bool ParserDecoder::DecodeValueSetSelectKeySet(
-    const IR::Expression& key_set, ParserSelectCase* decoded_case) {
+bool ParserDecoder::DecodeValueSetSelectKeySet(const IR::Expression& key_set,
+                                               ParserSelectCase* decoded_case) {
   if (!key_set.is<IR::PathExpression>()) return false;
   if (!key_set.type->is<IR::Type_Set>()) return false;
   auto path_expression = key_set.to<IR::PathExpression>();
@@ -352,8 +349,7 @@ void ParserDecoder::DecodeConcatOperator(
   decoded_select->add_selector_fields(left->member.name);
   decoded_select->add_selector_fields(right->member.name);
   for (auto& decoded_case : *decoded_select->mutable_cases()) {
-    if (decoded_case.is_default())
-      continue;
+    if (decoded_case.is_default()) continue;
     if (decoded_case.keyset_values_size() != 1) {
       LOG(ERROR) << "Compiler bug: expected keyset values of size 1 in select "
                  << "expression with concat operator, found keyset size "
@@ -400,8 +396,8 @@ std::string ParserDecoder::ExtractHeaderType(
           LOG(ERROR) << "extract expects arg type to be Type_Header";
           return header_type_name;
         }
-        header_type_name = std::string(
-            arg_type->to<IR::Type_Header>()->name.toString());
+        header_type_name =
+            std::string(arg_type->to<IR::Type_Header>()->name.toString());
       } else {
         LOG(WARNING) << "Unexpected argument count "
                      << method_call->arguments->size() << " in extract";
