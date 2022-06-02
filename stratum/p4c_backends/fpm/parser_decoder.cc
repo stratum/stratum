@@ -235,8 +235,8 @@ bool ParserDecoder::DecodePathExpression(const IR::PathExpression& expression,
 // in the decoded_case output.
 void ParserDecoder::DecodeSimpleSelectKeySet(
     const IR::Expression& key_set, ParserSelectCase* decoded_case) {
-  mpz_class value;
-  mpz_class mask;
+  boost::multiprecision::mpz_int value;
+  boost::multiprecision::mpz_int mask;
   if (key_set.is<IR::Mask>()) {
     auto mk = key_set.to<IR::Mask>();
     if (!mk->left->is<IR::Constant>()) {
@@ -265,8 +265,8 @@ void ParserDecoder::DecodeSimpleSelectKeySet(
   }
 
   ParserKeySetValue* case_value = decoded_case->add_keyset_values();
-  case_value->mutable_constant()->set_value(value.get_ui());
-  case_value->mutable_constant()->set_mask(mask.get_ui());
+  case_value->mutable_constant()->set_value(static_cast<int64>(value));
+  case_value->mutable_constant()->set_mask(static_cast<int64>(mask));
 }
 
 // A ListExpression means the select key uses a combination of multiple
