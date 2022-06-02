@@ -7,10 +7,11 @@
 
 #include <memory>
 #include <string>
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
+
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -22,8 +23,7 @@ class ParserDecoderTest : public testing::TestWithParam<std::string> {
   // for test use.
   void SetUpIRParser(const std::string& ir_input_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string ir_path = "stratum/p4c_backends/" +
-        ir_input_file;
+    const std::string ir_path = "stratum/p4c_backends/" + ir_input_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(ir_path));
   }
 
@@ -41,16 +41,15 @@ TEST_P(ParserDecoderTest, TestAllStatesParsed) {
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
-  bool result = parser_decoder_.DecodeParser(ir_parser,
-                                             ir_helper_->mid_end_refmap(),
-                                             ir_helper_->mid_end_typemap());
+  bool result = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   ASSERT_TRUE(result);
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
   EXPECT_EQ(ir_parser.states.size(), decoded_states_map.size());
   for (const auto ir_parser_state : ir_parser.states) {
-    auto iter = decoded_states_map.find(std::string(
-        ir_parser_state->getName().toString()));
+    auto iter = decoded_states_map.find(
+        std::string(ir_parser_state->getName().toString()));
     EXPECT_TRUE(iter != decoded_states_map.end());
   }
 }
@@ -60,9 +59,8 @@ TEST_P(ParserDecoderTest, TestReservedStates) {
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
-  bool result = parser_decoder_.DecodeParser(ir_parser,
-                                             ir_helper_->mid_end_refmap(),
-                                             ir_helper_->mid_end_typemap());
+  bool result = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   ASSERT_TRUE(result);
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
@@ -93,16 +91,14 @@ TEST_F(ParserDecoderTest, ParseComplex) {
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
-  bool result = parser_decoder_.DecodeParser(ir_parser,
-                                             ir_helper_->mid_end_refmap(),
-                                             ir_helper_->mid_end_typemap());
+  bool result = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   ASSERT_TRUE(result);
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
   const auto& params_state_iter = decoded_states_map.find("start");
   ASSERT_TRUE(params_state_iter != decoded_states_map.end());
-  const auto& concat_state_iter =
-      decoded_states_map.find("parse_concat");
+  const auto& concat_state_iter = decoded_states_map.find("parse_concat");
   ASSERT_TRUE(concat_state_iter != decoded_states_map.end());
   const auto& params_state = params_state_iter->second;
   const auto& concat_state = concat_state_iter->second;
@@ -137,14 +133,12 @@ TEST_F(ParserDecoderTest, ParseExtractStackedHeader) {
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
-  bool result = parser_decoder_.DecodeParser(ir_parser,
-                                             ir_helper_->mid_end_refmap(),
-                                             ir_helper_->mid_end_typemap());
+  bool result = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   ASSERT_TRUE(result);
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
-  const auto& vlan_state_iter =
-      decoded_states_map.find("parse_vlan_tag");
+  const auto& vlan_state_iter = decoded_states_map.find("parse_vlan_tag");
   ASSERT_TRUE(vlan_state_iter != decoded_states_map.end());
   const auto& vlan_state = vlan_state_iter->second;
   ASSERT_EQ(6, vlan_state.extracted_header().header_paths_size());
@@ -162,9 +156,8 @@ TEST_F(ParserDecoderTest, ParseValueSet) {
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
-  bool result = parser_decoder_.DecodeParser(ir_parser,
-                                             ir_helper_->mid_end_refmap(),
-                                             ir_helper_->mid_end_typemap());
+  bool result = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   ASSERT_TRUE(result);
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
@@ -208,13 +201,11 @@ TEST_F(ParserDecoderTest, TestDecodeTwice) {
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
-  bool result1 = parser_decoder_.DecodeParser(ir_parser,
-                                              ir_helper_->mid_end_refmap(),
-                                              ir_helper_->mid_end_typemap());
+  bool result1 = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   EXPECT_TRUE(result1);
-  bool result2 = parser_decoder_.DecodeParser(ir_parser,
-                                              ir_helper_->mid_end_refmap(),
-                                              ir_helper_->mid_end_typemap());
+  bool result2 = parser_decoder_.DecodeParser(
+      ir_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   EXPECT_FALSE(result2);
 }
 
@@ -229,14 +220,12 @@ TEST_F(ParserDecoderTest, TestNoStartState) {
   // parser, but using an empty ParserState vector.
   std::unique_ptr<IR::IndexedVector<IR::ParserState>> states(
       new IR::IndexedVector<IR::ParserState>());
-  auto new_parser = new IR::P4Parser(ir_parser.srcInfo, ir_parser.name,
-                                     ir_parser.type,
-                                     ir_parser.constructorParams,
-                                     ir_parser.parserLocals, *states);
+  auto new_parser = new IR::P4Parser(
+      ir_parser.srcInfo, ir_parser.name, ir_parser.type,
+      ir_parser.constructorParams, ir_parser.parserLocals, *states);
 
-  bool result = parser_decoder_.DecodeParser(*new_parser,
-                                             ir_helper_->mid_end_refmap(),
-                                             ir_helper_->mid_end_typemap());
+  bool result = parser_decoder_.DecodeParser(
+      *new_parser, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   EXPECT_FALSE(result);
 }
 
@@ -277,14 +266,12 @@ TEST_F(ParserDecoderTest, TestMultipleStartStates) {
 #endif
 
 INSTANTIATE_TEST_SUITE_P(
-  ValidParserIRInputFiles,
-  ParserDecoderTest,
-  ::testing::Values("fpm/testdata/parse_basic.ir.json",
-                    "fpm/testdata/parse_complex.ir.json",
-                    "fpm/testdata/parse_annotated_state.ir.json",
-                    "fpm/testdata/parse_value_set.ir.json",
-                    "test/testdata/simple_vlan_stack_16.ir.json")
-);
+    ValidParserIRInputFiles, ParserDecoderTest,
+    ::testing::Values("fpm/testdata/parse_basic.ir.json",
+                      "fpm/testdata/parse_complex.ir.json",
+                      "fpm/testdata/parse_annotated_state.ir.json",
+                      "fpm/testdata/parse_value_set.ir.json",
+                      "test/testdata/simple_vlan_stack_16.ir.json"));
 
 }  // namespace p4c_backends
 }  // namespace stratum
