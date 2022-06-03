@@ -5,25 +5,23 @@
 
 #include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
 
-#include "stratum/glue/logging.h"
-#include "stratum/lib/macros.h"
 #include "absl/debugging/leak_check.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace p4c_backends {
 
-HitAssignMapper::HitAssignMapper(
-    P4::ReferenceMap* ref_map, P4::TypeMap* type_map)
+HitAssignMapper::HitAssignMapper(P4::ReferenceMap* ref_map,
+                                 P4::TypeMap* type_map)
     : ref_map_(ABSL_DIE_IF_NULL(ref_map)),
-      type_map_(ABSL_DIE_IF_NULL(type_map)) {
-}
+      type_map_(ABSL_DIE_IF_NULL(type_map)) {}
 
 const IR::P4Control* HitAssignMapper::Apply(const IR::P4Control& control) {
   absl::LeakCheckDisabler disable_ir_control_leak_checks;
   auto new_body = control.body->apply(*this);
-  if (new_body == control.body)
-    return &control;
+  if (new_body == control.body) return &control;
 
   // Since the control body has transformed and the input control is
   // immutable, the return value is a new P4Control with the transformed
@@ -56,8 +54,10 @@ const IR::Node* HitAssignMapper::preorder(IR::AssignmentStatement* statement) {
   auto hit_var_path = statement->left->to<IR::PathExpression>();
   prune();
   if (hit_var_path == nullptr || !hit_var_path->type->is<IR::Type_Boolean>()) {
-    ::error("Backend: Expected PathExpression of Type_Boolean for "
-            "assignment to table hit variable %s", statement->left);
+    ::error(
+        "Backend: Expected PathExpression of Type_Boolean for "
+        "assignment to table hit variable %s",
+        statement->left);
     return statement;
   }
 
@@ -76,16 +76,18 @@ const IR::Node* HitAssignMapper::preorder(IR::AssignmentStatement* statement) {
 const IR::Node* HitAssignMapper::preorder(IR::Expression* expression) {
   auto table_hit = P4::TableApplySolver::isHit(expression, ref_map_, type_map_);
   if (table_hit != nullptr) {
-    ::error("Backend: Unexpected table hit condition in expression %s.  Check "
-            "for incompatible frontend or midend transformations.", expression);
+    ::error(
+        "Backend: Unexpected table hit condition in expression %s.  Check "
+        "for incompatible frontend or midend transformations.",
+        expression);
   }
 
   return expression;
 }
 
 const IR::P4Control* HitAssignMapper::RunPreTestTransform(
-    const IR::P4Control& control,
-    P4::ReferenceMap* ref_map, P4::TypeMap* type_map) {
+    const IR::P4Control& control, P4::ReferenceMap* ref_map,
+    P4::TypeMap* type_map) {
   HitAssignMapper hit_mapper(ref_map, type_map);
   return hit_mapper.Apply(control);
 }

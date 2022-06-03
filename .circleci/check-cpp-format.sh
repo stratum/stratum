@@ -239,10 +239,13 @@ stratum/lib/timer_daemon.cc
 stratum/lib/utils_test.cc
 stratum/lib/utils.cc
 stratum/p4c_backends/fpm/bcm/bcm_target_info.cc
+stratum/p4c_backends/fpm/hit_assign_mapper_test.cc
+stratum/p4c_backends/fpm/hit_assign_mapper.cc
+stratum/p4c_backends/fpm/hit_assign_mapper.h
 stratum/p4c_backends/fpm/meta_key_mapper.cc
-stratum/p4c_backends/fpm/parser_decoder.h
-stratum/p4c_backends/fpm/parser_decoder.cc
 stratum/p4c_backends/fpm/parser_decoder_test.cc
+stratum/p4c_backends/fpm/parser_decoder.cc
+stratum/p4c_backends/fpm/parser_decoder.h
 stratum/p4c_backends/fpm/target_info.cc
 stratum/p4c_backends/test/test_p4c_main.cc
 stratum/p4c_backends/test/test_target_info.cc
