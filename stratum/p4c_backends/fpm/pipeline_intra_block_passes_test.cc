@@ -309,7 +309,7 @@ TEST_P(PipelineIntraBlockPassesTest, TestBlockStatementStageInspect) {
 }
 
 // Verifies StatementStageInspector behavior with an unexpected IfStatement.
-TEST_P(PipelineIntraBlockPassesTest, TestIfStatementStageInspect) {
+TEST_P(PipelineIntraBlockPassesTest, DISABLED_TestIfStatementStageInspect) {
   SetUpTestIR("pipeline_intra_block1.ir.json");
   const IR::P4Control* ir_control = SetUpTestP4Control("ingress");
   ASSERT_TRUE(ir_control != nullptr);
