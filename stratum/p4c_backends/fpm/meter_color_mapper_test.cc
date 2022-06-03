@@ -575,8 +575,8 @@ INSTANTIATE_TEST_SUITE_P(
     // These values account for skips due to p4c's insertion of temporary
     // values for evaluating table hits.
     Values(
-      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 11),
-      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 13)));
+      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 10),
+      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 11)));
 
 }  // namespace p4c_backends
 }  // namespace stratum
