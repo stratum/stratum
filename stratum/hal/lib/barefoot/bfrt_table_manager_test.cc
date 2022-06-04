@@ -128,6 +128,7 @@ class BfrtTableManagerTest : public ::testing::Test {
             }
             size: 500
           }
+        }
       }
     )pb";
     BfrtDeviceConfig config;
@@ -207,7 +208,7 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
     data {
       byte_count: 200
       packet_count: 100
-      }
+    }
   )pb";
 
   ::p4::v1::DirectCounterEntry entry;
