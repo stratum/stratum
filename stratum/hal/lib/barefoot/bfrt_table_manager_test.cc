@@ -139,7 +139,6 @@ class BfrtTableManagerTest : public ::testing::Test {
   static constexpr int kDevice1 = 0;
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
-  std::unique_ptr<TableDataMock> bf_table_data_mock_;
   std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtTableManager> bfrt_table_manager_;
 };
