@@ -192,7 +192,8 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
               std::move(table_data_mock)))));
 
   const std::string kDirectCounterEntryText = R"pb(
-    table_id: 33583783
+    table_entry {
+      table_id: 33583783
       match {
         field_id: 1
         exact { value: "\001" }
