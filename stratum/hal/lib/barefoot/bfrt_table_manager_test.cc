@@ -424,7 +424,7 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutId) {
   WriterMock<::p4::v1::ReadResponse> writer_mock;
 
   const std::string kMeterEntryText = R"pb(
-  meter_id: 0
+    meter_id: 0
     index {
       index: 12345
     }
