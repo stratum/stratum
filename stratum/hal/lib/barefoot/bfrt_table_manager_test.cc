@@ -137,14 +137,7 @@ class BfrtTableManagerTest : public ::testing::Test {
   }
 
   static constexpr int kDevice1 = 0;
-
-  std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
-  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
-  std::unique_ptr<BfrtTableManager> bfrt_table_manager_;
-};
-
-constexpr int BfrtTableManagerTest::kDevice1;
-constexpr char kTableEntryText[] = R"pb(
+  static constexpr char kTableEntryText[] = R"pb(
   table_id: 33583783
       match {
         field_id: 4
@@ -159,7 +152,16 @@ constexpr char kTableEntryText[] = R"pb(
         }
       }
       priority: 10
-)pb";
+  )pb";
+
+  std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
+  std::unique_ptr<BfrtTableManager> bfrt_table_manager_;
+};
+
+constexpr int BfrtTableManagerTest::kDevice1;
+constexpr char BfrtTableManagerTest::kTableEntryText[];
+
 
 TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
   ASSERT_OK(PushTestConfig());
