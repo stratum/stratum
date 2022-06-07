@@ -44,6 +44,8 @@ const IR::P4Control* HitAssignMapper::Apply(const IR::P4Control& control) {
 //
 // The preorder below takes the IR::AssignmentStatement for "hit_tmp" and
 // transforms it into a TableHitStatement.
+// TODO(max): the above transformation is no longer performed in newer p4c
+// versions. Check if this function can be removed.
 const IR::Node* HitAssignMapper::preorder(IR::AssignmentStatement* statement) {
   auto table_hit =
       P4::TableApplySolver::isHit(statement->right, ref_map_, type_map_);
@@ -65,6 +67,88 @@ const IR::Node* HitAssignMapper::preorder(IR::AssignmentStatement* statement) {
       statement->srcInfo, hit_var_path->path->name.toString(),
       table_hit->externalName(), table_hit);
   return transformed_hit;
+}
+
+// This preorder transform checks for nested table hits inside block statements.
+// See the IR::AssignmentStatement transform for details.
+const IR::Node* HitAssignMapper::preorder(IR::BlockStatement* statement) {
+  auto tmp = statement->components.clone();
+  tmp->clear();
+  bool block_modified = false;
+
+  for (const auto& component : statement->components) {
+    // We're only interested in table hits inside if statements.
+    if (!component->to<IR::IfStatement>()) {
+      tmp->push_back(component);
+      continue;
+    }
+    auto* if_statement = component->to<IR::IfStatement>();
+
+    auto* rv = TransformTableHitIf(if_statement);
+    if (rv) {
+      tmp->push_back(rv->components[0]);
+      tmp->push_back(rv->components[1]);
+      block_modified = true;
+    } else {
+      tmp->push_back(if_statement);
+    }
+  }
+
+  if (block_modified) statement->components = *tmp;
+
+  return statement;
+}
+
+const IR::BlockStatement* HitAssignMapper::TransformTableHitIf(
+    const IR::IfStatement* statement) {
+  const IR::P4Table* table_hit = nullptr;
+  table_hit =
+      P4::TableApplySolver::isHit(statement->condition, ref_map_, type_map_);
+  if (statement->condition->is<IR::LNot>()) {
+    table_hit = P4::TableApplySolver::isHit(
+        statement->condition->as<IR::LNot>().expr, ref_map_, type_map_);
+  }
+
+  if (!table_hit) {
+    return nullptr;
+  }
+
+  auto* rv = statement->clone();
+
+  cstring tmp_var_name = ref_map_->newName(table_hit->getName() + "_hit_tmp");
+  auto* fake_hit = new IR::TableHitStatement(
+      rv->srcInfo, tmp_var_name, table_hit->externalName(), table_hit);
+  auto* path = new IR::PathExpression(rv->srcInfo, new IR::Type_Boolean(),
+                                      new IR::Path(tmp_var_name));
+  if (rv->condition->is<IR::LNot>()) {
+    rv->condition = new IR::LNot(path);
+  } else {
+    rv->condition = path;
+  }
+  auto* new_block = new IR::BlockStatement(rv->srcInfo);
+  new_block->components.push_back(fake_hit);
+  new_block->components.push_back(rv);
+
+  return new_block;
+}
+
+// This preorder transform checks for nested table hits inside the branches of
+// if statements. See the IR::AssignmentStatement transform for details.
+const IR::Node* HitAssignMapper::preorder(IR::IfStatement* statement) {
+  // Check for table hits in single (non-block) nested if statements.
+  if (statement->ifTrue->is<IR::IfStatement>()) {
+    auto* if_true =
+        TransformTableHitIf(statement->ifTrue->to<IR::IfStatement>());
+    if (if_true) statement->ifTrue = if_true;
+  }
+
+  if (statement->ifFalse->is<IR::IfStatement>()) {
+    auto* if_false =
+        TransformTableHitIf(statement->ifFalse->to<IR::IfStatement>());
+    if (if_false) statement->ifFalse = if_false;
+  }
+
+  return statement;
 }
 
 // This preorder catches any table apply+hit that appears in an unexpected
