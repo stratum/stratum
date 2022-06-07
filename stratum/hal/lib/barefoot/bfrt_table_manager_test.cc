@@ -51,41 +51,84 @@ class BfrtTableManagerTest : public ::testing::Test {
     const std::string kSamplePipelineText = R"pb(
       programs {
         name: "test pipeline config",
-        p4info {pkg_info {arch: "tna"} tables {
-          preamble {id: 33583783 name: "Ingress.control.table1"}
-          match_fields {id: 1 name: "field1" bitwidth: 9 match_type: EXACT}
-          match_fields {id: 2 name: "field2" bitwidth: 12 match_type: TERNARY}
-          match_fields {id: 3 name: "field3" bitwidth: 15 match_type: RANGE}
-          action_refs {id: 16794911}
-          const_default_action_id: 16836487
-          direct_resource_ids: 318814845
-          size: 1024
+        p4info {
+          pkg_info {
+            arch: "tna"
+          }
+          tables {
+            preamble {
+              id: 33583783
+              name: "Ingress.control.table1"
+            }
+            match_fields {
+              id: 1
+              name: "field1"
+              bitwidth: 9
+              match_type: EXACT
+            }
+            match_fields {
+              id: 2
+              name: "field2"
+              bitwidth: 12
+              match_type: TERNARY
+            }
+            match_fields {
+              id: 3
+              name: "field3"
+              bitwidth: 15
+              match_type: RANGE
+            }
+            action_refs {
+              id: 16794911
+            }
+            const_default_action_id: 16836487
+            direct_resource_ids: 318814845
+            size: 1024
+          }
+          actions {
+            preamble {
+              id: 16794911
+              name: "Ingress.control.action1"
+            }
+            params {
+              id: 1
+              name: "vlan_id"
+              bitwidth: 12
+            }
+          }
+          direct_counters {
+            preamble {
+              id: 318814845
+              name: "Ingress.control.counter1"
+            }
+            spec {
+              unit: BOTH
+            }
+            direct_table_id: 33583783
+          }
+          meters {
+            preamble {
+              id: 55555
+              name: "Ingress.control.meter_bytes"
+              alias: "meter_bytes"
+            }
+            spec {
+              unit: BYTES
+            }
+            size: 500
+          }
+          meters {
+            preamble {
+              id: 55556
+              name: "Ingress.control.meter_packets"
+              alias: "meter_packets"
+            }
+            spec {
+              unit: PACKETS
+            }
+            size: 500
+          }
         }
-                actions {preamble {id: 16794911 name: "Ingress.control.action1"}
-                         params {id: 1 name: "vlan_id" bitwidth: 12}}
-                direct_counters {
-                  preamble {id: 318814845 name: "Ingress.control.counter1"}
-                  spec {unit: BOTH}
-                  direct_table_id: 33583783
-                }
-                meters {
-                  preamble {
-                    id: 55555
-                    name: "Ingress.control.meter_bytes"
-                    alias: "meter_bytes"
-                  }
-                  spec {unit: BYTES}
-                  size: 500
-                }
-                meters {
-                  preamble {
-                    id: 55556
-                    name: "Ingress.control.meter_packets"
-                    alias: "meter_packets"
-                  }
-                  spec {unit: PACKETS}
-                  size: 500
-                }}
       }
     )pb";
     BfrtDeviceConfig config;
@@ -149,21 +192,21 @@ TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
               std::move(table_data_mock)))));
 
   const std::string kDirectCounterEntryText = R"pb(
-    table_entry {
-      table_id: 33583783
+    table_id: 33583783
       match {
         field_id: 1
-        exact {value: "\001"}
+        exact { value: "\001" }
       }
       match {
-        field_id: 2 ternary {value: "\x00" mask: "\x0f\xff"}
+        field_id: 2
+        ternary { value: "\x00" mask: "\x0f\xff" }
       }
-      action { action {action_id: 1}}
+      action { action { action_id: 1 } }
       priority: 10
     }
     data {
-        byte_count: 200
-        packet_count: 100
+      byte_count: 200
+      packet_count: 100
     }
   )pb";
 
@@ -254,13 +297,14 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryModifyWithoutMeterId) {
   const std::string kMeterEntryText = R"pb(
     meter_id: 0
     index {
-      index: 12345}
+      index: 12345
+    }
     config {
       cir: 1
       cburst: 100
       pir: 2
       pburst: 200
-   }
+    }
   )pb";
   ::p4::v1::MeterEntry entry;
   ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
