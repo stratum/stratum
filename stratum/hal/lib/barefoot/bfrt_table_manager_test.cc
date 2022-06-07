@@ -327,7 +327,8 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDelete) {
   const std::string kMeterEntryText = R"pb(
     meter_id: 55555
     index {
-      index: 12345}
+      index: 12345
+    }
     config {
       cir: 1
       cburst: 100
