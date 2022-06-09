@@ -42,6 +42,8 @@ class HitAssignMapper : public Transform {
   // the input pointer when no transform occurs, or they return a new
   // IR::Node representing the transformed object.
   const IR::Node* preorder(IR::AssignmentStatement* statement) override;
+  const IR::Node* preorder(IR::IfStatement* statement) override;
+  const IR::Node* preorder(IR::BlockStatement* statement) override;
   const IR::Node* preorder(IR::Expression* expression) override;
 
   // RunPreTestTransform typically runs during test setup
@@ -56,6 +58,11 @@ class HitAssignMapper : public Transform {
   HitAssignMapper& operator=(const HitAssignMapper&) = delete;
 
  private:
+  // Helper function to transform if statements containing table hits into
+  // TableHitStatements inside block statements.
+  const IR::BlockStatement* TransformTableHitIf(
+      const IR::IfStatement* statement);
+
   // These members store the injected parameters.
   P4::ReferenceMap* ref_map_;
   P4::TypeMap* type_map_;

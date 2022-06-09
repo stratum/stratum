@@ -127,7 +127,7 @@ TEST_P(PipelinePassesTest, TestNoBlockInsert) {
 
 // Tests PipelineBlockPass transformation of BlockStatements into
 // PipelineStageStatements.
-TEST_P(PipelinePassesTest, TestBlockOptimization) {
+TEST_P(PipelinePassesTest, DISABLED_TestBlockOptimization) {
   SetUpTestIR("pipeline_opt_block.ir.json");
   const IR::P4Control* ir_control = SetUpTestP4Control("ingress");
   ASSERT_TRUE(ir_control != nullptr);
@@ -167,7 +167,7 @@ TEST_P(PipelinePassesTest, TestBlockOptimization) {
 
 // Tests PipelineIfElsePass transformation of IfStatements into
 // PipelineStageStatements.
-TEST_P(PipelinePassesTest, TestIfElseOptimization) {
+TEST_P(PipelinePassesTest, DISABLED_TestIfElseOptimization) {
   SetUpTestIR("pipeline_opt_block.ir.json");
   const IR::P4Control* ir_control = SetUpTestP4Control("ingress");
   ASSERT_TRUE(ir_control != nullptr);
