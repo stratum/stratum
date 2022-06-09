@@ -23,11 +23,10 @@ package(
 # a that version upgrade re-visits these.
 SDE_DEFINES = select(
     {
-        "@local_barefoot_bin//:sde_version_9.5.0": ["SDE_9_5_0"],
-        "@local_barefoot_bin//:sde_version_9.5.2": ["SDE_9_5_2"],
         "@local_barefoot_bin//:sde_version_9.7.0": ["SDE_9_7_0"],
-        "@local_barefoot_bin//:sde_version_9.7.1": ["SDE_9_7_1"],
+        "@local_barefoot_bin//:sde_version_9.7.2": ["SDE_9_7_2"],
         "@local_barefoot_bin//:sde_version_9.8.0": ["SDE_9_8_0"],
+        "@local_barefoot_bin//:sde_version_9.9.0": ["SDE_9_9_0"],
     },
     no_match_error = "Unsupported SDE version",
 )
@@ -47,7 +46,6 @@ stratum_cc_library(
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/common:switch_interface",
-        "//stratum/hal/lib/pi:pi_node_bf",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",

@@ -21,6 +21,9 @@ cc_library(
         "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3*",
+        # target libraries from p4lang(was libbfsys and libbfutils before 9.9.0)
+        "barefoot-bin/lib/libtarget_sys.so*",
+        "barefoot-bin/lib/libtarget_utils.so*",
     ]),
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
@@ -38,6 +41,8 @@ cc_library(
         "barefoot-bin/include/tofino/bf_pal/*.h",
         "barefoot-bin/include/tofino/pdfixed/*.h",
         "barefoot-bin/include/traffic_mgr/*.h",
+        "barefoot-bin/include/target-sys/**/*.h",
+        "barefoot-bin/include/target-utils/**/*.h",
     ]),
     linkopts = [
         "-lpthread",
@@ -46,10 +51,6 @@ cc_library(
     ],
     strip_include_prefix = "barefoot-bin/include",
     deps = [
-        # TODO(bocon): PI needed when linking libdriver.so if/when pi is
-        # enabled when building bf-drivers. This shouldn't hurt, but can
-        # be excluded if/when PI is removed from the SDE build options.
-        "@com_github_p4lang_PI_bf//proto/frontend:pifeproto",
     ],
 )
 
@@ -75,6 +76,9 @@ pkg_tar_with_symlinks(
         # BSP libraries for Edgecore Wedge100bf series.
         "barefoot-bin/lib/libacctonbf_driver.so*",
         "barefoot-bin/lib/libtcl_server.so*",
+        # target libraries from p4lang(was libbfsys and libbfutils before 9.9.0)
+        "barefoot-bin/lib/libtarget_sys.so*",
+        "barefoot-bin/lib/libtarget_utils.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
@@ -112,20 +116,6 @@ string_setting(
 )
 
 config_setting(
-    name = "sde_version_9.5.0",
-    flag_values = {
-        ":sde_version_setting": "9.5.0",
-    },
-)
-
-config_setting(
-    name = "sde_version_9.5.2",
-    flag_values = {
-        ":sde_version_setting": "9.5.2",
-    },
-)
-
-config_setting(
     name = "sde_version_9.7.0",
     flag_values = {
         ":sde_version_setting": "9.7.0",
@@ -133,9 +123,9 @@ config_setting(
 )
 
 config_setting(
-    name = "sde_version_9.7.1",
+    name = "sde_version_9.7.2",
     flag_values = {
-        ":sde_version_setting": "9.7.1",
+        ":sde_version_setting": "9.7.2",
     },
 )
 
@@ -143,5 +133,12 @@ config_setting(
     name = "sde_version_9.8.0",
     flag_values = {
         ":sde_version_setting": "9.8.0",
+    },
+)
+
+config_setting(
+    name = "sde_version_9.9.0",
+    flag_values = {
+        ":sde_version_setting": "9.9.0",
     },
 )

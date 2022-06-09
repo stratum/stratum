@@ -87,14 +87,6 @@ def stratum_deps():
             sha256 = "7df38438f94d64c5005b890210d3f1b40e2402870295e21d44cceac67ebd1a1b",
         )
 
-    if "com_github_p4lang_PI_bf" not in native.existing_rules():
-        # ----- PI for Barefoot targets -----
-        remote_workspace(
-            name = "com_github_p4lang_PI_bf",
-            remote = "https://github.com/p4lang/PI.git",
-            commit = "4546038f5770e84dc0d2bba90f1ee7811c9955df",
-        )
-
     if "com_github_p4lang_PI_np4" not in native.existing_rules():
         # ----- PI for Netcope targets -----
         remote_workspace(

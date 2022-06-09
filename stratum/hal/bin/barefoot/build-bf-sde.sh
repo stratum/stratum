@@ -6,6 +6,8 @@
 
 STRATUM_BF_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 JOBS=${JOBS:-4}
+TARGET_SYSLIBS_COMMIT=54aef77cba438bf488042f260aec15147e4767e5
+TARGET_UTILS_COMMIT=1f6fbc3387b9605ecaa4faefdc038a039e5451b2
 
 print_help() {
 echo "
@@ -158,28 +160,43 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
-if [[ $(numeric_version "$SDE_VERSION") -ge $(numeric_version "9.7.0") ]]; then
-    # SDE verison >= 9.7.0
-    pushd "$SDE/p4studio"
-    $sudo ./install-p4studio-dependencies.sh
-    ./p4studio packages extract
-    # Patch SDE to build without kernel driver
-    sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
-    # Build BF SDE
-    ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
-    ./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
-    ./p4studio build --jobs $JOBS
-    popd
-else
-    # Patch stratum_profile.yaml in SDE
-    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
-    # Build BF SDE
-    pushd "$SDE/p4studio_build"
-    ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
-    popd
-fi
+pushd "$SDE/p4studio"
+$sudo ./install-p4studio-dependencies.sh
+./p4studio packages extract
+# Patch SDE to build without kernel driver
+sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
+# Build BF SDE
+./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
+./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
+./p4studio build --jobs $JOBS
+popd
 
 echo "BF SDE build complete."
+
+echo "Build and install target-syslibs and target-utils."
+TARGET_SYSLIBS_TMP=$(mktemp -d)
+git clone https://github.com/p4lang/target-syslibs.git "$TARGET_SYSLIBS_TMP"
+pushd "$TARGET_SYSLIBS_TMP"
+git checkout "$TARGET_SYSLIBS_COMMIT"
+git submodule update --init
+mkdir -p build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX="$SDE_INSTALL" ..
+make install -j "$JOBS"
+popd
+rm -rf "$TARGET_SYSLIBS_TMP"
+
+TARGET_UTILS_TMP=$(mktemp -d)
+git clone https://github.com/p4lang/target-utils.git "$TARGET_UTILS_TMP"
+pushd "$TARGET_UTILS_TMP"
+git checkout ${TARGET_UTILS_COMMIT}
+git submodule update --init --recursive
+mkdir -p build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX="$SDE_INSTALL" ..
+make install -j "$JOBS"
+popd
+rm -rf "$TARGET_UTILS_TMP"
 
 # Strip shared libraries and fix permissions
 find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 chmod u+w
