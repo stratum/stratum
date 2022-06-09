@@ -7,18 +7,18 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 #include <tuple>
+#include <vector>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -33,9 +33,7 @@ using ::testing::Values;
 // data for test use.
 class MeterColorMapperTest : public testing::Test {
  public:
-  static void SetUpTestCase() {
-    SetUpTestP4ModelNames();
-  }
+  static void SetUpTestCase() { SetUpTestP4ModelNames(); }
 
  protected:
   // The SetUpTestIR method uses an IRTestHelperJson to load an IR file in JSON
@@ -47,8 +45,8 @@ class MeterColorMapperTest : public testing::Test {
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
 
     meter_color_mapper_ = absl::make_unique<MeterColorMapper>(
-        ir_helper_->mid_end_refmap(),
-        ir_helper_->mid_end_typemap(), &mock_table_mapper_);
+        ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap(),
+        &mock_table_mapper_);
 
     // The lookup_table_mapper_ is set up to be able to find a field
     // descriptor for the metadata color field.  Its generated_map will be
@@ -88,20 +86,21 @@ class MeterColorMapperTest : public testing::Test {
     statement_actions->clear();
     forAllMatching<IR::MeterColorStatement>(
         control.body, [&](const IR::MeterColorStatement* statement) {
-      hal::P4ActionDescriptor parsed_descriptor;
-      std::string meter_actions_string(statement->meter_color_actions);
-      bool parsed_ok =
-          ParseProtoFromString(meter_actions_string, &parsed_descriptor).ok();
-      ASSERT_TRUE(parsed_ok);
-      statement_actions->push_back(parsed_descriptor);
-    });
+          hal::P4ActionDescriptor parsed_descriptor;
+          std::string meter_actions_string(statement->meter_color_actions);
+          bool parsed_ok =
+              ParseProtoFromString(meter_actions_string, &parsed_descriptor)
+                  .ok();
+          ASSERT_TRUE(parsed_ok);
+          statement_actions->push_back(parsed_descriptor);
+        });
   }
 
   // MeterColorMapper instance for test use; created by SetUpTestIR.
   std::unique_ptr<MeterColorMapper> meter_color_mapper_;
 
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
-  TableMapGeneratorMock mock_table_mapper_;  // Mock for testing output.
+  TableMapGeneratorMock mock_table_mapper_;      // Mock for testing output.
 
   // This TableMapGenerator backs the mock_table_mapper_ with a real map that
   // has test field lookup mappings.
@@ -118,9 +117,8 @@ class MeterColorMapperTest : public testing::Test {
 // logic as well as tests where the metering logic has an error.  See
 // INSTANTIATE_TEST_SUITE_P near the end if this file for the parameter formats.
 class MeterColorMapperNoTransformTest
-  : public MeterColorMapperTest,
-    public testing::WithParamInterface<
-        std::tuple<std::string, std::string>> {
+    : public MeterColorMapperTest,
+      public testing::WithParamInterface<std::tuple<std::string, std::string>> {
  protected:
   // Test parameter accessors.
   const std::string& test_ir_file() const {
@@ -139,22 +137,21 @@ typedef MeterColorMapperNoTransformTest MeterColorMapperTransformErrorTest;
 // InspectIfColorTest is a parameterized subclass of MeterColorMapperTest.
 // See INSTANTIATE_TEST_SUITE_P at the end if this file for the parameter
 // formats.
-class InspectIfColorTest
-  : public MeterColorMapperTest,
-    public testing::WithParamInterface<
-        std::tuple<std::string, std::string, int>> {
+class InspectIfColorTest : public MeterColorMapperTest,
+                           public testing::WithParamInterface<
+                               std::tuple<std::string, std::string, int>> {
  protected:
   // Finds the Nth statement in control_name, where N is statement_index,
   // assures that it is an IR::IfStatement, and returns a reference to the
   // statement.
-  const IR::IfStatement& SetUpIfStatement(
-      const std::string& control_name, int statement_index) {
+  const IR::IfStatement& SetUpIfStatement(const std::string& control_name,
+                                          int statement_index) {
     const IR::P4Control* test_control = ir_helper_->GetP4Control(control_name);
     if (test_control == nullptr) {
       LOG(FATAL) << "Unable to find test control " << control_name;
     }
-    auto ir_statement = test_control->body->
-        components[statement_index]->to<IR::IfStatement>();
+    auto ir_statement =
+        test_control->body->components[statement_index]->to<IR::IfStatement>();
     if (ir_statement == nullptr) {
       LOG(FATAL) << "Test statement at index " << statement_index
                  << " is not an IfStatement";
@@ -204,8 +201,8 @@ TEST_F(MeterColorMapperTest, TestGreen) {
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_green_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_green_,
+                                      statement_actions[0].color_actions(0)));
 }
 
 // Tests basic drop-on-yellow condition.
@@ -228,8 +225,8 @@ TEST_F(MeterColorMapperTest, TestYellow) {
   expected_red_yellow_.clear_colors();
   expected_red_yellow_.add_colors(P4_METER_YELLOW);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_red_yellow_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_red_yellow_,
+                                      statement_actions[0].color_actions(0)));
 }
 
 // Tests basic drop-on-red condition.
@@ -251,8 +248,8 @@ TEST_F(MeterColorMapperTest, TestRed) {
   expected_red_yellow_.clear_colors();
   expected_red_yellow_.add_colors(P4_METER_RED);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_red_yellow_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_red_yellow_,
+                                      statement_actions[0].color_actions(0)));
 }
 
 // Verifies behavior for clone-on-green, drop-on-non-green actions within
@@ -274,11 +271,11 @@ TEST_F(MeterColorMapperTest, TestGreenCases) {
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_green_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_green_,
+                                      statement_actions[0].color_actions(0)));
   ASSERT_EQ(1, statement_actions[1].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_red_yellow_, statement_actions[1].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_red_yellow_,
+                                      statement_actions[1].color_actions(0)));
 }
 
 // Verifies behavior for inverted conditions within switch statement cases.
@@ -299,11 +296,11 @@ TEST_F(MeterColorMapperTest, TestInvertedConditions) {
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_red_yellow_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_red_yellow_,
+                                      statement_actions[0].color_actions(0)));
   ASSERT_EQ(1, statement_actions[1].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_green_, statement_actions[1].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_green_,
+                                      statement_actions[1].color_actions(0)));
 }
 
 // Verifies behavior for meter condition nested in another IfStatement.
@@ -324,8 +321,8 @@ TEST_F(MeterColorMapperTest, TestNestedIf) {
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_green_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_green_,
+                                      statement_actions[0].color_actions(0)));
 }
 
 // Verifies behavior for a valid meter statement after one that is unsupported.
@@ -348,15 +345,14 @@ TEST_F(MeterColorMapperTest, TestValidMeterAfterUnsupported) {
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
   ASSERT_EQ(1, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_green_, statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_green_,
+                                      statement_actions[0].color_actions(0)));
 }
 
 // Verifies behavior for meter condition in an if-else statement.
 TEST_F(MeterColorMapperTest, TestMeterIfElse) {
   SetUpTestIR("meter_color_if_else.ir.json");
-  const IR::P4Control* test_control =
-      ir_helper_->GetP4Control("meter_if_else");
+  const IR::P4Control* test_control = ir_helper_->GetP4Control("meter_if_else");
   ASSERT_TRUE(test_control != nullptr);
 
   auto transformed_control = meter_color_mapper_->Apply(*test_control);
@@ -370,10 +366,10 @@ TEST_F(MeterColorMapperTest, TestMeterIfElse) {
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
   ASSERT_EQ(2, statement_actions[0].color_actions_size());
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_green_, statement_actions[0].color_actions(0)));
-  EXPECT_TRUE(msg_differencer.Compare(
-      expected_red_yellow_, statement_actions[0].color_actions(1)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_green_,
+                                      statement_actions[0].color_actions(0)));
+  EXPECT_TRUE(msg_differencer.Compare(expected_red_yellow_,
+                                      statement_actions[0].color_actions(1)));
 }
 
 // Verifies behavior when the metadata color has no field descriptor.
@@ -493,39 +489,36 @@ TEST_P(NoColorInspectTest, TestNoColorMeterConditions) {
 // the parameter tuple is the name of the JSON IR file to load for the test,
 // and the second member is the name of the control for test input.
 INSTANTIATE_TEST_SUITE_P(
-    TransformErrorTests,
-    MeterColorMapperNoTransformTest,
-    Values(
-        std::make_tuple("control_apply_hit_miss_test.ir.json", "egress"),
-        std::make_tuple("control_apply_hit_miss_test.ir.json", "ingress"),
-        std::make_tuple("control_if_test.ir.json", "egress"),
-        std::make_tuple("control_if_test.ir.json", "ingress"),
-        std::make_tuple("control_if_test.ir.json", "verifyChecksum"),
-        std::make_tuple("control_if_test.ir.json", "computeChecksum"),
-        std::make_tuple("control_misc_test.ir.json", "egress"),
-        std::make_tuple("control_misc_test.ir.json", "ingress"),
-        std::make_tuple("control_misc_test.ir.json", "verifyChecksum"),
-        std::make_tuple("control_misc_test.ir.json", "computeChecksum")));
+    TransformErrorTests, MeterColorMapperNoTransformTest,
+    Values(std::make_tuple("control_apply_hit_miss_test.ir.json", "egress"),
+           std::make_tuple("control_apply_hit_miss_test.ir.json", "ingress"),
+           std::make_tuple("control_if_test.ir.json", "egress"),
+           std::make_tuple("control_if_test.ir.json", "ingress"),
+           std::make_tuple("control_if_test.ir.json", "verifyChecksum"),
+           std::make_tuple("control_if_test.ir.json", "computeChecksum"),
+           std::make_tuple("control_misc_test.ir.json", "egress"),
+           std::make_tuple("control_misc_test.ir.json", "ingress"),
+           std::make_tuple("control_misc_test.ir.json", "verifyChecksum"),
+           std::make_tuple("control_misc_test.ir.json", "computeChecksum")));
 
 // This set of test parameters is for transform attempts that produce errors.
 // The first member of the tuple is the name of the JSON IR file to load for
 // the test, and the second member is the name of the control for test input.
 INSTANTIATE_TEST_SUITE_P(
-    TransformErrorTests,
-    MeterColorMapperTransformErrorTest,
-    Values(
-        std::make_tuple("meter_color_errors1.ir.json", "meter_and_apply"),
-        std::make_tuple("meter_color_errors1.ir.json", "meter_assign"),
-        std::make_tuple("meter_color_if_else.ir.json",
-                        "meter_if_else_false_bad"),
-        std::make_tuple("meter_color_if_else.ir.json",
-                        "meter_if_else_true_bad"),
-        std::make_tuple("meter_color_if_else.ir.json", "meter_if_elseif_else"),
-        std::make_tuple("meter_color_nested_ifs.ir.json", "if_in_meter_if"),
-        std::make_tuple("switch_case_errors.ir.json", "bad_condition"),
-        std::make_tuple("switch_case_errors.ir.json", "ingress_nested_if"),
-        std::make_tuple("switch_case_errors2.ir.json",
-                        "unsupported_function_test")));
+    TransformErrorTests, MeterColorMapperTransformErrorTest,
+    Values(std::make_tuple("meter_color_errors1.ir.json", "meter_and_apply"),
+           std::make_tuple("meter_color_errors1.ir.json", "meter_assign"),
+           std::make_tuple("meter_color_if_else.ir.json",
+                           "meter_if_else_false_bad"),
+           std::make_tuple("meter_color_if_else.ir.json",
+                           "meter_if_else_true_bad"),
+           std::make_tuple("meter_color_if_else.ir.json",
+                           "meter_if_elseif_else"),
+           std::make_tuple("meter_color_nested_ifs.ir.json", "if_in_meter_if"),
+           std::make_tuple("switch_case_errors.ir.json", "bad_condition"),
+           std::make_tuple("switch_case_errors.ir.json", "ingress_nested_if"),
+           std::make_tuple("switch_case_errors2.ir.json",
+                           "unsupported_function_test")));
 
 // This set of test parameters tests IR::IfStatements with valid meter
 // color conditions.  The test parameter is a tuple, with these members:
@@ -534,49 +527,40 @@ INSTANTIATE_TEST_SUITE_P(
 //     for testing.
 //  3) Index within the control body of the IR::IfStatement to be tested.
 INSTANTIATE_TEST_SUITE_P(
-    ValidColorParams,
-    InspectValidColorsTest,
+    ValidColorParams, InspectValidColorsTest,
     // Tests the first 7 IfStatements from control "ifs_with_transforms"
     // in the file "if_color_test.ir.json".
-    Combine(
-        Values("if_color_test.ir.json"),
-        Values("ifs_with_transforms"),
-        Range(0, 7)));
+    Combine(Values("if_color_test.ir.json"), Values("ifs_with_transforms"),
+            Range(0, 7)));
 
 // This set of test parameters tests IR::IfStatements with unsupported metering
 // conditions.  The tuple format is the same as ValidColorParams above.
 INSTANTIATE_TEST_SUITE_P(
-    UnsupportedColorParams,
-    InspectUnsupportedColorsTest,
+    UnsupportedColorParams, InspectUnsupportedColorsTest,
     // Tests the IfStatements from control "ifs_with_errors"
     // in the file "if_color_test_errors.ir.json".
-    Combine(
-        Values("if_color_test_errors.ir.json"),
-        Values("ifs_with_errors"),
-        Range(1, 4)));
+    Combine(Values("if_color_test_errors.ir.json"), Values("ifs_with_errors"),
+            Range(1, 4)));
 
 // This set of test parameters tests IR::IfStatements with non-metering
 // conditions.  The tuple format is the same as ValidColorParams above.
 INSTANTIATE_TEST_SUITE_P(
-    NoInspectParams,
-    NoColorInspectTest,
+    NoInspectParams, NoColorInspectTest,
     // Tests the first 10 IfStatements from control "ifs_with_no_transforms"
     // in the file "if_color_test.ir.json".
-    Combine(
-        Values("if_color_test.ir.json"),
-        Values("ifs_with_no_transforms"),
-        Range(0, 10)));
+    Combine(Values("if_color_test.ir.json"), Values("ifs_with_no_transforms"),
+            Range(0, 10)));
 
 // As above, accounting for discontinuities in the IfStatement index range
 // due to p4c's insertion of temporary variables.
 INSTANTIATE_TEST_SUITE_P(
-    NoInspectParamsWithTemporaries,
-    NoColorInspectTest,
+    NoInspectParamsWithTemporaries, NoColorInspectTest,
     // These values account for skips due to p4c's insertion of temporary
     // values for evaluating table hits.
-    Values(
-      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 11),
-      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 13)));
+    Values(std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms",
+                           10),
+           std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms",
+                           11)));
 
 }  // namespace p4c_backends
 }  // namespace stratum
