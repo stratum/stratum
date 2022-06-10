@@ -156,7 +156,7 @@ pkg_deb(
         "libssl1.1",
         "systemd",
         "telnet",
-        "libedit",
+        "libexpat1",
     ] + sde_bsp_debian_deps,
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
