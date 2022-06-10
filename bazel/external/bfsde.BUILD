@@ -90,6 +90,7 @@ pkg_tar_with_symlinks(
     srcs = glob([
         "barefoot-bin/share/bf_rt_shared/**",
         "barefoot-bin/share/bfsys/**",
+        "barefoot-bin/share/bf_switchd/**",
         "barefoot-bin/share/cli/xml/**",
         "barefoot-bin/share/microp_fw/**",
         "barefoot-bin/share/tofino_sds_fw/**",
