@@ -85,6 +85,23 @@ class BfrtTableManagerTest : public ::testing::Test {
             direct_resource_ids: 318814845
             size: 1024
           }
+          tables {
+            preamble {
+              id: 33597630
+              name: "Ingress.control.table2"
+            }
+            match_fields {
+              id: 1
+              name: "field1"
+              bitwidth: 12
+              match_type: TERNARY
+            }
+            action_refs {
+              id: 16794911
+            }
+            size: 1024
+            is_const_table: true
+          }
           actions {
             preamble {
               id: 16794911
@@ -140,7 +157,7 @@ class BfrtTableManagerTest : public ::testing::Test {
   static constexpr char kTableEntryText[] = R"pb(
     table_id: 33583783
         match {
-          field_id: 4
+          field_id: 2
           ternary {
             value: "\211B"
             mask: "\377\377"
