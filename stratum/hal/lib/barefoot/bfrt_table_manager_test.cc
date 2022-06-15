@@ -508,6 +508,7 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
 TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
+  constexpr int kP4ActionId = 16783057;
   constexpr int kBfRtTableId = 20;
   auto table_key_mock = absl::make_unique<TableKeyMock>();
   auto table_data_mock = absl::make_unique<TableDataMock>();
@@ -515,11 +516,15 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
 
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
       .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              InsertTableEntry(kDevice1, _, kBfRtTableId, table_key_mock.get(),
+                               table_data_mock.get()))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
               std::move(table_key_mock)))));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kP4ActionId))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
               std::move(table_data_mock)))));
@@ -530,6 +535,69 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::INSERT, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ModifyTableEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kP4ActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              ModifyTableEntry(kDevice1, _, kBfRtTableId, table_key_mock.get(),
+                               table_data_mock.get()))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+              std::move(table_key_mock)))));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kP4ActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateTableEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kP4ActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              DeleteTableEntry(kDevice1, _, kBfRtTableId, table_key_mock.get()))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+              std::move(table_key_mock)))));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kP4ActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateTableEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
+      session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
 TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
