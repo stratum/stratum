@@ -137,6 +137,22 @@ class BfrtTableManagerTest : public ::testing::Test {
   }
 
   static constexpr int kDevice1 = 0;
+  static constexpr char kTableEntryText[] = R"pb(
+    table_id: 33583783
+    match {
+      field_id: 4
+      ternary {
+        value: "\211B"
+        mask: "\377\377"
+      }
+    }
+    action {
+      action {
+        action_id: 16783057
+      }
+    }
+    priority: 10
+  )pb";
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
   std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
@@ -144,6 +160,7 @@ class BfrtTableManagerTest : public ::testing::Test {
 };
 
 constexpr int BfrtTableManagerTest::kDevice1;
+constexpr char BfrtTableManagerTest::kTableEntryText[];
 
 TEST_F(BfrtTableManagerTest, WriteDirectCounterEntryTest) {
   ASSERT_OK(PushTestConfig());
@@ -474,39 +491,26 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
 TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
+  constexpr int kP4ActionId = 16783057;
   constexpr int kBfRtTableId = 20;
   auto table_key_mock = absl::make_unique<TableKeyMock>();
   auto table_data_mock = absl::make_unique<TableDataMock>();
   auto session_mock = std::make_shared<SessionMock>();
-  WriterMock<::p4::v1::ReadResponse> writer_mock;
 
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
       .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              InsertTableEntry(kDevice1, _, kBfRtTableId, table_key_mock.get(),
+                               table_data_mock.get()))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
               std::move(table_key_mock)))));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kP4ActionId))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
               std::move(table_data_mock)))));
-
-  const std::string kTableEntryText = R"pb(
-    table_id: 33583783
-      match {
-        field_id: 4
-        ternary {
-          value: "\211B"
-          mask: "\377\377"
-        }
-      }
-      action {
-        action {
-          action_id: 16783057
-        }
-      }
-      priority: 10
-  )pb";
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
@@ -514,6 +518,69 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::INSERT, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ModifyTableEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kP4ActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              ModifyTableEntry(kDevice1, _, kBfRtTableId, table_key_mock.get(),
+                               table_data_mock.get()))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+              std::move(table_key_mock)))));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kP4ActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateTableEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kP4ActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_,
+              DeleteTableEntry(kDevice1, _, kBfRtTableId, table_key_mock.get()))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+              std::move(table_key_mock)))));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kP4ActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateTableEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
+      session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
 }  // namespace barefoot
