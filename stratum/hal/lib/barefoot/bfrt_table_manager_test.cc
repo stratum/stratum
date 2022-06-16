@@ -162,11 +162,6 @@ class BfrtTableManagerTest : public ::testing::Test {
          value: "\211B"
          mask: "\377\377"
        }
-      field_id: 4
-      ternary {
-        value: "\211B"
-        mask: "\377\377"
-      }
     }
     action {
       action {
