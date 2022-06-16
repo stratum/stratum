@@ -157,11 +157,11 @@ class BfrtTableManagerTest : public ::testing::Test {
   static constexpr char kTableEntryText[] = R"pb(
     table_id: 33583783
     match {
-       field_id: 2
-       ternary {
-         value: "\211B"
-         mask: "\377\377"
-       }
+      field_id: 2
+      ternary {
+        value: "\211B"
+        mask: "\377\377"
+      }
     }
     action {
       action {
