@@ -600,6 +600,7 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
+
 TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
@@ -718,6 +719,7 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriority) {
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Default action must not contain a priority field."));
 }
+
 
 }  // namespace barefoot
 }  // namespace hal
