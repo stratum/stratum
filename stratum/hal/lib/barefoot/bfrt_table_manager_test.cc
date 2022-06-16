@@ -162,6 +162,11 @@ class BfrtTableManagerTest : public ::testing::Test {
          value: "\211B"
          mask: "\377\377"
        }
+      field_id: 4
+      ternary {
+        value: "\211B"
+        mask: "\377\377"
+      }
     }
     action {
       action {
@@ -599,6 +604,7 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
+
 
 TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
   ASSERT_OK(PushTestConfig());
