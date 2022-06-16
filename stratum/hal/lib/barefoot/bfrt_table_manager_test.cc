@@ -161,7 +161,7 @@ class BfrtTableManagerTest : public ::testing::Test {
       ternary {
         value: "\211B"
         mask: "\377\377"
-       }
+      }
     }
     action {
       action {
