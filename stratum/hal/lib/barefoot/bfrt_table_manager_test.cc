@@ -607,7 +607,8 @@ TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
   ::util::Status ret =
-      bfrt_table_manager_->WriteTableEntry(session_mock,::p4::v1::Update::UNSPECIFIED,entry);
+      bfrt_table_manager_->WriteTableEntry(
+              session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
@@ -626,12 +627,13 @@ TEST_F(BfrtTableManagerTest, RejectWriteTableConstTest) {
   table_id: 33597630
   )pb";
   ::p4::v1::TableEntry entry;
-  ASSERT_OK(ParseProtoFromString( kTableEntryText2, &entry));
+  ASSERT_OK(ParseProtoFromString(kTableEntryText2, &entry));
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   ::util::Status ret =
-      bfrt_table_manager_->WriteTableEntry(session_mock,::p4::v1::Update::INSERT,entry);
+      bfrt_table_manager_->WriteTableEntry(
+              session_mock, ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_PERMISSION_DENIED, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Can't write to table "));
@@ -649,19 +651,21 @@ TEST_F(BfrtTableManagerTest, RejectWriteTableDefaultActionTest) {
       .WillOnce(Return(kBfRtTableId));
 
   const std::string  kTableEntryText2 = R"pb(
-  table_id:  33583783
+  table_id: 33583783
   is_default_action: true
   )pb";
   ::p4::v1::TableEntry entry;
-  ASSERT_OK(ParseProtoFromString( kTableEntryText2, &entry));
+  ASSERT_OK(ParseProtoFromString(kTableEntryText2, &entry));
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   ::util::Status ret =
-      bfrt_table_manager_->WriteTableEntry(session_mock,::p4::v1::Update::INSERT,entry);
+      bfrt_table_manager_->WriteTableEntry(
+              session_mock, ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-  EXPECT_THAT(ret.error_message(), HasSubstr("The table default entry can only be modified."));
+  EXPECT_THAT(ret.error_message(), HasSubstr(
+          "The table default entry can only be modified."));
 }
 
 TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSize) {
@@ -681,15 +685,17 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSize) {
   is_default_action: true
   )pb";
   ::p4::v1::TableEntry entry;
-  ASSERT_OK(ParseProtoFromString( kTableEntryText2, &entry));
+  ASSERT_OK(ParseProtoFromString(kTableEntryText2, &entry));
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   ::util::Status ret =
-      bfrt_table_manager_->WriteTableEntry(session_mock,::p4::v1::Update::MODIFY,entry);
+      bfrt_table_manager_->WriteTableEntry(
+              session_mock, ::p4::v1::Update::MODIFY, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-  EXPECT_THAT(ret.error_message(), HasSubstr("Default action must not contain match fields."));
+  EXPECT_THAT(ret.error_message(), HasSubstr(
+          "Default action must not contain match fields."));
 }
 
 TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriority) {
@@ -709,15 +715,17 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriority) {
   priority: 10
   )pb";
   ::p4::v1::TableEntry entry;
-  ASSERT_OK(ParseProtoFromString( kTableEntryText2, &entry));
+  ASSERT_OK(ParseProtoFromString(kTableEntryText2, &entry));
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
   ::util::Status ret =
-      bfrt_table_manager_->WriteTableEntry(session_mock,::p4::v1::Update::MODIFY,entry);
+      bfrt_table_manager_->WriteTableEntry(
+              session_mock, ::p4::v1::Update::MODIFY, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-  EXPECT_THAT(ret.error_message(), HasSubstr("Default action must not contain a priority field."));
+  EXPECT_THAT(ret.error_message(), HasSubstr(
+          "Default action must not contain a priority field."));
 }
 
 }  // namespace barefoot
