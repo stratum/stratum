@@ -720,7 +720,6 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriority) {
   EXPECT_THAT(ret.error_message(), HasSubstr("Default action must not contain a priority field."));
 }
 
-
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
