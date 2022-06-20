@@ -49,7 +49,7 @@ class BfrtTableManagerTest : public ::testing::Test {
 
   ::util::Status PushTestConfig() {
     const std::string kSamplePipelineText = R"pb(
-    programs {
+      programs {
         name: "test pipeline config",
         p4info {
           pkg_info {
@@ -111,7 +111,6 @@ class BfrtTableManagerTest : public ::testing::Test {
               id: 1
               name: "vlan_id"
               bitwidth: 12
-              
               }
             }
             direct_counters {
@@ -167,7 +166,7 @@ class BfrtTableManagerTest : public ::testing::Test {
     action {
       action {
         action_id: 16783057
-       }
+      }
     }
     priority: 10
   )pb";
