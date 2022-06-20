@@ -49,7 +49,7 @@ class BfrtTableManagerTest : public ::testing::Test {
 
   ::util::Status PushTestConfig() {
     const std::string kSamplePipelineText = R"pb(
-     programs {
+    programs {
         name: "test pipeline config",
         p4info {
           pkg_info {
@@ -111,6 +111,7 @@ class BfrtTableManagerTest : public ::testing::Test {
               id: 1
               name: "vlan_id"
               bitwidth: 12
+              
               }
             }
             direct_counters {
@@ -155,20 +156,20 @@ class BfrtTableManagerTest : public ::testing::Test {
 
   static constexpr int kDevice1 = 0;
   static constexpr char kTableEntryText[] = R"pb(
-   table_id: 33583783
-   match {
-     field_id: 2
-     ternary {
-       value: "\211B"
-       mask: "\377\377"
-     }
-   }
-   action {
-     action {
-       action_id: 16783057
+    table_id: 33583783
+    match {
+      field_id: 2
+      ternary {
+        value: "\211B"
+        mask: "\377\377"
       }
-   }
-   priority: 10
+    }
+    action {
+      action {
+        action_id: 16783057
+       }
+    }
+    priority: 10
   )pb";
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
