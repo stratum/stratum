@@ -128,6 +128,16 @@ class BfSdeInterface {
     virtual ::util::Status GetCounterData(uint64* bytes,
                                           uint64* packets) const = 0;
 
+    // Convenience function to set the entry TTL in milliseconds.
+    // This hides the IDs for the $ENTRY_TTL field.
+    virtual ::util::Status SetTtlMs(uint64 ttl_ms) = 0;
+
+    // Get the remaining entry TTL in milliseconds.
+    virtual ::util::Status GetTtlMs(uint64* ttl_ms) const = 0;
+
+    // Get the hit state.
+    virtual ::util::Status GetHitState(bool* hit, uint64* ttl) const = 0;
+
     // Get the action ID.
     virtual ::util::Status GetActionId(int* action_id) const = 0;
 
@@ -258,6 +268,17 @@ class BfSdeInterface {
   // Unregisters the writer registered to this device by
   // RegisterPacketReceiveWriter().
   virtual ::util::Status UnregisterPacketReceiveWriter(int device) = 0;
+
+  // Registers a writer to be invoked when we receive an idle timeout
+  // notification is received. There can only be one writer per device.
+  virtual ::util::Status RegisterIdleTimeoutReceiveWriter(
+      int device,
+      std::unique_ptr<ChannelWriter<std::shared_ptr<TableKeyInterface>>>
+          writer) = 0;
+
+  // Unregisters the writer registered to this device by
+  // UnregisterIdleTimeoutReceiveWriter().
+  virtual ::util::Status UnregisterIdleTimeoutReceiveWriter(int device) = 0;
 
   // Create a new multicast node with the given parameters. Returns the newly
   // allocated node id.
@@ -496,6 +517,18 @@ class BfSdeInterface {
   virtual ::util::Status SynchronizeCounters(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, absl::Duration timeout) = 0;
+
+  typedef std::function<void(int device, const TableKeyInterface& key,
+                             void* arg)>
+      IdleTimeoutNotificationCallback;
+
+  // Enables idle iimeout notifications for a given BfRt table.
+  virtual ::util::Status EnableIdleTimeoutNotifications(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id) = 0;
+
+  virtual ::util::Status RegisterIdleTimeoutCallback(
+      int device, IdleTimeoutNotificationCallback cb, void* arg) = 0;
 
   // Returns the equivalent BfRt ID for the given P4RT ID.
   virtual ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const = 0;

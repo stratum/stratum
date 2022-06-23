@@ -31,6 +31,7 @@ BfrtTableManager::BfrtTableManager(
     OperationMode mode, BfSdeInterface* bf_sde_interface,
     BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : mode_(mode),
+      sde_idle_notif_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       p4_info_manager_(nullptr),
@@ -38,6 +39,7 @@ BfrtTableManager::BfrtTableManager(
 
 BfrtTableManager::BfrtTableManager()
     : mode_(OPERATION_MODE_STANDALONE),
+      sde_idle_notif_thread_id_(),
       bf_sde_interface_(nullptr),
       bfrt_p4runtime_translator_(nullptr),
       p4_info_manager_(nullptr),
@@ -63,12 +65,90 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
   p4_info_manager_ = std::move(p4_info_manager);
 
+  // Enable and subcribe to idle timeouts on all supported tables.
+  // RETURN_IF_ERROR(bf_sde_interface_->RegisterIdleTimeoutCallback(
+  //     device_, BfrtTableManager::IdleTimeoutCb, this));
+
+  ASSIGN_OR_RETURN(auto session, bf_sde_interface_->CreateSession());
+  RETURN_IF_ERROR(session->BeginBatch());
+  for (const auto& table : p4_info.tables()) {
+    if (table.idle_timeout_behavior() ==
+        ::p4::config::v1::Table::NOTIFY_CONTROL) {
+      ASSIGN_OR_RETURN(uint32 table_id,
+                       bf_sde_interface_->GetBfRtId(table.preamble().id()));
+      RETURN_IF_ERROR(bf_sde_interface_->EnableIdleTimeoutNotifications(
+          device_, session, table_id));
+    }
+  }
+  RETURN_IF_ERROR(session->EndBatch());
+
+  if (sde_idle_notif_thread_id_ == 0) {
+    int ret = pthread_create(&sde_idle_notif_thread_id_, nullptr,
+                             &BfrtTableManager::IdleTimeoutThreadFunc, this);
+    if (ret != 0) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for SDE "
+                                      << "wrapper for device with ID "
+                                      << device_ << ". Err: " << ret << ".";
+    }
+  }
+
+  if (!idle_timeout_receive_channel_) {
+    idle_timeout_receive_channel_ =
+        Channel<std::shared_ptr<BfSdeInterface::TableKeyInterface>>::Create(
+            128);
+  }
+  RETURN_IF_ERROR(
+      bf_sde_interface_->UnregisterIdleTimeoutReceiveWriter(device_));
+  RETURN_IF_ERROR(bf_sde_interface_->RegisterIdleTimeoutReceiveWriter(
+      device_,
+      ChannelWriter<std::shared_ptr<BfSdeInterface::TableKeyInterface>>::Create(
+          idle_timeout_receive_channel_)));
+
   return ::util::OkStatus();
 }
 
 ::util::Status BfrtTableManager::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) const {
   // TODO(unknown): Implement if needed.
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::Shutdown() {
+  ::util::Status status;
+  {
+    absl::WriterMutexLock l(&rx_writer_lock_);
+    rx_writer_ = nullptr;
+  }
+  {
+    absl::WriterMutexLock l(&lock_);
+
+    APPEND_STATUS_IF_ERROR(
+        status, bf_sde_interface_->UnregisterIdleTimeoutReceiveWriter(device_));
+    if (!idle_timeout_receive_channel_ ||
+        !idle_timeout_receive_channel_->Close()) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Packet Rx channel is already closed.";
+      APPEND_STATUS_IF_ERROR(status, error);
+    }
+    idle_timeout_receive_channel_.reset();
+  }
+  // TODO(max): we release the locks between closing the channel and joining the
+  // thread to prevent deadlocks with the RX handler. But there might still be a
+  // bug hiding here.
+  {
+    absl::ReaderMutexLock l(&lock_);
+    if (sde_idle_notif_thread_id_ != 0 &&
+        pthread_join(sde_idle_notif_thread_id_, nullptr) != 0) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Failed to join thread "
+                             << sde_idle_notif_thread_id_;
+      APPEND_STATUS_IF_ERROR(status, error);
+    }
+  }
+  {
+    absl::WriterMutexLock l(&lock_);
+    sde_idle_notif_thread_id_ = 0;
+  }
   return ::util::OkStatus();
 }
 
@@ -237,6 +317,11 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
            << "Meter configs on TablesEntries are not supported.";
   }
 
+  if (table_entry.idle_timeout_ns()) {
+    table_data->SetTtlMs(table_entry.idle_timeout_ns() / 1000 / 1000);
+  }
+  // table_data->SetTtlMs(5000);
+
   return ::util::OkStatus();
 }
 
@@ -325,9 +410,18 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     const BfSdeInterface::TableDataInterface* table_data) {
   ::p4::v1::TableEntry result;
 
-  ASSIGN_OR_RETURN(auto table,
-                   p4_info_manager_->FindTableByID(request.table_id()));
-  result.set_table_id(request.table_id());
+  CHECK(table_key != nullptr);
+  CHECK(table_data != nullptr);
+  CHECK(bf_sde_interface_ != nullptr);
+  CHECK(p4_info_manager_ != nullptr);
+
+  uint32 bf_table_id;
+  RETURN_IF_ERROR(table_key->GetTableId(&bf_table_id));
+  ASSIGN_OR_RETURN(uint32 p4_table_id,
+                   bf_sde_interface_->GetP4InfoId(bf_table_id));
+  ASSIGN_OR_RETURN(auto table, p4_info_manager_->FindTableByID(p4_table_id));
+  result.set_table_id(p4_table_id);
+
 
   bool has_priority_field = false;
   // Match keys
@@ -438,6 +532,15 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     result.mutable_counter_data()->set_byte_count(bytes);
     result.mutable_counter_data()->set_packet_count(packets);
   }
+
+  // Entry TTL, if applicable.
+  uint64 ttl_ms;
+  if (table_data->GetTtlMs(&ttl_ms).ok()) {
+    result.set_idle_timeout_ns(ttl_ms);
+    result.mutable_time_since_last_hit()->set_elapsed_ns(ttl_ms * 1000 * 1000);
+  }
+
+  // bool hit;
 
   return result;
 }
@@ -1148,6 +1251,139 @@ BfrtTableManager::ReadDirectCounterEntry(
   }
 
   return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::RegisterIdleTimeoutReceiveWriter(
+    const std::shared_ptr<WriterInterface<::p4::v1::IdleTimeoutNotification>>&
+        writer) {
+  absl::WriterMutexLock l(&rx_writer_lock_);
+  rx_writer_ = writer;
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::UnregisterIdleTimeoutReceiveWriter() {
+  absl::WriterMutexLock l(&rx_writer_lock_);
+  rx_writer_ = nullptr;
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::HandleIdleTimeoutNotify() {
+  std::unique_ptr<
+      ChannelReader<std::shared_ptr<BfSdeInterface::TableKeyInterface>>>
+      reader;
+  {
+    absl::ReaderMutexLock l(&lock_);
+    reader = ChannelReader<std::shared_ptr<BfSdeInterface::TableKeyInterface>>::
+        Create(idle_timeout_receive_channel_);
+  }
+
+  while (true) {
+    std::shared_ptr<BfSdeInterface::TableKeyInterface> table_key;
+    int code = reader->Read(&table_key, absl::InfiniteDuration()).error_code();
+    if (code == ERR_CANCELLED) break;
+    if (code == ERR_ENTRY_NOT_FOUND) {
+      LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
+      continue;
+    }
+
+    ::p4::v1::TableEntry table_entry;
+    {
+      absl::ReaderMutexLock l(&lock_);
+      uint32 bf_table_id;
+      RETURN_IF_ERROR(table_key->GetTableId(&bf_table_id));
+      ASSIGN_OR_RETURN(auto table_data,
+                       bf_sde_interface_->CreateTableData(bf_table_id, 0));
+      ::p4::v1::TableEntry fake_request;
+      ASSIGN_OR_RETURN(
+          table_entry,
+          BuildP4TableEntry(fake_request, table_key.get(), table_data.get()));
+    }
+
+    LOG(WARNING) << "Built notif for P4 table entry: "
+                 << table_entry.ShortDebugString();
+    // const auto& translated_packet_in =
+    //     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
+    // if (!translated_packet_in.ok()) {
+    //   LOG(ERROR) << "TranslatePacketIn failed: " << status;
+    //   continue;
+    // }
+    ::p4::v1::IdleTimeoutNotification notification;
+    notification.set_timestamp(absl::GetCurrentTimeNanos());
+    *notification.add_table_entry() = table_entry;
+    {
+      absl::WriterMutexLock l(&rx_writer_lock_);
+      rx_writer_->Write(notification);
+    }
+    VLOG(1) << "Handled IdleTimeoutNotification: "
+            << notification.ShortDebugString();
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::HandleIdleTimeoutNotifyCb(
+    int device, const BfSdeInterface::TableKeyInterface& table_key) {
+  ::p4::v1::IdleTimeoutNotification notification;
+  // ::util::Status status = ParsePacketIn(buffer, &packet_in);
+  // if (!status.ok()) {
+  //   LOG(ERROR) << "ParsePacketIn failed: " << status;
+  //   continue;
+  // }
+  // const auto& translated_packet_in =
+  //     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
+  // if (!translated_packet_in.ok()) {
+  //   LOG(ERROR) << "TranslatePacketIn failed: " << status;
+  //   continue;
+  // }
+
+  ::p4::v1::TableEntry table_entry;
+  {
+    absl::ReaderMutexLock l(&lock_);
+    // ::p4::v1::TableEntry fake_request;
+    // ASSIGN_OR_RETURN(table_entry,
+    //                  BuildP4TableEntry(fake_request, &table_key, nullptr));
+
+    uint32 bf_table_id;
+    RETURN_IF_ERROR(table_key.GetTableId(&bf_table_id));
+    ASSIGN_OR_RETURN(auto table_data,
+                     bf_sde_interface_->CreateTableData(bf_table_id, 0));
+    ::p4::v1::TableEntry fake_request;
+    ASSIGN_OR_RETURN(
+        table_entry,
+        BuildP4TableEntry(fake_request, &table_key, table_data.get()));
+  }
+  // const auto& translated_packet_in =
+  //     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
+  // if (!translated_packet_in.ok()) {
+  //   LOG(ERROR) << "TranslatePacketIn failed: " << status;
+  //   continue;
+  // }
+  *notification.add_table_entry() = table_entry;
+
+  {
+    absl::WriterMutexLock l(&rx_writer_lock_);
+    rx_writer_->Write(notification);
+  }
+  VLOG(1) << "Handled IdleTimeoutNotification: "
+          << notification.ShortDebugString();
+
+  return ::util::OkStatus();
+}
+
+void* BfrtTableManager::IdleTimeoutThreadFunc(void* arg) {
+  BfrtTableManager* mgr = reinterpret_cast<BfrtTableManager*>(arg);
+  ::util::Status status = mgr->HandleIdleTimeoutNotify();
+  if (!status.ok()) {
+    LOG(ERROR) << "Non-OK exit of RX thread for SDE idle timeouts.";
+  }
+
+  return nullptr;
+}
+
+void BfrtTableManager::IdleTimeoutCb(
+    int device, const BfSdeInterface::TableKeyInterface& key, void* arg) {
+  BfrtTableManager* mgr = static_cast<BfrtTableManager*>(arg);
+  mgr->HandleIdleTimeoutNotifyCb(device, key);
 }
 
 }  // namespace barefoot

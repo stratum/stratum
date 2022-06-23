@@ -38,6 +38,11 @@ class BfrtTableManager {
       const ::p4::v1::ForwardingPipelineConfig& config) const
       LOCKS_EXCLUDED(lock_);
 
+  // Performs coldboot shutdown. Note that there is no public Initialize().
+  // Initialization is done as part of PushChassisConfig() if the class is not
+  // initialized by the time we push config.
+  virtual ::util::Status Shutdown() LOCKS_EXCLUDED(lock_);
+
   // Writes a table entry.
   virtual ::util::Status WriteTableEntry(
       std::shared_ptr<BfSdeInterface::SessionInterface> session,
@@ -113,6 +118,15 @@ class BfrtTableManager {
       const ::p4::v1::MeterEntry& meter_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
+  // Registers a writer to be invoked when we receive an idle timeout
+  // notifications for a table entry.
+  virtual ::util::Status RegisterIdleTimeoutReceiveWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::IdleTimeoutNotification>>&
+          writer) LOCKS_EXCLUDED(rx_writer_lock_);
+
+  virtual ::util::Status UnregisterIdleTimeoutReceiveWriter()
+      LOCKS_EXCLUDED(rx_writer_lock_);
+
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
       OperationMode mode, BfSdeInterface* bf_sde_interface,
@@ -169,6 +183,22 @@ class BfrtTableManager {
       const BfSdeInterface::TableDataInterface* table_data)
       SHARED_LOCKS_REQUIRED(lock_);
 
+  // Handles a received idle timeout notification and hands it over the
+  // registered receive writer.
+  ::util::Status HandleIdleTimeoutNotify()
+      LOCKS_EXCLUDED(lock_, rx_writer_lock_);
+
+  ::util::Status HandleIdleTimeoutNotifyCb(
+      int device, const BfSdeInterface::TableKeyInterface& key)
+      LOCKS_EXCLUDED(lock_, rx_writer_lock_);
+
+  // Idle timeout handler thread function.
+  static void* IdleTimeoutThreadFunc(void* arg);
+
+  static void IdleTimeoutCb(int device,
+                            const BfSdeInterface::TableKeyInterface& key,
+                            void* arg);
+
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
   // therefore needs to do all the SDK initialization itself.
@@ -181,6 +211,21 @@ class BfrtTableManager {
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
+
+  // Mutex lock for protecting rx_writer_.
+  mutable absl::Mutex rx_writer_lock_;
+
+  // Stores the registered writer for IdleTimeoutNotifications.
+  std::shared_ptr<WriterInterface<::p4::v1::IdleTimeoutNotification>> rx_writer_
+      GUARDED_BY(rx_writer_lock_);
+
+  // Buffer channel for idle timeout notifications coming from the SDE to this
+  // manager.
+  std::shared_ptr<Channel<std::shared_ptr<BfSdeInterface::TableKeyInterface>>>
+      idle_timeout_receive_channel_ GUARDED_BY(lock_);
+
+  // The ID of the RX thread which handles incoming idle timeouts from the SDE.
+  pthread_t sde_idle_notif_thread_id_ GUARDED_BY(lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.

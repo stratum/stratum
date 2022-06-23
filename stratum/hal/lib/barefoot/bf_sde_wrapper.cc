@@ -224,6 +224,14 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
         value = PrintVector(bools_as_ints, ",");
         break;
       }
+      case bfrt::DataType::STRING: {
+        if (is_active) {
+          RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &value));
+        } else {
+          value = "<field not active>";
+        }
+        break;
+      }
       default:
         return MAKE_ERROR(ERR_INTERNAL)
                << "Unknown data_type: " << static_cast<int>(data_type) << ".";
@@ -715,6 +723,16 @@ template <typename T>
   return ::util::OkStatus();
 }
 
+::util::Status TableKey::GetTableId(uint32* id) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+  *id = table_id;
+
+  return ::util::OkStatus();
+}
+
 ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>
 TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   const bfrt::BfRtTable* table;
@@ -923,6 +941,106 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   }
 
   return ::util::OkStatus();
+}
+
+::util::Status TableData::SetTtlMs(uint64 ttl_ms) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    if (field_name == "$ENTRY_TTL") {
+      RETURN_IF_BFRT_ERROR(table_data_->setValue(field_id, ttl_ms));
+      return ::util::OkStatus();
+    }
+    // Uninteresting field, ignore.
+  }
+
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "Entry has no TTL field.";
+}
+
+::util::Status TableData::GetTtlMs(uint64* ttl_ms) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    if (field_name == "$ENTRY_TTL") {
+      RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, ttl_ms));
+      LOG(WARNING)
+          << DumpTableData(table_data_.get()).ValueOr("<error parsing data>");
+      return ::util::OkStatus();
+    }
+    // Uninteresting field, ignore.
+  }
+
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "Entry has no TTL field.";
+}
+
+::util::Status TableData::GetHitState(bool* hit, uint64* ttl) const {
+  RET_CHECK(hit);
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));
+
+  *hit = false;
+  *ttl = 0;
+
+  bf_rt_id_t action_id = 0;
+  if (table->actionIdApplicable()) {
+    RETURN_IF_BFRT_ERROR(table_data_->actionIdGet(&action_id));
+  }
+
+  std::vector<bf_rt_id_t> data_field_ids;
+  if (action_id) {
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &data_field_ids));
+  } else {
+    RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  }
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    if (action_id) {
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldNameGet(field_id, action_id, &field_name));
+    } else {
+      RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    }
+    // if (field_name == "$ENTRY_HIT_STATE") {
+    //   std::string hit_state;
+    //   RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, &hit_state));
+    //   LOG(WARNING) << "read hit state " << hit_state;
+    //   if (hit_state == "ENTRY_IDLE") {
+    //     *hit = false;
+    //     return ::util::OkStatus();
+    //   } else if (hit_state == "ENTRY_ACTIVE") {
+    //     *hit = true;
+    //     return ::util::OkStatus();
+    //   } else {
+    //     return MAKE_ERROR(ERR_INTERNAL) << "Unknown hit state " << hit_state;
+    //   }
+    // }
+    if (field_name == "$ENTRY_TTL") {
+      RETURN_IF_BFRT_ERROR(table_data_->getValue(field_id, ttl));
+      LOG(WARNING) << "read ttl " << *ttl;
+      return ::util::OkStatus();
+    }
+    // Uninteresting field, ignore.
+  }
+
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "Entry has no hit state.";
 }
 
 ::util::Status TableData::GetActionId(int* action_id) const {
@@ -2013,6 +2131,65 @@ bf_rt_target_t BfSdeWrapper::GetDeviceTarget(int device) const {
   dev_tgt.dev_id = device;
   dev_tgt.pipe_id = BF_DEV_PIPE_ALL;
   return dev_tgt;
+}
+
+// Idle timeout notifications.
+::util::Status BfSdeWrapper::RegisterIdleTimeoutReceiveWriter(
+    int device,
+    std::unique_ptr<ChannelWriter<std::shared_ptr<TableKeyInterface>>> writer) {
+  absl::WriterMutexLock l(&idle_timeout_rx_callback_lock_);
+  device_to_idle_timeout_rx_writer_[device] = std::move(writer);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::UnregisterIdleTimeoutReceiveWriter(int device) {
+  absl::WriterMutexLock l(&idle_timeout_rx_callback_lock_);
+  device_to_idle_timeout_rx_writer_.erase(device);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::HandleIdleTimeoutNotify(
+    const bf_rt_target_t& target, const bfrt::BfRtTableKey* key,
+    const void* cookie) {
+  absl::ReaderMutexLock l(&idle_timeout_rx_callback_lock_);
+  auto rx_writer =
+      gtl::FindOrNull(device_to_idle_timeout_rx_writer_, target.dev_id);
+  RET_CHECK(rx_writer) << "No Rx callback registered for device id "
+                       << target.dev_id << ".";
+
+  // We copy the key by getting its handle, then fetching the key again.
+  auto session = bfrt::BfRtSession::sessionCreate();
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(key->tableGet(&table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  bf_rt_handle_t entry_handle;
+  RETURN_IF_BFRT_ERROR(
+      table->tableEntryHandleGet(*session, target, *key, &entry_handle));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *session, target, bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
+      entry_handle, table_key.get(), table_data.get()));
+
+  auto key_ptr = std::make_shared<TableKey>(std::move(table_key));
+  ::util::Status status = (*rx_writer)->TryWrite(key_ptr);
+  LOG_IF_EVERY_N(INFO, !status.ok(), 500)
+      << "Dropped idle timeout notification: " << status;
+  VLOG(1) << "Received idle timeout notification for table entry: "
+          << DumpTableKey(key).ValueOrDie() << ".";
+
+  LOG(WARNING) << DumpTableKey(key_ptr->table_key_.get()).ValueOrDie();
+
+  // std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
+  //                    bf_pkt_get_pkt_size(pkt));
+  // ::util::Status status = (*rx_writer)->TryWrite(buffer);
+  // LOG_IF_EVERY_N(INFO, !status.ok(), 500)
+  //     << "Dropped packet received from CPU: " << status;
+  // VLOG(1) << "Received " << buffer.size() << " byte packet from CPU "
+  //         << StringToHex(buffer);
+
+  return ::util::OkStatus();
 }
 
 // PRE
@@ -3677,6 +3854,60 @@ namespace {
              << table_id << ".";
     }
   }
+
+  return ::util::OkStatus();
+}
+
+bf_status_t BfSdeWrapper::BfIdleTimeoutNotifyCallback(
+    const bf_rt_target_t& target, const bfrt::BfRtTableKey* key,
+    const void* cookie) {
+  BfSdeWrapper* bf_sde_wrapper = BfSdeWrapper::GetSingleton();
+  // TODO(max): Handle error
+  bf_sde_wrapper->HandleIdleTimeoutNotify(target, key, cookie);
+
+  return BF_SUCCESS;
+}
+
+::util::Status BfSdeWrapper::EnableIdleTimeoutNotifications(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id) {
+  constexpr uint32 kTtlQueryIntervalMs = 50;
+
+  ::absl::ReaderMutexLock l(&data_lock_);
+
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  RET_CHECK(real_session);
+
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+
+  // CHECK(cb_);
+  // CHECK(cb_arg_);
+
+  std::unique_ptr<bfrt::BfRtTableAttributes> attr;
+  RETURN_IF_BFRT_ERROR(table->attributeAllocate(
+      bfrt::TableAttributesType::IDLE_TABLE_RUNTIME,
+      bfrt::TableAttributesIdleTableMode::NOTIFY_MODE, &attr));
+  // RETURN_IF_BFRT_ERROR(attr->idleTableNotifyModeSet(
+  //     true, BfIdleTimeoutNotifyCallback, kTtlQueryIntervalMs, 0, 0,
+  //     cb_arg_));
+  RETURN_IF_BFRT_ERROR(attr->idleTableNotifyModeSet(
+      true, BfIdleTimeoutNotifyCallback, kTtlQueryIntervalMs, 0, 0, nullptr));
+  RETURN_IF_BFRT_ERROR(table->tableAttributesSet(*real_session->bfrt_session_,
+                                                 bf_dev_tgt, 0, *attr.get()));
+
+  LOG(WARNING) << "enabled timeout notifs on table " << table_id;
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::RegisterIdleTimeoutCallback(
+    int device, IdleTimeoutNotificationCallback cb, void* arg) {
+  ::absl::WriterMutexLock l(&data_lock_);
+  cb_ = cb;
+  cb_arg_ = arg;
 
   return ::util::OkStatus();
 }

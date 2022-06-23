@@ -81,7 +81,10 @@ class TableData : public BfSdeInterface::TableDataInterface {
   ::util::Status SetSelectorGroupId(uint64 selector_group_id) override;
   ::util::Status GetSelectorGroupId(uint64* selector_group_id) const override;
   ::util::Status SetCounterData(uint64 bytes, uint64 packets) override;
+  ::util::Status SetTtlMs(uint64 ttl_ms) override;
+  ::util::Status GetTtlMs(uint64* ttl_ms) const override;
   ::util::Status GetCounterData(uint64* bytes, uint64* packets) const override;
+  ::util::Status GetHitState(bool* hit, uint64* ttl) const override;
   ::util::Status GetActionId(int* action_id) const override;
   ::util::Status Reset(int action_id) override;
 
@@ -193,6 +196,11 @@ class BfSdeWrapper : public BfSdeInterface {
   ::util::Status RegisterPacketReceiveWriter(
       int device, std::unique_ptr<ChannelWriter<std::string>> writer) override;
   ::util::Status UnregisterPacketReceiveWriter(int device) override;
+  ::util::Status RegisterIdleTimeoutReceiveWriter(
+      int device,
+      std::unique_ptr<ChannelWriter<std::shared_ptr<TableKeyInterface>>> writer)
+      override;
+  ::util::Status UnregisterIdleTimeoutReceiveWriter(int device) override;
   ::util::StatusOr<uint32> CreateMulticastNode(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       int mc_replication_id, const std::vector<uint32>& mc_lag_ids,
@@ -311,10 +319,6 @@ class BfSdeWrapper : public BfSdeInterface {
       std::vector<std::vector<uint32>>* member_ids,
       std::vector<std::vector<bool>>* member_status) override
       LOCKS_EXCLUDED(data_lock_);
-  ::util::Status SynchronizeCounters(
-      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, absl::Duration timeout) override
-      LOCKS_EXCLUDED(data_lock_);
   ::util::Status InsertTableEntry(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, const TableKeyInterface* table_key,
@@ -348,6 +352,16 @@ class BfSdeWrapper : public BfSdeInterface {
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, TableDataInterface* table_data) override
       LOCKS_EXCLUDED(data_lock_);
+  ::util::Status SynchronizeCounters(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, absl::Duration timeout) override
+      LOCKS_EXCLUDED(data_lock_);
+  ::util::Status EnableIdleTimeoutNotifications(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status RegisterIdleTimeoutCallback(
+      int device, IdleTimeoutNotificationCallback cb, void* arg) override
+      LOCKS_EXCLUDED(data_lock_);
 
   ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const override
       LOCKS_EXCLUDED(data_lock_);
@@ -373,11 +387,20 @@ class BfSdeWrapper : public BfSdeInterface {
   // Return the singleton instance to be used in the SDE callbacks.
   static BfSdeWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
 
+  // TODO(max): could those functions be private?
+
   // Writes a received packet to the registered Rx writer. Called from the SDE
   // callback function.
   ::util::Status HandlePacketRx(bf_dev_id_t device, bf_pkt* pkt,
                                 bf_pkt_rx_ring_t rx_ring)
       LOCKS_EXCLUDED(packet_rx_callback_lock_);
+
+  // Writes a received idle timeout notification to the registered writer.
+  // Called from the SDE callback function.
+  ::util::Status HandleIdleTimeoutNotify(const bf_rt_target_t& target,
+                                         const bfrt::BfRtTableKey* key,
+                                         const void* cookie)
+      LOCKS_EXCLUDED(idle_timeout_rx_callback_lock_);
 
   // Called whenever a port status event is received from SDK. It forwards the
   // port status event to the module who registered a callback by calling
@@ -414,6 +437,9 @@ class BfSdeWrapper : public BfSdeInterface {
   // Mutex protecting the packet rx writer map.
   mutable absl::Mutex packet_rx_callback_lock_;
 
+  // Mutex protecting the packet rx writer map.
+  mutable absl::Mutex idle_timeout_rx_callback_lock_;
+
   // RW mutex lock for protecting the pipeline state.
   mutable absl::Mutex data_lock_;
 
@@ -426,6 +452,11 @@ class BfSdeWrapper : public BfSdeInterface {
   static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t device, bf_pkt* pkt,
                                            void* cookie,
                                            bf_pkt_rx_ring_t rx_ring);
+
+  // Callback registed with the SDE for idle timeout notifications.
+  static bf_status_t BfIdleTimeoutNotifyCallback(const bf_rt_target_t& target,
+                                                 const bfrt::BfRtTableKey* key,
+                                                 const void* cookie);
 
   // Common code for multicast group handling.
   ::util::Status WriteMulticastGroup(
@@ -487,6 +518,15 @@ class BfSdeWrapper : public BfSdeInterface {
   // Map from device ID to packet receive writer.
   absl::flat_hash_map<int, std::unique_ptr<ChannelWriter<std::string>>>
       device_to_packet_rx_writer_ GUARDED_BY(packet_rx_callback_lock_);
+
+  // Map from device ID to idle timeout receive writer.
+  absl::flat_hash_map<
+      int, std::unique_ptr<ChannelWriter<std::shared_ptr<TableKeyInterface>>>>
+      device_to_idle_timeout_rx_writer_
+          GUARDED_BY(idle_timeout_rx_callback_lock_);
+
+  IdleTimeoutNotificationCallback cb_ GUARDED_BY(data_lock_);
+  void* cb_arg_ GUARDED_BY(data_lock_);
 
   // Map from device ID to vector of all allocated PPGs.
   absl::flat_hash_map<int, std::vector<bf_tm_ppg_hdl>> device_to_ppg_handles_
