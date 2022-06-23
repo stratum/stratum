@@ -55,6 +55,7 @@ class TableKey : public BfSdeInterface::TableKeyInterface {
                           std::string* high) const override;
   ::util::Status SetPriority(uint32 priority) override;
   ::util::Status GetPriority(uint32* priority) const override;
+  ::util::Status GetTableId(uint32* table_id) const override;
 
   // Allocates a new table key object.
   static ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>

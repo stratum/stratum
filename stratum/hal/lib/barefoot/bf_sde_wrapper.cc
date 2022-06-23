@@ -725,6 +725,14 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   return key;
 }
 
+::util::Status TableKey::GetTableId(uint32* table_id) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(table_id));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status TableData::SetParam(int id, const std::string& value) {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(table_data_->getParent(&table));

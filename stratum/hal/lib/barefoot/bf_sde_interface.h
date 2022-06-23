@@ -90,6 +90,9 @@ class BfSdeInterface {
 
     // Gets the priority of this table key. 0 is the highest priority.
     virtual ::util::Status GetPriority(uint32* priority) const = 0;
+
+    // Gets the BfRt (not P4) table ID associated with this table key.
+    virtual ::util::Status GetTableId(uint32* table_id) const = 0;
   };
 
   // TableKeyInterface is a proxy class for BfRt table data.
