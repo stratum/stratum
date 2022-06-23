@@ -2,18 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This is the main entry for HAL BCM module tests.
 #include <stdlib.h>
 
 #include "gflags/gflags.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "gtest/gtest.h"
 
 DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   InitGoogle(argv[0], &argc, &argv, true);
 

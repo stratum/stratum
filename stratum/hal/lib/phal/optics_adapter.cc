@@ -32,13 +32,12 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
-  CHECK_RETURN_IF_FALSE(phaldb->optical_modules_size() > module - 1)
+  RET_CHECK(phaldb->optical_modules_size() > module - 1)
       << "optical module in module " << module - 1 << " not found!";
 
   auto optical_module = phaldb->optical_modules(module - 1);
 
-  CHECK_RETURN_IF_FALSE(optical_module.network_interfaces_size() >
-                        network_interface - 1)
+  RET_CHECK(optical_module.network_interfaces_size() > network_interface - 1)
       << "optical port in port " << network_interface - 1 << " not found";
 
   auto optical_port = optical_module.network_interfaces(network_interface - 1);

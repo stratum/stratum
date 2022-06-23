@@ -61,7 +61,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   // The p4_device_config byte stream in this case is nothing but the
   // serialized version of P4PipelineConfig.
   P4PipelineConfig p4_pipeline_config;
-  CHECK_RETURN_IF_FALSE(p4_pipeline_config.ParseFromString(p4_device_config))
+  RET_CHECK(p4_pipeline_config.ParseFromString(p4_device_config))
       << "Failed to parse p4_device_config byte stream to P4PipelineConfig.";
 
   // If there is no change in the forwarding pipeline config pushed to the node,
@@ -1050,7 +1050,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
   // TODO(unknown): Should this enforce the same bitwidth in action parameter
   // and the header field info?  This could become a problem for constant
   // assignments, which are currently treated as 64 bits.
-  CHECK_RETURN_IF_FALSE(param_entry->param_descriptor != nullptr);
+  RET_CHECK(param_entry->param_descriptor != nullptr);
 
   // TODO(teverman): Complete deprecation of destination_field_names.
   std::string field_name =

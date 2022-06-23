@@ -4,6 +4,7 @@
 version: 2.1
 
 orbs:
+  aws-s3: circleci/aws-s3@3.0.0
   codecov: codecov/codecov@3.2.2
 
 # Cache Bazel output root (see bazelrc) to speed up job execution time.
@@ -26,12 +27,19 @@ save_bazel_cache: &save_bazel_cache
     paths:
       - /tmp/bazel-cache
       - /tmp/bazel-disk-cache
+      - /tmp/bf-sde-tars
 
 clean_bazel_cache: &clean_bazel_cache
   run:
     name: Clean Bazel disk cache of files that have not been modified in 30 days
     # mtime is the only time preserved after untaring the cache.
     command: /usr/bin/find /tmp/bazel-disk-cache -mtime +30 -exec rm -v {} \;
+
+fetch_sde_tars: &fetch_sde_tars
+  aws-s3/sync:
+    arguments: '--exclude "*" --include "bf-sde-*-install.tgz"'
+    from: 's3://stratum-artifacts'
+    to: /tmp/bf-sde-tars
 
 # Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
@@ -48,7 +56,10 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cat .circleci/bazelrc >> .bazelrc
+    # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
+    command: |
+      cat .circleci/bazelrc >> .bazelrc
+      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -98,6 +109,7 @@ jobs:
   unit_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: large  # 4 vCPUs, 8GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -110,12 +122,12 @@ jobs:
           command: bazel query '//...'
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build
+          command: xargs -a .circleci/build-targets.txt bazel build --config=ci-large
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test
+          command: xargs -a .circleci/test-targets.txt bazel test --config=ci-large
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -123,6 +135,7 @@ jobs:
   cdlang_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: small  # 1 vCPU, 2GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -132,12 +145,12 @@ jobs:
       - *set_bazelrc
       - run:
           name: Build CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel build
+          command: xargs -a .circleci/cdlang-targets.txt bazel build --config=ci-small
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel test
+          command: xargs -a .circleci/cdlang-targets.txt bazel test --config=ci-small
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -145,6 +158,7 @@ jobs:
   coverage:
     docker:
       - image: stratumproject/build:build
+    resource_class: large  # 4 vCPUs, 8GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -154,7 +168,7 @@ jobs:
       - *set_bazelrc
       - run:
           name: Run test and collect coverage data
-          command: xargs -a .circleci/test-targets.txt bazel coverage
+          command: xargs -a .circleci/test-targets.txt bazel coverage --config=ci-large
       - *analyze_bazel_profile
       - *store_bazel_profile
       - codecov/upload:
@@ -284,6 +298,36 @@ jobs:
       - *docker_push
       - *save_bazel_cache
 
+  publish-docker-stratum-bfrt:
+    docker:
+      - image: stratumproject/build:build
+    parameters:
+      sde_version:
+        description: "BF SDE version to build with"
+        type: string
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-<< parameters.sde_version >>
+      - CC: clang
+      - CXX: clang++
+      - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *fetch_sde_tars
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bfrt
+          command: |
+            bazel build --config=release //stratum/hal/bin/barefoot:stratum_bfrt_deb
+            cp bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb $DOCKER_SCOPE/stratum_bfrt_deb.deb
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
+
   publish-docker-stratum-tools:
     docker:
       - image: stratumproject/build:build
@@ -320,6 +364,7 @@ jobs:
   lint-and-style-checks:
     docker:
       - image: stratumproject/build:build
+    resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
       # We always continue with all steps, even on failures, to get the most
@@ -340,6 +385,7 @@ jobs:
   license-check:
     docker:
       - image: fsfe/reuse:latest
+    resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
       - run:
@@ -385,6 +431,12 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
+      - publish-docker-stratum-bfrt:
+          requires:
+            - publish-docker-build
+          matrix:
+            parameters:
+              sde_version: ["9.5.0", "9.5.2", "9.7.0", "9.7.1", "9.8.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build

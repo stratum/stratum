@@ -253,8 +253,7 @@ namespace {
     *resp.mutable_phal_db() = phaldb_resp;
 
     // If Write fails then break out of the loop
-    CHECK_RETURN_IF_FALSE(stream->Write(resp))
-        << "Subscribe stream write failed";
+    RET_CHECK(stream->Write(resp)) << "Subscribe stream write failed";
   }
 }
 

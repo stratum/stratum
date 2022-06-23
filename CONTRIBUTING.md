@@ -77,6 +77,67 @@ Some additional points for developers:
    approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page)
    to request a review or to bring additional attention to your PR.
 
+## Core Contributors
+Anyone with a Github account can open new issues, comment on existing issues, or
+contribute code by opening a pull request from a fork.
+
+A **“core contributor”** is someone who can manage Github issues, approve and
+merge pull requests, and create new branches in the main repository.
+
+Core contributors are responsible for maintaining the quality of contributions
+to the codebase. The goal of this program is to have a diverse group of
+individuals whose expertise in aggregate covers the entire project.
+
+The benefits of being a core contributor include:
+- Increased influence of the direction of the project,
+- The ability to create branches in the main repository and merge your own code,
+  and
+- Community recognition and visibility for their contributions and expertise.
+
+### Becoming a Core Contributor
+
+Core contributor candidates need to have a demonstrated proficiency with the
+Stratum codebase and a track record of code reviews.  Members of the Technical
+Steering Team (TST) and existing core contributors will regularly invite people
+to become new core contributors. Nominations can also be made (including
+self-nominations) to the Stratum TST (`stratum-tst@opennetworking.org`) at any time.
+
+A good nomination will include details about who the person is (including their
+Github username) and outline their experience with the Stratum codebase.
+Nominations are intended to start a conversation that results in a decision to
+make the person a core contributor – anyone whose nomination is not initially
+approved is encouraged to gain more experience with code submission and code
+review in order to gain further mastery over the codebase. Partial approval is
+also possible (e.g. a person may be granted the ability to triage issues, but
+not merge pull requests), and full approval may be granted after the contributor
+has gained more experience.
+
+New core contributors will be assigned a mentor that is either a TST member or
+existing core contributor. The mentor will serve as the primary point of contact
+to help onboard the new core contributors and answer any questions they have
+with their new responsibilities. The mentor is not the only point of contact,
+and core contributors should feel free to reach out to others if and when they
+have questions or concerns.
+
+### Tips for Core Contributors
+For your own contributions, you now have the ability to approve and merge your
+own code. For larger or potentially controversial pull requests, please give the
+community an opportunity (at least a few business days) to review your
+contribution. **With great power comes great responsibility; please don't abuse
+this privilege.**
+
+For branches in the main repository, please try to use sensible names (which
+could include your username, issue number, and/or a short descriptive tag).
+
+Stratum follows [Google’s best practices for code review](https://google.github.io/eng-practices/review/reviewer/).
+You should apply these guidelines strictly and with confidence when reviewing
+pull requests.
+
+If you are unsure about something in an issue or pull request, leave a comment
+that outlines your concerns. If a resolution is difficult to reach in the
+comments section, the TST meetings are a good place to raise your concerns and
+have a discussion.
+
 ## Community Guidelines
 
 This project follows [Google's Open Source Community Guidelines](https://opensource.google.com/conduct/)

@@ -14,6 +14,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 
@@ -43,7 +44,8 @@ class BfrtCounterManager {
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtCounterManager> CreateInstance(
-      BfSdeInterface* bf_sde_interface_, int device);
+      BfSdeInterface* bf_sde_interface_,
+      BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device);
 
  protected:
   // Default constructor. To be called by the Mock class instance only.
@@ -52,13 +54,19 @@ class BfrtCounterManager {
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtCounterManager(BfSdeInterface* bf_sde_interface_, int device);
+  explicit BfrtCounterManager(
+      BfSdeInterface* bf_sde_interface_,
+      BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device);
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.
+
+  // Pointer to a BfrtTranslator implementation that translate P4Runtime
+  // entities, not owned by this class.
+  BfrtP4RuntimeTranslator* bfrt_p4runtime_translator_ = nullptr;
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.

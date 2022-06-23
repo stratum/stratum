@@ -208,8 +208,8 @@ P4InfoManager::FindRegisterByName(const std::string& register_name) const {
 
   // Check the register index, if it's not a wildcard read/write.
   if (register_entry.has_index()) {
-    CHECK_RETURN_IF_FALSE(register_entry.index().index() >= 0);
-    CHECK_RETURN_IF_FALSE(register_entry.index().index() < reg.size());
+    RET_CHECK(register_entry.index().index() >= 0);
+    RET_CHECK(register_entry.index().index() < reg.size());
   }
 
   // Check the type spec, if the entry carries data.
@@ -225,7 +225,7 @@ P4InfoManager::FindRegisterByName(const std::string& register_name) const {
     const ::p4::config::v1::P4DataTypeSpec& type_spec) const {
   switch (data.data_case()) {
     case ::p4::v1::P4Data::kBitstring: {
-      CHECK_RETURN_IF_FALSE(type_spec.has_bitstring())
+      RET_CHECK(type_spec.has_bitstring())
           << "The type spec does not specify a bitstring type for P4Data "
           << data.ShortDebugString() << ".";
       int bit_width;
@@ -242,15 +242,15 @@ P4InfoManager::FindRegisterByName(const std::string& register_name) const {
         default:
           return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not implemented.";
       }
-      CHECK_RETURN_IF_FALSE(data.bitstring().size() * 8 <= bit_width);
+      RET_CHECK(data.bitstring().size() * 8 <= bit_width);
       break;
     }
     case ::p4::v1::P4Data::kTuple: {
-      CHECK_RETURN_IF_FALSE(type_spec.has_tuple())
+      RET_CHECK(type_spec.has_tuple())
           << "The type spec does not specify a tuple type for P4Data "
           << data.ShortDebugString() << ".";
-      CHECK_RETURN_IF_FALSE(data.tuple().members_size() ==
-                            type_spec.tuple().members_size());
+      RET_CHECK(data.tuple().members_size() ==
+                type_spec.tuple().members_size());
       for (size_t i = 0; i < data.tuple().members_size(); ++i) {
         RETURN_IF_ERROR(VerifyTypeSpec(data.tuple().members(i),
                                        type_spec.tuple().members(i)));

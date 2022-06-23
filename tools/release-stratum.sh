@@ -8,6 +8,14 @@ if [[ $EUID -eq 0 ]]; then
   exit 1
 fi
 
+function numeric_version() {
+  # Get numeric version, for example 9.5.2 will become 90502.
+  sem_ver=$1
+  ver_arr=()
+  IFS='.' read -raver_arr<<<"$sem_ver"
+  echo $((ver_arr[0] * 10000 + ver_arr[1] * 100 + ver_arr[2]))
+}
+
 # ---------- User Credentials -------------
 # DOCKER_USER=<FILL IN>
 # DOCKER_PASSWORD=<FILL IN>
@@ -19,7 +27,7 @@ VERSION_LONG=${VERSION_LONG:-$(date +%Y-%m-%d)}  # 2021-03-31
 STRATUM_DIR=${STRATUM_DIR:-$HOME/stratum-$(date +%Y-%m-%d-%H-%M-%SZ)}
 BCM_TARGETS=(stratum_bcm_opennsa stratum_bcm_sdklt)
 BF_TARGETS=(stratum_bf stratum_bfrt)
-BF_SDE_VERSIONS=(9.3.1 9.5.0 9.7.0)
+BF_SDE_VERSIONS=(9.5.0 9.5.2 9.7.0 9.7.1 9.8.0)
 
 # ---------- Build Variables -------------
 JOBS=30
@@ -142,7 +150,6 @@ for target in ${BCM_TARGETS[@]}; do
   docker tag stratumproject/stratum-bcm_$target_short:latest stratumproject/stratum-bcm:$target_short
   docker push stratumproject/stratum-bcm:${VERSION}-$target_short
   docker push stratumproject/stratum-bcm:latest-$target_short
-  docker push stratumproject/stratum-bcm:$target_short
   clean_up_after_build
   set +x
 done
@@ -150,7 +157,9 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
-    if [ "$sde_version" == "9.7.0" -a "$target" == "stratum_bf" ]; then
+    # We will not build stratum_bf target when SDE version is same or later than 9.7.0.
+    if [[ "$target" == "stratum_bf" ]] && \
+      [[ $(numeric_version "$sde_version") -ge $(numeric_version "9.7.0") ]]; then
       echo "Skipping $target with BF SDE $sde_version."
       continue
     fi
@@ -165,9 +174,9 @@ for sde_version in ${BF_SDE_VERSIONS[@]}; do
       SDE_INSTALL_TAR=$BF_SDE_INSTALL_TAR_PATH/bf-sde-$sde_version-install.tgz \
       stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh
     mv -f ${target}_deb.deb $RELEASE_DIR/$target_dash-${VERSION}-$sde_version-amd64.deb
-    docker tag stratumproject/$target_dash:$sde_version stratumproject/$target_dash:${VERSION}-$sde_version
+    docker tag stratumproject/$target_dash:latest-$sde_version stratumproject/$target_dash:${VERSION}-$sde_version
     docker push stratumproject/$target_dash:${VERSION}-$sde_version
-    docker push stratumproject/$target_dash:$sde_version
+    docker push stratumproject/$target_dash:latest-$sde_version
     clean_up_after_build
     set +x
   done

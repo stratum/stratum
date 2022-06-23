@@ -48,11 +48,11 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 
 Stratum for Broadcom switches can be run inside Docker on the switch itself.
 Follow their instructions on how to setup [Docker](https://docs.docker.com/engine/install/).
-As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
+As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/r/stratumproject/stratum-bcm).
 There are two versions, one for SDKLT (`:sdklt`) and one for OpenNSA (`:openNSA`).
 
 ```bash
-docker pull stratumproject/stratum-bcm:sdklt  # or :opennsa, to update the image
+docker pull stratumproject/stratum-bcm:latest-sdklt  # or :latest-opennsa, to update the image
 cd stratum/hal/bin/bcm/standalone/docker
 DOCKER_IMAGE_TAG=sdklt ./start-stratum-container.sh  # or =opennsa
 ```

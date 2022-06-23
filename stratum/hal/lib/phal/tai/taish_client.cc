@@ -38,8 +38,8 @@ TaishClient* TaishClient::CreateSingleton() {
 }
 
 util::Status TaishClient::Initialize() {
-  CHECK_RETURN_IF_FALSE(!initialized_);
-  CHECK_RETURN_IF_FALSE(!FLAGS_taish_addr.empty());
+  RET_CHECK(!initialized_);
+  RET_CHECK(!FLAGS_taish_addr.empty());
   auto channel = ::grpc::CreateChannel(FLAGS_taish_addr,
                                        grpc::InsecureChannelCredentials());
   taish_stub_ = ::taish::TAI::NewStub(channel);
@@ -108,7 +108,7 @@ util::Status TaishClient::Initialize() {
 
 util::StatusOr<std::vector<uint64>> TaishClient::GetModuleIds() {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   std::vector<uint64> oids;
   for (const auto& module : modules_) {
     oids.push_back(module.oid());
@@ -119,12 +119,11 @@ util::StatusOr<std::vector<uint64>> TaishClient::GetModuleIds() {
 util::StatusOr<std::vector<uint64>> TaishClient::GetNetworkInterfaceIds(
     const uint64 module_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   auto it = std::find_if(
       modules_.begin(), modules_.end(),
       [module_id](taish::Module m) { return m.oid() == module_id; });
-  CHECK_RETURN_IF_FALSE(it != modules_.end())
-      << "Cannot find module with id " << module_id;
+  RET_CHECK(it != modules_.end()) << "Cannot find module with id " << module_id;
   taish::Module module = *it;
   std::vector<uint64> oids;
   for (const auto& netif : module.netifs()) {
@@ -136,11 +135,11 @@ util::StatusOr<std::vector<uint64>> TaishClient::GetNetworkInterfaceIds(
 util::StatusOr<std::vector<uint64>> TaishClient::GetHostInterfaceIds(
     const uint64 module_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   auto it = std::find_if(
       modules_.begin(), modules_.end(),
       [module_id](taish::Module m) { return m.oid() == module_id; });
-  CHECK_RETURN_IF_FALSE(it != modules_.end())
+  RET_CHECK(it != modules_.end())
       << "Can not find module with id " << module_id;
   taish::Module module = *it;
   std::vector<uint64> oids;
@@ -152,54 +151,54 @@ util::StatusOr<std::vector<uint64>> TaishClient::GetHostInterfaceIds(
 
 util::StatusOr<uint64> TaishClient::GetTxLaserFrequency(const uint64 netif_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrTxLaserFreq]));
   uint64 result;
-  CHECK_RETURN_IF_FALSE(absl::SimpleAtoi<uint64>(attr_str_val, &result));
+  RET_CHECK(absl::SimpleAtoi<uint64>(attr_str_val, &result));
   return result;
 }
 
 util::StatusOr<double> TaishClient::GetCurrentInputPower(
     const uint64 netif_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrCurrentInputPower]));
   double result;
-  CHECK_RETURN_IF_FALSE(absl::SimpleAtod(attr_str_val, &result));
+  RET_CHECK(absl::SimpleAtod(attr_str_val, &result));
   return result;
 }
 
 util::StatusOr<double> TaishClient::GetCurrentOutputPower(
     const uint64 netif_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrCurrentOutputPower]));
   double result;
-  CHECK_RETURN_IF_FALSE(absl::SimpleAtod(attr_str_val, &result));
+  RET_CHECK(absl::SimpleAtod(attr_str_val, &result));
   return result;
 }
 
 util::StatusOr<double> TaishClient::GetTargetOutputPower(
     const uint64 netif_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrOutputPower]));
   double result;
-  CHECK_RETURN_IF_FALSE(absl::SimpleAtod(attr_str_val, &result));
+  RET_CHECK(absl::SimpleAtod(attr_str_val, &result));
   return result;
 }
 
 util::StatusOr<uint64> TaishClient::GetModulationFormat(const uint64 netif_id) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrModulationFormat]));
@@ -209,7 +208,7 @@ util::StatusOr<uint64> TaishClient::GetModulationFormat(const uint64 netif_id) {
 util::Status TaishClient::SetTargetOutputPower(const uint64 netif_id,
                                                const double power) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   return SetAttribute(netif_id, netif_attr_map_[kNetIfAttrOutputPower],
                       std::to_string(power));
 }
@@ -217,7 +216,7 @@ util::Status TaishClient::SetTargetOutputPower(const uint64 netif_id,
 util::Status TaishClient::SetModulationFormat(const uint64 netif_id,
                                               const uint64 mod_format) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   ASSIGN_OR_RETURN(auto modulation_format_name,
                    GetModulationFormatName(mod_format));
   return SetAttribute(netif_id, netif_attr_map_[kNetIfAttrModulationFormat],
@@ -227,7 +226,7 @@ util::Status TaishClient::SetModulationFormat(const uint64 netif_id,
 util::Status TaishClient::SetTxLaserFrequency(const uint64 netif_id,
                                               const uint64 frequency) {
   absl::ReaderMutexLock l(&init_lock_);
-  CHECK_RETURN_IF_FALSE(initialized_);
+  RET_CHECK(initialized_);
   return SetAttribute(netif_id, netif_attr_map_[kNetIfAttrTxLaserFreq],
                       std::to_string(frequency));
 }
@@ -251,7 +250,7 @@ util::StatusOr<std::string> TaishClient::GetAttribute(uint64 obj_id,
   request.mutable_attribute()->set_attr_id(attr_id);
 
   auto status = taish_stub_->GetAttribute(&context, request, &response);
-  CHECK_RETURN_IF_FALSE(status.ok()) << status.error_message();
+  RET_CHECK(status.ok()) << status.error_message();
   return response.attribute().value();
 }
 
@@ -269,13 +268,13 @@ util::Status TaishClient::SetAttribute(uint64 obj_id, uint64 attr_id,
   request.mutable_attribute()->set_value(value);
 
   auto status = taish_stub_->SetAttribute(&context, request, &response);
-  CHECK_RETURN_IF_FALSE(status.ok()) << status.error_message();
+  RET_CHECK(status.ok()) << status.error_message();
   return util::OkStatus();
 }
 
 util::StatusOr<uint64> TaishClient::GetModulationFormatIds(
     const std::string& modulation_format) {
-  CHECK_RETURN_IF_FALSE(kModulationFormatIds.contains(modulation_format))
+  RET_CHECK(kModulationFormatIds.contains(modulation_format))
       << "Unknown modulation format " << modulation_format;
   return kModulationFormatIds.at(modulation_format);
 }
@@ -287,7 +286,7 @@ util::StatusOr<std::string> TaishClient::GetModulationFormatName(
                    [id](const std::pair<std::string, uint64>& kv) {
                      return kv.second == id;
                    });
-  CHECK_RETURN_IF_FALSE(it != kModulationFormatIds.end())
+  RET_CHECK(it != kModulationFormatIds.end())
       << "Invalid modulation format id " << id;
   return it->first;
 }

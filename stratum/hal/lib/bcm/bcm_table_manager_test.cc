@@ -2,17 +2,26 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 
 #include <memory>
-#include <vector>
 #include <string>
 #include <tuple>
+#include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/strip.h"
+#include "absl/strings/substitute.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/glue/gtl/source_location.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -21,16 +30,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -99,19 +98,15 @@ class BcmTableManagerTest : public ::testing::Test {
   }
 
   ::util::Status VerifyInternalState() {
-    CHECK_RETURN_IF_FALSE(kNodeId == bcm_table_manager_->node_id_);
-    CHECK_RETURN_IF_FALSE(2U ==
-                          bcm_table_manager_->port_id_to_logical_port_.size());
-    CHECK_RETURN_IF_FALSE(1U ==
-                          bcm_table_manager_->trunk_id_to_trunk_port_.size());
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->port_id_to_logical_port_[kPortId1] ==
-        kLogicalPort1);
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->port_id_to_logical_port_[kPortId2] ==
-        kLogicalPort2);
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->trunk_id_to_trunk_port_[kTrunkId1] == kTrunkPort1);
+    RET_CHECK(kNodeId == bcm_table_manager_->node_id_);
+    RET_CHECK(2U == bcm_table_manager_->port_id_to_logical_port_.size());
+    RET_CHECK(1U == bcm_table_manager_->trunk_id_to_trunk_port_.size());
+    RET_CHECK(bcm_table_manager_->port_id_to_logical_port_[kPortId1] ==
+              kLogicalPort1);
+    RET_CHECK(bcm_table_manager_->port_id_to_logical_port_[kPortId2] ==
+              kLogicalPort2);
+    RET_CHECK(bcm_table_manager_->trunk_id_to_trunk_port_[kTrunkId1] ==
+              kTrunkPort1);
 
     return ::util::OkStatus();
   }
@@ -123,22 +118,20 @@ class BcmTableManagerTest : public ::testing::Test {
         bcm_table_manager_->LookupTableEntry(entry);
     ::util::Status status = result.status();
     if (!table_id_exists) {
-      CHECK_RETURN_IF_FALSE(
-          !status.ok() && status.error_code() == ERR_ENTRY_NOT_FOUND &&
-          absl::StrContains(status.error_message(), "Table"))
+      RET_CHECK(!status.ok() && status.error_code() == ERR_ENTRY_NOT_FOUND &&
+                absl::StrContains(status.error_message(), "Table"))
           << "Did not expect table id to exist. Status: " << status;
       return ::util::OkStatus();
     }
     if (!key_match) {
-      CHECK_RETURN_IF_FALSE(
-          !status.ok() && absl::StrContains(status.error_message(),
-                                            "does not contain a matching flow"))
+      RET_CHECK(!status.ok() &&
+                absl::StrContains(status.error_message(),
+                                  "does not contain a matching flow"))
           << "Did not expect key match. Status: " << status;
       return ::util::OkStatus();
     }
     RETURN_IF_ERROR(status);
-    CHECK_RETURN_IF_FALSE(proto_match ==
-                          ProtoEqual(result.ValueOrDie(), entry));
+    RET_CHECK(proto_match == ProtoEqual(result.ValueOrDie(), entry));
     return ::util::OkStatus();
   }
 
@@ -146,20 +139,20 @@ class BcmTableManagerTest : public ::testing::Test {
       const ::p4::v1::ActionProfileMember& member,
       BcmNonMultipathNexthop::Type type, int egress_intf_id, int bcm_port,
       uint32 group_ref_count, uint32 flow_ref_count) {
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         bcm_table_manager_->ActionProfileMemberExists(member.member_id()));
     const auto& members = bcm_table_manager_->members_;
     auto it = members.find(member.member_id());
-    CHECK_RETURN_IF_FALSE(it != members.end());
-    CHECK_RETURN_IF_FALSE(ProtoEqual(member, it->second));
+    RET_CHECK(it != members.end());
+    RET_CHECK(ProtoEqual(member, it->second));
     BcmNonMultipathNexthopInfo info;
     RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
         member.member_id(), &info));
-    CHECK_RETURN_IF_FALSE(type == info.type);
-    CHECK_RETURN_IF_FALSE(egress_intf_id == info.egress_intf_id);
-    CHECK_RETURN_IF_FALSE(bcm_port == info.bcm_port);
-    CHECK_RETURN_IF_FALSE(group_ref_count == info.group_ref_count);
-    CHECK_RETURN_IF_FALSE(flow_ref_count == info.flow_ref_count);
+    RET_CHECK(type == info.type);
+    RET_CHECK(egress_intf_id == info.egress_intf_id);
+    RET_CHECK(bcm_port == info.bcm_port);
+    RET_CHECK(group_ref_count == info.group_ref_count);
+    RET_CHECK(flow_ref_count == info.flow_ref_count);
 
     return ::util::OkStatus();
   }
@@ -169,28 +162,26 @@ class BcmTableManagerTest : public ::testing::Test {
       uint32 flow_ref_count,
       std::map<uint32, std::tuple<uint32, uint32, int>>
           member_id_to_weight_group_ref_count_port) {
-    CHECK_RETURN_IF_FALSE(
-        bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
+    RET_CHECK(bcm_table_manager_->ActionProfileGroupExists(group.group_id()));
     const auto& groups = bcm_table_manager_->groups_;
     auto it = groups.find(group.group_id());
-    CHECK_RETURN_IF_FALSE(it != groups.end());
-    CHECK_RETURN_IF_FALSE(ProtoEqual(group, it->second));
+    RET_CHECK(it != groups.end());
+    RET_CHECK(ProtoEqual(group, it->second));
     BcmMultipathNexthopInfo group_info;
     RETURN_IF_ERROR(bcm_table_manager_->GetBcmMultipathNexthopInfo(
         group.group_id(), &group_info));
-    CHECK_RETURN_IF_FALSE(egress_intf_id == group_info.egress_intf_id);
-    CHECK_RETURN_IF_FALSE(flow_ref_count == group_info.flow_ref_count);
-    CHECK_RETURN_IF_FALSE(member_id_to_weight_group_ref_count_port.size() ==
-                          group_info.member_id_to_weight.size());
+    RET_CHECK(egress_intf_id == group_info.egress_intf_id);
+    RET_CHECK(flow_ref_count == group_info.flow_ref_count);
+    RET_CHECK(member_id_to_weight_group_ref_count_port.size() ==
+              group_info.member_id_to_weight.size());
     for (const auto& e : member_id_to_weight_group_ref_count_port) {
-      CHECK_RETURN_IF_FALSE(std::get<0>(e.second) ==
-                            group_info.member_id_to_weight[e.first]);
+      RET_CHECK(std::get<0>(e.second) ==
+                group_info.member_id_to_weight[e.first]);
       BcmNonMultipathNexthopInfo member_info;
       RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
           e.first, &member_info));
-      CHECK_RETURN_IF_FALSE(std::get<1>(e.second) ==
-                            member_info.group_ref_count);
-      CHECK_RETURN_IF_FALSE(std::get<2>(e.second) == member_info.bcm_port);
+      RET_CHECK(std::get<1>(e.second) == member_info.group_ref_count);
+      RET_CHECK(std::get<2>(e.second) == member_info.bcm_port);
       // If this is a logical port, check that there is a mapping to the set of
       // referencing groups.
       auto* logical_port = gtl::FindOrNull(
@@ -198,8 +189,8 @@ class BcmTableManagerTest : public ::testing::Test {
       if (logical_port) {
         auto* group_ids = gtl::FindOrNull(
             bcm_table_manager_->port_to_group_ids_, *logical_port);
-        CHECK_RETURN_IF_FALSE(group_ids != nullptr);
-        CHECK_RETURN_IF_FALSE(gtl::ContainsKey(*group_ids, group.group_id()));
+        RET_CHECK(group_ids != nullptr);
+        RET_CHECK(gtl::ContainsKey(*group_ids, group.group_id()));
       }
     }
 
@@ -427,38 +418,38 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_UNKNOWN: No conversion.
     // P4_FIELD_TYPE_ANNOTATED: No conversion.
     //
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_ETH_SRC
       value { u64: 11111111111111 }
       mask { u64: 99999999999999 }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_ETH_DST
       value { u64: 22222222222222 }
       mask { u64: 99999999999999 }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
     // P4_FIELD_TYPE_ETH_TYPE: No currentf conversion.
     // P4_FIELD_TYPE_VLAN_VID: No current conversion.
     // P4_FIELD_TYPE_VLAN_PCP: No current conversion.
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV4_SRC
       value { u32: 11111111 }
       mask { u32: 99999999 }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV4_DST
       value { u32: 22222222 }
       mask { u32: 99999999 }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -466,30 +457,30 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_IPV4_DIFFSERV: No current conversion.
     // P4_FIELD_TYPE_NW_TTL: No current conversion.
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV6_SRC
       value { b: "\x00\x01\x02\x03\x04\x05" }
       mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     // IPV6_SRC translated to IPV6_SRC_UPPER_64.
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: IPV6_SRC_UPPER_64
       value { b: "\x00\x01\x02\x03\x04\x05" }
       mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
-    )PROTO", &bcm_field));
+    )pb", &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV6_DST
       value { b: "\x10\x11\x12\x13\x14\x15" }
       mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     // IPV6_DST translated to IPV6_SRC_UPPER_64.
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: IPV6_DST_UPPER_64
       value { b: "\x10\x11\x12\x13\x14\x15" }
       mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
-    )PROTO", &bcm_field));
+    )pb", &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     // P4_FIELD_TYPE_IPV6_NEXT_HDR: No current conversion.
@@ -499,10 +490,10 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_L4_DST_PORT: No current conversion.
     // P4_FIELD_TYPE_ARP_TPA: No current conversion.
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_VRF
       value { u32: 1234 }
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -574,44 +565,44 @@ P4ToBcmActions() {
     // P4_FIELD_TYPE_UNKNOWN: No conversion.
     // P4_FIELD_TYPE_ANNOTATED: No conversion.
     //
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_ETH_SRC
       u64: 11111111111111
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_ETH_DST
       u64: 22222222222222
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
     // P4_FIELD_TYPE_ETH_TYPE: No current conversion.
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_VLAN_VID u32: 22
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_VLAN_PCP u32: 22
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV4_SRC
       u32: 11111111
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV4_DST
       u32: 22222222
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
@@ -619,17 +610,17 @@ P4ToBcmActions() {
     // P4_FIELD_TYPE_IPV4_DIFFSERV: No current conversion.
     // P4_FIELD_TYPE_NW_TTL: No current conversion.
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV6_SRC
       b: "\x00\x01\x02\x03\x04\x05"
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_IPV6_DST
       b: "\x10\x11\x12\x13\x14\x15"
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
@@ -640,16 +631,16 @@ P4ToBcmActions() {
     // P4_FIELD_TYPE_L4_DST_PORT: No current conversion.
     // P4_FIELD_TYPE_ARP_TPA: No current conversion.
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_VRF u32: 1234
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
-    EXPECT_OK(ParseProtoFromString(R"PROTO(
+    EXPECT_OK(ParseProtoFromString(R"pb(
       type: P4_FIELD_TYPE_CLASS_ID
       u32: 1234
-    )PROTO", &p4_field));
+    )pb", &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
     // P4_FIELD_TYPE_COLOR: No current conversion.
@@ -1657,11 +1648,11 @@ TEST_F(BcmTableManagerTest,
 
   // Setup the DST IP field.
   MappedField* ip_field = source.add_fields();
-  ASSERT_OK(ParseProtoFromString(R"PROTO(
+  ASSERT_OK(ParseProtoFromString(R"pb(
     type: P4_FIELD_TYPE_IPV4_DST
     value { u32: 1 }
     mask { u32: 0xffffffff }
-  )PROTO", ip_field));
+  )pb", ip_field));
 
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
@@ -1669,11 +1660,11 @@ TEST_F(BcmTableManagerTest,
 
   // VRF fields cannot have a mask.
   MappedField* vrf_field = source.add_fields();
-  ASSERT_OK(ParseProtoFromString(R"PROTO(
+  ASSERT_OK(ParseProtoFromString(R"pb(
     type: P4_FIELD_TYPE_VRF
     value { u32: 1 }
     mask { u32: 1 }
-  )PROTO", vrf_field));
+  )pb", vrf_field));
   ::util::Status status = bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
       source, ::p4::v1::Update::INSERT, &actual);
   EXPECT_FALSE(status.ok());
@@ -1681,10 +1672,10 @@ TEST_F(BcmTableManagerTest,
               HasSubstr("VRF match fields do not accept a mask value."));
 
   // VRF fields cannot have an out-of-range value.
-  ASSERT_OK(ParseProtoFromString(R"PROTO(
+  ASSERT_OK(ParseProtoFromString(R"pb(
     type: P4_FIELD_TYPE_VRF
     value { u32: 99999999 }
-  )PROTO", vrf_field));
+  )pb", vrf_field));
   status = bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
       source, ::p4::v1::Update::INSERT, &actual);
   EXPECT_FALSE(status.ok());
@@ -1696,11 +1687,11 @@ TEST_F(BcmTableManagerTest,
        CommonFlowEntryToBcmFlowEntry_Insert_InvalidLpmFlowFields_NoVrfForIpv4) {
   CommonFlowEntry source;
 
-  ASSERT_OK(ParseProtoFromString(R"PROTO(
+  ASSERT_OK(ParseProtoFromString(R"pb(
     type: P4_FIELD_TYPE_IPV4_DST
     value { u32: 22 }
     mask { u32: 99 }
-  )PROTO", source.add_fields()));
+  )pb", source.add_fields()));
 
   // Setup table type and stage.
   source.mutable_table_info()->set_type(P4_TABLE_L3_IP);
@@ -1725,11 +1716,11 @@ TEST_F(BcmTableManagerTest,
        CommonFlowEntryToBcmFlowEntry_Insert_InvalidLpmFlowFields_NoVrfForIpv6) {
   CommonFlowEntry source;
 
-  ASSERT_OK(ParseProtoFromString(R"PROTO(
+  ASSERT_OK(ParseProtoFromString(R"pb(
     type: P4_FIELD_TYPE_IPV6_DST
     value { b: "\x22\x23" }
     mask { b: "\xff\xff" }
-  )PROTO", source.add_fields()));
+  )pb", source.add_fields()));
 
   // Setup table type and stage.
   source.mutable_table_info()->set_type(P4_TABLE_L3_IP);
@@ -2681,8 +2672,7 @@ TEST_F(BcmTableManagerTest,
   }
 }
 
-TEST_F(BcmTableManagerTest,
-       CommonFlowEntryToBcmFlowEntry_Insert_ValidDecap) {
+TEST_F(BcmTableManagerTest, CommonFlowEntryToBcmFlowEntry_Insert_ValidDecap) {
   CommonFlowEntry source;
   BcmFlowEntry expected;
 
@@ -4423,20 +4413,20 @@ TEST_F(BcmTableManagerTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO", &source));
+  )pb", &source));
 
   BcmFlowEntry expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     bcm_table_type: BCM_TABLE_ACL
     bcm_acl_table_id: 1
     fields { type: ETH_TYPE value { u32: 10 } }
     acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO", &expected));
+  )pb", &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4464,22 +4454,22 @@ TEST_F(BcmTableManagerTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO", &source));
+  )pb", &source));
 
   BcmFlowEntry expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     bcm_table_type: BCM_TABLE_ACL
     bcm_acl_table_id: 1
     fields { type: ETH_TYPE value { u32: 10 } }
     fields { type: IP_TYPE value { u32: 0x86dd } }
     fields { type: IP_PROTO_NEXT_HDR value { u32: 58 } }
     acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO", &expected));
+  )pb", &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4505,12 +4495,12 @@ TEST_F(BcmTableManagerTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO", &source));
+  )pb", &source));
 
   BcmFlowEntry actual;
   EXPECT_THAT(bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
@@ -4538,20 +4528,20 @@ TEST_P(ConstConditionTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
     fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
     action { type: P4_ACTION_TYPE_FUNCTION }
     priority: 10
-  )PROTO", &source));
+  )pb", &source));
 
   BcmFlowEntry expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     bcm_table_type: BCM_TABLE_ACL
     bcm_acl_table_id: 1
     fields { type: ETH_TYPE value { u32: 10 } }
     acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO", &expected));
+  )pb", &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4564,11 +4554,11 @@ TEST_P(ConstConditionTest,
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmTableManagerTest, ConstConditionTest,
-                        ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
-                                          P4_HEADER_IPV6, P4_HEADER_TCP,
-                                          P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,
-                                          P4_HEADER_GRE, P4_HEADER_ICMP),
-                        ParamName);
+                         ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
+                                           P4_HEADER_IPV6, P4_HEADER_TCP,
+                                           P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,
+                                           P4_HEADER_GRE, P4_HEADER_ICMP),
+                         ParamName);
 
 }  // namespace bcm
 }  // namespace hal

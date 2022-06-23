@@ -246,7 +246,7 @@ class RealAttributeDatabaseTest : public ::testing::Test {
       RETURN_IF_ERROR(reader->Read(&query_result, absl::Seconds(30)));
     }
 
-    CHECK_RETURN_IF_FALSE(google::protobuf::util::MessageDifferencer::Equals(
+    RET_CHECK(google::protobuf::util::MessageDifferencer::Equals(
         query_result, hardware_not_present_));
     return ::util::OkStatus();
   }

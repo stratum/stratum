@@ -2,6 +2,7 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "absl/container/flat_hash_map.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -9,6 +10,7 @@
 #include "stratum/hal/lib/barefoot/bf_sde_wrapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
@@ -23,6 +25,8 @@ DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
               "Path to the BF switchd json config file");
+DEFINE_bool(experimental_enable_p4runtime_translation, false,
+            "Enable experimental P4Runtime translation feature.");
 
 namespace stratum {
 namespace hal {
@@ -46,21 +50,23 @@ namespace barefoot {
   VLOG(1) << "Detected is_sw_model: " << is_sw_model;
   VLOG(1) << "SDE version: " << bf_sde_wrapper->GetSdeVersion();
   VLOG(1) << "Switch SKU: " << bf_sde_wrapper->GetBfChipType(device_id);
-
-  auto bfrt_table_manager =
-      BfrtTableManager::CreateInstance(mode, bf_sde_wrapper, device_id);
-  auto bfrt_packetio_manger =
-      BfrtPacketioManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_pre_manager =
-      BfrtPreManager::CreateInstance(bf_sde_wrapper, device_id);
-  auto bfrt_counter_manager =
-      BfrtCounterManager::CreateInstance(bf_sde_wrapper, device_id);
+  auto bfrt_p4runtime_translator = BfrtP4RuntimeTranslator::CreateInstance(
+      FLAGS_experimental_enable_p4runtime_translation, bf_sde_wrapper,
+      device_id);
+  auto bfrt_table_manager = BfrtTableManager::CreateInstance(
+      mode, bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_pre_manager = BfrtPreManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
+  auto bfrt_counter_manager = BfrtCounterManager::CreateInstance(
+      bf_sde_wrapper, bfrt_p4runtime_translator.get(), device_id);
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_packetio_manger.get(),
-      bfrt_pre_manager.get(), bfrt_counter_manager.get(), bf_sde_wrapper,
-      device_id);
+      bfrt_pre_manager.get(), bfrt_counter_manager.get(),
+      bfrt_p4runtime_translator.get(), bf_sde_wrapper, device_id);
   PhalInterface* phal = phal::Phal::CreateSingleton();
-  std::map<int, BfrtNode*> device_id_to_bfrt_node = {
+  absl::flat_hash_map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},
   };
   auto bf_chassis_manager =
@@ -75,7 +81,7 @@ namespace barefoot {
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
                                    bf_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
 
   // Setup and start serving RPCs.
   ::util::Status status = hal->Setup();

@@ -156,23 +156,17 @@ class BfChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status CheckCleanInternalState() {
-    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->device_to_node_id_.empty());
-    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->node_id_to_device_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bf_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bf_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(bf_chassis_manager_->device_to_node_id_.empty());
+    RET_CHECK(bf_chassis_manager_->node_id_to_device_.empty());
+    RET_CHECK(bf_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
+    RET_CHECK(bf_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
+    RET_CHECK(
         bf_chassis_manager_->node_id_to_port_id_to_singleton_port_key_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bf_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bf_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
-    CHECK_RETURN_IF_FALSE(
-        bf_chassis_manager_->xcvr_port_key_to_xcvr_state_.empty());
-    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->port_status_event_channel_ ==
-                          nullptr);
-    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->xcvr_event_channel_ == nullptr);
+    RET_CHECK(bf_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
+    RET_CHECK(bf_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
+    RET_CHECK(bf_chassis_manager_->xcvr_port_key_to_xcvr_state_.empty());
+    RET_CHECK(bf_chassis_manager_->port_status_event_channel_ == nullptr);
+    RET_CHECK(bf_chassis_manager_->xcvr_event_channel_ == nullptr);
     return ::util::OkStatus();
   }
 
@@ -194,7 +188,7 @@ class BfChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status PushBaseChassisConfig(ChassisConfigBuilder* builder) {
-    CHECK_RETURN_IF_FALSE(!Initialized())
+    RET_CHECK(!Initialized())
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     RegisterSdkPortId(builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED));
 
@@ -219,11 +213,9 @@ class BfChassisManagerTest : public ::testing::Test {
 
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
     auto device = GetDeviceFromNodeId(kNodeId);
-    CHECK_RETURN_IF_FALSE(device.ok());
-    CHECK_RETURN_IF_FALSE(device.ValueOrDie() == kDevice)
-        << "Invalid device number!";
-    CHECK_RETURN_IF_FALSE(Initialized())
-        << "Class is not initialized after push!";
+    RET_CHECK(device.ok());
+    RET_CHECK(device.ValueOrDie() == kDevice) << "Invalid device number!";
+    RET_CHECK(Initialized()) << "Class is not initialized after push!";
     return ::util::OkStatus();
   }
 
@@ -344,7 +336,7 @@ TEST_F(BfChassisManagerTest, SetPortLoopback) {
 }
 
 TEST_F(BfChassisManagerTest, ApplyPortShaping) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_port_shaping_config {
         key: 7654321
@@ -361,7 +353,7 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -394,7 +386,7 @@ TEST_F(BfChassisManagerTest, ApplyPortShaping) {
 }
 
 TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
         key: 7654321
@@ -410,7 +402,7 @@ TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -430,7 +422,7 @@ TEST_F(BfChassisManagerTest, ApplyDeflectOnDrop) {
 }
 
 TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_qos_config {
         key: 7654321  # kNodeId
@@ -475,7 +467,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -494,7 +486,7 @@ TEST_F(BfChassisManagerTest, ApplyQoSConfig) {
 }
 
 TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_qos_config {
         key: 7654321  # kNodeId
@@ -534,7 +526,7 @@ TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
@@ -562,7 +554,7 @@ TEST_F(BfChassisManagerTest, QoSConfigWithSingletonPortsIsTransformed) {
 }
 
 TEST_F(BfChassisManagerTest, ReplayPorts) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
         key: 7654321
@@ -592,7 +584,7 @@ TEST_F(BfChassisManagerTest, ReplayPorts) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   constexpr int kCpuPort = 64;
 

@@ -66,30 +66,30 @@ BcmSerdesDbManager::~BcmSerdesDbManager() {}
       const auto& serdes_chip_configs =
           e.bcm_serdes_board_config().bcm_serdes_chip_configs();
       auto i = serdes_chip_configs.find(bcm_port.unit());
-      CHECK_RETURN_IF_FALSE(i != serdes_chip_configs.end())
+      RET_CHECK(i != serdes_chip_configs.end())
           << "Unit " << bcm_port.unit() << " not found in serdes DB for "
           << PrintBcmPort(bcm_port) << " with following front panel port info: "
           << fp_port_info.ShortDebugString();
       const auto& serdes_core_configs = i->second.bcm_serdes_core_configs();
       auto j = serdes_core_configs.find(bcm_port.serdes_core());
-      CHECK_RETURN_IF_FALSE(j != serdes_core_configs.end())
+      RET_CHECK(j != serdes_core_configs.end())
           << "Serdes core " << bcm_port.serdes_core() << " not found in serdes "
           << "DB for " << PrintBcmPort(bcm_port) << " with following front "
           << "panel port info: " << fp_port_info.ShortDebugString();
       const auto& serdes_lane_configs = j->second.bcm_serdes_lane_configs();
       auto k = serdes_lane_configs.find(bcm_port.serdes_lane());
-      CHECK_RETURN_IF_FALSE(k != serdes_lane_configs.end())
+      RET_CHECK(k != serdes_lane_configs.end())
           << "Serdes lane " << bcm_port.serdes_lane() << " not found in "
           << "serdes DB for " << PrintBcmPort(bcm_port) << " with following "
           << "front panel port info: " << fp_port_info.ShortDebugString();
       *bcm_serdes_lane_config = k->second;
       for (int l = 1; l < bcm_port.num_serdes_lanes(); ++l) {
         auto k = serdes_lane_configs.find(bcm_port.serdes_lane() + l);
-        CHECK_RETURN_IF_FALSE(k != serdes_lane_configs.end())
+        RET_CHECK(k != serdes_lane_configs.end())
             << "Serdes lane " << bcm_port.serdes_lane() + l << " not found in "
             << "serdes DB for " << PrintBcmPort(bcm_port) << " with following "
             << "front panel port info: " << fp_port_info.ShortDebugString();
-        CHECK_RETURN_IF_FALSE(ProtoEqual(*bcm_serdes_lane_config, k->second))
+        RET_CHECK(ProtoEqual(*bcm_serdes_lane_config, k->second))
             << "Serdes lane configs found for " << PrintBcmPort(bcm_port)
             << " do not have the same value for all the lanes: "
             << j->second.ShortDebugString();

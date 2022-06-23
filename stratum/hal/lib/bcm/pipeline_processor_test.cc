@@ -4,15 +4,15 @@
 
 #include "stratum/hal/lib/bcm/pipeline_processor.h"
 
-#include "stratum/lib/test_utils/matchers.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/str_cat.h"
 
 namespace stratum {
 

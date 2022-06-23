@@ -10,6 +10,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -26,13 +27,17 @@ using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
+using ::testing::ReturnArg;
 
 class BfrtPacketioManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<BfSdeMock>();
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
     bfrt_packetio_manager_ = BfrtPacketioManager::CreateInstance(
-        bf_sde_wrapper_mock_.get(), kDevice1);
+        bf_sde_wrapper_mock_.get(), bfrt_p4runtime_translator_mock_.get(),
+        kDevice1);
   }
 
   ::util::Status PushPipelineConfig(const std::string& p4info_str = kP4Info,
@@ -53,7 +58,10 @@ class BfrtPacketioManagerTest : public ::testing::Test {
           .WillOnce(Invoke(
               this, &BfrtPacketioManagerTest::RegisterPacketReceiveWriter));
     }
-
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateP4Info(EqualsProto(program->p4info())))
+        .WillOnce(Return(
+            ::util::StatusOr<::p4::config::v1::P4Info>(program->p4info())));
     auto status = bfrt_packetio_manager_->PushForwardingPipelineConfig(config);
     // FIXME(Yi Tseng): Wait few milliseconds to ensure the rx thread is ready.
     //                  Should check the internal state.
@@ -87,7 +95,7 @@ class BfrtPacketioManagerTest : public ::testing::Test {
   }
 
   static constexpr int kDevice1 = 0;
-  static constexpr char kP4Info[] = R"PROTO(
+  static constexpr char kP4Info[] = R"pb(
     controller_packet_metadata {
       preamble {
         id: 67146229
@@ -135,9 +143,10 @@ class BfrtPacketioManagerTest : public ::testing::Test {
         bitwidth: 16
       }
     }
-  )PROTO";
+  )pb";
 
   std::unique_ptr<BfSdeMock> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtPacketioManager> bfrt_packetio_manager_;
   std::unique_ptr<ChannelWriter<std::string>> packet_rx_writer;
 };
@@ -157,8 +166,8 @@ TEST_F(BfrtPacketioManagerTest, PushForwardingPipelineConfigAndShutdown) {
 }
 
 TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
-  // The total length of packet-in metadata is not byte aligned
-  const char invalid_packet_in[] = R"PROTO(
+  // The total length of packet-in metadata is not byte aligned.
+  const char invalid_packet_in[] = R"pb(
     controller_packet_metadata {
       preamble {
         id: 67146229
@@ -172,7 +181,7 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
         bitwidth: 9
       }
     }
-  )PROTO";
+  )pb";
   auto status = PushPipelineConfig(invalid_packet_in, false);
   EXPECT_THAT(
       status,
@@ -182,8 +191,8 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketInConfigAndShutdown) {
 }
 
 TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
-  // The total length of packet-out metadata is not byte aligned
-  const char invalid_packet_out[] = R"PROTO(
+  // The total length of packet-out metadata is not byte aligned.
+  const char invalid_packet_out[] = R"pb(
     controller_packet_metadata {
       preamble {
         id: 67121543
@@ -197,7 +206,7 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
         bitwidth: 9
       }
     }
-  )PROTO";
+  )pb";
   auto status = PushPipelineConfig(invalid_packet_out, false);
   EXPECT_THAT(
       status,
@@ -209,8 +218,8 @@ TEST_F(BfrtPacketioManagerTest, PushInvalidPacketOutConfigAndShutdown) {
 
 TEST_F(BfrtPacketioManagerTest,
        PushUnknownControllerPacketMetadataConfigAndShutdown) {
-  // The unknown
-  const char p4info_with_known[] = R"PROTO(
+  // The controller_packet_metadata has an unknown name.
+  const char p4info_with_known[] = R"pb(
     controller_packet_metadata {
       preamble {
         id: 1234567
@@ -232,7 +241,7 @@ TEST_F(BfrtPacketioManagerTest,
         bitwidth: 8
       }
     }
-  )PROTO";
+  )pb";
   EXPECT_OK(PushPipelineConfig(p4info_with_known));
   EXPECT_OK(Shutdown());
 }
@@ -240,7 +249,7 @@ TEST_F(BfrtPacketioManagerTest,
 TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
   EXPECT_OK(PushPipelineConfig());
   p4::v1::PacketOut packet_out;
-  const char packet_out_str[] = R"PROTO(
+  const char packet_out_str[] = R"pb(
     payload: "abcde"
     metadata {
       metadata_id: 1
@@ -258,12 +267,15 @@ TEST_F(BfrtPacketioManagerTest, TransmitPacketAfterPipelineConfigPush) {
       metadata_id: 4
       value: "\xbf\x01"
     }
-  )PROTO";
+  )pb";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
   const std::string expected_packet(
-      "\0\x80\0\0\0\0\0\0\0\0\0\0\xBF\x1"
+      "\0\x80\0\0\0\0\0\0\0\0\0\0\xBF\x01"
       "abcde",
       19);
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketOut(EqualsProto(packet_out)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketOut>(packet_out)));
   EXPECT_CALL(*bf_sde_wrapper_mock_, TxPacket(kDevice1, expected_packet))
       .WillOnce(Return(util::OkStatus()));
   EXPECT_OK(bfrt_packetio_manager_->TransmitPacket(packet_out));
@@ -274,7 +286,7 @@ TEST_F(BfrtPacketioManagerTest, TransmitInvalidPacketAfterPipelineConfigPush) {
   EXPECT_OK(PushPipelineConfig());
   p4::v1::PacketOut packet_out;
   // Missing the third metadata.
-  const char packet_out_str[] = R"PROTO(
+  const char packet_out_str[] = R"pb(
     payload: "abcde"
     metadata {
       metadata_id: 1
@@ -288,8 +300,11 @@ TEST_F(BfrtPacketioManagerTest, TransmitInvalidPacketAfterPipelineConfigPush) {
       metadata_id: 3
       value: "\x0"
     }
-  )PROTO";
+  )pb";
   EXPECT_OK(ParseProtoFromString(packet_out_str, &packet_out));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketOut(EqualsProto(packet_out)))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketOut>(packet_out)));
   auto status = bfrt_packetio_manager_->TransmitPacket(packet_out);
   EXPECT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(),
@@ -301,17 +316,17 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
   EXPECT_OK(PushPipelineConfig());
   auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
   EXPECT_OK(bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer));
-  const char expected_packet_in_str[] = R"PROTO(
+  const char expected_packet_in_str[] = R"pb(
     payload: "abcde"
     metadata {
       metadata_id: 1
-      value: "\000\001"
+      value: "\001"
     }
     metadata {
       metadata_id: 2
       value: "\000"
     }
-  )PROTO";
+  )pb";
   ::p4::v1::PacketIn expected_packet_in;
   EXPECT_OK(ParseProtoFromString(expected_packet_in_str, &expected_packet_in));
   const std::string packet_from_asic(
@@ -332,10 +347,54 @@ TEST_F(BfrtPacketioManagerTest, TestPacketIn) {
               return false;
             }
           }));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketIn(EqualsProto(expected_packet_in)))
+      .WillOnce(
+          Return(::util::StatusOr<::p4::v1::PacketIn>(expected_packet_in)));
   EXPECT_OK(packet_rx_writer->Write(packet_from_asic, absl::Milliseconds(100)));
 
   // Here we need to wait until we receive and verify the packet from the mock
   // packet-in writer.
+  EXPECT_TRUE(
+      write_notifier->WaitForNotificationWithTimeout(absl::Milliseconds(100)));
+  EXPECT_OK(bfrt_packetio_manager_->UnregisterPacketReceiveWriter());
+  EXPECT_OK(Shutdown());
+}
+
+TEST_F(BfrtPacketioManagerTest, MalformedPacketInShouldNotStopRxThread) {
+  EXPECT_OK(PushPipelineConfig());
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
+  EXPECT_OK(bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer));
+  auto write_notifier = std::make_shared<absl::Notification>();
+  std::weak_ptr<absl::Notification> weak_ref(write_notifier);
+  EXPECT_CALL(*writer, Write(_))
+      .WillOnce(Invoke([weak_ref](::p4::v1::PacketIn actual) {
+        if (auto notifier = weak_ref.lock()) {
+          notifier->Notify();
+          return true;
+        } else {
+          LOG(ERROR) << "Write notifier expired.";
+          return false;
+        }
+      }));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_, TranslatePacketIn(_))
+      .WillRepeatedly(ReturnArg<0>());
+  const std::string malformed_packet_from_asic("\0",  // metadata too short
+                                               1);
+  const std::string valid_packet_from_asic(
+      "\0\x80"  // metadata
+      "abcde",  // payload
+      7);
+
+  // Send malformed packet first, then a valid one. This verifies that
+  // processing continues after previous errors.
+  EXPECT_OK(packet_rx_writer->Write(malformed_packet_from_asic,
+                                    absl::Milliseconds(100)));
+  EXPECT_OK(
+      packet_rx_writer->Write(valid_packet_from_asic, absl::Milliseconds(100)));
+
+  // Here we wait until we receive the valid packet from the mock packet-in
+  // writer.
   EXPECT_TRUE(
       write_notifier->WaitForNotificationWithTimeout(absl::Milliseconds(100)));
   EXPECT_OK(bfrt_packetio_manager_->UnregisterPacketReceiveWriter());

@@ -23,8 +23,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
-                                         int device)
+BfrtPacketioManager::BfrtPacketioManager(
+    BfSdeInterface* bf_sde_interface,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : initialized_(false),
       rx_writer_(nullptr),
       packetin_header_(),
@@ -34,6 +35,7 @@ BfrtPacketioManager::BfrtPacketioManager(BfSdeInterface* bf_sde_interface,
       packet_receive_channel_(nullptr),
       sde_rx_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
+      bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       device_(device) {}
 
 BfrtPacketioManager::BfrtPacketioManager()
@@ -51,8 +53,10 @@ BfrtPacketioManager::BfrtPacketioManager()
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
 std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
-    BfSdeInterface* bf_sde_interface_, int device) {
-  return absl::WrapUnique(new BfrtPacketioManager(bf_sde_interface_, device));
+    BfSdeInterface* bf_sde_interface_,
+    BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device) {
+  return absl::WrapUnique(new BfrtPacketioManager(
+      bf_sde_interface_, bfrt_p4runtime_translator, device));
 }
 
 ::util::Status BfrtPacketioManager::PushChassisConfig(
@@ -62,29 +66,28 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 
 ::util::Status BfrtPacketioManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
-  CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
-      << "Only one program is supported.";
+  absl::WriterMutexLock l(&data_lock_);
+  RET_CHECK(config.programs_size() == 1) << "Only one program is supported.";
   const auto& program = config.programs(0);
-  {
-    absl::WriterMutexLock l(&data_lock_);
-    RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
-    // PushForwardingPipelineConfig resets the bf_pkt driver.
-    RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
-    if (!initialized_) {
-      packet_receive_channel_ = Channel<std::string>::Create(128);
-      if (sde_rx_thread_id_ == 0) {
-        int ret = pthread_create(&sde_rx_thread_id_, nullptr,
-                                 &BfrtPacketioManager::SdeRxThreadFunc, this);
-        if (ret != 0) {
-          return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for "
-                                             "SDE wrapper for device with ID "
-                                          << device_ << ". Err: " << ret << ".";
-        }
+  ASSIGN_OR_RETURN(
+      const auto& p4info,
+      bfrt_p4runtime_translator_->TranslateP4Info(program.p4info()));
+  RETURN_IF_ERROR(BuildMetadataMapping(p4info));
+  // PushForwardingPipelineConfig resets the bf_pkt driver.
+  RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
+  if (!initialized_) {
+    packet_receive_channel_ = Channel<std::string>::Create(128);
+    if (sde_rx_thread_id_ == 0) {
+      int ret = pthread_create(&sde_rx_thread_id_, nullptr,
+                               &BfrtPacketioManager::SdeRxThreadFunc, this);
+      if (ret != 0) {
+        return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for SDE "
+                                        << "wrapper for device with ID "
+                                        << device_ << ". Err: " << ret << ".";
       }
-      RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
-          device_,
-          ChannelWriter<std::string>::Create(packet_receive_channel_)));
     }
+    RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
+        device_, ChannelWriter<std::string>::Create(packet_receive_channel_)));
     initialized_ = true;
   }
 
@@ -161,8 +164,7 @@ class BitBuffer {
 
   // Add a bytestring to the back of the buffer.
   ::util::Status PushBack(const std::string& bytestring, size_t bitwidth) {
-    CHECK_RETURN_IF_FALSE(bytestring.size() <=
-                          (bitwidth + kBitsPerByte - 1) / kBitsPerByte)
+    RET_CHECK(bytestring.size() <= (bitwidth + kBitsPerByte - 1) / kBitsPerByte)
         << "Bytestring " << StringToHex(bytestring) << " overflows bit width "
         << bitwidth << ".";
 
@@ -180,7 +182,7 @@ class BitBuffer {
     }
     // Remove bits from partial byte at the front.
     while (new_bits.size() > bitwidth) {
-      CHECK_RETURN_IF_FALSE(new_bits.front() == 0)
+      RET_CHECK(new_bits.front() == 0)
           << "Bytestring " << StringToHex(bytestring) << " overflows bit width "
           << bitwidth << ".";
       new_bits.pop_front();
@@ -245,7 +247,7 @@ class BitBuffer {
                            [&id](::p4::v1::PacketMetadata metadata) {
                              return metadata.metadata_id() == id;
                            });
-    CHECK_RETURN_IF_FALSE(it != packet.metadata().end())
+    RET_CHECK(it != packet.metadata().end())
         << "Missing metadata with Id " << id << " in PacketOut "
         << packet.ShortDebugString();
     RETURN_IF_ERROR(bit_buf.PushBack(it->value(), bitwidth));
@@ -264,7 +266,7 @@ class BitBuffer {
 ::util::Status BfrtPacketioManager::ParsePacketIn(const std::string& buffer,
                                                   ::p4::v1::PacketIn* packet) {
   absl::ReaderMutexLock l(&data_lock_);
-  CHECK_RETURN_IF_FALSE(buffer.size() >= packetin_header_size_)
+  RET_CHECK(buffer.size() >= packetin_header_size_)
       << "Received packet is too small.";
 
   BitBuffer bit_buf;
@@ -295,15 +297,16 @@ class BitBuffer {
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
+  ASSIGN_OR_RETURN(const auto& translated_packet_out,
+                   bfrt_p4runtime_translator_->TranslatePacketOut(packet));
   std::string buf;
-  RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
+  RETURN_IF_ERROR(DeparsePacketOut(translated_packet_out, &buf));
 
   RETURN_IF_ERROR(bf_sde_interface_->TxPacket(device_, buf));
 
   return ::util::OkStatus();
 }
 
-// TODO(max): drop Sde in name?
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {
@@ -323,12 +326,20 @@ class BitBuffer {
     }
 
     ::p4::v1::PacketIn packet_in;
-    // FIXME: returning here in case of parsing errors might not be the best
-    // solution.
-    RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
+    ::util::Status status = ParsePacketIn(buffer, &packet_in);
+    if (!status.ok()) {
+      LOG(ERROR) << "ParsePacketIn failed: " << status;
+      continue;
+    }
+    const auto& translated_packet_in =
+        bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
+    if (!translated_packet_in.ok()) {
+      LOG(ERROR) << "TranslatePacketIn failed: " << status;
+      continue;
+    }
     {
       absl::WriterMutexLock l(&rx_writer_lock_);
-      rx_writer_->Write(packet_in);
+      rx_writer_->Write(translated_packet_in.ValueOrDie());
     }
     VLOG(1) << "Handled PacketIn: " << packet_in.ShortDebugString();
   }
@@ -367,9 +378,9 @@ class BitBuffer {
     }
   }
 
-  CHECK_RETURN_IF_FALSE(packetin_bits % 8 == 0)
+  RET_CHECK(packetin_bits % 8 == 0)
       << "PacketIn header size must be multiple of 8 bits.";
-  CHECK_RETURN_IF_FALSE(packetout_bits % 8 == 0)
+  RET_CHECK(packetout_bits % 8 == 0)
       << "PacketOut header size must be multiple of 8 bits.";
   packetin_header_ = std::move(packetin_header);
   packetout_header_ = std::move(packetout_header);

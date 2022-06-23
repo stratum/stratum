@@ -19,14 +19,14 @@ You can find Debian packages and Docker containers on the
 ### Nightly version
 
 You can pull a nightly version of this container image from
-[Dockerhub](https://hub.docker.com/repository/docker/stratumproject/stratum-bf/tags)
+[Dockerhub](https://hub.docker.com/r/stratumproject/stratum-bfrt/tags)
 
 ```bash
-$ docker pull stratumproject/stratum-bfrt:[SDE version]
+$ docker pull stratumproject/stratum-bfrt:latest-[SDE version]
 ```
 
-For example, the container with BF SDE 9.5.0: <br/>
-`stratumproject/stratum-bfrt:9.5.0`
+For example, the container with BF SDE 9.5.2: <br/>
+`stratumproject/stratum-bfrt:latest-9.5.2`
 
 These containers include kernel modules for OpenNetworkLinux.
 
@@ -60,8 +60,8 @@ docker save [Image Name] -o [Tarball Name]
 
 For example,
 ```bash
-docker pull stratumproject/stratum-bfrt:9.5.0
-docker save stratumproject/stratum-bfrt:9.5.0 -o stratum-bfrt-9.5.0-docker.tar
+docker pull stratumproject/stratum-bfrt:latest-9.5.2
+docker save stratumproject/stratum-bfrt:latest-9.5.2 -o stratum-bfrt-9.5.2-docker.tar
 ```
 
 Then, deploy the tarball to the device via scp, rsync, http, USB stick, etc.
@@ -77,7 +77,7 @@ docker images
 For example,
 
 ```bash
-docker load -i stratum-bfrt-9.5.0-docker.tar
+docker load -i stratum-bfrt-9.5.2-docker.tar
 ```
 
 ### Set up huge pages
@@ -119,7 +119,7 @@ CHASSIS_CONFIG    # Override the default chassis config file.
 LOG_DIR           # The directory for logging, default: `/var/log/`.
 SDE_VERSION       # The SDE version
 DOCKER_IMAGE      # The container image name, default: stratumproject/stratum-bfrt
-DOCKER_IMAGE_TAG  # The container image tag, default: $SDE_VERSION
+DOCKER_IMAGE_TAG  # The container image tag, default: latest-$SDE_VERSION
 PLATFORM          # Use specific platform port map
 ```
 
@@ -151,6 +151,8 @@ You can safely ignore warnings like this:
 ```
 
 For more details on additional options, see [below](#stratum-runtime-options).
+Otherwise, continue with the [pipeline README](/stratum/hal/bin/barefoot/README.pipeline.md)
+on how to load a P4 pipeline into Stratum.
 
 ### Managing Stratum with systemd
 
@@ -198,7 +200,7 @@ In one terminal window, run `tofino-model` in one container:
 ```bash
 docker run --rm -it --privileged \
   --network=host \
-  stratumproject/tofino-model:9.5.0  # <SDE_VERSION>
+  stratumproject/tofino-model:9.5.2  # <SDE_VERSION>
 ```
 
 In another terminal window, run Stratum in its own container:
@@ -206,8 +208,7 @@ In another terminal window, run Stratum in its own container:
 ```bash
 PLATFORM=barefoot-tofino-model \
 stratum/hal/bin/barefoot/docker/start-stratum-container.sh \
-  -bf_switchd_background=false \
-  -enable_onlp=false
+  -bf_switchd_background=false
 ```
 
 ### Cleaning up `tofino-model` interfaces
@@ -567,12 +568,13 @@ On some supported platforms the BSP-based implementation is chosen by default.
 This selection can be overwritten with the `-bf_switchd_cfg` flag:
 
 ```bash
-start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf -enable_onlp=false
+start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf [-enable_onlp=false]
 ```
 
-The `-enable_onlp=false` flag tells Stratum not to use the ONLP PHAL plugin. Use
-this flag when you are using a vendor-provided BSP or running Stratum with the
-Tofino software model.
+The optional `-enable_onlp=false` flag tells Stratum not to use the ONLP PHAL
+plugin. ONLP is disabled by default, but you can explicitly override this flag
+when using a vendor-provided BSP or running Stratum with the Tofino software
+model.
 
 ### Running the binary in BSP-less mode
 
@@ -662,6 +664,30 @@ short, it requires that the binary strings must not contain redundant bytes,
 `-incompatible_enable_bfrt_legacy_bytestring_responses` flag toggles this
 behavior. **This flag will be removed in a future release and canonical byte
 strings will be the default.**
+
+
+### Experimental P4Runtime translation support
+
+The `stratum_bfrt` target supports P4Runtime translation which helps to translate
+between SDN port and the SDK port.
+
+To enable this, you need to create a new port type in you P4 code and use this type
+for match field and action parameter, for example:
+
+```p4
+@p4runtime_translation("tna/PortId_t", 32)
+type bit<9> FabricPortId_t;
+```
+
+To enable it on Stratum, add `--experimental_enable_p4runtime_translation` flag
+when starting Stratum.
+
+Note that `stratum_bfrt` also follows the PSA port spec, below are reserved ports
+when using `stratum_bfrt`:
+
+- `0x00000000`: Unspecified port.
+- `0xFFFFFFFD`: CPU port.
+- `0xFFFFFF00` - `0xFFFFFF03`: Recirculation ports for pipeline 0 - 3.
 
 -----
 
@@ -781,3 +807,13 @@ In a bash shell on the switch:
 lspci -d 1d1c:
 # 05:00.0 Unassigned class [ff00]: Device 1d1c:0010 (rev 10)
 ```
+
+### SDE config mismatch and connection error
+
+`connect failed. Error: Connection refused`
+
+This error means that Stratum was started with the expectation of a BSP
+(`-bf_switchd_cfg=...`), but no BSP was actually found. Check that you are
+passing in the right config, depending on how you compiled the SDE:
+`tofino_skip_p4.conf` vs. `tofino_skip_p4_no_bsp.conf `. Normally the
+`start-stratum.sh` script will pick the right value.

@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/barefoot/bf_sde_mock.h"
+#include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -33,14 +34,18 @@ class BfrtPreManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     bf_sde_wrapper_mock_ = absl::make_unique<StrictMock<BfSdeMock>>();
-    bfrt_pre_manager_ =
-        BfrtPreManager::CreateInstance(bf_sde_wrapper_mock_.get(), kDevice1);
+    bfrt_p4runtime_translator_mock_ =
+        absl::make_unique<BfrtP4RuntimeTranslatorMock>();
+    bfrt_pre_manager_ = BfrtPreManager::CreateInstance(
+        bf_sde_wrapper_mock_.get(), bfrt_p4runtime_translator_mock_.get(),
+        kDevice1);
   }
 
   static constexpr int kDevice1 = 0;
 
   // Strict mock to ensure we capture all SDE calls.
   std::unique_ptr<StrictMock<BfSdeMock>> bf_sde_wrapper_mock_;
+  std::unique_ptr<BfrtP4RuntimeTranslatorMock> bfrt_p4runtime_translator_mock_;
   std::unique_ptr<BfrtPreManager> bfrt_pre_manager_;
 };
 
@@ -48,11 +53,12 @@ constexpr int BfrtPreManagerTest::kDevice1;
 
 TEST_F(BfrtPreManagerTest, PushForwardingPipelineConfigSuccess) {
   BfrtDeviceConfig config;
+
   EXPECT_OK(bfrt_pre_manager_->PushForwardingPipelineConfig(config));
 }
 
 TEST_F(BfrtPreManagerTest, InsertMulticastGroupSuccess) {
-  const std::string kMulticastGroupEntryText = R"PROTO(
+  const std::string kMulticastGroupEntryText = R"pb(
     multicast_group_entry {
       multicast_group_id: 55
       replicas {
@@ -68,7 +74,7 @@ TEST_F(BfrtPreManagerTest, InsertMulticastGroupSuccess) {
         instance: 654
       }
     }
-  )PROTO";
+  )pb";
   constexpr int kGroupId = 55;
   const std::vector<uint32> egress_ports_group1 = {1, 2};
   const std::vector<uint32> egress_ports_group2 = {3};
@@ -93,13 +99,16 @@ TEST_F(BfrtPreManagerTest, InsertMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::INSERT, entry));
 }
 
 TEST_F(BfrtPreManagerTest, ModifyMulticastGroupSuccess) {
-  const std::string kMulticastGroupEntryText = R"PROTO(
+  const std::string kMulticastGroupEntryText = R"pb(
     multicast_group_entry {
       multicast_group_id: 55
       replicas {
@@ -115,7 +124,7 @@ TEST_F(BfrtPreManagerTest, ModifyMulticastGroupSuccess) {
         instance: 987
       }
     }
-  )PROTO";
+  )pb";
   constexpr int kGroupId = 55;
   const std::vector<uint32> egress_ports_group1 = {5, 6};
   const std::vector<uint32> egress_ports_group2 = {7};
@@ -148,17 +157,20 @@ TEST_F(BfrtPreManagerTest, ModifyMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
-
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::MODIFY, entry));
 }
 
 TEST_F(BfrtPreManagerTest, DeleteMulticastGroupSuccess) {
-  const std::string kMulticastGroupEntryText = R"PROTO(
+  const std::string kMulticastGroupEntryText = R"pb(
     multicast_group_entry {
       multicast_group_id: 55
     }
-  )PROTO";
+  )pb";
   constexpr int kGroupId = 55;
   const std::vector<uint32> nodes = {1, 2, 3};
   auto session_mock = std::make_shared<SessionMock>();
@@ -175,6 +187,11 @@ TEST_F(BfrtPreManagerTest, DeleteMulticastGroupSuccess) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::DELETE, entry));
 }
@@ -182,12 +199,12 @@ TEST_F(BfrtPreManagerTest, DeleteMulticastGroupSuccess) {
 TEST_F(BfrtPreManagerTest, ReadMulticastGroupSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
-  const std::string kMulticastGroupRequestText = R"PROTO(
+  const std::string kMulticastGroupRequestText = R"pb(
     multicast_group_entry {
       multicast_group_id: 55
     }
-  )PROTO";
-  const std::string kMulticastGroupResponseText = R"PROTO(
+  )pb";
+  const std::string kMulticastGroupResponseText = R"pb(
     entities {
       packet_replication_engine_entry {
         multicast_group_entry {
@@ -211,7 +228,7 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupSuccess) {
         }
       }
     }
-  )PROTO";
+  )pb";
   const int kMcNodeId1 = 100;
   const int kReplicationId1 = 111;
   const std::vector<uint32> kLagIds1 = {0, 0};
@@ -248,18 +265,32 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  const auto& resp_pre_entry =
+      resp.entities(0).packet_replication_engine_entry();
+  EXPECT_CALL(
+      *bfrt_p4runtime_translator_mock_,
+      TranslatePacketReplicationEngineEntry(EqualsProto(resp_pre_entry), false))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+          resp_pre_entry)));
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
 TEST_F(BfrtPreManagerTest, ReadMulticastGroupWildcardSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
-  const std::string kMulticastGroupRequestText = R"PROTO(
+  const std::string kMulticastGroupRequestText = R"pb(
     multicast_group_entry {
       multicast_group_id: 0
     }
-  )PROTO";
-  const std::string kMulticastGroupResponseText = R"PROTO(
+  )pb";
+  const std::string kMulticastGroupResponseText = R"pb(
     entities {
       packet_replication_engine_entry {
         multicast_group_entry {
@@ -290,7 +321,7 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupWildcardSuccess) {
         }
       }
     }
-  )PROTO";
+  )pb";
   const int kMcNodeId1 = 100;
   const int kReplicationId1 = 111;
   const std::vector<uint32> kLagIds1 = {0, 0};
@@ -327,11 +358,27 @@ TEST_F(BfrtPreManagerTest, ReadMulticastGroupWildcardSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kMulticastGroupRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  for (const auto& entity : resp.entities()) {
+    const auto& resp_pre_entry = entity.packet_replication_engine_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslatePacketReplicationEngineEntry(
+                    EqualsProto(resp_pre_entry), false))
+        .WillOnce(
+            Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+                resp_pre_entry)));
+  }
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
@@ -341,7 +388,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
       class_of_service: 2
       packet_length_bytes: 1500
     }
-  )PROTO";
+  )pb";
   constexpr uint32 kSessionId = 55;
   constexpr int kEgressPort = 123;
   constexpr int kCos = 2;
@@ -356,23 +403,33 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionSuccess) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::INSERT, entry));
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidSessionIdFail) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 1016
       replicas {
         egress_port: 123
       }
     }
-  )PROTO";
+  )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -382,7 +439,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidSessionIdFail) {
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidPacketLengthFail) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
@@ -390,11 +447,16 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidPacketLengthFail) {
       }
       packet_length_bytes: 65536
     }
-  )PROTO";
+  )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -405,7 +467,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidPacketLengthFail) {
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionMultipleReplicasFail) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
@@ -415,11 +477,16 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionMultipleReplicasFail) {
         egress_port: 456
       }
     }
-  )PROTO";
+  )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -430,7 +497,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionMultipleReplicasFail) {
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInstanceSetFail) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
@@ -438,11 +505,16 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInstanceSetFail) {
         instance: 1
       }
     }
-  )PROTO";
+  )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -453,18 +525,23 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInstanceSetFail) {
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidEgressPortFail) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
         egress_port: 0
       }
     }
-  )PROTO";
+  )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -474,7 +551,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidEgressPortFail) {
 }
 
 TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidCosFail) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
@@ -482,11 +559,16 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidCosFail) {
       }
       class_of_service: 9
     }
-  )PROTO";
+  )pb";
   auto session_mock = std::make_shared<SessionMock>();
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
 
   auto ret = bfrt_pre_manager_->WritePreEntry(session_mock,
                                               ::p4::v1::Update::INSERT, entry);
@@ -497,7 +579,7 @@ TEST_F(BfrtPreManagerTest, InsertCloneSessionInvalidCosFail) {
 }
 
 TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
       replicas {
@@ -507,7 +589,7 @@ TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
       class_of_service: 4
       packet_length_bytes: 510
     }
-  )PROTO";
+  )pb";
   constexpr uint32 kSessionId = 55;
   constexpr int kEgressPort = 654;
   constexpr int kCos = 4;
@@ -522,16 +604,21 @@ TEST_F(BfrtPreManagerTest, ModifyCloneSessionSuccess) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::MODIFY, entry));
 }
 
 TEST_F(BfrtPreManagerTest, DeleteCloneSessionSuccess) {
-  const std::string kCloneSessionEntryText = R"PROTO(
+  const std::string kCloneSessionEntryText = R"pb(
     clone_session_entry {
       session_id: 55
     }
-  )PROTO";
+  )pb";
   constexpr uint32 kSessionId = 55;
   auto session_mock = std::make_shared<SessionMock>();
 
@@ -542,6 +629,11 @@ TEST_F(BfrtPreManagerTest, DeleteCloneSessionSuccess) {
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryText, &entry));
 
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
   EXPECT_OK(bfrt_pre_manager_->WritePreEntry(session_mock,
                                              ::p4::v1::Update::DELETE, entry));
 }
@@ -549,12 +641,12 @@ TEST_F(BfrtPreManagerTest, DeleteCloneSessionSuccess) {
 TEST_F(BfrtPreManagerTest, ReadCloneSessionSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
-  const std::string kCloneSessionEntryRequestText = R"PROTO(
+  const std::string kCloneSessionEntryRequestText = R"pb(
     clone_session_entry {
       session_id: 55
     }
-  )PROTO";
-  const std::string kCloneSessionEntryResponseText = R"PROTO(
+  )pb";
+  const std::string kCloneSessionEntryResponseText = R"pb(
     entities {
       packet_replication_engine_entry {
         clone_session_entry {
@@ -568,7 +660,7 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionSuccess) {
         }
       }
     }
-  )PROTO";
+  )pb";
   const int kSessionId = 55;
   std::vector<uint32> session_ids = {kSessionId};
   std::vector<int> egress_ports = {123};
@@ -588,18 +680,32 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  const auto& resp_pre_entry =
+      resp.entities(0).packet_replication_engine_entry();
+  EXPECT_CALL(
+      *bfrt_p4runtime_translator_mock_,
+      TranslatePacketReplicationEngineEntry(EqualsProto(resp_pre_entry), false))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+          resp_pre_entry)));
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
 TEST_F(BfrtPreManagerTest, ReadCloneSessionWildcardSuccess) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
-  const std::string kCloneSessionEntryRequestText = R"PROTO(
+  const std::string kCloneSessionEntryRequestText = R"pb(
     clone_session_entry {
       session_id: 0
     }
-  )PROTO";
-  const std::string kCloneSessionEntryResponseText = R"PROTO(
+  )pb";
+  const std::string kCloneSessionEntryResponseText = R"pb(
     entities {
       packet_replication_engine_entry {
         clone_session_entry {
@@ -626,7 +732,7 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionWildcardSuccess) {
         }
       }
     }
-  )PROTO";
+  )pb";
   const int kSessionId1 = 55;
   const int kSessionId2 = 88;
   std::vector<uint32> session_ids = {kSessionId1, kSessionId2};
@@ -647,6 +753,22 @@ TEST_F(BfrtPreManagerTest, ReadCloneSessionWildcardSuccess) {
 
   ::p4::v1::PacketReplicationEngineEntry entry;
   ASSERT_OK(ParseProtoFromString(kCloneSessionEntryRequestText, &entry));
+
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslatePacketReplicationEngineEntry(EqualsProto(entry), true))
+      .WillOnce(Return(
+          ::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(entry)));
+
+  for (const auto& entity : resp.entities()) {
+    const auto& resp_pre_entry = entity.packet_replication_engine_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslatePacketReplicationEngineEntry(
+                    EqualsProto(resp_pre_entry), false))
+        .WillOnce(
+            Return(::util::StatusOr<::p4::v1::PacketReplicationEngineEntry>(
+                resp_pre_entry)));
+  }
+
   EXPECT_OK(bfrt_pre_manager_->ReadPreEntry(session_mock, entry, &writer_mock));
 }
 
