@@ -2111,7 +2111,8 @@ namespace {
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_7_2)|| defined(SDE_9_8_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_7_2) || \
+    defined(SDE_9_8_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
 #else
@@ -2775,7 +2776,8 @@ namespace {
     // Wildcard write to all indices.
     size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_7_2)|| defined(SDE_9_8_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_7_2) || \
+    defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
@@ -2913,7 +2915,8 @@ namespace {
     // Wildcard write to all indices.
     size_t table_size;
 #if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_7_2)|| defined(SDE_9_8_0)
+    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_7_2) || \
+    defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
 #else
