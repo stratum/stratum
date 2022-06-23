@@ -74,7 +74,7 @@ TEST_P(HitAssignMapperTest, TestApplyNoErrors) {
 }
 
 // Tests a table.apply().hit expression in an unexpected place.
-TEST_F(HitAssignMapperTest, TestApplyUnexpectedHit) {
+TEST_F(HitAssignMapperTest, DISABLED_TestApplyUnexpectedHit) {
   const std::string kTestP4File = "hit_assign.ir.json";
   SetUpTestIR(kTestP4File);
   const IR::P4Control* ir_control = ir_helper_->GetP4Control("basic_hit");
@@ -105,7 +105,7 @@ TEST_F(HitAssignMapperTest, TestApplyUnexpectedHit) {
 }
 
 // Tests assignment of table hit status to an unexpected value type.
-TEST_F(HitAssignMapperTest, TestApplyUnknownHitVarType) {
+TEST_F(HitAssignMapperTest, DISABLED_TestApplyUnknownHitVarType) {
   const std::string kTestP4File = "hit_assign.ir.json";
   SetUpTestIR(kTestP4File);
   const IR::P4Control* ir_control = ir_helper_->GetP4Control("basic_hit");
