@@ -24,6 +24,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - ~~9.6.0~~ (skipped)
  - 9.7.0 (experimental; stratum_bfrt only)
  - 9.7.1 (experimental; stratum_bfrt only)
+ - 9.7.2 (experimental; stratum_bfrt only)
  - 9.8.0 (experimental; stratum_bfrt only)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
