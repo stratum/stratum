@@ -157,6 +157,12 @@ done
 # ---------- Build: Tofino -------------
 for sde_version in ${BF_SDE_VERSIONS[@]}; do
   for target in ${BF_TARGETS[@]}; do
+    # We will not build stratum_bf target when SDE version is same or later than 9.7.0.
+    if [[ "$target" == "stratum_bf" ]] && \
+      [[ $(numeric_version "$sde_version") -ge $(numeric_version "9.7.0") ]]; then
+      echo "Skipping $target with BF SDE $sde_version."
+      continue
+    fi
     target_dash=${target/_/-}
     echo "Building $target ($target_dash) with BF SDE $sde_version..."
     set -x

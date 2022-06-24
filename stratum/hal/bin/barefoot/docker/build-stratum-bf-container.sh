@@ -6,6 +6,7 @@ set -e
 DOCKERFILE_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 2>&1 && pwd )"}
 STRATUM_BF_DIR=$( cd "$DOCKERFILE_DIR/.." >/dev/null 2>&1 && pwd )
+STRATUM_TARGET=${STRATUM_TARGET:-stratum_bfrt}
 JOBS=${JOBS:-4}
 DOCKER_IMG=${DOCKER_IMG:-stratumproject/build:build}
 
@@ -23,6 +24,7 @@ Example:
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
     SDE_INSTALL: Path to BF SDE install directory (set to skip SDE build)
+    STRATUM_TARGET: stratum_bf or stratum_bfrt (Default: stratum_bfrt)
     STRATUM_ROOT: The root directory of Stratum.
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
@@ -58,8 +60,12 @@ if [ -n "$1" ]; then
       CMD_OPTS+="-k /kernel-tar$i/$KERNEL_HEADERS_TAR_NAME "
       ((i+=1))
   done
+  # Mount BSP folder and pass it to the build script, if requested, for SDE 9.6.0 and before.
   # Pass in the BSP tarball directly, starting with SDE 9.7.0.
-  if [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
+  if [[ -n "$BSP" && -d "$BSP" ]]; then
+    DOCKER_OPTS+="-v $BSP:/bsp-directory "
+    CMD_OPTS+="--bsp-path /bsp-directory "
+  elif [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
     DOCKER_OPTS+="-v $BSP:/bsp.tgz "
     CMD_OPTS+="--bsp-path /bsp.tgz "
   fi
@@ -84,6 +90,7 @@ Build variables:
   SDE install tar: ${SDE_INSTALL_TAR:-none}
   SDE install directory: ${SDE_INSTALL:-none}
   Stratum directory: $STRATUM_ROOT
+  Stratum target: $STRATUM_TARGET
   Build jobs: $JOBS
   Docker image for building: $DOCKER_IMG
   Release build enabled: ${RELEASE_BUILD:-false}
@@ -130,11 +137,11 @@ docker run --rm \
   -w /stratum \
   --entrypoint bash \
   $DOCKER_IMG -c \
-    "bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb \
+    "bazel build //stratum/hal/bin/barefoot:${STRATUM_TARGET}_deb \
        $BAZEL_OPTS \
        --jobs $JOBS && \
-     cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb /output/ && \
-     cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb) /output/"
+     cp -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb /output/ && \
+     cp -f \$(readlink -f /stratum/bazel-bin/stratum/hal/bin/barefoot/${STRATUM_TARGET}_deb.deb) /output/"
 set +x
 
 
@@ -143,7 +150,7 @@ if [ "$(docker version -f '{{.Server.Experimental}}')" = "true" ]; then
   DOCKER_BUILD_OPTS+="--squash "
 fi
 
-DOCKER_BUILD_OPTS+="--label stratum-target=stratum_bfrt "
+DOCKER_BUILD_OPTS+="--label stratum-target=$STRATUM_TARGET "
 DOCKER_BUILD_OPTS+="--label bf-sde-version=$SDE_VERSION "
 DOCKER_BUILD_OPTS+="--label build-timestamp=$(date +%FT%T%z) "
 DOCKER_BUILD_OPTS+="--label build-machine=$(hostname) "
@@ -161,14 +168,14 @@ fi
 popd
 
 # Build Stratum BF runtime Docker image
-STRATUM_NAME=stratum-bfrt
+STRATUM_NAME=$(echo $STRATUM_TARGET | sed 's/_/-/')
 RUNTIME_IMAGE=stratumproject/$STRATUM_NAME:latest-$SDE_VERSION
 echo "Building Stratum runtime image: $RUNTIME_IMAGE"
 set -x
 docker build \
   $DOCKER_BUILD_OPTS \
   -t "$RUNTIME_IMAGE" \
-  --build-arg STRATUM_TARGET="stratum_bfrt" \
+  --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f "$DOCKERFILE_DIR/Dockerfile" \
   "$(pwd)"
 

@@ -160,17 +160,17 @@ Systemd provides service management and Stratum has been integrated into it.
 
 Start/stop Stratum service manually:
 ```bash
-systemctl start stratum_bfrt.service  # stop
+systemctl start stratum_bf.service  # stop
 ```
 
 Enable/disable auto-start of Stratum on boot:
 ```bash
-systemctl enable stratum_bfrt.service  # disable
+systemctl enable stratum_bf.service  # disable
 ```
 
 View logs:
 ```bash
-journalctl -u stratum_bfrt.service
+journalctl -u stratum_bf.service
 ```
 
 -----

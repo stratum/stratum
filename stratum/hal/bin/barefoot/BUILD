@@ -11,6 +11,16 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
+stratum_bf_common_deps = [
+    "//stratum/glue:init_google",
+    "//stratum/glue:logging",
+    "//stratum/hal/lib/common:hal",
+    "//stratum/hal/lib/phal",
+    "//stratum/lib/security:auth_policy_checker",
+    "//stratum/lib/security:credentials_manager",
+    "@com_github_google_glog//:glog",
+]
+
 stratum_cc_binary(
     name = "bf_pipeline_builder",
     srcs = [
@@ -29,9 +39,27 @@ stratum_cc_binary(
 )
 
 stratum_cc_binary(
-    name = "stratum_bfrt",
+    name = "stratum_bf",
     srcs = [
         "main.cc",
+    ],
+    arches = HOST_ARCHES,
+    data = [
+        "tofino_skip_p4.conf",
+        "tofino_skip_p4_no_bsp.conf",
+    ],
+    deps = [
+        "//stratum/hal/lib/barefoot:bf_chassis_manager",
+        "//stratum/hal/lib/barefoot:bf_sde_wrapper",
+        "//stratum/hal/lib/barefoot:bf_switch",
+        "//stratum/hal/lib/pi:pi_node_bf",
+    ] + stratum_bf_common_deps,
+)
+
+stratum_cc_binary(
+    name = "stratum_bfrt",
+    srcs = [
+        "main_bfrt.cc",
     ],
     arches = HOST_ARCHES,
     data = [
@@ -47,17 +75,21 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bfrt_table_manager",
         "//stratum/hal/lib/barefoot:bfrt_counter_manager",
         "//stratum/hal/lib/barefoot:bfrt_p4runtime_translator",
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
-        "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/phal",
-        "//stratum/lib/security:auth_policy_checker",
-        "//stratum/lib/security:credentials_manager",
-        "@com_github_google_glog//:glog",
-    ]
+    ] + stratum_bf_common_deps,
 )
 
 # Rules for Debian package
+pkg_tar(
+    name = "stratum_binaries",
+    srcs = [
+        "deb/attach-bf-shell.sh",
+        "deb/start-stratum.sh",
+        ":stratum_bf",
+    ],
+    mode = "0755",
+    package_dir = "/usr/bin",
+)
+
 pkg_tar(
     name = "stratum_bfrt_binaries",
     # TODO(bocon): Consider refactoring common start script and builder
@@ -68,12 +100,13 @@ pkg_tar(
     ],
     mode = "0755",
     package_dir = "/usr/bin",
+    symlinks = {"./usr/bin/stratum_bf": "/usr/bin/stratum_bfrt"},
 )
 
 pkg_tar(
     name = "systemd_service",
     srcs = [
-        "deb/stratum_bfrt.service",
+        "deb/stratum_bf.service",
     ],
     mode = "0644",
     package_dir = "/usr/lib/systemd/system",
@@ -99,6 +132,21 @@ pkg_tar(
     deps = [
         "//stratum/hal/config:platform_configs_tar",
     ],
+)
+
+stratum_license_tar(
+    name = "stratum_bf_legal",
+    dep_notices = [
+        "//legal:NOTICE.common.txt",
+        "//legal:NOTICE.pi.txt",
+        "//legal:NOTICE.json.txt",
+        "//legal:NOTICE.intel-sde.txt",
+    ],
+    extra_licenses = [
+        "//legal:LICENSE.intel-sde.txt",
+    ],
+    mode = "0644",
+    package_dir = "/usr/share/doc/stratum-bf/",
 )
 
 stratum_license_tar(
@@ -128,6 +176,16 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "stratum_bf_data",
+    extension = "tar.bz2",
+    deps = [
+        ":stratum_bf_legal",
+        ":stratum_binaries",
+        ":stratum_common_data",
+    ],
+)
+
+pkg_tar(
     name = "stratum_bfrt_data",
     extension = "tar.bz2",
     deps = [
@@ -146,6 +204,27 @@ sde_bsp_debian_deps = [
 ]
 
 pkg_deb(
+    name = "stratum_bf_deb",
+    architecture = "amd64",
+    conflicts = ["stratum-bfrt"],
+    data = ":stratum_bf_data",
+    depends = [
+        "kmod",
+        "libedit2",
+        "systemd",
+        "telnet",
+    ] + sde_bsp_debian_deps,
+    description = "The Stratum package for Barefoot Tofino-based platform",
+    homepage = "https://stratumproject.org/",
+    maintainer = "The Stratum Project",
+    package = "stratum-bf",
+    postinst = "deb/postinst",
+    prerm = "deb/prerm",
+    recommends = ["systemd"],
+    version = "0.0.1",
+)
+
+pkg_deb(
     name = "stratum_bfrt_deb",
     architecture = "amd64",
     conflicts = ["stratum-bf"],
@@ -156,7 +235,6 @@ pkg_deb(
         "libssl1.1",
         "systemd",
         "telnet",
-        "libexpat1",
     ] + sde_bsp_debian_deps,
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",

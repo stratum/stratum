@@ -21,5 +21,5 @@ ldconfig
 # If systemd is installed,
 if command -v systemctl &> /dev/null; then
   # Enable Stratum service
-  systemctl enable stratum_bfrt.service
+  systemctl enable stratum_bf.service
 fi
