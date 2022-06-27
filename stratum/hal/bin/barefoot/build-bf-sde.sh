@@ -26,14 +26,14 @@ Options:
 
 Examples:
 
-    $0 -t ~/bf-sde-9.5.2.tgz
-    $0 -t ~/bf-sde-9.5.2.tgz -j 4
-    $0 -t ~/bf-sde-9.5.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
+    $0 -t ~/bf-sde-9.7.2.tgz
+    $0 -t ~/bf-sde-9.7.2.tgz -j 4
+    $0 -t ~/bf-sde-9.7.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
 "
 }
 
 function numeric_version() {
-  # Get numeric version, for example 9.5.2 will become 90502.
+  # Get numeric version, for example 9.7.2 will become 90702.
   sem_ver=$1
   ver_arr=()
   IFS='.' read -raver_arr<<<"$sem_ver"

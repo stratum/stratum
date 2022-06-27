@@ -40,7 +40,7 @@ container we should access.
 
 ```
 $ docker ps | grep stratum-bf
-4c615277261d  stratumproject/stratum-bfrt:9.5.2-4.14.49-OpenNetworkLinux  "/usr/bin/stratum-st…"  5 days ago  Up 5 days
+4c615277261d  stratumproject/stratum-bfrt:9.7.2-4.14.49-OpenNetworkLinux  "/usr/bin/stratum-st…"  5 days ago  Up 5 days
 ```
 
 The `4c615277261d` is the container ID we need.
