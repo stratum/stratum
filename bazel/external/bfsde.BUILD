@@ -127,7 +127,6 @@ config_setting(
     },
 )
 
-
 config_setting(
     name = "sde_version_9.7.1",
     flag_values = {
