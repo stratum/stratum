@@ -3,7 +3,7 @@
 [Unit]
 Description=Stratum service
 Documentation=https://www.opennetworking.org/stratum/
-ConditionPathExists=/usr/bin/stratum_bf
+ConditionPathExists=/usr/bin/stratum_bfrt
 ConditionPathExists=/usr/bin/start-stratum.sh
 
 [Service]

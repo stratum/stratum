@@ -26,7 +26,7 @@ fi
 nr_hugepages=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages)
 free_hugepages=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/free_hugepages)
 # The number of pages needed is dynamically computed by bf_switchd.
-# stratum_bf uses around 70 pages in testing, but 128 is a safe bound.
+# stratum_bfrt uses around 70 pages in testing, but 128 is a safe bound.
 if [[ $nr_hugepages -lt 128 ]] || [[ $free_hugepages -lt 128 ]]; then
     if [[ $nr_hugepages -eq 0 ]]; then
         echo "Setting up hugepages..."
@@ -90,7 +90,7 @@ fi
 
 mkdir -p /var/run/stratum /var/log/stratum
 
-exec /usr/bin/stratum_bf \
+exec /usr/bin/stratum_bfrt \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
     -log_dir=/var/log/stratum \
     -bf_switchd_cfg=$BF_SWITCHD_CFG \

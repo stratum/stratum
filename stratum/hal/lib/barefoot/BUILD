@@ -47,7 +47,6 @@ stratum_cc_library(
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/common:switch_interface",
-        "//stratum/hal/lib/pi:pi_node_bf",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",

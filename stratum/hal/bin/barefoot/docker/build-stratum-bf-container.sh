@@ -24,7 +24,6 @@ Example:
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
     SDE_INSTALL: Path to BF SDE install directory (set to skip SDE build)
-    STRATUM_TARGET: stratum_bf or stratum_bfrt (Default: stratum_bfrt)
     STRATUM_ROOT: The root directory of Stratum.
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
@@ -60,12 +59,8 @@ if [ -n "$1" ]; then
       CMD_OPTS+="-k /kernel-tar$i/$KERNEL_HEADERS_TAR_NAME "
       ((i+=1))
   done
-  # Mount BSP folder and pass it to the build script, if requested, for SDE 9.6.0 and before.
-  # Pass in the BSP tarball directly, starting with SDE 9.7.0.
-  if [[ -n "$BSP" && -d "$BSP" ]]; then
-    DOCKER_OPTS+="-v $BSP:/bsp-directory "
-    CMD_OPTS+="--bsp-path /bsp-directory "
-  elif [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
+  # Pass in the BSP tarball directly
+  if [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
     DOCKER_OPTS+="-v $BSP:/bsp.tgz "
     CMD_OPTS+="--bsp-path /bsp.tgz "
   fi

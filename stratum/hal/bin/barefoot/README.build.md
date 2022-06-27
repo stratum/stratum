@@ -142,11 +142,6 @@ First follow [Step 1 from Method 2](#step-1:-generate-the-sde-install-tarball)
 Make sure to export the path to the install tarball as an environment variable,
 then you can use Bazel to build the Stratum.
 
-#### To build `stratum_bf`:
-```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
-```
-
 #### To build `stratum_bfrt`:
 ```bash
 bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb
@@ -158,7 +153,6 @@ package also includes systemd service definition so users can use systemd to
 start the Stratum as a system service.
 
 The resulting Debian package can be found here:
-`bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb` or
 `bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb`
 
 Copy this file over to the switch and follow the
@@ -289,22 +283,6 @@ the Stratum ONLP support. The exact instructions vary by the BSP vendor, here is
 how it works for the Wedge reference switch. Either set the `BSP` environment
 variable before running the
 [`build-stratum-bf-container.sh`](#method-1-build-with-docker-in-one-shot) script:
-
-```bash
-tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
-export BSP=`pwd`/bf-reference-bsp-<SDE_VERSION>
-stratum/hal/bin/barefoot/docker/build-stratum-bf-container.sh ...
-```
-
-Or pass the BSP sources to the p4studio_build script with the `--bsp-path` flag.
-
-```bash
-tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
-export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
-./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
-```
-
-Starting with SDE 9.7.0 the BSP does not have to be extracted anymore:
 
 ```bash
 export BSP=`pwd`/bf-reference-bsp-<SDE_VERSION>.tgz
