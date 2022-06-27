@@ -160,6 +160,7 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
+# SDE verison >= 9.7.0
 pushd "$SDE/p4studio"
 $sudo ./install-p4studio-dependencies.sh
 ./p4studio packages extract
