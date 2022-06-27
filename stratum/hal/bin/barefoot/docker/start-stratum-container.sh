@@ -13,6 +13,8 @@ if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
     PLATFORM=$(cat /etc/onl/platform)
 elif [[ -z "$PLATFORM" ]] && [[ -f "/etc/sonic/sonic-environment" ]]; then
     PLATFORM=$(source /etc/sonic/sonic-environment; echo "$PLATFORM" | sed 's/_/-/g')
+elif [[ -z "$PLATFORM" ]] && [[ -f "/etc/sonic/config_db.json" ]]; then
+    PLATFORM=$(cat /etc/sonic/config_db.json | jq -r '.DEVICE_METADATA.localhost.platform' | sed 's/_/-/g')
 elif [[ -z "$PLATFORM" ]]; then
     echo "PLATFORM variable must be set manually on non-ONL switches."
     exit 255
