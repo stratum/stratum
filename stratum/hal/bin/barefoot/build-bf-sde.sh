@@ -24,14 +24,14 @@ Options:
 
 Examples:
 
-    $0 -t ~/bf-sde-9.5.2.tgz
-    $0 -t ~/bf-sde-9.5.2.tgz -j 4
-    $0 -t ~/bf-sde-9.5.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
+    $0 -t ~/bf-sde-9.7.2.tgz
+    $0 -t ~/bf-sde-9.7.2.tgz -j 4
+    $0 -t ~/bf-sde-9.7.2.tgz -k ~/linux-4.14.49-ONL.tar.xz
 "
 }
 
 function numeric_version() {
-  # Get numeric version, for example 9.5.2 will become 90502.
+  # Get numeric version, for example 9.7.2 will become 90702.
   sem_ver=$1
   ver_arr=()
   IFS='.' read -raver_arr<<<"$sem_ver"
@@ -158,26 +158,17 @@ else
     echo "SDE version: ${SDE_VERSION}"
 fi
 
-if [[ $(numeric_version "$SDE_VERSION") -ge $(numeric_version "9.7.0") ]]; then
-    # SDE verison >= 9.7.0
-    pushd "$SDE/p4studio"
-    $sudo ./install-p4studio-dependencies.sh
-    ./p4studio packages extract
-    # Patch SDE to build without kernel driver
-    sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
-    # Build BF SDE
-    ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
-    ./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
-    ./p4studio build --jobs $JOBS
-    popd
-else
-    # Patch stratum_profile.yaml in SDE
-    cp -f "$STRATUM_BF_DIR/stratum_profile.yaml" "$SDE/p4studio_build/profiles/stratum_profile.yaml"
-    # Build BF SDE
-    pushd "$SDE/p4studio_build"
-    ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc $BSP_CMD
-    popd
-fi
+# SDE verison >= 9.7.0
+pushd "$SDE/p4studio"
+$sudo ./install-p4studio-dependencies.sh
+./p4studio packages extract
+# Patch SDE to build without kernel driver
+sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
+# Build BF SDE
+./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
+./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
+./p4studio build --jobs $JOBS
+popd
 
 echo "BF SDE build complete."
 

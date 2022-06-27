@@ -4,7 +4,7 @@
 set -e
 
 LOG_DIR=${LOG_DIR:-/var/log}
-SDE_VERSION=${SDE_VERSION:-9.5.2}
+SDE_VERSION=${SDE_VERSION:-9.7.2}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bfrt}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-latest-$SDE_VERSION}
 
