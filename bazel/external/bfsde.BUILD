@@ -127,6 +127,14 @@ config_setting(
     },
 )
 
+
+config_setting(
+    name = "sde_version_9.7.1",
+    flag_values = {
+        ":sde_version_setting": "9.7.1",
+    },
+)
+
 config_setting(
     name = "sde_version_9.7.2",
     flag_values = {
