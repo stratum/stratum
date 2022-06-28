@@ -152,6 +152,7 @@ pkg_deb(
     depends = [
         "kmod",
         "libedit2",
+        "libexpat1",
         "libssl1.1",
         "systemd",
         "telnet",
