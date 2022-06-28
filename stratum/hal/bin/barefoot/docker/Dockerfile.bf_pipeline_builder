@@ -4,7 +4,7 @@
 FROM bitnami/minideb:stretch as runtime
 
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
-LABEL description="Docker-based distribution of the Stratum-bf pipeline builder"
+LABEL description="Docker-based distribution of the Stratum-bfrt pipeline builder"
 
 ADD ./bf_pipeline_builder /usr/local/bin
 

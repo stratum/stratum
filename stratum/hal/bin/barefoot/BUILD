@@ -148,7 +148,6 @@ sde_bsp_debian_deps = [
 pkg_deb(
     name = "stratum_bfrt_deb",
     architecture = "amd64",
-    conflicts = ["stratum-bf"],
     data = ":stratum_bfrt_data",
     depends = [
         "kmod",
