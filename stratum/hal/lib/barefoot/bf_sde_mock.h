@@ -44,6 +44,7 @@ class TableKeyMock : public BfSdeInterface::TableKeyInterface {
                                               std::string* high));
   MOCK_METHOD1(SetPriority, ::util::Status(uint32 priority));
   MOCK_CONST_METHOD1(GetPriority, ::util::Status(uint32* priority));
+  MOCK_CONST_METHOD1(GetTableId, ::util::Status(uint32* table_id));
 };
 
 class TableDataMock : public BfSdeInterface::TableDataInterface {
