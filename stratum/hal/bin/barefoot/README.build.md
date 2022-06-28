@@ -23,6 +23,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - 9.7.1 (experimental; stratum_bfrt only)
  - 9.7.2 (recommended; LTS release)
  - 9.8.0 (experimental; stratum_bfrt only)
+ - 9.9.0 (experimental; stratum_bfrt only)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:

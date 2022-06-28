@@ -6,6 +6,9 @@
 
 STRATUM_BF_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 JOBS=${JOBS:-4}
+# target-syslibs commit is based on submodule in target-utils/third-party/target-syslibs
+TARGET_SYSLIBS_COMMIT=95dca9002890418614be7f76da6012b4670fb2b5
+TARGET_UTILS_COMMIT=1f6fbc3387b9605ecaa4faefdc038a039e5451b2
 
 print_help() {
 echo "
@@ -171,6 +174,33 @@ sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drive
 popd
 
 echo "BF SDE build complete."
+
+if [[ $(numeric_version "$SDE_VERSION") -ge $(numeric_version "9.9.0") ]]; then
+    echo "Build and install target-syslibs and target-utils."
+    TARGET_SYSLIBS_TMP=$(mktemp -d)
+    git clone https://github.com/p4lang/target-syslibs.git "$TARGET_SYSLIBS_TMP"
+    pushd "$TARGET_SYSLIBS_TMP"
+    git checkout "$TARGET_SYSLIBS_COMMIT"
+    git submodule update --init
+    mkdir -p build
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX="$SDE_INSTALL" ..
+    make install -j "$JOBS"
+    popd
+    rm -rf "$TARGET_SYSLIBS_TMP"
+
+    TARGET_UTILS_TMP=$(mktemp -d)
+    git clone https://github.com/p4lang/target-utils.git "$TARGET_UTILS_TMP"
+    pushd "$TARGET_UTILS_TMP"
+    git checkout ${TARGET_UTILS_COMMIT}
+    git submodule update --init --recursive
+    mkdir -p build
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX="$SDE_INSTALL" -DSTANDALONE=1 ..
+    make install -j "$JOBS"
+    popd
+    rm -rf "$TARGET_UTILS_TMP"
+fi
 
 # Strip shared libraries and fix permissions
 find $SDE_INSTALL -name "*\.so*" -a -type f | xargs -n1 chmod u+w

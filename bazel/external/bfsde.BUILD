@@ -21,6 +21,9 @@ cc_library(
         "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3*",
+        # target libraries from p4lang (was libbfsys and libbfutils before 9.9.0)
+        "barefoot-bin/lib/libtarget_sys.so*",
+        "barefoot-bin/lib/libtarget_utils.so*",
     ]),
     hdrs = glob([
         "barefoot-bin/include/bf_rt/*.h",
@@ -38,6 +41,8 @@ cc_library(
         "barefoot-bin/include/tofino/bf_pal/*.h",
         "barefoot-bin/include/tofino/pdfixed/*.h",
         "barefoot-bin/include/traffic_mgr/*.h",
+        "barefoot-bin/include/target-sys/**/*.h",
+        "barefoot-bin/include/target-utils/**/*.h",
     ]),
     linkopts = [
         "-lpthread",
@@ -75,6 +80,9 @@ pkg_tar_with_symlinks(
         # BSP libraries for Edgecore Wedge100bf series.
         "barefoot-bin/lib/libacctonbf_driver.so*",
         "barefoot-bin/lib/libtcl_server.so*",
+        # target libraries from p4lang (was libbfsys and libbfutils before 9.9.0)
+        "barefoot-bin/lib/libtarget_sys.so*",
+        "barefoot-bin/lib/libtarget_utils.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
@@ -86,6 +94,7 @@ pkg_tar_with_symlinks(
     srcs = glob([
         "barefoot-bin/share/bf_rt_shared/**",
         "barefoot-bin/share/bfsys/**",
+        "barefoot-bin/share/bf_switchd/**",
         "barefoot-bin/share/cli/xml/**",
         "barefoot-bin/share/microp_fw/**",
         "barefoot-bin/share/tofino_sds_fw/**",
@@ -136,5 +145,12 @@ config_setting(
     name = "sde_version_9.8.0",
     flag_values = {
         ":sde_version_setting": "9.8.0",
+    },
+)
+
+config_setting(
+    name = "sde_version_9.9.0",
+    flag_values = {
+        ":sde_version_setting": "9.9.0",
     },
 )
