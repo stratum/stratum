@@ -6,7 +6,8 @@
 
 STRATUM_BF_DIR=$( cd $(dirname "${BASH_SOURCE[0]}") >/dev/null 2>&1 && pwd )
 JOBS=${JOBS:-4}
-TARGET_SYSLIBS_COMMIT=54aef77cba438bf488042f260aec15147e4767e5
+# target-syslibs commit is based on submodule in target-utils/third-party/target-syslibs
+TARGET_SYSLIBS_COMMIT=95dca9002890418614be7f76da6012b4670fb2b5
 TARGET_UTILS_COMMIT=1f6fbc3387b9605ecaa4faefdc038a039e5451b2
 
 print_help() {
@@ -194,7 +195,7 @@ git checkout ${TARGET_UTILS_COMMIT}
 git submodule update --init --recursive
 mkdir -p build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX="$SDE_INSTALL" ..
+cmake -DCMAKE_INSTALL_PREFIX="$SDE_INSTALL" -DSTANDALONE=1 ..
 make install -j "$JOBS"
 popd
 rm -rf "$TARGET_UTILS_TMP"
