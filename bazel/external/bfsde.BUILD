@@ -21,7 +21,7 @@ cc_library(
         "barefoot-bin/lib/libclish.so*",
         "barefoot-bin/lib/libdriver.so*",
         "barefoot-bin/lib/libpython3*",
-        # target libraries from p4lang(was libbfsys and libbfutils before 9.9.0)
+        # target libraries from p4lang (was libbfsys and libbfutils before 9.9.0)
         "barefoot-bin/lib/libtarget_sys.so*",
         "barefoot-bin/lib/libtarget_utils.so*",
     ]),
@@ -80,7 +80,7 @@ pkg_tar_with_symlinks(
         # BSP libraries for Edgecore Wedge100bf series.
         "barefoot-bin/lib/libacctonbf_driver.so*",
         "barefoot-bin/lib/libtcl_server.so*",
-        # target libraries from p4lang(was libbfsys and libbfutils before 9.9.0)
+        # target libraries from p4lang (was libbfsys and libbfutils before 9.9.0)
         "barefoot-bin/lib/libtarget_sys.so*",
         "barefoot-bin/lib/libtarget_utils.so*",
     ]),
