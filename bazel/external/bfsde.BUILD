@@ -50,8 +50,6 @@ cc_library(
         "-ldl",
     ],
     strip_include_prefix = "barefoot-bin/include",
-    deps = [
-    ],
 )
 
 pkg_tar_with_symlinks(
