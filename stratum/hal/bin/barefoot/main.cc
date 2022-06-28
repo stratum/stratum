@@ -71,7 +71,7 @@ namespace barefoot {
   };
   auto bf_chassis_manager =
       BfChassisManager::CreateInstance(mode, phal, bf_sde_wrapper);
-  auto bf_switch = BfrtSwitch::CreateInstance(
+  auto bfrt_switch = BfrtSwitch::CreateInstance(
       phal, bf_chassis_manager.get(), bf_sde_wrapper, device_id_to_bfrt_node);
 
   // Create the 'Hal' class instance.
@@ -79,7 +79,7 @@ namespace barefoot {
   ASSIGN_OR_RETURN(auto credentials_manager,
                    CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
-                                   bf_switch.get(), auth_policy_checker.get(),
+                                   bfrt_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
   RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
 

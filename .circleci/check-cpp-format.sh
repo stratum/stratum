@@ -49,7 +49,6 @@ stratum/hal/lib/barefoot/bf_chassis_manager.cc
 stratum/hal/lib/barefoot/bf_pipeline_utils_test.cc
 stratum/hal/lib/barefoot/bf_pipeline_utils.cc
 stratum/hal/lib/barefoot/bf_sde_wrapper.cc
-stratum/hal/lib/barefoot/bf_switch.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager_test.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager.cc
 stratum/hal/lib/barefoot/bfrt_id_mapper.cc
