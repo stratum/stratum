@@ -60,12 +60,8 @@ if [ -n "$1" ]; then
       CMD_OPTS+="-k /kernel-tar$i/$KERNEL_HEADERS_TAR_NAME "
       ((i+=1))
   done
-  # Mount BSP folder and pass it to the build script, if requested, for SDE 9.6.0 and before.
-  # Pass in the BSP tarball directly, starting with SDE 9.7.0.
-  if [[ -n "$BSP" && -d "$BSP" ]]; then
-    DOCKER_OPTS+="-v $BSP:/bsp-directory "
-    CMD_OPTS+="--bsp-path /bsp-directory "
-  elif [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
+  # Pass in the BSP tarball directly.
+  if [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
     DOCKER_OPTS+="-v $BSP:/bsp.tgz "
     CMD_OPTS+="--bsp-path /bsp.tgz "
   fi
