@@ -24,6 +24,7 @@ Example:
 Additional environment variables:
     SDE_INSTALL_TAR: Tar archive of BF SDE install (set to skip SDE build)
     SDE_INSTALL: Path to BF SDE install directory (set to skip SDE build)
+    STRATUM_TARGET: stratum_bfrt (Default: stratum_bfrt)
     STRATUM_ROOT: The root directory of Stratum.
     JOBS: The number of jobs to run simultaneously while building the base container. (Default: 4)
     DOCKER_IMG: Docker image to use for building (Default: stratumproject/build:build)
