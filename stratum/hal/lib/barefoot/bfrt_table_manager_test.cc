@@ -916,7 +916,7 @@ TEST_F(BfrtTableManagerTest, ReadRegisterEntryTest) {
   {
     EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4RegisterId))
         .WillOnce(Return(kBfRtTableId));
-    std::vector<uint32> register_indices = {kRegisterIndex};;
+    std::vector<uint32> register_indices = {kRegisterIndex};
     std::vector<uint64> register_datas = {1};
     EXPECT_CALL(*bf_sde_wrapper_mock_, ReadRegisters(kDevice1, _, kBfRtTableId,
                                                      Optional(kRegisterIndex),
