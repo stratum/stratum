@@ -720,7 +720,7 @@ TEST_F(BfrtTableManagerTest, RejectWriteTableDefaultActionTest) {
               HasSubstr("The table default entry can only be modified."));
 }
 
-TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSize) {
+TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSizeTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
   constexpr int kBfRtTableId = 20;
@@ -749,7 +749,7 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSize) {
               HasSubstr("Default action must not contain match fields."));
 }
 
-TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriority) {
+TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriorityTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
   constexpr int kBfRtTableId = 20;
@@ -926,11 +926,15 @@ TEST_F(BfrtTableManagerTest, ReadRegisterEntryTest) {
                         Return(::util::OkStatus())));
 
     const std::string kRegisterResponseText = R"pb(
-     entities {register_entry {
+     entities {
+      register_entry {
         register_id: 66666
-        index { index: 1}
-        data { bitstring: "\x01"}
-    }}
+        index { 
+          index: 1}
+        data { 
+          bitstring: "\x01"}
+        }
+      }
     )pb";
     ::p4::v1::ReadResponse resp;
     ASSERT_OK(ParseProtoFromString(kRegisterResponseText, &resp));
