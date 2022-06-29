@@ -59,7 +59,7 @@ if [ -n "$1" ]; then
       CMD_OPTS+="-k /kernel-tar$i/$KERNEL_HEADERS_TAR_NAME "
       ((i+=1))
   done
-  # Pass in the BSP tarball directly
+  # Pass in the BSP tarball directly.
   if [[ -n "$BSP" && -f "$BSP" && $BSP =~ ^.*.tgz$ ]]; then
     DOCKER_OPTS+="-v $BSP:/bsp.tgz "
     CMD_OPTS+="--bsp-path /bsp.tgz "
