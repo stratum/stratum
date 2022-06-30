@@ -50,12 +50,6 @@ cc_library(
         "-ldl",
     ],
     strip_include_prefix = "barefoot-bin/include",
-    deps = [
-        # TODO(bocon): PI needed when linking libdriver.so if/when pi is
-        # enabled when building bf-drivers. This shouldn't hurt, but can
-        # be excluded if/when PI is removed from the SDE build options.
-        "@com_github_p4lang_PI_bf//proto/frontend:pifeproto",
-    ],
 )
 
 pkg_tar_with_symlinks(
