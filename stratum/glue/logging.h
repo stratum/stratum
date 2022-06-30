@@ -8,13 +8,13 @@
 #include <string>
 #include <utility>
 
-#include "gflags/gflags.h"
-
 // P4c lib/log.h already defines the ERROR macro.
 // Issue: https://github.com/p4lang/p4c/issues/2523
 #ifdef ERROR
 #undef ERROR
 #endif
+
+#include "gflags/gflags.h"
 #include "glog/logging.h"  // IWYU pragma: export
 
 #ifdef STRATUM_ARCH_PPC

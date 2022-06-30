@@ -6,6 +6,7 @@
 #   - The p4c IR definitions and IR generator binary.
 #   - A cc_binary for the simple_switch variation of the bmv2 backend.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load(
     "@com_github_stratum_stratum//bazel:defs.bzl",
     "STRATUM_INTERNAL",
@@ -50,6 +51,7 @@ cc_library(
         "config.h",
     ],
     includes = ["."],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     visibility = ["//visibility:private"],
 )
 
@@ -114,6 +116,7 @@ cc_library(
         "lib/",
         "tools/ir-generator",
     ],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     visibility = [":__subpackages__"],
 )
 
@@ -127,6 +130,7 @@ cc_library(
     ]) + glob([
         "frontends/common/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     #visibility = ["//visibility:private"],
 )
 
@@ -166,6 +170,7 @@ cc_library(
     ] + glob([
         "tools/ir-generator/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_includes",
         ":p4c_toolkit",
@@ -178,6 +183,7 @@ cc_binary(
     srcs = ["tools/ir-generator/generator.cpp"],
     linkopts = ["-lgmp"],
     visibility = [":__subpackages__"],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_ir_generator_lib",
         ":p4c_toolkit",
@@ -240,6 +246,7 @@ cc_library(
         "ir/*.h",
     ]),
     #visibility = STRATUM_INTERNAL,
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_frontend_h",
         ":p4c_includes",
@@ -316,10 +323,15 @@ cc_library(
     hdrs = glob([
         "lib/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     includes = ["."],
+    # Workaround for gcc < 7 for p4c boost multiprecision dependency, see:
+    # https://github.com/boostorg/math/issues/272
+    defines = ["BOOST_MATH_DISABLE_FLOAT128"],
     deps = [
         ":config_h",
         "@boost//:format",
+        "@boost//:multiprecision",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -332,6 +344,7 @@ cc_library(
         ["control-plane/*.h"],
     ),
     # visibility = STRATUM_INTERNAL,
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_frontend_h",
         ":p4c_ir",
