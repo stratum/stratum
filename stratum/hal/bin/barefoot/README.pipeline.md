@@ -11,10 +11,6 @@ Stratum-bfrt uses a protobuf based format ([bf.proto](/stratum/hal/lib/barefoot/
 to push a pipeline over P4Runtime for Barefoot Tofino devices. Use the
 `BfPipelineBuilder` tool to generate it.
 
-For legacy reasons, Stratum-bf supports both the older binary packing used by
-[PI](https://github.com/p4lang/PI) and the new protobuf based format also
-supported in Stratum-bfrt.
-
 ## Stratum BfPipelineConfig format and the BfPipelineBuilder
 
 You can use the device config builder to generate the protobuf based format

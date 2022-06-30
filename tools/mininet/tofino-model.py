@@ -23,8 +23,8 @@ from mininet.node import Switch, Host
 from mininet.link import Link
 
 TOFINO_MODEL_BIN = 'tofino-model'
-STRATUM_BIN = 'stratum_bf'
-# DEV_STRATUM_BIN = '/root/stratum/bazel-bin/stratum/hal/bin/barefoot/stratum_bf'
+STRATUM_BIN = 'stratum_bfrt'
+# DEV_STRATUM_BIN = '/root/stratum/bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt'
 
 def watchdog(sw):
     try:
