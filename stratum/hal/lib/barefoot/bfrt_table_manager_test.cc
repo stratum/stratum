@@ -374,31 +374,6 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDelete) {
 
   const std::string kMeterEntryText = R"pb(
     meter_id: 55555
-    index {index: 12345}
-    config {cir: 1 cburst: 100 pir: 2 pburst: 200}
-  )pb";
-  ::p4::v1::MeterEntry entry;
-  ASSERT_OK(ParseProtoFromString(kMeterEntryText, &entry));
-  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-              TranslateMeterEntry(EqualsProto(entry), true))
-      .WillRepeatedly(Return(::util::StatusOr<::p4::v1::MeterEntry>(entry)));
-  ::util::Status ret = bfrt_table_manager_->WriteMeterEntry(
-      session_mock, ::p4::v1::Update::INSERT, entry);
-  ASSERT_FALSE(ret.ok());
-  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-
-  ret = bfrt_table_manager_->WriteMeterEntry(session_mock,
-                                             ::p4::v1::Update::DELETE, entry);
-  ASSERT_FALSE(ret.ok());
-  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-}
-
-TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDelete) {
-  ASSERT_OK(PushTestConfig());
-  auto session_mock = std::make_shared<SessionMock>();
-
-  const std::string kMeterEntryText = R"pb(
-    meter_id: 55555
     index {
       index: 12345
     }
@@ -929,9 +904,9 @@ TEST_F(BfrtTableManagerTest, ReadRegisterEntryTest) {
      entities {
       register_entry {
         register_id: 66666
-        index { 
+        index {
           index: 1}
-        data { 
+        data {
           bitstring: "\x01"}
         }
       }
