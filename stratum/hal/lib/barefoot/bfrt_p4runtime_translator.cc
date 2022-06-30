@@ -677,15 +677,18 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     // singleton port id(N-byte) -> singleton port id(uint32) -> sdk port
     // id(uint32) -> sdk port id(1 or 2 bytes)
     const uint32 port_id = ByteStreamToUint<uint32>(value);
-    RET_CHECK(singleton_port_to_sdk_port_.contains(port_id));
+    RET_CHECK(singleton_port_to_sdk_port_.contains(port_id))
+        << "Could not find SDK port for singleton port id " << value << ".";
     return Uint32ToByteStream(singleton_port_to_sdk_port_[port_id]);
   } else {
     // sdk port id(1 or 2 bytes) -> sdk port id(uint32) -> singleton port
     // id(uint32)
     // -> singleton port id(N-byte)
-    RET_CHECK(value.size() <= NumBitsToNumBytes(kTnaPortIdBitWidth));
+    RET_CHECK(value.size() <= NumBitsToNumBytes(kTnaPortIdBitWidth))
+        << "Port value " << value << " exceeds maximum bit width";
     const uint32 sdk_port_id = ByteStreamToUint<uint32>(value);
-    RET_CHECK(sdk_port_to_singleton_port_.contains(sdk_port_id));
+    RET_CHECK(sdk_port_to_singleton_port_.contains(sdk_port_id))
+        << "Could not find singleton port for sdk port " << sdk_port_id << ".";
     const uint32 port_id = sdk_port_to_singleton_port_[sdk_port_id];
     std::string port_id_bytes = Uint32ToByteStream(port_id);
     if (FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
