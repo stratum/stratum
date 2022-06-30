@@ -323,7 +323,7 @@ TEST_F(BfrtTableManagerTest, ResetIndirectMeterEntryTest) {
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
 
-TEST_F(BfrtTableManagerTest, RejectMeterEntryModifyWithoutMeterId) {
+TEST_F(BfrtTableManagerTest, RejectMeterEntryModifyWithoutMeterIdTest) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
 
@@ -368,7 +368,7 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertTest) {
   EXPECT_THAT(ret.error_message(), HasSubstr("must be MODIFY."));
 }
 
-TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDelete) {
+TEST_F(BfrtTableManagerTest, RejectMeterEntryInsertDeleteTest) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
 
@@ -467,7 +467,7 @@ TEST_F(BfrtTableManagerTest, ReadSingleIndirectMeterEntryTest) {
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock));
 }
 
-TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutId) {
+TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutIdTest) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
