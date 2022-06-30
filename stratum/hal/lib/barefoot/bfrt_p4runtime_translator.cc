@@ -392,12 +392,16 @@ BfrtP4RuntimeTranslator::TranslateDirectMeterEntry(
     ::p4::v1::Index translated_index;
     if (to_sdk) {
       RET_CHECK(singleton_port_to_sdk_port_.contains(
-          static_cast<uint32>(index_value)));
+          static_cast<uint32>(index_value)))
+          << "Could not find SDK port for singleton port " << index_value
+          << ".";
       translated_index.set_index(
           singleton_port_to_sdk_port_[static_cast<uint32>(index_value)]);
     } else {
       RET_CHECK(sdk_port_to_singleton_port_.contains(
-          static_cast<uint32>(index_value)));
+          static_cast<uint32>(index_value)))
+          << "Could not find singleton port for sdk port " << index_value
+          << ".";
       translated_index.set_index(
           sdk_port_to_singleton_port_[static_cast<uint32>(index_value)]);
     }
@@ -459,11 +463,15 @@ BfrtP4RuntimeTranslator::TranslateRegisterEntry(
   // Since we know we are always translating the port number, we can simply
   // use the port map here.
   if (to_sdk) {
-    RET_CHECK(singleton_port_to_sdk_port_.contains(replica.egress_port()));
+    RET_CHECK(singleton_port_to_sdk_port_.contains(replica.egress_port()))
+        << "Could not find SDK port for singleton port "
+        << replica.egress_port() << ".";
     translated_replica.set_egress_port(
         singleton_port_to_sdk_port_[replica.egress_port()]);
   } else {
-    RET_CHECK(sdk_port_to_singleton_port_.contains(replica.egress_port()));
+    RET_CHECK(sdk_port_to_singleton_port_.contains(replica.egress_port()))
+        << "Could not find singleton port for sdk port "
+        << replica.egress_port() << ".";
     translated_replica.set_egress_port(
         sdk_port_to_singleton_port_[replica.egress_port()]);
   }
@@ -678,7 +686,7 @@ BfrtP4RuntimeTranslator::TranslateP4Info(
     // id(uint32) -> sdk port id(1 or 2 bytes)
     const uint32 port_id = ByteStreamToUint<uint32>(value);
     RET_CHECK(singleton_port_to_sdk_port_.contains(port_id))
-        << "Could not find SDK port for singleton port id " << value << ".";
+        << "Could not find SDK port for singleton port " << port_id << ".";
     return Uint32ToByteStream(singleton_port_to_sdk_port_[port_id]);
   } else {
     // sdk port id(1 or 2 bytes) -> sdk port id(uint32) -> singleton port
