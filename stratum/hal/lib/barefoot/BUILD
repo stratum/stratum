@@ -33,29 +33,6 @@ SDE_DEFINES = select(
 )
 
 stratum_cc_library(
-    name = "bf_switch",
-    srcs = ["bf_switch.cc"],
-    hdrs = ["bf_switch.h"],
-    deps = [
-        ":bf_cc_proto",
-        ":bf_chassis_manager",
-        ":bf_pipeline_utils",
-        ":bf_sde_interface",
-        "//stratum/glue:integral_types",
-        "//stratum/glue:logging",
-        "//stratum/glue/gtl:map_util",
-        "//stratum/glue/status:status_macros",
-        "//stratum/hal/lib/common:phal_interface",
-        "//stratum/hal/lib/common:switch_interface",
-        "//stratum/hal/lib/pi:pi_node_bf",
-        "//stratum/lib:constants",
-        "//stratum/lib:macros",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
-    ],
-)
-
-stratum_cc_library(
     name = "bfrt_switch",
     srcs = ["bfrt_switch.cc"],
     hdrs = ["bfrt_switch.h"],

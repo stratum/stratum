@@ -35,7 +35,6 @@ stratum/glue/status/status.cc
 stratum/glue/status/statusor_test.cc
 stratum/glue/status/statusor.cc
 stratum/hal/bin/barefoot/bf_pipeline_builder.cc
-stratum/hal/bin/barefoot/main_bfrt.cc
 stratum/hal/bin/barefoot/main.cc
 stratum/hal/bin/bcm/sim/main.cc
 stratum/hal/bin/bcm/standalone/main.cc
@@ -50,7 +49,6 @@ stratum/hal/lib/barefoot/bf_chassis_manager.cc
 stratum/hal/lib/barefoot/bf_pipeline_utils_test.cc
 stratum/hal/lib/barefoot/bf_pipeline_utils.cc
 stratum/hal/lib/barefoot/bf_sde_wrapper.cc
-stratum/hal/lib/barefoot/bf_switch.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager_test.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager.cc
 stratum/hal/lib/barefoot/bfrt_id_mapper.cc

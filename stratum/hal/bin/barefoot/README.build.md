@@ -19,11 +19,11 @@ access P4 Studio SDE. Contact Intel for more details.*
 
 #### Supported SDE versions
 
- - 9.7.0 (experimental; stratum_bfrt only)
- - 9.7.1 (experimental; stratum_bfrt only)
+ - 9.7.0 (experimental)
+ - 9.7.1 (experimental)
  - 9.7.2 (recommended; LTS release)
- - 9.8.0 (experimental; stratum_bfrt only)
- - 9.9.0 (experimental; stratum_bfrt only)
+ - 9.8.0 (experimental)
+ - 9.9.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -142,11 +142,6 @@ First follow [Step 1 from Method 2](#step-1:-generate-the-sde-install-tarball)
 Make sure to export the path to the install tarball as an environment variable,
 then you can use Bazel to build the Stratum.
 
-#### To build `stratum_bf`:
-```bash
-bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
-```
-
 #### To build `stratum_bfrt`:
 ```bash
 bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb
@@ -158,7 +153,6 @@ package also includes systemd service definition so users can use systemd to
 start the Stratum as a system service.
 
 The resulting Debian package can be found here:
-`bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb` or
 `bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb`
 
 Copy this file over to the switch and follow the
