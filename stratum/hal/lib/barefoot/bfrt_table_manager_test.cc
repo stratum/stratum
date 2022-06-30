@@ -904,9 +904,9 @@ TEST_F(BfrtTableManagerTest, ReadRegisterEntryTest) {
      entities {
       register_entry {
         register_id: 66666
-        index {
+        index { 
           index: 1}
-        data {
+        data { 
           bitstring: "\x01"}
         }
       }

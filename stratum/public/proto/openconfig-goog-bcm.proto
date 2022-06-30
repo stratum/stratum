@@ -35,7 +35,8 @@ message Chassis {
     // Components.Component.Chassis.Conf.ConfigParams represents the
     // /openconfig-platform/components/component/chassis/conf/config-params
     // YANG schema element.
-    message ConfigParams {}
+    message ConfigParams {
+    }
 
     // Components.Component.Chassis.Conf.NodeIdToRateLimitConfig represents
     // the
@@ -147,7 +148,8 @@ message Chassis {
     // Components.Component.Chassis.State.ConfigParams represents the
     // /openconfig-platform/components/component/chassis/state/config-params
     // YANG schema element.
-    message ConfigParams {}
+    message ConfigParams {
+    }
 
     // Components.Component.Chassis.State.NodeIdToKnetConfig represents the
     // /openconfig-platform/components/component/chassis/state/node_id_to_knet_config
