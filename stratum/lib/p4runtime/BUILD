@@ -19,6 +19,7 @@ stratum_cc_library(
     srcs = ["p4runtime_session.cc"],
     hdrs = ["p4runtime_session.h"],
     deps = [
+        ":p4_role_config_cc_proto",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -42,6 +43,7 @@ stratum_cc_library(
     srcs = ["sdn_controller_manager.cc"],
     hdrs = ["sdn_controller_manager.h"],
     deps = [
+        ":p4_role_config_cc_proto",
         "@com_github_google_glog//:glog",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
@@ -64,4 +66,15 @@ stratum_cc_library(
         "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
         "@com_google_googletest//:gtest",
     ],
+)
+
+proto_library(
+    name = "p4_role_config_proto",
+    srcs = ["p4_role_config.proto"],
+    deps = ["@com_github_p4lang_p4runtime//:p4runtime_proto"],
+)
+
+cc_proto_library(
+    name = "p4_role_config_cc_proto",
+    deps = [":p4_role_config_proto"],
 )

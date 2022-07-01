@@ -108,8 +108,21 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
   // If the role name is not set then we assume the connection is a 'root'
   // connection.
   absl::optional<std::string> role_name;
+  absl::optional<P4RoleConfig> role_config;
   if (update.has_role() && !update.role().name().empty()) {
     role_name = update.role().name();
+  }
+
+  LOG(WARNING) << update.role().ShortDebugString();
+  if (update.has_role() && update.role().has_config()) {
+    LOG(WARNING) << "have role config: "
+                 << update.role().config().ShortDebugString();
+    P4RoleConfig rc;
+    if (!update.role().config().UnpackTo(&rc)) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                          absl::StrCat("Unknown role config."));
+    }
+    role_config = rc;
   }
 
   const auto old_election_id_for_connection = controller->GetElectionId();

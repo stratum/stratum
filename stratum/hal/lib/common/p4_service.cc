@@ -753,7 +753,11 @@ bool P4Service::IsWritePermitted(
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return false;
-  return it->second.AllowRequest(req).ok();
+
+  auto s = it->second.AllowRequest(req);
+  LOG(INFO) << s.error_message();
+  return s.ok();
+  // return it->second.AllowRequest(req).ok();
 }
 
 bool P4Service::IsMasterController(
