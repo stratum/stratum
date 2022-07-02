@@ -121,6 +121,9 @@ jobs:
           name: Query all Stratum targets
           command: bazel query '//...'
       - run:
+          name: Run clang-tidy on targets
+          command: xargs -a .circleci/clang-tidy-targets.txt bazel build --config=clang-tidy
+      - run:
           name: Build Stratum targets
           command: xargs -a .circleci/build-targets.txt bazel build --config=ci-large
       - *analyze_bazel_profile
