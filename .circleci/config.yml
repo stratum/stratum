@@ -56,7 +56,10 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cat .circleci/bazelrc >> .bazelrc
+    # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
+    command: |
+      cat .circleci/bazelrc >> .bazelrc
+      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -106,6 +109,7 @@ jobs:
   unit_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: large  # 4 vCPUs, 8GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -118,12 +122,12 @@ jobs:
           command: bazel query '//...'
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build
+          command: xargs -a .circleci/build-targets.txt bazel build --config=ci-large
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test
+          command: xargs -a .circleci/test-targets.txt bazel test --config=ci-large
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -131,6 +135,7 @@ jobs:
   cdlang_tests:
     docker:
       - image: stratumproject/build:build
+    resource_class: small  # 1 vCPU, 2GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -140,12 +145,12 @@ jobs:
       - *set_bazelrc
       - run:
           name: Build CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel build
+          command: xargs -a .circleci/cdlang-targets.txt bazel build --config=ci-small
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
           name: Test CDLang targets
-          command: xargs -a .circleci/cdlang-targets.txt bazel test
+          command: xargs -a .circleci/cdlang-targets.txt bazel test --config=ci-small
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -153,6 +158,7 @@ jobs:
   coverage:
     docker:
       - image: stratumproject/build:build
+    resource_class: large  # 4 vCPUs, 8GB RAM
     environment:
       - CC: clang
       - CXX: clang++
@@ -162,7 +168,7 @@ jobs:
       - *set_bazelrc
       - run:
           name: Run test and collect coverage data
-          command: xargs -a .circleci/test-targets.txt bazel coverage
+          command: xargs -a .circleci/test-targets.txt bazel coverage --config=ci-large
       - *analyze_bazel_profile
       - *store_bazel_profile
       - codecov/upload:
@@ -358,6 +364,7 @@ jobs:
   lint-and-style-checks:
     docker:
       - image: stratumproject/build:build
+    resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
       # We always continue with all steps, even on failures, to get the most
@@ -378,6 +385,7 @@ jobs:
   license-check:
     docker:
       - image: fsfe/reuse:latest
+    resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
       - run:
@@ -428,7 +436,7 @@ workflows:
             - publish-docker-build
           matrix:
             parameters:
-              sde_version: ["9.5.0", "9.5.2", "9.7.0", "9.7.1", "9.8.0"]
+              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build

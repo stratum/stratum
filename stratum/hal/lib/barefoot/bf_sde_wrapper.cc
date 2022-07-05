@@ -489,13 +489,8 @@ template <typename T>
   if (table_type == bfrt::BfRtTable::TableType::METER ||
       table_type == bfrt::BfRtTable::TableType::COUNTER) {
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(
         table->tableSizeGet(*bfrt_session, bf_dev_target, &table_size));
-#else
-    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
     entries = table_size;
   } else {
     RETURN_IF_BFRT_ERROR(table->tableUsageGet(
@@ -723,6 +718,14 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   auto key = std::unique_ptr<BfSdeInterface::TableKeyInterface>(
       new TableKey(std::move(table_key)));
   return key;
+}
+
+::util::Status TableKey::GetTableId(uint32* table_id) const {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_key_->tableGet(&table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(table_id));
+
+  return ::util::OkStatus();
 }
 
 ::util::Status TableData::SetParam(int id, const std::string& value) {
@@ -1658,16 +1661,16 @@ std::string BfSdeWrapper::GetBfChipType(int device) const {
 }
 
 std::string BfSdeWrapper::GetSdeVersion() const {
-#if defined(SDE_9_5_0)
-  return "9.5.0";
-#elif defined(SDE_9_5_2)
-  return "9.5.2";
-#elif defined(SDE_9_7_0)
+#if defined(SDE_9_7_0)
   return "9.7.0";
 #elif defined(SDE_9_7_1)
   return "9.7.1";
+#elif defined(SDE_9_7_2)
+  return "9.7.2";
 #elif defined(SDE_9_8_0)
   return "9.8.0";
+#elif defined(SDE_9_9_0)
+  return "9.9.0";
 #else
 #error Unsupported SDE version
 #endif
@@ -2107,13 +2110,8 @@ namespace {
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
   RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                            bf_dev_tgt, &table_size));
-#else
-  RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
   uint32 usage;
   RETURN_IF_BFRT_ERROR(table->tableUsageGet(
       *real_session->bfrt_session_, bf_dev_tgt,
@@ -2771,13 +2769,8 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
-#else
-    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
     for (size_t i = 0; i < table_size; ++i) {
       // Register key: $REGISTER_INDEX
       RETURN_IF_ERROR(SetField(table_key.get(), kRegisterIndex, i));
@@ -2909,13 +2902,8 @@ namespace {
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-#if defined(SDE_9_4_0) || defined(SDE_9_5_0) || defined(SDE_9_5_2) || \
-    defined(SDE_9_7_0) || defined(SDE_9_7_1) || defined(SDE_9_8_0)
     RETURN_IF_BFRT_ERROR(table->tableSizeGet(*real_session->bfrt_session_,
                                              bf_dev_tgt, &table_size));
-#else
-    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
-#endif  // SDE_9_4_0
     for (size_t i = 0; i < table_size; ++i) {
       // Meter key: $METER_INDEX
       RETURN_IF_ERROR(SetField(table_key.get(), kMeterIndex, i));

@@ -54,7 +54,7 @@ Also see the chapter about
   - [Building Stratum for Barefoot Tofino based switches](/stratum/hal/bin/barefoot/README.build.md)
   - [Running Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.run.md)
   - [Testing Stratum on a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.test.md)
-  - [P4Runtime p4_device_config formats](/stratum/hal/bin/barefoot/README.pipeline.md)
+  - [Pushing a pipeline to a Barefoot Tofino based switch](/stratum/hal/bin/barefoot/README.pipeline.md)
 - [Broadcom](/stratum/hal/bin/bcm/standalone/README.md)
   - [How to Add a Dataplane Feature to Stratum (BCM)](/stratum/docs/extenting_stratum_bcm.md)
 - [Intel NP4](/stratum/hal/bin/np4intel/docker/README.md)
@@ -74,7 +74,7 @@ Also see the chapter about
 
 ### Other Documentation
 
-- [Installation guide: ONOS + Stratum + Barefoot Tofino switch](/stratum/docs/setup_guide_barefoot_tofino_onos.md)
+- [SD-Fabric](https://docs.sd-fabric.org)
 - [Trellis + Stratum example](/tools/mininet/examples/trellis/README.md)
 - [Continuous Certification Program (CCP)](https://wiki.opennetworking.org/display/COM/Stratum+Continuous+Certification+Program)
 - [Community Channels](https://github.com/stratum/stratum/wiki/Discuss)

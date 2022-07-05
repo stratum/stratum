@@ -21,6 +21,7 @@
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/p4runtime/stream_message_reader_writer_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -122,12 +123,21 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     }
   }
 
-  void AddFakeMasterController(uint64 node_id, uint64 connection_id,
-                               absl::uint128 election_id,
-                               const std::string& uri) {
+  void AddFakeMasterController(uint64 node_id,
+                               p4runtime::SdnConnection* controller) {
+    p4::v1::MasterArbitrationUpdate request;
+    request.set_device_id(node_id);
+    request.mutable_election_id()->set_high(
+        absl::Uint128High64(controller->GetElectionId().value()));
+    request.mutable_election_id()->set_low(
+        absl::Uint128Low64(controller->GetElectionId().value()));
+    ASSERT_OK(p4_service_->AddOrModifyController(node_id, request, controller));
+  }
+
+  int GetNumberOfActiveConnections(uint64 node_id) {
     absl::WriterMutexLock l(&p4_service_->controller_lock_);
-    P4Service::Controller controller(connection_id, election_id, uri, nullptr);
-    p4_service_->node_id_to_controllers_[node_id].insert(controller);
+    return p4_service_->node_id_to_controller_manager_.at(node_id)
+        .ActiveConnections();
   }
 
   static constexpr char kForwardingPipelineConfigsTemplate[] = R"(
@@ -387,6 +397,11 @@ TEST_P(P4ServiceTest, SetupAndPushForwardingPipelineConfigSuccess) {
       .WillOnce(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
+
   ::p4::v1::SetForwardingPipelineConfigRequest request;
   ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
@@ -397,7 +412,6 @@ TEST_P(P4ServiceTest, SetupAndPushForwardingPipelineConfigSuccess) {
   configs.mutable_node_id_to_config()->at(kNodeId1).set_p4_device_config(
       "fake");  // emulate a modification in the config
   *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -421,6 +435,10 @@ TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigSuccess) {
       .WillRepeatedly(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
   ::p4::v1::SetForwardingPipelineConfigRequest request;
   ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
@@ -428,7 +446,6 @@ TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigSuccess) {
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(::p4::v1::SetForwardingPipelineConfigRequest::VERIFY);
   *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -547,6 +564,10 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigFailureWhenPushFails) {
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kAggrErrorMsg)));
 
   ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
   ::p4::v1::SetForwardingPipelineConfigRequest request;
   ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
@@ -554,7 +575,6 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigFailureWhenPushFails) {
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -572,6 +592,10 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
                                       "reboot required")));
 
   ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
   ::p4::v1::SetForwardingPipelineConfigRequest request;
   ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
@@ -579,7 +603,6 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -592,6 +615,12 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
 }
 
 TEST_P(P4ServiceTest, WriteSuccess) {
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
+
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -599,7 +628,6 @@ TEST_P(P4ServiceTest, WriteSuccess) {
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -686,6 +714,11 @@ TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -694,7 +727,6 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
   req.add_updates()->set_type(::p4::v1::Update::MODIFY);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -746,6 +778,11 @@ TEST_P(P4ServiceTest, WriteFailureForAuthError) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -753,7 +790,6 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -1045,33 +1081,39 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
   // Controller #2 demotes itself and connects with an election_id which is
-  // lower than election_id for Controller #1. In this case Controller #1
-  // becomes master.
+  // lower than election_id for Controller #1. Note that Controller #1 does not
+  // becomes master automatically.
   req.mutable_arbitration()->set_device_id(kNodeId1);
   req.mutable_arbitration()->mutable_election_id()->set_high(
       absl::Uint128High64(kElectionId1 - 1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1 - 1));
   ASSERT_TRUE(stream2->Write(req));
+  absl::SleepFor(absl::Milliseconds(500));
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
-  // Status will be OK for Controller #1 and non-OK for Controller #2.
+  // Status will be non-OK for Controller #1 and #2, as there is no active
+  // master. The election ID will be the highest ever seen by the controller so
+  // far, i.e. kElectionId2.
   ASSERT_TRUE(stream1->Read(&resp));
-  ASSERT_EQ(absl::Uint128High64(kElectionId1),
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
-  ASSERT_EQ(absl::Uint128Low64(kElectionId1),
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
-  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
 
   ASSERT_TRUE(stream2->Read(&resp));
-  ASSERT_EQ(absl::Uint128High64(kElectionId1),
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
-  ASSERT_EQ(absl::Uint128Low64(kElectionId1),
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
-  ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
+  ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
   // Controller #2 changes its mind and decides to promote itself again.
@@ -1084,6 +1126,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
   // Status will be OK for Controller #2 and non-OK for Controller #1.
+
   ASSERT_TRUE(stream1->Read(&resp));
   ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
@@ -1097,6 +1140,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
   // Controller #2 sends some packet out.
@@ -1154,25 +1198,51 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
-  // Controller #2 (master) disconnects. This triggers a mastership change.
-  // We will return the mastership info back to Controller #1 and Controller #3.
-  // Since Controller #3 has a higher election_id, it becomes the new master.
+  // Controller #2 (master) disconnects. This makes the server master-less.
+  // We will return the non-ok mastership info back to Controller #1 and
+  // Controller #3.
   stream2->WritesDone();
   ASSERT_TRUE(stream2->Finish().ok());
 
   ASSERT_TRUE(stream1->Read(&resp));
-  ASSERT_EQ(absl::Uint128High64(kElectionId3),
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
-  ASSERT_EQ(absl::Uint128Low64(kElectionId3),
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
-  ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
+  ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
 
   ASSERT_TRUE(stream3->Read(&resp));
-  ASSERT_EQ(absl::Uint128High64(kElectionId3),
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
             resp.arbitration().election_id().high());
-  ASSERT_EQ(absl::Uint128Low64(kElectionId3),
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
+
+  //----------------------------------------------------------------------------
+  // Controller #3 promotes itself to master again.
+  // Since Controller #3 has a higher election_id, it becomes the new master.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId2));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId2));
+  ASSERT_TRUE(stream3->Write(req));
+
+  // Read the mastership info back. It will be sent to Controller #1 and #3.
+  // Status will be OK for Controller #3 and non-OK for Controller #1.
+  ASSERT_TRUE(stream3->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId2),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId2),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
   // We receive some packet from CPU. This will be forwarded to the master
@@ -1279,7 +1349,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
   EXPECT_FALSE(stream1->Read(&resp));
   ::grpc::Status status = stream1->Finish();
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(), HasSubstr("Duplicate election ID"));
+  EXPECT_THAT(status.error_message(), HasSubstr("Election ID is already used"));
   EXPECT_TRUE(status.error_details().empty());
 }
 
@@ -1460,6 +1530,10 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
       .WillRepeatedly(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
   ::p4::v1::SetForwardingPipelineConfigRequest setRequest;
   ::p4::v1::SetForwardingPipelineConfigResponse setResponse;
   setRequest.set_device_id(kNodeId1);
@@ -1468,7 +1542,6 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   setRequest.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   *setRequest.mutable_config() = configs.node_id_to_config().at(kNodeId1);
-  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   setRequest.mutable_config()->mutable_cookie()->set_cookie(kCookie1);
 

@@ -30,14 +30,15 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # + libelf-dev to build the kernel modules
 # BF SDE dependecies
 # + libelf-dev to build the kernel modules
-# + libbz2-dev for tar archive p4_device_config format
+# Tools and libraries for p4lang/target-syslibs and p4lang/target-utils
+# + cmake libedit-dev expat
 ENV PKG_DEPS pkg-config zip zlib1g-dev unzip wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
     libfl-dev libgmp-dev libi2c-dev python3-yaml libyaml-dev build-essential \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
     gnupg2 software-properties-common python3-pip python3-dev \
-    apt-transport-https libelf-dev libbz2-dev
+    apt-transport-https libelf-dev cmake libedit-dev expat libbz2-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
@@ -89,6 +90,8 @@ RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
 
 # Bazelisk and Bazel
 ADD .bazelversion .
+ADD BUILD .
+ADD WORKSPACE .
 ARG BAZELISK_VERSION
 RUN wget --quiet https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 && \
     mv bazelisk-linux-amd64 /usr/local/bin/bazel && \

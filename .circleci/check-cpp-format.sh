@@ -35,7 +35,6 @@ stratum/glue/status/status.cc
 stratum/glue/status/statusor_test.cc
 stratum/glue/status/statusor.cc
 stratum/hal/bin/barefoot/bf_pipeline_builder.cc
-stratum/hal/bin/barefoot/main_bfrt.cc
 stratum/hal/bin/barefoot/main.cc
 stratum/hal/bin/bcm/sim/main.cc
 stratum/hal/bin/bcm/standalone/main.cc
@@ -50,7 +49,6 @@ stratum/hal/lib/barefoot/bf_chassis_manager.cc
 stratum/hal/lib/barefoot/bf_pipeline_utils_test.cc
 stratum/hal/lib/barefoot/bf_pipeline_utils.cc
 stratum/hal/lib/barefoot/bf_sde_wrapper.cc
-stratum/hal/lib/barefoot/bf_switch.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager_test.cc
 stratum/hal/lib/barefoot/bfrt_counter_manager.cc
 stratum/hal/lib/barefoot/bfrt_id_mapper.cc
@@ -239,7 +237,16 @@ stratum/lib/timer_daemon.cc
 stratum/lib/utils_test.cc
 stratum/lib/utils.cc
 stratum/p4c_backends/fpm/bcm/bcm_target_info.cc
+stratum/p4c_backends/fpm/hit_assign_mapper_test.cc
+stratum/p4c_backends/fpm/hit_assign_mapper.cc
+stratum/p4c_backends/fpm/hit_assign_mapper.h
 stratum/p4c_backends/fpm/meta_key_mapper.cc
+stratum/p4c_backends/fpm/meter_color_mapper_test.cc
+stratum/p4c_backends/fpm/parser_decoder_test.cc
+stratum/p4c_backends/fpm/parser_decoder.cc
+stratum/p4c_backends/fpm/parser_decoder.h
+stratum/p4c_backends/fpm/pipeline_block_passes_test.cc
+stratum/p4c_backends/fpm/pipeline_intra_block_passes_test.cc
 stratum/p4c_backends/fpm/target_info.cc
 stratum/p4c_backends/test/test_p4c_main.cc
 stratum/p4c_backends/test/test_target_info.cc

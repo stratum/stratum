@@ -16,16 +16,16 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-static constexpr char bf_config_1pipe_str[] = R"PROTO(
+static constexpr char bf_config_1pipe_str[] = R"pb(
   p4_name: "prog1"
   bfruntime_info: "{json: true}"
   profiles {
     profile_name: "pipe1"
     context: "{json: true}"
     binary: "<raw bin>"
-  })PROTO";
+  })pb";
 
-static constexpr char bf_config_2pipe_str[] = R"PROTO(
+static constexpr char bf_config_2pipe_str[] = R"pb(
   p4_name: "prog1"
   bfruntime_info: "{json: true}"
   profiles {
@@ -37,7 +37,7 @@ static constexpr char bf_config_2pipe_str[] = R"PROTO(
     profile_name: "pipe2"
     context: "{json: true}"
     binary: "<raw bin>"
-  })PROTO";
+  })pb";
 
 TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromProtoSuccess) {
   BfPipelineConfig bf_config;
@@ -77,25 +77,6 @@ TEST(ExtractBfPipelineTest, ExtractBfPipelineConfigFromRandomBytesFail) {
 
   BfPipelineConfig extracted_bf_config;
   EXPECT_FALSE(ExtractBfPipelineConfig(p4_config, &extracted_bf_config).ok());
-}
-
-TEST(BfPipelineConvertTest, BfPipelineConfigToLegacyBfPiConfigSuccess) {
-  static constexpr char expected_bytes[] =
-      "\x5\0\0\0prog1\x9\0\0\0<raw bin>\xc\0\0\0{json: true}";
-  BfPipelineConfig bf_config;
-  ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
-  std::string extracted_config;
-  EXPECT_OK(BfPipelineConfigToPiConfig(bf_config, &extracted_config));
-  // Convert to a string, excluding the implicit null terminator.
-  std::string expected_config(expected_bytes, sizeof(expected_bytes) - 1);
-  EXPECT_EQ(expected_config, extracted_config);
-}
-
-TEST(BfPipelineConvertTest, BfPipelineConfigToLegacyBfPiConfigMultiPipeFail) {
-  BfPipelineConfig bf_config;
-  ASSERT_OK(ParseProtoFromString(bf_config_2pipe_str, &bf_config));
-  std::string extracted_config;
-  EXPECT_FALSE(BfPipelineConfigToPiConfig(bf_config, &extracted_config).ok());
 }
 
 }  // namespace barefoot

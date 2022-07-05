@@ -10,8 +10,8 @@ load(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//bazel:workspace_rule.bzl", "remote_workspace")
 
-P4RUNTIME_VER = "1.3.0"
-P4RUNTIME_SHA = "20b187a965fab78df9b8253da14166b8666938a82a2aeea16c6f9abaa934bdcb"
+P4RUNTIME_VER = "1.4.0-rc.1"
+P4RUNTIME_SHA = "3a32a4781c02e8aa36d998046b350c32c12abc27d62feeebff4e1554f29f37ef"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
@@ -30,19 +30,17 @@ def stratum_deps():
     if "com_github_grpc_grpc" not in native.existing_rules():
         http_archive(
             name = "com_github_grpc_grpc",
-            urls = [
-                "https://github.com/grpc/grpc/archive/v1.35.0.tar.gz",
-            ],
-            strip_prefix = "grpc-1.35.0",
-            sha256 = "27dd2fc5c9809ddcde8eb6fa1fa278a3486566dfc28335fca13eb8df8bd3b958",
+            urls = ["https://github.com/grpc/grpc/archive/v1.40.0.tar.gz"],
+            strip_prefix = "grpc-1.40.0",
+            sha256 = "13e7c6460cd979726e5b3b129bb01c34532f115883ac696a75eb7f1d6a9765ed",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
         http_archive(
             name = "com_google_googleapis",
-            urls = ["https://github.com/googleapis/googleapis/archive/a8cd11e2c420a194348839c6490a8a1bef2835d3.zip"],
-            strip_prefix = "googleapis-a8cd11e2c420a194348839c6490a8a1bef2835d3",
-            sha256 = "bb2b4aa6558e5125a357d829530f2bad932c6f091f0d2faaacfeec185d031ec2",
+            urls = ["https://github.com/googleapis/googleapis/archive/9b1c49de24301ba6bf1ee6462a634fffc2b97677.zip"],
+            strip_prefix = "googleapis-9b1c49de24301ba6bf1ee6462a634fffc2b97677",
+            sha256 = "2b10a2fe30a0ab4279d803ed7b3bfefb61c48fb3aa651e5f2d4899b4167b7f3b",
         )
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
@@ -50,9 +48,9 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4c",
             remote = "https://github.com/p4lang/p4c",
-            commit = "43568b75796d68a6424ad22eebeee62f46ccd3fe",
+            commit = "94e55783733be7420b8d8fd7bfc0025a3ad9033a",
             build_file = "@//bazel:external/p4c.BUILD",
-            sha256 = "6f0c38ccc82a3876403843c67d2994bd66115c569d1ef11cbf8e23a0281266da",
+            sha256 = "541ab66df80465dac9702779b6446b80234210410e6f5948d995a978475b64c2",
         )
 
     if "judy" not in native.existing_rules():
@@ -87,14 +85,6 @@ def stratum_deps():
             remote = "https://github.com/p4lang/PI.git",
             commit = "a5fd855d4b3293e23816ef6154e83dc6621aed6a",
             sha256 = "7df38438f94d64c5005b890210d3f1b40e2402870295e21d44cceac67ebd1a1b",
-        )
-
-    if "com_github_p4lang_PI_bf" not in native.existing_rules():
-        # ----- PI for Barefoot targets -----
-        remote_workspace(
-            name = "com_github_p4lang_PI_bf",
-            remote = "https://github.com/p4lang/PI.git",
-            commit = "4546038f5770e84dc0d2bba90f1ee7811c9955df",
         )
 
     if "com_github_p4lang_PI_np4" not in native.existing_rules():

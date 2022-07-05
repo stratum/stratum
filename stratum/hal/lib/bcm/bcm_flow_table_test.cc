@@ -20,7 +20,7 @@ namespace {
 using test_utils::EqualsProto;
 using test_utils::IsOkAndHolds;
 
-constexpr char kMockTableEntry[] = R"PROTO(
+constexpr char kMockTableEntry[] = R"pb(
     table_id: 1
     match {
       field_id: 1
@@ -43,7 +43,7 @@ constexpr char kMockTableEntry[] = R"PROTO(
     priority: 10
     action {
       action_profile_member_id: 11
-    })PROTO";
+    })pb";
 
 const ::p4::v1::TableEntry& MockTableEntry() {
   static const ::p4::v1::TableEntry* entry = []() {

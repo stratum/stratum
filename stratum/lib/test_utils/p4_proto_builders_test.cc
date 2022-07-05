@@ -23,21 +23,21 @@ TEST(P4ProtoBuildersTest, Table) {
   P4ControlTableRef expected;
   CHECK_OK(
       ParseProtoFromString(
-          R"PROTO(table_id: 1234
+          R"pb(table_id: 1234
                   table_name: "table_1234"
-                  pipeline_stage: EGRESS_ACL)PROTO", &expected));
+                  pipeline_stage: EGRESS_ACL)pb", &expected));
   EXPECT_THAT(Table(1234, P4Annotation::EGRESS_ACL), EqualsProto(expected));
 }
 
 TEST(P4ProtoBuildersTest, ApplyTable_FromId) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(
+      R"pb(
         apply {
           table_id: 1234
           table_name: "table_1234"
           pipeline_stage: EGRESS_ACL
-        })PROTO", &expected));
+        })pb", &expected));
   EXPECT_THAT(ApplyTable(1234, P4Annotation::EGRESS_ACL),
               EqualsProto(expected));
 }
@@ -45,40 +45,40 @@ TEST(P4ProtoBuildersTest, ApplyTable_FromId) {
 TEST(P4ProtoBuildersTest, ApplyTable_FromTable) {
   ::p4::config::v1::Table table;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(preamble { id: 1234 name: "HelloWorld" })PROTO", &table));
+      R"pb(preamble { id: 1234 name: "HelloWorld" })pb", &table));
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(
+      R"pb(
         apply {
           table_id: 1234
           table_name: "HelloWorld"
           pipeline_stage: EGRESS_ACL
-        })PROTO", &expected));
+        })pb", &expected));
   EXPECT_THAT(ApplyTable(table, P4Annotation::EGRESS_ACL),
               EqualsProto(expected));
 }
 
 TEST(P4ProtoBuildersTest, ApplyTable_FromPreamble) {
   ::p4::config::v1::Preamble preamble;
-  CHECK_OK(ParseProtoFromString(R"PROTO(id: 1234 name: "HelloWorld")PROTO",
+  CHECK_OK(ParseProtoFromString(R"pb(id: 1234 name: "HelloWorld")pb",
                                 &preamble));
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(
+      R"pb(
         apply {
           table_id: 1234
           table_name: "HelloWorld"
           pipeline_stage: EGRESS_ACL
-        })PROTO", &expected));
+        })pb", &expected));
   EXPECT_THAT(ApplyTable(preamble, P4Annotation::EGRESS_ACL),
               EqualsProto(expected));
 }
 
 TEST(P4ProtoBuildersTest, ApplyNested_FromRefs) {
   std::vector<std::string> table_strings = {
-    R"PROTO(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)PROTO",
-    R"PROTO(table_id: 2 table_name: "t2" pipeline_stage: VLAN_ACL)PROTO",
-    R"PROTO(table_id: 3 table_name: "t3" pipeline_stage: VLAN_ACL)PROTO",
+    R"pb(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)pb",
+    R"pb(table_id: 2 table_name: "t2" pipeline_stage: VLAN_ACL)pb",
+    R"pb(table_id: 3 table_name: "t3" pipeline_stage: VLAN_ACL)pb",
   };
   std::vector<hal::P4ControlTableRef> tables;
   for (const std::string& table_string : table_strings) {
@@ -90,7 +90,7 @@ TEST(P4ProtoBuildersTest, ApplyNested_FromRefs) {
   P4ControlBlock expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             statements { apply { $0 } }
             statements {
               branch {
@@ -106,7 +106,7 @@ TEST(P4ProtoBuildersTest, ApplyNested_FromRefs) {
                 }
               }
             }
-          )PROTO", table_strings[0], table_strings[1], table_strings[2]),
+          )pb", table_strings[0], table_strings[1], table_strings[2]),
       &expected));
 
   EXPECT_THAT(ApplyNested(tables), EqualsProto(expected));
@@ -114,9 +114,9 @@ TEST(P4ProtoBuildersTest, ApplyNested_FromRefs) {
 
 TEST(P4ProtoBuildersTest, ApplyNested_FromTables) {
   std::vector<std::string> table_strings = {
-      R"PROTO(preamble { id: 1 name: "t1" })PROTO",
-      R"PROTO(preamble { id: 2 name: "t2" })PROTO",
-      R"PROTO(preamble { id: 3 name: "t3" })PROTO",
+      R"pb(preamble { id: 1 name: "t1" })pb",
+      R"pb(preamble { id: 2 name: "t2" })pb",
+      R"pb(preamble { id: 3 name: "t3" })pb",
   };
   std::vector<::p4::config::v1::Table> tables;
   for (const std::string& table_string : table_strings) {
@@ -126,15 +126,15 @@ TEST(P4ProtoBuildersTest, ApplyNested_FromTables) {
   }
 
   std::vector<std::string> ref_strings = {
-    R"PROTO(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)PROTO",
-    R"PROTO(table_id: 2 table_name: "t2" pipeline_stage: VLAN_ACL)PROTO",
-    R"PROTO(table_id: 3 table_name: "t3" pipeline_stage: VLAN_ACL)PROTO",
+    R"pb(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)pb",
+    R"pb(table_id: 2 table_name: "t2" pipeline_stage: VLAN_ACL)pb",
+    R"pb(table_id: 3 table_name: "t3" pipeline_stage: VLAN_ACL)pb",
   };
 
   P4ControlBlock expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             statements { apply { $0 } }
             statements {
               branch {
@@ -150,7 +150,7 @@ TEST(P4ProtoBuildersTest, ApplyNested_FromTables) {
                 }
               }
             }
-          )PROTO", ref_strings[0], ref_strings[1], ref_strings[2]),
+          )pb", ref_strings[0], ref_strings[1], ref_strings[2]),
       &expected));
 
   EXPECT_THAT(ApplyNested(tables, P4Annotation::VLAN_ACL),
@@ -164,15 +164,15 @@ TEST(P4ProtoBuildersTest, ApplyNested_Empty) {
 
 TEST(P4ProtoBuildersTest, ApplyNested_SingleTable) {
   std::string table_string =
-      R"PROTO(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)PROTO";
+      R"pb(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)pb";
   hal::P4ControlTableRef table;
   CHECK_OK(ParseProtoFromString(table_string, &table));
 
   P4ControlBlock expected;
   CHECK_OK(ParseProtoFromString(absl::Substitute(
-                                    R"PROTO(
+                                    R"pb(
                                       statements { apply { $0 } }
-                                    )PROTO", table_string),
+                                    )pb", table_string),
                                 &expected));
 
   EXPECT_THAT(ApplyNested({table}), EqualsProto(expected));
@@ -212,26 +212,26 @@ TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderStage) {
 TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderFromPreamble) {
   P4ControlTableRef expected;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(table_id: 1234 table_name: "table")PROTO", &expected));
+      R"pb(table_id: 1234 table_name: "table")pb", &expected));
 
   ::p4::config::v1::Preamble preamble;
   CHECK_OK(
-      ParseProtoFromString(R"PROTO(id: 1234 name: "table")PROTO", &preamble));
+      ParseProtoFromString(R"pb(id: 1234 name: "table")pb", &preamble));
   EXPECT_THAT(P4ControlTableRefBuilder(preamble).Build(),
               EqualsProto(expected));
 }
 
 TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderFromPreambleAndStage) {
   P4ControlTableRef expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_id: 1234
     table_name: "table"
     pipeline_stage: VLAN_ACL
-  )PROTO", &expected));
+  )pb", &expected));
 
   ::p4::config::v1::Preamble preamble;
   CHECK_OK(
-      ParseProtoFromString(R"PROTO(id: 1234 name: "table")PROTO", &preamble));
+      ParseProtoFromString(R"pb(id: 1234 name: "table")pb", &preamble));
   EXPECT_THAT(
       P4ControlTableRefBuilder(preamble, P4Annotation::VLAN_ACL).Build(),
       EqualsProto(expected));
@@ -240,35 +240,35 @@ TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderFromPreambleAndStage) {
 TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderFromTable) {
   P4ControlTableRef expected;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(table_id: 1234 table_name: "table")PROTO", &expected));
+      R"pb(table_id: 1234 table_name: "table")pb", &expected));
 
   ::p4::config::v1::Table table;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(preamble { id: 1234 name: "table" })PROTO", &table));
+      R"pb(preamble { id: 1234 name: "table" })pb", &table));
   EXPECT_THAT(P4ControlTableRefBuilder(table).Build(), EqualsProto(expected));
 }
 
 TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderFromTableAndStage) {
   P4ControlTableRef expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_id: 1234
     table_name: "table"
     pipeline_stage: VLAN_ACL
-  )PROTO", &expected));
+  )pb", &expected));
 
   ::p4::config::v1::Table table;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(preamble { id: 1234 name: "table" })PROTO", &table));
+      R"pb(preamble { id: 1234 name: "table" })pb", &table));
   EXPECT_THAT(P4ControlTableRefBuilder(table, P4Annotation::VLAN_ACL).Build(),
               EqualsProto(expected));
 }
 
 TEST(P4ProtoBuildersTest, P4ControlTableRefBuilderMixed) {
   P4ControlTableRef expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     table_id: 1234
     table_name: "table"
-    pipeline_stage: VLAN_ACL)PROTO", &expected));
+    pipeline_stage: VLAN_ACL)pb", &expected));
 
   EXPECT_THAT(P4ControlTableRefBuilder()
                   .Id(1234)
@@ -289,9 +289,9 @@ TEST(P4ProtoBuildersTest, HitBuilderOnHit) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             branch { condition { hit { $0 } } true_block { statements { $1 } } }
-          )PROTO", Table(1).ShortDebugString().c_str(),
+          )pb", Table(1).ShortDebugString().c_str(),
           ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -302,12 +302,12 @@ TEST(P4ProtoBuildersTest, HitBuilderOnHit) {
 TEST(P4ProtoBuildersTest, HitBuilderOnHitUseFalse) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition { not_operator: true hit { $0 } }
           false_block { statements { $1 } }
         }
-      )PROTO", Table(1).ShortDebugString().c_str(),
+      )pb", Table(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -318,12 +318,12 @@ TEST(P4ProtoBuildersTest, HitBuilderOnHitUseFalse) {
 TEST(P4ProtoBuildersTest, HitBuilderOnMiss) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition { not_operator: true hit { $0 } }
           true_block { statements { $1 } }
         }
-      )PROTO", Table(1).ShortDebugString().c_str(),
+      )pb", Table(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -334,12 +334,12 @@ TEST(P4ProtoBuildersTest, HitBuilderOnMiss) {
 TEST(P4ProtoBuildersTest, HitBuilderOnMissUseFalse) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition { not_operator: false hit { $0 } }
           false_block { statements { $1 } }
         }
-      )PROTO", Table(1).ShortDebugString().c_str(),
+      )pb", Table(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -351,12 +351,12 @@ TEST(P4ProtoBuildersTest, HitBuilderOnMissUseFalse) {
 TEST(P4ProtoBuildersTest, HitBuilderOnMissOverwritesOnHit) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition { not_operator: false hit { $0 } }
           false_block { statements { $1 } }
         }
-      )PROTO", Table(1).ShortDebugString().c_str(),
+      )pb", Table(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -373,9 +373,9 @@ TEST(P4ProtoBuildersTest, HitBuilderOnHitOverwritesOnMiss) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             branch { condition { hit { $0 } } true_block { statements { $1 } } }
-          )PROTO", Table(1).ShortDebugString().c_str(),
+          )pb", Table(1).ShortDebugString().c_str(),
           ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -388,9 +388,9 @@ TEST(P4ProtoBuildersTest, HitBuilderControlBlock) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             branch { condition { hit { $0 } } true_block { statements { $1 } } }
-          )PROTO", Table(1).ShortDebugString().c_str(),
+          )pb", Table(1).ShortDebugString().c_str(),
           ApplyTable(2).ShortDebugString().c_str()),
       &expected));
 
@@ -403,12 +403,12 @@ TEST(P4ProtoBuildersTest, HitBuilderControlBlock) {
 TEST(P4ProtoBuildersTest, HitBuilderMultipleActions) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition { not_operator: true hit { $0 } }
           true_block { statements { $1 } statements { $2 } }
         }
-      )PROTO", Table(1).ShortDebugString().c_str(),
+      )pb", Table(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str(),
                        ApplyTable(3).ShortDebugString().c_str()),
       &expected));
@@ -421,7 +421,7 @@ TEST(P4ProtoBuildersTest, HitBuilderMultipleActions) {
 // IsValidBuilder tests.
 TEST(P4ProtoBuildersTest, IsValidBuilderEmpty) {
   P4ControlStatement expected;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
+  CHECK_OK(ParseProtoFromString(R"pb(
     branch {
       condition {
         is_valid {
@@ -430,7 +430,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderEmpty) {
         }
       }
     }
-  )PROTO", &expected));
+  )pb", &expected));
 
   EXPECT_THAT(IsValidBuilder().Build(), EqualsProto(expected));
 }
@@ -439,7 +439,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderEmpty) {
 TEST(P4ProtoBuildersTest, IsValidBuilderValidControlBlock) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             is_valid {
@@ -449,7 +449,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderValidControlBlock) {
           }
           true_block { statements { $0 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str()), &expected));
+      )pb", ApplyTable(1).ShortDebugString().c_str()), &expected));
   hal::P4ControlBlock control_block;
   *control_block.add_statements() = ApplyTable(1);
   EXPECT_THAT(IsValidBuilder().ValidControlBlock(control_block).Build(),
@@ -459,7 +459,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderValidControlBlock) {
 TEST(P4ProtoBuildersTest, IsValidBuilderInvalidControlBlock) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             is_valid {
@@ -469,7 +469,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderInvalidControlBlock) {
           }
           false_block { statements { $0 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str()), &expected));
+      )pb", ApplyTable(1).ShortDebugString().c_str()), &expected));
   hal::P4ControlBlock control_block;
   *control_block.add_statements() = ApplyTable(1);
   EXPECT_THAT(IsValidBuilder().InvalidControlBlock(control_block).Build(),
@@ -479,7 +479,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderInvalidControlBlock) {
 TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValid_Statement) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             is_valid {
@@ -489,7 +489,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValid_Statement) {
           }
           true_block { statements { $0 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str()), &expected));
+      )pb", ApplyTable(1).ShortDebugString().c_str()), &expected));
   EXPECT_THAT(IsValidBuilder().DoIfValid(ApplyTable(1)).Build(),
               EqualsProto(expected));
 }
@@ -501,7 +501,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValid_Block) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             branch {
               condition {
                 is_valid {
@@ -511,7 +511,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValid_Block) {
               }
               true_block { statements { $0 } statements { $1 } }
             }
-          )PROTO", ApplyTable(1).ShortDebugString().c_str(),
+          )pb", ApplyTable(1).ShortDebugString().c_str(),
           ApplyTable(2).ShortDebugString().c_str()),
       &expected));
   EXPECT_THAT(
@@ -522,7 +522,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValid_Block) {
 TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalid_Statement) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             is_valid {
@@ -532,7 +532,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalid_Statement) {
           }
           false_block { statements { $0 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str()), &expected));
+      )pb", ApplyTable(1).ShortDebugString().c_str()), &expected));
   EXPECT_THAT(IsValidBuilder().DoIfInvalid(ApplyTable(1)).Build(),
               EqualsProto(expected));
 }
@@ -544,7 +544,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalid_Block) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
       absl::Substitute(
-          R"PROTO(
+          R"pb(
             branch {
               condition {
                 is_valid {
@@ -554,7 +554,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalid_Block) {
               }
               false_block { statements { $0 } statements { $1 } }
             }
-          )PROTO", ApplyTable(1).ShortDebugString().c_str(),
+          )pb", ApplyTable(1).ShortDebugString().c_str(),
           ApplyTable(2).ShortDebugString().c_str()),
       &expected));
   EXPECT_THAT(
@@ -565,7 +565,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalid_Block) {
 TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValidMultipleActions) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             is_valid {
@@ -575,7 +575,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValidMultipleActions) {
           }
           true_block { statements { $0 } statements { $1 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str(),
+      )pb", ApplyTable(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str()),
       &expected));
   EXPECT_THAT(IsValidBuilder()
@@ -588,7 +588,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValidMultipleActions) {
 TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalidMultipleActions) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             is_valid {
@@ -598,7 +598,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalidMultipleActions) {
           }
           false_block { statements { $0 } statements { $1 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str(),
+      )pb", ApplyTable(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str()),
       &expected));
   EXPECT_THAT(IsValidBuilder()
@@ -611,7 +611,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalidMultipleActions) {
 TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValidUseNot) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             not_operator: true
@@ -622,7 +622,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValidUseNot) {
           }
           false_block { statements { $0 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str()), &expected));
+      )pb", ApplyTable(1).ShortDebugString().c_str()), &expected));
   EXPECT_THAT(IsValidBuilder().UseNot().DoIfValid(ApplyTable(1)).Build(),
               EqualsProto(expected));
 }
@@ -630,7 +630,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfValidUseNot) {
 TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalidUseNot) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             not_operator: true
@@ -641,7 +641,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalidUseNot) {
           }
           true_block { statements { $0 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str()), &expected));
+      )pb", ApplyTable(1).ShortDebugString().c_str()), &expected));
   EXPECT_THAT(IsValidBuilder().DoIfInvalid(ApplyTable(1)).UseNot().Build(),
               EqualsProto(expected));
 }
@@ -649,7 +649,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderDoIfInvalidUseNot) {
 TEST(P4ProtoBuildersTest, IsValidBuilderHeader) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      R"PROTO(
+      R"pb(
         branch {
           condition {
             is_valid {
@@ -658,7 +658,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderHeader) {
             }
           }
         }
-      )PROTO", &expected));
+      )pb", &expected));
   EXPECT_THAT(IsValidBuilder().Header(P4_HEADER_IPV4).Build(),
               EqualsProto(expected));
 }
@@ -666,7 +666,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderHeader) {
 TEST(P4ProtoBuildersTest, IsValidBuilderComplexBlock) {
   P4ControlStatement expected;
   CHECK_OK(ParseProtoFromString(
-      absl::Substitute(R"PROTO(
+      absl::Substitute(R"pb(
         branch {
           condition {
             not_operator: true
@@ -678,7 +678,7 @@ TEST(P4ProtoBuildersTest, IsValidBuilderComplexBlock) {
           true_block { statements { $0 } statements { $1 } }
           false_block { statements { $2 } statements { $3 } }
         }
-      )PROTO", ApplyTable(1).ShortDebugString().c_str(),
+      )pb", ApplyTable(1).ShortDebugString().c_str(),
                        ApplyTable(2).ShortDebugString().c_str(),
                        ApplyTable(3).ShortDebugString().c_str(),
                        ApplyTable(4).ShortDebugString().c_str()),
