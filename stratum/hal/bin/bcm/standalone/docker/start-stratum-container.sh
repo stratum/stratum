@@ -36,10 +36,10 @@ fi
 docker run -it --rm --privileged --cap-add ALL --shm-size=512m --network host \
     -v /dev:/dev -v /sys:/sys -v /run:/run \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
+    -v /lib/platform-config:/lib/platform-config \
     --env PLATFORM=$PLATFORM \
     $ONLP_MOUNT \
     $CHASSIS_CONFIG_MOUNT \
-    -v /lib/platform-config:/lib/platform-config \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
     $@
