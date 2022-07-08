@@ -29,7 +29,13 @@ sleep 1
 
 mkdir -p /var/run/stratum /var/log/stratum
 
-PLATFORM=$(cat /etc/onl/platform)
+# Try to load the platform string if not already set.
+if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
+    PLATFORM="$(cat /etc/onl/platform)"
+elif [[ -z "$PLATFORM" ]]; then
+    echo "PLATFORM variable must be set manually on non-ONL switches."
+    exit 255
+fi
 
 exec stratum_bcm_opennsa \
     -base_bcm_chassis_map_file=/etc/stratum/${PLATFORM}/base_bcm_chassis_map.pb.txt \
