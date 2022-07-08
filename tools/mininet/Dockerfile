@@ -13,7 +13,8 @@ ENV BUILD_DEPS \
     python3-setuptools \
     python3-pip \
     help2man
-RUN install_packages $BUILD_DEPS
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ${BUILD_DEPS}
 
 # Build Mininet
 RUN mkdir /tmp/mininet
@@ -21,9 +22,9 @@ WORKDIR /tmp/mininet
 RUN curl -L https://github.com/mininet/mininet/tarball/master | \
     tar xz --strip-components 1
 # Install in a special directory that we will copy to the runtime image.
-RUN mkdir -p /output
+RUN mkdir -p /output/usr/local/lib
 RUN PREFIX=/output make install-mnexec install-manpages
-RUN python3 setup.py install --root /output
+RUN python3 setup.py install --root /output --prefix /usr/local
 # Install `m` utility so user can attach to a mininet host directly
 RUN cp util/m /output/bin/m && sed -i 's#sudo##g' /output/bin/m
 
@@ -50,6 +51,7 @@ ENV RUNTIME_DEPS \
     iperf \
     arping \
     telnet \
+    python3 \
     python3-pexpect \
     tcpdump \
     screen
@@ -64,7 +66,7 @@ RUN ldconfig
 WORKDIR /root
 COPY stratum/hal/bin/bmv2/dummy.json ./dummy.json
 COPY tools/mininet/stratum.py ./stratum.py
-ENV PYTHONPATH $PYTHONPATH:/root
+ENV PYTHONPATH /root:/usr/local/lib/python3.7/dist-packages:/usr/local/lib/python3.7/site-packages
 
 # We need to expose one port per stratum_bmv2 instance, hence the number of
 # exposed ports limit the number of switches that can be controlled from an
