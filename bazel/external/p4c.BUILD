@@ -316,6 +316,9 @@ cc_library(
     hdrs = glob([
         "lib/*.h",
     ]),
+    # Workaround for gcc < 7 for p4c boost multiprecision dependency, see:
+    # https://github.com/boostorg/math/issues/272
+    defines = ["BOOST_MATH_DISABLE_FLOAT128"],
     includes = ["."],
     deps = [
         ":config_h",
