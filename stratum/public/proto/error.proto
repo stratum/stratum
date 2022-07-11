@@ -21,6 +21,7 @@ enum ErrorCode {
   ERR_SUCCESS = 0;  // Success (default value). Same as OK.
   ERR_CANCELLED = 1;
   ERR_UNKNOWN = 2;
+  ERR_NOT_FOUND = 5;
   ERR_PERMISSION_DENIED = 7;
   ERR_FAILED_PRECONDITION = 9;
   ERR_ABORTED = 10;

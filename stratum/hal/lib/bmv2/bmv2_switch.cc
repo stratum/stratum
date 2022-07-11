@@ -227,7 +227,7 @@ std::unique_ptr<Bmv2Switch> Bmv2Switch::CreateInstance(
     uint64 node_id) const {
   PINode* pi_node = gtl::FindPtrOrNull(node_id_to_pi_node_, node_id);
   if (pi_node == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_NOT_FOUND)
            << "Node with ID " << node_id
            << " is unknown or no config has been pushed to it yet.";
   }

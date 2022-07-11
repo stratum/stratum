@@ -232,7 +232,7 @@ std::unique_ptr<NP4Switch> NP4Switch::CreateInstance(
 ::util::StatusOr<PINode*> NP4Switch::GetPINodeFromNodeId(uint64 node_id) const {
   auto it = node_id_to_pi_node_.find(node_id);
   if (it == node_id_to_pi_node_.end()) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_NOT_FOUND)
            << "Node with ID " << node_id
            << " is unknown or no config has been pushed to it yet.";
   }
