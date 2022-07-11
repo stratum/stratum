@@ -31,7 +31,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # OpenNSA dependencies
 # + libelf-dev to build the kernel modules
 # BF SDE dependecies
-# + libelf-dev to build the kernel modules
+# + libelf-dev gawk to build the kernel modules
 # Tools and libraries for p4lang/target-syslibs and p4lang/target-utils
 # + cmake libedit-dev expat
 # Tools to patch the SONiC kernel headers
@@ -42,7 +42,7 @@ ENV PKG_DEPS pkg-config zip zlib1g-dev unzip wget ca-certificates \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
     gnupg2 software-properties-common python3-pip python3-dev \
-    apt-transport-https libelf-dev cmake libedit-dev expat libbz2-dev rsync
+    apt-transport-https libelf-dev cmake libedit-dev expat libbz2-dev rsync gawk
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
