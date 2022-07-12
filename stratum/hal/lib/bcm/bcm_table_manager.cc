@@ -2329,7 +2329,8 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     const CommonFlowEntry& common_flow_entry) const {
   uint32 table_id = common_flow_entry.table_info().id();
   P4TableType table_type = common_flow_entry.table_info().type();
-
+  LOG(INFO) << "\n\n\ntable_type: " << table_type << "\n\n\n";
+  LOG(INFO) << "\n\n\nvlan_table_type:" << P4_TABLE_L2_VLAN << "\n\n\n";
   // We always expect the stage to be available for any table entry. Although
   // we do not use it in this function, we validate it.
   CHECK_RETURN_IF_FALSE(common_flow_entry.table_info().pipeline_stage() !=
@@ -2388,6 +2389,9 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       break;
     case P4_TABLE_MPLS:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_MPLS;
+      break;
+    case P4_TABLE_L2_VLAN:
+      bcm_table_type = BcmFlowEntry::BCM_TABLE_L2_VLAN;
       break;
     default:
       break;

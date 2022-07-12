@@ -66,6 +66,8 @@ class BcmL2Manager {
   // exists.
   virtual ::util::Status DeleteL2Entry(const BcmFlowEntry& bcm_flow_entry);
 
+  virtual ::util::Status InsertL2VlanEntry(const BcmFlowEntry& bcm_flow_entry);
+
   // Creates an L2 multicast or broadcast group. Each multicast or broadcast
   // group is specified by a multicast_group_id given by an action of type
   // SET_L2_MCAST_GROUP which has an action param of type L2_MCAST_GROUP_ID.

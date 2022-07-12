@@ -184,6 +184,12 @@ BcmL2Manager::~BcmL2Manager() {}
   return ::util::OkStatus();
 }
 
+::util::Status BcmL2Manager::InsertL2VlanEntry(const BcmFlowEntry& bcm_flow_entry)
+{
+  LOG(INFO) << "\n\n\nInsert L2 Vlan Entry\n\n\n";
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmL2Manager::InsertMulticastGroup(
     const BcmFlowEntry& bcm_flow_entry) {
   // We will have two cases here:

@@ -519,6 +519,23 @@ control l2_fwd(inout parsed_packet_t hdr,
         standard_metadata.egress_spec = port;
     }
 
+    action push_vlan()
+    {
+        
+    }
+
+    @switchstack("pipeline_stage: L2_VLAN")
+    table l2_vlan_table{
+        actions = {
+            push_vlan;
+            NoAction;
+        }
+        key = {
+            standard_metadata.ingress_port: ternary;
+        }
+        const default_action = NoAction();
+    }
+
     @switchstack("pipeline_stage: L2")
     table l2_unicast_table {
         key = {
@@ -534,6 +551,7 @@ control l2_fwd(inout parsed_packet_t hdr,
     }
 
     apply {
+        l2_vlan_table.apply();
         l2_unicast_table.apply();
     }
 }

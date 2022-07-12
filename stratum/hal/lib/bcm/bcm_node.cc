@@ -552,6 +552,12 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
           consumed = true;
           break;
+        case BcmFlowEntry::BCM_TABLE_L2_VLAN:
+          RETURN_IF_ERROR(bcm_l2_manager_->InsertL2VlanEntry(bcm_flow_entry));
+          // Update the internal records in BcmTableManager.
+          RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
+          consumed = true;
+          break;
         case BcmFlowEntry::BCM_TABLE_MY_STATION:
           RETURN_IF_ERROR(
               bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));

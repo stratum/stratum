@@ -452,6 +452,7 @@ message BcmFlowEntry {
     BCM_TABLE_TUNNEL = 8;
     BCM_TABLE_L2_UNICAST = 9;
     BCM_TABLE_MPLS = 10; // OK
+    BCM_TABLE_L2_VLAN = 11;
   }
   // The unit to program this flow.
   int32 unit = 1;  // required

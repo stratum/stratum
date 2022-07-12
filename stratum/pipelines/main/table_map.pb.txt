@@ -15,6 +15,13 @@ table_addenda_map {
     addenda_names: "l2-vlan-fallback"
   }
 }
+
+table_addenda_map {
+  key: "ingress.l2_fwd.l2_vlan_table"
+  value {
+    type: P4_TABLE_L2_VLAN
+  }
+}
 table_addenda_map {
   key: "ingress.my_station_table"
   value {

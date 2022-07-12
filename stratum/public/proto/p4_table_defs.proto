@@ -46,6 +46,7 @@ enum P4TableType {
                                // can be L3 routed based on (MAC, VLAN).
   P4_TABLE_L2_UNICAST = 5;     // The unicast logical table in L2 stage.
   P4_TABLE_MPLS = 6;           // The MPLS transit table in L3 stage.
+  P4_TABLE_L2_VLAN=7;
 }
 
 // This enum defines values to identify the table mapping output for match
