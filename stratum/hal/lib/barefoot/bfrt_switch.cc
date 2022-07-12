@@ -305,7 +305,7 @@ std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
       BfrtNode* bfrt_node =
           gtl::FindPtrOrNull(device_id_to_bfrt_node_, device_id);
       if (bfrt_node == nullptr) {
-        ::util::Status error = MAKE_ERROR(ERR_INVALID_PARAM)
+        ::util::Status error = MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
                                << "Node ID " << node_id
                                << " mapped to unknown device " << device_id
                                << ".";
@@ -328,7 +328,7 @@ std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     int device_id) const {
   BfrtNode* bfrt_node = gtl::FindPtrOrNull(device_id_to_bfrt_node_, device_id);
   if (bfrt_node == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
            << "Device " << device_id << " is unknown.";
   }
   return bfrt_node;
@@ -338,7 +338,7 @@ std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     uint64 node_id) const {
   BfrtNode* bfrt_node = gtl::FindPtrOrNull(node_id_to_bfrt_node_, node_id);
   if (bfrt_node == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
            << "Node with ID " << node_id
            << " is unknown or no config has been pushed to it yet.";
   }
