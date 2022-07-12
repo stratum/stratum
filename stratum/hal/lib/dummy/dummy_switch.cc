@@ -327,7 +327,7 @@ std::vector<DummyNode*> DummySwitch::GetDummyNodes() {
 ::util::StatusOr<DummyNode*> DummySwitch::GetDummyNode(uint64 node_id) {
   auto node_element = dummy_nodes_.find(node_id);
   if (node_element == dummy_nodes_.end()) {
-    return MAKE_ERROR(ERR_NOT_FOUND)
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
            << "DummyNode with id " << node_id << " not found.";
   }
   return ::util::StatusOr<DummyNode*>(node_element->second.get());

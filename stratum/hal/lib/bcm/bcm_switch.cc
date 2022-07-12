@@ -535,7 +535,7 @@ std::unique_ptr<BcmSwitch> BcmSwitch::CreateInstance(
       int unit = entry.second;
       BcmNode* bcm_node = gtl::FindPtrOrNull(unit_to_bcm_node_, unit);
       if (bcm_node == nullptr) {
-        ::util::Status error = MAKE_ERROR(ERR_NOT_FOUND)
+        ::util::Status error = MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
                                << "Node ID " << node_id
                                << " mapped to unknown unit " << unit << ".";
         APPEND_STATUS_IF_ERROR(status, error);
@@ -573,7 +573,7 @@ std::unique_ptr<BcmSwitch> BcmSwitch::CreateInstance(
 ::util::StatusOr<BcmNode*> BcmSwitch::GetBcmNodeFromUnit(int unit) const {
   BcmNode* bcm_node = gtl::FindPtrOrNull(unit_to_bcm_node_, unit);
   if (bcm_node == nullptr) {
-    return MAKE_ERROR(ERR_NOT_FOUND) << "Unit " << unit << " is unknown.";
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "Unit " << unit << " is unknown.";
   }
   return bcm_node;
 }
@@ -582,7 +582,7 @@ std::unique_ptr<BcmSwitch> BcmSwitch::CreateInstance(
     uint64 node_id) const {
   BcmNode* bcm_node = gtl::FindPtrOrNull(node_id_to_bcm_node_, node_id);
   if (bcm_node == nullptr) {
-    return MAKE_ERROR(ERR_NOT_FOUND)
+    return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
            << "Node with ID " << node_id
            << " is unknown or no config has been pushed to it yet.";
   }
