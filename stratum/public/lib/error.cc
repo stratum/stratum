@@ -49,7 +49,6 @@ class StratumErrorSpace : public ::util::ErrorSpace {
       case ERR_OPER_TIMEOUT:
         return ::util::error::DEADLINE_EXCEEDED;
       case ERR_ENTRY_NOT_FOUND:
-      case ERR_ENTRY_NOT_FOUND:
         return ::util::error::NOT_FOUND;
       case ERR_ENTRY_EXISTS:
         return ::util::error::ALREADY_EXISTS;
