@@ -37,7 +37,7 @@ These containers include kernel modules for OpenNetworkLinux.
 **This is the recommended way to run Stratum.**
 
 Before deploing the container to the device, make sure you install Docker on the
-switch; we've tested with: **Docker 18.06.0-ce**
+switch; we've tested with: **Docker 18.09.8 community edition**
 
 No other dependencies are required.
 
@@ -93,7 +93,7 @@ __Note:__ This step only needs to be done once.
 [sudo] mount -t hugetlbfs nodev /mnt/huge
 ```
 
-If you re-image your switch (reload ONL via ONIE), you will need to run these commands again.
+If you re-image your switch (reload SONiC via ONIE), you will need to run these commands again.
 
 ### Upload start script to the switch
 
