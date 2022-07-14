@@ -23,7 +23,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/lib/p4runtime/p4_role_config.pb.h"
+#include "stratum/public/proto/p4_role_config.pb.h"
 
 namespace stratum {
 namespace p4runtime {

@@ -14,7 +14,7 @@
 #include "absl/status/status.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
-#include "stratum/lib/p4runtime/p4_role_config.pb.h"
+#include "stratum/public/proto/p4_role_config.pb.h"
 
 namespace stratum {
 namespace p4runtime {

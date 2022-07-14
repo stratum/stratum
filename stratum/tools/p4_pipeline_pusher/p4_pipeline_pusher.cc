@@ -4,10 +4,10 @@
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/lib/macros.h"
-#include "stratum/lib/p4runtime/p4_role_config.pb.h"
 #include "stratum/lib/p4runtime/p4runtime_session.h"
 #include "stratum/lib/security/credentials_manager.h"
 #include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_role_config.pb.h"
 
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "P4Runtime server address.");
 DEFINE_string(p4_info_file, "",
