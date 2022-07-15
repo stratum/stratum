@@ -6,14 +6,18 @@ setup: true
 orbs:
   continuation: circleci/continuation@0.1.2
 jobs:
-  setup:
-    executor: continuation/default
+  setup: 
+    docker:
+      - image: golang:1.13-alpine
     steps:
       - checkout
       - run:
           name: Generate config
           command: |
-            ./.circleci/generate-config > /tmp/generated_config.yml
+            # Check if the Dockerfile.build is modified in this revision
+            git diff main HEAD --stat | grep Dockerfile.build &> /dev/null
+            [[ $? == 0 ]] && export NEW_BUILDER_FLAG="--new-builder"
+            cd .circleci && go run generate-config.go $NEW_BUILDER_FLAG > /tmp/generated_config.yml
       - continuation/continue:
           configuration_path: /tmp/generated_config.yml # use newly generated config to continue
 
