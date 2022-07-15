@@ -13,7 +13,7 @@ jobs:
       - checkout
       - run:
           name: Install git
-          command: apk add git
+          command: apk add git bash
       - run:
           name: Generate config
           command: |
