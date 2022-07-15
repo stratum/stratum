@@ -12,6 +12,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install git
+          command: apk add git
+      - run:
           name: Generate config
           command: |
             # Check if the Dockerfile.build is modified in this revision
