@@ -28,13 +28,12 @@ jobs:
       - attach_workspace:
           at: /tmp
       - continuation/continue:
-          configuration_path: /tmp/generated_config.yml # use newly generated config to continue
+          configuration_path: /tmp/generated_config.yml
 
-# our single workflow, that triggers the setup job defined above
 workflows:
   setup:
     jobs:
       - generate_config
-      - setup:
+      - run_config:
           requires: 
             - generate_config
