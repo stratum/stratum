@@ -2,26 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 version: 2.1
-
-# this allows you to use CircleCI's dynamic configuration feature
 setup: true
-
-# the continuation orb is required in order to use dynamic configuration
 orbs:
   continuation: circleci/continuation@0.1.2
-
-# our defined job, and its steps
 jobs:
   setup:
     executor: continuation/default
     steps:
-      - checkout # checkout code
-      - run: # run a command
+      - checkout
+      - run:
           name: Generate config
           command: |
-            ./generate-config > generated_config.yml
+            ./circleci/generate-config > /tmp/generated_config.yml
       - continuation/continue:
-          configuration_path: generated_config.yml # use newly generated config to continue
+          configuration_path: /tmp/generated_config.yml # use newly generated config to continue
 
 # our single workflow, that triggers the setup job defined above
 workflows:
