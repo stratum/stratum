@@ -8,12 +8,12 @@ orbs:
 jobs:
   setup: 
     docker:
-      - image: cimg/go:1.13
+      - image: golang:1.13-alpine
     steps:
       - checkout
       - run:
-          name: Install git
-          command: apt-get install -y git
+          name: Prerequest
+          command: apk add git curl
       - run:
           name: Generate config
           command: |
