@@ -5,7 +5,7 @@ PUBLISH_DOCKER_BUILD=""
 # if Dockerfile.build changed...
 git diff main HEAD --stat | grep Dockerfile.build &> /dev/null
 BUILDER_IMG_CHANGED=$?
-if [[ $BUILDER_IMG_CHANGED != 0 ]]; then
+if [[ $BUILDER_IMG_CHANGED == 0 ]]; then
 STRATUM_BUILDER_IMAGE="stratumproject/build:ci-${CIRCLE_BRANCH}"
 PUBLISH_DOCKER_BUILD="- publish-docker-build"
 fi
