@@ -4,8 +4,6 @@ STRATUM_BUILDER_IMAGE="stratumproject/build:build"
 # if Dockerfile.build changed...
 STRATUM_BUILDER_IMAGE="stratumproject/build:ci-${CIRCLE_PR_NUMBER}"
 CONFIG_FILE=$(mktemp)
-echo "A"
 sed "s@##STRATUM_BUILDER_IMAGE##@${STRATUM_BUILDER_IMAGE}@g" "$CURRENT_DIR/config_template.yml" > "$CONFIG_FILE"
-echo "A"
 sed -i "s@##PUBLISH_DOCKER_BUILD##@- publish-docker-build@g" "$CONFIG_FILE"
 cat "$CONFIG_FILE"
