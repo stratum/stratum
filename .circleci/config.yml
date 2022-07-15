@@ -11,6 +11,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: ls
+          command: ls -al; pwd
+      - run:
           name: Generate config
           command: |
             ./.circleci/generate-config > /tmp/generated_config.yml
