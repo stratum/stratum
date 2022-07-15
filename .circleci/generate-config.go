@@ -38,9 +38,6 @@ func main() {
 		stratumBuilderImage = fmt.Sprintf("stratumproject/build:ci-%s", envMap["CIRCLE_BRANCH"])
 	}
 	data := Variables{
-		Environment:         envMap,
-		Branch:              envMap["CIRCLE_BRANCH"],
-		Revision:            envMap["CIRCLE_SHA1"],
 		StratumBuilderImage: stratumBuilderImage,
 		PublishDockerBuild:  rebuildBuilderImage,
 	}
