@@ -13,7 +13,7 @@ jobs:
       - checkout
       - run:
           name: Prerequest
-          command: apk add git curl
+          command: apk add git curl jq
       - run:
           name: Generate config
           command: |
