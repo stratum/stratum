@@ -18,8 +18,8 @@ jobs:
           name: Generate config
           command: |
             # Check if the Dockerfile.build is modified in this revision
-            git diff main HEAD --stat | grep Dockerfile.build &> /dev/null
-            [[ $? == 0 ]] && export NEW_BUILDER_FLAG="--new-builder"
+            git diff main HEAD Dockerfile.build > /tmp/Dockerfile.build.diff
+            [ -s /tmp/Dockerfile.build.diff ] && NEW_BUILDER_FLAG="--new-builder"
             cd .circleci && go run generate-config.go $NEW_BUILDER_FLAG > /tmp/generated_config.yml
       - persist_to_workspace:
           root: /tmp
