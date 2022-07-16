@@ -414,8 +414,24 @@ workflows:
       - unit_tests:
           requires:
             - publish-docker-build
+      - cdlang_tests:
+          requires:
+            - publish-docker-build
+      - coverage:
+          requires:
+            - publish-docker-build
+      - lint-and-style-checks:
+          requires:
+            - publish-docker-build
+      - license-check
+      - markdown-style-check
     {{- else }}
       - unit_tests
+      - cdlang_tests
+      - coverage
+      - lint-and-style-checks
+      - license-check
+      - markdown-style-check
     {{- end }}
   docker-publish:
     jobs:
