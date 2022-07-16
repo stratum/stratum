@@ -410,10 +410,12 @@ workflows:
     {{- if .PublishDockerBuild }}
       - publish-docker-build
     {{- end }}
-      - unit_tests:
     {{- if .PublishDockerBuild }}
+      - unit_tests:
           requires:
             - publish-docker-build
+    {{- else }}
+      - unit_tests
     {{- end }}
   docker-publish:
     jobs:
