@@ -409,8 +409,6 @@ workflows:
     jobs:
     {{- if .PublishDockerBuild }}
       - publish-docker-build
-    {{- end }}
-    {{- if .PublishDockerBuild }}
       - unit_tests:
           requires:
             - publish-docker-build
