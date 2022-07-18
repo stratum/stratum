@@ -18,7 +18,8 @@ If building from source:
 
 Switch:
 ```bash
-cat /etc/onl/platform
+cat /etc/sonic/sonic-environment
+cat /etc/sonic/sonic_version.yml
 uname -a
 lsmod
 ```
