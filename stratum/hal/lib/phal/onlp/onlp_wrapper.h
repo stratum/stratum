@@ -6,6 +6,9 @@
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
 
 extern "C" {
+// Unless we set this define, AIM will undef _GNU_SOURCE and cause compilation
+// errors with GNU-only symbols later.
+#define AIM_CONFIG_INCLUDE_GNU_SOURCE 1
 #include <onlp/fan.h>
 #include <onlp/led.h>
 #include <onlp/oids.h>
