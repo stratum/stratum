@@ -11,6 +11,7 @@ jobs:
     environment:
       - BASE_REVISION: <<pipeline.git.base_revision>>
     steps:
+      - checkout
       - run:
           name: Generate config
           command: |
