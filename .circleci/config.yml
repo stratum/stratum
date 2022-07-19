@@ -6,37 +6,19 @@ setup: true
 orbs:
   continuation: circleci/continuation@0.1.2
 jobs:
-  generate_config: 
-    docker:
-      - image: golang:1.13-alpine
+  generate_and_run_config:
+    executor: continuation/default
+    environment:
+      - BASE_REVISION: <<pipeline.git.base_revision>>
     steps:
-      - checkout
-      - run:
-          name: Install git
-          command: apk add git bash
       - run:
           name: Generate config
           command: |
-            # Check if the Dockerfile.build is modified in this revision
-            git diff main HEAD Dockerfile.build > /tmp/Dockerfile.build.diff
-            [ -s /tmp/Dockerfile.build.diff ] && NEW_BUILDER_FLAG="--new-builder"
-            cd .circleci && go run generate-config.go $NEW_BUILDER_FLAG > /tmp/generated_config.yml
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - generated_config.yml
-  run_config:
-    executor: continuation/default
-    steps:
-      - attach_workspace:
-          at: /tmp
+            bash .circleci/generate-config.sh > /tmp/generated_config.yml
       - continuation/continue:
           configuration_path: /tmp/generated_config.yml
 
 workflows:
   setup:
     jobs:
-      - generate_config
-      - run_config:
-          requires: 
-            - generate_config
+      - generate_and_run_config

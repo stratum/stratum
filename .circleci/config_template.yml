@@ -14,16 +14,16 @@ orbs:
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
     keys:
-      - {{ "v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}" }}
-      - {{ "v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}" }}
-      - {{ "v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main" }}
+      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
     # jobs where the bazel process was killed because it took too long or OOM.
     # Restart the job if you see the bazel server being terminated abruptly.
     when: always
-    key: {{ "v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}" }}
+    key: v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
     paths:
       - /tmp/bazel-cache
       - /tmp/bazel-disk-cache
@@ -108,7 +108,7 @@ jobs:
   # Build targets and run unit tests.
   unit_tests:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     resource_class: large  # 4 vCPUs, 8GB RAM
     environment:
       - CC: clang
@@ -134,7 +134,7 @@ jobs:
   # CDLang
   cdlang_tests:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     resource_class: small  # 1 vCPU, 2GB RAM
     environment:
       - CC: clang
@@ -157,7 +157,7 @@ jobs:
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     resource_class: large  # 4 vCPUs, 8GB RAM
     environment:
       - CC: clang
@@ -182,7 +182,7 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: Dockerfile.build
-      - DOCKER_IMG: {{ .StratumBuilderImage }}
+      - DOCKER_IMG: STRATUM_BUILDER_IMAGE
     steps:
       - checkout
       - *docker_login
@@ -191,7 +191,7 @@ jobs:
 
   publish-docker-mininet:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
@@ -222,7 +222,7 @@ jobs:
 
   publish-docker-p4c-fpm:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     environment:
       - DOCKER_SCOPE: stratum/p4c_backends/fpm
       - DOCKER_FILE: Dockerfile
@@ -251,7 +251,7 @@ jobs:
 
   publish-docker-stratum-bcm-sdklt:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
@@ -276,7 +276,7 @@ jobs:
 
   publish-docker-stratum-bcm-opennsa:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
@@ -300,7 +300,7 @@ jobs:
 
   publish-docker-stratum-bfrt:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     parameters:
       sde_version:
         description: "BF SDE version to build with"
@@ -330,7 +330,7 @@ jobs:
 
   publish-docker-stratum-tools:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     environment:
       - DOCKER_SCOPE: stratum/tools
       - DOCKER_FILE: Dockerfile.stratum_tools
@@ -363,7 +363,7 @@ jobs:
 
   lint-and-style-checks:
     docker:
-      - image: {{ .StratumBuilderImage }}
+      - image: STRATUM_BUILDER_IMAGE
     resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
@@ -407,7 +407,6 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-    {{- if .PublishDockerBuild }}
       - publish-docker-build
       - unit_tests:
           requires:
@@ -423,14 +422,6 @@ workflows:
             - publish-docker-build
       - license-check
       - markdown-style-check
-    {{- else }}
-      - unit_tests
-      - cdlang_tests
-      - coverage
-      - lint-and-style-checks
-      - license-check
-      - markdown-style-check
-    {{- end }}
   docker-publish:
     jobs:
       - publish-docker-build:
