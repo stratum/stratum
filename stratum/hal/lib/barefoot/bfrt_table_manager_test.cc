@@ -601,7 +601,7 @@ TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
   ::util::Status ret =
-      bfrt_table_manager_->ReadTableEntry(session_mock, entry, NULL);
+      bfrt_table_manager_->ReadTableEntry(session_mock, entry, nullptr);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Null writer."));
