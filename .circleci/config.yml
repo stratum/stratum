@@ -8,6 +8,7 @@ orbs:
 jobs:
   generate_and_run_config:
     executor: continuation/default
+    resource_class: small
     environment:
       - BASE_REVISION: <<pipeline.git.base_revision>>
     steps:
