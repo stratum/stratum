@@ -6,9 +6,17 @@
 
 #include <errno.h>
 #include <stdlib.h>
+
+// The current (stub) implementation of AuthPolicyChecker uses Linux specific
+// syscalls. To allow building on other platforms, we provide noop stubs for the
+// parts that depend on Linux.
+// TODO(max): The file watcher functions don't seem to be used anywhere.
+//            Investigate whether we can remove them.
+#ifdef __linux__
 #include <sys/epoll.h>
 #include <sys/inotify.h>
 #include <sys/types.h>
+#endif
 
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
@@ -59,6 +67,7 @@ void ReadProtoIfValidFileExists(const std::string& path,
   }
 }
 
+#ifdef __linux__
 // Helpers for adding and removing watch for a file/dir.
 ::util::StatusOr<int> AddWatchHelper(int fd, const std::string& path,
                                      uint32 mask) {
@@ -129,6 +138,28 @@ void PrintFileEvent(const std::string& path, uint32 mask) {
     LOG(WARNING) << "Unknown event on file '" << path << "'!";
   }
 }
+#else
+::util::StatusOr<int> AddWatchHelper(int fd, const std::string& path,
+                                     uint32 mask) {
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+}
+
+::util::Status RemoveWatchHelper(int fd, int wd) {
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+}
+
+::util::StatusOr<int> AddWatchForFileChange(int ifd, const std::string& path) {
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+}
+
+::util::StatusOr<int> AddPollForFileChange(int ifd) {
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+}
+
+void PrintFileEvent(const std::string& path, uint32 mask) {
+  LOG(ERROR) << "UNIMPLEMENTED";
+}
+#endif
 
 }  // namespace
 
