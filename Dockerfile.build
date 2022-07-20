@@ -1,6 +1,6 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 ARG BAZELISK_VERSION=1.8.0
 ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
 ARG BMV2_COMMIT=b0fb01ecacbf3a7d7f0c01e2f149b0c6a957f779
