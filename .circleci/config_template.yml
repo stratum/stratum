@@ -1,0 +1,451 @@
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+version: 2.1
+
+orbs:
+  aws-s3: circleci/aws-s3@3.0.0
+  codecov: codecov/codecov@3.2.2
+
+# Cache Bazel output root (see bazelrc) to speed up job execution time.
+# The idea is to use the last cache available for the same branch, or the one
+# from main if this is the first build for this branch.
+# TODO: consider using Bazel remote cache (e.g. local HTTP proxy cache backed by S3)
+restore_bazel_cache: &restore_bazel_cache
+  restore_cache:
+    keys:
+      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
+save_bazel_cache: &save_bazel_cache
+  save_cache:
+    # Always saving the cache, even in case of failures, helps with completing
+    # jobs where the bazel process was killed because it took too long or OOM.
+    # Restart the job if you see the bazel server being terminated abruptly.
+    when: always
+    key: v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+    paths:
+      - /tmp/bazel-cache
+      - /tmp/bazel-disk-cache
+      - /tmp/bf-sde-tars
+
+clean_bazel_cache: &clean_bazel_cache
+  run:
+    name: Clean Bazel disk cache of files that have not been modified in 30 days
+    # mtime is the only time preserved after untaring the cache.
+    command: /usr/bin/find /tmp/bazel-disk-cache -mtime +30 -exec rm -v {} \;
+
+fetch_sde_tars: &fetch_sde_tars
+  aws-s3/sync:
+    arguments: '--exclude "*" --include "bf-sde-*-install.tgz"'
+    from: 's3://stratum-artifacts'
+    to: /tmp/bf-sde-tars
+
+# Print Bazel profiling info and generate JSON report to upload as artifact.
+analyze_bazel_profile: &analyze_bazel_profile
+  run:
+    name: Analyze Bazel profile
+    command: |
+      bazel analyze-profile /tmp/bazel.profile.json
+
+store_bazel_profile: &store_bazel_profile
+  store_artifacts:
+    path: /tmp/bazel.profile.json
+
+# Use a bazelrc file convenient for CI jobs.
+set_bazelrc: &set_bazelrc
+  run:
+    name: Set bazelrc
+    # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
+    command: |
+      cat .circleci/bazelrc >> .bazelrc
+      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
+
+# Convenience anchors to update published Docker images. Images are first pulled
+# to allow for layer cache hits and reduce build times.
+docker_login: &docker_login
+  run:
+    name: Docker login
+    command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+
+harbor_login: &harbor_login
+  run:
+    name: Harbor login
+    command: echo $AETHER_HARBOR_PWD | docker login -u $AETHER_HARBOR_LOGIN --password-stdin registry.aetherproject.org
+
+docker_build: &docker_build
+  run:
+    name: Build Docker image
+    command: |
+      docker pull $DOCKER_IMG || true
+      cd $DOCKER_SCOPE
+      docker build -f $DOCKER_FILE -t $DOCKER_IMG \
+        --cache-from $DOCKER_IMG \
+        --label org.opencontainers.image.source=$CIRCLE_REPOSITORY_URL  \
+        --label org.opencontainers.image.version=$CIRCLE_SHA1 \
+        --label org.opencontainers.image.revision=$CIRCLE_SHA1 \
+        --label build-timestamp=$(date +%FT%T%z) \
+        --label build-machine=circle-ci \
+        .
+
+harbor_tag: &harbor_tag
+  run:
+    name: Tag image for Harbor
+    command: docker tag $DOCKER_IMG registry.aetherproject.org/$HARBOR_IMG
+
+docker_push: &docker_push
+  run:
+    name: Push Docker image
+    command: docker push $DOCKER_IMG
+
+harbor_push: &harbor_push
+  run:
+    name: Push Docker image to harbor
+    command: docker push registry.aetherproject.org/$HARBOR_IMG
+
+jobs:
+
+  # Build targets and run unit tests.
+  unit_tests:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    resource_class: large  # 4 vCPUs, 8GB RAM
+    environment:
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Query all Stratum targets
+          command: bazel query '//...'
+      - run:
+          name: Build Stratum targets
+          command: xargs -a .circleci/build-targets.txt bazel build --config=ci-large
+      - *analyze_bazel_profile
+      - *store_bazel_profile
+      - run:
+          name: Test Stratum targets
+          command: xargs -a .circleci/test-targets.txt bazel test --config=ci-large
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  # CDLang
+  cdlang_tests:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    resource_class: small  # 1 vCPU, 2GB RAM
+    environment:
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build CDLang targets
+          command: xargs -a .circleci/cdlang-targets.txt bazel build --config=ci-small
+      - *analyze_bazel_profile
+      - *store_bazel_profile
+      - run:
+          name: Test CDLang targets
+          command: xargs -a .circleci/cdlang-targets.txt bazel test --config=ci-small
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  # Generate coverage report and upload to codecov.io.
+  coverage:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    resource_class: large  # 4 vCPUs, 8GB RAM
+    environment:
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Run test and collect coverage data
+          command: xargs -a .circleci/test-targets.txt bazel coverage --config=ci-large
+      - *analyze_bazel_profile
+      - *store_bazel_profile
+      - codecov/upload:
+          file: bazel-out/_coverage/_coverage_report.dat
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  # Update images on Docker Hub
+  publish-docker-build:
+    machine: true
+    environment:
+      - DOCKER_SCOPE: .
+      - DOCKER_FILE: Dockerfile.build
+      - DOCKER_IMG: STRATUM_BUILDER_IMAGE
+    steps:
+      - checkout
+      - *docker_login
+      - *docker_build
+      - *docker_push
+
+  publish-docker-mininet:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    environment:
+      - DOCKER_SCOPE: .
+      - DOCKER_FILE: tools/mininet/Dockerfile
+      - DOCKER_IMG: opennetworking/mn-stratum
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum-bmv2
+          command: |
+            bazel build --config=release //stratum/hal/bin/bmv2:stratum_bmv2_deb
+            cp bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2_deb.deb $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - run:
+          name: Check that Mininet Docker image has all required shared objects
+          command: |
+            docker run --entrypoint stratum_bmv2 $DOCKER_IMG -version
+            docker run --entrypoint mn $DOCKER_IMG --version
+            docker run --rm --entrypoint python $DOCKER_IMG -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
+      - *docker_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  publish-docker-p4c-fpm:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    environment:
+      - DOCKER_SCOPE: stratum/p4c_backends/fpm
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/p4c-fpm
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build p4c-fpm
+          command: |
+            bazel build --config=release //stratum/p4c_backends/fpm:p4c_fpm_deb
+            cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - run:
+          name: Test p4c-fpm Docker image
+          command: |
+            docker run $DOCKER_IMG -version
+      - *docker_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  publish-docker-stratum-bcm-sdklt:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bcm:sdklt
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bcm
+          command: |
+            bazel build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  publish-docker-stratum-bcm-opennsa:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bcm:opennsa
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bcm
+          command: |
+            bazel build --config=release //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
+
+  publish-docker-stratum-bfrt:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    parameters:
+      sde_version:
+        description: "BF SDE version to build with"
+        type: string
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-<< parameters.sde_version >>
+      - CC: clang
+      - CXX: clang++
+      - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *fetch_sde_tars
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bfrt
+          command: |
+            bazel build --config=release //stratum/hal/bin/barefoot:stratum_bfrt_deb
+            cp bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb $DOCKER_SCOPE/stratum_bfrt_deb.deb
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
+
+  publish-docker-stratum-tools:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    environment:
+      - DOCKER_SCOPE: stratum/tools
+      - DOCKER_FILE: Dockerfile.stratum_tools
+      - DOCKER_IMG: stratumproject/stratum-tools
+      - HARBOR_IMG: tost/stratum-tools
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum tools package
+          command: |
+            bazel build --config=release //stratum/tools:stratum_tools_deb
+            cp bazel-bin/stratum/tools/stratum_tools_deb.deb $DOCKER_SCOPE
+      - *docker_login
+      - *harbor_login
+      - *docker_build
+      - *harbor_tag
+      - run:
+          name: Test stratum-tools Docker image
+          command: |
+            docker run $DOCKER_IMG
+      - *docker_push
+      - *harbor_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
+  lint-and-style-checks:
+    docker:
+      - image: STRATUM_BUILDER_IMAGE
+    resource_class: small  # 1 vCPU, 2GB RAM
+    steps:
+      - checkout
+      # We always continue with all steps, even on failures, to get the most
+      # information per CI run.
+      - run:
+          when: always
+          name: Run clang-format script
+          command: .circleci/check-cpp-format.sh
+      - run:
+          when: always
+          name: Run cpplint script
+          command: .circleci/check-cpplint.sh
+      - run:
+          when: always
+          name: Run buildifier script
+          command: .circleci/check-bazel-format.sh
+
+  license-check:
+    docker:
+      - image: fsfe/reuse:latest
+    resource_class: small  # 1 vCPU, 2GB RAM
+    steps:
+      - checkout
+      - run:
+          name: Run reuse
+          command: reuse lint
+
+  markdown-style-check:
+    # We use the machine executor because mounting folders is not possible with
+    # CircleCi remote docker:
+    # https://circleci.com/docs/2.0/building-docker-images/#separation-of-environments
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Run markdownlint script
+          command: .circleci/check-markdown.sh
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - publish-docker-build
+      - unit_tests:
+          requires:
+            - publish-docker-build
+      - cdlang_tests:
+          requires:
+            - publish-docker-build
+      - coverage:
+          requires:
+            - publish-docker-build
+      - lint-and-style-checks:
+          requires:
+            - publish-docker-build
+      - license-check
+      - markdown-style-check
+  docker-publish:
+    jobs:
+      - publish-docker-build:
+          filters:
+            branches:
+              only: main
+      - publish-docker-mininet:
+          requires:
+            - publish-docker-build
+      - publish-docker-p4c-fpm:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bcm-sdklt:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bcm-opennsa:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bfrt:
+          requires:
+            - publish-docker-build
+          matrix:
+            parameters:
+              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0"]
+      - publish-docker-stratum-tools:
+          requires:
+            - publish-docker-build
