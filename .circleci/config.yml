@@ -408,16 +408,16 @@ workflows:
   build_and_test:
     jobs:
       - publish-docker-build
-      - unit_tests
+      - unit_tests:
           requires:
             - publish-docker-build
-      - cdlang_tests
+      - cdlang_tests:
           requires:
             - publish-docker-build
-      - coverage
+      - coverage:
           requires:
             - publish-docker-build
-      - lint-and-style-checks
+      - lint-and-style-checks:
           requires:
             - publish-docker-build
       - license-check
