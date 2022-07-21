@@ -7,17 +7,6 @@
 #include <errno.h>
 #include <stdlib.h>
 
-// The current (stub) implementation of AuthPolicyChecker uses Linux specific
-// syscalls. To allow building on other platforms, we provide noop stubs for the
-// parts that depend on Linux.
-// TODO(max): The file watcher functions don't seem to be used anywhere.
-//            Investigate whether we can remove them.
-#ifdef __linux__
-#include <sys/epoll.h>
-#include <sys/inotify.h>
-#include <sys/types.h>
-#endif
-
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
@@ -66,100 +55,6 @@ void ReadProtoIfValidFileExists(const std::string& path,
     LOG(ERROR) << "File '" << path << "' not found.";
   }
 }
-
-#ifdef __linux__
-// Helpers for adding and removing watch for a file/dir.
-::util::StatusOr<int> AddWatchHelper(int fd, const std::string& path,
-                                     uint32 mask) {
-  int wd = inotify_add_watch(fd, path.c_str(), mask);
-  if (wd <= 0) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "inotify_add_watch() failed for path '" << path << "', and mask '"
-           << mask << "'. errno: " << errno << ".";
-  }
-
-  return wd;
-}
-
-::util::Status RemoveWatchHelper(int fd, int wd) {
-  RET_CHECK(fd > 0) << "Invalid fd: " << fd << ".";
-  if (wd > 0) inotify_rm_watch(fd, wd);
-
-  return ::util::OkStatus();
-}
-
-// This method creates watch descritor for watching change in the directory
-// containing the file whose path is given as input. We add watch for the
-// directory so that we can detect the file creation/deletion/move as well as
-// modify.
-::util::StatusOr<int> AddWatchForFileChange(int ifd, const std::string& path) {
-  std::string dir = DirName(path);
-  RET_CHECK(PathExists(dir)) << "Dir '" << dir << "' not found.";
-  RET_CHECK(IsDir(dir)) << "'" << dir << "' is not a directory.";
-  ASSIGN_OR_RETURN(
-      int wd,
-      AddWatchHelper(ifd, dir, IN_CREATE | IN_DELETE | IN_MOVE | IN_MODIFY));
-
-  return wd;
-}
-
-// This method create an epoll file descriptor which will later be used to check
-// for the file/dir change in a non blocking mannger. The FD created by
-// inotify_init() is passed to this method.
-::util::StatusOr<int> AddPollForFileChange(int ifd) {
-  struct epoll_event event;
-  int efd = epoll_create1(0);
-  if (efd <= 0) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "epoll_create1() failed. errno: " << errno << ".";
-  }
-
-  event.data.fd = ifd;  // not even used.
-  event.events = EPOLLIN;
-  if (epoll_ctl(efd, EPOLL_CTL_ADD, ifd, &event) != 0) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "epoll_ctl() failed. errno: " << errno << ".";
-  }
-
-  return efd;
-}
-
-// Pretty prints the filed event on a specific file.
-void PrintFileEvent(const std::string& path, uint32 mask) {
-  if (mask & IN_CREATE) {
-    LOG(INFO) << "File '" << path << "' created!";
-  } else if (mask & IN_MODIFY) {
-    LOG(INFO) << "File '" << path << "' modified!";
-  } else if (mask & IN_MOVE) {
-    LOG(INFO) << "File '" << path << "' moved!";
-  } else if (mask & IN_DELETE) {
-    LOG(INFO) << "File '" << path << "' deleted!";
-  } else {
-    LOG(WARNING) << "Unknown event on file '" << path << "'!";
-  }
-}
-#else
-::util::StatusOr<int> AddWatchHelper(int fd, const std::string& path,
-                                     uint32 mask) {
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
-}
-
-::util::Status RemoveWatchHelper(int fd, int wd) {
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
-}
-
-::util::StatusOr<int> AddWatchForFileChange(int ifd, const std::string& path) {
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
-}
-
-::util::StatusOr<int> AddPollForFileChange(int ifd) {
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
-}
-
-void PrintFileEvent(const std::string& path, uint32 mask) {
-  LOG(ERROR) << "UNIMPLEMENTED";
-}
-#endif
 
 }  // namespace
 
