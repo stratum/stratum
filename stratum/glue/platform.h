@@ -141,7 +141,7 @@
 #define s6_addr32 __u6_addr.__u6_addr32
 
 // Typedef for compatability with Linux's sighandler_t.
-typedef void (*sig_t)(int);
+typedef sig_t sighandler_t;
 
 #endif  // __APPLE__
 

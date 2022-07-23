@@ -583,6 +583,30 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
+TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
+      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
+}
+
+TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  ::util::Status ret =
+      bfrt_table_manager_->ReadTableEntry(session_mock, entry, nullptr);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Null writer."));
+}
+
 TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
   ASSERT_OK(PushTestConfig());
   auto table_key_mock = absl::make_unique<TableKeyMock>();
@@ -615,7 +639,6 @@ TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(),
               HasSubstr("Update type of DirectCounterEntry"));
-}
 
 }  // namespace barefoot
 }  // namespace hal
