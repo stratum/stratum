@@ -583,6 +583,36 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
+TEST_F(BfrtTableManagerTest, RejectReadActionProfileMemberTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+  const std::string kActionProfileEntryText = R"pb(
+    action_profile_id : 0
+    member_id : 1
+    action {}
+  )pb";
+  ::p4::v1::ActionProfileMember entry;
+  ::util::Status ret = bfrt_table_manager_->ReadActionProfileMember(
+      session_mock, entry, &writer_mock);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Reading all action profiles is not supported yet."));
+}
+
+TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  ::util::Status ret =
+      bfrt_table_manager_->ReadTableEntry(session_mock, entry, nullptr);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Null writer."));
+}
+
 TEST_F(BfrtTableManagerTest, WriteActionProfileMemberTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
@@ -634,7 +664,7 @@ TEST_F(BfrtTableManagerTest, WriteActionProfileMemberModifyTest) {
     member_id : 1
     action {
             action_id: 16783057
-            para { param_id: 1 value: "\x01" }
+            params { param_id: 1 value: "\x01" }
             params { param_id: 2 value: "\x01" }
     }
   )pb";
@@ -679,12 +709,12 @@ TEST_F(BfrtTableManagerTest, WriteActionProfileMemberDeleteTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
-TEST_F(BfrtTableManagerTest, RejectWriteActionProfileMembereUnspecifiedType) {
+TEST_F(BfrtTableManagerTest,  RejectWriteActionProfileMembereUnspecifiedType) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
   ::p4::v1::ActionProfileMember entry;
-  ::util::Status ret = bfrt_table_manager_->WriteActionProfileMember(
-      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  ::util::Status ret =bfrt_table_manager_->WriteActionProfileMember(
+                    session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
@@ -700,12 +730,10 @@ TEST_F(BfrtTableManagerTest, RejectReadActionProfileMemberTest) {
     action {}
   )pb";
   ::p4::v1::ActionProfileMember entry;
-  ::util::Status ret = bfrt_table_manager_->ReadActionProfileMember(
-      session_mock, entry, &writer_mock);
+  ::util::Status ret = bfrt_table_manager_->ReadActionProfileMember(session_mock, entry, &writer_mock);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-  EXPECT_THAT(ret.error_message(),
-              HasSubstr("Reading all action profiles is not supported yet."));
+  EXPECT_THAT(ret.error_message(),HasSubstr("Reading all action profiles is not supported yet."));
 }
 
 }  // namespace barefoot
