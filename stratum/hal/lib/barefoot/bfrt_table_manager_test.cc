@@ -709,12 +709,12 @@ TEST_F(BfrtTableManagerTest, WriteActionProfileMemberDeleteTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
-TEST_F(BfrtTableManagerTest,  RejectWriteActionProfileMembereUnspecifiedType) {
+TEST_F(BfrtTableManagerTest, RejectWriteActionProfileMembereUnspecifiedType) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
   ::p4::v1::ActionProfileMember entry;
-  ::util::Status ret =bfrt_table_manager_->WriteActionProfileMember(
-                    session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  ::util::Status ret = bfrt_table_manager_->WriteActionProfileMember(
+      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
