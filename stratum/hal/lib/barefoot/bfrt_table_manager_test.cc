@@ -639,6 +639,7 @@ TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(),
               HasSubstr("Update type of DirectCounterEntry"));
+}
 
 }  // namespace barefoot
 }  // namespace hal
