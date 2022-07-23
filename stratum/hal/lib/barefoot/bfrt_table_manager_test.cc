@@ -720,22 +720,6 @@ TEST_F(BfrtTableManagerTest,  RejectWriteActionProfileMembereUnspecifiedType) {
   EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
 }
 
-TEST_F(BfrtTableManagerTest, RejectReadActionProfileMemberTest) {
-  ASSERT_OK(PushTestConfig());
-  auto session_mock = std::make_shared<SessionMock>();
-  WriterMock<::p4::v1::ReadResponse> writer_mock;
-  const std::string kActionProfileEntryText = R"pb(
-    action_profile_id : 0
-    member_id : 1
-    action {}
-  )pb";
-  ::p4::v1::ActionProfileMember entry;
-  ::util::Status ret = bfrt_table_manager_->ReadActionProfileMember(session_mock, entry, &writer_mock);
-  ASSERT_FALSE(ret.ok());
-  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-  EXPECT_THAT(ret.error_message(),HasSubstr("Reading all action profiles is not supported yet."));
-}
-
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
