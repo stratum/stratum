@@ -18,6 +18,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"
+#include "stratum/glue/platform.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
 #include "stratum/hal/lib/common/common.pb.h"
