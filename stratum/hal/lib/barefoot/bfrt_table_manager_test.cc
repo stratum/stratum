@@ -583,16 +583,22 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
-TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
+TEST_F(BfrtTableManagerTest, RejectReadActionProfileMemberTest) {
   ASSERT_OK(PushTestConfig());
   auto session_mock = std::make_shared<SessionMock>();
-  ::p4::v1::TableEntry entry;
-  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
-  ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
-      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+  const std::string kActionProfileEntryText = R"pb(
+    action_profile_id : 0
+    member_id : 1
+    action {}
+  )pb";
+  ::p4::v1::ActionProfileMember entry;
+  ::util::Status ret = bfrt_table_manager_->ReadActionProfileMember(
+      session_mock, entry, &writer_mock);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
-  EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Reading all action profiles is not supported yet."));
 }
 
 TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
@@ -605,6 +611,113 @@ TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(), HasSubstr("Null writer."));
+}
+
+TEST_F(BfrtTableManagerTest, WriteActionProfileMemberTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  const std::string kActionProfileEntryText = R"pb(
+    action_profile_id : 33583783
+    member_id : 1
+    action {
+            action_id: 16783057
+            params { param_id: 1 value: "\x01" }
+            params { param_id: 2 value: "\x01" }
+    }
+  )pb";
+  ::p4::v1::ActionProfileMember entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateActionProfileMember(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::ActionProfileMember>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteActionProfileMember(
+      session_mock, ::p4::v1::Update::INSERT, entry));
+}
+
+TEST_F(BfrtTableManagerTest, WriteActionProfileMemberModifyTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  const std::string kActionProfileEntryText = R"pb(
+    action_profile_id : 33583783
+    member_id : 1
+    action {
+            action_id: 16783057
+            params { param_id: 1 value: "\x01" }
+            params { param_id: 2 value: "\x01" }
+    }
+  )pb";
+  ::p4::v1::ActionProfileMember entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateActionProfileMember(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::ActionProfileMember>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteActionProfileMember(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, WriteActionProfileMemberDeleteTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4TableId = 33583783;
+  constexpr int kActionId = 16783057;
+  constexpr int kBfRtTableId = 20;
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, kActionId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
+  const std::string kActionProfileEntryText = R"pb(
+    action_profile_id : 33583783
+    member_id : 1
+    action {
+            action_id: 16783057
+            params { param_id: 1 value: "\x01" }
+            params { param_id: 2 value: "\x01" }
+    }
+  )pb";
+  ::p4::v1::ActionProfileMember entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateActionProfileMember(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::ActionProfileMember>(entry)));
+  EXPECT_OK(bfrt_table_manager_->WriteActionProfileMember(
+      session_mock, ::p4::v1::Update::DELETE, entry));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteActionProfileMembereUnspecifiedType) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  ::p4::v1::ActionProfileMember entry;
+  ::util::Status ret = bfrt_table_manager_->WriteActionProfileMember(
+      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
 }
 
 }  // namespace barefoot
