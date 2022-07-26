@@ -185,9 +185,9 @@ jobs:
       - DOCKER_IMG: STRATUM_BUILDER_IMAGE
     steps:
       - run: |
-        if [[ -z $DOCKER_LOGIN ]]; then
-          circleci-agent step halt
-        fi
+          if [[ -z $DOCKER_LOGIN ]]; then
+            circleci-agent step halt
+          fi
       - checkout
       - *docker_login
       - *docker_build
