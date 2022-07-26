@@ -186,9 +186,9 @@ jobs:
     steps:
       - checkout
       - run: |
-        if [[ -n $DOCKER_LOGIN ]]; then
-          circleci-agent step halt
-        fi
+          if [[ -n $DOCKER_LOGIN ]]; then
+            circleci-agent step halt
+          fi
       - *docker_login
       - *docker_build
       - *docker_push
