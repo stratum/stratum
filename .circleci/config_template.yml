@@ -66,10 +66,7 @@ set_bazelrc: &set_bazelrc
 docker_login: &docker_login
   run:
     name: Docker login
-    command: |
-      if [[ -n $DOCKER_LOGIN ]]; then
-        echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-      fi
+    command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
 
 harbor_login: &harbor_login
   run:
@@ -80,9 +77,6 @@ docker_build: &docker_build
   run:
     name: Build Docker image
     command: |
-      if [[ -z $DOCKER_LOGIN ]]; then
-        exit 0
-      fi
       docker pull $DOCKER_IMG || true
       cd $DOCKER_SCOPE
       docker build -f $DOCKER_FILE -t $DOCKER_IMG \
@@ -102,10 +96,7 @@ harbor_tag: &harbor_tag
 docker_push: &docker_push
   run:
     name: Push Docker image
-    command: |
-      if [[ -n $DOCKER_LOGIN ]]; then
-        docker push $DOCKER_IMG
-      fi
+    command: docker push $DOCKER_IMG
 
 harbor_push: &harbor_push
   run:
@@ -193,6 +184,10 @@ jobs:
       - DOCKER_FILE: Dockerfile.build
       - DOCKER_IMG: STRATUM_BUILDER_IMAGE
     steps:
+      - run: |
+        if [[ -z $DOCKER_LOGIN ]]; then
+          circleci-agent step halt
+        fi
       - checkout
       - *docker_login
       - *docker_build
