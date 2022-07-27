@@ -6,8 +6,6 @@ ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
 ARG BMV2_COMMIT=b0fb01ecacbf3a7d7f0c01e2f149b0c6a957f779
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
 ARG LLVM_REPO_NAME="deb http://apt.llvm.org/buster/  llvm-toolchain-buster-11 main"
-ARG SONIC_KERNEL_HEADER_URL_COMMON="https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=202106&platform=barefoot&buildId=116439&target=target%2Fdebs%2Fbuster%2Flinux-headers-4.19.0-12-2-common_4.19.152-1_all.deb"
-ARG SONIC_KERNEL_HEADER_URL_AMD64="https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=202106&platform=barefoot&buildId=116439&target=target%2Fdebs%2Fbuster%2Flinux-headers-4.19.0-12-2-amd64_4.19.152-1_amd64.deb"
 
 # Reasonable for CI
 ARG JOBS=2
@@ -67,18 +65,6 @@ RUN wget --quiet $JDK_URL -O $HOME/jdk_11.0.2.tar.gz && \
     tar xf $HOME/jdk_11.0.2.tar.gz -C $JAVA_HOME --strip-components=1 && \
     rm $HOME/jdk_11.0.2.tar.gz
 ENV PATH=$PATH:/usr/local/lib/jvm/bin
-
-# Install and patch SONiC Kernel headers for later kmod builds.
-ARG SONIC_KERNEL_HEADER_URL_COMMON
-ARG SONIC_KERNEL_HEADER_URL_AMD64
-RUN wget --quiet -O $HOME/linux-headers-4.19.0-12-2-common.deb "$SONIC_KERNEL_HEADER_URL_COMMON" && \
-    wget --quiet -O $HOME/linux-headers-4.19.0-12-2-amd64.deb "$SONIC_KERNEL_HEADER_URL_AMD64" && \
-    apt-get install -y --no-install-recommends $HOME/linux-headers-4.19.0-12-2-common.deb && \
-    apt-get install -y --no-install-recommends $HOME/linux-headers-4.19.0-12-2-amd64.deb && \
-    rm $HOME/linux-headers-4.19.0-12-2-common.deb $HOME/linux-headers-4.19.0-12-2-amd64.deb
-RUN mkdir /usr/src/linux-headers-4.19.0-12-2-merged
-RUN rsync -ahPL /usr/src/linux-headers-4.19.0-12-2-common/ /usr/src/linux-headers-4.19.0-12-2-merged
-RUN rsync -ahPL /usr/src/linux-headers-4.19.0-12-2-amd64/ /usr/src/linux-headers-4.19.0-12-2-merged
 
 ARG PI_COMMIT
 RUN git clone https://github.com/p4lang/PI.git /tmp/PI && \

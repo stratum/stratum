@@ -266,6 +266,14 @@ def stratum_deps():
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.
             patch_cmds = [
+                "wget --quiet -O linux-headers-4.19.0-12-2-common.deb 'https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=202106&platform=barefoot&buildId=116439&target=target%2Fdebs%2Fbuster%2Flinux-headers-4.19.0-12-2-common_4.19.152-1_all.deb'",
+                "wget --quiet -O linux-headers-4.19.0-12-2-amd64.deb 'https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=202106&platform=barefoot&buildId=116439&target=target%2Fdebs%2Fbuster%2Flinux-headers-4.19.0-12-2-amd64_4.19.152-1_amd64.deb'",
+                "sudo apt-get install -y --no-install-recommends ./linux-headers-4.19.0-12-2-common.deb",
+                "sudo apt-get install -y --no-install-recommends ./linux-headers-4.19.0-12-2-amd64.deb",
+                "rm ./linux-headers-4.19.0-12-2-common.deb ./linux-headers-4.19.0-12-2-amd64.deb",
+                "sudo mkdir -p /usr/src/linux-headers-4.19.0-12-2-merged",
+                "sudo rsync -ahPL /usr/src/linux-headers-4.19.0-12-2-common/ /usr/src/linux-headers-4.19.0-12-2-merged",
+                "sudo rsync -ahPL /usr/src/linux-headers-4.19.0-12-2-amd64/ /usr/src/linux-headers-4.19.0-12-2-merged",
                 "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=/usr/src/linux-headers-4.19.0-12-2-merged && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
             ],
         )
