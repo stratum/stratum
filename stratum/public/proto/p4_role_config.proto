@@ -13,32 +13,26 @@ package stratum;
 
 import "p4/v1/p4runtime.proto";
 
-
 // The P4RoleConfig message conists of these fields:
-//  accessible_p4_ids - a list of the
-//  packet_in_filters -
-//  receives_packet_ins -
+//  exclusive_p4_ids - A list of P4 entities for which this role exclusivly may
+//      issue Write updates. Those entities are also filtered out of Read
+//      responses.
+//  shared_p4_ids - A list of P4 entities for which this role may issue Write
+//      updates. Access to those entities is shared with other roles. Those
+//      entities are also filtered out of Read responses.
+//  packet_in_filter - A single PacketFilter that is applied to incoming packets
+//      to determine whether this role should receive them. An empty list
+//      results in no filtering.
+//  receives_packet_ins - A toggle to set if this role should receive PacketIns.
+//  can_push_pipeline - Determines if this role is allowed to push a pipeline.
 message P4RoleConfig {
-  repeated uint32 accessible_p4_ids = 1;
-  repeated p4.v1.PacketMetadata packet_in_filters = 2;
-  bool receives_packet_ins = 3;
-  // Do we need to guard pipeline pushes?
-  // bool can_push_pipeline = 4;
+  message PacketFilter {
+    uint32 metadata_id = 1;
+    bytes value = 2;
+  }
+  repeated uint32 exclusive_p4_ids = 1;
+  repeated uint32 shared_p4_ids = 2;
+  PacketFilter packet_in_filter = 3;
+  bool receives_packet_ins = 4;
+  bool can_push_pipeline = 5;
 }
-
-// The P4PipelineConfig message conists of these fields:
-//  table_map - contains a map from P4 object name to descriptor data that
-//      supports mapping between P4 runtime requests, P4Info, and internal
-//      HAL flow entries.
-//  p4_controls - present the control methods from the P4 program in a form
-//      that the HAL switch can use for logical-to-physical table translation.
-//  idle_pipeline_stages - identify any forwarding pipeline stages that are
-//      not needed by tables in the P4 program.
-//  static_table_entries - contains a WriteRequest.updates() entry for each
-//      "const entry" table property in the P4 program.
-// message P4PipelineConfig {
-//   map<string, P4TableMapValue> table_map = 1;
-//   repeated P4Control p4_controls = 2;
-//   repeated P4Annotation.PipelineStage idle_pipeline_stages = 3;
-//   p4.v1.WriteRequest static_table_entries = 4;
-// }
