@@ -57,7 +57,7 @@ RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
 RUN ln -s ../lib/llvm-11/bin/clang++ /usr/bin/clang++
 RUN ln -s ../lib/llvm-11/bin/clang-format /usr/bin/clang-format
 
-# Install java Bazel tools
+# Install java for Bazel coverage report
 ARG JDK_URL
 ENV JAVA_HOME /usr/local/lib/jvm
 RUN wget --quiet $JDK_URL -O $HOME/jdk_11.0.2.tar.gz && \
