@@ -702,6 +702,18 @@ HugePages_Surp:        0
 
 To enable them or allocate more, follow the steps from the [post install script](deb/postinst).
 
+### ONLP / BMC errors on Wedge100BF
+
+`07-24 23:10:16.072010 [x86_64_accton_wedge100bf_32x] ERROR: bmc_send_command(cat /sys/bus/i2c/drivers/com_e_driver/4-0033/temp2_input
+) timed out`
+
+`07-25 08:30:59.834213 [x86_64_accton_wedge100bf_32x] Unable to read status from file (/sys/bus/i2c/drivers/lm75/3-0048/temp1_input)`
+
+This error occurs when ONLP can not reach the BMC CPU managing the platform.
+Either the ONL image is not correctly set up or ONLP support is simply broken on
+this particular switch model. As a workaround, [BSP mode](#Running-with-BSP-or-on-Tofino-model),
+which bypasses ONLP, is available.
+
 ### RESOURCE_EXHAUSTED when pushing pipeline
 
 Stratum rejects a SetForwardingPipelineConfig request with a RESOURCE_EXHAUSTED
