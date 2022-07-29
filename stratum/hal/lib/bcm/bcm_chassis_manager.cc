@@ -1136,7 +1136,10 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     if (bcm_port.internal()) {
       xcvr_port_key_to_xcvr_state_[port_group_key] = HW_STATE_PRESENT;
     } else {
-      xcvr_port_key_to_xcvr_state_[port_group_key] = HW_STATE_UNKNOWN;
+      // TODO(max): With the transition away from ONL we lost the transceiver
+      // events and have to assume all transceivers are present instead of
+      // unknown. Find an alternative way to fix this.
+      xcvr_port_key_to_xcvr_state_[port_group_key] = HW_STATE_PRESENT;
     }
   }
 
