@@ -12,21 +12,23 @@ The following guide details how to build Stratum for Broadcom based switches
 For additional information related to optical transponders like the Cassini, see
 the [TAI README](/stratum/docs/tai/README.md).
 
-## ONLPv2 operating system on the switch
-Stratum requires an ONLPv2 operating system on the switch. ONF maintains a [fork](https://github.com/opennetworkinglab/OpenNetworkLinux) with additional platforms. Follow the [ONL](https://opennetlinux.org/doc-building.html) instructions to setup your device. Here is what your switch should look like:
+## SONiC operating system on the switch
+Stratum requires an SONiC operating system on the switch.
+The SONiC image we recommand can be found [here](https://github.com/stratum/sonic-base-image/releases)
+Follow the [SONiC](https://github.com/sonic-net/SONiC/wiki/Quick-Start) instructions to setup your device. Here is what your switch should look like:
 
 ```bash
-# uname -a
-Linux as7712 4.14.49-OpenNetworkLinux #4 SMP Tue May 14 20:43:21 UTC 2019 x86_64 GNU/Linux
+$ uname -a
+Linux sonic 4.19.0-12-2-amd64 #1 SMP Debian 4.19.152-1 (2020-10-18) x86_64 GNU/Linux
 ```
 
 ```bash
-# cat /etc/os-release
-PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+$ cat /etc/os-release
+PRETTY_NAME="Debian GNU/Linux 10 (buster)"
 NAME="Debian GNU/Linux"
-VERSION_ID="9"
-VERSION="9 (stretch)"
-VERSION_CODENAME=stretch
+VERSION_ID="10"
+VERSION="10 (buster)"
+VERSION_CODENAME=buster
 ID=debian
 HOME_URL="https://www.debian.org/"
 SUPPORT_URL="https://www.debian.org/support"
@@ -34,20 +36,13 @@ BUG_REPORT_URL="https://bugs.debian.org/"
 ```
 
 ```bash
-# cat /etc/onl/SWI
-images:ONL-onf-ONLPv2_ONL-OS_<some-date>_AMD64.swi
-```
-Note the **ONLPv2**!
-
-```bash
-# cat /etc/onl/platform
-x86-64-<vendor-name>-<box-name>-32x-r0
+$ cat /etc/sonic/sonic_release
+202106
 ```
 
 ## Pre-built Docker image
 
 Stratum for Broadcom switches can be run inside Docker on the switch itself.
-Follow their instructions on how to setup [Docker](https://docs.docker.com/engine/install/).
 As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/r/stratumproject/stratum-bcm).
 There are two versions, one for SDKLT (`:sdklt`) and one for OpenNSA (`:openNSA`).
 
@@ -136,13 +131,13 @@ something go wrong, these steps help you troubleshoot:
 
 #### SDKLT
 
-SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the Debian package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.19.0 in the Debian package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
 
 ```bash
 cd /usr/lib/stratum/
 # or
 wget https://github.com/opennetworkinglab/SDKLT/releases/...
-tar xf sdklt-4.14.49.tgz
+tar xf sdklt-4.19.0.tgz
 insmod linux_ngbde.ko && insmod linux_ngknet.ko
 ```
 
