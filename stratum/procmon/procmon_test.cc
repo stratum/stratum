@@ -116,7 +116,9 @@ class FakeProcessHandler : public ProcessHandler {
     if (found == procs_running_.end()) return -1;
     bool running = found->second;
     // We should never see a blocking waitpid on a live process.
-    if (!(options & WNOHANG)) EXPECT_FALSE(running);
+    if (!(options & WNOHANG)) {
+      EXPECT_FALSE(running);
+    }
     if (running) {
       return 0;
     } else {
