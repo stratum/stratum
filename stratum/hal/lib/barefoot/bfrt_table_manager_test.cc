@@ -641,6 +641,226 @@ TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
               HasSubstr("Update type of DirectCounterEntry"));
 }
 
+TEST_F(BfrtTableManagerTest, WriteActionProfileGroupTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 16783057;
+  constexpr int kBfRtTableId = 10;
+  constexpr int kActionId = 10;
+  constexpr int kBfRtActSetTableId = 10;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 1
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  EXPECT_OK(bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::INSERT, entry));
+}
+
+TEST_F(BfrtTableManagerTest, WriteActionProfileGroupModifyTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 16783057;
+  constexpr int kBfRtTableId = 10;
+  constexpr int kActionId = 10;
+  constexpr int kBfRtActSetTableId = 10;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 1
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  EXPECT_OK(bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, WriteActionProfileGroupDeleteTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 16783057;
+  constexpr int kBfRtTableId = 10;
+  constexpr int kActionId = 10;
+  constexpr int kBfRtActSetTableId = 10;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 1
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  EXPECT_OK(bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::DELETE, entry));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteActionProfileGroupWatchPortTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 16783057;
+  constexpr int kBfRtTableId = 10;
+  constexpr int kActionId = 10;
+  constexpr int kBfRtActSetTableId = 10;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 1
+    watch_port : "17/0"
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Watch ports are not supported."));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteActionProfileGroupWeigthTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 16783057;
+  constexpr int kBfRtTableId = 10;
+  constexpr int kActionId = 10;
+  constexpr int kBfRtActSetTableId = 10;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 10
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_OPER_NOT_SUPPORTED, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Member weights greater than 1 are not supported."));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteActionProfileGroupWeigthZeroTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 16783057;
+  constexpr int kBfRtTableId = 10;
+  constexpr int kActionId = 10;
+  constexpr int kBfRtActSetTableId = 10;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 0
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Zero member weights are not allowed."));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteActionProfileGroupInvalidTypeTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 16783057
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 1
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteActionProfileGroup(
+      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
+}
+
+TEST_F(BfrtTableManagerTest, RejectReadActionProfileGroupProfileIdZeroTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4ActionProfileId = 0;
+  constexpr int kBfRtTableId = 0;
+  constexpr int kActionId = 0;
+  constexpr int kBfRtActSetTableId = 0;
+  auto session_mock = std::make_shared<SessionMock>();
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSetTableId));
+  const std::string kActionProfileGroupEntryText = R"pb(
+   action_profile_id : 0
+   group_id : 10
+   members{
+    member_id : 50
+    weight : 1
+   }
+  )pb";
+  ::p4::v1::ActionProfileGroup entry;
+  ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->ReadActionProfileGroup(
+      session_mock, entry, &writer_mock);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Reading all action profiles is not supported yet"));
+}
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
