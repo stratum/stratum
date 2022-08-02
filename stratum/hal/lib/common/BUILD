@@ -550,6 +550,7 @@ stratum_cc_library(
         ":channel_writer_wrapper",
         ":common_cc_proto",
         ":error_buffer",
+        ":filtered_server_writer_wrapper",
         ":server_writer_wrapper",
         ":switch_interface",
         "//stratum/glue:logging",
@@ -597,6 +598,7 @@ stratum_cc_test(
         ":test_main",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/p4:p4_info_manager",
         "//stratum/lib:utils",
         "//stratum/lib/p4runtime:stream_message_reader_writer_mock",
         "//stratum/lib/security:auth_policy_checker_mock",
@@ -654,6 +656,11 @@ cc_library(
 stratum_cc_library(
     name = "proto_oneof_writer_wrapper",
     hdrs = ["proto_oneof_writer_wrapper.h"],
+)
+
+stratum_cc_library(
+    name = "filtered_server_writer_wrapper",
+    hdrs = ["filtered_server_writer_wrapper.h"],
 )
 
 stratum_cc_library(

@@ -10,3 +10,6 @@ In particular, it allows a given role to:
 - enable or disable receipt of `PacketIn` messages
 - filter PacketIn messages based on their `PacketMetadata`
 - enable or disable ability to push a new pipeline
+
+
+TODO: `any` instructions. Packing, url and bytes.

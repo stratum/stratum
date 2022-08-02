@@ -86,9 +86,17 @@ class SdnControllerManager {
 
   grpc::Status AllowRequest(const p4::v1::WriteRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
+
+  grpc::Status AllowRequest(const p4::v1::ReadRequest& request) const
+      ABSL_LOCKS_EXCLUDED(lock_);
+
   grpc::Status AllowRequest(
       const p4::v1::SetForwardingPipelineConfigRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
+
+  p4::v1::ReadResponse FilterReadResponse(
+      const absl::optional<std::string>& role_name,
+      const p4::v1::ReadResponse& response) const ABSL_LOCKS_EXCLUDED(lock_);
 
   // Returns the number of currently active connections.
   int ActiveConnections() const ABSL_LOCKS_EXCLUDED(lock_);
@@ -141,6 +149,9 @@ class SdnControllerManager {
   //    valid, but it cannot ever be primary (i.e. the controller can force a
   //    connection to be a backup).
   std::vector<SdnConnection*> connections_ ABSL_GUARDED_BY(lock_);
+
+  absl::flat_hash_map<absl::optional<std::string>, absl::optional<P4RoleConfig>>
+      role_config_by_name_ ABSL_GUARDED_BY(lock_);
 
   // We maintain a map of the highest election IDs that have been selected for
   // the primary connection of a role. Once an election ID is set all new

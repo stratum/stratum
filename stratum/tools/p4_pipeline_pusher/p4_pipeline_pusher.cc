@@ -54,9 +54,9 @@ const char kUsage[] =
       ReadFileToString(FLAGS_p4_pipeline_config_file, &p4_device_config));
 #if 0
   constexpr char role_config_text[] = R"pb(
-    accessible_p4_ids: 100
-    accessible_p4_ids: 200
-    packet_in_filters {
+    exclusive_p4_ids: 100
+    exclusive_p4_ids: 200
+    packet_in_filter {
       metadata_id: 300
       value: "foo"
     }

@@ -153,6 +153,12 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
                         const p4::v1::SetForwardingPipelineConfigRequest& req)
       const LOCKS_EXCLUDED(controller_lock_);
 
+  ::util::StatusOr<WriterInterface<p4::v1::ReadResponse>*>
+  GetReadResponseWriterWrapper(
+      uint64 node_id, const p4::v1::ReadRequest& req,
+      ::grpc::ServerWriter<::p4::v1::ReadResponse>* writer) const
+      LOCKS_EXCLUDED(controller_lock_);
+
   // Returns true if the given role and election_id belongs to the master
   // controller stream for a node given by its node ID.
   bool IsMasterController(

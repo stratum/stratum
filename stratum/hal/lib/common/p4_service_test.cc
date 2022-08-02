@@ -20,6 +20,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/p4runtime/stream_message_reader_writer_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
@@ -134,6 +135,23 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     ASSERT_OK(p4_service_->AddOrModifyController(node_id, request, controller));
   }
 
+  void AddFakeController(uint64 node_id, const std::string& role_name,
+                         const P4RoleConfig& role_config,
+                         p4runtime::SdnConnection* controller) {
+    p4::v1::MasterArbitrationUpdate request;
+    request.set_device_id(node_id);
+    if (controller->GetElectionId().has_value()) {
+      request.mutable_election_id()->set_high(
+          absl::Uint128High64(controller->GetElectionId().value()));
+      request.mutable_election_id()->set_low(
+          absl::Uint128Low64(controller->GetElectionId().value()));
+    }
+    request.mutable_role()->set_name(role_name);
+    ASSERT_TRUE(
+        request.mutable_role()->mutable_config()->PackFrom(role_config));
+    ASSERT_OK(p4_service_->AddOrModifyController(node_id, request, controller));
+  }
+
   int GetNumberOfActiveConnections(uint64 node_id) {
     absl::WriterMutexLock l(&p4_service_->controller_lock_);
     return p4_service_->node_id_to_controller_manager_.at(node_id)
@@ -147,7 +165,21 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
           p4info {
             tables {
               preamble {
+                # id: 0x02000005
+                id: 12  # kTableId1
                 name: "some_table"
+              }
+            }
+            tables {
+              preamble {
+                id: 25  # kTableId2
+                name: "another_table"
+              }
+            }
+            actions {
+              preamble {
+                id: 0x01000001
+                name: "some_action"
               }
             }
           }
@@ -161,6 +193,12 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
             tables {
               preamble {
                 name: "another_table"
+              }
+            }
+            actions {
+              preamble {
+                id: 0x01000001
+                name: "some_action"
               }
             }
           }
@@ -191,6 +229,17 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
       digest_id: 123456
       list_id: 654321
   )";
+  static constexpr char kRoleConfigText[] = R"pb(
+      exclusive_p4_ids: 12  # kTableId1
+      shared_p4_ids: 25  # kTableId1
+      packet_in_filter {
+        metadata_id: 1
+        value: "\x00\x01"
+      }
+      receives_packet_ins: true
+      can_push_pipeline: true
+  )pb";
+  static constexpr char kRoleName[] = "test_role_1";
   static constexpr char kOperErrorMsg[] = "Some error";
   static constexpr char kAggrErrorMsg[] = "A few errors happened";
   static constexpr uint64 kNodeId1 = 123123123;
@@ -201,6 +250,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   static constexpr absl::uint128 kElectionId2 = 2222;
   static constexpr absl::uint128 kElectionId3 = 1212;
   static constexpr uint32 kTableId1 = 12;
+  static constexpr uint32 kTableId2 = 25;
   static constexpr uint64 kCookie1 = 123;
   static constexpr uint64 kCookie2 = 321;
   OperationMode mode_;
@@ -219,6 +269,8 @@ constexpr char P4ServiceTest::kTestPacketMetadata3[];
 constexpr char P4ServiceTest::kTestPacketMetadata4[];
 constexpr char P4ServiceTest::kTestDigestList1[];
 constexpr char P4ServiceTest::kTestDigestListAck1[];
+constexpr char P4ServiceTest::kRoleConfigText[];
+constexpr char P4ServiceTest::kRoleName[];
 constexpr char P4ServiceTest::kOperErrorMsg[];
 constexpr char P4ServiceTest::kAggrErrorMsg[];
 constexpr uint64 P4ServiceTest::kNodeId1;
@@ -229,6 +281,7 @@ constexpr absl::uint128 P4ServiceTest::kElectionId1;
 constexpr absl::uint128 P4ServiceTest::kElectionId2;
 constexpr absl::uint128 P4ServiceTest::kElectionId3;
 constexpr uint32 P4ServiceTest::kTableId1;
+constexpr uint32 P4ServiceTest::kTableId2;
 
 TEST_P(P4ServiceTest, ColdbootSetupSuccessForSavedConfigs) {
   if (mode_ == OPERATION_MODE_COUPLED) return;
@@ -646,6 +699,45 @@ TEST_P(P4ServiceTest, WriteSuccess) {
   EXPECT_THAT(s, HasSubstr(req.updates(0).ShortDebugString()));
 }
 
+TEST_P(P4ServiceTest, WriteWithRoleSuccess) {
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  controller.SetRoleName(kRoleName);
+  AddFakeController(kNodeId1, kRoleName, role_config, &controller);
+
+  ::grpc::ClientContext context;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
+  req.set_device_id(kNodeId1);
+  req.set_role(kRoleName);
+  req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  ::p4::v1::Update* update = req.add_updates();
+  update->set_type(::p4::v1::Update::INSERT);
+  update->mutable_entity()->mutable_table_entry()->set_table_id(kTableId1);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
+      .WillOnce(Return(::util::OkStatus()));
+  const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
+  EXPECT_CALL(*switch_mock_, WriteForwardingEntries(EqualsProto(req), _))
+      .WillOnce(DoAll(SetArgPointee<1>(kExpectedResults),
+                      Return(::util::OkStatus())));
+
+  // Invoke the RPC and validate the results.
+  ::grpc::Status status = stub_->Write(&context, req, &resp);
+  EXPECT_TRUE(status.ok());
+  EXPECT_TRUE(status.error_message().empty()) << status.error_message();
+  EXPECT_TRUE(status.error_details().empty());
+  std::string s;
+  ASSERT_OK(ReadFileToString(FLAGS_write_req_log_file, &s));
+  EXPECT_THAT(s, HasSubstr(req.updates(0).ShortDebugString()));
+}
+
 TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
@@ -830,6 +922,70 @@ TEST_P(P4ServiceTest, ReadSuccess) {
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
   EXPECT_TRUE(status.ok());
+  std::string s;
+  ASSERT_OK(ReadFileToString(FLAGS_read_req_log_file, &s));
+  EXPECT_THAT(s, HasSubstr(req.entities(0).ShortDebugString()));
+}
+
+TEST_P(P4ServiceTest, ReadWithRoleSuccess) {
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(absl::nullopt);
+  controller.SetRoleName(kRoleName);
+  AddFakeController(kNodeId1, kRoleName, role_config, &controller);
+
+  ::grpc::ClientContext context;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
+  req.set_device_id(kNodeId1);
+  req.set_role(kRoleName);
+  req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
+      .WillOnce(Return(::util::OkStatus()));
+  const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
+  EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _))
+      .WillOnce(DoAll(SetArgPointee<2>(kExpectedResults),
+                      Return(::util::OkStatus())));
+
+  // Invoke the RPC and validate the results.
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
+      stub_->Read(&context, req);
+  ASSERT_FALSE(reader->Read(&resp));
+  ::grpc::Status status = reader->Finish();
+  EXPECT_TRUE(status.ok()) << status.error_message();
+  std::string s;
+  ASSERT_OK(ReadFileToString(FLAGS_read_req_log_file, &s));
+  EXPECT_THAT(s, HasSubstr(req.entities(0).ShortDebugString()));
+}
+
+TEST_P(P4ServiceTest, ReadWithRoleFailureForInaccessibleId) {
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+  ::grpc::ClientContext context;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
+  req.set_device_id(kNodeId1);
+  req.set_role(kRoleName);
+  req.add_entities()->mutable_table_entry()->set_table_id(kTableId2);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
+      .WillOnce(Return(::util::OkStatus()));
+  const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
+  EXPECT_CALL(*switch_mock_, ReadForwardingEntries(EqualsProto(req), _, _))
+      .WillOnce(DoAll(SetArgPointee<2>(kExpectedResults),
+                      Return(::util::OkStatus())));
+
+  // Invoke the RPC and validate the results.
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
+      stub_->Read(&context, req);
+  ASSERT_FALSE(reader->Read(&resp));
+  ::grpc::Status status = reader->Finish();
+  EXPECT_TRUE(status.ok()) << status.error_message();
   std::string s;
   ASSERT_OK(ReadFileToString(FLAGS_read_req_log_file, &s));
   EXPECT_THAT(s, HasSubstr(req.entities(0).ShortDebugString()));
@@ -1270,6 +1426,102 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   // And finally Controller #3 disconnects too. Nothing will be sent.
   stream3->WritesDone();
   ASSERT_TRUE(stream3->Finish().ok());
+}
+
+// This test cannot be really broken down to multiple tests as it tries to test
+// a sequence of events. To make the debugging simpler, we use ASSERT_XXX to
+// stop executing as soon as an error happens as the rest of the test might get
+// to an unknown state.
+TEST_P(P4ServiceTest, StreamChannelWithRolesSuccess) {
+  ::grpc::ClientContext context1;
+  ::grpc::ClientContext context2;
+  ::grpc::ClientContext context3;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Sample role config.
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
+  // Sample packets. We dont care about payload.
+  ::p4::v1::PacketOut packet1;
+  ::p4::v1::PacketOut packet2;
+  ::p4::v1::PacketIn packet3;
+  ::p4::v1::PacketOut packet4;
+  ASSERT_OK(ParseProtoFromString(kTestPacketMetadata1, packet1.add_metadata()));
+  ASSERT_OK(ParseProtoFromString(kTestPacketMetadata2, packet2.add_metadata()));
+  ASSERT_OK(ParseProtoFromString(kTestPacketMetadata3, packet3.add_metadata()));
+  ASSERT_OK(ParseProtoFromString(kTestPacketMetadata4, packet4.add_metadata()));
+
+  // Sample digest lists and acks. We don't care about data.
+  ::p4::v1::DigestList digest_list1;
+  ::p4::v1::DigestListAck digest_ack1;
+  ASSERT_OK(ParseProtoFromString(kTestDigestList1, &digest_list1));
+  ASSERT_OK(ParseProtoFromString(kTestDigestListAck1, &digest_ack1));
+
+  // Sample StreamMessageRequests.
+  ::p4::v1::StreamMessageRequest req1;
+  ::p4::v1::StreamMessageRequest req2;
+  ::p4::v1::StreamMessageRequest req3;
+  *req1.mutable_packet() = packet2;
+  *req2.mutable_packet() = packet4;
+  *req3.mutable_digest_ack() = digest_ack1;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_,
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req1)))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_,
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req2)))
+      .WillOnce(Return(::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM,
+                                      kOperErrorMsg)));
+  EXPECT_CALL(*switch_mock_,
+              HandleStreamMessageRequest(kNodeId1, EqualsProto(req3)))
+      .WillOnce(Return(::util::OkStatus()));
+
+  //----------------------------------------------------------------------------
+  // Before any connection, any PacketIn received from the CPU will be
+  // ignored.
+  OnPacketReceive(packet3);
+
+  //----------------------------------------------------------------------------
+  // Before any connection, any digest list received from the switch will be
+  // ignored.
+  OnDigestListReceive(digest_list1);
+
+  //----------------------------------------------------------------------------
+  // Now start with making the stream channels for all the controllers. We use
+  // 3 streams to emulate 3 controllers.
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream1 =
+      stub_->StreamChannel(&context1);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream2 =
+      stub_->StreamChannel(&context2);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream3 =
+      stub_->StreamChannel(&context3);
+
+  //----------------------------------------------------------------------------
+  // Controller #1 connect and becomes master for role .
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config);
+  ASSERT_TRUE(stream1->Write(req));
+
+  // Read the mastership info back.
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId1),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId1),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {

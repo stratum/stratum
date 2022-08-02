@@ -21,6 +21,12 @@ std::string PrettyPrintRoleName(const absl::optional<std::string>& name) {
   return (name.has_value()) ? absl::StrCat("'", *name, "'") : "<default>";
 }
 
+std::string PrettyPrintRoleConfig(const absl::optional<P4RoleConfig>& config) {
+  return (config.has_value())
+             ? absl::StrCat("'", config->ShortDebugString(), "'")
+             : "<default>";
+}
+
 std::string PrettyPrintElectionId(const absl::optional<absl::uint128>& id) {
   if (id.has_value()) {
     p4::v1::Uint128 p4_id;
@@ -66,6 +72,110 @@ grpc::Status VerifyElectionIdIsActive(
   }
   return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
                       "Election ID is not active for the role.");
+}
+
+uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
+  switch (entity.entity_case()) {
+    case ::p4::v1::Entity::kTableEntry:
+      return entity.table_entry().table_id();
+    case ::p4::v1::Entity::kExternEntry:
+      return entity.extern_entry().extern_id();
+    case ::p4::v1::Entity::kActionProfileMember:
+      return entity.action_profile_member().action_profile_id();
+    case ::p4::v1::Entity::kActionProfileGroup:
+      return entity.action_profile_group().action_profile_id();
+    // case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+    //       return
+    //       entity.packet_replication_engine_entry().clone_session_entry().id;
+    // case ::p4::v1::Entity::kDirectCounterEntry:
+    //   return entity.direct_counter_entry().table_entry().table_id();
+    case ::p4::v1::Entity::kCounterEntry:
+      return entity.counter_entry().counter_id();
+    case ::p4::v1::Entity::kRegisterEntry:
+      return entity.register_entry().register_id();
+    case ::p4::v1::Entity::kMeterEntry:
+      return entity.meter_entry().meter_id();
+    case ::p4::v1::Entity::kDirectMeterEntry:
+    case ::p4::v1::Entity::kValueSetEntry:
+    case ::p4::v1::Entity::kDigestEntry:
+    default:
+      LOG(ERROR) << "Unsupported entity type: " << entity.ShortDebugString();
+      return 0;
+  }
+}
+
+grpc::Status VerifyP4IdsArePermitted(
+    const absl::optional<P4RoleConfig>& role_config,
+    const ::p4::v1::WriteRequest& request) {
+  // TODO(max): is empty role config an error?
+  if (!role_config.has_value()) return grpc::Status::OK;
+
+  for (const auto& update : request.updates()) {
+    uint32_t id = GetP4IdFromEntity(update.entity());
+    if (std::find(role_config->exclusive_p4_ids().begin(),
+                  role_config->exclusive_p4_ids().end(),
+                  id) != role_config->exclusive_p4_ids().end()) {
+      continue;
+    }
+    if (std::find(role_config->shared_p4_ids().begin(),
+                  role_config->shared_p4_ids().end(),
+                  id) != role_config->shared_p4_ids().end()) {
+      continue;
+    }
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role is not allowed to access this entity.");
+  }
+
+  return grpc::Status::OK;
+}
+
+grpc::Status VerifyP4IdsArePermitted(
+    const absl::optional<P4RoleConfig>& role_config,
+    const ::p4::v1::ReadRequest& request) {
+  // TODO(max): is empty role config an error?
+  if (!role_config.has_value()) return grpc::Status::OK;
+
+  for (const auto& entity : request.entities()) {
+    uint32_t id = GetP4IdFromEntity(entity);
+    if (std::find(role_config->exclusive_p4_ids().begin(),
+                  role_config->exclusive_p4_ids().end(),
+                  id) != role_config->exclusive_p4_ids().end()) {
+      continue;
+    }
+    if (std::find(role_config->shared_p4_ids().begin(),
+                  role_config->shared_p4_ids().end(),
+                  id) != role_config->shared_p4_ids().end()) {
+      continue;
+    }
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role is not allowed to access this entity.");
+  }
+
+  return grpc::Status::OK;
+}
+
+grpc::Status VerifyRoleReceviesPacketIn(
+    const absl::optional<P4RoleConfig>& role_config,
+    const p4::v1::StreamMessageResponse& response) {
+  if (!response.has_packet()) {
+    return grpc::Status::OK;
+  }
+
+  // An empty role config implies full access.
+  if (!role_config.has_value()) {
+    return grpc::Status::OK;
+  }
+
+  for (const auto& metadata : response.packet().metadata()) {
+    if (metadata.metadata_id() ==
+            role_config.value().packet_in_filter().metadata_id() &&
+        metadata.value() == role_config.value().packet_in_filter().value()) {
+      return grpc::Status::OK;
+    }
+  }
+
+  return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                      "Role is not allowed to receive this packet.");
 }
 
 }  // namespace
@@ -123,6 +233,12 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
                           absl::StrCat("Unknown role config."));
     }
     role_config = rc;
+  }
+
+  if (!role_name.has_value() && role_config.has_value()) {
+    return grpc::Status(
+        grpc::StatusCode::INVALID_ARGUMENT,
+        absl::StrCat("Cannot set a role config for the default role."));
   }
 
   const auto old_election_id_for_connection = controller->GetElectionId();
@@ -206,6 +322,15 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
 
   if (connection_is_new_primary) {
     election_id_past_for_role = new_election_id_for_connection;
+    // Update the configuration for this controllers role.
+    role_config_by_name_[role_name] = role_config;
+    if (role_name.has_value() && role_config.has_value()) {
+      if (role_config.value().receives_packet_ins()) {
+        role_receives_packet_in_.insert(role_name);
+      } else {
+        role_receives_packet_in_.erase(role_name);
+      }
+    }
     // The spec demands we send a notifcation even if the old & new primary
     // match.
     InformConnectionsAboutPrimaryChange(role_name);
@@ -303,12 +428,47 @@ grpc::Status SdnControllerManager::AllowRequest(
     role_name = request.role();
   }
 
+  {
+    absl::MutexLock l(&lock_);
+    const auto& role_config = role_config_by_name_.find(role_name);
+    if (role_config == role_config_by_name_.end()) {
+      return grpc::Status(grpc::StatusCode::NOT_FOUND,
+                          "Found no config for given role.");
+    }
+    grpc::Status result = VerifyP4IdsArePermitted(role_config->second, request);
+    if (!result.ok()) {
+      return result;
+    }
+  }
+
   absl::optional<absl::uint128> election_id;
   if (request.has_election_id()) {
     election_id = absl::MakeUint128(request.election_id().high(),
                                     request.election_id().low());
   }
   return AllowRequest(role_name, election_id);
+}
+
+grpc::Status SdnControllerManager::AllowRequest(
+    const p4::v1::ReadRequest& request) const {
+  absl::optional<std::string> role_name;
+  if (!request.role().empty()) {
+    role_name = request.role();
+  }
+
+  // The default role is unrestricted.
+  if (!role_name) {
+    return grpc::Status::OK;
+  }
+
+  absl::MutexLock l(&lock_);
+  if (!role_config_by_name_.contains(role_name)) {
+    // We don't have the role config for this role, which can happen when no
+    // master has connected yet.
+    return grpc::Status::OK;
+  }
+
+  return VerifyP4IdsArePermitted(role_config_by_name_.at(role_name), request);
 }
 
 grpc::Status SdnControllerManager::AllowRequest(
@@ -324,6 +484,38 @@ grpc::Status SdnControllerManager::AllowRequest(
                                     request.election_id().low());
   }
   return AllowRequest(role_name, election_id);
+}
+
+p4::v1::ReadResponse SdnControllerManager::FilterReadResponse(
+    const absl::optional<std::string>& role_name,
+    const p4::v1::ReadResponse& response) const {
+  absl::MutexLock l(&lock_);
+  p4::v1::ReadResponse filtered_response = response;
+  filtered_response.clear_entities();
+  const auto& role_config = role_config_by_name_.find(role_name);
+  // TODO(max): is empty role config an error?
+  if (role_config == role_config_by_name_.end() ||
+      !role_config->second.has_value()) {
+    LOG(INFO) << "No role with name " << PrettyPrintRoleName(role_name)
+              << " found.";
+    return response;
+  }
+
+  for (const auto& entity : response.entities()) {
+    uint32_t id = GetP4IdFromEntity(entity);
+    if (std::find(role_config->second->exclusive_p4_ids().begin(),
+                  role_config->second->exclusive_p4_ids().end(),
+                  id) != role_config->second->exclusive_p4_ids().end()) {
+      *filtered_response.add_entities() = entity;
+    }
+    if (std::find(role_config->second->shared_p4_ids().begin(),
+                  role_config->second->shared_p4_ids().end(),
+                  id) != role_config->second->shared_p4_ids().end()) {
+      *filtered_response.add_entities() = entity;
+    }
+  }
+
+  return filtered_response;
 }
 
 int SdnControllerManager::ActiveConnections() const {
@@ -366,6 +558,11 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
   if (connection->GetRoleName().has_value()) {
     *arbitration->mutable_role()->mutable_name() =
         connection->GetRoleName().value();
+    if (role_config_by_name_.contains(connection->GetRoleName()) &&
+        role_config_by_name_.at(connection->GetRoleName()).has_value()) {
+      arbitration->mutable_role()->mutable_config()->PackFrom(
+          role_config_by_name_.at(connection->GetRoleName()).value());
+    }
   }
 
   // Populate the election ID with the highest accepted value.
@@ -424,8 +621,35 @@ absl::Status SdnControllerManager::SendStreamMessageToPrimary(
     if (election_id_past_for_role.has_value() &&
         election_id_past_for_role == connection->GetElectionId()) {
       if (role_receives_packet_in_.contains(connection->GetRoleName())) {
-        found_at_least_one_primary = true;
-        connection->SendStreamMessageResponse(response);
+        auto role_config = role_config_by_name_.find(connection->GetRoleName());
+        if (role_config == role_config_by_name_.end() ||
+            VerifyRoleReceviesPacketIn(role_config->second, response).ok()) {
+          found_at_least_one_primary = true;
+          connection->SendStreamMessageResponse(response);
+        }
+        // else {
+        //   if (VerifyRoleReceviesPacketIn(role_config->second, response).ok()) {
+        //     found_at_least_one_primary = true;
+        //     connection->SendStreamMessageResponse(response);
+        //   }
+        // }
+
+        // if (!role_config_by_name_.contains(connection->GetRoleName())) {
+        //     found_at_least_one_primary = true;
+        //     connection->SendStreamMessageResponse(response);
+        // }
+
+        // if (!role_config_by_name_.contains(connection->GetRoleName()) ||
+        //     (role_config_by_name_.contains(connection->GetRoleName()) &&
+        //      VerifyRoleReceviesPacketIn(
+        //          role_config_by_name_.at(connection->GetRoleName()),
+        //          response) .ok())) {
+        //   LOG(WARNING) << "Role " << connection->GetRoleName();
+        //   LOG(WARNING) << "Role config "
+        //                << role_config_by_name_.at(connection->GetRoleName());
+        //   found_at_least_one_primary = true;
+        //   connection->SendStreamMessageResponse(response);
+        // }
       }
     }
   }

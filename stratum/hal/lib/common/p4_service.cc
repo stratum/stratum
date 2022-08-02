@@ -21,6 +21,7 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/common/filtered_server_writer_wrapper.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
@@ -313,6 +314,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
 
   // Verify the request comes from the primary connection.
   if (!IsWritePermitted(node_id, *req)) {
+    LOG(ERROR) << "non master write";
     return ::grpc::Status(::grpc::StatusCode::PERMISSION_DENIED,
                           "Write from non-master is not permitted.");
   }
@@ -343,11 +345,15 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid device ID.");
   }
 
-  ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
+  auto wrapper = GetReadResponseWriterWrapper(req->device_id(), *req, writer);
+  if (!wrapper.ok()) {
+    return ::grpc::Status(ToGrpcCode(wrapper.status().CanonicalCode()),
+                          wrapper.status().error_message());
+  }
   std::vector<::util::Status> details = {};
   absl::Time timestamp = absl::Now();
-  ::util::Status status =
-      switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
+  ::util::Status status = switch_interface_->ReadForwardingEntries(
+      *req, wrapper.ValueOrDie(), &details);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();
@@ -598,6 +604,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
       }
       case ::p4::v1::StreamMessageRequest::kPacket: {
         // If this stream is not the master stream generate a stream error.
+        // TODO(max): check with role config if permitted to send.
         ::util::Status status;
         if (!IsMasterController(node_id, sdn_connection->GetRoleName(),
                                 sdn_connection->GetElectionId())) {
@@ -744,7 +751,13 @@ bool P4Service::IsWritePermitted(uint64 node_id,
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return false;
+#if 0
   return it->second.AllowRequest(req).ok();
+#else
+  auto s = it->second.AllowRequest(req);
+  LOG_IF(ERROR, !s.ok()) << s.error_message();
+  return s.ok();
+#endif
 }
 
 bool P4Service::IsWritePermitted(
@@ -758,6 +771,35 @@ bool P4Service::IsWritePermitted(
   LOG(INFO) << s.error_message();
   return s.ok();
   // return it->second.AllowRequest(req).ok();
+}
+
+::util::StatusOr<WriterInterface<p4::v1::ReadResponse>*>
+P4Service::GetReadResponseWriterWrapper(
+    uint64 node_id, const p4::v1::ReadRequest& req,
+    ::grpc::ServerWriter<::p4::v1::ReadResponse>* writer) const {
+  absl::ReaderMutexLock l(&controller_lock_);
+  auto it = node_id_to_controller_manager_.find(node_id);
+  // Since reads do not require an active StreamChannel, we have to allow reads
+  // even when no controller is active.
+  if (it == node_id_to_controller_manager_.end()) {
+    LOG(WARNING) << "No active stream channel";
+    ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
+    return &wrapper;
+  } else {
+    ::grpc::Status allowed = it->second.AllowRequest(req);
+    if (!allowed.ok()) {
+      return ::util::Status(
+          static_cast<::util::error::Code>(allowed.error_code()),
+          allowed.error_message());
+    }
+    FilteredServerWriterWrapper<::p4::v1::ReadResponse> wrapper(
+        writer,
+        [req,
+         it](const ::p4::v1::ReadResponse& resp) -> ::p4::v1::ReadResponse {
+          return it->second.FilterReadResponse(req.role(), resp);
+        });
+    return &wrapper;
+  }
 }
 
 bool P4Service::IsMasterController(
