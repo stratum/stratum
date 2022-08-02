@@ -680,10 +680,6 @@ TEST_F(BfrtTableManagerTest, ReadActionProfileGroupProfileTest) {
   WriterMock<::p4::v1::ReadResponse> writer_mock;
 
   { 
-    EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
-      .WillRepeatedly(Return(kActionId));
-    EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
-      .WillRepeatedly(Return(kBfRtActSelTableId));
     std::vector<int> group_ids = {10};
     std::vector<int> max_group_sizes = {0};
     std::vector<std::vector<uint32>> member_ids = {{50}};
@@ -699,10 +695,14 @@ TEST_F(BfrtTableManagerTest, ReadActionProfileGroupProfileTest) {
 
     const std::string kActionProfileGroupResponseText = R"pb(
      entities {
-       members {
-        member_id : 50
+       action_profile_group  {
+        action_profile_id : 16783057
+        group_id : 10
+        members {
+          member_id : 50
+          weight : 1
+        }
        } 
-       max_size = 0
      }
     )pb";
     ::p4::v1::ReadResponse resp;
@@ -719,6 +719,10 @@ TEST_F(BfrtTableManagerTest, ReadActionProfileGroupProfileTest) {
   )pb";
   ::p4::v1::ActionProfileGroup entry;
   ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+      .WillOnce(Return(kActionId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+      .WillOnce(Return(kBfRtActSelTableId));
   EXPECT_OK(bfrt_table_manager_->ReadActionProfileGroup(session_mock, entry, &writer_mock));
 }
 
