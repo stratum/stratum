@@ -679,20 +679,27 @@ TEST_F(BfrtTableManagerTest, ReadActionProfileGroupProfileTest) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
 
-  { 
+  {
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
+        .WillOnce(Return(kActionId));
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
+        .WillOnce(Return(kBfRtActSelTableId));
     std::vector<int> group_ids = {10};
     std::vector<int> max_group_sizes = {0};
     std::vector<std::vector<uint32>> member_ids = {{50}};
     std::vector<std::vector<bool>> member_statuses = {{true}};
+    EXPECT_CALL(
+        *bf_sde_wrapper_mock_,
+        GetActionProfileGroups(kDevice1, _, kBfRtActSelTableId, _, _, _, _, _))
+        .WillOnce(DoAll(
+            SetArgPointee<4>(group_ids), SetArgPointee<5>(max_group_sizes),
+            SetArgPointee<6>(member_ids), SetArgPointee<7>(member_statuses),
+            Return(::util::OkStatus())));
     EXPECT_CALL(*bf_sde_wrapper_mock_,
-                GetActionProfileGroups(kDevice1, _, kBfRtActSelTableId,
-                              _, _, _, _, _))
-        .WillOnce(DoAll(SetArgPointee<4>(group_ids),
-                        SetArgPointee<5>(max_group_sizes),
-                        SetArgPointee<6>(member_ids),
-                        SetArgPointee<7>(member_statuses),
-                        Return(::util::OkStatus())));
-
+                GetActionProfileBfRtId(kBfRtActSelTableId))
+        .WillOnce(Return(kActionId));
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetP4InfoId(kActionId))
+        .WillOnce(Return(kP4ActionProfileId));
     const std::string kActionProfileGroupResponseText = R"pb(
      entities {
        action_profile_group  {
@@ -719,11 +726,8 @@ TEST_F(BfrtTableManagerTest, ReadActionProfileGroupProfileTest) {
   )pb";
   ::p4::v1::ActionProfileGroup entry;
   ASSERT_OK(ParseProtoFromString(kActionProfileGroupEntryText, &entry));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4ActionProfileId))
-      .WillOnce(Return(kActionId));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, GetActionSelectorBfRtId(kActionId))
-      .WillOnce(Return(kBfRtActSelTableId));
-  EXPECT_OK(bfrt_table_manager_->ReadActionProfileGroup(session_mock, entry, &writer_mock));
+  EXPECT_OK(bfrt_table_manager_->ReadActionProfileGroup(session_mock, entry,
+                                                        &writer_mock));
 }
 
 }  // namespace barefoot
