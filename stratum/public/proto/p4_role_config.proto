@@ -8,8 +8,6 @@ option cc_generic_services = false;
 
 package stratum;
 
-import "p4/v1/p4runtime.proto";
-
 // The P4RoleConfig message conists of these fields:
 //  exclusive_p4_ids - A list of P4 entities for which this role exclusivly may
 //      issue Write updates. Those entities are also filtered out of Read
