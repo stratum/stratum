@@ -51,10 +51,12 @@ typedef ::grpc::ClientReaderWriter<::p4::v1::StreamMessageRequest,
                                    ::p4::v1::StreamMessageResponse>
     ClientStreamChannelReaderWriter;
 
-class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
+class P4ServiceTest
+    : public ::testing::TestWithParam<std::tuple<OperationMode, bool>> {
  protected:
   void SetUp() override {
-    mode_ = GetParam();
+    mode_ = ::testing::get<0>(GetParam());
+    use_roles_ = ::testing::get<1>(GetParam());
     switch_mock_ = absl::make_unique<SwitchMock>();
     auth_policy_checker_mock_ = absl::make_unique<AuthPolicyCheckerMock>();
     error_buffer_ = absl::make_unique<ErrorBuffer>();
@@ -191,6 +193,17 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
       digest_id: 123456
       list_id: 654321
   )";
+  static constexpr char kRoleConfigText[] = R"pb(
+      exclusive_p4_ids: 12  # kTableId1
+      shared_p4_ids: 25
+      packet_in_filter {
+        metadata_id: 1
+        value: "\x00\x01"
+      }
+      receives_packet_ins: true
+      can_push_pipeline: true
+  )pb";
+  static constexpr char kRoleName[] = "test_role_1";
   static constexpr char kOperErrorMsg[] = "Some error";
   static constexpr char kAggrErrorMsg[] = "A few errors happened";
   static constexpr uint64 kNodeId1 = 123123123;
@@ -204,6 +217,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   static constexpr uint64 kCookie1 = 123;
   static constexpr uint64 kCookie2 = 321;
   OperationMode mode_;
+  bool use_roles_;
   std::unique_ptr<SwitchMock> switch_mock_;
   std::unique_ptr<AuthPolicyCheckerMock> auth_policy_checker_mock_;
   std::unique_ptr<ErrorBuffer> error_buffer_;
@@ -219,6 +233,8 @@ constexpr char P4ServiceTest::kTestPacketMetadata3[];
 constexpr char P4ServiceTest::kTestPacketMetadata4[];
 constexpr char P4ServiceTest::kTestDigestList1[];
 constexpr char P4ServiceTest::kTestDigestListAck1[];
+constexpr char P4ServiceTest::kRoleConfigText[];
+constexpr char P4ServiceTest::kRoleName[];
 constexpr char P4ServiceTest::kOperErrorMsg[];
 constexpr char P4ServiceTest::kAggrErrorMsg[];
 constexpr uint64 P4ServiceTest::kNodeId1;
@@ -939,6 +955,10 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ::p4::v1::StreamMessageRequest req;
   ::p4::v1::StreamMessageResponse resp;
 
+  // Sample role config.
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
   // Sample packets. We dont care about payload.
   ::p4::v1::PacketOut packet1;
   ::p4::v1::PacketOut packet2;
@@ -1006,6 +1026,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream1->Write(req));
 
   // Read the mastership info back.
@@ -1024,6 +1049,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId2));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream2->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
@@ -1071,6 +1101,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream1->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 only. It
@@ -1092,6 +1127,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1 - 1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1 - 1));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream2->Write(req));
   absl::SleepFor(absl::Milliseconds(500));
   ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
@@ -1122,6 +1162,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId2));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream2->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
@@ -1187,6 +1232,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId3));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId3));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream3->Write(req));
 
   // Read the mastership info back. The data will be sent to Controller #3 only.
@@ -1226,6 +1276,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId2));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
+  if (use_roles_) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream3->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 and #3.
@@ -1247,18 +1302,22 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   //----------------------------------------------------------------------------
   // We receive some packet from CPU. This will be forwarded to the master
   // which is Controller #3.
-  OnPacketReceive(packet3);
+  if (!use_roles_) {
+    OnPacketReceive(packet3);
 
-  ASSERT_TRUE(stream3->Read(&resp));
-  ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+    ASSERT_TRUE(stream3->Read(&resp));
+    ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+  }
 
   //----------------------------------------------------------------------------
   // We receive some digest from switch. This will be forwarded to the master
   // which is Controller #3.
-  OnDigestListReceive(digest_list1);
+  if (!use_roles_) {
+    OnDigestListReceive(digest_list1);
 
-  ASSERT_TRUE(stream3->Read(&resp));
-  ASSERT_TRUE(ProtoEqual(resp.digest(), digest_list1));
+    ASSERT_TRUE(stream3->Read(&resp));
+    ASSERT_TRUE(ProtoEqual(resp.digest(), digest_list1));
+  }
 
   //----------------------------------------------------------------------------
   // Now Controller #1 disconnects. In this case there will be no mastership
@@ -1580,10 +1639,12 @@ TEST_P(P4ServiceTest, GetCapabilities) {
   ASSERT_EQ(response.p4runtime_api_version(), STRINGIFY(P4RUNTIME_VER));
 }
 
-INSTANTIATE_TEST_SUITE_P(P4ServiceTestWithMode, P4ServiceTest,
-                         ::testing::Values(OPERATION_MODE_STANDALONE,
-                                           OPERATION_MODE_COUPLED,
-                                           OPERATION_MODE_SIM));
+INSTANTIATE_TEST_SUITE_P(
+    P4ServiceTestWithMode, P4ServiceTest,
+    ::testing::Combine(::testing::Values(OPERATION_MODE_STANDALONE,
+                                         OPERATION_MODE_COUPLED,
+                                         OPERATION_MODE_SIM),
+                       ::testing::Values(true, false) /* with role config */));
 
 }  // namespace hal
 }  // namespace stratum
