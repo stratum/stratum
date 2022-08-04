@@ -28,8 +28,8 @@ DEFINE_string(role_name, "",
               "Name of the role for the controller instance. Empty string "
               "means no role name.");
 DEFINE_string(role_config_file, "",
-              "Path to the role config file for the controller instance. Empty "
-              "path means no role config.");
+              "Path to the role config text file for the controller instance. "
+              "Empty path means no role config.");
 
 namespace stratum {
 namespace tools {

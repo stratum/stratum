@@ -2,16 +2,11 @@
 // Copyright 2022 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-// TODO(max)
-// The P4RoleConfig contains ...
-
 syntax = "proto3";
 
 option cc_generic_services = false;
 
 package stratum;
-
-import "p4/v1/p4runtime.proto";
 
 // The P4RoleConfig message conists of these fields:
 //  exclusive_p4_ids - A list of P4 entities for which this role exclusivly may

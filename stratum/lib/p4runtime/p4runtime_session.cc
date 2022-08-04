@@ -59,6 +59,9 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
     std::unique_ptr<P4Runtime::Stub> stub, uint32 device_id,
     absl::uint128 election_id, absl::optional<std::string> role_name,
     absl::optional<P4RoleConfig> role_config) {
+  RET_CHECK(role_name.has_value() || !role_config.has_value())
+      << "Cannot set a role config for the default role.";
+
   // Open streaming channel.
   // Using `new` to access a private constructor.
   std::unique_ptr<P4RuntimeSession> session =
@@ -111,7 +114,27 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
            << "Lowest 64 bits of received election id doesn't match: "
            << response.ShortDebugString();
   }
-  // TODO(max): verify role response
+  if (role_name.has_value()) {
+    if (response.arbitration().role().name() != session->role_name_) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Role name of received role doesn't match: "
+             << response.ShortDebugString();
+    }
+    if (role_config.has_value()) {
+      P4RoleConfig received_role_config;
+      if (!response.arbitration().role().config().UnpackTo(
+              &received_role_config)) {
+        return MAKE_ERROR(ERR_INTERNAL)
+               << "Role config of received role has invalid format: "
+               << response.ShortDebugString();
+      }
+      if (!ProtoEqual(received_role_config, session->role_config_.value())) {
+        return MAKE_ERROR(ERR_INTERNAL)
+               << "Role config of received role doesn't match: "
+               << response.ShortDebugString();
+      }
+    }
+  }
 
   // When object returned doesn't have the same type as the function's return
   // type (i.e. unique_ptr vs StatusOr in this case), certain old compilers
