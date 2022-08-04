@@ -8,6 +8,7 @@ set -ex
 KNOWN_FILES=(
   "README.md"
   "CONTRIBUTING.md"
+  "stratum/public/proto/p4_role_config.md"
 )
 
 # For all available rules, see:

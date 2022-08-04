@@ -14,6 +14,7 @@
 #include "absl/numeric/int128.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "grpcpp/security/credentials.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
@@ -22,6 +23,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/channel/channel.h"
+#include "stratum/public/proto/p4_role_config.pb.h"
 
 namespace stratum {
 namespace p4runtime {
@@ -78,14 +80,18 @@ class P4RuntimeSession {
   // destructed.
   static ::util::StatusOr<std::unique_ptr<P4RuntimeSession>> Create(
       std::unique_ptr<::p4::v1::P4Runtime::Stub> stub, uint32 device_id,
-      absl::uint128 election_id = TimeBasedElectionId());
+      absl::uint128 election_id = TimeBasedElectionId(),
+      absl::optional<std::string> role_name = absl::nullopt,
+      absl::optional<P4RoleConfig> role_config = absl::nullopt);
 
   // Creates a session with the switch, which lasts until the session object is
   // destructed.
   static ::util::StatusOr<std::unique_ptr<P4RuntimeSession>> Create(
       const std::string& address,
       const std::shared_ptr<grpc::ChannelCredentials>& credentials,
-      uint32 device_id, absl::uint128 election_id = TimeBasedElectionId());
+      uint32 device_id, absl::uint128 election_id = TimeBasedElectionId(),
+      absl::optional<std::string> role_name = absl::nullopt,
+      absl::optional<P4RoleConfig> role_config = absl::nullopt);
 
   // Connects to the default session on the switch, which has no election_id
   // and which cannot be terminated. This should only be used for testing.
@@ -135,8 +141,12 @@ class P4RuntimeSession {
  private:
   P4RuntimeSession(uint32 device_id,
                    std::unique_ptr<::p4::v1::P4Runtime::Stub> stub,
-                   absl::uint128 election_id)
+                   absl::uint128 election_id,
+                   absl::optional<std::string> role_name = absl::nullopt,
+                   absl::optional<P4RoleConfig> role_config = absl::nullopt)
       : device_id_(device_id),
+        role_name_(role_name),
+        role_config_(role_config),
         stub_(std::move(stub)),
         stream_channel_context_(absl::make_unique<grpc::ClientContext>()),
         stream_channel_(stub_->StreamChannel(stream_channel_context_.get())) {
@@ -148,6 +158,10 @@ class P4RuntimeSession {
   uint32 device_id_;
   // The election id that has been used to perform master arbitration.
   ::p4::v1::Uint128 election_id_;
+  // The optional role name that has been used to perform master arbitration.
+  absl::optional<std::string> role_name_;
+  // The optional role config that has been used to perform master arbitration.
+  absl::optional<P4RoleConfig> role_config_;
   // The P4Runtime stub of the switch that this session belongs to.
   std::unique_ptr<::p4::v1::P4Runtime::Stub> stub_;
   // This stream channel and context are used to perform master arbitration,
