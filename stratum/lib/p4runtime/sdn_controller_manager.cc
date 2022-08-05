@@ -117,15 +117,14 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
     P4RoleConfig rc;
     if (!update.role().config().UnpackTo(&rc)) {
       return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                          absl::StrCat("Unknown role config."));
+                          "Unknown role config.");
     }
     role_config = rc;
   }
 
   if (!role_name.has_value() && role_config.has_value()) {
-    return grpc::Status(
-        grpc::StatusCode::INVALID_ARGUMENT,
-        absl::StrCat("Cannot set a role config for the default role."));
+    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                        "Cannot set a role config for the default role.");
   }
 
   const auto old_election_id_for_connection = controller->GetElectionId();
