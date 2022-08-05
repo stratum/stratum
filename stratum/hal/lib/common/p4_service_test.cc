@@ -5,6 +5,7 @@
 #include "stratum/hal/lib/common/p4_service.h"
 
 #include <memory>
+#include <tuple>
 
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
