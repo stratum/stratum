@@ -374,7 +374,7 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
         role_config_by_name_[connection->GetRoleName()];
     if (role_config.has_value()) {
       arbitration->mutable_role()->mutable_config()->PackFrom(
-          role_config_by_name_.at(connection->GetRoleName()).value());
+          role_config.value());
     }
   }
 
