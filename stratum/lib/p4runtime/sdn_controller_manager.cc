@@ -371,6 +371,12 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
   if (connection->GetRoleName().has_value()) {
     *arbitration->mutable_role()->mutable_name() =
         connection->GetRoleName().value();
+    absl::optional<P4RoleConfig> role_config =
+        role_config_by_name_[connection->GetRoleName()];
+    if (role_config.has_value()) {
+      arbitration->mutable_role()->mutable_config()->PackFrom(
+          role_config_by_name_.at(connection->GetRoleName()).value());
+    }
   }
 
   // Populate the election ID with the highest accepted value.

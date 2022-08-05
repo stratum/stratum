@@ -1039,6 +1039,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId1),
             resp.arbitration().election_id().low());
+  if (use_roles_) {
+    ASSERT_EQ(kRoleName, resp.arbitration().role().name());
+    P4RoleConfig returned_role_config;
+    ASSERT_TRUE(
+        resp.arbitration().role().config().UnpackTo(&returned_role_config));
+    ASSERT_THAT(role_config, EqualsProto(returned_role_config));
+  }
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
@@ -1063,6 +1070,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
+  if (use_roles_) {
+    ASSERT_EQ(kRoleName, resp.arbitration().role().name());
+    P4RoleConfig returned_role_config;
+    ASSERT_TRUE(
+        resp.arbitration().role().config().UnpackTo(&returned_role_config));
+    ASSERT_THAT(role_config, EqualsProto(returned_role_config));
+  }
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
 
   ASSERT_TRUE(stream2->Read(&resp));
@@ -1070,6 +1084,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
+  if (use_roles_) {
+    ASSERT_EQ(kRoleName, resp.arbitration().role().name());
+    P4RoleConfig returned_role_config;
+    ASSERT_TRUE(
+        resp.arbitration().role().config().UnpackTo(&returned_role_config));
+    ASSERT_THAT(role_config, EqualsProto(returned_role_config));
+  }
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
@@ -1570,6 +1591,71 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyControllersPerNode) {
   // Disconnect the 1st controller at the end.
   stream1->WritesDone();
   ASSERT_TRUE(stream1->Finish().ok());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigType) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->set_type_url(
+      "some_type_url");
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));  // no resp is sent back
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForRoleChange) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config);
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_TRUE(stream->Read(&resp));
+
+  // Try to change our role by name.
+  req.mutable_arbitration()->mutable_role()->set_name("other_role_name_2");
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::FAILED_PRECONDITION, status.error_code());
 }
 
 // Pushing a different forwarding pipeline config again should work.
