@@ -1650,13 +1650,44 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleChange) {
   ASSERT_TRUE(stream->Write(req));
   ASSERT_TRUE(stream->Read(&resp));
 
-  // Try to change our role by name.
+  // Try to change the controllers role by name.
   req.mutable_arbitration()->mutable_role()->set_name("other_role_name_2");
   ASSERT_TRUE(stream->Write(req));
   ASSERT_FALSE(stream->Read(&resp));
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::FAILED_PRECONDITION, status.error_code());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+  P4RoleConfig role_config;
+  ASSERT_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config);
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("default role"));
 }
 
 // Pushing a different forwarding pipeline config again should work.
