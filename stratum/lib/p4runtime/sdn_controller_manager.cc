@@ -108,8 +108,23 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
   // If the role name is not set then we assume the connection is a 'root'
   // connection.
   absl::optional<std::string> role_name;
+  absl::optional<P4RoleConfig> role_config;
   if (update.has_role() && !update.role().name().empty()) {
     role_name = update.role().name();
+  }
+
+  if (update.has_role() && update.role().has_config()) {
+    P4RoleConfig rc;
+    if (!update.role().config().UnpackTo(&rc)) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                          "Unknown role config.");
+    }
+    role_config = rc;
+  }
+
+  if (!role_name.has_value() && role_config.has_value()) {
+    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                        "Cannot set a role config for the default role.");
   }
 
   const auto old_election_id_for_connection = controller->GetElectionId();
@@ -193,6 +208,8 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
 
   if (connection_is_new_primary) {
     election_id_past_for_role = new_election_id_for_connection;
+    // Update the configuration for this controllers role.
+    role_config_by_name_[role_name] = role_config;
     // The spec demands we send a notifcation even if the old & new primary
     // match.
     InformConnectionsAboutPrimaryChange(role_name);
@@ -353,6 +370,12 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
   if (connection->GetRoleName().has_value()) {
     *arbitration->mutable_role()->mutable_name() =
         connection->GetRoleName().value();
+    absl::optional<P4RoleConfig> role_config =
+        role_config_by_name_[connection->GetRoleName()];
+    if (role_config.has_value()) {
+      arbitration->mutable_role()->mutable_config()->PackFrom(
+          role_config.value());
+    }
   }
 
   // Populate the election ID with the highest accepted value.
