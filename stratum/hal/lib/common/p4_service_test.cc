@@ -57,7 +57,7 @@ class P4ServiceTest
  protected:
   void SetUp() override {
     mode_ = ::testing::get<0>(GetParam());
-    role_name_ = ::testing::get<1>(GetParam()) ? kRoleName : "";
+    role_name_ = ::testing::get<1>(GetParam()) ? kRoleName1 : "";
     switch_mock_ = absl::make_unique<SwitchMock>();
     auth_policy_checker_mock_ = absl::make_unique<AuthPolicyCheckerMock>();
     error_buffer_ = absl::make_unique<ErrorBuffer>();
@@ -135,7 +135,7 @@ class P4ServiceTest
     request.mutable_election_id()->set_low(
         absl::Uint128Low64(controller->GetElectionId().value()));
     if (!role_name_.empty()) {
-      request.mutable_role()->set_name(kRoleName);
+      request.mutable_role()->set_name(kRoleName1);
       ASSERT_TRUE(
           request.mutable_role()->mutable_config()->PackFrom(GetRoleConfig()));
     }
@@ -215,7 +215,8 @@ class P4ServiceTest
       receives_packet_ins: true
       can_push_pipeline: true
   )pb";
-  static constexpr char kRoleName[] = "test_role_1";
+  static constexpr char kRoleName1[] = "TestRole1";
+  static constexpr char kRoleName2[] = "TestRole2";
   static constexpr char kOperErrorMsg[] = "Some error";
   static constexpr char kAggrErrorMsg[] = "A few errors happened";
   static constexpr uint64 kNodeId1 = 123123123;
@@ -246,7 +247,8 @@ constexpr char P4ServiceTest::kTestPacketMetadata4[];
 constexpr char P4ServiceTest::kTestDigestList1[];
 constexpr char P4ServiceTest::kTestDigestListAck1[];
 constexpr char P4ServiceTest::kRoleConfigText[];
-constexpr char P4ServiceTest::kRoleName[];
+constexpr char P4ServiceTest::kRoleName1[];
+constexpr char P4ServiceTest::kRoleName2[];
 constexpr char P4ServiceTest::kOperErrorMsg[];
 constexpr char P4ServiceTest::kAggrErrorMsg[];
 constexpr uint64 P4ServiceTest::kNodeId1;
@@ -1045,7 +1047,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1058,7 +1060,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId1),
             resp.arbitration().election_id().low());
   if (!role_name_.empty()) {
-    ASSERT_EQ(kRoleName, resp.arbitration().role().name());
+    ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
     P4RoleConfig returned_role_config;
     ASSERT_TRUE(
         resp.arbitration().role().config().UnpackTo(&returned_role_config));
@@ -1075,7 +1077,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1089,7 +1091,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   if (!role_name_.empty()) {
-    ASSERT_EQ(kRoleName, resp.arbitration().role().name());
+    ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
     P4RoleConfig returned_role_config;
     ASSERT_TRUE(
         resp.arbitration().role().config().UnpackTo(&returned_role_config));
@@ -1103,7 +1105,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   if (!role_name_.empty()) {
-    ASSERT_EQ(kRoleName, resp.arbitration().role().name());
+    ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
     P4RoleConfig returned_role_config;
     ASSERT_TRUE(
         resp.arbitration().role().config().UnpackTo(&returned_role_config));
@@ -1141,7 +1143,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1167,7 +1169,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1 - 1));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1202,7 +1204,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1272,7 +1274,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId3));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1316,7 +1318,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
   if (!role_name_.empty()) {
-    req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
     req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
         role_config);
   }
@@ -1630,7 +1632,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigType) {
       absl::Uint128High64(kElectionId1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
-  req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
   req.mutable_arbitration()->mutable_role()->mutable_config()->set_type_url(
       "some_type_url");
   ASSERT_TRUE(stream->Write(req));
@@ -1659,14 +1661,15 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleChange) {
       absl::Uint128High64(kElectionId1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
-  req.mutable_arbitration()->mutable_role()->set_name(kRoleName);
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
   req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
       GetRoleConfig());
   ASSERT_TRUE(stream->Write(req));
   ASSERT_TRUE(stream->Read(&resp));
 
   // Try to change the controllers role by name.
-  req.mutable_arbitration()->mutable_role()->set_name("other_role_name_2");
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName2);
+  req.mutable_arbitration()->mutable_role()->clear_config();
   ASSERT_TRUE(stream->Write(req));
   ASSERT_FALSE(stream->Read(&resp));
   stream->WritesDone();
@@ -1701,6 +1704,84 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
   EXPECT_THAT(status.error_message(), HasSubstr("default role"));
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+
+  ::grpc::ClientContext context1;
+  ::grpc::ClientContext context2;
+  ::grpc::ClientContext context3;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Role configs with overlapping exclusive IDs.
+  constexpr char kRoleConfigText1[] = R"pb(
+      exclusive_p4_ids: 30
+      exclusive_p4_ids: 12
+  )pb";
+  constexpr char kRoleConfigText2[] = R"pb(
+      exclusive_p4_ids: 44
+      exclusive_p4_ids: 30
+  )pb";
+
+  P4RoleConfig role_config1;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText1, &role_config1));
+  P4RoleConfig role_config2;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText2, &role_config2));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream1 =
+      stub_->StreamChannel(&context1);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream2 =
+      stub_->StreamChannel(&context2);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream3 =
+      stub_->StreamChannel(&context3);
+
+  //----------------------------------------------------------------------------
+  // Controller #1 connects and becomes master for role 1.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config1);
+  ASSERT_TRUE(stream1->Write(req));
+
+  // Read the mastership info back.
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+
+  //----------------------------------------------------------------------------
+  // Controller #2 connects and sends a role config that has overlapping IDs
+  // with controller #1.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName2);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config2);
+  ASSERT_TRUE(stream2->Write(req));
+
+  // The stream of controller #2 gets closed and the status will be non-OK.
+  ASSERT_FALSE(stream2->Read(&resp));
+  stream2->WritesDone();
+  ::grpc::Status status = stream2->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("contains overlapping exclusive ID"));
 }
 
 // Pushing a different forwarding pipeline config again should work.

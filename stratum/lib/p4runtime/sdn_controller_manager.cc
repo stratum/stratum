@@ -4,6 +4,8 @@
 
 #include "stratum/lib/p4runtime/sdn_controller_manager.h"
 
+#include <algorithm>
+
 #include "absl/numeric/int128.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -68,6 +70,43 @@ grpc::Status VerifyElectionIdIsActive(
                       "Election ID is not active for the role.");
 }
 
+grpc::Status VerifyRoleConfig(
+    const absl::optional<std::string>& role_name,
+    const absl::optional<P4RoleConfig>& role_config,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& existing_configs) {
+  if (!role_config.has_value()) {
+    return grpc::Status::OK;
+  }
+
+  for (const auto& e : existing_configs) {
+    if (!e.second.has_value()) {
+      continue;
+    }
+    // Don't compare role to itself.
+    if (e.first == role_name) {
+      continue;
+    }
+    std::vector<uint32_t> new_ids(
+        role_config.value().exclusive_p4_ids().begin(),
+        role_config.value().exclusive_p4_ids().end());
+    std::vector<uint32_t> existing_ids(
+        e.second.value().exclusive_p4_ids().begin(),
+        e.second.value().exclusive_p4_ids().end());
+    std::vector<uint32_t> common_ids;
+    std::sort(new_ids.begin(), new_ids.end());
+    std::sort(existing_ids.begin(), existing_ids.end());
+    std::set_intersection(new_ids.begin(), new_ids.end(), existing_ids.begin(),
+                          existing_ids.end(), std::back_inserter(common_ids));
+    if (!common_ids.empty()) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                          "Role config contains overlapping exclusive IDs.");
+    }
+  }
+
+  return grpc::Status::OK;
+}
+
 }  // namespace
 
 void SdnConnection::SetElectionId(const absl::optional<absl::uint128>& id) {
@@ -120,6 +159,13 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
                           "Unknown role config.");
     }
     role_config = rc;
+  }
+
+  // Validate the role config.
+  grpc::Status status =
+      VerifyRoleConfig(role_name, role_config, role_config_by_name_);
+  if (!status.ok()) {
+    return status;
   }
 
   if (!role_name.has_value() && role_config.has_value()) {
