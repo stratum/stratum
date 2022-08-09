@@ -237,7 +237,6 @@ class P4ServiceTest
   )";
   static constexpr char kRoleConfigText[] = R"pb(
       exclusive_p4_ids: 12  # kTableId1
-      shared_p4_ids: 25
       packet_in_filter {
         metadata_id: 666666
         value: "\x12"
@@ -257,6 +256,7 @@ class P4ServiceTest
   static constexpr absl::uint128 kElectionId2 = 2222;
   static constexpr absl::uint128 kElectionId3 = 1212;
   static constexpr uint32 kTableId1 = 12;
+  static constexpr uint32 kTableId2 = 25;
   static constexpr uint64 kCookie1 = 123;
   static constexpr uint64 kCookie2 = 321;
   OperationMode mode_;
@@ -290,6 +290,7 @@ constexpr absl::uint128 P4ServiceTest::kElectionId1;
 constexpr absl::uint128 P4ServiceTest::kElectionId2;
 constexpr absl::uint128 P4ServiceTest::kElectionId3;
 constexpr uint32 P4ServiceTest::kTableId1;
+constexpr uint32 P4ServiceTest::kTableId2;
 
 TEST_P(P4ServiceTest, ColdbootSetupSuccessForSavedConfigs) {
   if (mode_ == OPERATION_MODE_COUPLED) return;
@@ -733,6 +734,8 @@ TEST_P(P4ServiceTest, WriteSuccess) {
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.set_role(role_name_);
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
+  req.mutable_updates(0)->mutable_entity()->mutable_table_entry()->set_table_id(
+      kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -837,7 +840,11 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.set_role(role_name_);
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
+  req.mutable_updates(0)->mutable_entity()->mutable_table_entry()->set_table_id(
+      kTableId1);
   req.add_updates()->set_type(::p4::v1::Update::MODIFY);
+  req.mutable_updates(1)->mutable_entity()->mutable_table_entry()->set_table_id(
+      kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -904,6 +911,8 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.set_role(role_name_);
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
+  req.mutable_updates(0)->mutable_entity()->mutable_table_entry()->set_table_id(
+      kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -950,6 +959,41 @@ TEST_P(P4ServiceTest, WriteFailureForNoPipeline) {
   EXPECT_EQ(ERR_FAILED_PRECONDITION, status.error_code());
   EXPECT_THAT(status.error_message(),
               HasSubstr("No valid forwarding pipeline"));
+  EXPECT_TRUE(status.error_details().empty());
+}
+
+TEST_P(P4ServiceTest, WriteFailureWhenWritingToExclusiveTable) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  controller.SetRoleName(kRoleName1);
+  AddFakeMasterController(kNodeId1, &controller);
+
+  ::grpc::ClientContext context;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
+  req.set_device_id(kNodeId1);
+  req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  req.set_role(role_name_);
+  ::p4::v1::Update* update = req.add_updates();
+  update->set_type(::p4::v1::Update::INSERT);
+  update->mutable_entity()->mutable_table_entry()->set_table_id(kTableId2);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Invoke the RPC and validate the results.
+  ::grpc::Status status = stub_->Write(&context, req, &resp);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(::grpc::StatusCode::PERMISSION_DENIED, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("not permitted"));
   EXPECT_TRUE(status.error_details().empty());
 }
 

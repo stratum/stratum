@@ -70,6 +70,59 @@ grpc::Status VerifyElectionIdIsActive(
                       "Election ID is not active for the role.");
 }
 
+uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
+  switch (entity.entity_case()) {
+    case ::p4::v1::Entity::kTableEntry:
+      return entity.table_entry().table_id();
+    case ::p4::v1::Entity::kExternEntry:
+      return entity.extern_entry().extern_id();
+    case ::p4::v1::Entity::kActionProfileMember:
+      return entity.action_profile_member().action_profile_id();
+    case ::p4::v1::Entity::kActionProfileGroup:
+      return entity.action_profile_group().action_profile_id();
+    // case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+    case ::p4::v1::Entity::kDirectCounterEntry:
+      return entity.direct_counter_entry().table_entry().table_id();
+    case ::p4::v1::Entity::kCounterEntry:
+      return entity.counter_entry().counter_id();
+    case ::p4::v1::Entity::kRegisterEntry:
+      return entity.register_entry().register_id();
+    case ::p4::v1::Entity::kMeterEntry:
+      return entity.meter_entry().meter_id();
+    case ::p4::v1::Entity::kDirectMeterEntry:
+    case ::p4::v1::Entity::kValueSetEntry:
+    case ::p4::v1::Entity::kDigestEntry:
+    default:
+      LOG(ERROR) << "Unsupported entity type: " << entity.ShortDebugString();
+      return 0;
+  }
+}
+
+grpc::Status VerifyP4IdsArePermitted(
+    const absl::optional<P4RoleConfig>& role_config,
+    const ::p4::v1::WriteRequest& request) {
+  // TODO(max): is empty role config an error?
+  if (!role_config.has_value()) return grpc::Status::OK;
+
+  for (const auto& update : request.updates()) {
+    uint32_t id = GetP4IdFromEntity(update.entity());
+    if (std::find(role_config->exclusive_p4_ids().begin(),
+                  role_config->exclusive_p4_ids().end(),
+                  id) != role_config->exclusive_p4_ids().end()) {
+      continue;
+    }
+    if (std::find(role_config->shared_p4_ids().begin(),
+                  role_config->shared_p4_ids().end(),
+                  id) != role_config->shared_p4_ids().end()) {
+      continue;
+    }
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role is not allowed to access this entity.");
+  }
+
+  return grpc::Status::OK;
+}
+
 grpc::Status VerifyRoleCanPushPipeline(
     const absl::optional<std::string>& role_name,
     const absl::flat_hash_map<absl::optional<std::string>,
@@ -466,6 +519,20 @@ grpc::Status SdnControllerManager::AllowRequest(
   absl::optional<std::string> role_name;
   if (!request.role().empty()) {
     role_name = request.role();
+  }
+
+  {
+    absl::MutexLock l(&lock_);
+    const auto& role_config = role_config_by_name_.find(role_name);
+    if (role_config == role_config_by_name_.end()) {
+      return grpc::Status(grpc::StatusCode::NOT_FOUND,
+                          "Found no config for given role.");
+    }
+    grpc::Status result = VerifyP4IdsArePermitted(role_config->second, request);
+    if (!result.ok()) {
+      LOG(WARNING) << result.error_message();
+      return result;
+    }
   }
 
   absl::optional<absl::uint128> election_id;
