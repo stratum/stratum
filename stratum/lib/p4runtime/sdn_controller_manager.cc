@@ -80,7 +80,6 @@ uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
       return entity.action_profile_member().action_profile_id();
     case ::p4::v1::Entity::kActionProfileGroup:
       return entity.action_profile_group().action_profile_id();
-    // case ::p4::v1::Entity::kPacketReplicationEngineEntry:
     case ::p4::v1::Entity::kDirectCounterEntry:
       return entity.direct_counter_entry().table_entry().table_id();
     case ::p4::v1::Entity::kCounterEntry:
@@ -90,6 +89,7 @@ uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
     case ::p4::v1::Entity::kMeterEntry:
       return entity.meter_entry().meter_id();
     case ::p4::v1::Entity::kDirectMeterEntry:
+    case ::p4::v1::Entity::kPacketReplicationEngineEntry:
     case ::p4::v1::Entity::kValueSetEntry:
     case ::p4::v1::Entity::kDigestEntry:
     default:
@@ -101,7 +101,6 @@ uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
 grpc::Status VerifyP4IdsArePermitted(
     const absl::optional<P4RoleConfig>& role_config,
     const ::p4::v1::WriteRequest& request) {
-  // TODO(max): is empty role config an error?
   if (!role_config.has_value()) return grpc::Status::OK;
 
   for (const auto& update : request.updates()) {
@@ -145,9 +144,7 @@ grpc::Status VerifyRoleConfig(
     const absl::optional<P4RoleConfig>& role_config,
     const absl::flat_hash_map<absl::optional<std::string>,
                               absl::optional<P4RoleConfig>>& existing_configs) {
-  if (!role_config.has_value()) {
-    return grpc::Status::OK;
-  }
+  if (!role_config.has_value()) return grpc::Status::OK;
 
   for (const auto& e : existing_configs) {
     if (!e.second.has_value()) {
