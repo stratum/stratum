@@ -70,6 +70,23 @@ grpc::Status VerifyElectionIdIsActive(
                       "Election ID is not active for the role.");
 }
 
+grpc::Status VerifyRoleCanPushPipeline(
+    const absl::optional<std::string>& role_name,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& role_configs) {
+  const auto& role_config = role_configs.find(role_name);
+  if (role_config == role_configs.end()) {
+    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+  }
+  if (!role_config->second.has_value()) return grpc::Status::OK;
+  if (!role_config->second->can_push_pipeline()) {
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role not allowed to push pipelines.");
+  }
+
+  return grpc::Status::OK;
+}
+
 grpc::Status VerifyRoleConfig(
     const absl::optional<std::string>& role_name,
     const absl::optional<P4RoleConfig>& role_config,
@@ -87,12 +104,10 @@ grpc::Status VerifyRoleConfig(
     if (e.first == role_name) {
       continue;
     }
-    std::vector<uint32_t> new_ids(
-        role_config.value().exclusive_p4_ids().begin(),
-        role_config.value().exclusive_p4_ids().end());
-    std::vector<uint32_t> existing_ids(
-        e.second.value().exclusive_p4_ids().begin(),
-        e.second.value().exclusive_p4_ids().end());
+    std::vector<uint32_t> new_ids(role_config->exclusive_p4_ids().begin(),
+                                  role_config->exclusive_p4_ids().end());
+    std::vector<uint32_t> existing_ids(e.second->exclusive_p4_ids().begin(),
+                                       e.second->exclusive_p4_ids().end());
     std::vector<uint32_t> common_ids;
     std::sort(new_ids.begin(), new_ids.end());
     std::sort(existing_ids.begin(), existing_ids.end());
@@ -368,6 +383,15 @@ grpc::Status SdnControllerManager::AllowRequest(
     role_name = request.role();
   }
 
+  {
+    absl::MutexLock l(&lock_);
+    grpc::Status status =
+        VerifyRoleCanPushPipeline(role_name, role_config_by_name_);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+
   absl::optional<absl::uint128> election_id;
   if (request.has_election_id()) {
     election_id = absl::MakeUint128(request.election_id().high(),
@@ -419,8 +443,7 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
     absl::optional<P4RoleConfig> role_config =
         role_config_by_name_[connection->GetRoleName()];
     if (role_config.has_value()) {
-      arbitration->mutable_role()->mutable_config()->PackFrom(
-          role_config.value());
+      arbitration->mutable_role()->mutable_config()->PackFrom(*role_config);
     }
   }
 
