@@ -126,8 +126,9 @@ class P4ServiceTest
     }
   }
 
-  void AddFakeMasterController(uint64 node_id,
-                               p4runtime::SdnConnection* controller) {
+  void AddFakeMasterController(
+      uint64 node_id, p4runtime::SdnConnection* controller,
+      const P4RoleConfig& role_config = GetRoleConfig()) {
     p4::v1::MasterArbitrationUpdate request;
     request.set_device_id(node_id);
     request.mutable_election_id()->set_high(
@@ -137,7 +138,7 @@ class P4ServiceTest
     if (!role_name_.empty()) {
       request.mutable_role()->set_name(role_name_);
       ASSERT_TRUE(
-          request.mutable_role()->mutable_config()->PackFrom(GetRoleConfig()));
+          request.mutable_role()->mutable_config()->PackFrom(role_config));
     }
     ASSERT_OK(p4_service_->AddOrModifyController(node_id, request, controller));
   }
@@ -644,6 +645,44 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
   EXPECT_THAT(status.error_message(), HasSubstr("reboot required"));
 
   // CheckForwardingPipelineConfigs(&configs, kNodeId1);
+  ASSERT_OK(p4_service_->Teardown());
+  CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
+}
+
+TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForRoleProhibited) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "SetForwardingPipelineConfig", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  constexpr char kRoleConfigText[] = R"pb(
+      can_push_pipeline: false
+  )pb";
+  P4RoleConfig role_config;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+  ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller, role_config);
+
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
+  request.set_device_id(kNodeId1);
+  request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_role(role_name_);
+  request.set_action(
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+
+  ::grpc::Status status =
+      p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(), HasSubstr("not permitted"));
+
   ASSERT_OK(p4_service_->Teardown());
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
 }

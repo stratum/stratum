@@ -70,6 +70,23 @@ grpc::Status VerifyElectionIdIsActive(
                       "Election ID is not active for the role.");
 }
 
+grpc::Status VerifyRoleCanPushPipeline(
+    const absl::optional<std::string>& role_name,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& role_configs) {
+  const auto& role_config = role_configs.find(role_name);
+  if (role_config == role_configs.end()) {
+    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+  }
+  if (!role_config->second.has_value()) return grpc::Status::OK;
+  if (!role_config->second->can_push_pipeline()) {
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role not allowed to push pipelines.");
+  }
+
+  return grpc::Status::OK;
+}
+
 grpc::Status VerifyRoleConfig(
     const absl::optional<std::string>& role_name,
     const absl::optional<P4RoleConfig>& role_config,
@@ -364,6 +381,15 @@ grpc::Status SdnControllerManager::AllowRequest(
   absl::optional<std::string> role_name;
   if (!request.role().empty()) {
     role_name = request.role();
+  }
+
+  {
+    absl::MutexLock l(&lock_);
+    grpc::Status status =
+        VerifyRoleCanPushPipeline(role_name, role_config_by_name_);
+    if (!status.ok()) {
+      return status;
+    }
   }
 
   absl::optional<absl::uint128> election_id;
