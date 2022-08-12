@@ -135,7 +135,7 @@ class P4ServiceTest
     request.mutable_election_id()->set_low(
         absl::Uint128Low64(controller->GetElectionId().value()));
     if (!role_name_.empty()) {
-      request.mutable_role()->set_name(kRoleName1);
+      request.mutable_role()->set_name(role_name_);
       ASSERT_TRUE(
           request.mutable_role()->mutable_config()->PackFrom(GetRoleConfig()));
     }
@@ -148,7 +148,7 @@ class P4ServiceTest
         .ActiveConnections();
   }
 
-  P4RoleConfig GetRoleConfig() {
+  static P4RoleConfig GetRoleConfig() {
     P4RoleConfig role_config;
     CHECK_OK(ParseProtoFromString(kRoleConfigText, &role_config));
     return role_config;
