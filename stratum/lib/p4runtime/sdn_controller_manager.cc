@@ -87,12 +87,10 @@ grpc::Status VerifyRoleConfig(
     if (e.first == role_name) {
       continue;
     }
-    std::vector<uint32_t> new_ids(
-        role_config.value().exclusive_p4_ids().begin(),
-        role_config.value().exclusive_p4_ids().end());
-    std::vector<uint32_t> existing_ids(
-        e.second.value().exclusive_p4_ids().begin(),
-        e.second.value().exclusive_p4_ids().end());
+    std::vector<uint32_t> new_ids(role_config->exclusive_p4_ids().begin(),
+                                  role_config->exclusive_p4_ids().end());
+    std::vector<uint32_t> existing_ids(e.second->exclusive_p4_ids().begin(),
+                                       e.second->exclusive_p4_ids().end());
     std::vector<uint32_t> common_ids;
     std::sort(new_ids.begin(), new_ids.end());
     std::sort(existing_ids.begin(), existing_ids.end());
@@ -419,8 +417,7 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
     absl::optional<P4RoleConfig> role_config =
         role_config_by_name_[connection->GetRoleName()];
     if (role_config.has_value()) {
-      arbitration->mutable_role()->mutable_config()->PackFrom(
-          role_config.value());
+      arbitration->mutable_role()->mutable_config()->PackFrom(*role_config);
     }
   }
 
@@ -429,9 +426,9 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
       election_id_past_by_role_[connection->GetRoleName()];
   if (election_id_past_for_role.has_value()) {
     arbitration->mutable_election_id()->set_high(
-        absl::Uint128High64(election_id_past_for_role.value()));
+        absl::Uint128High64(*election_id_past_for_role));
     arbitration->mutable_election_id()->set_low(
-        absl::Uint128Low64(election_id_past_for_role.value()));
+        absl::Uint128Low64(*election_id_past_for_role));
   }
 
   // Update connection status for the arbitration response.
