@@ -452,9 +452,9 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
       election_id_past_by_role_[connection->GetRoleName()];
   if (election_id_past_for_role.has_value()) {
     arbitration->mutable_election_id()->set_high(
-        absl::Uint128High64(election_id_past_for_role.value()));
+        absl::Uint128High64(*election_id_past_for_role));
     arbitration->mutable_election_id()->set_low(
-        absl::Uint128Low64(election_id_past_for_role.value()));
+        absl::Uint128Low64(*election_id_past_for_role));
   }
 
   // Update connection status for the arbitration response.
