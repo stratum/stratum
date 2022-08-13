@@ -165,6 +165,13 @@ class P4ServiceTest
                 name: "some_table"
               }
             }
+            controller_packet_metadata {
+              metadata {
+                id: 666666
+                name: "some_metadata_field"
+                bitwidth: 16
+              }
+            }
           }
           p4_device_config: "\x01\x02\x03\x04\x05"
         }
@@ -197,6 +204,10 @@ class P4ServiceTest
   )";
   static constexpr char kTestPacketMetadata4[] = R"(
   )";
+  static constexpr char kTestPacketMetadata5[] = R"(
+      metadata_id: 123456
+      value: "\x12"
+  )";
   static constexpr char kTestDigestList1[] = R"(
       digest_id: 123456
       list_id: 654321
@@ -210,8 +221,8 @@ class P4ServiceTest
       exclusive_p4_ids: 12  # kTableId1
       shared_p4_ids: 25
       packet_in_filter {
-        metadata_id: 1
-        value: "\x00\x01"
+        metadata_id: 666666
+        value: "\x12"
       }
       receives_packet_ins: true
       can_push_pipeline: true
@@ -245,6 +256,7 @@ constexpr char P4ServiceTest::kTestPacketMetadata1[];
 constexpr char P4ServiceTest::kTestPacketMetadata2[];
 constexpr char P4ServiceTest::kTestPacketMetadata3[];
 constexpr char P4ServiceTest::kTestPacketMetadata4[];
+constexpr char P4ServiceTest::kTestPacketMetadata5[];
 constexpr char P4ServiceTest::kTestDigestList1[];
 constexpr char P4ServiceTest::kTestDigestListAck1[];
 constexpr char P4ServiceTest::kRoleConfigText[];
@@ -1023,10 +1035,12 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ::p4::v1::PacketOut packet2;
   ::p4::v1::PacketIn packet3;
   ::p4::v1::PacketOut packet4;
+  ::p4::v1::PacketIn packet5;
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata1, packet1.add_metadata()));
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata2, packet2.add_metadata()));
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata3, packet3.add_metadata()));
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata4, packet4.add_metadata()));
+  ASSERT_OK(ParseProtoFromString(kTestPacketMetadata5, packet5.add_metadata()));
 
   // Sample digest lists and acks. We don't care about data.
   ::p4::v1::DigestList digest_list1;
@@ -1382,11 +1396,20 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   //----------------------------------------------------------------------------
   // We receive some packet from CPU. This will be forwarded to the master
   // which is Controller #3.
-  if (role_name_.empty()) {
-    OnPacketReceive(packet3);
+  OnPacketReceive(packet3);
 
+  ASSERT_TRUE(stream3->Read(&resp));
+  ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+
+  //----------------------------------------------------------------------------
+  // We receive some packet from CPU. If roles are used, this packet will be
+  // filtered out. Otherwise, this will be forwarded to the master which is
+  // Controller #3.
+  OnPacketReceive(packet5);
+
+  if (role_name_.empty()) {
     ASSERT_TRUE(stream3->Read(&resp));
-    ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+    ASSERT_TRUE(ProtoEqual(resp.packet(), packet5));
   }
 
   //----------------------------------------------------------------------------
