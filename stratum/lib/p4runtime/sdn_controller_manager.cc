@@ -525,14 +525,11 @@ absl::Status SdnControllerManager::SendStreamMessageToPrimary(
   for (const auto& connection : connections_) {
     absl::optional<absl::uint128> election_id_past_for_role =
         election_id_past_by_role_[connection->GetRoleName()];
-    LOG(WARNING) << 1;
     if (election_id_past_for_role.has_value() &&
         election_id_past_for_role == connection->GetElectionId()) {
-      LOG(WARNING) << 2;
       absl::optional<P4RoleConfig> role_config =
           role_config_by_name_[connection->GetRoleName()];
       if (VerifyStreamMessageNotFiltered(role_config, response)) {
-        LOG(WARNING) << 3;
         found_at_least_one_primary = true;
         connection->SendStreamMessageResponse(response);
       }
