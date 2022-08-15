@@ -143,8 +143,14 @@ class SdnControllerManager {
   std::vector<SdnConnection*> connections_ ABSL_GUARDED_BY(lock_);
 
   // We maintain a map of the latest role config set for a given role.
+  //
+  // key:   role_name   (no value indicates the default/root role)
+  // value: role config (no value indicates unrestricted access)
   absl::flat_hash_map<absl::optional<std::string>, absl::optional<P4RoleConfig>>
-      role_config_by_name_ ABSL_GUARDED_BY(lock_);
+      role_config_by_name_ ABSL_GUARDED_BY(lock_){
+          {kP4RuntimeRoleSdnController, {}},
+          {absl::nullopt, {}},  // default role
+      };
 
   // We maintain a map of the highest election IDs that have been selected for
   // the primary connection of a role. Once an election ID is set all new
@@ -157,16 +163,6 @@ class SdnControllerManager {
   absl::flat_hash_map<absl::optional<std::string>,
                       absl::optional<absl::uint128>>
       election_id_past_by_role_ ABSL_GUARDED_BY(lock_);
-
-  // Placeholder for role_config which ideally would be passed
-  // via the MasterArbitration method.
-  //
-  // Contains the roles that will receive packet in messages.
-  // A copy of the packet will be sent to the primary for each role.
-  absl::flat_hash_set<absl::optional<std::string>> role_receives_packet_in_{
-      kP4RuntimeRoleSdnController,
-      absl::nullopt,  // default role
-  };
 };
 
 }  // namespace p4runtime

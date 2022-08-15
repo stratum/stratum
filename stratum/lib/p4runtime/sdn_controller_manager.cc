@@ -119,7 +119,32 @@ grpc::Status VerifyRoleConfig(
     }
   }
 
+  // TODO(max): verify packet filters for valid metadata
+
   return grpc::Status::OK;
+}
+
+bool VerifyStreamMessageNotFiltered(
+    const absl::optional<P4RoleConfig>& role_config,
+    const p4::v1::StreamMessageResponse& response) {
+  if (!role_config.has_value()) return true;  // No filter rules set, allow.
+
+  switch (response.update_case()) {
+    case p4::v1::StreamMessageResponse::kPacket: {
+      if (!role_config->has_packet_in_filter()) return true;
+      for (const auto& metadata : response.packet().metadata()) {
+        if (role_config->packet_in_filter().metadata_id() ==
+                metadata.metadata_id() &&
+            role_config->packet_in_filter().value() == metadata.value()) {
+          return true;
+        }
+      }
+      return false;  // No packet filter match, discard.
+    }
+    default:
+      // TODO(max): implement filtering for other message types
+      return true;
+  }
 }
 
 }  // namespace
@@ -502,10 +527,14 @@ absl::Status SdnControllerManager::SendStreamMessageToPrimary(
         election_id_past_by_role_[connection->GetRoleName()];
     if (election_id_past_for_role.has_value() &&
         election_id_past_for_role == connection->GetElectionId()) {
-      if (role_receives_packet_in_.contains(connection->GetRoleName())) {
+      absl::optional<P4RoleConfig> role_config =
+          role_config_by_name_[connection->GetRoleName()];
+      if (VerifyStreamMessageNotFiltered(role_config, response)) {
         found_at_least_one_primary = true;
         connection->SendStreamMessageResponse(response);
       }
+      // We don't report an error for packets getting filtered as this is
+      // expected operation.
     }
   }
 
