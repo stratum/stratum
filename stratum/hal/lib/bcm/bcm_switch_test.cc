@@ -397,6 +397,38 @@ TEST_F(BcmSwitchTest, VerifyForwardingPipelineConfigSuccess) {
   EXPECT_OK(bcm_switch_->VerifyForwardingPipelineConfig(kNodeId, config));
 }
 
+TEST_F(BcmSwitchTest, WriteForwardingEntriesSuccess) {
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  req.updates_size();
+  std::vector<::util::Status> results = {};
+  EXPECT_OK(bcm_switch_->WriteForwardingEntries(req, &results));
+}
+
+TEST_F(BcmSwitchTest, WriteForwardingEntriesDevIdFail) {
+  ::p4::v1::WriteRequest req;
+  req.add_updates();
+  std::vector<::util::Status> results = {};
+  ::util::Status status = bcm_switch_->WriteForwardingEntries(req, &results);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("No device_id in WriteRequest."));
+}
+
+TEST_F(BcmSwitchTest, WriteForwardingEntriesNullFail) {
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  req.add_updates();
+  ::util::Status status = bcm_switch_->WriteForwardingEntries(req, NULL);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr(
+          "Need to provide non-null results pointer for non-empty updates."));
+}
+
 // Test registration of a writer for sending gNMI events.
 TEST_F(BcmSwitchTest, RegisterEventNotifyWriterTest) {
   auto writer = std::shared_ptr<WriterInterface<GnmiEventPtr>>(
