@@ -125,19 +125,24 @@ grpc::Status VerifyRoleConfig(
 bool VerifyStreamMessageNotFiltered(
     const absl::optional<P4RoleConfig>& role_config,
     const p4::v1::StreamMessageResponse& response) {
-  if (!response.has_packet()) return true;    // Not a packet, allow.
-  if (!role_config.has_value()) return true;  // No filter rule set, allow.
-  if (!role_config->has_packet_in_filter()) return true;
+  if (!role_config.has_value()) return true;  // No filter rules set, allow.
 
-  for (const auto& metadata : response.packet().metadata()) {
-    if (role_config->packet_in_filter().metadata_id() ==
-            metadata.metadata_id() &&
-        role_config->packet_in_filter().value() == metadata.value()) {
-      return true;
+  switch (response.update_case()) {
+    case p4::v1::StreamMessageResponse::kPacket: {
+      if (!role_config->has_packet_in_filter()) return true;
+      for (const auto& metadata : response.packet().metadata()) {
+        if (role_config->packet_in_filter().metadata_id() ==
+                metadata.metadata_id() &&
+            role_config->packet_in_filter().value() == metadata.value()) {
+          return true;
+        }
+      }
+      return false;  // No packet filter match, discard.
     }
+    default:
+      // TODO(max): implement filtering for other message types
+      return true;
   }
-
-  return false;  // No filter match, discard.
 }
 
 }  // namespace
@@ -526,7 +531,7 @@ absl::Status SdnControllerManager::SendStreamMessageToPrimary(
         found_at_least_one_primary = true;
         connection->SendStreamMessageResponse(response);
       }
-      // We don't report and error for packets getting filtered as this is
+      // We don't report an error for packets getting filtered as this is
       // expected operation.
     }
   }
