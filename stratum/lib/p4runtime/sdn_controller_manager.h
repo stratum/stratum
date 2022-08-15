@@ -14,6 +14,7 @@
 #include "absl/status/status.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/public/proto/p4_role_config.pb.h"
 
 namespace stratum {
 namespace p4runtime {
@@ -140,6 +141,10 @@ class SdnControllerManager {
   //    valid, but it cannot ever be primary (i.e. the controller can force a
   //    connection to be a backup).
   std::vector<SdnConnection*> connections_ ABSL_GUARDED_BY(lock_);
+
+  // We maintain a map of the latest role config set for a given role.
+  absl::flat_hash_map<absl::optional<std::string>, absl::optional<P4RoleConfig>>
+      role_config_by_name_ ABSL_GUARDED_BY(lock_);
 
   // We maintain a map of the highest election IDs that have been selected for
   // the primary connection of a role. Once an election ID is set all new

@@ -5,6 +5,7 @@
 #include "stratum/hal/lib/common/p4_service.h"
 
 #include <memory>
+#include <tuple>
 
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
@@ -51,10 +52,12 @@ typedef ::grpc::ClientReaderWriter<::p4::v1::StreamMessageRequest,
                                    ::p4::v1::StreamMessageResponse>
     ClientStreamChannelReaderWriter;
 
-class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
+class P4ServiceTest
+    : public ::testing::TestWithParam<std::tuple<OperationMode, bool>> {
  protected:
   void SetUp() override {
-    mode_ = GetParam();
+    mode_ = ::testing::get<0>(GetParam());
+    role_name_ = ::testing::get<1>(GetParam()) ? kRoleName1 : "";
     switch_mock_ = absl::make_unique<SwitchMock>();
     auth_policy_checker_mock_ = absl::make_unique<AuthPolicyCheckerMock>();
     error_buffer_ = absl::make_unique<ErrorBuffer>();
@@ -123,14 +126,20 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     }
   }
 
-  void AddFakeMasterController(uint64 node_id,
-                               p4runtime::SdnConnection* controller) {
+  void AddFakeMasterController(
+      uint64 node_id, p4runtime::SdnConnection* controller,
+      const P4RoleConfig& role_config = GetRoleConfig()) {
     p4::v1::MasterArbitrationUpdate request;
     request.set_device_id(node_id);
     request.mutable_election_id()->set_high(
         absl::Uint128High64(controller->GetElectionId().value()));
     request.mutable_election_id()->set_low(
         absl::Uint128Low64(controller->GetElectionId().value()));
+    if (!role_name_.empty()) {
+      request.mutable_role()->set_name(role_name_);
+      ASSERT_TRUE(
+          request.mutable_role()->mutable_config()->PackFrom(role_config));
+    }
     ASSERT_OK(p4_service_->AddOrModifyController(node_id, request, controller));
   }
 
@@ -138,6 +147,12 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     absl::WriterMutexLock l(&p4_service_->controller_lock_);
     return p4_service_->node_id_to_controller_manager_.at(node_id)
         .ActiveConnections();
+  }
+
+  static P4RoleConfig GetRoleConfig() {
+    P4RoleConfig role_config;
+    CHECK_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+    return role_config;
   }
 
   static constexpr char kForwardingPipelineConfigsTemplate[] = R"(
@@ -191,6 +206,18 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
       digest_id: 123456
       list_id: 654321
   )";
+  static constexpr char kRoleConfigText[] = R"pb(
+      exclusive_p4_ids: 12  # kTableId1
+      shared_p4_ids: 25
+      packet_in_filter {
+        metadata_id: 1
+        value: "\x00\x01"
+      }
+      receives_packet_ins: true
+      can_push_pipeline: true
+  )pb";
+  static constexpr char kRoleName1[] = "TestRole1";
+  static constexpr char kRoleName2[] = "TestRole2";
   static constexpr char kOperErrorMsg[] = "Some error";
   static constexpr char kAggrErrorMsg[] = "A few errors happened";
   static constexpr uint64 kNodeId1 = 123123123;
@@ -204,6 +231,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   static constexpr uint64 kCookie1 = 123;
   static constexpr uint64 kCookie2 = 321;
   OperationMode mode_;
+  std::string role_name_;
   std::unique_ptr<SwitchMock> switch_mock_;
   std::unique_ptr<AuthPolicyCheckerMock> auth_policy_checker_mock_;
   std::unique_ptr<ErrorBuffer> error_buffer_;
@@ -219,6 +247,9 @@ constexpr char P4ServiceTest::kTestPacketMetadata3[];
 constexpr char P4ServiceTest::kTestPacketMetadata4[];
 constexpr char P4ServiceTest::kTestDigestList1[];
 constexpr char P4ServiceTest::kTestDigestListAck1[];
+constexpr char P4ServiceTest::kRoleConfigText[];
+constexpr char P4ServiceTest::kRoleName1[];
+constexpr char P4ServiceTest::kRoleName2[];
 constexpr char P4ServiceTest::kOperErrorMsg[];
 constexpr char P4ServiceTest::kAggrErrorMsg[];
 constexpr uint64 P4ServiceTest::kNodeId1;
@@ -407,6 +438,7 @@ TEST_P(P4ServiceTest, SetupAndPushForwardingPipelineConfigSuccess) {
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_role(role_name_);
   request.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   configs.mutable_node_id_to_config()->at(kNodeId1).set_p4_device_config(
@@ -444,6 +476,7 @@ TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigSuccess) {
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_role(role_name_);
   request.set_action(::p4::v1::SetForwardingPipelineConfigRequest::VERIFY);
   *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
 
@@ -573,6 +606,7 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigFailureWhenPushFails) {
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_role(role_name_);
   request.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
 
@@ -601,6 +635,7 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_role(role_name_);
   request.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
 
@@ -610,6 +645,44 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
   EXPECT_THAT(status.error_message(), HasSubstr("reboot required"));
 
   // CheckForwardingPipelineConfigs(&configs, kNodeId1);
+  ASSERT_OK(p4_service_->Teardown());
+  CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
+}
+
+TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForRoleProhibited) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "SetForwardingPipelineConfig", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  constexpr char kRoleConfigText[] = R"pb(
+      can_push_pipeline: false
+  )pb";
+  P4RoleConfig role_config;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+  ::grpc::ServerContext context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller, role_config);
+
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
+  request.set_device_id(kNodeId1);
+  request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_role(role_name_);
+  request.set_action(
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+
+  ::grpc::Status status =
+      p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(), HasSubstr("not permitted"));
+
   ASSERT_OK(p4_service_->Teardown());
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
 }
@@ -627,6 +700,7 @@ TEST_P(P4ServiceTest, WriteSuccess) {
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  req.set_role(role_name_);
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
@@ -725,6 +799,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  req.set_role(role_name_);
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
   req.add_updates()->set_type(::p4::v1::Update::MODIFY);
 
@@ -789,6 +864,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  req.set_role(role_name_);
   req.add_updates()->set_type(::p4::v1::Update::INSERT);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
@@ -939,6 +1015,9 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ::p4::v1::StreamMessageRequest req;
   ::p4::v1::StreamMessageResponse resp;
 
+  // Sample role config.
+  const P4RoleConfig role_config = GetRoleConfig();
+
   // Sample packets. We dont care about payload.
   ::p4::v1::PacketOut packet1;
   ::p4::v1::PacketOut packet2;
@@ -1006,6 +1085,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream1->Write(req));
 
   // Read the mastership info back.
@@ -1014,6 +1098,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId1),
             resp.arbitration().election_id().low());
+  if (!role_name_.empty()) {
+    ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
+    P4RoleConfig returned_role_config;
+    ASSERT_TRUE(
+        resp.arbitration().role().config().UnpackTo(&returned_role_config));
+    ASSERT_THAT(role_config, EqualsProto(returned_role_config));
+  }
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
@@ -1024,6 +1115,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId2));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream2->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
@@ -1033,6 +1129,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
+  if (!role_name_.empty()) {
+    ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
+    P4RoleConfig returned_role_config;
+    ASSERT_TRUE(
+        resp.arbitration().role().config().UnpackTo(&returned_role_config));
+    ASSERT_THAT(role_config, EqualsProto(returned_role_config));
+  }
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
 
   ASSERT_TRUE(stream2->Read(&resp));
@@ -1040,6 +1143,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
             resp.arbitration().election_id().high());
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
+  if (!role_name_.empty()) {
+    ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
+    P4RoleConfig returned_role_config;
+    ASSERT_TRUE(
+        resp.arbitration().role().config().UnpackTo(&returned_role_config));
+    ASSERT_THAT(role_config, EqualsProto(returned_role_config));
+  }
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
@@ -1071,6 +1181,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream1->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 only. It
@@ -1092,6 +1207,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId1 - 1));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId1 - 1));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream2->Write(req));
   absl::SleepFor(absl::Milliseconds(500));
   ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
@@ -1122,6 +1242,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId2));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream2->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
@@ -1187,6 +1312,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId3));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId3));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream3->Write(req));
 
   // Read the mastership info back. The data will be sent to Controller #3 only.
@@ -1226,6 +1356,11 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
       absl::Uint128High64(kElectionId2));
   req.mutable_arbitration()->mutable_election_id()->set_low(
       absl::Uint128Low64(kElectionId2));
+  if (!role_name_.empty()) {
+    req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+    req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+        role_config);
+  }
   ASSERT_TRUE(stream3->Write(req));
 
   // Read the mastership info back. It will be sent to Controller #1 and #3.
@@ -1247,18 +1382,22 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   //----------------------------------------------------------------------------
   // We receive some packet from CPU. This will be forwarded to the master
   // which is Controller #3.
-  OnPacketReceive(packet3);
+  if (role_name_.empty()) {
+    OnPacketReceive(packet3);
 
-  ASSERT_TRUE(stream3->Read(&resp));
-  ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+    ASSERT_TRUE(stream3->Read(&resp));
+    ASSERT_TRUE(ProtoEqual(resp.packet(), packet3));
+  }
 
   //----------------------------------------------------------------------------
   // We receive some digest from switch. This will be forwarded to the master
   // which is Controller #3.
-  OnDigestListReceive(digest_list1);
+  if (role_name_.empty()) {
+    OnDigestListReceive(digest_list1);
 
-  ASSERT_TRUE(stream3->Read(&resp));
-  ASSERT_TRUE(ProtoEqual(resp.digest(), digest_list1));
+    ASSERT_TRUE(stream3->Read(&resp));
+    ASSERT_TRUE(ProtoEqual(resp.digest(), digest_list1));
+  }
 
   //----------------------------------------------------------------------------
   // Now Controller #1 disconnects. In this case there will be no mastership
@@ -1513,6 +1652,177 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyControllersPerNode) {
   ASSERT_TRUE(stream1->Finish().ok());
 }
 
+TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigType) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->set_type_url(
+      "some_type_url");
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));  // no resp is sent back
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForRoleChange) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      GetRoleConfig());
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_TRUE(stream->Read(&resp));
+
+  // Try to change the controllers role by name.
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName2);
+  req.mutable_arbitration()->mutable_role()->clear_config();
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::FAILED_PRECONDITION, status.error_code());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      GetRoleConfig());
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("default role"));
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+
+  ::grpc::ClientContext context1;
+  ::grpc::ClientContext context2;
+  ::grpc::ClientContext context3;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Role configs with overlapping exclusive IDs.
+  constexpr char kRoleConfigText1[] = R"pb(
+      exclusive_p4_ids: 30
+      exclusive_p4_ids: 12
+  )pb";
+  constexpr char kRoleConfigText2[] = R"pb(
+      exclusive_p4_ids: 44
+      exclusive_p4_ids: 30
+  )pb";
+
+  P4RoleConfig role_config1;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText1, &role_config1));
+  P4RoleConfig role_config2;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText2, &role_config2));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream1 =
+      stub_->StreamChannel(&context1);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream2 =
+      stub_->StreamChannel(&context2);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream3 =
+      stub_->StreamChannel(&context3);
+
+  //----------------------------------------------------------------------------
+  // Controller #1 connects and becomes master for role 1.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config1);
+  ASSERT_TRUE(stream1->Write(req));
+
+  // Read the mastership info back.
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+
+  //----------------------------------------------------------------------------
+  // Controller #2 connects and sends a role config that has overlapping IDs
+  // with controller #1.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName2);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config2);
+  ASSERT_TRUE(stream2->Write(req));
+
+  // The stream of controller #2 gets closed and the status will be non-OK.
+  ASSERT_FALSE(stream2->Read(&resp));
+  stream2->WritesDone();
+  ::grpc::Status status = stream2->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("contains overlapping exclusive ID"));
+}
+
 // Pushing a different forwarding pipeline config again should work.
 TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   ForwardingPipelineConfigs configs;
@@ -1539,6 +1849,7 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   setRequest.set_device_id(kNodeId1);
   setRequest.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   setRequest.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  setRequest.set_role(role_name_);
   setRequest.set_action(
       ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   *setRequest.mutable_config() = configs.node_id_to_config().at(kNodeId1);
@@ -1580,10 +1891,12 @@ TEST_P(P4ServiceTest, GetCapabilities) {
   ASSERT_EQ(response.p4runtime_api_version(), STRINGIFY(P4RUNTIME_VER));
 }
 
-INSTANTIATE_TEST_SUITE_P(P4ServiceTestWithMode, P4ServiceTest,
-                         ::testing::Values(OPERATION_MODE_STANDALONE,
-                                           OPERATION_MODE_COUPLED,
-                                           OPERATION_MODE_SIM));
+INSTANTIATE_TEST_SUITE_P(
+    P4ServiceTestWithMode, P4ServiceTest,
+    ::testing::Combine(::testing::Values(OPERATION_MODE_STANDALONE,
+                                         OPERATION_MODE_COUPLED,
+                                         OPERATION_MODE_SIM),
+                       ::testing::Values(true, false) /* with role config */));
 
 }  // namespace hal
 }  // namespace stratum

@@ -4,6 +4,8 @@
 
 #include "stratum/lib/p4runtime/sdn_controller_manager.h"
 
+#include <algorithm>
+
 #include "absl/numeric/int128.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -68,6 +70,58 @@ grpc::Status VerifyElectionIdIsActive(
                       "Election ID is not active for the role.");
 }
 
+grpc::Status VerifyRoleCanPushPipeline(
+    const absl::optional<std::string>& role_name,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& role_configs) {
+  const auto& role_config = role_configs.find(role_name);
+  if (role_config == role_configs.end()) {
+    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+  }
+  if (!role_config->second.has_value()) return grpc::Status::OK;
+  if (!role_config->second->can_push_pipeline()) {
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role not allowed to push pipelines.");
+  }
+
+  return grpc::Status::OK;
+}
+
+grpc::Status VerifyRoleConfig(
+    const absl::optional<std::string>& role_name,
+    const absl::optional<P4RoleConfig>& role_config,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& existing_configs) {
+  if (!role_config.has_value()) {
+    return grpc::Status::OK;
+  }
+
+  for (const auto& e : existing_configs) {
+    if (!e.second.has_value()) {
+      continue;
+    }
+    // Don't compare role to itself.
+    if (e.first == role_name) {
+      continue;
+    }
+    std::vector<uint32_t> new_ids(role_config->exclusive_p4_ids().begin(),
+                                  role_config->exclusive_p4_ids().end());
+    std::vector<uint32_t> existing_ids(e.second->exclusive_p4_ids().begin(),
+                                       e.second->exclusive_p4_ids().end());
+    std::vector<uint32_t> common_ids;
+    std::sort(new_ids.begin(), new_ids.end());
+    std::sort(existing_ids.begin(), existing_ids.end());
+    std::set_intersection(new_ids.begin(), new_ids.end(), existing_ids.begin(),
+                          existing_ids.end(), std::back_inserter(common_ids));
+    if (!common_ids.empty()) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                          "Role config contains overlapping exclusive IDs.");
+    }
+  }
+
+  return grpc::Status::OK;
+}
+
 }  // namespace
 
 void SdnConnection::SetElectionId(const absl::optional<absl::uint128>& id) {
@@ -108,8 +162,30 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
   // If the role name is not set then we assume the connection is a 'root'
   // connection.
   absl::optional<std::string> role_name;
+  absl::optional<P4RoleConfig> role_config;
   if (update.has_role() && !update.role().name().empty()) {
     role_name = update.role().name();
+  }
+
+  if (update.has_role() && update.role().has_config()) {
+    P4RoleConfig rc;
+    if (!update.role().config().UnpackTo(&rc)) {
+      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                          "Unknown role config.");
+    }
+    role_config = rc;
+  }
+
+  // Validate the role config.
+  grpc::Status status =
+      VerifyRoleConfig(role_name, role_config, role_config_by_name_);
+  if (!status.ok()) {
+    return status;
+  }
+
+  if (!role_name.has_value() && role_config.has_value()) {
+    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                        "Cannot set a role config for the default role.");
   }
 
   const auto old_election_id_for_connection = controller->GetElectionId();
@@ -193,6 +269,8 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
 
   if (connection_is_new_primary) {
     election_id_past_for_role = new_election_id_for_connection;
+    // Update the configuration for this controllers role.
+    role_config_by_name_[role_name] = role_config;
     // The spec demands we send a notifcation even if the old & new primary
     // match.
     InformConnectionsAboutPrimaryChange(role_name);
@@ -305,6 +383,15 @@ grpc::Status SdnControllerManager::AllowRequest(
     role_name = request.role();
   }
 
+  {
+    absl::MutexLock l(&lock_);
+    grpc::Status status =
+        VerifyRoleCanPushPipeline(role_name, role_config_by_name_);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+
   absl::optional<absl::uint128> election_id;
   if (request.has_election_id()) {
     election_id = absl::MakeUint128(request.election_id().high(),
@@ -353,6 +440,11 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
   if (connection->GetRoleName().has_value()) {
     *arbitration->mutable_role()->mutable_name() =
         connection->GetRoleName().value();
+    absl::optional<P4RoleConfig> role_config =
+        role_config_by_name_[connection->GetRoleName()];
+    if (role_config.has_value()) {
+      arbitration->mutable_role()->mutable_config()->PackFrom(*role_config);
+    }
   }
 
   // Populate the election ID with the highest accepted value.
@@ -360,9 +452,9 @@ void SdnControllerManager::SendArbitrationResponse(SdnConnection* connection) {
       election_id_past_by_role_[connection->GetRoleName()];
   if (election_id_past_for_role.has_value()) {
     arbitration->mutable_election_id()->set_high(
-        absl::Uint128High64(election_id_past_for_role.value()));
+        absl::Uint128High64(*election_id_past_for_role));
     arbitration->mutable_election_id()->set_low(
-        absl::Uint128Low64(election_id_past_for_role.value()));
+        absl::Uint128Low64(*election_id_past_for_role));
   }
 
   // Update connection status for the arbitration response.
