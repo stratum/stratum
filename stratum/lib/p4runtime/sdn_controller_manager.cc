@@ -98,21 +98,26 @@ uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
   }
 }
 
-grpc::Status VerifyP4IdsArePermitted(
-    const absl::optional<P4RoleConfig>& role_config,
-    const ::p4::v1::WriteRequest& request) {
-  if (!role_config.has_value()) return grpc::Status::OK;
-
+grpc::Status VerifyRoleCanAccessIds(
+    const absl::optional<std::string>& role_name,
+    const p4::v1::WriteRequest& request,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& role_configs) {
+  const auto& role_config = role_configs.find(role_name);
+  if (role_config == role_configs.end()) {
+    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+  }
+  if (!role_config->second.has_value()) return grpc::Status::OK;
   for (const auto& update : request.updates()) {
     uint32_t id = GetP4IdFromEntity(update.entity());
-    if (std::find(role_config->exclusive_p4_ids().begin(),
-                  role_config->exclusive_p4_ids().end(),
-                  id) != role_config->exclusive_p4_ids().end()) {
+    if (std::find(role_config->second->exclusive_p4_ids().begin(),
+                  role_config->second->exclusive_p4_ids().end(),
+                  id) != role_config->second->exclusive_p4_ids().end()) {
       continue;
     }
-    if (std::find(role_config->shared_p4_ids().begin(),
-                  role_config->shared_p4_ids().end(),
-                  id) != role_config->shared_p4_ids().end()) {
+    if (std::find(role_config->second->shared_p4_ids().begin(),
+                  role_config->second->shared_p4_ids().end(),
+                  id) != role_config->second->shared_p4_ids().end()) {
       continue;
     }
     return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
@@ -520,15 +525,10 @@ grpc::Status SdnControllerManager::AllowRequest(
 
   {
     absl::MutexLock l(&lock_);
-    const auto& role_config = role_config_by_name_.find(role_name);
-    if (role_config == role_config_by_name_.end()) {
-      return grpc::Status(grpc::StatusCode::NOT_FOUND,
-                          "Found no config for given role.");
-    }
-    grpc::Status result = VerifyP4IdsArePermitted(role_config->second, request);
-    if (!result.ok()) {
-      LOG(WARNING) << result.error_message();
-      return result;
+    grpc::Status status =
+        VerifyRoleCanAccessIds(role_name, request, role_config_by_name_);
+    if (!status.ok()) {
+      return status;
     }
   }
 
