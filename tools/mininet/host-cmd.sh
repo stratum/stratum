@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2022-present Intel
+# SPDX-License-Identifier: Apache-2.0
 
 # Attach to a Mininet host and run a command
 
