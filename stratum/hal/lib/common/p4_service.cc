@@ -733,10 +733,10 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
 void P4Service::RemoveController(uint64 node_id,
                                  p4runtime::SdnConnection* connection) {
   absl::WriterMutexLock l(&controller_lock_);
+  --num_controller_connections_;
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return;
   it->second.Disconnect(connection);
-  --num_controller_connections_;
 }
 
 bool P4Service::IsWritePermitted(uint64 node_id,
