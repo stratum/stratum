@@ -10,6 +10,9 @@ ADD ./${STRATUM_TARGET}_deb.deb /
 RUN install_packages ./${STRATUM_TARGET}_deb.deb
 RUN rm ./${STRATUM_TARGET}_deb.deb
 
+RUN ls -al /
+RUN cat /proc/1/cgroup
+
 EXPOSE 9339/tcp
 EXPOSE 9559/tcp
 
