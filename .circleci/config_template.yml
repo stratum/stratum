@@ -81,6 +81,7 @@ docker_build: &docker_build
       cd $DOCKER_SCOPE
       docker build -f $DOCKER_FILE -t $DOCKER_IMG \
         --cache-from $DOCKER_IMG \
+        --progress=plain \
         --label org.opencontainers.image.source=$CIRCLE_REPOSITORY_URL  \
         --label org.opencontainers.image.version=$CIRCLE_SHA1 \
         --label org.opencontainers.image.revision=$CIRCLE_SHA1 \
@@ -316,6 +317,7 @@ jobs:
       - CC: clang
       - CXX: clang++
       - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
+      - DOCKER_BUILDKIT: 1
     steps:
       - setup_remote_docker
       - checkout
