@@ -329,7 +329,7 @@ jobs:
             cp bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb $DOCKER_SCOPE/stratum_bfrt_deb.deb
       - *docker_login
       - *docker_build
-      - *docker_push
+      # - *docker_push
       - *save_bazel_cache
 
   publish-docker-stratum-tools:
@@ -409,47 +409,44 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
-    jobs:
-      - publish-docker-build
-      - unit_tests:
-          requires:
-            - publish-docker-build
-      - cdlang_tests:
-          requires:
-            - publish-docker-build
-      - coverage:
-          requires:
-            - publish-docker-build
-      - lint-and-style-checks:
-          requires:
-            - publish-docker-build
-      - license-check
-      - markdown-style-check
+  # build_and_test:
+  #   jobs:
+  #     - publish-docker-build
+  #     - unit_tests:
+  #         requires:
+  #           - publish-docker-build
+  #     - cdlang_tests:
+  #         requires:
+  #           - publish-docker-build
+  #     - coverage:
+  #         requires:
+  #           - publish-docker-build
+  #     - lint-and-style-checks:
+  #         requires:
+  #           - publish-docker-build
+  #     - license-check
+  #     - markdown-style-check
   docker-publish:
     jobs:
-      - publish-docker-build:
-          filters:
-            branches:
-              only: main
-      - publish-docker-mininet:
-          requires:
-            - publish-docker-build
-      - publish-docker-p4c-fpm:
-          requires:
-            - publish-docker-build
-      - publish-docker-stratum-bcm-sdklt:
-          requires:
-            - publish-docker-build
-      - publish-docker-stratum-bcm-opennsa:
-          requires:
-            - publish-docker-build
+      # - publish-docker-build
+      # - publish-docker-mininet:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-p4c-fpm:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-stratum-bcm-sdklt:
+      #     requires:
+      #       - publish-docker-build
+      # - publish-docker-stratum-bcm-opennsa:
+      #     requires:
+      #       - publish-docker-build
       - publish-docker-stratum-bfrt:
-          requires:
-            - publish-docker-build
+          # requires:
+          #   - publish-docker-build
           matrix:
             parameters:
-              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0"]
-      - publish-docker-stratum-tools:
-          requires:
-            - publish-docker-build
+              sde_version: ["9.7.0"]
+      # - publish-docker-stratum-tools:
+      #     requires:
+      #       - publish-docker-build
