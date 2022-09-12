@@ -331,7 +331,7 @@ jobs:
             cp bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb $DOCKER_SCOPE/stratum_bfrt_deb.deb
       - *docker_login
       - *docker_build
-      # - *docker_push
+      - *docker_push
       - *save_bazel_cache
 
   publish-docker-stratum-tools:
