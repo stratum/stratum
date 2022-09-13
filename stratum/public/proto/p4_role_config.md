@@ -20,7 +20,27 @@ In particular, it allows a given role to:
 ## Example workflow using `P4RoleConfig`
 
 This section shows how to pack and push a role configuration into Stratum in
-practice. Below is an example role configuration, stored somewhere on disk as
+practice. If Bazel is used, the role config proto can be imported as a
+dependency as follows:
+
+```python
+# BUILD
+
+load("@rules_cc//cc:defs.bzl", "cc_proto_library", "cc_binary")
+
+cc_proto_library(
+    name = "p4_role_config_cc_proto",
+    deps = ["@com_github_stratum_stratum//stratum/public/proto:p4_role_config_proto"],
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    deps = [":p4_role_config_cc_proto"],
+)
+```
+
+Below is an example role configuration, stored somewhere on disk as
 `role_config.pb.txt`:
 
 ```textproto
