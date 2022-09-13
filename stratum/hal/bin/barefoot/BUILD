@@ -124,6 +124,7 @@ pkg_tar(
         "@local_barefoot_bin//:bf_library_files",
         "@local_barefoot_bin//:bf_shareable_files",
         "@local_barefoot_bin//:kernel_module",
+        "@local_barefoot_bin//:bf_bin",
     ],
 )
 
