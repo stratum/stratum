@@ -106,6 +106,16 @@ pkg_tar(
     strip_prefix = "barefoot-bin",
 )
 
+pkg_tar(
+    name = "bf_binary_files",
+    srcs = [
+        "barefoot-bin/bin/credo_firmware.bin",  # firmware for retimers in the 65x
+    ],
+    mode = "0644",
+    package_dir = "/usr",
+    strip_prefix = "barefoot-bin",
+)
+
 # This string setting is templated with the correct version string by reading
 # the $SDE_INSTALL/share/VERSION file. Then one of the config settings below
 # will match and can be used with select().
