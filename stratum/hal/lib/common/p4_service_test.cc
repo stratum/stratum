@@ -145,8 +145,14 @@ class P4ServiceTest
 
   int GetNumberOfActiveConnections(uint64 node_id) {
     absl::WriterMutexLock l(&p4_service_->controller_lock_);
+    if (!p4_service_->node_id_to_controller_manager_.count(node_id)) return 0;
     return p4_service_->node_id_to_controller_manager_.at(node_id)
         .ActiveConnections();
+  }
+
+  int GetNumberOfConnections() {
+    absl::WriterMutexLock l(&p4_service_->controller_lock_);
+    return p4_service_->num_controller_connections_;
   }
 
   static P4RoleConfig GetRoleConfig() {
@@ -1120,6 +1126,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
     ASSERT_THAT(role_config, EqualsProto(returned_role_config));
   }
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(1, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
   // Controller #2 connects and since it has higher election_id it becomes the
@@ -1165,6 +1172,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
     ASSERT_THAT(role_config, EqualsProto(returned_role_config));
   }
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
   // Controller #2 connects again with the same election_id. Controller #2 will
@@ -1186,6 +1194,7 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   //----------------------------------------------------------------------------
   // Controller #1 connects again with the same election_id. Controller #2 will
@@ -1227,8 +1236,6 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
         role_config);
   }
   ASSERT_TRUE(stream2->Write(req));
-  absl::SleepFor(absl::Milliseconds(500));
-  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
 
   // Read the mastership info back. It will be sent to Controller #1 and #2.
   // Status will be non-OK for Controller #1 and #2, as there is no active
@@ -1340,6 +1347,8 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::ALREADY_EXISTS, resp.arbitration().status().code());
+  ASSERT_EQ(3, GetNumberOfActiveConnections(kNodeId1));
+  ASSERT_EQ(3, GetNumberOfConnections());
 
   //----------------------------------------------------------------------------
   // Controller #2 (master) disconnects. This makes the server master-less.
@@ -1361,6 +1370,8 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(absl::Uint128Low64(kElectionId2),
             resp.arbitration().election_id().low());
   ASSERT_EQ(::google::rpc::NOT_FOUND, resp.arbitration().status().code());
+  ASSERT_EQ(2, GetNumberOfActiveConnections(kNodeId1));
+  ASSERT_EQ(2, GetNumberOfConnections());
 
   //----------------------------------------------------------------------------
   // Controller #3 promotes itself to master again.
@@ -1427,11 +1438,15 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   // change. And nothing will be sent to Controller #3 which is still master.
   stream1->WritesDone();
   ASSERT_TRUE(stream1->Finish().ok());
+  ASSERT_EQ(1, GetNumberOfActiveConnections(kNodeId1));
+  ASSERT_EQ(1, GetNumberOfConnections());
 
   //----------------------------------------------------------------------------
   // And finally Controller #3 disconnects too. Nothing will be sent.
   stream3->WritesDone();
   ASSERT_TRUE(stream3->Finish().ok());
+  ASSERT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  ASSERT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
@@ -1542,6 +1557,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyConnections) {
   stream2->WritesDone();
   ASSERT_TRUE(stream1->Finish().ok());
   ASSERT_TRUE(stream2->Finish().ok());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForZeroDeviceId) {
@@ -1561,6 +1578,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForZeroDeviceId) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForInvalidDeviceId) {
@@ -1581,6 +1600,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidDeviceId) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForZeroElectionId) {
@@ -1601,6 +1622,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForZeroElectionId) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureWhenRegisterHandlerFails) {
@@ -1628,6 +1651,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureWhenRegisterHandlerFails) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INTERNAL, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForTooManyControllersPerNode) {
@@ -1702,6 +1727,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigType) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForRoleChange) {
@@ -1737,6 +1764,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleChange) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::FAILED_PRECONDITION, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
@@ -1766,6 +1795,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
   EXPECT_THAT(status.error_message(), HasSubstr("default role"));
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
