@@ -339,10 +339,13 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   return ToGrpcStatus(status, results);
 }
 
+// here
 ::grpc::Status P4Service::Read(
     ::grpc::ServerContext* context, const ::p4::v1::ReadRequest* req,
     ::grpc::ServerWriter<::p4::v1::ReadResponse>* writer) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service, Read, context);
+
+  LOG(WARNING) << "foo";
 
   if (!req->entities_size()) return ::grpc::Status::OK;
   // device_id is nothing but the node_id specified in the config for the node.
@@ -357,6 +360,24 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   if (!ret.ok()) {
     return ::grpc::Status(ToGrpcCode(ret.status().CanonicalCode()),
                           ret.status().error_message());
+  }
+
+  // To allow read filtering for wildcard requests, we ...
+  // Break up wildcard reads for all tables into individual table wildcards.
+  ::p4::v1::ReadRequest patched_req;
+  if (!req->role().empty()) {
+    LOG(WARNING) << "bar";
+    // TODO: need to filter out IDs disallowed by role config, else automatic
+    // error
+    patched_req = ExpandWildcardsInReadRequest(*req, ret.ValueOrDie().p4info());
+    req = &patched_req;
+    LOG(INFO) << patched_req.ShortDebugString();
+  }
+
+  // Verify the request ...
+  if (!IsReadPermitted(req->device_id(), *req)) {
+    return ::grpc::Status(::grpc::StatusCode::PERMISSION_DENIED,
+                          "Read is not permitted.");
   }
 
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
@@ -764,6 +785,14 @@ bool P4Service::IsWritePermitted(
   return it->second.AllowRequest(req).ok();
 }
 
+bool P4Service::IsReadPermitted(uint64 node_id,
+                                const p4::v1::ReadRequest& req) const {
+  absl::ReaderMutexLock l(&controller_lock_);
+  auto it = node_id_to_controller_manager_.find(node_id);
+  if (it == node_id_to_controller_manager_.end()) return true;
+  return it->second.AllowRequest(req).ok();
+}
+
 bool P4Service::IsMasterController(
     uint64 node_id, const absl::optional<std::string>& role_name,
     const absl::optional<absl::uint128>& election_id) const {
@@ -790,6 +819,16 @@ P4Service::DoGetForwardingPipelineConfig(uint64 node_id) const {
   }
 
   return it->second;
+}
+
+p4::v1::ReadRequest P4Service::ExpandWildcardsInReadRequest(
+    const p4::v1::ReadRequest& req,
+    const p4::config::v1::P4Info& p4info) const {
+  absl::ReaderMutexLock l(&controller_lock_);
+
+  auto it = node_id_to_controller_manager_.find(req.device_id());
+  if (it == node_id_to_controller_manager_.end()) return req;
+  return it->second.UnwildcardReadRequest(req, p4info);
 }
 
 void* P4Service::StreamResponseReceiveThreadFunc(void* arg) {

@@ -153,6 +153,9 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
                         const ::p4::v1::SetForwardingPipelineConfigRequest& req)
       const LOCKS_EXCLUDED(controller_lock_);
 
+  bool IsReadPermitted(uint64 node_id, const p4::v1::ReadRequest& req) const
+      LOCKS_EXCLUDED(controller_lock_);
+
   // Returns true if the given role and election_id belongs to the master
   // controller stream for a node given by its node ID.
   bool IsMasterController(
@@ -164,6 +167,11 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
   ::util::StatusOr<::p4::v1::ForwardingPipelineConfig>
   DoGetForwardingPipelineConfig(uint64 node_id) const
       LOCKS_EXCLUDED(config_lock_);
+
+  p4::v1::ReadRequest ExpandWildcardsInReadRequest(
+      const p4::v1::ReadRequest& req,
+      const p4::config::v1::P4Info& p4info) const
+      LOCKS_EXCLUDED(controller_lock_);
 
   // Thread function for handling stream response RX.
   static void* StreamResponseReceiveThreadFunc(void* arg)

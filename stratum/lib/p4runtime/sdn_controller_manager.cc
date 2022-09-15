@@ -139,12 +139,85 @@ bool VerifyStreamMessageNotFiltered(
           return true;
         }
       }
+      VLOG(2) << "Discarding PacketIn " << response.packet().ShortDebugString()
+              << " because it did not match the role config filter: "
+              << role_config->packet_in_filter().ShortDebugString() << ".";
       return false;  // No packet filter match, discard.
     }
     default:
       // TODO(max): implement filtering for other message types
       return true;
   }
+}
+
+uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
+  switch (entity.entity_case()) {
+    case ::p4::v1::Entity::kTableEntry:
+      return entity.table_entry().table_id();
+    case ::p4::v1::Entity::kExternEntry:
+      return entity.extern_entry().extern_id();
+    case ::p4::v1::Entity::kActionProfileMember:
+      return entity.action_profile_member().action_profile_id();
+    case ::p4::v1::Entity::kActionProfileGroup:
+      return entity.action_profile_group().action_profile_id();
+    case ::p4::v1::Entity::kDirectCounterEntry:
+      return entity.direct_counter_entry().table_entry().table_id();
+    case ::p4::v1::Entity::kCounterEntry:
+      return entity.counter_entry().counter_id();
+    case ::p4::v1::Entity::kRegisterEntry:
+      return entity.register_entry().register_id();
+    case ::p4::v1::Entity::kMeterEntry:
+      return entity.meter_entry().meter_id();
+    case ::p4::v1::Entity::kDirectMeterEntry:
+    case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+    case ::p4::v1::Entity::kValueSetEntry:
+    case ::p4::v1::Entity::kDigestEntry:
+    default:
+      LOG(ERROR) << "Unsupported entity type: " << entity.ShortDebugString();
+      return 0;
+  }
+}
+
+std::vector<uint32_t> GetP4IdsFromRequest(const p4::v1::ReadRequest& request) {
+  std::vector<uint32_t> ids;
+  for (const auto& entity : request.entities()) {
+    uint32_t id = GetP4IdFromEntity(entity);
+    if (id) ids.push_back(id);
+  }
+
+  return ids;
+}
+
+grpc::Status VerifyRoleCanAccessIds(
+    const absl::optional<std::string>& role_name,
+    const std::vector<uint32_t>& ids,
+    const absl::flat_hash_map<absl::optional<std::string>,
+                              absl::optional<P4RoleConfig>>& role_configs) {
+  const auto& role_config = role_configs.find(role_name);
+  if (role_config == role_configs.end()) {
+    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+  }
+  if (!role_config->second.has_value()) return grpc::Status::OK;
+  LOG(INFO) << "testing against role config: "
+            << role_config->second->ShortDebugString();
+  for (const auto& id : ids) {
+    if (id == 0) continue;
+    if (std::find(role_config->second->exclusive_p4_ids().begin(),
+                  role_config->second->exclusive_p4_ids().end(),
+                  id) != role_config->second->exclusive_p4_ids().end()) {
+      continue;
+    }
+    if (std::find(role_config->second->shared_p4_ids().begin(),
+                  role_config->second->shared_p4_ids().end(),
+                  id) != role_config->second->shared_p4_ids().end()) {
+      continue;
+    }
+    LOG(ERROR) << "not allowed to access " << id << ".";
+    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
+                        "Role is not allowed to access this entity.");
+  }
+
+  return grpc::Status::OK;
 }
 
 }  // namespace
@@ -402,6 +475,25 @@ grpc::Status SdnControllerManager::AllowRequest(
 }
 
 grpc::Status SdnControllerManager::AllowRequest(
+    const p4::v1::ReadRequest& request) const {
+  absl::optional<std::string> role_name;
+  if (!request.role().empty()) {
+    role_name = request.role();
+  }
+
+  if (role_name) {
+    absl::MutexLock l(&lock_);
+    grpc::Status status = VerifyRoleCanAccessIds(
+        role_name, GetP4IdsFromRequest(request), role_config_by_name_);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+
+  return grpc::Status::OK;
+}
+
+grpc::Status SdnControllerManager::AllowRequest(
     const p4::v1::SetForwardingPipelineConfigRequest& request) const {
   absl::optional<std::string> role_name;
   if (!request.role().empty()) {
@@ -428,6 +520,54 @@ grpc::Status SdnControllerManager::AllowRequest(
 int SdnControllerManager::ActiveConnections() const {
   absl::MutexLock l(&lock_);
   return connections_.size();
+}
+
+p4::v1::ReadRequest SdnControllerManager::UnwildcardReadRequest(
+    const p4::v1::ReadRequest& request,
+    const p4::config::v1::P4Info& p4info) const {
+  absl::MutexLock l(&lock_);
+  // Copy the request, except for the entities.
+  p4::v1::ReadRequest ret(request);
+  ret.clear_entities();
+
+  absl::optional<std::string> role_name;
+  if (!request.role().empty()) {
+    role_name = request.role();
+  }
+
+  for (const auto& entity : request.entities()) {
+    // Check if wildcard or single read.
+    uint32_t id = GetP4IdFromEntity(entity);
+    if (id != 0) {
+      *ret.add_entities() = entity;
+      continue;
+    }
+    switch (entity.entity_case()) {
+      case ::p4::v1::Entity::kTableEntry: {
+        LOG(INFO) << "found table wildcard";
+        for (const auto& table : p4info.tables()) {
+          if (VerifyRoleCanAccessIds(role_name, {table.preamble().id()},
+                                     role_config_by_name_)
+                  .ok()) {
+            LOG(INFO) << "Allowed to access " << table.preamble().id();
+            p4::v1::Entity table_entry;
+            table_entry.mutable_table_entry()->set_table_id(
+                table.preamble().id());
+            *ret.add_entities() = table_entry;
+          } else {
+            LOG(INFO) << "Not allowed to access " << table.preamble().id();
+          }
+        }
+        break;
+      }
+      default: {
+        *ret.add_entities() = entity;
+        break;
+      }
+    }
+  }
+
+  return ret;
 }
 
 void SdnControllerManager::InformConnectionsAboutPrimaryChange(

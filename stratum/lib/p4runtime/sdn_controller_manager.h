@@ -83,8 +83,9 @@ class SdnControllerManager {
   grpc::Status AllowRequest(const absl::optional<std::string>& role_name,
                             const absl::optional<absl::uint128>& election_id)
       const ABSL_LOCKS_EXCLUDED(lock_);
-
   grpc::Status AllowRequest(const p4::v1::WriteRequest& request) const
+      ABSL_LOCKS_EXCLUDED(lock_);
+  grpc::Status AllowRequest(const p4::v1::ReadRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
   grpc::Status AllowRequest(
       const p4::v1::SetForwardingPipelineConfigRequest& request) const
@@ -92,6 +93,10 @@ class SdnControllerManager {
 
   // Returns the number of currently active connections.
   int ActiveConnections() const ABSL_LOCKS_EXCLUDED(lock_);
+
+  p4::v1::ReadRequest UnwildcardReadRequest(
+      const p4::v1::ReadRequest& req,
+      const p4::config::v1::P4Info& p4info) const ABSL_LOCKS_EXCLUDED(lock_);
 
   absl::Status SendPacketInToPrimary(
       const p4::v1::StreamMessageResponse& response) ABSL_LOCKS_EXCLUDED(lock_);
