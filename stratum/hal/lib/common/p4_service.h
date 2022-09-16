@@ -160,6 +160,11 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
       const absl::optional<absl::uint128>& election_id) const
       LOCKS_EXCLUDED(controller_lock_);
 
+  // Return the stored forwarding pipeline for the given node.
+  ::util::StatusOr<p4::v1::ForwardingPipelineConfig>
+  DoGetForwardingPipelineConfig(uint64 node_id) const
+      LOCKS_EXCLUDED(config_lock_);
+
   // Thread function for handling stream response RX.
   static void* StreamResponseReceiveThreadFunc(void* arg)
       LOCKS_EXCLUDED(controller_lock_);

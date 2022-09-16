@@ -126,6 +126,18 @@ class P4ServiceTest
     }
   }
 
+  void SetTestForwardingPipelineConfigs() {
+    absl::WriterMutexLock l(&p4_service_->config_lock_);
+    ASSERT_TRUE(p4_service_->forwarding_pipeline_configs_ == nullptr);
+    p4_service_->forwarding_pipeline_configs_ =
+        absl::make_unique<ForwardingPipelineConfigs>();
+    ForwardingPipelineConfigs configs;
+    const std::string& configs_text = absl::Substitute(
+        kForwardingPipelineConfigsTemplate, kNodeId1, kNodeId2);
+    ASSERT_OK(ParseProtoFromString(
+        configs_text, p4_service_->forwarding_pipeline_configs_.get()));
+  }
+
   void AddFakeMasterController(
       uint64 node_id, p4runtime::SdnConnection* controller,
       const P4RoleConfig& role_config = GetRoleConfig()) {
@@ -706,6 +718,7 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForRoleProhibited) {
 }
 
 TEST_P(P4ServiceTest, WriteSuccess) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
@@ -739,6 +752,7 @@ TEST_P(P4ServiceTest, WriteSuccess) {
 }
 
 TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -754,6 +768,7 @@ TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureForNoDeviceId) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -770,6 +785,7 @@ TEST_P(P4ServiceTest, WriteFailureForNoDeviceId) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureForNoElectionId) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -787,6 +803,7 @@ TEST_P(P4ServiceTest, WriteFailureForNoElectionId) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -806,6 +823,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
@@ -854,6 +872,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureForAuthError) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -871,6 +890,7 @@ TEST_P(P4ServiceTest, WriteFailureForAuthError) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
@@ -905,6 +925,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
 }
 
 TEST_P(P4ServiceTest, ReadSuccess) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -946,6 +967,7 @@ TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
 }
 
 TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -964,6 +986,7 @@ TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
 }
 
 TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -1002,6 +1025,7 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
 }
 
 TEST_P(P4ServiceTest, ReadFailureForAuthError) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
