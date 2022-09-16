@@ -131,7 +131,6 @@ class P4ServiceTest
     ASSERT_TRUE(p4_service_->forwarding_pipeline_configs_ == nullptr);
     p4_service_->forwarding_pipeline_configs_ =
         absl::make_unique<ForwardingPipelineConfigs>();
-    ForwardingPipelineConfigs configs;
     const std::string& configs_text = absl::Substitute(
         kForwardingPipelineConfigsTemplate, kNodeId1, kNodeId2);
     ASSERT_OK(ParseProtoFromString(
