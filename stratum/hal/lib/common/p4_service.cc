@@ -364,14 +364,16 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
 
   // To allow read filtering for wildcard requests, we ...
   // Break up wildcard reads for all tables into individual table wildcards.
-  ::p4::v1::ReadRequest patched_req;
+  ::p4::v1::ReadRequest expanded_req;
+  const ::p4::v1::ReadRequest* original_req = req;
   if (!req->role().empty()) {
     LOG(WARNING) << "bar";
     // TODO: need to filter out IDs disallowed by role config, else automatic
     // error
-    patched_req = ExpandWildcardsInReadRequest(*req, ret.ValueOrDie().p4info());
-    req = &patched_req;
-    LOG(INFO) << patched_req.ShortDebugString();
+    expanded_req =
+        ExpandWildcardsInReadRequest(*req, ret.ValueOrDie().p4info());
+    req = &expanded_req;
+    LOG(INFO) << expanded_req.ShortDebugString();
   }
 
   // Verify the request ...
@@ -391,7 +393,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   // Log debug info for future debugging.
-  LogReadRequest(node_id, *req, details, timestamp);
+  LogReadRequest(node_id, *original_req, details, timestamp);
 
   return ToGrpcStatus(status, details);
 }
@@ -828,7 +830,7 @@ p4::v1::ReadRequest P4Service::ExpandWildcardsInReadRequest(
 
   auto it = node_id_to_controller_manager_.find(req.device_id());
   if (it == node_id_to_controller_manager_.end()) return req;
-  return it->second.UnwildcardReadRequest(req, p4info);
+  return it->second.ExpandWildcardsInReadRequest(req, p4info);
 }
 
 void* P4Service::StreamResponseReceiveThreadFunc(void* arg) {

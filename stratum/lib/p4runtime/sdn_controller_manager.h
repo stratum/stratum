@@ -94,7 +94,7 @@ class SdnControllerManager {
   // Returns the number of currently active connections.
   int ActiveConnections() const ABSL_LOCKS_EXCLUDED(lock_);
 
-  p4::v1::ReadRequest UnwildcardReadRequest(
+  p4::v1::ReadRequest ExpandWildcardsInReadRequest(
       const p4::v1::ReadRequest& req,
       const p4::config::v1::P4Info& p4info) const ABSL_LOCKS_EXCLUDED(lock_);
 

@@ -522,7 +522,7 @@ int SdnControllerManager::ActiveConnections() const {
   return connections_.size();
 }
 
-p4::v1::ReadRequest SdnControllerManager::UnwildcardReadRequest(
+p4::v1::ReadRequest SdnControllerManager::ExpandWildcardsInReadRequest(
     const p4::v1::ReadRequest& request,
     const p4::config::v1::P4Info& p4info) const {
   absl::MutexLock l(&lock_);
@@ -550,7 +550,7 @@ p4::v1::ReadRequest SdnControllerManager::UnwildcardReadRequest(
                                      role_config_by_name_)
                   .ok()) {
             LOG(INFO) << "Allowed to access " << table.preamble().id();
-            p4::v1::Entity table_entry;
+            p4::v1::Entity table_entry = entity;
             table_entry.mutable_table_entry()->set_table_id(
                 table.preamble().id());
             *ret.add_entities() = table_entry;
