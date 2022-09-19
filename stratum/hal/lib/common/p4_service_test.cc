@@ -180,6 +180,7 @@ class P4ServiceTest
             tables {
               preamble {
                 name: "some_table"
+                id: 12  # kTableId1
               }
             }
             controller_packet_metadata {
@@ -992,6 +993,47 @@ TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
   EXPECT_TRUE(status.ok());
+}
+
+TEST_P(P4ServiceTest, ReadSuccessForRoleConfigWildcardExpansion) {
+  SetTestForwardingPipelineConfigs();
+
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
+
+  ::grpc::ClientContext context;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
+  req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
+  req.add_entities()->mutable_table_entry()->set_table_id(0);  // Wildcard
+
+  ::p4::v1::ReadRequest expected_req = req;
+  if (!role_name_.empty()) {
+    expected_req.mutable_entities(0)->mutable_table_entry()->set_table_id(
+        kTableId1);
+  }
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
+      .WillOnce(Return(::util::OkStatus()));
+  const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
+  EXPECT_CALL(*switch_mock_,
+              ReadForwardingEntries(EqualsProto(expected_req), _, _))
+      .WillOnce(DoAll(SetArgPointee<2>(kExpectedResults),
+                      Return(::util::OkStatus())));
+
+  // Invoke the RPC and validate the results.
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
+      stub_->Read(&context, req);
+  ASSERT_FALSE(reader->Read(&resp));
+  ::grpc::Status status = reader->Finish();
+  EXPECT_TRUE(status.ok());
+  std::string s;
+  ASSERT_OK(ReadFileToString(FLAGS_read_req_log_file, &s));
+  EXPECT_THAT(s, HasSubstr(req.entities(0).ShortDebugString()));
 }
 
 TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
