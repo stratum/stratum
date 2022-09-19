@@ -506,23 +506,24 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
     return ::grpc::Status(ToGrpcCode(status.status().CanonicalCode()),
                           status.status().error_message());
   }
-  p4::v1::ForwardingPipelineConfig config = status.ConsumeValueOrDie();
+  const ::p4::v1::ForwardingPipelineConfig& config = status.ValueOrDie();
 
   switch (req->response_type()) {
-    case p4::v1::GetForwardingPipelineConfigRequest::ALL: {
+    case ::p4::v1::GetForwardingPipelineConfigRequest::ALL: {
       *resp->mutable_config() = config;
       break;
     }
-    case p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY: {
+    case ::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY: {
       *resp->mutable_config()->mutable_cookie() = config.cookie();
       break;
     }
-    case p4::v1::GetForwardingPipelineConfigRequest::P4INFO_AND_COOKIE: {
+    case ::p4::v1::GetForwardingPipelineConfigRequest::P4INFO_AND_COOKIE: {
       *resp->mutable_config()->mutable_p4info() = config.p4info();
       *resp->mutable_config()->mutable_cookie() = config.cookie();
       break;
     }
-    case p4::v1::GetForwardingPipelineConfigRequest::DEVICE_CONFIG_AND_COOKIE: {
+    case ::p4::v1::GetForwardingPipelineConfigRequest::
+        DEVICE_CONFIG_AND_COOKIE: {
       *resp->mutable_config()->mutable_p4_device_config() =
           config.p4_device_config();
       *resp->mutable_config()->mutable_cookie() = config.cookie();
@@ -680,7 +681,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
 }
 
 ::util::Status P4Service::AddOrModifyController(
-    uint64 node_id, const p4::v1::MasterArbitrationUpdate& update,
+    uint64 node_id, const ::p4::v1::MasterArbitrationUpdate& update,
     p4runtime::SdnConnection* controller) {
   // To be called by all the threads handling controller connections.
   absl::WriterMutexLock l(&controller_lock_);
@@ -747,7 +748,7 @@ void P4Service::RemoveController(uint64 node_id,
 }
 
 bool P4Service::IsWritePermitted(uint64 node_id,
-                                 const p4::v1::WriteRequest& req) const {
+                                 const ::p4::v1::WriteRequest& req) const {
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return false;
@@ -756,7 +757,7 @@ bool P4Service::IsWritePermitted(uint64 node_id,
 
 bool P4Service::IsWritePermitted(
     uint64 node_id,
-    const p4::v1::SetForwardingPipelineConfigRequest& req) const {
+    const ::p4::v1::SetForwardingPipelineConfigRequest& req) const {
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return false;
@@ -772,7 +773,7 @@ bool P4Service::IsMasterController(
   return it->second.AllowRequest(role_name, election_id).ok();
 }
 
-::util::StatusOr<p4::v1::ForwardingPipelineConfig>
+::util::StatusOr<::p4::v1::ForwardingPipelineConfig>
 P4Service::DoGetForwardingPipelineConfig(uint64 node_id) const {
   absl::ReaderMutexLock l(&config_lock_);
   if (forwarding_pipeline_configs_ == nullptr ||
