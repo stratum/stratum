@@ -126,6 +126,17 @@ class P4ServiceTest
     }
   }
 
+  void SetTestForwardingPipelineConfigs() {
+    absl::WriterMutexLock l(&p4_service_->config_lock_);
+    ASSERT_TRUE(p4_service_->forwarding_pipeline_configs_ == nullptr);
+    p4_service_->forwarding_pipeline_configs_ =
+        absl::make_unique<ForwardingPipelineConfigs>();
+    const std::string& configs_text = absl::Substitute(
+        kForwardingPipelineConfigsTemplate, kNodeId1, kNodeId2);
+    ASSERT_OK(ParseProtoFromString(
+        configs_text, p4_service_->forwarding_pipeline_configs_.get()));
+  }
+
   void AddFakeMasterController(
       uint64 node_id, p4runtime::SdnConnection* controller,
       const P4RoleConfig& role_config = GetRoleConfig()) {
@@ -706,6 +717,7 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForRoleProhibited) {
 }
 
 TEST_P(P4ServiceTest, WriteSuccess) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
@@ -739,6 +751,7 @@ TEST_P(P4ServiceTest, WriteSuccess) {
 }
 
 TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -754,6 +767,7 @@ TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureForNoDeviceId) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -770,6 +784,7 @@ TEST_P(P4ServiceTest, WriteFailureForNoDeviceId) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureForNoElectionId) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -787,6 +802,7 @@ TEST_P(P4ServiceTest, WriteFailureForNoElectionId) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -806,6 +822,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
@@ -854,6 +871,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureForAuthError) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::WriteRequest req;
   ::p4::v1::WriteResponse resp;
@@ -871,6 +889,7 @@ TEST_P(P4ServiceTest, WriteFailureForAuthError) {
 }
 
 TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
@@ -904,7 +923,37 @@ TEST_P(P4ServiceTest, WriteFailureWhenSwitchNotInitializedError) {
   // EXPECT_TRUE(status.error_details().empty());
 }
 
+TEST_P(P4ServiceTest, WriteFailureForNoPipeline) {
+  // Not setting a pipeline here.
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
+
+  ::grpc::ClientContext context;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
+  req.set_device_id(kNodeId1);
+  req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  req.set_role(role_name_);
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Invoke the RPC and validate the results.
+  ::grpc::Status status = stub_->Write(&context, req, &resp);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_FAILED_PRECONDITION, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("No valid forwarding pipeline"));
+  EXPECT_TRUE(status.error_details().empty());
+}
+
 TEST_P(P4ServiceTest, ReadSuccess) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -946,6 +995,7 @@ TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
 }
 
 TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -964,6 +1014,7 @@ TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
 }
 
 TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -1002,6 +1053,7 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
 }
 
 TEST_P(P4ServiceTest, ReadFailureForAuthError) {
+  SetTestForwardingPipelineConfigs();
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
@@ -1019,6 +1071,29 @@ TEST_P(P4ServiceTest, ReadFailureForAuthError) {
   ::grpc::Status status = reader->Finish();
   EXPECT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(), HasSubstr(kAggrErrorMsg));
+  EXPECT_TRUE(status.error_details().empty());
+}
+
+TEST_P(P4ServiceTest, ReadFailureForNoPipeline) {
+  // Not setting a pipeline here.
+  ::grpc::ClientContext context;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
+  req.set_device_id(kNodeId1);
+  req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Invoke the RPC and validate the results.
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
+      stub_->Read(&context, req);
+  ASSERT_FALSE(reader->Read(&resp));
+  ::grpc::Status status = reader->Finish();
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_FAILED_PRECONDITION, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("No valid forwarding pipeline"));
   EXPECT_TRUE(status.error_details().empty());
 }
 
