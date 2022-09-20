@@ -981,9 +981,9 @@ TEST_P(P4ServiceTest, WriteFailureWhenWritingToExclusiveTable) {
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   req.set_role(role_name_);
-  ::p4::v1::Update* update = req.add_updates();
-  update->set_type(::p4::v1::Update::INSERT);
-  update->mutable_entity()->mutable_table_entry()->set_table_id(1234);
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
+  req.mutable_updates(0)->mutable_entity()->mutable_table_entry()->set_table_id(
+      1234);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
