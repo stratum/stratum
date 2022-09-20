@@ -339,13 +339,10 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   return ToGrpcStatus(status, results);
 }
 
-// here
 ::grpc::Status P4Service::Read(
     ::grpc::ServerContext* context, const ::p4::v1::ReadRequest* req,
     ::grpc::ServerWriter<::p4::v1::ReadResponse>* writer) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service, Read, context);
-
-  LOG(WARNING) << "foo";
 
   if (!req->entities_size()) return ::grpc::Status::OK;
   // device_id is nothing but the node_id specified in the config for the node.
@@ -362,21 +359,21 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           ret.status().error_message());
   }
 
-  // To allow read filtering for wildcard requests, we ...
-  // Break up wildcard reads for all tables into individual table wildcards.
+  // To allow role config read filtering in wildcard requests, we have to expand
+  // wildcard reads targeting all tables into individual table wildcards. At the
+  // same time, we must not include entities disallowed by the role config, else
+  // the request fill be denied erroneously later.
+  const ::p4::v1::ReadRequest* original_req = req;  // For later logging.
   ::p4::v1::ReadRequest expanded_req;
-  const ::p4::v1::ReadRequest* original_req = req;
   if (!req->role().empty()) {
-    LOG(WARNING) << "bar";
-    // TODO: need to filter out IDs disallowed by role config, else automatic
-    // error
     expanded_req =
         ExpandWildcardsInReadRequest(*req, ret.ValueOrDie().p4info());
     req = &expanded_req;
-    LOG(INFO) << expanded_req.ShortDebugString();
+    VLOG(1) << "Expanded wildcard read into "
+            << expanded_req.ShortDebugString();
   }
 
-  // Verify the request ...
+  // Verify the request only contains entities allowed by the role config.
   if (!IsReadPermitted(req->device_id(), *req)) {
     return ::grpc::Status(::grpc::StatusCode::PERMISSION_DENIED,
                           "Read is not permitted.");

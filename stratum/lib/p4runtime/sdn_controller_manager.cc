@@ -150,29 +150,29 @@ bool VerifyStreamMessageNotFiltered(
   }
 }
 
-uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
+uint32_t GetP4IdFromEntity(const p4::v1::Entity& entity) {
   switch (entity.entity_case()) {
-    case ::p4::v1::Entity::kTableEntry:
+    case p4::v1::Entity::kTableEntry:
       return entity.table_entry().table_id();
-    case ::p4::v1::Entity::kExternEntry:
+    case p4::v1::Entity::kExternEntry:
       return entity.extern_entry().extern_id();
-    case ::p4::v1::Entity::kActionProfileMember:
+    case p4::v1::Entity::kActionProfileMember:
       return entity.action_profile_member().action_profile_id();
-    case ::p4::v1::Entity::kActionProfileGroup:
+    case p4::v1::Entity::kActionProfileGroup:
       return entity.action_profile_group().action_profile_id();
-    case ::p4::v1::Entity::kDirectCounterEntry:
+    case p4::v1::Entity::kDirectCounterEntry:
       return entity.direct_counter_entry().table_entry().table_id();
-    case ::p4::v1::Entity::kCounterEntry:
+    case p4::v1::Entity::kCounterEntry:
       return entity.counter_entry().counter_id();
-    case ::p4::v1::Entity::kRegisterEntry:
+    case p4::v1::Entity::kRegisterEntry:
       return entity.register_entry().register_id();
-    case ::p4::v1::Entity::kMeterEntry:
+    case p4::v1::Entity::kMeterEntry:
       return entity.meter_entry().meter_id();
-    case ::p4::v1::Entity::kDirectMeterEntry:
+    case p4::v1::Entity::kDirectMeterEntry:
       return entity.direct_meter_entry().table_entry().table_id();
-    case ::p4::v1::Entity::kPacketReplicationEngineEntry:
-    case ::p4::v1::Entity::kValueSetEntry:
-    case ::p4::v1::Entity::kDigestEntry:
+    case p4::v1::Entity::kPacketReplicationEngineEntry:
+    case p4::v1::Entity::kValueSetEntry:
+    case p4::v1::Entity::kDigestEntry:
     default:
       LOG(WARNING) << "Unsupported entity type: " << entity.ShortDebugString();
       return 0;
@@ -199,8 +199,8 @@ grpc::Status VerifyRoleCanAccessIds(
     return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
   }
   if (!role_config->second.has_value()) return grpc::Status::OK;
-  LOG(INFO) << "testing against role config: "
-            << role_config->second->ShortDebugString();
+  VLOG(1) << "Testing IDs against role config: "
+          << role_config->second->ShortDebugString();
   for (const auto& id : ids) {
     if (id == 0) continue;
     if (std::find(role_config->second->exclusive_p4_ids().begin(),
@@ -213,7 +213,8 @@ grpc::Status VerifyRoleCanAccessIds(
                   id) != role_config->second->shared_p4_ids().end()) {
       continue;
     }
-    LOG(ERROR) << "not allowed to access " << id << ".";
+    VLOG(1) << "Role " << PrettyPrintRoleName(role_name)
+            << " not allowed to access " << id << ".";
     return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
                         "Role is not allowed to access this entity.");
   }
@@ -546,24 +547,35 @@ p4::v1::ReadRequest SdnControllerManager::ExpandWildcardsInReadRequest(
       continue;
     }
     switch (entity.entity_case()) {
-      case ::p4::v1::Entity::kTableEntry: {
-        LOG(INFO) << "found table wildcard";
+      case p4::v1::Entity::kTableEntry: {
         for (const auto& table : p4info.tables()) {
           if (VerifyRoleCanAccessIds(role_name, {table.preamble().id()},
                                      role_config_by_name_)
                   .ok()) {
-            LOG(INFO) << "Allowed to access " << table.preamble().id();
             p4::v1::Entity table_entry = entity;
             table_entry.mutable_table_entry()->set_table_id(
                 table.preamble().id());
             *ret.add_entities() = table_entry;
-          } else {
-            LOG(INFO) << "Not allowed to access " << table.preamble().id();
+          }
+        }
+        break;
+      }
+      case p4::v1::Entity::kCounterEntry: {
+        for (const auto& counter : p4info.counters()) {
+          if (VerifyRoleCanAccessIds(role_name, {counter.preamble().id()},
+                                     role_config_by_name_)
+                  .ok()) {
+            p4::v1::Entity counter_entry = entity;
+            counter_entry.mutable_counter_entry()->set_counter_id(
+                counter.preamble().id());
+            *ret.add_entities() = counter_entry;
           }
         }
         break;
       }
       default: {
+        VLOG(1) << "Expanding entity " << entity.ShortDebugString()
+                << " not supported yet.";
         *ret.add_entities() = entity;
         break;
       }
