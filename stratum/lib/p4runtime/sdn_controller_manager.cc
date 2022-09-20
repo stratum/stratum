@@ -92,9 +92,7 @@ grpc::Status VerifyRoleConfig(
     const absl::optional<P4RoleConfig>& role_config,
     const absl::flat_hash_map<absl::optional<std::string>,
                               absl::optional<P4RoleConfig>>& existing_configs) {
-  if (!role_config.has_value()) {
-    return grpc::Status::OK;
-  }
+  if (!role_config.has_value()) return grpc::Status::OK;
 
   for (const auto& e : existing_configs) {
     if (!e.second.has_value()) {
@@ -139,7 +137,7 @@ bool VerifyStreamMessageNotFiltered(
           return true;
         }
       }
-      VLOG(2) << "Discarding PacketIn " << response.packet().ShortDebugString()
+      VLOG(1) << "Discarding PacketIn " << response.packet().ShortDebugString()
               << " because it did not match the role config filter: "
               << role_config->packet_in_filter().ShortDebugString() << ".";
       return false;  // No packet filter match, discard.
@@ -183,6 +181,16 @@ std::vector<uint32_t> GetP4IdsFromRequest(const p4::v1::ReadRequest& request) {
   std::vector<uint32_t> ids;
   for (const auto& entity : request.entities()) {
     uint32_t id = GetP4IdFromEntity(entity);
+    if (id) ids.push_back(id);
+  }
+
+  return ids;
+}
+
+std::vector<uint32_t> GetP4IdsFromRequest(const p4::v1::WriteRequest& request) {
+  std::vector<uint32_t> ids;
+  for (const auto& update : request.updates()) {
+    uint32_t id = GetP4IdFromEntity(update.entity());
     if (id) ids.push_back(id);
   }
 
@@ -466,6 +474,15 @@ grpc::Status SdnControllerManager::AllowRequest(
   absl::optional<std::string> role_name;
   if (!request.role().empty()) {
     role_name = request.role();
+  }
+
+  if (role_name) {
+    absl::MutexLock l(&lock_);
+    grpc::Status status = VerifyRoleCanAccessIds(
+        role_name, GetP4IdsFromRequest(request), role_config_by_name_);
+    if (!status.ok()) {
+      return status;
+    }
   }
 
   absl::optional<absl::uint128> election_id;
