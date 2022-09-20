@@ -583,6 +583,64 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
 
+TEST_F(BfrtTableManagerTest, RejectWriteTableUnspecifiedTypeTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
+      session_mock, ::p4::v1::Update::UNSPECIFIED, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Invalid update type"));
+}
+
+TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  ::p4::v1::TableEntry entry;
+  ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+  ::util::Status ret =
+      bfrt_table_manager_->ReadTableEntry(session_mock, entry, nullptr);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Null writer."));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
+  ASSERT_OK(PushTestConfig());
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+  auto session_mock = std::make_shared<SessionMock>();
+  const std::string kDirectCounterEntryText = R"pb(
+    table_entry {
+      table_id: 33583783
+      match {
+        field_id: 1
+        exact { value: "\001" }
+      }
+      match {
+        field_id: 2
+        ternary { value: "\x00" mask: "\x0f\xff" }
+      }
+      action { action { action_id: 1 } }
+      priority: 10
+    }
+    data {
+      byte_count: 200
+      packet_count: 100
+    }
+  )pb";
+  ::p4::v1::DirectCounterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDirectCounterEntryText, &entry));
+  ::util::Status ret = bfrt_table_manager_->WriteDirectCounterEntry(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Update type of DirectCounterEntry"));
+}
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

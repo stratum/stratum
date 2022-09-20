@@ -57,17 +57,29 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
 
 ::util::StatusOr<std::unique_ptr<P4RuntimeSession>> P4RuntimeSession::Create(
     std::unique_ptr<P4Runtime::Stub> stub, uint32 device_id,
-    absl::uint128 election_id) {
+    absl::uint128 election_id, absl::optional<std::string> role_name,
+    absl::optional<P4RoleConfig> role_config) {
+  RET_CHECK(role_name.has_value() || !role_config.has_value())
+      << "Cannot set a role config for the default role.";
+
   // Open streaming channel.
   // Using `new` to access a private constructor.
-  std::unique_ptr<P4RuntimeSession> session = absl::WrapUnique(
-      new P4RuntimeSession(device_id, std::move(stub), election_id));
+  std::unique_ptr<P4RuntimeSession> session =
+      absl::WrapUnique(new P4RuntimeSession(
+          device_id, std::move(stub), election_id, role_name, role_config));
 
   // Send arbitration request.
   ::p4::v1::StreamMessageRequest request;
   auto arbitration = request.mutable_arbitration();
   arbitration->set_device_id(device_id);
   *arbitration->mutable_election_id() = session->election_id_;
+  if (role_name.has_value()) {
+    arbitration->mutable_role()->set_name(role_name.value());
+    if (role_config.has_value()) {
+      arbitration->mutable_role()->mutable_config()->PackFrom(
+          role_config.value());
+    }
+  }
   if (!session->stream_channel_->Write(request)) {
     return MAKE_ERROR(ERR_UNAVAILABLE)
            << "Unable to initiate P4RT connection to device ID " << device_id
@@ -102,6 +114,27 @@ std::unique_ptr<P4Runtime::Stub> CreateP4RuntimeStub(
            << "Lowest 64 bits of received election id doesn't match: "
            << response.ShortDebugString();
   }
+  if (role_name.has_value()) {
+    if (response.arbitration().role().name() != session->role_name_) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Role name of received role doesn't match: "
+             << response.ShortDebugString();
+    }
+    if (role_config.has_value()) {
+      P4RoleConfig received_role_config;
+      if (!response.arbitration().role().config().UnpackTo(
+              &received_role_config)) {
+        return MAKE_ERROR(ERR_INTERNAL)
+               << "Role config of received role has invalid format: "
+               << response.ShortDebugString();
+      }
+      if (!ProtoEqual(received_role_config, session->role_config_.value())) {
+        return MAKE_ERROR(ERR_INTERNAL)
+               << "Role config of received role doesn't match: "
+               << response.ShortDebugString();
+      }
+    }
+  }
 
   // When object returned doesn't have the same type as the function's return
   // type (i.e. unique_ptr vs StatusOr in this case), certain old compilers
@@ -124,9 +157,11 @@ P4RuntimeSession::~P4RuntimeSession() {
 ::util::StatusOr<std::unique_ptr<P4RuntimeSession>> P4RuntimeSession::Create(
     const std::string& address,
     const std::shared_ptr<grpc::ChannelCredentials>& credentials,
-    uint32 device_id, absl::uint128 election_id) {
+    uint32 device_id, absl::uint128 election_id,
+    absl::optional<std::string> role_name,
+    absl::optional<P4RoleConfig> role_config) {
   return Create(CreateP4RuntimeStub(address, credentials), device_id,
-                election_id);
+                election_id, role_name, role_config);
 }
 
 // Create the default session with the switch.
@@ -154,6 +189,8 @@ std::unique_ptr<P4RuntimeSession> P4RuntimeSession::Default(
   SetForwardingPipelineConfigRequest request;
   request.set_device_id(device_id_);
   *request.mutable_election_id() = election_id_;
+  role_name_.has_value() ? request.set_role(role_name_.value())
+                         : request.clear_role();
   request.set_action(SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   *request.mutable_config()->mutable_p4info() = p4info;
   *request.mutable_config()->mutable_p4_device_config() = p4_device_config;

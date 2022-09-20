@@ -45,6 +45,17 @@ cc_proto_library(
 )
 
 proto_library(
+    name = "p4_role_config_proto",
+    srcs = ["p4_role_config.proto"],
+    visibility = ["//visibility:public"],
+)
+
+cc_proto_library(
+    name = "p4_role_config_cc_proto",
+    deps = [":p4_role_config_proto"],
+)
+
+proto_library(
     name = "openconfig_goog_bcm_proto",
     srcs = ["openconfig-goog-bcm.proto"],
     deps = ["@com_github_openconfig_ygot_proto//:ywrapper_proto"],

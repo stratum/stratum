@@ -14,6 +14,7 @@
 #include "absl/status/status.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/public/proto/p4_role_config.pb.h"
 
 namespace stratum {
 namespace p4runtime {
@@ -82,8 +83,9 @@ class SdnControllerManager {
   grpc::Status AllowRequest(const absl::optional<std::string>& role_name,
                             const absl::optional<absl::uint128>& election_id)
       const ABSL_LOCKS_EXCLUDED(lock_);
-
   grpc::Status AllowRequest(const p4::v1::WriteRequest& request) const
+      ABSL_LOCKS_EXCLUDED(lock_);
+  grpc::Status AllowRequest(const p4::v1::ReadRequest& request) const
       ABSL_LOCKS_EXCLUDED(lock_);
   grpc::Status AllowRequest(
       const p4::v1::SetForwardingPipelineConfigRequest& request) const
@@ -91,6 +93,11 @@ class SdnControllerManager {
 
   // Returns the number of currently active connections.
   int ActiveConnections() const ABSL_LOCKS_EXCLUDED(lock_);
+
+  // Expands a generic wildcard request into individual entity wildcard reads.
+  p4::v1::ReadRequest ExpandWildcardsInReadRequest(
+      const p4::v1::ReadRequest& req,
+      const p4::config::v1::P4Info& p4info) const ABSL_LOCKS_EXCLUDED(lock_);
 
   absl::Status SendPacketInToPrimary(
       const p4::v1::StreamMessageResponse& response) ABSL_LOCKS_EXCLUDED(lock_);
@@ -141,6 +148,16 @@ class SdnControllerManager {
   //    connection to be a backup).
   std::vector<SdnConnection*> connections_ ABSL_GUARDED_BY(lock_);
 
+  // We maintain a map of the latest role config set for a given role.
+  //
+  // key:   role_name   (no value indicates the default/root role)
+  // value: role config (no value indicates unrestricted access)
+  absl::flat_hash_map<absl::optional<std::string>, absl::optional<P4RoleConfig>>
+      role_config_by_name_ ABSL_GUARDED_BY(lock_){
+          {kP4RuntimeRoleSdnController, {}},
+          {absl::nullopt, {}},  // default role
+      };
+
   // We maintain a map of the highest election IDs that have been selected for
   // the primary connection of a role. Once an election ID is set all new
   // primary connections for that role must use an election ID that is >= in
@@ -152,16 +169,6 @@ class SdnControllerManager {
   absl::flat_hash_map<absl::optional<std::string>,
                       absl::optional<absl::uint128>>
       election_id_past_by_role_ ABSL_GUARDED_BY(lock_);
-
-  // Placeholder for role_config which ideally would be passed
-  // via the MasterArbitration method.
-  //
-  // Contains the roles that will receive packet in messages.
-  // A copy of the packet will be sent to the primary for each role.
-  absl::flat_hash_set<absl::optional<std::string>> role_receives_packet_in_{
-      kP4RuntimeRoleSdnController,
-      absl::nullopt,  // default role
-  };
 };
 
 }  // namespace p4runtime
