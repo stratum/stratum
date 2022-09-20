@@ -256,7 +256,6 @@ class P4ServiceTest
   static constexpr absl::uint128 kElectionId2 = 2222;
   static constexpr absl::uint128 kElectionId3 = 1212;
   static constexpr uint32 kTableId1 = 12;
-  static constexpr uint32 kTableId2 = 25;
   static constexpr uint64 kCookie1 = 123;
   static constexpr uint64 kCookie2 = 321;
   OperationMode mode_;
@@ -290,7 +289,6 @@ constexpr absl::uint128 P4ServiceTest::kElectionId1;
 constexpr absl::uint128 P4ServiceTest::kElectionId2;
 constexpr absl::uint128 P4ServiceTest::kElectionId3;
 constexpr uint32 P4ServiceTest::kTableId1;
-constexpr uint32 P4ServiceTest::kTableId2;
 
 TEST_P(P4ServiceTest, ColdbootSetupSuccessForSavedConfigs) {
   if (mode_ == OPERATION_MODE_COUPLED) return;
@@ -985,7 +983,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenWritingToExclusiveTable) {
   req.set_role(role_name_);
   ::p4::v1::Update* update = req.add_updates();
   update->set_type(::p4::v1::Update::INSERT);
-  update->mutable_entity()->mutable_table_entry()->set_table_id(kTableId2);
+  update->mutable_entity()->mutable_table_entry()->set_table_id(1234);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
