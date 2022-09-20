@@ -960,7 +960,7 @@ TEST_P(P4ServiceTest, WriteFailureForNoPipeline) {
   EXPECT_TRUE(status.error_details().empty());
 }
 
-TEST_P(P4ServiceTest, WriteFailureWhenWritingToExclusiveTable) {
+TEST_P(P4ServiceTest, WriteFailureForWritingOutsideRoleAllowedTable) {
   // This test is specific to role configs.
   if (role_name_.empty()) {
     GTEST_SKIP();
