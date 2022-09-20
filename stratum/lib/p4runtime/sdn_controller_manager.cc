@@ -137,7 +137,7 @@ bool VerifyStreamMessageNotFiltered(
           return true;
         }
       }
-      VLOG(2) << "Discarding PacketIn " << response.packet().ShortDebugString()
+      VLOG(1) << "Discarding PacketIn " << response.packet().ShortDebugString()
               << " because it did not match the role config filter: "
               << role_config->packet_in_filter().ShortDebugString() << ".";
       return false;  // No packet filter match, discard.
