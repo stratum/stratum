@@ -968,6 +968,7 @@ TEST_P(P4ServiceTest, WriteFailureWhenWritingToExclusiveTable) {
     GTEST_SKIP();
   }
 
+  SetTestForwardingPipelineConfigs();
   ::grpc::ServerContext server_context;
   StreamMessageReaderWriterMock stream;
   p4runtime::SdnConnection controller(&server_context, &stream);
