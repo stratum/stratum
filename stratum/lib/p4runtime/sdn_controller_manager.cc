@@ -527,15 +527,17 @@ p4::v1::ReadRequest SdnControllerManager::ExpandWildcardsInReadRequest(
     const p4::v1::ReadRequest& request,
     const p4::config::v1::P4Info& p4info) const {
   absl::MutexLock l(&lock_);
-  // Copy the request, except for the entities.
-  p4::v1::ReadRequest ret = request;
-  ret.clear_entities();
 
   absl::optional<std::string> role_name;
   if (!request.role().empty()) {
     role_name = request.role();
   }
 
+  // Copy the request, except for the entities.
+  p4::v1::ReadRequest ret = request;
+  ret.clear_entities();
+
+  // Next, expand wildcard reads into individual table reads.
   for (const auto& entity : request.entities()) {
     // Check if wildcard or single read.
     uint32_t id = GetP4IdFromEntity(entity);
