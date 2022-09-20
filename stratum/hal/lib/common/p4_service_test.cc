@@ -959,6 +959,7 @@ TEST_P(P4ServiceTest, ReadSuccess) {
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
@@ -983,6 +984,8 @@ TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
+  req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -995,7 +998,7 @@ TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
   EXPECT_TRUE(status.ok());
 }
 
-TEST_P(P4ServiceTest, ReadSuccessForRoleConfigWildcardExpansion) {
+TEST_P(P4ServiceTest, ReadSuccessForRoleWildcardExpansion) {
   SetTestForwardingPipelineConfigs();
 
   ::grpc::ServerContext server_context;
@@ -1041,6 +1044,7 @@ TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
   ::grpc::ClientContext context;
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
+  req.set_role(role_name_);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
@@ -1061,6 +1065,7 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
@@ -1100,6 +1105,7 @@ TEST_P(P4ServiceTest, ReadFailureForAuthError) {
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
@@ -1122,6 +1128,7 @@ TEST_P(P4ServiceTest, ReadFailureForNoPipeline) {
   ::p4::v1::ReadRequest req;
   ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
@@ -1136,6 +1143,40 @@ TEST_P(P4ServiceTest, ReadFailureForNoPipeline) {
   EXPECT_EQ(ERR_FAILED_PRECONDITION, status.error_code());
   EXPECT_THAT(status.error_message(),
               HasSubstr("No valid forwarding pipeline"));
+  EXPECT_TRUE(status.error_details().empty());
+}
+
+TEST_P(P4ServiceTest, ReadFailureForRoleProhibited) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+
+  SetTestForwardingPipelineConfigs();
+  ::grpc::ServerContext server_context;
+  StreamMessageReaderWriterMock stream;
+  p4runtime::SdnConnection controller(&server_context, &stream);
+  controller.SetElectionId(kElectionId1);
+  AddFakeMasterController(kNodeId1, &controller);
+
+  ::grpc::ClientContext context;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
+  req.set_device_id(kNodeId1);
+  req.set_role(role_name_);
+  req.add_entities()->mutable_table_entry()->set_table_id(1234);
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Invoke the RPC and validate the results.
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
+      stub_->Read(&context, req);
+  ASSERT_FALSE(reader->Read(&resp));
+  ::grpc::Status status = reader->Finish();
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_PERMISSION_DENIED, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("Read is not permitted"));
   EXPECT_TRUE(status.error_details().empty());
 }
 

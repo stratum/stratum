@@ -169,11 +169,12 @@ uint32_t GetP4IdFromEntity(const ::p4::v1::Entity& entity) {
     case ::p4::v1::Entity::kMeterEntry:
       return entity.meter_entry().meter_id();
     case ::p4::v1::Entity::kDirectMeterEntry:
+      return entity.direct_meter_entry().table_entry().table_id();
     case ::p4::v1::Entity::kPacketReplicationEngineEntry:
     case ::p4::v1::Entity::kValueSetEntry:
     case ::p4::v1::Entity::kDigestEntry:
     default:
-      LOG(ERROR) << "Unsupported entity type: " << entity.ShortDebugString();
+      LOG(WARNING) << "Unsupported entity type: " << entity.ShortDebugString();
       return 0;
   }
 }
@@ -527,7 +528,7 @@ p4::v1::ReadRequest SdnControllerManager::ExpandWildcardsInReadRequest(
     const p4::config::v1::P4Info& p4info) const {
   absl::MutexLock l(&lock_);
   // Copy the request, except for the entities.
-  p4::v1::ReadRequest ret(request);
+  p4::v1::ReadRequest ret = request;
   ret.clear_entities();
 
   absl::optional<std::string> role_name;
