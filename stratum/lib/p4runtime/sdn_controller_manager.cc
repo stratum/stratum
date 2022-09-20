@@ -476,7 +476,7 @@ grpc::Status SdnControllerManager::AllowRequest(
     role_name = request.role();
   }
 
-  {
+  if (role_name) {
     absl::MutexLock l(&lock_);
     grpc::Status status = VerifyRoleCanAccessIds(
         role_name, GetP4IdsFromRequest(request), role_config_by_name_);
