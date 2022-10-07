@@ -170,9 +170,8 @@ nodes {{
   index: 1
 }}\n""".format(name=self.name, nodeId=self.nodeId)
 
-        intf_number = 1
-        for intf_name in self.intfNames():
-            if intf_name == 'lo':
+        for port_num, intf in sorted(self.intfs.items()):
+            if intf.name == "lo":
                 continue
             config = config + """singleton_ports {{
   id: {intfNumber}
@@ -185,8 +184,7 @@ nodes {{
     admin_state: ADMIN_STATE_{adminState}
   }}
   node: {nodeId}
-}}\n""".format(intfName=intf_name, intfNumber=intf_number, nodeId=self.nodeId, adminState=self.adminState)
-            intf_number += 1
+}}\n""".format(intfName=intf.name, intfNumber=port_num, nodeId=self.nodeId, adminState=self.adminState)
 
         return config
 
