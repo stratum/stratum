@@ -48,9 +48,11 @@ grpc::Status VerifyElectionIdIsUnused(
     if (connection == current_connection) continue;
     if (connection->GetRoleName() == role_name &&
         connection->GetElectionId() == election_id) {
-      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                          "Election ID is already used by another connection "
-                          "with the same role.");
+      return grpc::Status(
+          grpc::StatusCode::INVALID_ARGUMENT,
+          absl::StrCat("Election ID ", PrettyPrintElectionId(election_id),
+                       " is already used by another connection "
+                       "with the same role."));
     }
   }
   return grpc::Status::OK;
@@ -66,8 +68,10 @@ grpc::Status VerifyElectionIdIsActive(
       return grpc::Status::OK;
     }
   }
-  return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
-                      "Election ID is not active for the role.");
+  return grpc::Status(
+      grpc::StatusCode::PERMISSION_DENIED,
+      absl::StrCat("Election ID ", PrettyPrintElectionId(election_id),
+                   " is not active for the role."));
 }
 
 grpc::Status VerifyRoleCanPushPipeline(
@@ -81,7 +85,8 @@ grpc::Status VerifyRoleCanPushPipeline(
   if (!role_config->second.has_value()) return grpc::Status::OK;
   if (!role_config->second->can_push_pipeline()) {
     return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
-                        "Role not allowed to push pipelines.");
+                        absl::StrCat("Role ", PrettyPrintRoleName(role_name),
+                                     " is not allowed to push pipelines."));
   }
 
   return grpc::Status::OK;
@@ -222,9 +227,11 @@ grpc::Status VerifyRoleCanAccessIds(
       continue;
     }
     VLOG(1) << "Role " << PrettyPrintRoleName(role_name)
-            << " not allowed to access " << id << ".";
-    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
-                        "Role is not allowed to access this entity.");
+            << " not allowed to access entity with ID " << id << ".";
+    return grpc::Status(
+        grpc::StatusCode::PERMISSION_DENIED,
+        absl::StrCat("Role ", PrettyPrintRoleName(role_name),
+                     " is not allowed to access entity with ID ", id, "."));
   }
 
   return grpc::Status::OK;

@@ -710,7 +710,8 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForRoleProhibited) {
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(), HasSubstr("not permitted"));
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("not allowed to push pipelines"));
 
   ASSERT_OK(p4_service_->Teardown());
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
@@ -992,7 +993,8 @@ TEST_P(P4ServiceTest, WriteFailureForWritingOutsideRoleAllowedTable) {
   ::grpc::Status status = stub_->Write(&context, req, &resp);
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(::grpc::StatusCode::PERMISSION_DENIED, status.error_code());
-  EXPECT_THAT(status.error_message(), HasSubstr("not permitted"));
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("is not allowed to access entity"));
   EXPECT_TRUE(status.error_details().empty());
 }
 
@@ -1219,7 +1221,8 @@ TEST_P(P4ServiceTest, ReadFailureForRoleProhibited) {
   ::grpc::Status status = reader->Finish();
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(ERR_PERMISSION_DENIED, status.error_code());
-  EXPECT_THAT(status.error_message(), HasSubstr("Read is not permitted"));
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("is not allowed to access entity"));
   EXPECT_TRUE(status.error_details().empty());
 }
 
@@ -1727,7 +1730,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
   EXPECT_FALSE(stream1->Read(&resp));
   ::grpc::Status status = stream1->Finish();
   EXPECT_FALSE(status.ok());
-  EXPECT_THAT(status.error_message(), HasSubstr("Election ID is already used"));
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("is already used by another connection"));
   EXPECT_TRUE(status.error_details().empty());
 }
 
