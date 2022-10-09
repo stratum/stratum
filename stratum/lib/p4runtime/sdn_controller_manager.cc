@@ -123,7 +123,7 @@ grpc::Status VerifyRoleConfig(
     }
   }
 
-  // Verify that PacketIns are enabled when a PacketIns filter is configured.
+  // Verify that PacketIns are enabled when a PacketIn filter is configured.
   if (!role_config->receives_packet_ins() &&
       role_config->has_packet_in_filter()) {
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
