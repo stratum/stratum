@@ -1653,6 +1653,63 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ASSERT_EQ(0, GetNumberOfConnections());
 }
 
+TEST_P(P4ServiceTest, StreamChannelSuccessForFilteredPacketIn) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Role config with disabled PacketIns.
+  constexpr char kRoleConfigNoPacketInsText[] = R"pb(
+      receives_packet_ins: false
+  )pb";
+  P4RoleConfig role_config_no_packet_ins;
+  CHECK_OK(ParseProtoFromString(kRoleConfigNoPacketInsText,
+                                &role_config_no_packet_ins));
+
+  // Sample packet. We dont care about payload.
+  ::p4::v1::PacketIn packet;
+  ASSERT_OK(ParseProtoFromString(kTestPacketMetadata3, packet.add_metadata()));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // The Controller connects and becomes master with a role.
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config_no_packet_ins);
+  ASSERT_TRUE(stream->Write(req));
+
+  // Read the mastership info back.
+  ASSERT_TRUE(stream->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId1),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId1),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(1, GetNumberOfActiveConnections(kNodeId1));
+
+  // We receive some packet from CPU. This will be dropped as the Controller
+  // disabled PacketIns.
+  OnPacketReceive(packet);
+
+  // Now the Controller disconnects. We ensure the packet was not sent to it.
+  stream->WritesDone();
+  ASSERT_FALSE(stream->Read(&resp));
+  ASSERT_TRUE(stream->Finish().ok());
+  ASSERT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  ASSERT_EQ(0, GetNumberOfConnections());
+}
+
 TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
@@ -2096,7 +2153,6 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigPacketInFlag) {
     }
     receives_packet_ins: false
   )pb";
-
   P4RoleConfig role_config;
   CHECK_OK(ParseProtoFromString(kRoleConfigText, &role_config));
 
