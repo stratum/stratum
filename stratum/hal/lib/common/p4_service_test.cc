@@ -2082,6 +2082,57 @@ TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
               HasSubstr("contains overlapping exclusive ID"));
 }
 
+TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigPacketInFlag) {
+  // This test is specific to role configs.
+  if (role_name_.empty()) {
+    GTEST_SKIP();
+  }
+
+  // Role config with filter but disabled PacketIns.
+  constexpr char kRoleConfigText[] = R"pb(
+    packet_in_filter {
+      metadata_id: 666666
+      value: "\x12"
+    }
+    receives_packet_ins: false
+  )pb";
+
+  P4RoleConfig role_config;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText, &role_config));
+
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config);
+  ASSERT_TRUE(stream->Write(req));
+  ASSERT_FALSE(stream->Read(&resp));
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Role config contains a PacketIn filter, but disables "
+                        "PacketIn delivery"));
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
+}
+
 // Pushing a different forwarding pipeline config again should work.
 TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   ForwardingPipelineConfigs configs;
