@@ -2062,11 +2062,6 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
-  // This test is specific to role configs.
-  if (role_name_.empty()) {
-    GTEST_SKIP();
-  }
-
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
   ::grpc::ClientContext context3;
@@ -2140,11 +2135,6 @@ TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigPacketInFlag) {
-  // This test is specific to role configs.
-  if (role_name_.empty()) {
-    GTEST_SKIP();
-  }
-
   // Role config with filter but disabled PacketIns.
   constexpr char kRoleConfigText[] = R"pb(
     packet_in_filter {
