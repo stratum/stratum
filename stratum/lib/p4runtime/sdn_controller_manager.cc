@@ -165,27 +165,31 @@ bool VerifyStreamMessageNotFiltered(
 
 uint32_t GetP4IdFromEntity(const p4::v1::Entity& entity) {
   switch (entity.entity_case()) {
-    case p4::v1::Entity::kTableEntry:
-      return entity.table_entry().table_id();
     case p4::v1::Entity::kExternEntry:
       return entity.extern_entry().extern_id();
+    case p4::v1::Entity::kTableEntry:
+      return entity.table_entry().table_id();
     case p4::v1::Entity::kActionProfileMember:
       return entity.action_profile_member().action_profile_id();
     case p4::v1::Entity::kActionProfileGroup:
       return entity.action_profile_group().action_profile_id();
-    case p4::v1::Entity::kDirectCounterEntry:
-      return entity.direct_counter_entry().table_entry().table_id();
-    case p4::v1::Entity::kCounterEntry:
-      return entity.counter_entry().counter_id();
-    case p4::v1::Entity::kRegisterEntry:
-      return entity.register_entry().register_id();
     case p4::v1::Entity::kMeterEntry:
       return entity.meter_entry().meter_id();
     case p4::v1::Entity::kDirectMeterEntry:
       return entity.direct_meter_entry().table_entry().table_id();
+    case p4::v1::Entity::kCounterEntry:
+      return entity.counter_entry().counter_id();
+    case p4::v1::Entity::kDirectCounterEntry:
+      return entity.direct_counter_entry().table_entry().table_id();
     case p4::v1::Entity::kPacketReplicationEngineEntry:
+      // PREs dont reference any P4 entity. Return without error.
+      return 0;
     case p4::v1::Entity::kValueSetEntry:
+      return entity.value_set_entry().value_set_id();
+    case p4::v1::Entity::kRegisterEntry:
+      return entity.register_entry().register_id();
     case p4::v1::Entity::kDigestEntry:
+      return entity.digest_entry().digest_id();
     default:
       LOG(WARNING) << "Unsupported entity type: " << entity.ShortDebugString();
       return 0;
