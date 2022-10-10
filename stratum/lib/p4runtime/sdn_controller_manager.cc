@@ -99,6 +99,7 @@ grpc::Status VerifyRoleConfig(
                               absl::optional<P4RoleConfig>>& existing_configs) {
   if (!role_config.has_value()) return grpc::Status::OK;
 
+  // Verify that requested IDs are not exclusive to other roles already.
   for (const auto& e : existing_configs) {
     if (!e.second.has_value()) {
       continue;
@@ -122,6 +123,14 @@ grpc::Status VerifyRoleConfig(
     }
   }
 
+  // Verify that PacketIns are enabled when a PacketIn filter is configured.
+  if (!role_config->receives_packet_ins() &&
+      role_config->has_packet_in_filter()) {
+    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                        "Role config contains a PacketIn filter, but disables "
+                        "PacketIn delivery.");
+  }
+
   // TODO(max): verify packet filters for valid metadata
 
   return grpc::Status::OK;
@@ -134,6 +143,7 @@ bool VerifyStreamMessageNotFiltered(
 
   switch (response.update_case()) {
     case p4::v1::StreamMessageResponse::kPacket: {
+      if (!role_config->receives_packet_ins()) return false;
       if (!role_config->has_packet_in_filter()) return true;
       for (const auto& metadata : response.packet().metadata()) {
         if (role_config->packet_in_filter().metadata_id() ==
