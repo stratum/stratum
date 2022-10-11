@@ -2096,7 +2096,6 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
 TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
-  ::grpc::ClientContext context3;
   ::p4::v1::StreamMessageRequest req;
   ::p4::v1::StreamMessageResponse resp;
 
@@ -2125,8 +2124,6 @@ TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
       stub_->StreamChannel(&context1);
   std::unique_ptr<ClientStreamChannelReaderWriter> stream2 =
       stub_->StreamChannel(&context2);
-  std::unique_ptr<ClientStreamChannelReaderWriter> stream3 =
-      stub_->StreamChannel(&context3);
 
   //----------------------------------------------------------------------------
   // Controller #1 connects and becomes master for role 1.
@@ -2162,8 +2159,82 @@ TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
   stream2->WritesDone();
   ::grpc::Status status = stream2->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
-  EXPECT_THAT(status.error_message(),
-              HasSubstr("contains overlapping exclusive ID"));
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr(
+          "contains exclusive IDs that overlap with existing exclusive IDs"));
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingSharedRoles) {
+  ::grpc::ClientContext context1;
+  ::grpc::ClientContext context2;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Role configs with overlapping exclusive IDs.
+  constexpr char kRoleConfigText1[] = R"pb(
+      exclusive_p4_ids: 12
+      shared_p4_ids: 79
+  )pb";
+  constexpr char kRoleConfigText2[] = R"pb(
+      exclusive_p4_ids: 45
+      shared_p4_ids: 12
+  )pb";
+
+  P4RoleConfig role_config1;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText1, &role_config1));
+  P4RoleConfig role_config2;
+  CHECK_OK(ParseProtoFromString(kRoleConfigText2, &role_config2));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream1 =
+      stub_->StreamChannel(&context1);
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream2 =
+      stub_->StreamChannel(&context2);
+
+  //----------------------------------------------------------------------------
+  // Controller #1 connects and becomes master for role 1.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config1);
+  ASSERT_TRUE(stream1->Write(req));
+
+  // Read the mastership info back.
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+
+  //----------------------------------------------------------------------------
+  // Controller #2 connects and sends a role config that has overlapping shared
+  // IDs with controller #1.
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName2);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config2);
+  ASSERT_TRUE(stream2->Write(req));
+
+  // The stream of controller #2 gets closed and the status will be non-OK.
+  ASSERT_FALSE(stream2->Read(&resp));
+  stream2->WritesDone();
+  ::grpc::Status status = stream2->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr(
+          "contains shared IDs that overlap with existing exclusive IDs"));
 }
 
 TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigPacketInFlag) {
@@ -2204,9 +2275,9 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigPacketInFlag) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
-  EXPECT_THAT(status.error_message(),
-              HasSubstr("Role config contains a PacketIn filter, but disables "
-                        "PacketIn delivery"));
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr("contains a PacketIn filter, but disables PacketIn delivery"));
   EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
   EXPECT_EQ(0, GetNumberOfConnections());
 }

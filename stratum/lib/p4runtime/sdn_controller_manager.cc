@@ -119,8 +119,11 @@ grpc::Status VerifyRoleConfig(
     std::set_intersection(new_ids.begin(), new_ids.end(), existing_ids.begin(),
                           existing_ids.end(), std::back_inserter(common_ids));
     if (!common_ids.empty()) {
-      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                          "Role config contains overlapping exclusive IDs.");
+      return grpc::Status(
+          grpc::StatusCode::INVALID_ARGUMENT,
+          absl::StrCat("Role config ", PrettyPrintRoleName(role_name),
+                       " contains exclusive IDs that overlap "
+                       "with existing exclusive IDs."));
     }
     // Ensure new exclusive IDs and existing shared IDs do not overlap.
     std::vector<uint32_t> existing_shared_ids(e.second->shared_p4_ids().begin(),
@@ -131,8 +134,11 @@ grpc::Status VerifyRoleConfig(
         new_ids.begin(), new_ids.end(), existing_shared_ids.begin(),
         existing_shared_ids.end(), std::back_inserter(common_ids));
     if (!common_ids.empty()) {
-      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                          "Role config contains overlapping exclusive IDs.");
+      return grpc::Status(
+          grpc::StatusCode::INVALID_ARGUMENT,
+          absl::StrCat("Role config ", PrettyPrintRoleName(role_name),
+                       " contains exclusive IDs that overlap "
+                       "with existing shared IDs."));
     }
     // Ensure new shared IDs and existing exclusive IDs do not overlap.
     std::vector<uint32_t> new_shared_ids(role_config->shared_p4_ids().begin(),
@@ -143,17 +149,22 @@ grpc::Status VerifyRoleConfig(
                           existing_ids.begin(), existing_ids.end(),
                           std::back_inserter(common_ids));
     if (!common_ids.empty()) {
-      return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                          "Role config contains overlapping exclusive IDs.");
+      return grpc::Status(
+          grpc::StatusCode::INVALID_ARGUMENT,
+          absl::StrCat("Role config ", PrettyPrintRoleName(role_name),
+                       " contains shared IDs that overlap "
+                       "with existing exclusive IDs."));
     }
   }
 
   // Verify that PacketIns are enabled when a PacketIn filter is configured.
   if (!role_config->receives_packet_ins() &&
       role_config->has_packet_in_filter()) {
-    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                        "Role config contains a PacketIn filter, but disables "
-                        "PacketIn delivery.");
+    return grpc::Status(
+        grpc::StatusCode::INVALID_ARGUMENT,
+        absl::StrCat("Role config ", PrettyPrintRoleName(role_name),
+                     " contains a PacketIn filter, but disables "
+                     "PacketIn delivery."));
   }
 
   // TODO(max): verify packet filters for valid metadata
