@@ -182,7 +182,7 @@ uint32_t GetP4IdFromEntity(const p4::v1::Entity& entity) {
     case p4::v1::Entity::kDirectCounterEntry:
       return entity.direct_counter_entry().table_entry().table_id();
     case p4::v1::Entity::kPacketReplicationEngineEntry:
-      // PREs dont reference any P4 entity. Return without error.
+      // PREs don't reference any P4 entity. Return without error.
       return 0;
     case p4::v1::Entity::kValueSetEntry:
       return entity.value_set_entry().value_set_id();
@@ -578,12 +578,14 @@ p4::v1::ReadRequest SdnControllerManager::ExpandWildcardsInReadRequest(
 
   // Next, expand wildcard reads into individual table reads.
   for (const auto& entity : request.entities()) {
-    // Check if wildcard or single read.
+    // Check if wildcard or single read. Single reads are preserved as is.
     uint32_t id = GetP4IdFromEntity(entity);
     if (id != 0) {
       *ret.add_entities() = entity;
       continue;
     }
+
+    // Expand the wildcard entities into a series of single entity reads.
     switch (entity.entity_case()) {
       case p4::v1::Entity::kTableEntry: {
         for (const auto& table : p4info.tables()) {
@@ -607,6 +609,32 @@ p4::v1::ReadRequest SdnControllerManager::ExpandWildcardsInReadRequest(
             counter_entry.mutable_counter_entry()->set_counter_id(
                 counter.preamble().id());
             *ret.add_entities() = counter_entry;
+          }
+        }
+        break;
+      }
+      case p4::v1::Entity::kMeterEntry: {
+        for (const auto& meter : p4info.meters()) {
+          if (VerifyRoleCanAccessIds(role_name, {meter.preamble().id()},
+                                     role_config_by_name_)
+                  .ok()) {
+            p4::v1::Entity meter_entry = entity;
+            meter_entry.mutable_meter_entry()->set_meter_id(
+                meter.preamble().id());
+            *ret.add_entities() = meter_entry;
+          }
+        }
+        break;
+      }
+      case p4::v1::Entity::kRegisterEntry: {
+        for (const auto& reg : p4info.registers()) {
+          if (VerifyRoleCanAccessIds(role_name, {reg.preamble().id()},
+                                     role_config_by_name_)
+                  .ok()) {
+            p4::v1::Entity register_entry = entity;
+            register_entry.mutable_register_entry()->set_register_id(
+                reg.preamble().id());
+            *ret.add_entities() = register_entry;
           }
         }
         break;

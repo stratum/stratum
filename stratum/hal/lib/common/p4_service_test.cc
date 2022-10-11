@@ -183,6 +183,24 @@ class P4ServiceTest
                 id: 12  # kTableId1
               }
             }
+            meters {
+              preamble {
+                name: "some_meter"
+                id: 641
+              }
+            }
+            registers {
+              preamble {
+                name: "some_register"
+                id: 267
+              }
+            }
+            counters {
+              preamble {
+                name: "some_counter"
+                id: 719
+              }
+            }
             controller_packet_metadata {
               metadata {
                 id: 666666
@@ -237,6 +255,9 @@ class P4ServiceTest
   )";
   static constexpr char kRoleConfigText[] = R"pb(
       exclusive_p4_ids: 12  # kTableId1
+      exclusive_p4_ids: 641
+      exclusive_p4_ids: 267
+      exclusive_p4_ids: 719
       packet_in_filter {
         metadata_id: 666666
         value: "\x12"
@@ -1057,17 +1078,27 @@ TEST_P(P4ServiceTest, ReadSuccessForRoleWildcardExpansion) {
   ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
   req.set_role(role_name_);
-  req.add_entities()->mutable_table_entry()->set_table_id(0);  // Wildcard
+  req.add_entities()->mutable_table_entry()->set_table_id(0);        // Wildcard
+  req.add_entities()->mutable_register_entry()->set_register_id(0);  // Wildcard
+  req.add_entities()->mutable_meter_entry()->set_meter_id(0);        // Wildcard
+  req.add_entities()->mutable_counter_entry()->set_counter_id(0);    // Wildcard
 
   ::p4::v1::ReadRequest expected_req = req;
   if (!role_name_.empty()) {
     expected_req.mutable_entities(0)->mutable_table_entry()->set_table_id(
         kTableId1);
+    expected_req.mutable_entities(1)->mutable_register_entry()->set_register_id(
+        267);
+    expected_req.mutable_entities(2)->mutable_meter_entry()->set_meter_id(641);
+    expected_req.mutable_entities(3)->mutable_counter_entry()->set_counter_id(
+        719);
   }
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
       .WillOnce(Return(::util::OkStatus()));
-  const std::vector<::util::Status> kExpectedResults = {::util::OkStatus()};
+  const std::vector<::util::Status> kExpectedResults = {
+      ::util::OkStatus(), ::util::OkStatus(), ::util::OkStatus(),
+      ::util::OkStatus()};
   EXPECT_CALL(*switch_mock_,
               ReadForwardingEntries(EqualsProto(expected_req), _, _))
       .WillOnce(DoAll(SetArgPointee<2>(kExpectedResults),
