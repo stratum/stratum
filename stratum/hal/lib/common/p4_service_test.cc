@@ -2092,6 +2092,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureForRoleConfigOnDefaultRole) {
   EXPECT_EQ(0, GetNumberOfConnections());
 }
 
+// TODO: needs shared IDs test
 TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
