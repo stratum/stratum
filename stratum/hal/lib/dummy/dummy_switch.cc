@@ -306,6 +306,20 @@ namespace dummy_switch {
   absl::ReaderMutexLock l(&chassis_lock);
   // TODO(Yi Tseng): Implement this method.
   LOG(INFO) << __FUNCTION__;
+
+  for (const auto& req : request.requests()) {
+    switch (req.request_case()) {
+      case SetRequest::Request::kNode: {
+        LOG(WARNING) << "SetRequest: " << req.ShortDebugString();
+        // Do something with req.
+        break;
+      }
+      default:
+        LOG(ERROR) << "not implemented";
+        break;
+    }
+  }
+
   return ::util::OkStatus();
 }
 

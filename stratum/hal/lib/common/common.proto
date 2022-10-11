@@ -1326,6 +1326,11 @@ message SdnPortId {
   uint32 port_id = 1;
 }
 
+message FooMessage {
+  uint32 id = 1;
+  bytes key = 2;
+}
+
 // DataRequest is a message used internally to request data about a component
 // or a set of components through SwitchInterface. It is specifically used in
 // ConfigMonitoringService, as part of gNMI Get/Subscribe RPC implementation.
@@ -1375,6 +1380,7 @@ message DataRequest {
       Port loopback_status = 20;
       Node node_info = 21;
       Port sdn_port_id = 22;
+      Node foo_message = 23;
     }
   }
   repeated Request requests = 1;
@@ -1407,6 +1413,7 @@ message DataResponse {
     LoopbackStatus loopback_status = 20;
     NodeInfo node_info = 21;
     SdnPortId sdn_port_id = 22;
+    FooMessage foo_message = 23;
   }
 }
 
@@ -1441,6 +1448,10 @@ message SetRequest {
     // Data required to set info for a specific node.
     message Node {
       // TODO(unknown): Add this.
+      uint64 node_id = 1;  // Node ID of the node the port is located on.
+      oneof value {
+        FooMessage foo_message = 2;
+      }
     }
     // Data required to set info for a specific chassis.
     message Chassis {

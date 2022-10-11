@@ -28,6 +28,7 @@ DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
 DEFINE_string(uint_val, "", "Unsigned integer value to be set (64-bit)");
 DEFINE_string(string_val, "", "String value to be set");
 DEFINE_string(float_val, "", "Floating point value to be set");
+DEFINE_string(proto_bytes, "", "Floating point value to be set");
 DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
 
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
@@ -171,6 +172,8 @@ void BuildGnmiPath(std::string path_str, ::gnmi::Path* path) {
     update->mutable_val()->set_uint_val(stoull(FLAGS_uint_val));
   } else if (!FLAGS_float_val.empty()) {
     update->mutable_val()->set_float_val(stof(FLAGS_float_val));
+  } else if (!FLAGS_proto_bytes.empty()) {
+    update->mutable_val()->set_proto_bytes(FLAGS_proto_bytes);
   } else if (!FLAGS_string_val.empty()) {
     update->mutable_val()->set_string_val(FLAGS_string_val);
   } else if (!FLAGS_bytes_val_file.empty()) {

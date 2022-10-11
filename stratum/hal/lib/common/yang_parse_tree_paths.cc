@@ -148,6 +148,28 @@ bool HasConfigBeenPushed(const GnmiEvent& event) {
 //   ('data_request_get_mutable_inner_message_func'); it is needed to build the
 //   data retrieval request.
 
+// Node-specific version. Extra parameters needed:
+// - node ID ('node_id')
+template <typename T, typename V>
+::util::Status SetValue(uint64 node_id, YangParseTree* tree,
+                        T* (SetRequest::Request::Node::*
+                                set_request_get_mutable_inner_message_func)(),
+                        // void (T::*inner_message_set_field_func)(U),
+                        const V& value) {
+  // Create a set request.
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_node();
+  request->set_node_id(node_id);
+  *(request->*set_request_get_mutable_inner_message_func)() = value;
+  // Request the change of the value. The returned status is ignored as there is
+  // no way to notify the controller that something went wrong. The error is
+  // logged when it is created.
+  std::vector<::util::Status> details;
+  tree->GetSwitchInterface()->SetValue(node_id, req, &details).IgnoreError();
+  // Return status of the operation.
+  return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
+}
+
 // Port-specific version. Extra parameters needed:
 // - node ID ('node_id')
 // - port ID ('port_id')
@@ -3057,6 +3079,73 @@ void SetUpComponentsComponentStateMfgName(uint64 node_id, TreeNode* node,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /my/path/ipsec
+void SetUpMyPathIpsec(uint64 node_id, TreeNode* node, YangParseTree* tree) {
+  // auto poll_functor = [](const GnmiEvent& event,
+  //                                      const ::gnmi::Path& path,
+  //                                      GnmiSubscribeStream* stream) {
+  //   // This leaf represents configuration data. Return what was known when it
+  //   // was configured!
+  //   return SendResponse(
+  //       GetResponse(path, ConvertLogSeverityToString()), stream);
+  // };
+
+  auto poll_functor = UnsupportedFunc();
+
+  auto on_set_functor =
+      [node_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    LOG(WARNING) << "on_set_functor called with "
+                 << typed_val->ShortDebugString();
+    RET_CHECK(typed_val->has_proto_bytes()) << "not a embedded proto";
+
+    // TODO: conversion from yang proto to common proto here
+    FooMessage msg;
+    // ParseProtoFromString accepts the TextProto encoding. Use
+    // msg.ParseFromString() for binary encoding.
+    RETURN_IF_ERROR(ParseProtoFromString(typed_val->proto_bytes(), &msg));
+
+    // Set value.
+    RETURN_IF_ERROR(SetValue(
+        node_id, tree, &SetRequest::Request::Node::mutable_foo_message, msg));
+
+    // // Update the YANG parse tree.
+    // auto poll_functor = [logging_config](const GnmiEvent& event,
+    //                                      const ::gnmi::Path& path,
+    //                                      GnmiSubscribeStream* stream) {
+    //   // This leaf represents configuration data. Return what was known when
+    //   it
+    //   // was configured!
+    //   return SendResponse(
+    //       GetResponse(path, ConvertLogSeverityToString(logging_config)),
+    //       stream);
+    // };
+    // node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+
+    // Trigger change notification.
+    // tree->SendNotification(GnmiEventPtr(new ConsoleLogSeverityChangedEvent(
+    //     logging_config.first, logging_config.second)));
+
+    return ::util::OkStatus();
+  };
+  // auto register_functor = RegisterFunc<ConsoleLogSeverityChangedEvent>();
+  // auto on_change_functor = GetOnChangeFunctor(
+  //     &ConsoleLogSeverityChangedEvent::GetState, ConvertLogSeverityToString);
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      // ->SetOnChangeHandler(on_change_functor)
+      // ->SetOnChangeRegistration(register_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /qos/interfaces/interface[name=<name>]
 //                    /output/queues/queue[name=<name>]/state/name
 void SetUpQosInterfacesInterfaceOutputQueuesQueueStateName(
@@ -3808,6 +3897,8 @@ void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   tree_node = tree->AddNode(
       GetPath("components")("component", name)("state")("description")());
   SetUpComponentsComponentStateDescription(node.name(), tree_node);
+  tree_node = tree->AddNode(GetPath("my")("path")("ipsec")());
+  SetUpMyPathIpsec(node.id(), tree_node, tree);
 }
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
