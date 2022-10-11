@@ -2141,8 +2141,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingExclusiveRoles) {
   ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
 
   //----------------------------------------------------------------------------
-  // Controller #2 connects and sends a role config that has overlapping IDs
-  // with controller #1.
+  // Controller #2 connects and sends a role config that has overlapping
+  // exclusive IDs with controller #1.
   req.mutable_arbitration()->set_device_id(kNodeId1);
   req.mutable_arbitration()->mutable_election_id()->set_high(
       absl::Uint128High64(kElectionId1));
@@ -2170,7 +2170,7 @@ TEST_P(P4ServiceTest, StreamChannelFailureForOverlappingSharedRoles) {
   ::p4::v1::StreamMessageRequest req;
   ::p4::v1::StreamMessageResponse resp;
 
-  // Role configs with overlapping exclusive IDs.
+  // Role configs with overlapping shared IDs.
   constexpr char kRoleConfigText1[] = R"pb(
       exclusive_p4_ids: 12
       shared_p4_ids: 79
