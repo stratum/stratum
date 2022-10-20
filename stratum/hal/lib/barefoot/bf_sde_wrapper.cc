@@ -1671,6 +1671,8 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   return "9.8.0";
 #elif defined(SDE_9_9_0)
   return "9.9.0";
+#elif defined(SDE_9_10_0)
+  return "9.10.0";
 #else
 #error Unsupported SDE version
 #endif
