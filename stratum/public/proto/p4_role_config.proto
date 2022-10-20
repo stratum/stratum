@@ -24,7 +24,7 @@ package stratum;
 message P4RoleConfig {
   message PacketFilter {
     uint32 metadata_id = 1;  // Must match an ID in the P4Info.
-    bytes value = 2;         // Must be given in full bitwidth.
+    bytes value = 2;         // Should be given in canonical form.
   }
   repeated uint32 exclusive_p4_ids = 1;
   repeated uint32 shared_p4_ids = 2;

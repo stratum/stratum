@@ -1741,6 +1741,65 @@ TEST_P(P4ServiceTest, StreamChannelSuccessForFilteredPacketIn) {
   ASSERT_EQ(0, GetNumberOfConnections());
 }
 
+TEST_P(P4ServiceTest,
+       StreamChannelSuccessWithRoleConfigCanonicalizesPacketInFilter) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Role config with non-canonical filter byte string.
+  constexpr char kRoleConfigNotCanonical[] = R"pb(
+      receives_packet_ins: true
+      packet_in_filter {
+        metadata_id: 1
+        value: "\x00\xab"  # padded, not canonical.
+      }
+  )pb";
+  P4RoleConfig role_config_not_canonical;
+  CHECK_OK(ParseProtoFromString(kRoleConfigNotCanonical,
+                                &role_config_not_canonical));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // The Controller connects and becomes master with a role.
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config_not_canonical);
+  ASSERT_TRUE(stream->Write(req));
+
+  // Read the mastership info back and check that the filter got canonicalized.
+  ASSERT_TRUE(stream->Read(&resp));
+  ASSERT_EQ(absl::Uint128High64(kElectionId1),
+            resp.arbitration().election_id().high());
+  ASSERT_EQ(absl::Uint128Low64(kElectionId1),
+            resp.arbitration().election_id().low());
+  ASSERT_EQ(::google::rpc::OK, resp.arbitration().status().code());
+  ASSERT_EQ(kRoleName1, resp.arbitration().role().name());
+  P4RoleConfig returned_role_config;
+  ASSERT_TRUE(
+      resp.arbitration().role().config().UnpackTo(&returned_role_config));
+  ASSERT_EQ("\xab", returned_role_config.packet_in_filter().value());
+  ASSERT_EQ(1, GetNumberOfActiveConnections(kNodeId1));
+
+  // Now the Controller disconnects.
+  stream->WritesDone();
+  ASSERT_FALSE(stream->Read(&resp));
+  ASSERT_TRUE(stream->Finish().ok());
+  ASSERT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  ASSERT_EQ(0, GetNumberOfConnections());
+}
+
 TEST_P(P4ServiceTest, StreamChannelFailureForDuplicateElectionId) {
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
@@ -2020,6 +2079,52 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidRoleConfigType) {
   stream->WritesDone();
   ::grpc::Status status = stream->Finish();
   EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
+  EXPECT_EQ(0, GetNumberOfConnections());
+}
+
+TEST_P(P4ServiceTest, StreamChannelFailureForEmptyRoleConfigPacketFilter) {
+  ::grpc::ClientContext context;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
+
+  // Role config with an empty filter byte string.
+  constexpr char kRoleConfigEmptyFilter[] = R"pb(
+      receives_packet_ins: true
+      packet_in_filter {
+        metadata_id: 1
+        value: ""  # empty
+      }
+  )pb";
+  P4RoleConfig role_config_empty_filter;
+  CHECK_OK(
+      ParseProtoFromString(kRoleConfigEmptyFilter, &role_config_empty_filter));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "StreamChannel", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, RegisterStreamMessageResponseWriter(kNodeId1, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // The Controller connects and becomes master with a role.
+  std::unique_ptr<ClientStreamChannelReaderWriter> stream =
+      stub_->StreamChannel(&context);
+  req.mutable_arbitration()->set_device_id(kNodeId1);
+  req.mutable_arbitration()->mutable_election_id()->set_high(
+      absl::Uint128High64(kElectionId1));
+  req.mutable_arbitration()->mutable_election_id()->set_low(
+      absl::Uint128Low64(kElectionId1));
+  req.mutable_arbitration()->mutable_role()->set_name(kRoleName1);
+  req.mutable_arbitration()->mutable_role()->mutable_config()->PackFrom(
+      role_config_empty_filter);
+  ASSERT_TRUE(stream->Write(req));
+
+  ASSERT_FALSE(stream->Read(&resp));
+  stream->WritesDone();
+  ::grpc::Status status = stream->Finish();
+  EXPECT_EQ(::grpc::StatusCode::INVALID_ARGUMENT, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("contains an empty PacketIn filter"));
   EXPECT_EQ(0, GetNumberOfActiveConnections(kNodeId1));
   EXPECT_EQ(0, GetNumberOfConnections());
 }
