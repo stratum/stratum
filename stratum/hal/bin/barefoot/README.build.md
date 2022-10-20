@@ -47,7 +47,7 @@ Stratum release -- 2020-12.*
 If you plan to run Stratum on hardware, you will need to build the kernel
 module for your particular switch OS.
 
-We recommand running Stratum on SONiC, you can download the [Linux kernel headers here][sonic-linux-headers].
+We recommend running Stratum on SONiC, you can download the [Linux kernel headers here][sonic-linux-headers].
 
 You can also find the Linux headers package for your distro by using `apt-get`,
 for example:
@@ -61,7 +61,7 @@ for example:
 If you plan to build Stratum using Docker or build the Stratum Docker container,
 we've tested with: **Docker 18.09.8 community edition**
 
-You can skip this depedency if you plan to build the Stratum Debian package
+You can skip this dependency if you plan to build the Stratum Debian package
 locally (Method 3 and Method 4).
 
 ## Building Stratum
@@ -98,7 +98,7 @@ You can also build the SDE to support multiple kernel modules, for example:
 
 ```bash
 stratum/hal/bin/barefoot/build-bf-sde.sh -t $SDE_TAR \
-  -k linux-headers-4.19.0-12-2-amd64.tgz \
+  -k linux-headers-4.19.0-12-2-merged.tar.xz \
   -k linux-4.14.49-OpenNetworkLinux.tar.xz
 ```
 
