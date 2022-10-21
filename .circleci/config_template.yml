@@ -59,7 +59,7 @@ set_bazelrc: &set_bazelrc
     # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
     command: |
       cat .circleci/bazelrc >> .bazelrc
-      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
+      rm -rf /tmp/bazel-cache/output-root/install/ec7bc80570c57e35507fafa6aadd57b1
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
