@@ -45,10 +45,6 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 
 DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
-DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, false,
-            "Enables the legacy padded byte string format in P4Runtime "
-            "responses for Stratum-bfrt. The strings are left unchanged from "
-            "the underlying SDE.");
 
 namespace stratum {
 namespace hal {
@@ -632,9 +628,7 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->getValue(
       id, value->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(value))));
-  if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-    *value = ByteStringToP4RuntimeByteString(*value);
-  }
+  *value = ByteStringToP4RuntimeByteString(*value);
 
   return ::util::OkStatus();
 }
@@ -652,10 +646,8 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->getValueandMask(
       id, value->size(), reinterpret_cast<uint8*>(gtl::string_as_array(value)),
       reinterpret_cast<uint8*>(gtl::string_as_array(mask))));
-  if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-    *value = ByteStringToP4RuntimeByteString(*value);
-    *mask = ByteStringToP4RuntimeByteString(*mask);
-  }
+  *value = ByteStringToP4RuntimeByteString(*value);
+  *mask = ByteStringToP4RuntimeByteString(*mask);
 
   return ::util::OkStatus();
 }
@@ -671,9 +663,7 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->getValueLpm(
       id, prefix->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(prefix)), prefix_length));
-  if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-    *prefix = ByteStringToP4RuntimeByteString(*prefix);
-  }
+  *prefix = ByteStringToP4RuntimeByteString(*prefix);
 
   return ::util::OkStatus();
 }
@@ -691,10 +681,8 @@ template <typename T>
   RETURN_IF_BFRT_ERROR(table_key_->getValueRange(
       id, low->size(), reinterpret_cast<uint8*>(gtl::string_as_array(low)),
       reinterpret_cast<uint8*>(gtl::string_as_array(high))));
-  if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-    *low = ByteStringToP4RuntimeByteString(*low);
-    *high = ByteStringToP4RuntimeByteString(*high);
-  }
+  *low = ByteStringToP4RuntimeByteString(*low);
+  *high = ByteStringToP4RuntimeByteString(*high);
 
   return ::util::OkStatus();
 }
@@ -769,9 +757,7 @@ TableKey::CreateTableKey(const bfrt::BfRtInfo* bfrt_info_, int table_id) {
   RETURN_IF_BFRT_ERROR(table_data_->getValue(
       id, value->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(value))));
-  if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-    *value = ByteStringToP4RuntimeByteString(*value);
-  }
+  *value = ByteStringToP4RuntimeByteString(*value);
 
   return ::util::OkStatus();
 }

@@ -11,11 +11,6 @@
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 
-DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, false,
-            "Enables the legacy padded byte string format in P4Runtime "
-            "responses for Stratum-bfrt. The strings are left unchanged from "
-            "the underlying SDE.");
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
