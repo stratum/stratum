@@ -647,17 +647,6 @@ To exit the BF CLI or the BF Shell, use `exit`. Note that using `Ctrl+C` will
 end the BF Shell without closing the telnet session. To exit the telnet session,
 press `Ctrl` and `]` to escape from the session and type `quit` to exit telnet.
 
-### P4Runtime canonical byte strings
-
-P4Runtime defines a [canonical byte string representation](https://s3-us-west-2.amazonaws.com/p4runtime/docs/master/P4Runtime-Spec.html#sec-bytestrings)
-for binary data in proto messages such as TableEntries and PacketIn/Outs. In
-short, it requires that the binary strings must not contain redundant bytes,
- i.e., `\x00\xab` vs `\xab`. For Stratum-bfrt the
-`-incompatible_enable_bfrt_legacy_bytestring_responses` flag toggles this
-behavior. **This flag will be removed in a future release and canonical byte
-strings will be the default.**
-
-
 ### Experimental P4Runtime translation support
 
 The `stratum_bfrt` target supports P4Runtime translation which helps to translate
