@@ -24,6 +24,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - 9.7.2 (recommended; LTS release)
  - 9.8.0 (experimental)
  - 9.9.0 (experimental)
+ - 9.10.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -46,7 +47,7 @@ Stratum release -- 2020-12.*
 If you plan to run Stratum on hardware, you will need to build the kernel
 module for your particular switch OS.
 
-We recommand running Stratum on SONiC, you can download the [Linux kernel headers here][sonic-linux-headers].
+We recommend running Stratum on SONiC, you can download the [Linux kernel headers here][sonic-linux-headers].
 
 You can also find the Linux headers package for your distro by using `apt-get`,
 for example:
@@ -60,7 +61,7 @@ for example:
 If you plan to build Stratum using Docker or build the Stratum Docker container,
 we've tested with: **Docker 18.09.8 community edition**
 
-You can skip this depedency if you plan to build the Stratum Debian package
+You can skip this dependency if you plan to build the Stratum Debian package
 locally (Method 3 and Method 4).
 
 ## Building Stratum
@@ -97,7 +98,7 @@ You can also build the SDE to support multiple kernel modules, for example:
 
 ```bash
 stratum/hal/bin/barefoot/build-bf-sde.sh -t $SDE_TAR \
-  -k linux-headers-4.19.0-12-2-amd64.tgz \
+  -k linux-headers-4.19.0-12-2-merged.tar.xz \
   -k linux-4.14.49-OpenNetworkLinux.tar.xz
 ```
 
