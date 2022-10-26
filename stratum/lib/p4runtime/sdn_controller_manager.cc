@@ -72,7 +72,7 @@ grpc::Status VerifyElectionIdIsActive(
   return grpc::Status(
       grpc::StatusCode::PERMISSION_DENIED,
       absl::StrCat("Election ID ", PrettyPrintElectionId(election_id),
-                   " is not active for the role."));
+                   " is not active for role ", PrettyPrintRoleName(role_name)));
 }
 
 grpc::Status VerifyRoleCanPushPipeline(
@@ -81,7 +81,9 @@ grpc::Status VerifyRoleCanPushPipeline(
                               absl::optional<P4RoleConfig>>& role_configs) {
   const auto& role_config = role_configs.find(role_name);
   if (role_config == role_configs.end()) {
-    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+    return grpc::Status(
+        grpc::StatusCode::NOT_FOUND,
+        absl::StrCat("Role ", PrettyPrintRoleName(role_name), " is unknown."));
   }
   if (!role_config->second.has_value()) return grpc::Status::OK;
   if (!role_config->second->can_push_pipeline()) {
@@ -269,7 +271,9 @@ grpc::Status VerifyRoleCanAccessIds(
                               absl::optional<P4RoleConfig>>& role_configs) {
   const auto& role_config = role_configs.find(role_name);
   if (role_config == role_configs.end()) {
-    return grpc::Status(grpc::StatusCode::NOT_FOUND, "Unknown role.");
+    return grpc::Status(
+        grpc::StatusCode::NOT_FOUND,
+        absl::StrCat("Role ", PrettyPrintRoleName(role_name), " is unknown."));
   }
   if (!role_config->second.has_value()) return grpc::Status::OK;
   VLOG(1) << "Testing IDs against role config: "
@@ -346,7 +350,7 @@ grpc::Status SdnControllerManager::HandleArbitrationUpdate(
     P4RoleConfig rc;
     if (!update.role().config().UnpackTo(&rc)) {
       return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                          "Unknown role config.");
+                          "Unknown role config format.");
     }
     // Ensure packet filter byte string is canonical for later comparison.
     if (rc.has_packet_in_filter()) {
@@ -535,8 +539,12 @@ grpc::Status SdnControllerManager::AllowRequest(
   }
 
   if (election_id != election_id_past_for_role->second) {
-    return grpc::Status(grpc::StatusCode::PERMISSION_DENIED,
-                        "Only the primary connection can issue requests.");
+    return grpc::Status(
+        grpc::StatusCode::PERMISSION_DENIED,
+        absl::StrCat("Only the primary connection can issue requests, but this "
+                     "SDN connection for role ",
+                     PrettyPrintRoleName(role_name), " with election ID ",
+                     PrettyPrintElectionId(election_id), " is not primary."));
   }
 
   return VerifyElectionIdIsActive(role_name, election_id, connections_);
