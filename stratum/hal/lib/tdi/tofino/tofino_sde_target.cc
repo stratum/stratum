@@ -23,7 +23,7 @@
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 
-#include "stratum/glue/gtl/cleanup.h"
+#include "absl/cleanup/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"

@@ -13,7 +13,7 @@
 #include <deque>
 #include <string>
 
-#include "stratum/glue/gtl/cleanup.h"
+#include "absl/cleanup/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/p4/utils.h"
@@ -252,7 +252,7 @@ class BitBuffer {
 }
 
 ::util::Status TdiPacketioManager::ParsePacketIn(const std::string& buffer,
-                                                  ::p4::v1::PacketIn* packet) {
+                                                 ::p4::v1::PacketIn* packet) {
   absl::ReaderMutexLock l(&data_lock_);
   CHECK_RETURN_IF_FALSE(buffer.size() >= packetin_header_size_)
       << "Received packet is too small.";
