@@ -47,6 +47,9 @@ __pycache__/
 # VS Code
 /.vscode/
 
+# Visual SlickEdit
+/.vslick/
+
 # CLion
 /.idea/
 /.project/

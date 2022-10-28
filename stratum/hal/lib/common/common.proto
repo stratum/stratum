@@ -63,6 +63,20 @@ enum TrafficClass {
   LLQ2 = 30;  // Low-latency congestion-control queue (go/llq)
 };
 
+// Mode of hotplug request
+enum QemuHotplugMode {
+  HOTPLUG_MODE_NONE = 0;
+  HOTPLUG_MODE_ADD = 1;
+  HOTPLUG_MODE_DEL = 2;
+}
+
+// Packet Direction type
+enum PacketDirection {
+  DIRECTION_HOST = 0;
+  DIRECTION_NETWORK = 1;
+  DIRECTION_NONE = 2;
+};
+
 //------------------------------------------------------------------------------
 // Definition of chassis, nodes, singleton ports, trunk ports, etc in the
 // internal chassis config (defined later in this file) pushed to the managers.
@@ -243,14 +257,64 @@ enum FecMode {
   FEC_MODE_AUTO = 3;
 }
 
+// DPDK port types.
+enum DpdkPortType {
+  PORT_TYPE_NONE = 0;
+  PORT_TYPE_VHOST = 1;
+  PORT_TYPE_TAP = 2;
+  PORT_TYPE_LINK = 3;
+  PORT_TYPE_SOURCE = 4;
+  PORT_TYPE_SINK = 5;
+}
+
+// DPDK device types.
+enum DpdkDeviceType {
+  DEVICE_TYPE_NONE = 0;
+  DEVICE_TYPE_VIRTIO_NET = 1;
+  DEVICE_TYPE_VIRTIO_BLK = 2;
+}
+
+// QEMU Hotplug parameters.
+enum DpdkHotplugParam {
+  PARAM_NONE = 0;
+  PARAM_SOCK_IP = 1;
+  PARAM_SOCK_PORT = 2;
+  PARAM_HOTPLUG_MODE = 3;
+  PARAM_VM_MAC = 4;
+  PARAM_NETDEV_ID = 5;
+  PARAM_CHARDEV_ID = 6;
+  PARAM_NATIVE_SOCK_PATH = 7;
+  PARAM_DEVICE_ID = 8;
+}
+
+// Hotplug config parameters for QEMU-based VM.
+message HotplugConfig {
+  // IP address for qemu monitor socket
+  string qemu_socket_ip = 1;
+  // Port number for qemu monitor socket
+  uint32 qemu_socket_port = 2;
+  // Qemu Hotplug mode
+  QemuHotplugMode qemu_hotplug_mode = 3;
+  // The configured mac address for this port.
+  uint64 qemu_vm_mac_address = 4;
+  // VM netdev id for hotplug
+  string qemu_vm_netdev_id = 5;
+  // VM chardev id for hotplug
+  string qemu_vm_chardev_id = 6;
+  // Native socket path (applicable for containers)
+  string native_socket_path = 7;
+  // VM device id for hotplug
+  string qemu_vm_device_id = 8;
+}
+
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
-  // Per port hash config. Most of the hash configuration is given per node.
+  // Per-port hash config. Most of the hash configuration is given per node.
   // This is the only hash config we need to provide per node, for ports that
   // are part of a trunk/lag or ECMP group.
   message HashConfig {
-    // TODO(unknown): Instead of hash_select, we need a better way. this is
-    // RTAG7 specific. Maybe based on the port type?
+    // TODO(unknown): We need a better way than hash_select.
+    // This is RTAG7 specific. Maybe based on the port type?
     int32 rtag7_ecmp_hash_select = 1;
     int32 rtag7_lag_hash_select = 2;
   }
@@ -276,6 +340,30 @@ message PortConfigParams {
   MacAddress mac_address = 7;
   // The configured loopback state for this port.
   LoopbackState loopback_mode = 8;
+  // Type of this port.
+  DpdkPortType port_type = 9;
+  // Flag to trigger SW backed pipeline.
+  bool build_pipeline = 10;
+  // VM associated in the OpenConfig.
+  string host_name = 11;
+  // Queues to be configured
+  int32 queues = 12;
+  // Socket path to be used
+  string socket_path = 13;
+  // Backend device type
+  DpdkDeviceType device_type = 14;
+  // Pipeline name to be used
+  string pipeline_name = 15;
+  // Mempool name to be used
+  string mempool_name = 16;
+  // Flag to trigger Auto creation of back-end control TAP ports and rules.
+  string control_port = 17;
+  // PCI BDF value to be used for the LINK port
+  string pci_bdf = 18;
+  // Per Qemu VM hotplug config
+  HotplugConfig hotplug_config = 19;
+  // Packet direction
+  PacketDirection packet_dir = 20;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
@@ -332,7 +420,7 @@ message Node {
 message SingletonPort {
   // The unique ID of the singleton port. Used for operations which need a
   // single unique integer ID for each port (e.g. flow programming). Note that
-  // all the singleton and trunk ports use a common range of integer IDs. So,
+  // all the singleton and trunk ports use a common range of integer IDs, so
   // using the same integer ID for a singleton port and a trunk port is not
   // allowed.
   uint32 id = 1;  // required
@@ -340,16 +428,16 @@ message SingletonPort {
   // PARSED. Example: "ju1u1.xyz99.net.google.com:ce-1/32". Used only for
   // logging purposes.
   string name = 2;
-  // The 1-base index of the slot (aka linecard) of the port.
+  // The 1-based index of the slot (aka linecard) of the port.
   int32 slot = 3;  // required
-  // The 1-base index of the singleton port on the slot.
+  // The 1-based index of the singleton port on the slot.
   int32 port = 4;  // required
-  // The 1-base channel index (only if the port is channelized). Absence or
+  // The 1-based channel index (only if the port is channelized). Absence or
   // zero means non-channelized.
   int32 channel = 5;
   // The speed of the ports.
   uint64 speed_bps = 6;  // required
-  // The id of the corresponding node that the port belongs to.
+  // The id of the node that the port belongs to.
   uint64 node = 9;  // required
   // Flow-related parameters used when SingletonPort message is used in flow
   // programming related operations.
@@ -813,8 +901,8 @@ message VendorConfig {
 // Definition of the internal chassis config pushed to the managers.
 //------------------------------------------------------------------------------
 
-// ChassisConfig is the internal data structure that encapsulates the so called
-// "config" pushed to the entire chassis. The term "chassis" refers to the a
+// ChassisConfig is the internal data structure that encapsulates the so-called
+// "config" pushed to the entire chassis. The term "chassis" refers to a
 // switching box with one or more switching nodes managed by a mgmt interface.
 // The proto includes all the not-so-frequent settings that are required before
 // the switch can accept flow programming requests from the controller.
@@ -1221,6 +1309,61 @@ message LoopbackStatus {
   LoopbackState state = 1;  // required
 }
 
+// Wrapper around DPDK port type.
+message DpdkPortTypeValue {
+  DpdkPortType type = 1;  // required
+}
+
+// Wrapper around DPDK device type
+message DpdkDeviceTypeValue {
+  DpdkDeviceType device_type = 1;  // required
+}
+
+// Specifies host to be used by the device
+message HostNameValue {
+  string host_name = 1;  // required
+}
+
+// Specifies number of queues needed for backend
+message QueuesConfigured {
+  int32 queue_count = 1;  // required
+}
+
+// Specifies socket path to be used for port creation
+message SocketPathConfigured {
+  string sock_path = 1;  // required
+}
+
+// Specifies pipeline name to be used for port association
+message PipelineNameConfigured {
+  string pipeline_name = 1;  // required
+}
+
+// Specifies mempool name to be used for port association
+message MempoolNameConfigured {
+  string mempool_name = 1;  // required
+}
+
+// Specifies packet direction to be used for port association
+message PacketDirValue {
+  PacketDirection packet_dir = 1;  // required
+}
+
+// Specifies if Auto creation of back-end control TAP ports is needed.
+message ControlPortConfigured {
+  string control_port = 1;  // required
+}
+
+// Specifies PCI BDF value to be used for the LINK port.
+message PciBdfConfigured {
+  string pci_bdf = 1;  // required
+}
+
+// Specifies the MTU value to be used
+message MtuValue {
+  int32 mtu_value = 1;  // required
+}
+
 // Wrapper around admin state of a HW component.
 message AdminStatus {
   AdminState state = 1;  // required
@@ -1326,6 +1469,12 @@ message SdnPortId {
   uint32 port_id = 1;
 }
 
+// Wrapper around Target datapath index required for pipeline configuration
+message TargetDatapathId {
+  uint32 tdi_portin_id = 1;   // Port ID for Pipeline in Input Direction
+  uint32 tdi_portout_id = 2;  // Port ID for Pipeline in Output Direction
+}
+
 // DataRequest is a message used internally to request data about a component
 // or a set of components through SwitchInterface. It is specifically used in
 // ConfigMonitoringService, as part of gNMI Get/Subscribe RPC implementation.
@@ -1375,6 +1524,7 @@ message DataRequest {
       Port loopback_status = 20;
       Node node_info = 21;
       Port sdn_port_id = 22;
+      Port target_dp_id = 23;
     }
   }
   repeated Request requests = 1;
@@ -1407,6 +1557,19 @@ message DataResponse {
     LoopbackStatus loopback_status = 20;
     NodeInfo node_info = 21;
     SdnPortId sdn_port_id = 22;
+    DpdkPortTypeValue port_type = 23;
+    HostNameValue host_config = 24;
+    QueuesConfigured queue_count = 25;
+    SocketPathConfigured sock_path = 26;
+    DpdkDeviceTypeValue device_type = 27;
+    PipelineNameConfigured pipeline_name = 28;
+    MempoolNameConfigured mempool_name = 29;
+    ControlPortConfigured control_port = 30;
+    PciBdfConfigured pci_bdf = 31;
+    MtuValue mtu_value = 32;
+    HotplugConfig hotplug_config = 33;
+    TargetDatapathId target_dp_id = 34;
+    PacketDirValue packet_dir = 35;
   }
 }
 
@@ -1436,6 +1599,30 @@ message SetRequest {
         ForwardingViability forwarding_viability = 10;
         // The intended loopback state of the port.
         LoopbackStatus loopback_status = 11;
+        // The new port type to be used.
+        DpdkPortTypeValue port_type = 12;
+        // The new device to be used.
+        DpdkDeviceTypeValue device_type = 13;
+        // The hostname to be used by backend.
+        HostNameValue host_config = 14;
+        // The no of queues to be used by backend.
+        QueuesConfigured queue_count = 15;
+        // The socket path to be used by backend.
+        SocketPathConfigured sock_path = 16;
+        // The Pipeline name to be used for port association.
+        PipelineNameConfigured pipeline_name = 17;
+        // The Mempool name to be used for port association.
+        MempoolNameConfigured mempool_name = 18;
+        // The control port to be used for creation of back-end TAP ports/rules
+        ControlPortConfigured control_port = 19;
+        // PCI BDF value to be used for the LINK port
+        PciBdfConfigured pci_bdf = 20;
+        // MTU value to be used for the Port
+        MtuValue mtu_value = 21;
+        // Per Qemu VM hotplug config
+        HotplugConfig hotplug_config = 22;
+        // The packet direction to be used for port association.
+        PacketDirValue packet_dir = 23;
       }
     }
     // Data required to set info for a specific node.

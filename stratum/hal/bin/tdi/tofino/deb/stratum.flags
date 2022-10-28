@@ -1,0 +1,2 @@
+-tdi_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+-tdi_switchd_background=true
