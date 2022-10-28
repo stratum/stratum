@@ -1,0 +1,25 @@
+#!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+# If not running in Docker,
+if ! cat /proc/1/cgroup | grep -q "/docker"; then
+  # Set up huge pages
+  echo "vm.nr_hugepages = 196" >> /etc/sysctl.conf
+  sysctl -p /etc/sysctl.conf
+  mkdir -p /mnt/huge
+  mount -t hugetlbfs nodev /mnt/huge
+fi
+
+# Create directories needed by Stratum
+mkdir -p /var/log/stratum
+mkdir -p /var/run/stratum
+
+# Reload libraries
+ldconfig
+
+# If systemd is installed,
+if command -v systemctl &> /dev/null; then
+  # Enable Stratum service
+  systemctl enable stratum_tofino.service
+fi

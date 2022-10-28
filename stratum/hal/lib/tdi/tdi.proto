@@ -1,0 +1,46 @@
+// Copyright 2020-present Open Networking Foundation
+// Copyright 2022 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal.tdi;
+
+import "p4/config/v1/p4info.proto";
+
+// This message describes the public Barefoot-specific definition of a single P4
+// program. It is passed to Stratum as the p4 device config of the P4Runtime
+// ForwardingPipelineConfig message.
+message BfPipelineConfig {
+  message Profile {
+    string profile_name = 1;         // name for this profile
+    bytes context = 2;               // context.json file
+    bytes binary = 3;                // tofino.bin file
+    repeated uint32 pipe_scope = 4;  // list of hardware pipes for this profile
+  }
+  string p4_name = 1;                // name for this P4 program
+  bytes bfruntime_info = 2;          // bfrt.json file
+  repeated Profile profiles = 3;     // list of profiles for this program
+}
+
+// Internal storage format that contains all the information of a P4 program
+// that can be loaded into the SDE.
+message TdiDeviceConfig {
+  message P4Program {
+    message P4Pipeline {
+      string name = 1;           // For display purposes only.
+      repeated uint32 scope = 2; // List of pipes this profile is applied to.
+      bytes context = 3;         // JSON
+      bytes config = 4;          // tofino.bin
+    }
+
+    string name = 1; // For display purposes only.
+    bytes bfrt = 2;  // JSON
+    p4.config.v1.P4Info p4info = 3;
+    repeated P4Pipeline pipelines = 4;
+  }
+
+  repeated P4Program programs = 1;
+}

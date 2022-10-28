@@ -1,0 +1,21 @@
+#!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+# If systemd is installed,
+if command -v systemctl &> /dev/null; then
+  # Stop and disable Stratum service
+  systemctl stop stratum_tofino.service
+  systemctl disable stratum_tofino.service
+fi
+
+# Remove files and dirs created by Stratum
+rm -rf /usr/share/port_map.json
+rm -rf /var/run/stratum
+rm -rf /var/log/stratum
+
+# Remove huge page
+sed -i '/nr_hugepages/d' /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
+umount /mnt/huge
+rm -rf /mnt/huge
