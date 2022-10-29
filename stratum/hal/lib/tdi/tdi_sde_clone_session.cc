@@ -32,7 +32,7 @@ using namespace stratum::hal::tdi::helpers;
     int dev_id, std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     uint32 session_id, int egress_port, int cos, int max_pkt_len, bool insert) {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   const ::tdi::Device *device = nullptr;
@@ -107,7 +107,7 @@ using namespace stratum::hal::tdi::helpers;
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   const ::tdi::DataFieldInfo *dataFieldInfo;
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(
@@ -140,14 +140,14 @@ using namespace stratum::hal::tdi::helpers;
     uint32 session_id, std::vector<uint32>* session_ids,
     std::vector<int>* egress_ports, std::vector<int>* coss,
     std::vector<int>* max_pkt_lens) {
-  CHECK_RETURN_IF_FALSE(session_ids);
-  CHECK_RETURN_IF_FALSE(egress_ports);
-  CHECK_RETURN_IF_FALSE(coss);
-  CHECK_RETURN_IF_FALSE(max_pkt_lens);
+  RET_CHECK(session_ids);
+  RET_CHECK(egress_ports);
+  RET_CHECK(coss);
+  RET_CHECK(max_pkt_lens);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   const ::tdi::DataFieldInfo *dataFieldInfo;
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Device *device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
@@ -206,13 +206,13 @@ using namespace stratum::hal::tdi::helpers;
     // Data: $session_enable
     bool session_enable;
     RETURN_IF_ERROR(GetFieldBool(*table_data, "$session_enable", &session_enable));
-    CHECK_RETURN_IF_FALSE(session_enable)
+    RET_CHECK(session_enable)
         << "Found a session that is not enabled.";
     // Data: $ucast_egress_port_valid
     bool ucast_egress_port_valid;
     RETURN_IF_ERROR(GetFieldBool(*table_data, "$ucast_egress_port_valid",
                              &ucast_egress_port_valid));
-    CHECK_RETURN_IF_FALSE(ucast_egress_port_valid)
+    RET_CHECK(ucast_egress_port_valid)
         << "Found a unicast egress port that is not set valid.";
   }
 

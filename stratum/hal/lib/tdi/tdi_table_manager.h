@@ -136,9 +136,6 @@ class TdiTableManager {
       const TdiSdeInterface::TableDataInterface* table_data)
       SHARED_LOCKS_REQUIRED(lock_);
 
-  ::util::Status SetupRegisterReset(const ::p4::config::v1::P4Info& p4_info)
-      EXCLUSIVE_LOCKS_REQUIRED(lock_);
-
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
   // therefore needs to do all the SDK initialization itself.

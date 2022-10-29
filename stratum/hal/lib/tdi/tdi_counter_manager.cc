@@ -37,13 +37,13 @@ TdiCounterManager::TdiCounterManager(TdiSdeInterface* tdi_sde_interface,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::CounterEntry& counter_entry) {
   absl::WriterMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of CounterEntry " << counter_entry.ShortDebugString()
       << " must be MODIFY.";
-  CHECK_RETURN_IF_FALSE(counter_entry.has_index())
+  RET_CHECK(counter_entry.has_index())
       << "Modifying an indirect counter without counter index is currently not "
          "supported.";
-  CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
+  RET_CHECK(counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
 
   // Find counter table.
@@ -69,7 +69,7 @@ TdiCounterManager::TdiCounterManager(TdiSdeInterface* tdi_sde_interface,
     const ::p4::v1::CounterEntry& counter_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
+  RET_CHECK(counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
 
   // Index 0 is a valid value and not a wildcard.

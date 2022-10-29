@@ -51,7 +51,7 @@ void SetUpSystemLoggingConsoleConfigSeverity(
         ConvertStringToLogSeverity(typed_val->string_val(), &logging_config));
 
     // Set the value.
-    CHECK_RETURN_IF_FALSE(SetLogLevel(logging_config))
+    RET_CHECK(SetLogLevel(logging_config))
         << "Could not set new log level (" << logging_config.first << ", "
         << logging_config.second << ").";
 

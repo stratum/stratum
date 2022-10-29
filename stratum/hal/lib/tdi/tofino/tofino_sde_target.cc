@@ -78,7 +78,7 @@ namespace {
     case kHundredGigBps:
       return BF_SPEED_100G;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported port speed.";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Unsupported port speed.";
   }
 }
 
@@ -91,7 +91,7 @@ namespace {
     case TRI_STATE_FALSE:
       return 2;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid autoneg state.";
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid autoneg state.";
   }
 }
 
@@ -103,7 +103,7 @@ namespace {
     // we have to "guess" the FEC type to use based on the port speed.
     switch (speed_bps) {
       case kOneGigBps:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode for 1Gbps mode.";
+        return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode for 1Gbps mode.";
       case kTenGigBps:
       case kFortyGigBps:
         return BF_FEC_TYP_FIRECODE;
@@ -114,10 +114,10 @@ namespace {
       case kFourHundredGigBps:
         return BF_FEC_TYP_REED_SOLOMON;
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported port speed.";
+        return MAKE_ERROR(ERR_INVALID_PARAM) << "Unsupported port speed.";
     }
   }
-  RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode.";
+  return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode.";
 }
 
 ::util::StatusOr<bf_loopback_mode_e> LoopbackModeToBf(
@@ -128,7 +128,7 @@ namespace {
     case LOOPBACK_STATE_MAC:
       return BF_LPBK_MAC_NEAR;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM)
+      return MAKE_ERROR(ERR_INVALID_PARAM)
           << "Unsupported loopback mode: " << LoopbackState_Name(loopback_mode)
           << ".";
   }
@@ -277,7 +277,7 @@ bf_status_t sde_port_status_callback(
 
 ::util::Status TdiSdeWrapper::SetPortMtu(int device, int port, int32 mtu) {
   if (mtu < 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid MTU value.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid MTU value.";
   }
   if (mtu == 0) mtu = kBfDefaultMtu;
   RETURN_IF_TDI_ERROR(bf_pal_port_mtu_set(
@@ -306,7 +306,7 @@ bool TdiSdeWrapper::IsValidPort(int device, int port) {
 ::util::StatusOr<bool> TdiSdeWrapper::IsSoftwareModel(int device) {
   bool is_sw_model = true;
   auto bf_status = bf_pal_pltfm_type_get(device, &is_sw_model);
-  CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS)
+  RET_CHECK(bf_status == BF_SUCCESS)
       << "Error getting software model status.";
   return is_sw_model;
 }
@@ -356,7 +356,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
 ::util::StatusOr<uint32> TdiSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;
-  CHECK_RETURN_IF_FALSE(port >= 0)
+  RET_CHECK(port >= 0)
       << "Port ID must be non-negative. Attempted to get port " << port
       << " on dev " << device << ".";
 
@@ -369,12 +369,12 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   //     Otherwise, port is already 0 in the non-channelized case
   const int channel =
       (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
-  CHECK_RETURN_IF_FALSE(channel >= 0)
+  RET_CHECK(channel >= 0)
       << "Channel must be set for port " << port << " on dev " << device << ".";
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
-  CHECK_RETURN_IF_FALSE(r > 0 && r < sizeof(port_string))
+  RET_CHECK(r > 0 && r < sizeof(port_string))
       << "Failed to build port string for port " << port << " channel "
       << channel << " on dev " << device << ".";
 
@@ -386,12 +386,12 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
 
 ::util::StatusOr<int> TdiSdeWrapper::GetPcieCpuPort(int device) {
   int port = p4_devport_mgr_pcie_cpu_port_get(device);
-  CHECK_RETURN_IF_FALSE(port != -1);
+  RET_CHECK(port != -1);
   return port;
 }
 
 ::util::Status TdiSdeWrapper::SetTmCpuPort(int device, int port) {
-  CHECK_RETURN_IF_FALSE(p4_pd_tm_set_cpuport(device, port) == 0)
+  RET_CHECK(p4_pd_tm_set_cpuport(device, port) == 0)
       << "Unable to set CPU port " << port << " on device " << device;
   return ::util::OkStatus();
 }
@@ -408,9 +408,9 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
 ::util::Status TdiSdeWrapper::InitializeSde(
     const std::string& sde_install_path, const std::string& sde_config_file,
     bool run_in_background) {
-  CHECK_RETURN_IF_FALSE(sde_install_path != "")
+  RET_CHECK(sde_install_path != "")
       << "sde_install_path is required";
-  CHECK_RETURN_IF_FALSE(sde_config_file != "") << "sde_config_file is required";
+  RET_CHECK(sde_config_file != "") << "sde_config_file is required";
 
   // Parse bf_switchd arguments.
   auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
@@ -451,7 +451,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   const ::tdi::Device *device = nullptr;
   absl::WriterMutexLock l(&data_lock_);
 
-  CHECK_RETURN_IF_FALSE(device_config.programs_size() > 0);
+  RET_CHECK(device_config.programs_size() > 0);
 
   tdi_id_mapper_.reset();
 
@@ -480,7 +480,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
     p4_program->bfrt_json_file = &(*tdi_path)[0];
     p4_program->num_p4_pipelines = program.pipelines_size();
     path_strings.emplace_back(std::move(tdi_path));
-    CHECK_RETURN_IF_FALSE(program.pipelines_size() > 0);
+    RET_CHECK(program.pipelines_size() > 0);
     for (int j = 0; j < program.pipelines_size(); ++j) {
       const auto& pipeline = program.pipelines(j);
       const std::string pipeline_path =
@@ -501,7 +501,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
       path_strings.emplace_back(std::move(config_path));
       path_strings.emplace_back(std::move(context_path));
 
-      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= MAX_P4_PIPELINES);
+      RET_CHECK(pipeline.scope_size() <= MAX_P4_PIPELINES);
       pipeline_profile->num_pipes_in_scope = pipeline.scope_size();
       for (int p = 0; p < pipeline.scope_size(); ++p) {
         const auto& scope = pipeline.scope(p);
@@ -517,15 +517,15 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   // Set SDE log levels for modules of interest.
   // TODO(max): create story around SDE logs. How to get them into glog? What
   // levels to enable for which modules?
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   stat_mgr_enable_detail_trace = false;
   if (VLOG_IS_ON(2)) {
-    CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
+    RET_CHECK(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
                                                BF_LOG_WARN) == 0);
     stat_mgr_enable_detail_trace = true;
   }
@@ -603,7 +603,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
     bf_dev_id_t device, bf_pkt* pkt, bf_pkt_rx_ring_t rx_ring) {
   absl::ReaderMutexLock l(&packet_rx_callback_lock_);
   auto rx_writer = gtl::FindOrNull(device_to_packet_rx_writer_, device);
-  CHECK_RETURN_IF_FALSE(rx_writer)
+  RET_CHECK(rx_writer)
       << "No Rx callback registered for device id " << device << ".";
 
   std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),

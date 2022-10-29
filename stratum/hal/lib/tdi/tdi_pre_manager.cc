@@ -38,7 +38,7 @@ TdiPreManager::TdiPreManager(TdiSdeInterface* tdi_sde_interface, int device)
     case PreEntry::kCloneSessionEntry:
       return WriteCloneSessionEntry(session, type, entry.clone_session_entry());
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED)
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported PRE entry: " << entry.ShortDebugString();
   }
 }
@@ -59,7 +59,7 @@ TdiPreManager::TdiPreManager(TdiSdeInterface* tdi_sde_interface, int device)
       break;
     }
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED)
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported PRE entry: " << entry.ShortDebugString();
   }
 
@@ -75,12 +75,12 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::MulticastGroupEntry& entry) {
   const uint32 group_id = entry.multicast_group_id();
-  CHECK_RETURN_IF_FALSE(group_id <= kMaxMulticastGroupId);
+  RET_CHECK(group_id <= kMaxMulticastGroupId);
 
   // Collect instance (rid) -> egress ports mapping
   absl::flat_hash_map<uint32, std::vector<uint32>> instance_to_egress_ports;
   for (const auto& replica : entry.replicas()) {
-    CHECK_RETURN_IF_FALSE(replica.instance() <= UINT16_MAX);
+    RET_CHECK(replica.instance() <= UINT16_MAX);
     instance_to_egress_ports[replica.instance()].push_back(
         replica.egress_port());
   }
@@ -155,7 +155,7 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
       break;
     }
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED) << "Unsupported update type: " << type;
+      return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unsupported update type: " << type;
   }
   return ::util::OkStatus();
 }
@@ -222,27 +222,27 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type& type,
     const ::p4::v1::CloneSessionEntry& entry) {
-  CHECK_RETURN_IF_FALSE(entry.session_id() != 0 &&
+  RET_CHECK(entry.session_id() != 0 &&
                         entry.session_id() <= kMaxCloneSessionId)
       << "Invalid session id in CloneSessionEntry " << entry.ShortDebugString()
       << ".";
-  CHECK_RETURN_IF_FALSE(entry.packet_length_bytes() <= UINT16_MAX)
+  RET_CHECK(entry.packet_length_bytes() <= UINT16_MAX)
       << "Packet length exceeds maximum value: " << entry.ShortDebugString()
       << ".";
 
   switch (type) {
     case ::p4::v1::Update::INSERT: {
-      CHECK_RETURN_IF_FALSE(entry.replicas_size() == 1)
+      RET_CHECK(entry.replicas_size() == 1)
           << "Multiple replicas are not supported: " << entry.ShortDebugString()
           << ".";
-      CHECK_RETURN_IF_FALSE(entry.class_of_service() < 8)
+      RET_CHECK(entry.class_of_service() < 8)
           << "Class of service must be smaller than 8: "
           << entry.ShortDebugString() << ".";
       const auto& replica = entry.replicas(0);
-      CHECK_RETURN_IF_FALSE(replica.egress_port() != 0)
+      RET_CHECK(replica.egress_port() != 0)
           << "Invalid egress port in Replica " << replica.ShortDebugString()
           << ".";
-      CHECK_RETURN_IF_FALSE(replica.instance() == 0)
+      RET_CHECK(replica.instance() == 0)
           << "Instances on Replicas are not supported: "
           << replica.ShortDebugString() << ".";
       RETURN_IF_ERROR(tdi_sde_interface_->InsertCloneSession(
@@ -251,14 +251,14 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
       break;
     }
     case ::p4::v1::Update::MODIFY: {
-      CHECK_RETURN_IF_FALSE(entry.replicas_size() == 1)
+      RET_CHECK(entry.replicas_size() == 1)
           << "Multiple replicas are not supported: " << entry.ShortDebugString()
           << ".";
       const auto& replica = entry.replicas(0);
-      CHECK_RETURN_IF_FALSE(replica.egress_port() != 0)
+      RET_CHECK(replica.egress_port() != 0)
           << "Invalid egress port in Replica " << replica.ShortDebugString()
           << ".";
-      CHECK_RETURN_IF_FALSE(replica.instance() == 0)
+      RET_CHECK(replica.instance() == 0)
           << "Instances on Replicas are not supported: "
           << replica.ShortDebugString() << ".";
       RETURN_IF_ERROR(tdi_sde_interface_->ModifyCloneSession(
@@ -272,7 +272,7 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
       break;
     }
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED)
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported update type: " << type << " on CloneSessionEntry "
           << entry.ShortDebugString() << ".";
   }

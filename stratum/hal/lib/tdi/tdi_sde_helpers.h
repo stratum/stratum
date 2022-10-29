@@ -75,7 +75,7 @@ template <typename T>
 
   auto field_id = dataFieldInfo->idGet();
   auto data_type = dataFieldInfo->dataTypeGet();
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_INT_ARR ||
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_INT_ARR ||
                         data_type == TDI_FIELD_DATA_TYPE_BOOL_ARR)
       << "Requested array but field has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_values));
@@ -104,7 +104,7 @@ template <typename T>
 
   auto field_id = dataFieldInfo->idGet();
   auto data_type = dataFieldInfo->dataTypeGet();
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_INT_ARR ||
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_INT_ARR ||
                         data_type == TDI_FIELD_DATA_TYPE_BOOL_ARR)
       << "Requested array but field has type " << static_cast<int>(data_type);
 

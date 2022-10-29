@@ -121,8 +121,8 @@ using namespace stratum::hal::tdi::helpers;
 }
 
 ::util::Status TableData::GetCounterData(uint64* bytes, uint64* packets) const {
-  CHECK_RETURN_IF_FALSE(bytes);
-  CHECK_RETURN_IF_FALSE(packets);
+  RET_CHECK(bytes);
+  RET_CHECK(packets);
   tdi_id_t field_id_bytes = 0;
   tdi_id_t field_id_packets = 0;
   const ::tdi::DataFieldInfo *dataFieldInfoPackets;
@@ -149,7 +149,7 @@ using namespace stratum::hal::tdi::helpers;
 }
 
 ::util::Status TableData::GetActionId(int* action_id) const {
-  CHECK_RETURN_IF_FALSE(action_id);
+  RET_CHECK(action_id);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(table_data_->getParent(&table));
   *action_id = table_data_->actionIdGet();

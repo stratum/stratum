@@ -192,7 +192,7 @@ bool YangParseTree::IsWildcard(const std::string& name) const {
     const gnmi::Path& path, const gnmi::Path& subpath,
     const std::function<::util::Status(const TreeNode& leaf)>& action) const {
   const auto* root = root_.FindNodeOrNull(path);
-  CHECK_RETURN_IF_FALSE(root);
+  RET_CHECK(root);
   ::util::Status ret = ::util::OkStatus();
   for (const auto& entry : root->children_) {
     if (IsWildcard(entry.first)) {

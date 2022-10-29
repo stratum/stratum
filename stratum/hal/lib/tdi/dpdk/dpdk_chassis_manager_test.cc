@@ -178,19 +178,19 @@ class DpdkChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status CheckCleanInternalState() {
-    CHECK_RETURN_IF_FALSE(m_chassis_manager_->unit_to_node_id_.empty());
-    CHECK_RETURN_IF_FALSE(m_chassis_manager_->node_id_to_unit_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(m_chassis_manager_->unit_to_node_id_.empty());
+    RET_CHECK(m_chassis_manager_->node_id_to_unit_.empty());
+    RET_CHECK(
         m_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         m_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         m_chassis_manager_->node_id_to_port_id_to_singleton_port_key_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         m_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         m_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         m_chassis_manager_->node_id_port_id_to_backend_.empty());
     return ::util::OkStatus();
   }
@@ -213,7 +213,7 @@ class DpdkChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status PushBaseChassisConfig(ChassisConfigBuilder* builder) {
-    CHECK_RETURN_IF_FALSE(!Initialized())
+    RET_CHECK(!Initialized())
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     RegisterSdkPortId(builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED));
 
@@ -224,9 +224,9 @@ class DpdkChassisManagerTest : public ::testing::Test {
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
 
     auto unit = GetUnitFromNodeId(kNodeId);
-    CHECK_RETURN_IF_FALSE(unit.ok());
-    CHECK_RETURN_IF_FALSE(unit.ValueOrDie() == kUnit) << "Invalid unit number!";
-    CHECK_RETURN_IF_FALSE(Initialized())
+    RET_CHECK(unit.ok());
+    RET_CHECK(unit.ValueOrDie() == kUnit) << "Invalid unit number!";
+    RET_CHECK(Initialized())
         << "Class is not initialized after push!";
     return ::util::OkStatus();
   }

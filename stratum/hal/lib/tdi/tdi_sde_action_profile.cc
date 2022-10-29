@@ -38,9 +38,9 @@ using namespace stratum::hal::tdi::helpers;
     uint32 table_id, int member_id, const TableDataInterface* table_data,
     bool insert) {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_data = dynamic_cast<const TableData*>(table_data);
-  CHECK_RETURN_IF_FALSE(real_table_data);
+  RET_CHECK(real_table_data);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -103,7 +103,7 @@ using namespace stratum::hal::tdi::helpers;
     uint32 table_id, int member_id) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -138,11 +138,11 @@ using namespace stratum::hal::tdi::helpers;
     int dev_id, std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     uint32 table_id, int member_id, std::vector<int>* member_ids,
     std::vector<std::unique_ptr<TableDataInterface>>* table_values) {
-  CHECK_RETURN_IF_FALSE(member_ids);
-  CHECK_RETURN_IF_FALSE(table_values);
+  RET_CHECK(member_ids);
+  RET_CHECK(table_values);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Device *device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
@@ -195,7 +195,7 @@ using namespace stratum::hal::tdi::helpers;
     const std::vector<uint32>& member_ids,
     const std::vector<bool>& member_status, bool insert) {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -272,7 +272,7 @@ using namespace stratum::hal::tdi::helpers;
     uint32 table_id, int group_id) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -308,13 +308,13 @@ using namespace stratum::hal::tdi::helpers;
     std::vector<int>* max_group_sizes,
     std::vector<std::vector<uint32>>* member_ids,
     std::vector<std::vector<bool>>* member_status) {
-  CHECK_RETURN_IF_FALSE(group_ids);
-  CHECK_RETURN_IF_FALSE(max_group_sizes);
-  CHECK_RETURN_IF_FALSE(member_ids);
-  CHECK_RETURN_IF_FALSE(member_status);
+  RET_CHECK(group_ids);
+  RET_CHECK(max_group_sizes);
+  RET_CHECK(member_ids);
+  RET_CHECK(member_status);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Device *device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);

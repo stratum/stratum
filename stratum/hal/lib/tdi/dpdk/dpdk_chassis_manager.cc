@@ -288,11 +288,11 @@ bool DpdkChassisManager::IsPortParamSet(
       (config.hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_ADD)) {
     if ((validate & GNMI_CONFIG_PORT_DONE) != GNMI_CONFIG_PORT_DONE) {
       validate &= ~GNMI_CONFIG_HOTPLUG_ALL;
-      RETURN_ERROR(ERR_INTERNAL) << "Unsupported operation, requested port doesn't exist \n";
+      return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, requested port doesn't exist \n";
     }
     if ((validate & GNMI_CONFIG_HOTPLUG_DONE) == GNMI_CONFIG_HOTPLUG_DONE) {
       validate &= ~GNMI_CONFIG_HOTPLUG_ALL;
-      RETURN_ERROR(ERR_INTERNAL) << "Unsupported operation, requested port is already hotplugged \n";
+      return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, requested port is already hotplugged \n";
     }
 
     RETURN_IF_ERROR(HotplugPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
@@ -308,7 +308,7 @@ bool DpdkChassisManager::IsPortParamSet(
               (config.hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_DEL)) {
     if (!((validate & GNMI_CONFIG_HOTPLUG_DONE) == GNMI_CONFIG_HOTPLUG_DONE)) {
        validate &= ~GNMI_CONFIG_HOTPLUG_MODE;
-       RETURN_ERROR(ERR_INTERNAL) << "Unsupported operation, No device is hotplugged to be deleted";
+       return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, No device is hotplugged to be deleted";
     }
     RETURN_IF_ERROR(HotplugPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
     validate &= ~(GNMI_CONFIG_HOTPLUG_DONE);
@@ -490,12 +490,12 @@ bool DpdkChassisManager::IsPortParamSet(
   const auto& config_params = singleton_port.config_params();
 
   if (config_params.admin_state() == ADMIN_STATE_UNKNOWN) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_INVALID_PARAM)
         << "Invalid admin state for port " << port_id << " in node " << node_id
         << " (SDK Port " << sdk_port_id << ").";
   }
   if (config_params.admin_state() == ADMIN_STATE_DIAG) {
-    RETURN_ERROR(ERR_UNIMPLEMENTED)
+    return MAKE_ERROR(ERR_UNIMPLEMENTED)
         << "Unsupported 'diags' admin state for port " << port_id << " in node "
         << node_id << " (SDK Port " << sdk_port_id << ").";
   }
@@ -616,7 +616,7 @@ bool DpdkChassisManager::IsPortParamSet(
     config->admin_state = ADMIN_STATE_UNKNOWN;
     config->speed_bps.reset();
     config->fec_mode.reset();
-    RETURN_ERROR(ERR_INTERNAL)
+    return MAKE_ERROR(ERR_INTERNAL)
         << "Port " << port_id << " in node " << node_id << " is not valid"
         << " (SDK Port " << sdk_port_id << ").";
   }
@@ -645,7 +645,7 @@ bool DpdkChassisManager::IsPortParamSet(
       if (config_old.fec_mode)
         port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
       AddPortHelper(node_id, unit, sdk_port_id, port_old, config);
-      RETURN_ERROR(ERR_INVALID_PARAM)
+      return MAKE_ERROR(ERR_INVALID_PARAM)
           << "Could not add port " << port_id << " with new speed "
           << singleton_port.speed_bps() << " to BF SDE"
           << " (SDK Port " << sdk_port_id << ").";
@@ -654,19 +654,19 @@ bool DpdkChassisManager::IsPortParamSet(
 
   // same for FEC mode
   if (config_params.fec_mode() != config_old.fec_mode) {
-    RETURN_ERROR(ERR_UNIMPLEMENTED)
+    return MAKE_ERROR(ERR_UNIMPLEMENTED)
         << "The FEC mode for port " << port_id << " in node " << node_id
         << " has changed; you need to delete the port and add it again"
         << " (SDK Port " << sdk_port_id << ").";
   }
 
   if (config_params.admin_state() == ADMIN_STATE_UNKNOWN) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_INVALID_PARAM)
         << "Invalid admin state for port " << port_id << " in node " << node_id
         << " (SDK Port " << sdk_port_id << ").";
   }
   if (config_params.admin_state() == ADMIN_STATE_DIAG) {
-    RETURN_ERROR(ERR_UNIMPLEMENTED)
+    return MAKE_ERROR(ERR_UNIMPLEMENTED)
         << "Unsupported 'diags' admin state for port " << port_id << " in node "
         << node_id << " (SDK Port " << sdk_port_id << ").";
   }
@@ -768,7 +768,7 @@ bool DpdkChassisManager::IsPortParamSet(
 
     auto* unit = gtl::FindOrNull(node_id_to_unit, node_id);
     if (unit == nullptr) {
-      RETURN_ERROR(ERR_INVALID_PARAM)
+      return MAKE_ERROR(ERR_INVALID_PARAM)
           << "Invalid ChassisConfig, unknown node id " << node_id
           << " for port " << port_id << ".";
     }
@@ -837,7 +837,7 @@ bool DpdkChassisManager::IsPortParamSet(
       // sanity-check: if admin_state is not ADMIN_STATE_UNKNOWN, then the port
       // was added and the speed_bps was set.
       if (!config_old->speed_bps) {
-        RETURN_ERROR(ERR_INTERNAL)
+        return MAKE_ERROR(ERR_INTERNAL)
             << "Invalid internal state in DpdkChassisManager, "
             << "speed_bps field should contain a value";
       }
@@ -886,15 +886,15 @@ bool DpdkChassisManager::IsPortParamSet(
 
 ::util::Status DpdkChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
-  CHECK_RETURN_IF_FALSE(config.trunk_ports_size() == 0)
+  RET_CHECK(config.trunk_ports_size() == 0)
       << "Trunk ports are not supported on Tofino.";
-  CHECK_RETURN_IF_FALSE(config.port_groups_size() == 0)
+  RET_CHECK(config.port_groups_size() == 0)
       << "Port groups are not supported on Tofino.";
-  CHECK_RETURN_IF_FALSE(config.nodes_size() > 0)
+  RET_CHECK(config.nodes_size() > 0)
       << "The config must contain at least one node.";
 
   // Find the supported Tofino chip types based on the given platform.
-  CHECK_RETURN_IF_FALSE(config.has_chassis() && config.chassis().platform())
+  RET_CHECK(config.has_chassis() && config.chassis().platform())
       << "Config needs a Chassis message with correct platform.";
   switch (config.chassis().platform()) {
     case PLT_GENERIC_BAREFOOT_TOFINO:
@@ -911,11 +911,11 @@ bool DpdkChassisManager::IsPortParamSet(
   std::map<uint64, int> node_id_to_unit;
   std::map<int, uint64> unit_to_node_id;
   for (const auto& node : config.nodes()) {
-    CHECK_RETURN_IF_FALSE(node.slot() > 0)
+    RET_CHECK(node.slot() > 0)
         << "No positive slot in " << node.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(node.id() > 0)
+    RET_CHECK(node.id() > 0)
         << "No positive ID in " << node.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
         << "The id for Node " << PrintNode(node) << " was already recorded "
         << "for another Node in the config.";
@@ -942,31 +942,31 @@ bool DpdkChassisManager::IsPortParamSet(
   std::set<PortKey> singleton_port_keys;
   for (const auto& singleton_port : config.singleton_ports()) {
     // TODO(max): enable once we decoupled port ids from sdk ports.
-    // CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
+    // RET_CHECK(singleton_port.id() > 0)
     //     << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
+    RET_CHECK(singleton_port.id() != kCpuPortId)
         << "SingletonPort " << PrintSingletonPort(singleton_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
-    CHECK_RETURN_IF_FALSE(singleton_port.slot() > 0)
+    RET_CHECK(singleton_port.slot() > 0)
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
+    RET_CHECK(singleton_port.port() > 0)
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
+    RET_CHECK(singleton_port.speed_bps() > 0)
         << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
-    CHECK_RETURN_IF_FALSE(!singleton_port_keys.count(singleton_port_key))
+    RET_CHECK(!singleton_port_keys.count(singleton_port_key))
         << "The (slot, port, channel) tuple for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " was already recorded for another SingletonPort in the config.";
     singleton_port_keys.insert(singleton_port_key);
-    CHECK_RETURN_IF_FALSE(singleton_port.node() > 0)
+    RET_CHECK(singleton_port.node() > 0)
         << "No valid node ID in " << singleton_port.ShortDebugString() << ".";
-    CHECK_RETURN_IF_FALSE(node_id_to_unit.count(singleton_port.node()))
+    RET_CHECK(node_id_to_unit.count(singleton_port.node()))
         << "Node ID " << singleton_port.node() << " given for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " has not been given to any Node in the config.";
-    CHECK_RETURN_IF_FALSE(
+    RET_CHECK(
         !node_id_to_port_ids[singleton_port.node()].count(singleton_port.id()))
         << "The id for SingletonPort " << PrintSingletonPort(singleton_port)
         << " was already recorded for another SingletonPort for node with ID "
@@ -988,7 +988,7 @@ bool DpdkChassisManager::IsPortParamSet(
 
     // Make sure that the port exists by getting the SDK port ID.
     const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
-    CHECK_RETURN_IF_FALSE(unit != nullptr)
+    RET_CHECK(unit != nullptr)
         << "Node " << node_id << " not found for port " << port_id << ".";
     RETURN_IF_ERROR(
         sde_interface_->GetPortIdFromPortKey(*unit, singleton_port_key)
@@ -1000,14 +1000,14 @@ bool DpdkChassisManager::IsPortParamSet(
   if (initialized_) {
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
-      RETURN_ERROR(ERR_REBOOT_REQUIRED)
+      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
           << "The switch is already initialized, but we detected the newly "
           << "pushed config requires a change in the port layout. The stack "
           << "needs to be rebooted to finish config push.";
     }
 
     if (node_id_to_unit != node_id_to_unit_) {
-      RETURN_ERROR(ERR_REBOOT_REQUIRED)
+      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
           << "The switch is already initialized, but we detected the newly "
           << "pushed config requires a change in node_id_to_unit. The stack "
           << "needs to be rebooted to finish config push.";
@@ -1034,10 +1034,10 @@ bool DpdkChassisManager::IsPortParamSet(
 DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   auto* port_id_to_config =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_config != nullptr)
+  RET_CHECK(port_id_to_config != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortConfig* config = gtl::FindOrNull(*port_id_to_config, port_id);
-  CHECK_RETURN_IF_FALSE(config != nullptr)
+  RET_CHECK(config != nullptr)
       << "Port " << port_id << " is not configured or not known for node "
       << node_id << ".";
   return config;
@@ -1051,11 +1051,11 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   const auto* port_map =
       gtl::FindOrNull(node_id_to_port_id_to_sdk_port_id_, node_id);
-  CHECK_RETURN_IF_FALSE(port_map != nullptr)
+  RET_CHECK(port_map != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
   const uint32* sdk_port_id = gtl::FindOrNull(*port_map, port_id);
-  CHECK_RETURN_IF_FALSE(sdk_port_id != nullptr)
+  RET_CHECK(sdk_port_id != nullptr)
       << "Port " << port_id << " for node " << node_id
       << " is not configured or not known.";
 
@@ -1203,7 +1203,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       break;
     }
     default:
-      RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
+      return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
   return resp;
 }
@@ -1217,7 +1217,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
+  RET_CHECK(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortState* port_state_ptr =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
@@ -1245,9 +1245,9 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       node_id_to_port_id_to_time_last_changed_.count(node_id));
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       node_id_to_port_id_to_time_last_changed_[node_id].count(port_id));
   return node_id_to_port_id_to_time_last_changed_[node_id][port_id];
 }
@@ -1297,12 +1297,12 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
 
     if (!config.speed_bps) {
-      RETURN_ERROR(ERR_INTERNAL)
+      return MAKE_ERROR(ERR_INTERNAL)
           << "Invalid internal state in DpdkChassisManager, "
           << "speed_bps field should contain a value";
     }
     if (!config.fec_mode) {
-      RETURN_ERROR(ERR_INTERNAL)
+      return MAKE_ERROR(ERR_INTERNAL)
           << "Invalid internal state in DpdkChassisManager, "
           << "fec_mode field should contain a value";
     }
@@ -1365,7 +1365,7 @@ std::unique_ptr<DpdkChassisManager> DpdkChassisManager::CreateInstance(
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  CHECK_RETURN_IF_FALSE(unit != nullptr)
+  RET_CHECK(unit != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
   return *unit;

@@ -103,7 +103,7 @@ namespace helpers {
         break;
       }
       default:
-        RETURN_ERROR(ERR_INTERNAL)
+        return MAKE_ERROR(ERR_INTERNAL)
             << "Unknown key_type: " << static_cast<int>(key_type) << ".";
     }
 
@@ -177,7 +177,7 @@ namespace helpers {
         break;
       }
       default:
-        RETURN_ERROR(ERR_INTERNAL)
+        return MAKE_ERROR(ERR_INTERNAL)
             << "Unknown data_type: " << static_cast<int>(data_type) << ".";
     }
 
@@ -205,7 +205,7 @@ namespace helpers {
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_UINT64)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
       << "Requested uint64 but field " << field_name
       << " has type " << static_cast<int>(data_type);
 
@@ -230,7 +230,7 @@ namespace helpers {
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_UINT64)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
       << "Setting uint64 but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_key->setValue(field_id, key_field_value));
@@ -249,7 +249,7 @@ namespace helpers {
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_UINT64)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
       << "Setting uint64 but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_key->setValue(field_id, value));
@@ -271,7 +271,7 @@ namespace helpers {
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_UINT64)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
       << "Requested uint64 but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_value));
@@ -293,7 +293,7 @@ namespace helpers {
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_STRING)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_STRING)
       << "Requested string but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_value));
@@ -316,7 +316,7 @@ namespace helpers {
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_BOOL)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_BOOL)
       << "Requested bool but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_value));
@@ -338,7 +338,7 @@ namespace helpers {
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_UINT64)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
       << "Setting uint64 but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, value));
@@ -360,7 +360,7 @@ namespace helpers {
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_STRING)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_STRING)
       << "Setting string but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, field_value));
@@ -382,7 +382,7 @@ namespace helpers {
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
-  CHECK_RETURN_IF_FALSE(data_type == TDI_FIELD_DATA_TYPE_BOOL)
+  RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_BOOL)
       << "Setting bool but field " << field_name
       << " has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, field_value));
@@ -395,8 +395,8 @@ namespace helpers {
     ::tdi::Target tdi_dev_target, const ::tdi::Table* table,
     std::vector<std::unique_ptr<::tdi::TableKey>>* table_keys,
     std::vector<std::unique_ptr<::tdi::TableData>>* table_values) {
-  CHECK_RETURN_IF_FALSE(table_keys) << "table_keys is null";
-  CHECK_RETURN_IF_FALSE(table_values) << "table_values is null";
+  RET_CHECK(table_keys) << "table_keys is null";
+  RET_CHECK(table_values) << "table_values is null";
 
   // Get number of entries. Some types of tables are preallocated and are always
   // "full". The SDE does not support querying the usage on these.

@@ -38,7 +38,7 @@ using namespace stratum::hal::tdi::helpers;
     uint64 cir, uint64 cburst, uint64 pir, uint64 pburst) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -101,14 +101,14 @@ using namespace stratum::hal::tdi::helpers;
     std::vector<uint32>* meter_indices, std::vector<uint64>* cirs,
     std::vector<uint64>* cbursts, std::vector<uint64>* pirs,
     std::vector<uint64>* pbursts, std::vector<bool>* in_pps) {
-  CHECK_RETURN_IF_FALSE(meter_indices);
-  CHECK_RETURN_IF_FALSE(cirs);
-  CHECK_RETURN_IF_FALSE(cbursts);
-  CHECK_RETURN_IF_FALSE(pirs);
-  CHECK_RETURN_IF_FALSE(pbursts);
+  RET_CHECK(meter_indices);
+  RET_CHECK(cirs);
+  RET_CHECK(cbursts);
+  RET_CHECK(pirs);
+  RET_CHECK(pbursts);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
 
   const ::tdi::Device *device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
@@ -196,7 +196,7 @@ using namespace stratum::hal::tdi::helpers;
         RETURN_IF_TDI_ERROR(table_data->getValue(field_id, &pburst));
         pbursts->push_back(pburst);
       } else {
-        RETURN_ERROR(ERR_INVALID_PARAM)
+        return MAKE_ERROR(ERR_INVALID_PARAM)
             << "Unknown meter field " << field_name
             << " in meter with id " << table_id << ".";
       }
