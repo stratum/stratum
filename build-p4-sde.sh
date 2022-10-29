@@ -48,6 +48,7 @@ pip3 install distro meson
 # Build the P4 TDI SDE
 tmpdir="$(mktemp -d /tmp/p4_sde.XXXXXX)"
 pushd $tmpdir
+# TODO: needs commit hash pinning
 git clone --depth=1 --recursive https://github.com/p4lang/target-utils utils
 git clone --depth=1 --recursive https://github.com/p4lang/target-syslibs syslibs
 git clone --depth=1 --recursive https://github.com/p4lang/p4-dpdk-target p4-dpdk-target

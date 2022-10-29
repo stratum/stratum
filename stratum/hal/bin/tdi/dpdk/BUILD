@@ -32,12 +32,12 @@ stratum_cc_binary(
         "main.cc",
     ],
     arches = HOST_ARCHES,
-    defines = ["DPDK_TARGET"],
     data = [
         # NOTE: Replace with dpdk conf files
         "//stratum/hal/bin/barefoot:tofino_skip_p4.conf",
         "//stratum/hal/bin/barefoot:tofino_skip_p4_no_bsp.conf",
     ],
+    defines = ["DPDK_TARGET"],
     deps = [
         "//stratum/hal/lib/tdi/dpdk:dpdk_chassis_manager",
         "//stratum/hal/lib/tdi/dpdk:dpdk_hal",
