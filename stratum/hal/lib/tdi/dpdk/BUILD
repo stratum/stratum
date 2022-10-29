@@ -22,20 +22,23 @@ package(
 )
 
 target_defines = [
-    "DPDK_TARGET",      # shouldn't be necessary
+    "DPDK_TARGET",  # shouldn't be necessary
 ]
 
 stratum_cc_library(
     name = "dpdk_chassis_manager",
     srcs = ["dpdk_chassis_manager.cc"],
     hdrs = ["dpdk_chassis_manager.h"],
+    copts = [
+        "-Wno-thread-safety-analysis",  # FIXME
+    ],
     defines = target_defines,
     deps = [
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
-        "//stratum/glue:integral_types",
-        "//stratum/glue:logging",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:switch_interface",
@@ -88,19 +91,22 @@ stratum_cc_library(
     name = "dpdk_switch",
     srcs = ["dpdk_switch.cc"],
     hdrs = ["dpdk_switch.h"],
+    copts = [
+        "-Wno-thread-safety-analysis",  # FIXME
+    ],
     defines = target_defines,
     deps = [
         ":dpdk_chassis_manager",
-        "//stratum/glue/gtl:map_util",
-        "//stratum/glue/status:status_macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/common:switch_interface",
         "//stratum/hal/lib/tdi:tdi_cc_proto",
         "//stratum/hal/lib/tdi:tdi_node",
         "//stratum/hal/lib/tdi:tdi_pipeline_utils",
         "//stratum/hal/lib/tdi:tdi_sde_interface",
         "//stratum/hal/lib/tdi:utils",
-        "//stratum/hal/lib/common:switch_interface",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
@@ -116,11 +122,11 @@ stratum_cc_test(
     deps = [
         ":dpdk_chassis_manager",
         ":test_main",
+        "//stratum/glue:integral_types",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
         "//stratum/glue/status:status_test_util",
         "//stratum/glue/status:statusor",
-        "//stratum/glue:integral_types",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:utils",
@@ -140,8 +146,8 @@ stratum_cc_library(
     name = "dpdk_chassis_manager_mock",
     testonly = 1,
     hdrs = ["dpdk_chassis_manager_mock.h"],
-    defines = target_defines,
     arches = HOST_ARCHES,
+    defines = target_defines,
     deps = [
         ":dpdk_chassis_manager",
         "@com_google_googletest//:gtest",
@@ -174,17 +180,17 @@ stratum_cc_library(
         "//stratum/hal/lib/common:error_buffer",
         "//stratum/hal/lib/common:p4_service",
         "//stratum/hal/lib/common:switch_interface",
-        "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker",
         "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_github_grpc_grpc//:grpc++",
     ],
 )
 
@@ -200,9 +206,9 @@ stratum_cc_test(
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:switch_mock",
+        "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
-        "//stratum/lib:utils",
         "//stratum/public/lib:error",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
@@ -226,8 +232,8 @@ stratum_cc_test(
         "//stratum/hal/lib/p4:p4_table_mapper_mock",
         "//stratum/hal/lib/tdi:tdi_node_mock",
         "//stratum/hal/lib/tdi:tdi_sde_mock",
-        "//stratum/lib/channel:channel_mock",
         "//stratum/lib:utils",
+        "//stratum/lib/channel:channel_mock",
         "//stratum/lib/test_utils:matchers",
         "@com_google_absl//absl/memory",
         "@com_google_googletest//:gtest",

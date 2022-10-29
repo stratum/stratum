@@ -4,8 +4,6 @@
 
 // Target-agnostic SDE wrapper for Multicast methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -23,6 +21,7 @@
 #include "stratum/hal/lib/tdi/macros.h"
 #include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/error.pb.h"
 
@@ -93,21 +92,19 @@ namespace {
     RET_CHECK(real_session);
 
     const ::tdi::Table* table;
-    const ::tdi::Device *device = nullptr;
+    const ::tdi::Device* device = nullptr;
     ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
     std::unique_ptr<::tdi::Target> dev_tgt;
     device->createTarget(&dev_tgt);
 
     // Dump group table
     LOG(INFO) << "#### $pre.mgid ####";
-    RETURN_IF_TDI_ERROR(
-        tdi_info_->tableFromNameGet(kPreMgidTable, &table));
+    RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreMgidTable, &table));
     std::vector<std::unique_ptr<::tdi::TableKey>> keys;
     std::vector<std::unique_ptr<::tdi::TableData>> datums;
-    RETURN_IF_TDI_ERROR(
-        tdi_info_->tableFromNameGet(kPreMgidTable, &table));
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreMgidTable, &table));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
     for (size_t i = 0; i < keys.size(); ++i) {
       const std::unique_ptr<::tdi::TableData>& table_data = datums[i];
       const std::unique_ptr<::tdi::TableKey>& table_key = keys[i];
@@ -117,10 +114,9 @@ namespace {
 
     // Dump node table
     LOG(INFO) << "#### $pre.node ####";
-    RETURN_IF_TDI_ERROR(
-        tdi_info_->tableFromNameGet(kPreNodeTable, &table));
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreNodeTable, &table));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
     for (size_t i = 0; i < keys.size(); ++i) {
       const std::unique_ptr<::tdi::TableData>& table_data = datums[i];
       const std::unique_ptr<::tdi::TableKey>& table_key = keys[i];
@@ -136,23 +132,22 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
 
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreNodeTable, &table));
   size_t table_size;
 
-  RETURN_IF_TDI_ERROR(table->sizeGet(*real_session->tdi_session_,
-                                      *dev_tgt, *flags, &table_size));
+  RETURN_IF_TDI_ERROR(table->sizeGet(*real_session->tdi_session_, *dev_tgt,
+                                     *flags, &table_size));
   uint32 usage;
-  RETURN_IF_TDI_ERROR(table->usageGet(
-      *real_session->tdi_session_, *dev_tgt,
-      *flags, &usage));
+  RETURN_IF_TDI_ERROR(
+      table->usageGet(*real_session->tdi_session_, *dev_tgt, *flags, &usage));
   std::unique_ptr<::tdi::TableKey> table_key;
   std::unique_ptr<::tdi::TableData> table_data;
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
@@ -162,9 +157,8 @@ namespace {
     // Key: $MULTICAST_NODE_ID
     RETURN_IF_ERROR(SetFieldExact(table_key.get(), kMcNodeId, id));
     bf_status_t status;
-    status = table->entryGet(
-        *real_session->tdi_session_, *dev_tgt, *flags, *table_key,
-        table_data.get());
+    status = table->entryGet(*real_session->tdi_session_, *dev_tgt, *flags,
+                             *table_key, table_data.get());
     if (status == BF_OBJECT_NOT_FOUND) {
       return id;
     } else if (status == BF_SUCCESS) {
@@ -196,12 +190,12 @@ namespace {
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_TDI_ERROR(table->dataAllocate(&table_data));
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
 
   ASSIGN_OR_RETURN(uint64 mc_node_id, GetFreeMulticastNodeId(dev_id, session));
 
@@ -214,8 +208,8 @@ namespace {
   RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeLagId, mc_lag_ids));
   // Data: $DEV_PORT
   RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeDevPort, ports));
-  RETURN_IF_TDI_ERROR(table->entryAdd(
-      *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+  RETURN_IF_TDI_ERROR(table->entryAdd(*real_session->tdi_session_, *dev_tgt,
+                                      *flags, *table_key, *table_data));
   return mc_node_id;
 }
 
@@ -227,12 +221,12 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreMgidTable, &table));
 
@@ -242,15 +236,12 @@ namespace {
   RETURN_IF_TDI_ERROR(table->dataAllocate(&table_data));
   // Key: $MGID
   RETURN_IF_ERROR(SetFieldExact(table_key.get(), kMgid, group_id));
-  RETURN_IF_TDI_ERROR(table->entryGet(
-      *real_session->tdi_session_,*dev_tgt, *flags, *table_key,
-      table_data.get()));
+  RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                      *flags, *table_key, table_data.get()));
   // Data: $MULTICAST_NODE_ID
   std::vector<uint32> mc_node_list;
   RETURN_IF_ERROR(GetField(*table_data, kMcNodeId, &mc_node_list));
   return mc_node_list;
-
-  return ::util::OkStatus();
 }
 
 ::util::Status TdiSdeWrapper::DeleteMulticastNodes(
@@ -260,12 +251,12 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreNodeTable, &table));
   auto table_id = table->tableInfoGet()->idGet();
@@ -275,8 +266,8 @@ namespace {
     std::unique_ptr<::tdi::TableKey> table_key;
     RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
     RETURN_IF_ERROR(SetFieldExact(table_key.get(), kMcNodeId, mc_node_id));
-    RETURN_IF_TDI_ERROR(table->entryDel(*real_session->tdi_session_,
-                                         *dev_tgt, *flags, *table_key));
+    RETURN_IF_TDI_ERROR(table->entryDel(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key));
   }
 
   return ::util::OkStatus();
@@ -293,12 +284,12 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;  // PRE node table.
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreNodeTable, &table));
   auto table_id = table->tableInfoGet()->idGet();
@@ -309,9 +300,8 @@ namespace {
   RETURN_IF_TDI_ERROR(table->dataAllocate(&table_data));
   // Key: $MULTICAST_NODE_ID
   RETURN_IF_ERROR(SetFieldExact(table_key.get(), kMcNodeId, mc_node_id));
-  RETURN_IF_TDI_ERROR(table->entryGet(
-      *real_session->tdi_session_, *dev_tgt, *flags, *table_key,
-      table_data.get()));
+  RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                      *flags, *table_key, table_data.get()));
   // Data: $DEV_PORT
   std::vector<uint32> dev_ports;
   RETURN_IF_ERROR(GetField(*table_data, kMcNodeDevPort, &dev_ports));
@@ -334,13 +324,12 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table = nullptr;  // PRE MGID table.
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreMgidTable, &table));
   auto table_id = table->tableInfoGet()->idGet();
@@ -369,12 +358,12 @@ namespace {
   RETURN_IF_ERROR(SetField(table_data.get(), kMcNodeL1Xid, l1_xid_list));
 
   if (insert) {
-    RETURN_IF_TDI_ERROR(table->entryAdd(
-        *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryAdd(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
 
   } else {
-    RETURN_IF_TDI_ERROR(table->entryMod(
-        *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
   }
 
   return ::util::OkStatus();
@@ -385,16 +374,13 @@ namespace {
     uint32 group_id, const std::vector<uint32>& mc_node_ids) {
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteMulticastGroup(dev_id, session, group_id, mc_node_ids, true);
-
-  return ::util::OkStatus();
 }
+
 ::util::Status TdiSdeWrapper::ModifyMulticastGroup(
     int dev_id, std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     uint32 group_id, const std::vector<uint32>& mc_node_ids) {
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteMulticastGroup(dev_id, session, group_id, mc_node_ids, false);
-
-  return ::util::OkStatus();
 }
 
 ::util::Status TdiSdeWrapper::DeleteMulticastGroup(
@@ -404,20 +390,20 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;  // PRE MGID table.
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreMgidTable, &table));
   std::unique_ptr<::tdi::TableKey> table_key;
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
   // Key: $MGID
   RETURN_IF_ERROR(SetFieldExact(table_key.get(), kMgid, group_id));
-  RETURN_IF_TDI_ERROR(table->entryDel(*real_session->tdi_session_,
-                                            *dev_tgt, *flags, *table_key));
+  RETURN_IF_TDI_ERROR(table->entryDel(*real_session->tdi_session_, *dev_tgt,
+                                      *flags, *table_key));
 
   return ::util::OkStatus();
 }
@@ -432,12 +418,12 @@ namespace {
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;  // PRE MGID table.
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kPreMgidTable, &table));
   std::vector<std::unique_ptr<::tdi::TableKey>> keys;
@@ -450,12 +436,11 @@ namespace {
     RETURN_IF_TDI_ERROR(table->dataAllocate(&datums[0]));
     // Key: $MGID
     RETURN_IF_ERROR(SetFieldExact(keys[0].get(), kMgid, group_id));
-    RETURN_IF_TDI_ERROR(table->entryGet(
-        *real_session->tdi_session_, *dev_tgt, *flags, *keys[0],
-        datums[0].get()));
+    RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *keys[0], datums[0].get()));
   } else {
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
   }
 
   group_ids->resize(0);
