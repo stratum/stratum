@@ -20,6 +20,10 @@ cc_library(
         "dpdk-bin/lib/libtarget_sys.so",
         "dpdk-bin/lib/libtdi.so*",
         "dpdk-bin/lib/libtdi_json_parser.so*",
+        "dpdk-bin/lib/libclish.so*",
+        "dpdk-bin/lib/bfshell_plugin_*.so*",
+        "dpdk-bin/lib/libtarget_utils.so*",
+        "dpdk-bin/lib/libpython3*",
     ]),
     hdrs = glob([
         "dpdk-bin/include/bf_pal/*.h",
