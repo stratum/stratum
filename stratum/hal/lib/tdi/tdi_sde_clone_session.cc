@@ -87,8 +87,6 @@ using namespace stratum::hal::tdi::helpers;
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteCloneSession(dev_id, session, session_id, egress_port, cos,
                            max_pkt_len, true);
-
-  return ::util::OkStatus();
 }
 
 ::util::Status TdiSdeWrapper::ModifyCloneSession(
@@ -97,8 +95,6 @@ using namespace stratum::hal::tdi::helpers;
   ::absl::ReaderMutexLock l(&data_lock_);
   return WriteCloneSession(dev_id, session, session_id, egress_port, cos,
                            max_pkt_len, false);
-
-  return ::util::OkStatus();
 }
 
 ::util::Status TdiSdeWrapper::DeleteCloneSession(

@@ -4,13 +4,12 @@
 
 // Target-agnostic SDE wrapper for Register methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <memory>
 #include <set>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -18,7 +17,6 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
-
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -28,6 +26,7 @@
 #include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/error.pb.h"
 
@@ -46,10 +45,9 @@ namespace {
 // RETURN_IF_TDI_ERROR(
 //     table->dataFieldIdGet(absl::StrCat(table_name, ".", "f1"), &field_id));
 
-::util::StatusOr<tdi_id_t> GetRegisterDataFieldId(
-    const ::tdi::Table* table) {
+::util::StatusOr<tdi_id_t> GetRegisterDataFieldId(const ::tdi::Table* table) {
   std::vector<tdi_id_t> data_field_ids;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   data_field_ids = table->tableInfoGet()->dataFieldIdListGet();
   for (const auto& field_id : data_field_ids) {
     std::string field_name;
@@ -62,8 +60,6 @@ namespace {
   }
 
   return MAKE_ERROR(ERR_INTERNAL) << "Could not find register data field id.";
-
-   return ::util::OkStatus();
 }
 
 }  // namespace
@@ -90,7 +86,7 @@ namespace {
   tdi_id_t field_id;
   ASSIGN_OR_RETURN(field_id, GetRegisterDataFieldId(table));
   size_t data_field_size_bits;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id);
   RETURN_IF_NULL(dataFieldInfo);
   data_field_size_bits = dataFieldInfo->sizeGet();
@@ -100,30 +96,29 @@ namespace {
   RETURN_IF_TDI_ERROR(table_data->setValue(
       field_id, reinterpret_cast<const uint8*>(value.data()), value.size()));
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   if (register_index) {
     // Single index target.
     // Register key: $REGISTER_INDEX
     RETURN_IF_ERROR(
         SetFieldExact(table_key.get(), kRegisterIndex, register_index.value()));
-    RETURN_IF_TDI_ERROR(table->entryMod(
-        *real_session->tdi_session_, *dev_tgt, *flags,
-        *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-    RETURN_IF_TDI_ERROR(table->sizeGet(*real_session->tdi_session_,
-                                       *dev_tgt, *flags, &table_size));
+    RETURN_IF_TDI_ERROR(table->sizeGet(*real_session->tdi_session_, *dev_tgt,
+                                       *flags, &table_size));
     for (size_t i = 0; i < table_size; ++i) {
       // Register key: $REGISTER_INDEX
       RETURN_IF_ERROR(SetFieldExact(table_key.get(), kRegisterIndex, i));
-      RETURN_IF_TDI_ERROR(table->entryMod(
-          *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+      RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                          *flags, *table_key, *table_data));
     }
   }
 
@@ -143,12 +138,12 @@ namespace {
 
   RETURN_IF_ERROR(SynchronizeRegisters(dev_id, session, table_id, timeout));
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
   std::vector<std::unique_ptr<::tdi::TableKey>> keys;
@@ -164,12 +159,11 @@ namespace {
     // Key: $REGISTER_INDEX
     RETURN_IF_ERROR(
         SetFieldExact(keys[0].get(), kRegisterIndex, register_index.value()));
-    RETURN_IF_TDI_ERROR(table->entryGet(
-        *real_session->tdi_session_, *dev_tgt, *flags, *keys[0],
-        datums[0].get()));
+    RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *keys[0], datums[0].get()));
   } else {
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
   }
 
   register_indices->resize(0);
@@ -179,13 +173,14 @@ namespace {
     const std::unique_ptr<::tdi::TableKey>& table_key = keys[i];
     // Key: $REGISTER_INDEX
     uint32_t tdi_register_index = 0;
-    RETURN_IF_ERROR(GetFieldExact(*table_key, kRegisterIndex, &tdi_register_index));
+    RETURN_IF_ERROR(
+        GetFieldExact(*table_key, kRegisterIndex, &tdi_register_index));
     register_indices->push_back(tdi_register_index);
     // Data: <register_name>.f1
     ASSIGN_OR_RETURN(auto f1_field_id, GetRegisterDataFieldId(table));
 
     tdi_field_data_type_e data_type;
-    const ::tdi::DataFieldInfo *dataFieldInfo;
+    const ::tdi::DataFieldInfo* dataFieldInfo;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(f1_field_id);
     RETURN_IF_NULL(dataFieldInfo);
     data_type = dataFieldInfo->dataTypeGet();
@@ -201,8 +196,9 @@ namespace {
       }
       default:
         return MAKE_ERROR(ERR_INVALID_PARAM)
-            << "Unsupported register data type " << static_cast<int>(data_type)
-            << " for register in table " << table_id;
+               << "Unsupported register data type "
+               << static_cast<int>(data_type) << " for register in table "
+               << table_id;
     }
   }
 
@@ -215,26 +211,27 @@ namespace {
 ::util::Status TdiSdeWrapper::SynchronizeRegisters(
     int dev_id, std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     uint32 table_id, absl::Duration timeout) {
-
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
   // Sync table registers.
   // TDI comments ; its supposed to be tdi_rt_operations_type_e ??
-  //const std::set<tdi_rt_operations_type_e> supported_ops;
-  //supported_ops = static_cast<tdi_rt_operations_type_e>(table->tableInfoGet()->operationsSupported());
+  // const std::set<tdi_rt_operations_type_e> supported_ops;
+  // supported_ops =
+  // static_cast<tdi_rt_operations_type_e>(table->tableInfoGet()->operationsSupported());
 
   std::set<tdi_operations_type_e> supported_ops;
   supported_ops = table->tableInfoGet()->operationsSupported();
-  // TODO TDI comments : Need to uncomment this after SDE exposes registerSyncSet
+  // TODO TDI comments : Need to uncomment this after SDE exposes
+  // registerSyncSet
 #if 0
   if (supported_ops.count(static_cast<tdi_operations_type_e>(tdi_rt_operations_type_e::REGISTER_SYNC))) {
     auto sync_notifier = std::make_shared<absl::Notification>();

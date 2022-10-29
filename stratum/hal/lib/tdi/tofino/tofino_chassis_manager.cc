@@ -907,6 +907,7 @@ TofinoChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 }
 
 ::util::Status TofinoChassisManager::ReplayPortsConfig(uint64 node_id) {
+  absl::WriterMutexLock l(&chassis_lock);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
