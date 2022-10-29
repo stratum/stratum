@@ -299,7 +299,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
 ::util::StatusOr<uint32> TdiSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;
-  CHECK_RETURN_IF_FALSE(port >= 0)
+  RET_CHECK(port >= 0)
       << "Port ID must be non-negative. Attempted to get port " << port
       << " on dev " << device << ".";
 
@@ -312,12 +312,12 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   //     Otherwise, port is already 0 in the non-channelized case
   const int channel =
       (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
-  CHECK_RETURN_IF_FALSE(channel >= 0)
+  RET_CHECK(channel >= 0)
       << "Channel must be set for port " << port << " on dev " << device << ".";
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
-  CHECK_RETURN_IF_FALSE(r > 0 && r < sizeof(port_string))
+  RET_CHECK(r > 0 && r < sizeof(port_string))
       << "Failed to build port string for port " << port << " channel "
       << channel << " on dev " << device << ".";
 
@@ -344,9 +344,9 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
 ::util::Status TdiSdeWrapper::InitializeSde(
     const std::string& sde_install_path, const std::string& sde_config_file,
     bool run_in_background) {
-  CHECK_RETURN_IF_FALSE(sde_install_path != "")
+  RET_CHECK(sde_install_path != "")
       << "sde_install_path is required";
-  CHECK_RETURN_IF_FALSE(sde_config_file != "") << "sde_config_file is required";
+  RET_CHECK(sde_config_file != "") << "sde_config_file is required";
 
   // Parse bf_switchd arguments.
   auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
@@ -386,7 +386,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   const ::tdi::Device *device = nullptr;
   absl::WriterMutexLock l(&data_lock_);
 
-  CHECK_RETURN_IF_FALSE(device_config.programs_size() > 0);
+  RET_CHECK(device_config.programs_size() > 0);
 
   tdi_id_mapper_.reset();
 
@@ -415,7 +415,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
     p4_program->bfrt_json_file = &(*tdi_path)[0];
     p4_program->num_p4_pipelines = program.pipelines_size();
     path_strings.emplace_back(std::move(tdi_path));
-    CHECK_RETURN_IF_FALSE(program.pipelines_size() > 0);
+    RET_CHECK(program.pipelines_size() > 0);
     for (int j = 0; j < program.pipelines_size(); ++j) {
       const auto& pipeline = program.pipelines(j);
       const std::string pipeline_path =
@@ -436,7 +436,7 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
       path_strings.emplace_back(std::move(config_path));
       path_strings.emplace_back(std::move(context_path));
 
-      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= MAX_P4_PIPELINES);
+      RET_CHECK(pipeline.scope_size() <= MAX_P4_PIPELINES);
       pipeline_profile->num_pipes_in_scope = pipeline.scope_size();
       for (int p = 0; p < pipeline.scope_size(); ++p) {
         const auto& scope = pipeline.scope(p);
@@ -452,14 +452,14 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   // Set SDE log levels for modules of interest.
   // TODO(max): create story around SDE logs. How to get them into glog? What
   // levels to enable for which modules?
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  CHECK_RETURN_IF_FALSE(
+  RET_CHECK(
       bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   if (VLOG_IS_ON(2)) {
-    CHECK_RETURN_IF_FALSE(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
+    RET_CHECK(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
                                                BF_LOG_WARN) == 0);
   }
 

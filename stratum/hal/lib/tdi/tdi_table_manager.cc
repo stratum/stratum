@@ -47,7 +47,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
 ::util::Status TdiTableManager::PushForwardingPipelineConfig(
     const TdiDeviceConfig& config) {
   absl::WriterMutexLock l(&lock_);
-  CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
+  RET_CHECK(config.programs_size() == 1)
       << "Only one P4 program is supported.";
   register_timer_descriptors_.clear();
   const auto& program = config.programs(0);
@@ -56,7 +56,6 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
       absl::make_unique<P4InfoManager>(p4_info);
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
   p4_info_manager_ = std::move(p4_info_manager);
-  RETURN_IF_ERROR(SetupRegisterReset(p4_info));
 
   return ::util::OkStatus();
 }
@@ -67,92 +66,10 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
   return ::util::OkStatus();
 }
 
-::util::Status TdiTableManager::SetupRegisterReset(
-    const ::p4::config::v1::P4Info& p4_info) {
-  if (!FLAGS_incompatible_enable_register_reset_annotations) {
-    return ::util::OkStatus();
-  }
-  // Crude check to prevent consecutive pipeline pushes.
-  static bool first_time = true;
-  if (!first_time) {
-    LOG(FATAL) << "Multiple pipeline pushes are not allowed when using "
-                  "register reset annotations.";
-  }
-  first_time = false;
-  if (mode_ == OPERATION_MODE_SIM) {
-    LOG(WARNING)
-        << "Register reset annotations are disabled in simulation mode.";
-    return ::util::OkStatus();
-  }
-
-  // Validate consistent reset intervals.
-  std::vector<uint64> intervals_ms;
-  for (const auto& reg : p4_info.registers()) {
-    ASSIGN_OR_RETURN(
-        P4Annotation annotation,
-        p4_info_manager_->GetSwitchStackAnnotations(reg.preamble().name()));
-    if (annotation.register_reset_interval_ms()) {
-      intervals_ms.push_back(annotation.register_reset_interval_ms());
-    }
-  }
-  if (intervals_ms.empty()) {
-    return ::util::OkStatus();
-  }
-  std::sort(intervals_ms.begin(), intervals_ms.end());
-  auto last = std::unique(intervals_ms.begin(), intervals_ms.end());
-  intervals_ms.erase(last, intervals_ms.end());
-  if (intervals_ms.size() != 1) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
-        << "Inconsistent register reset intervals are not supported.";
-  }
-
-  TimerDaemon::DescriptorPtr handle;
-  RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
-      0, intervals_ms[0],
-      [this, p4_info]() -> ::util::Status {
-        auto t1 = absl::Now();
-        ASSIGN_OR_RETURN(auto session, tdi_sde_interface_->CreateSession());
-        RETURN_IF_ERROR(session->BeginBatch());
-        ::util::Status status = ::util::OkStatus();
-        for (const auto& reg : p4_info.registers()) {
-          P4Annotation annotation;
-          {
-            absl::ReaderMutexLock l(&lock_);
-            ASSIGN_OR_RETURN(annotation,
-                             p4_info_manager_->GetSwitchStackAnnotations(
-                                 reg.preamble().name()));
-          }
-          std::string clear_value =
-              Uint64ToByteStream(annotation.register_reset_value());
-          ::p4::v1::RegisterEntry register_entry;
-          register_entry.set_register_id(reg.preamble().id());
-          register_entry.mutable_data()->set_bitstring(clear_value);
-          register_entry.clear_index();
-          APPEND_STATUS_IF_ERROR(
-              status, this->WriteRegisterEntry(
-                          session, ::p4::v1::Update::MODIFY, register_entry));
-          VLOG(1) << "Cleared register " << reg.preamble().name() << ".";
-        }
-        // We need to end the batch and destroy the session in every case.
-        RETURN_IF_ERROR(session->EndBatch());
-        session.reset();
-
-        auto t2 = absl::Now();
-        VLOG(1) << "Reset all registers in "
-                << (t2 - t1) / absl::Milliseconds(1) << " ms.";
-
-        return status;
-      },
-      &handle));
-  register_timer_descriptors_.push_back(handle);
-
-  return ::util::OkStatus();
-}
-
 ::util::Status TdiTableManager::BuildTableKey(
     const ::p4::v1::TableEntry& table_entry,
     TdiSdeInterface::TableKeyInterface* table_key) {
-  CHECK_RETURN_IF_FALSE(table_key);
+  RET_CHECK(table_key);
   bool needs_priority = false;
   ASSIGN_OR_RETURN(auto table,
                    p4_info_manager_->FindTableByID(table_entry.table_id()));
@@ -173,51 +90,51 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
       auto mk = *it;
       switch (mk.field_match_type_case()) {
         case ::p4::v1::FieldMatch::kExact: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+          RET_CHECK(expected_match_field.match_type() ==
                                 ::p4::config::v1::MatchField::EXACT)
               << "Found match field of type EXACT does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
+          RET_CHECK(!IsDontCareMatch(mk.exact()));
           RETURN_IF_ERROR(
               table_key->SetExact(mk.field_id(), mk.exact().value()));
           break;
         }
         case ::p4::v1::FieldMatch::kTernary: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+          RET_CHECK(expected_match_field.match_type() ==
                                 ::p4::config::v1::MatchField::TERNARY)
               << "Found match field of type TERNARY does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
+          RET_CHECK(!IsDontCareMatch(mk.ternary()));
           RETURN_IF_ERROR(table_key->SetTernary(
               mk.field_id(), mk.ternary().value(), mk.ternary().mask()));
           break;
         }
         case ::p4::v1::FieldMatch::kLpm: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+          RET_CHECK(expected_match_field.match_type() ==
                                 ::p4::config::v1::MatchField::LPM)
               << "Found match field of type LPM does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
+          RET_CHECK(!IsDontCareMatch(mk.lpm()));
           RETURN_IF_ERROR(table_key->SetLpm(mk.field_id(), mk.lpm().value(),
                                             mk.lpm().prefix_len()));
           break;
         }
         case ::p4::v1::FieldMatch::kRange: {
-          CHECK_RETURN_IF_FALSE(expected_match_field.match_type() ==
+          RET_CHECK(expected_match_field.match_type() ==
                                 ::p4::config::v1::MatchField::RANGE)
               << "Found match field of type Range does not fit match field "
               << expected_match_field.ShortDebugString() << ".";
           // TODO(max): Do we need to check this for range matches?
-          // CHECK_RETURN_IF_FALSE(!IsDontCareMatch(match.range(), ));
+          // RET_CHECK(!IsDontCareMatch(match.range(), ));
           RETURN_IF_ERROR(table_key->SetRange(mk.field_id(), mk.range().low(),
                                               mk.range().high()));
           break;
         }
         case ::p4::v1::FieldMatch::kOptional:
-          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()));
+          RET_CHECK(!IsDontCareMatch(mk.optional()));
           ABSL_FALLTHROUGH_INTENDED;
         default:
-          RETURN_ERROR(ERR_INVALID_PARAM)
+          return MAKE_ERROR(ERR_INVALID_PARAM)
               << "Invalid or unsupported match key: " << mk.ShortDebugString();
       }
     } else {
@@ -235,7 +152,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
           break;
         }
         default:
-          RETURN_ERROR(ERR_INVALID_PARAM)
+          return MAKE_ERROR(ERR_INVALID_PARAM)
               << "Invalid field match type "
               << ::p4::config::v1::MatchField_MatchType_Name(
                      expected_match_field.match_type())
@@ -246,9 +163,9 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
 
   // Priority handling.
   if (!needs_priority && table_entry.priority()) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Non-zero priority for exact/LPM match.";
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Non-zero priority for exact/LPM match.";
   } else if (needs_priority && table_entry.priority() == 0) {
-    RETURN_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_INVALID_PARAM)
         << "Zero priority for ternary/range/optional match.";
   } else if (needs_priority) {
     ASSIGN_OR_RETURN(uint64 priority,
@@ -287,7 +204,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
       break;
     case ::p4::v1::TableAction::kActionProfileActionSet:
     default:
-      RETURN_ERROR(ERR_UNIMPLEMENTED)
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported action type: " << table_entry.action().type_case();
   }
 
@@ -304,7 +221,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
-  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
+  RET_CHECK(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
   absl::ReaderMutexLock l(&lock_);
@@ -315,7 +232,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
 
   if (!table_entry.is_default_action()) {
     if (table.is_const_table()) {
-      RETURN_ERROR(ERR_PERMISSION_DENIED)
+      return MAKE_ERROR(ERR_PERMISSION_DENIED)
           << "Can't write to table " << table.preamble().name()
           << " because it has const entries.";
     }
@@ -344,16 +261,16 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
             device_, session, table_id, table_key.get()));
         break;
       default:
-        RETURN_ERROR(ERR_INTERNAL)
+        return MAKE_ERROR(ERR_INTERNAL)
             << "Unsupported update type: " << type << " in table entry "
             << table_entry.ShortDebugString() << ".";
     }
   } else {
-    CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+    RET_CHECK(type == ::p4::v1::Update::MODIFY)
         << "The table default entry can only be modified.";
-    CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
+    RET_CHECK(table_entry.match_size() == 0)
         << "Default action must not contain match fields.";
-    CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
+    RET_CHECK(table_entry.priority() == 0)
         << "Default action must not contain a priority field.";
 
     if (table_entry.has_action()) {
@@ -436,7 +353,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
         break;
       }
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM)
+        return MAKE_ERROR(ERR_INVALID_PARAM)
             << "Invalid field match type "
             << ::p4::config::v1::MatchField_MatchType_Name(
                    expected_match_field.match_type())
@@ -528,7 +445,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(table_entry.table_id())
+  RET_CHECK(table_entry.table_id())
       << "Missing table id on default action read "
       << table_entry.ShortDebugString() << ".";
 
@@ -561,15 +478,15 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
+  RET_CHECK(table_entry.match_size() == 0)
       << "Match filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
+  RET_CHECK(table_entry.priority() == 0)
       << "Priority filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.has_action() == false)
+  RET_CHECK(table_entry.has_action() == false)
       << "Action filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.metadata() == "")
+  RET_CHECK(table_entry.metadata() == "")
       << "Metadata filters on wildcard reads are not supported.";
-  CHECK_RETURN_IF_FALSE(table_entry.is_default_action() == false)
+  RET_CHECK(table_entry.is_default_action() == false)
       << "Default action filters on wildcard reads are not supported.";
 
   ASSIGN_OR_RETURN(uint32 table_id,
@@ -602,7 +519,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::TableEntry& table_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(writer) << "Null writer.";
+  RET_CHECK(writer) << "Null writer.";
   absl::ReaderMutexLock l(&lock_);
 
   // We have four cases to handle:
@@ -665,13 +582,13 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of DirectCounterEntry "
       << direct_counter_entry.ShortDebugString() << " must be MODIFY.";
 
   // Read table entry first.
   const auto& table_entry = direct_counter_entry.table_entry();
-  CHECK_RETURN_IF_FALSE(table_entry.action().action().action_id() == 0)
+  RET_CHECK(table_entry.action().action().action_id() == 0)
       << "Found action on DirectCounterEntry "
       << direct_counter_entry.ShortDebugString();
   ASSIGN_OR_RETURN(uint32 table_id,
@@ -714,7 +631,7 @@ TdiTableManager::ReadDirectCounterEntry(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
   const auto& table_entry = direct_counter_entry.table_entry();
-  CHECK_RETURN_IF_FALSE(table_entry.action().action().action_id() == 0)
+  RET_CHECK(table_entry.action().action().action_id() == 0)
       << "Found action on DirectCounterEntry "
       << direct_counter_entry.ShortDebugString();
 
@@ -805,13 +722,13 @@ TdiTableManager::ReadDirectCounterEntry(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::RegisterEntry& register_entry) {
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of RegisterEntry " << register_entry.ShortDebugString()
       << " must be MODIFY.";
-  CHECK_RETURN_IF_FALSE(register_entry.has_data())
+  RET_CHECK(register_entry.has_data())
       << "RegisterEntry " << register_entry.ShortDebugString()
       << " must have data.";
-  CHECK_RETURN_IF_FALSE(register_entry.data().data_case() ==
+  RET_CHECK(register_entry.data().data_case() ==
                         ::p4::v1::P4Data::kBitstring)
       << "Only bitstring registers data types are supported.";
 
@@ -833,7 +750,7 @@ TdiTableManager::ReadDirectCounterEntry(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::MeterEntry& meter_entry,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
-  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+  RET_CHECK(meter_entry.meter_id() != 0)
       << "Wildcard MeterEntry reads are not supported.";
   ASSIGN_OR_RETURN(uint32 table_id,
                    tdi_sde_interface_->GetTdiRtId(meter_entry.meter_id()));
@@ -850,7 +767,7 @@ TdiTableManager::ReadDirectCounterEntry(
         meter_units_in_bits = false;
         break;
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
+        return MAKE_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
                                         << meter.ShortDebugString() << ".";
     }
   }
@@ -895,10 +812,10 @@ TdiTableManager::ReadDirectCounterEntry(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::MeterEntry& meter_entry) {
-  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+  RET_CHECK(type == ::p4::v1::Update::MODIFY)
       << "Update type of RegisterEntry " << meter_entry.ShortDebugString()
       << " must be MODIFY.";
-  CHECK_RETURN_IF_FALSE(meter_entry.meter_id() != 0)
+  RET_CHECK(meter_entry.meter_id() != 0)
       << "Missing meter id in MeterEntry " << meter_entry.ShortDebugString()
       << ".";
 
@@ -915,7 +832,7 @@ TdiTableManager::ReadDirectCounterEntry(
         meter_units_in_packets = true;
         break;
       default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
+        return MAKE_ERROR(ERR_INVALID_PARAM) << "Unsupported meter spec on meter "
                                         << meter.ShortDebugString() << ".";
     }
   }

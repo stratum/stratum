@@ -92,7 +92,7 @@ namespace tdi {
   auto* hal = TofinoHal::CreateSingleton(
       stratum::hal::OPERATION_MODE_STANDALONE, tdi_switch.get(),
       auth_policy_checker.get());
-  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
+  RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
 
   // Set up P4 runtime servers.
   ::util::Status status = hal->Setup();

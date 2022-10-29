@@ -126,8 +126,8 @@ TofinoSwitch::~TofinoSwitch() {}
 ::util::Status TofinoSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
-  CHECK_RETURN_IF_FALSE(results != nullptr)
+  RET_CHECK(req.device_id()) << "No device_id in WriteRequest.";
+  RET_CHECK(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
   absl::ReaderMutexLock l(&chassis_lock);
@@ -139,9 +139,9 @@ TofinoSwitch::~TofinoSwitch() {}
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
-  CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
-  CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
-  CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
+  RET_CHECK(req.device_id()) << "No device_id in ReadRequest.";
+  RET_CHECK(writer) << "Channel writer must be non-null.";
+  RET_CHECK(details) << "Details pointer must be non-null.";
 
   absl::ReaderMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* tdi_node, GetTdiNodeFromNodeId(req.device_id()));

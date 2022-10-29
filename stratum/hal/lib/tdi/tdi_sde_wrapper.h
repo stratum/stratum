@@ -123,7 +123,7 @@ class TdiSdeWrapper : public TdiSdeInterface {
       ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
       device->createSession(&tdi_session);
 
-      CHECK_RETURN_IF_FALSE(tdi_session) << "Failed to create new session.";
+      RET_CHECK(tdi_session) << "Failed to create new session.";
 
       return std::shared_ptr<TdiSdeInterface::SessionInterface>(
           new Session(tdi_session));

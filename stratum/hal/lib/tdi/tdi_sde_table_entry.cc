@@ -36,11 +36,11 @@ using namespace stratum::hal::tdi::helpers;
 
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_key = dynamic_cast<const TableKey*>(table_key);
-  CHECK_RETURN_IF_FALSE(real_table_key);
+  RET_CHECK(real_table_key);
   auto real_table_data = dynamic_cast<const TableData*>(table_data);
-  CHECK_RETURN_IF_FALSE(real_table_data);
+  RET_CHECK(real_table_data);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -80,11 +80,11 @@ using namespace stratum::hal::tdi::helpers;
 
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_key = dynamic_cast<const TableKey*>(table_key);
-  CHECK_RETURN_IF_FALSE(real_table_key);
+  RET_CHECK(real_table_key);
   auto real_table_data = dynamic_cast<const TableData*>(table_data);
-  CHECK_RETURN_IF_FALSE(real_table_data);
+  RET_CHECK(real_table_data);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -118,9 +118,9 @@ using namespace stratum::hal::tdi::helpers;
 
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_key = dynamic_cast<const TableKey*>(table_key);
-  CHECK_RETURN_IF_FALSE(real_table_key);
+  RET_CHECK(real_table_key);
 
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
@@ -151,11 +151,11 @@ using namespace stratum::hal::tdi::helpers;
     TableDataInterface* table_data) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_key = dynamic_cast<const TableKey*>(table_key);
-  CHECK_RETURN_IF_FALSE(real_table_key);
+  RET_CHECK(real_table_key);
   auto real_table_data = dynamic_cast<const TableData*>(table_data);
-  CHECK_RETURN_IF_FALSE(real_table_data);
+  RET_CHECK(real_table_data);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 
@@ -178,7 +178,7 @@ using namespace stratum::hal::tdi::helpers;
     std::vector<std::unique_ptr<TableDataInterface>>* table_values) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 
@@ -209,9 +209,9 @@ using namespace stratum::hal::tdi::helpers;
     uint32 table_id, const TableDataInterface* table_data) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_data = dynamic_cast<const TableData*>(table_data);
-  CHECK_RETURN_IF_FALSE(real_table_data);
+  RET_CHECK(real_table_data);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 
@@ -232,7 +232,7 @@ using namespace stratum::hal::tdi::helpers;
     uint32 table_id) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 
@@ -253,9 +253,9 @@ using namespace stratum::hal::tdi::helpers;
     uint32 table_id, TableDataInterface* table_data) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  CHECK_RETURN_IF_FALSE(real_session);
+  RET_CHECK(real_session);
   auto real_table_data = dynamic_cast<const TableData*>(table_data);
-  CHECK_RETURN_IF_FALSE(real_table_data);
+  RET_CHECK(real_table_data);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 

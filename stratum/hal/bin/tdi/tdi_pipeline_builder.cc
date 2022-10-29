@@ -38,7 +38,7 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
 )USAGE";
 
 ::util::Status Unpack() {
-  CHECK_RETURN_IF_FALSE(!FLAGS_bf_pipeline_config_binary_file.empty())
+  RET_CHECK(!FLAGS_bf_pipeline_config_binary_file.empty())
       << "pipeline_config_binary_file must be specified.";
 
   BfPipelineConfig bf_config;
@@ -48,12 +48,12 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
   // TODO(max): replace with <filesystem> once we move to C++17
   char* resolved_path = realpath(FLAGS_unpack_dir.c_str(), nullptr);
   if (!resolved_path) {
-    RETURN_ERROR(ERR_INTERNAL) << "Unable to resolve path " << FLAGS_unpack_dir;
+    return MAKE_ERROR(ERR_INTERNAL) << "Unable to resolve path " << FLAGS_unpack_dir;
   }
   std::string base_path(resolved_path);
   free(resolved_path);
 
-  CHECK_RETURN_IF_FALSE(!bf_config.p4_name().empty());
+  RET_CHECK(!bf_config.p4_name().empty());
   LOG(INFO) << "Found P4 program: " << bf_config.p4_name();
   RETURN_IF_ERROR(
       RecursivelyCreateDir(absl::StrCat(base_path, "/", bf_config.p4_name())));
@@ -61,7 +61,7 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
       bf_config.bfruntime_info(),
       absl::StrCat(base_path, "/", bf_config.p4_name(), "/", "bfrt.json")));
   for (const auto& profile : bf_config.profiles()) {
-    CHECK_RETURN_IF_FALSE(!profile.profile_name().empty());
+    RET_CHECK(!profile.profile_name().empty());
     LOG(INFO) << "\tFound profile: " << profile.profile_name();
     RETURN_IF_ERROR(RecursivelyCreateDir(absl::StrCat(
         base_path, "/", bf_config.p4_name(), "/", profile.profile_name())));
@@ -87,7 +87,7 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
     return Unpack();
   }
 
-  CHECK_RETURN_IF_FALSE(!FLAGS_p4c_conf_file.empty())
+  RET_CHECK(!FLAGS_p4c_conf_file.empty())
       << "p4c_conf_file must be specified.";
 
   nlohmann::json conf;
@@ -95,7 +95,7 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
     std::string conf_content;
     RETURN_IF_ERROR(ReadFileToString(FLAGS_p4c_conf_file, &conf_content));
     conf = nlohmann::json::parse(conf_content, nullptr, false);
-    CHECK_RETURN_IF_FALSE(!conf.is_discarded()) << "Failed to parse .conf";
+    RET_CHECK(!conf.is_discarded()) << "Failed to parse .conf";
     VLOG(1) << ".conf content: " << conf.dump();
   }
 
@@ -103,11 +103,11 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
   // Taken from bf_pipeline_utils.cc
   BfPipelineConfig bf_config;
   try {
-    CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
+    RET_CHECK(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";
     // Only support single devices for now.
     const auto& device = conf["p4_devices"][0];
-    CHECK_RETURN_IF_FALSE(device["p4_programs"].size() == 1)
+    RET_CHECK(device["p4_programs"].size() == 1)
         << "BfPipelineConfig only supports single P4 programs.";
     const auto& program = device["p4_programs"][0];
     bf_config.set_p4_name(program["program-name"]);
