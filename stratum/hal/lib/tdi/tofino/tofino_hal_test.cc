@@ -50,8 +50,8 @@ class TofinoHalTest : public ::testing::Test {
     switch_mock_ = new ::testing::StrictMock<SwitchMock>();
     auth_policy_checker_mock_ =
         new ::testing::StrictMock<AuthPolicyCheckerMock>();
-    hal_ = TofinoHal::CreateSingleton(
-	kMode, switch_mock_, auth_policy_checker_mock_);
+    hal_ = TofinoHal::CreateSingleton(kMode, switch_mock_,
+                                      auth_policy_checker_mock_);
     ASSERT_NE(hal_, nullptr);
   }
 
@@ -313,7 +313,8 @@ TEST_F(TofinoHalTest, ColdbootSetupFailureWhenChassisConfigPushFails) {
   EXPECT_THAT(errors[0].error_message(), HasSubstr("saved chassis config"));
 }
 
-TEST_F(TofinoHalTest, ColdbootSetupFailureWhenPipelineConfigPushFailsForSomeNodes) {
+TEST_F(TofinoHalTest,
+       ColdbootSetupFailureWhenPipelineConfigPushFailsForSomeNodes) {
   // Setup and save the test config(s).
   ChassisConfig chassis_config;
   ForwardingPipelineConfigs forwarding_pipeline_configs;
@@ -436,7 +437,8 @@ TEST_F(TofinoHalTest, ColdbootTeardownFailureWhenSwitchInterfaceShutdownFails) {
   EXPECT_THAT(errors[0].error_message(), HasSubstr("shut down"));
 }
 
-TEST_F(TofinoHalTest, ColdbootTeardownFailureWhenAuthPolicyCheckerShutdownFails) {
+TEST_F(TofinoHalTest,
+       ColdbootTeardownFailureWhenAuthPolicyCheckerShutdownFails) {
   EXPECT_CALL(*switch_mock_, Shutdown()).WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
       .WillOnce(

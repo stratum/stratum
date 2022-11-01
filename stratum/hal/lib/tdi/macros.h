@@ -73,7 +73,7 @@ class BooleanBfStatus {
 
 // A macro for simplify checking and logging the return value of a SDE function
 // call.
-#define RETURN_IF_TDI_ERROR(expr)                            \
+#define RETURN_IF_TDI_ERROR(expr)                             \
   if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {  \
   } else /* NOLINT */                                         \
     return MAKE_ERROR(__ret.error_code())                     \

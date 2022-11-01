@@ -6,15 +6,14 @@
 // Implements the YangParseTreePaths::AddSubtreeNode() method and its
 // supporting functions.
 
-#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
-
 #include "absl/strings/str_format.h"
 #include "gnmi/gnmi.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_component.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
-#include "stratum/hal/lib/yang/yang_parse_tree.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
 
 namespace stratum {
 namespace hal {
@@ -26,8 +25,8 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /debug/nodes/node[name=<name>]/packet-io/debug-string
-void SetUpDebugNodesNodePacketIoDebugString(
-    uint64 node_id, TreeNode* node, YangParseTree* tree) {
+void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
+                                            YangParseTree* tree) {
   // Regular method using a template cannot be used to get the OnPoll functor as
   // std::string fields are treated differently by the PROTO-to-C++ generator:
   // the getter returns "const std::string&" instead of "string" which leads to
@@ -78,8 +77,9 @@ void SetUpComponentsComponentIntegratedCircuitConfigNodeId(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/integrated-circuit/state/node-id
-void SetUpComponentsComponentIntegratedCircuitStateNodeId(
-    uint64 node_id, TreeNode* node, YangParseTree* tree) {
+void SetUpComponentsComponentIntegratedCircuitStateNodeId(uint64 node_id,
+                                                          TreeNode* node,
+                                                          YangParseTree* tree) {
   auto poll_functor = [node_id](const GnmiEvent& event,
                                 const ::gnmi::Path& path,
                                 GnmiSubscribeStream* stream) {
@@ -91,7 +91,7 @@ void SetUpComponentsComponentIntegratedCircuitStateNodeId(
       ->SetOnChangeHandler(on_change_functor);
 }
 
-} // namespace
+}  // namespace
 
 //////////////////////
 //  AddSubtreeNode  //
@@ -126,5 +126,5 @@ void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   SetUpComponentsComponentStateDescription(node.name(), tree_node);
 }
 
-} // namespace hal
-} // namespace stratum
+}  // namespace hal
+}  // namespace stratum

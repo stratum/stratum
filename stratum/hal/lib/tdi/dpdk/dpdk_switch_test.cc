@@ -75,13 +75,12 @@ class DpdkSwitchTest : public ::testing::Test {
   void SetUp() override {
     // Use NiceMock to suppress "uninteresting mock function call" warnings
     sde_mock_ = absl::make_unique<NiceMock<TdiSdeMock>>();
-    chassis_manager_mock_ = absl::make_unique<NiceMock<DpdkChassisManagerMock>>();
+    chassis_manager_mock_ =
+        absl::make_unique<NiceMock<DpdkChassisManagerMock>>();
     node_mock_ = absl::make_unique<NiceMock<TdiNodeMock>>();
     unit_to_tdi_node_mock_[kUnit] = node_mock_.get();
     switch_ = DpdkSwitch::CreateInstance(
-        chassis_manager_mock_.get(),
-        sde_mock_.get(),
-        unit_to_tdi_node_mock_);
+        chassis_manager_mock_.get(), sde_mock_.get(), unit_to_tdi_node_mock_);
 #if 0
     // no 'shutdown'
     shutdown = false;  // global variable initialization
@@ -98,8 +97,7 @@ class DpdkSwitchTest : public ::testing::Test {
   void PushChassisConfigSuccessfully() {
     ChassisConfig config;
     config.add_nodes()->set_id(kNodeId);
-    EXPECT_CALL(*node_mock_,
-                PushChassisConfig(EqualsProto(config), kNodeId))
+    EXPECT_CALL(*node_mock_, PushChassisConfig(EqualsProto(config), kNodeId))
         .WillOnce(Return(::util::OkStatus()));
     EXPECT_OK(switch_->PushChassisConfig(config));
   }
@@ -116,7 +114,7 @@ class DpdkSwitchTest : public ::testing::Test {
 };
 
 TEST_F(DpdkSwitchTest, PushChassisConfigSucceeds) {
-    PushChassisConfigSuccessfully();
+  PushChassisConfigSuccessfully();
 }
 
 TEST_F(DpdkSwitchTest, PushChassisConfigFailsWhenNodePushFails) {
@@ -154,8 +152,7 @@ TEST_F(DpdkSwitchTest, PushForwardingPipelineConfigSucceeds) {
   PushChassisConfigSuccessfully();
 
   ::p4::v1::ForwardingPipelineConfig config;
-  EXPECT_CALL(*node_mock_,
-              PushForwardingPipelineConfig(EqualsProto(config)))
+  EXPECT_CALL(*node_mock_, PushForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(switch_->PushForwardingPipelineConfig(kNodeId, config));
 }
@@ -166,8 +163,7 @@ TEST_F(DpdkSwitchTest, PushForwardingPipelineConfigFailsWhenPushFails) {
   PushChassisConfigSuccessfully();
 
   ::p4::v1::ForwardingPipelineConfig config;
-  EXPECT_CALL(*node_mock_,
-              PushForwardingPipelineConfig(EqualsProto(config)))
+  EXPECT_CALL(*node_mock_, PushForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(DefaultError()));
   EXPECT_THAT(switch_->PushForwardingPipelineConfig(kNodeId, config),
               DerivedFromStatus(DefaultError()));
@@ -178,8 +174,7 @@ TEST_F(DpdkSwitchTest, VerifyForwardingPipelineConfigSucceeds) {
 
   ::p4::v1::ForwardingPipelineConfig config;
   // Verify should always be called before push.
-  EXPECT_CALL(*node_mock_,
-              VerifyForwardingPipelineConfig(EqualsProto(config)))
+  EXPECT_CALL(*node_mock_, VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(switch_->VerifyForwardingPipelineConfig(kNodeId, config));
 }

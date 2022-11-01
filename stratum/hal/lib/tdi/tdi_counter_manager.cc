@@ -24,7 +24,8 @@ std::unique_ptr<TdiCounterManager> TdiCounterManager::CreateInstance(
 
 TdiCounterManager::TdiCounterManager(TdiSdeInterface* tdi_sde_interface,
                                      int device)
-    : tdi_sde_interface_(ABSL_DIE_IF_NULL(tdi_sde_interface)), device_(device) {}
+    : tdi_sde_interface_(ABSL_DIE_IF_NULL(tdi_sde_interface)),
+      device_(device) {}
 
 ::util::Status TdiCounterManager::PushForwardingPipelineConfig(
     const TdiDeviceConfig& config) {

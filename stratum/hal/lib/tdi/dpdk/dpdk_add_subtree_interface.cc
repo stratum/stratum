@@ -3,10 +3,8 @@
 // Copyright 2022 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-// Implements the DPDK-specific YangParseTreePaths::AddSubtreeInterface() method.
-// The supporting functions are in other files.
-
-#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
+// Implements the DPDK-specific YangParseTreePaths::AddSubtreeInterface()
+// method. The supporting functions are in other files.
 
 #include <string>
 
@@ -15,6 +13,7 @@
 #include "stratum/hal/lib/tdi/dpdk/dpdk_parse_tree_interface.h"
 #include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_interface.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
 
 namespace stratum {
 namespace hal {
@@ -32,7 +31,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
     const NodeConfigParams& node_config, YangParseTree* tree) {
   // No need to lock the mutex - it is locked by method calling this one.
   uint64 mac_address = kDummyMacAddress;
- 
+
   TreeNode* node = tree->AddNode(
       GetPath("interfaces")("virtual-interface", name)("config")("ifindex")());
   SetUpInterfacesInterfaceStateIfindex(node_id, port_id, node, tree);
@@ -41,8 +40,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
       GetPath("interfaces")("virtual-interface", name)("state")("name")());
   SetUpInterfacesInterfaceStateName(name, node);
 
-  node = tree->AddNode(
-      GetPath("interfaces")("virtual-interface", name)("state")("admin-status")());
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("state")("admin-status")());
   SetUpInterfacesInterfaceStateAdminStatus(node_id, port_id, node, tree);
 
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
@@ -50,7 +49,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   // realistic it is changed to SAMPLE with the period of 10s.
   // TODO(tmadejski) remove/update this functor once the support for reading
   // counters is implemented.
-  tree->AddNode(GetPath("interfaces")("virtual-interface", name)("config")("counters")())
+  tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                      name)("config")("counters")())
       ->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 
   node = tree->AddNode(GetPath("interfaces")(
@@ -63,33 +63,33 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-unicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersInUnicastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInUnicastPkts(node_id, port_id, node,
+                                                     tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("out-unicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersOutUnicastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutUnicastPkts(node_id, port_id, node,
+                                                      tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-broadcast-pkts")());
-  SetUpInterfacesInterfaceStateCountersInBroadcastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInBroadcastPkts(node_id, port_id, node,
+                                                       tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("out-broadcast-pkts")());
-  SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(node_id, port_id, node,
+                                                        tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-multicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersInMulticastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInMulticastPkts(node_id, port_id, node,
+                                                       tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("out-multicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutMulticastPkts(node_id, port_id, node,
+                                                        tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-discards")());
@@ -97,13 +97,13 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("out-discards")());
-  SetUpInterfacesInterfaceStateCountersOutDiscards(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutDiscards(node_id, port_id, node,
+                                                   tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-unknown-protos")());
-  SetUpInterfacesInterfaceStateCountersInUnknownProtos(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInUnknownProtos(node_id, port_id, node,
+                                                       tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-errors")());
@@ -115,57 +115,59 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("counters")("in-fcs-errors")());
-  SetUpInterfacesInterfaceStateCountersInFcsErrors(node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInFcsErrors(node_id, port_id, node,
+                                                   tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("host-name")());
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("host-name")());
   SetUpInterfacesInterfaceConfigHost("", node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("port-type")());
-  SetUpInterfacesInterfaceConfigPortType(
-      DpdkPortType::PORT_TYPE_NONE, node_id, port_id, node, tree);
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("port-type")());
+  SetUpInterfacesInterfaceConfigPortType(DpdkPortType::PORT_TYPE_NONE, node_id,
+                                         port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("device-type")());
-  SetUpInterfacesInterfaceConfigDeviceType(
-      DpdkPortType::PORT_TYPE_NONE, node_id, port_id, node, tree);
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("device-type")());
+  SetUpInterfacesInterfaceConfigDeviceType(DpdkPortType::PORT_TYPE_NONE,
+                                           node_id, port_id, node, tree);
 
+  LOG(WARNING) << __PRETTY_FUNCTION__;
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("pipeline-name")());
   SetUpInterfacesInterfaceConfigPipelineName("", node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("mempool-name")());
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("mempool-name")());
   SetUpInterfacesInterfaceConfigMempoolName("", node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("control-port")());
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("control-port")());
   SetUpInterfacesInterfaceConfigControlPort("", node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("pci-bdf")());
+  node = tree->AddNode(
+      GetPath("interfaces")("virtual-interface", name)("config")("pci-bdf")());
   SetUpInterfacesInterfaceConfigPciBdf("", node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("mtu")());
+  node = tree->AddNode(
+      GetPath("interfaces")("virtual-interface", name)("config")("mtu")());
   SetUpInterfacesInterfaceConfigMtuValue(0, node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("queues")());
+  node = tree->AddNode(
+      GetPath("interfaces")("virtual-interface", name)("config")("queues")());
   SetUpInterfacesInterfaceConfigQueues(0, node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("socket-path")());
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("socket-path")());
   SetUpInterfacesInterfaceConfigSocket("/", node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")(
-      "virtual-interface", name)("config")("packet-dir")());
-  SetUpInterfacesInterfaceConfigPacketDir(
-      PacketDirection::DIRECTION_NONE, node_id, port_id, node, tree);
+  node = tree->AddNode(GetPath("interfaces")("virtual-interface",
+                                             name)("config")("packet-dir")());
+  SetUpInterfacesInterfaceConfigPacketDir(PacketDirection::DIRECTION_NONE,
+                                          node_id, port_id, node, tree);
 
-  node = tree->AddNode(GetPath("interfaces")("virtual-interface", name)
-                       ("config")("qemu-socket-ip")());
+  node = tree->AddNode(GetPath("interfaces")(
+      "virtual-interface", name)("config")("qemu-socket-ip")());
   SetUpInterfacesInterfaceConfigQemuSocketIp("/", node_id, port_id, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
@@ -179,30 +181,34 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("qemu-vm-mac-address")());
-  SetUpInterfacesInterfaceConfigQemuVmMacAddress(node_id, port_id, mac_address, node, tree);
+  SetUpInterfacesInterfaceConfigQemuVmMacAddress(node_id, port_id, mac_address,
+                                                 node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("qemu-vm-netdev-id")());
-  SetUpInterfacesInterfaceConfigQemuVmNetdevId("/", node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceConfigQemuVmNetdevId("/", node_id, port_id, node,
+                                               tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("qemu-vm-chardev-id")());
-  SetUpInterfacesInterfaceConfigQemuVmChardevId("/", node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceConfigQemuVmChardevId("/", node_id, port_id, node,
+                                                tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("qemu-vm-device-id")());
-  SetUpInterfacesInterfaceConfigQemuVmDeviceId("/", node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceConfigQemuVmDeviceId("/", node_id, port_id, node,
+                                               tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "virtual-interface", name)("config")("native-socket-path")());
   SetUpInterfacesInterfaceConfigNativeSocket("/", node_id, port_id, node, tree);
 
-  node = tree->AddNode(
-      GetPath("interfaces")("virtual-interface", name)("config")("tdi-portin-id")());
+  node = tree->AddNode(GetPath("interfaces")(
+      "virtual-interface", name)("config")("tdi-portin-id")());
   SetUpInterfacesInterfaceConfigTdiPortinId(node_id, port_id, node, tree);
 
-  node = tree->AddNode(
-      GetPath("interfaces")("virtual-interface", name)("config")("tdi-portout-id")());
+  node = tree->AddNode(GetPath("interfaces")(
+      "virtual-interface", name)("config")("tdi-portout-id")());
   SetUpInterfacesInterfaceConfigTdiPortoutId(node_id, port_id, node, tree);
 
   absl::flat_hash_map<uint32, uint32> internal_priority_to_q_num;
@@ -214,8 +220,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
     uint32* q_num =
         gtl::FindOrNull(internal_priority_to_q_num, e.internal_priority());
     if (q_num != nullptr) {
-      gtl::InsertIfNotPresent(
-          &q_num_to_trafic_class, *q_num, e.traffic_class());
+      gtl::InsertIfNotPresent(&q_num_to_trafic_class, *q_num,
+                              e.traffic_class());
     }
   }
 
@@ -226,27 +232,32 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
     std::string queue_name = TrafficClass_Name(e.second);
 
     // Add output-qos-related leafs.
-    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
-        "output")("queues")("queue", queue_name)("state")("name")());
+    node =
+        tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
+            "output")("queues")("queue", queue_name)("state")("name")());
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateName(queue_name, node);
 
-    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
-        "output")("queues")("queue", queue_name)("state")("id")());
-    SetUpQosInterfacesInterfaceOutputQueuesQueueStateId(
-        node_id, port_id, queue_id, node, tree);
+    node =
+        tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
+            "output")("queues")("queue", queue_name)("state")("id")());
+    SetUpQosInterfacesInterfaceOutputQueuesQueueStateId(node_id, port_id,
+                                                        queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
-        "output")("queues")("queue", queue_name)("state")("transmit-pkts")());
+    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface",
+                                                      name)("output")("queues")(
+        "queue", queue_name)("state")("transmit-pkts")());
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateTransmitPkts(
         node_id, port_id, queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
-        "output")("queues")("queue", queue_name)("state")("transmit-octets")());
+    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface",
+                                                      name)("output")("queues")(
+        "queue", queue_name)("state")("transmit-octets")());
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateTransmitOctets(
         node_id, port_id, queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface", name)(
-        "output")("queues")("queue", queue_name)("state")("dropped-pkts")());
+    node = tree->AddNode(GetPath("qos")("interfaces")("virtual-interface",
+                                                      name)("output")("queues")(
+        "queue", queue_name)("state")("dropped-pkts")());
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
         node_id, port_id, queue_id, node, tree);
 

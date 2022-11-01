@@ -44,8 +44,8 @@ example:
   do {                                                                         \
     const ::grpc::Status _grpc_status = (expr);                                \
     if (GNMI_PREDICT_ERROR(!_grpc_status.ok())) {                              \
-      std::cout << "Return grpc errno ("<< _grpc_status.error_code() <<        \
-                   "), Reason: "<<_grpc_status.error_message() << std::endl;   \
+      std::cout << "Return grpc errno (" << _grpc_status.error_code()          \
+                << "), Reason: " << _grpc_status.error_message() << std::endl; \
       return 0;                                                                \
     }                                                                          \
   } while (0)
@@ -110,7 +110,7 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
 ::gnmi::SetRequest build_gnmi_set_req(std::string path, std::string val) {
   ::gnmi::SetRequest req;
   ::gnmi::Update* update;
-  char *check;
+  char* check;
 
   if (FLAGS_replace) {
     update = req.add_replace();
@@ -159,8 +159,8 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
 }
 
 bool extract_interface_node(char** path, char* node_path, bool* vhost_dev) {
-  char* key =  NULL;
-  char* value =  NULL;
+  char* key = NULL;
+  char* value = NULL;
   int found_node = 0;
 
   while (client_parse_key_value(path, &key, &value)) {
@@ -181,36 +181,35 @@ bool extract_interface_node(char** path, char* node_path, bool* vhost_dev) {
     }
     if (strcmp(key, FLAGS_name_key.c_str()) == 0) {
       // Hardcoded length of "[name=]/"
-      snprintf(node_path + strlen(node_path), strlen(value) + 9,
-               "[name=%s]/", value);
+      snprintf(node_path + strlen(node_path), strlen(value) + 9, "[name=%s]/",
+               value);
       found_node += 1;
     }
-    if (found_node == 2)
-      return 0;
+    if (found_node == 2) return 0;
   }
   return -1;
 }
 
 void traverse_params(char** path, char* node_path, char* config_value,
                      bool& flag) {
-  char* key =  NULL;
-  char* value =  NULL;
+  char* key = NULL;
+  char* value = NULL;
 
   if (client_parse_key_value(path, &key, &value)) {
     if ((value != NULL) && value[0] != '\0') {
       // This should be executed for a <key=value> pair, specifically for
       // SET operation.
       snprintf(node_path + strlen(node_path),
-               strlen(FLAGS_subtree_config.c_str()) + strlen(key) + 2,
-               "%s/%s", FLAGS_subtree_config.c_str(), key);
+               strlen(FLAGS_subtree_config.c_str()) + strlen(key) + 2, "%s/%s",
+               FLAGS_subtree_config.c_str(), key);
       strcpy(config_value, value);
       return;
     } else if (key != NULL && key[0] != '\0') {
       // This should be executed for a <key>, specifically for
       // GET operation.
       snprintf(node_path + strlen(node_path),
-               strlen(FLAGS_subtree_config.c_str()) + strlen(key) + 2,
-               "%s/%s", FLAGS_subtree_config.c_str(), key);
+               strlen(FLAGS_subtree_config.c_str()) + strlen(key) + 2, "%s/%s",
+               FLAGS_subtree_config.c_str(), key);
       return;
     }
   }
@@ -249,7 +248,7 @@ int Main(int argc, char** argv) {
     return 0;
   }
 
-  char *path = argv[2];
+  char* path = argv[2];
   char buffer[MAX_STR_LENGTH];
   bool params = true;
 
@@ -272,7 +271,7 @@ int Main(int argc, char** argv) {
     RETURN_IF_GRPC_ERROR(stub->Get(&ctx, req, &resp));
     PRINT_MSG(resp, "Get Response from Server");
   } else if (cmd == "set") {
-    while(params) {
+    while (params) {
       char path1[MAX_STR_LENGTH] = {0};
       char config_value[MAX_STR_LENGTH] = {0};
 
@@ -281,8 +280,9 @@ int Main(int argc, char** argv) {
       // If device is 'virtual-device' and port type is 'link', consider it a
       // 'vhost' type.
       if (((strcmp(config_value, "link") == 0) ||
-           (strcmp(config_value, "LINK") == 0)) && vhost_device) {
-           strcpy(config_value, "vhost");
+           (strcmp(config_value, "LINK") == 0)) &&
+          vhost_device) {
+        strcpy(config_value, "vhost");
       }
       if (params) {
         auto stub = ::gnmi::gNMI::NewStub(channel);

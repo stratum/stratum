@@ -15,11 +15,11 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/tdi/tdi.pb.h"
-#include "stratum/hal/lib/tdi/tdi_sde_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/tdi/tdi.pb.h"
+#include "stratum/hal/lib/tdi/tdi_sde_interface.h"
 #include "stratum/lib/timer_daemon.h"
 
 namespace stratum {
@@ -107,8 +107,9 @@ class TdiTableManager {
 
   // Builds a SDE table data from the given P4 table entry. The table data
   // object is reset, even in case of failure.
-  ::util::Status BuildTableData(const ::p4::v1::TableEntry& table_entry,
-                                TdiSdeInterface::TableDataInterface* table_data);
+  ::util::Status BuildTableData(
+      const ::p4::v1::TableEntry& table_entry,
+      TdiSdeInterface::TableDataInterface* table_data);
 
   ::util::Status ReadSingleTableEntry(
       std::shared_ptr<TdiSdeInterface::SessionInterface> session,

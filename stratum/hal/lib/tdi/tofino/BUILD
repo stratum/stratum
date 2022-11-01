@@ -5,8 +5,6 @@
 # Copyright 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load(
     "//bazel:rules.bzl",
     "HOST_ARCHES",

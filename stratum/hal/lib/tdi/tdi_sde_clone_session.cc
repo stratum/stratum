@@ -4,12 +4,11 @@
 
 // Target-agnostic SDE wrapper for CloneSession methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <memory>
-#include <stddef.h>
-#include <stdint.h>
 #include <vector>
 
 #include "absl/synchronization/mutex.h"
@@ -20,6 +19,7 @@
 #include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/macros.h"
 
 namespace stratum {
@@ -35,15 +35,14 @@ using namespace stratum::hal::tdi::helpers;
   RET_CHECK(real_session);
 
   const ::tdi::Table* table;
-  const ::tdi::Device *device = nullptr;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::Device* device = nullptr;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
-  RETURN_IF_TDI_ERROR(
-      tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
+  RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
   std::unique_ptr<::tdi::TableKey> table_key;
   std::unique_ptr<::tdi::TableData> table_data;
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
@@ -71,11 +70,11 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_ERROR(SetField(table_data.get(), "$max_pkt_len", max_pkt_len));
 
   if (insert) {
-    RETURN_IF_TDI_ERROR(table->entryAdd(
-        *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryAdd(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
   } else {
-    RETURN_IF_TDI_ERROR(table->entryMod(
-        *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
   }
 
   return ::util::OkStatus();
@@ -102,12 +101,11 @@ using namespace stratum::hal::tdi::helpers;
     uint32 session_id) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RET_CHECK(real_session);
 
   const ::tdi::Table* table;
-  RETURN_IF_TDI_ERROR(
-      tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
+  RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
   std::unique_ptr<::tdi::TableKey> table_key;
   std::unique_ptr<::tdi::TableData> table_data;
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
@@ -119,14 +117,14 @@ using namespace stratum::hal::tdi::helpers;
   // Key: $sid
   RETURN_IF_ERROR(SetFieldExact(table_key.get(), "$sid", session_id));
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
-  RETURN_IF_TDI_ERROR(table->entryDel(*real_session->tdi_session_,
-                                      *dev_tgt, *flags, *table_key));
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
+  RETURN_IF_TDI_ERROR(table->entryDel(*real_session->tdi_session_, *dev_tgt,
+                                      *flags, *table_key));
 
   return ::util::OkStatus();
 }
@@ -142,18 +140,17 @@ using namespace stratum::hal::tdi::helpers;
   RET_CHECK(max_pkt_lens);
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
-  RETURN_IF_TDI_ERROR(
-      tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
+  RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
   tdi_id_t action_id;
   dataFieldInfo = table->tableInfoGet()->dataFieldGet("$normal");
   RETURN_IF_NULL(dataFieldInfo);
@@ -168,12 +165,11 @@ using namespace stratum::hal::tdi::helpers;
     RETURN_IF_TDI_ERROR(table->dataAllocate(action_id, &datums[0]));
     // Key: $sid
     RETURN_IF_ERROR(SetFieldExact(keys[0].get(), "$sid", session_id));
-    RETURN_IF_TDI_ERROR(table->entryGet(
-        *real_session->tdi_session_, *dev_tgt, *flags, *keys[0],
-        datums[0].get()));
+    RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *keys[0], datums[0].get()));
   } else {
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
   }
 
   session_ids->resize(0);
@@ -201,13 +197,13 @@ using namespace stratum::hal::tdi::helpers;
     egress_ports->push_back(port);
     // Data: $session_enable
     bool session_enable;
-    RETURN_IF_ERROR(GetFieldBool(*table_data, "$session_enable", &session_enable));
-    RET_CHECK(session_enable)
-        << "Found a session that is not enabled.";
+    RETURN_IF_ERROR(
+        GetFieldBool(*table_data, "$session_enable", &session_enable));
+    RET_CHECK(session_enable) << "Found a session that is not enabled.";
     // Data: $ucast_egress_port_valid
     bool ucast_egress_port_valid;
     RETURN_IF_ERROR(GetFieldBool(*table_data, "$ucast_egress_port_valid",
-                             &ucast_egress_port_valid));
+                                 &ucast_egress_port_valid));
     RET_CHECK(ucast_egress_port_valid)
         << "Found a unicast egress port that is not set valid.";
   }

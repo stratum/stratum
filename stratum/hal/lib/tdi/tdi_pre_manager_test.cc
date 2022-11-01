@@ -78,7 +78,7 @@ TEST_F(TdiPreManagerTest, DeleteMulticastGroupTest) {
   ASSERT_OK(ParseProtoFromString(kMulticastGroupEntryText, &entry));
 
   EXPECT_OK(tdi_pre_manager_->WritePreEntry(session_mock,
-                                             ::p4::v1::Update::DELETE, entry));
+                                            ::p4::v1::Update::DELETE, entry));
 }
 
 }  // namespace tdi

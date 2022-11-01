@@ -4,18 +4,16 @@
 
 // Target-agnostic SDE wrapper for Meter methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <memory>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
-
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -23,6 +21,7 @@
 #include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/error.pb.h"
 
@@ -66,29 +65,29 @@ using namespace stratum::hal::tdi::helpers;
                              BytesPerSecondToKbits(pburst)));
   }
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   if (meter_index) {
     // Single index target.
     // Meter key: $METER_INDEX
     RETURN_IF_ERROR(
         SetFieldExact(table_key.get(), kMeterIndex, meter_index.value()));
-    RETURN_IF_TDI_ERROR(table->entryMod(
-        *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
   } else {
     // Wildcard write to all indices.
     size_t table_size;
-    RETURN_IF_TDI_ERROR(table->sizeGet(*real_session->tdi_session_,
-                                       *dev_tgt, *flags, &table_size));
+    RETURN_IF_TDI_ERROR(table->sizeGet(*real_session->tdi_session_, *dev_tgt,
+                                       *flags, &table_size));
     for (size_t i = 0; i < table_size; ++i) {
       // Meter key: $METER_INDEX
       RETURN_IF_ERROR(SetFieldExact(table_key.get(), kMeterIndex, i));
-      RETURN_IF_TDI_ERROR(table->entryMod(
-          *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+      RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                          *flags, *table_key, *table_data));
     }
   }
 
@@ -110,12 +109,12 @@ using namespace stratum::hal::tdi::helpers;
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
   std::vector<std::unique_ptr<::tdi::TableKey>> keys;
@@ -128,14 +127,13 @@ using namespace stratum::hal::tdi::helpers;
     RETURN_IF_TDI_ERROR(table->keyAllocate(&keys[0]));
     RETURN_IF_TDI_ERROR(table->dataAllocate(&datums[0]));
     // Key: $METER_INDEX
-    RETURN_IF_ERROR(SetFieldExact(keys[0].get(), kMeterIndex,
-                    meter_index.value()));
-    RETURN_IF_TDI_ERROR(table->entryGet(
-        *real_session->tdi_session_, *dev_tgt, *flags, *keys[0],
-        datums[0].get()));
+    RETURN_IF_ERROR(
+        SetFieldExact(keys[0].get(), kMeterIndex, meter_index.value()));
+    RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *keys[0], datums[0].get()));
   } else {
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
   }
 
   meter_indices->resize(0);
@@ -157,7 +155,7 @@ using namespace stratum::hal::tdi::helpers;
     data_field_ids = table->tableInfoGet()->dataFieldIdListGet();
     for (const auto& field_id : data_field_ids) {
       std::string field_name;
-      const ::tdi::DataFieldInfo *dataFieldInfo;
+      const ::tdi::DataFieldInfo* dataFieldInfo;
       dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id);
       RETURN_IF_NULL(dataFieldInfo);
       field_name = dataFieldInfo->nameGet();
@@ -197,8 +195,8 @@ using namespace stratum::hal::tdi::helpers;
         pbursts->push_back(pburst);
       } else {
         return MAKE_ERROR(ERR_INVALID_PARAM)
-            << "Unknown meter field " << field_name
-            << " in meter with id " << table_id << ".";
+               << "Unknown meter field " << field_name << " in meter with id "
+               << table_id << ".";
       }
     }
   }

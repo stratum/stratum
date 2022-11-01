@@ -52,8 +52,7 @@ std::unique_ptr<TdiPacketioManager> TdiPacketioManager::CreateInstance(
 
 ::util::Status TdiPacketioManager::PushForwardingPipelineConfig(
     const TdiDeviceConfig& config) {
-  RET_CHECK(config.programs_size() == 1)
-      << "Only one program is supported.";
+  RET_CHECK(config.programs_size() == 1) << "Only one program is supported.";
   const auto& program = config.programs(0);
   {
     absl::WriterMutexLock l(&data_lock_);
@@ -66,9 +65,9 @@ std::unique_ptr<TdiPacketioManager> TdiPacketioManager::CreateInstance(
         int ret = pthread_create(&sde_rx_thread_id_, nullptr,
                                  &TdiPacketioManager::SdeRxThreadFunc, this);
         if (ret != 0) {
-          return MAKE_ERROR(ERR_INTERNAL)
-              << "Failed to spawn RX thread for SDE wrapper for device with ID "
-              << device_ << ". Err: " << ret << ".";
+          return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for "
+                                             "SDE wrapper for device with ID "
+                                          << device_ << ". Err: " << ret << ".";
         }
       }
       RETURN_IF_ERROR(tdi_sde_interface_->RegisterPacketReceiveWriter(
@@ -151,8 +150,7 @@ class BitBuffer {
 
   // Add a bytestring to the back of the buffer.
   ::util::Status PushBack(const std::string& bytestring, size_t bitwidth) {
-    RET_CHECK(bytestring.size() <=
-                          (bitwidth + kBitsPerByte - 1) / kBitsPerByte)
+    RET_CHECK(bytestring.size() <= (bitwidth + kBitsPerByte - 1) / kBitsPerByte)
         << "Bytestring " << StringToHex(bytestring) << " overflows bit width "
         << bitwidth << ".";
 
@@ -282,7 +280,8 @@ class BitBuffer {
     const ::p4::v1::PacketOut& packet) {
   {
     absl::ReaderMutexLock l(&data_lock_);
-    if (!initialized_) return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+    if (!initialized_)
+      return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
   std::string buf;
   RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
@@ -297,7 +296,8 @@ class BitBuffer {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {
     absl::ReaderMutexLock l(&data_lock_);
-    if (!initialized_) return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+    if (!initialized_)
+      return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<std::string>::Create(packet_receive_channel_);
   }
 

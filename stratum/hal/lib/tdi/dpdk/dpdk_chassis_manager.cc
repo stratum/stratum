@@ -16,10 +16,9 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
-
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
-#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
@@ -51,13 +50,11 @@
 #define GNMI_CONFIG_PORT_DONE 0x10000000
 #define GNMI_CONFIG_HOTPLUG_DONE 0x20000000
 
-#define GNMI_CONFIG_VHOST \
-    (GNMI_CONFIG_PORT_TYPE | GNMI_CONFIG_DEVICE_TYPE | \
-                         GNMI_CONFIG_QUEUE_COUNT | GNMI_CONFIG_SOCKET_PATH | \
-                         GNMI_CONFIG_HOST_NAME)
+#define GNMI_CONFIG_VHOST                                                      \
+  (GNMI_CONFIG_PORT_TYPE | GNMI_CONFIG_DEVICE_TYPE | GNMI_CONFIG_QUEUE_COUNT | \
+   GNMI_CONFIG_SOCKET_PATH | GNMI_CONFIG_HOST_NAME)
 
-#define GNMI_CONFIG_LINK \
-     (GNMI_CONFIG_PORT_TYPE | GNMI_CONFIG_PCI_BDF_VALUE)
+#define GNMI_CONFIG_LINK (GNMI_CONFIG_PORT_TYPE | GNMI_CONFIG_PCI_BDF_VALUE)
 
 #define GNMI_CONFIG_TAP (GNMI_CONFIG_PORT_TYPE)
 
@@ -65,39 +62,39 @@
 #define GNMI_CONFIG_UNSUPPORTED_MASK_VHOST (GNMI_CONFIG_PCI_BDF_VALUE)
 
 // Independent LINK ports shouldn't have the below params.
-#define GNMI_CONFIG_UNSUPPORTED_MASK_LINK \
-     (GNMI_CONFIG_DEVICE_TYPE | GNMI_CONFIG_QUEUE_COUNT | \
-      GNMI_CONFIG_SOCKET_PATH | GNMI_CONFIG_HOST_NAME)
+#define GNMI_CONFIG_UNSUPPORTED_MASK_LINK              \
+  (GNMI_CONFIG_DEVICE_TYPE | GNMI_CONFIG_QUEUE_COUNT | \
+   GNMI_CONFIG_SOCKET_PATH | GNMI_CONFIG_HOST_NAME)
 
 // Independent TAP ports shouldn't have the below params.
-#define GNMI_CONFIG_UNSUPPORTED_MASK_TAP \
-      (GNMI_CONFIG_DEVICE_TYPE | GNMI_CONFIG_QUEUE_COUNT | \
-       GNMI_CONFIG_SOCKET_PATH | GNMI_CONFIG_HOST_NAME | \
-       GNMI_CONFIG_PCI_BDF_VALUE)
+#define GNMI_CONFIG_UNSUPPORTED_MASK_TAP               \
+  (GNMI_CONFIG_DEVICE_TYPE | GNMI_CONFIG_QUEUE_COUNT | \
+   GNMI_CONFIG_SOCKET_PATH | GNMI_CONFIG_HOST_NAME |   \
+   GNMI_CONFIG_PCI_BDF_VALUE)
 
-#define GNMI_CONFIG_HOTPLUG_ALL \
-       (GNMI_CONFIG_HOTPLUG_SOCKET_IP | GNMI_CONFIG_HOTPLUG_SOCKET_PORT | \
-        GNMI_CONFIG_HOTPLUG_MODE | GNMI_CONFIG_HOTPLUG_VM_MAC_ADDRESS | \
-        GNMI_CONFIG_HOTPLUG_VM_NETDEV_ID | GNMI_CONFIG_HOTPLUG_VM_CHARDEV_ID | \
-        GNMI_CONFIG_NATIVE_SOCKET_PATH | GNMI_CONFIG_HOTPLUG_VM_DEVICE_ID)
+#define GNMI_CONFIG_HOTPLUG_ALL                                           \
+  (GNMI_CONFIG_HOTPLUG_SOCKET_IP | GNMI_CONFIG_HOTPLUG_SOCKET_PORT |      \
+   GNMI_CONFIG_HOTPLUG_MODE | GNMI_CONFIG_HOTPLUG_VM_MAC_ADDRESS |        \
+   GNMI_CONFIG_HOTPLUG_VM_NETDEV_ID | GNMI_CONFIG_HOTPLUG_VM_CHARDEV_ID | \
+   GNMI_CONFIG_NATIVE_SOCKET_PATH | GNMI_CONFIG_HOTPLUG_VM_DEVICE_ID)
 
 // SDK_PORT_CONTROL_BASE is used as an offset to define the reserved port
 // range for the control ports.
 #define SDK_PORT_CONTROL_BASE 256
 
 #define DEFAULT_PIPELINE "pipe"
-#define DEFAULT_MEMPOOL  "MEMPOOL0"
-#define DEFAULT_MTU      1500
-#define MAX_MTU          65535
+#define DEFAULT_MEMPOOL "MEMPOOL0"
+#define DEFAULT_MTU 1500
+#define MAX_MTU 65535
 #define DEFAULT_PACKET_DIR DIRECTION_HOST
 
 typedef enum qemu_cmd_type {
-   CHARDEV_ADD,
-   NETDEV_ADD,
-   DEVICE_ADD,
-   CHARDEV_DEL,
-   NETDEV_DEL,
-   DEVICE_DEL
+  CHARDEV_ADD,
+  NETDEV_ADD,
+  DEVICE_ADD,
+  CHARDEV_DEL,
+  NETDEV_DEL,
+  DEVICE_DEL
 } qemu_cmd_type;
 
 namespace stratum {
@@ -113,8 +110,8 @@ constexpr int DpdkChassisManager::kMaxPortStatusEventDepth;
 /* static */
 constexpr int DpdkChassisManager::kMaxXcvrEventDepth;
 
-DpdkChassisManager::DpdkChassisManager(
-    OperationMode mode, TdiSdeInterface* sde_interface)
+DpdkChassisManager::DpdkChassisManager(OperationMode mode,
+                                       TdiSdeInterface* sde_interface)
     : mode_(mode),
       initialized_(false),
       gnmi_event_writer_(nullptr),
@@ -149,67 +146,66 @@ DpdkChassisManager::~DpdkChassisManager() = default;
 bool DpdkChassisManager::IsPortParamSet(
     uint64 node_id, uint32 port_id,
     SetRequest::Request::Port::ValueCase value_case) {
-
   uint32 validate = node_id_port_id_to_backend_[node_id][port_id];
 
   switch (value_case) {
     case SetRequest::Request::Port::ValueCase::kPortType:
       if (validate & GNMI_CONFIG_PORT_TYPE) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kDeviceType:
       if (validate & GNMI_CONFIG_DEVICE_TYPE) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kQueueCount:
       if (validate & GNMI_CONFIG_QUEUE_COUNT) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kSockPath:
       if (validate & GNMI_CONFIG_SOCKET_PATH) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kPipelineName:
       if (validate & GNMI_CONFIG_PIPELINE_NAME) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kMempoolName:
-      if (validate &  GNMI_CONFIG_MEMPOOL_NAME) {
-          return true;
+      if (validate & GNMI_CONFIG_MEMPOOL_NAME) {
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kMtuValue:
       if (validate & GNMI_CONFIG_MTU_VALUE) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kPciBdf:
       if (validate & GNMI_CONFIG_PCI_BDF_VALUE) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kHostConfig:
       if (validate & GNMI_CONFIG_HOST_NAME) {
-          return true;
+        return true;
       }
       break;
 
     case SetRequest::Request::Port::ValueCase::kPacketDir:
       if (validate & GNMI_CONFIG_PACKET_DIR) {
-          return true;
+        return true;
       }
       break;
 
@@ -217,8 +213,8 @@ bool DpdkChassisManager::IsPortParamSet(
       break;
   }
 
-      return false;
-  }
+  return false;
+}
 
 ::util::Status DpdkChassisManager::SetHotplugParam(
     uint64 node_id, uint32 port_id, const SingletonPort& singleton_port,
@@ -229,53 +225,69 @@ bool DpdkChassisManager::IsPortParamSet(
   uint32 validate = node_id_port_id_to_backend_[node_id][port_id];
   const auto& config_params = singleton_port.config_params();
 
-    switch (param_type) {
+  switch (param_type) {
     case PARAM_SOCK_IP:
-      config.hotplug_config.qemu_socket_ip = config_params.hotplug_config().qemu_socket_ip();
+      config.hotplug_config.qemu_socket_ip =
+          config_params.hotplug_config().qemu_socket_ip();
       validate |= GNMI_CONFIG_HOTPLUG_SOCKET_IP;
-      LOG(INFO) << "SetPortParam::kQemuSocketIp = " << config_params.hotplug_config().qemu_socket_ip();
+      LOG(INFO) << "SetPortParam::kQemuSocketIp = "
+                << config_params.hotplug_config().qemu_socket_ip();
       break;
 
     case PARAM_SOCK_PORT:
       validate |= GNMI_CONFIG_HOTPLUG_SOCKET_PORT;
-      config.hotplug_config.qemu_socket_port = config_params.hotplug_config().qemu_socket_port();
-      LOG(INFO) << "SetPortParam::kQemuSocketPort = " << config_params.hotplug_config().qemu_socket_port();
+      config.hotplug_config.qemu_socket_port =
+          config_params.hotplug_config().qemu_socket_port();
+      LOG(INFO) << "SetPortParam::kQemuSocketPort = "
+                << config_params.hotplug_config().qemu_socket_port();
       break;
 
     case PARAM_HOTPLUG_MODE:
       validate |= GNMI_CONFIG_HOTPLUG_MODE;
-      config.hotplug_config.qemu_hotplug_mode = config_params.hotplug_config().qemu_hotplug_mode();
-      LOG(INFO) << "SetPortParam::kQemuHotplugMode = " << config_params.hotplug_config().qemu_hotplug_mode();
+      config.hotplug_config.qemu_hotplug_mode =
+          config_params.hotplug_config().qemu_hotplug_mode();
+      LOG(INFO) << "SetPortParam::kQemuHotplugMode = "
+                << config_params.hotplug_config().qemu_hotplug_mode();
       break;
 
     case PARAM_VM_MAC:
       validate |= GNMI_CONFIG_HOTPLUG_VM_MAC_ADDRESS;
-      config.hotplug_config.qemu_vm_mac_address = config_params.hotplug_config().qemu_vm_mac_address();
-      LOG(INFO) << "SetPortParam::kQemuVmMacAddress = " << config_params.hotplug_config().qemu_vm_mac_address();
+      config.hotplug_config.qemu_vm_mac_address =
+          config_params.hotplug_config().qemu_vm_mac_address();
+      LOG(INFO) << "SetPortParam::kQemuVmMacAddress = "
+                << config_params.hotplug_config().qemu_vm_mac_address();
       break;
 
     case PARAM_NETDEV_ID:
       validate |= GNMI_CONFIG_HOTPLUG_VM_NETDEV_ID;
-      config.hotplug_config.qemu_vm_netdev_id = config_params.hotplug_config().qemu_vm_netdev_id();
-      LOG(INFO) << "SetPortParam::kQemuVmNetdevId = " << config_params.hotplug_config().qemu_vm_netdev_id();
+      config.hotplug_config.qemu_vm_netdev_id =
+          config_params.hotplug_config().qemu_vm_netdev_id();
+      LOG(INFO) << "SetPortParam::kQemuVmNetdevId = "
+                << config_params.hotplug_config().qemu_vm_netdev_id();
       break;
 
     case PARAM_CHARDEV_ID:
       validate |= GNMI_CONFIG_HOTPLUG_VM_CHARDEV_ID;
-      config.hotplug_config.qemu_vm_chardev_id = config_params.hotplug_config().qemu_vm_chardev_id();
-      LOG(INFO) << "SetPortParam::kQemuVmChardevId = " << config_params.hotplug_config().qemu_vm_chardev_id();
+      config.hotplug_config.qemu_vm_chardev_id =
+          config_params.hotplug_config().qemu_vm_chardev_id();
+      LOG(INFO) << "SetPortParam::kQemuVmChardevId = "
+                << config_params.hotplug_config().qemu_vm_chardev_id();
       break;
 
     case PARAM_NATIVE_SOCK_PATH:
       validate |= GNMI_CONFIG_NATIVE_SOCKET_PATH;
-      config.hotplug_config.native_socket_path = config_params.hotplug_config().native_socket_path();
-      LOG(INFO) << "SetPortParam::kNativeSocketPath = " << config_params.hotplug_config().native_socket_path();
+      config.hotplug_config.native_socket_path =
+          config_params.hotplug_config().native_socket_path();
+      LOG(INFO) << "SetPortParam::kNativeSocketPath = "
+                << config_params.hotplug_config().native_socket_path();
       break;
 
     case PARAM_DEVICE_ID:
       validate |= GNMI_CONFIG_HOTPLUG_VM_DEVICE_ID;
-      config.hotplug_config.qemu_vm_device_id = config_params.hotplug_config().qemu_vm_device_id();
-      LOG(INFO) << "SetPortParam::kQemuVmDeviceId = " << config_params.hotplug_config().qemu_vm_device_id();
+      config.hotplug_config.qemu_vm_device_id =
+          config_params.hotplug_config().qemu_vm_device_id();
+      LOG(INFO) << "SetPortParam::kQemuVmDeviceId = "
+                << config_params.hotplug_config().qemu_vm_device_id();
       break;
 
     default:
@@ -288,14 +300,17 @@ bool DpdkChassisManager::IsPortParamSet(
       (config.hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_ADD)) {
     if ((validate & GNMI_CONFIG_PORT_DONE) != GNMI_CONFIG_PORT_DONE) {
       validate &= ~GNMI_CONFIG_HOTPLUG_ALL;
-      return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, requested port doesn't exist \n";
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Unsupported operation, requested port doesn't exist \n";
     }
     if ((validate & GNMI_CONFIG_HOTPLUG_DONE) == GNMI_CONFIG_HOTPLUG_DONE) {
       validate &= ~GNMI_CONFIG_HOTPLUG_ALL;
-      return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, requested port is already hotplugged \n";
+      return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, requested "
+                                         "port is already hotplugged \n";
     }
 
-    RETURN_IF_ERROR(HotplugPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+    RETURN_IF_ERROR(
+        HotplugPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
     validate |= GNMI_CONFIG_HOTPLUG_DONE;
     LOG(INFO) << "Port was successfully hotplugged";
 
@@ -304,13 +319,16 @@ bool DpdkChassisManager::IsPortParamSet(
       validate &= ~(GNMI_CONFIG_HOTPLUG_MODE);
       config.hotplug_config.qemu_hotplug_mode = HOTPLUG_MODE_NONE;
     }
-  } else if (((validate & GNMI_CONFIG_HOTPLUG_MODE) == GNMI_CONFIG_HOTPLUG_MODE) &&
-              (config.hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_DEL)) {
+  } else if (((validate & GNMI_CONFIG_HOTPLUG_MODE) ==
+              GNMI_CONFIG_HOTPLUG_MODE) &&
+             (config.hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_DEL)) {
     if (!((validate & GNMI_CONFIG_HOTPLUG_DONE) == GNMI_CONFIG_HOTPLUG_DONE)) {
-       validate &= ~GNMI_CONFIG_HOTPLUG_MODE;
-       return MAKE_ERROR(ERR_INTERNAL) << "Unsupported operation, No device is hotplugged to be deleted";
+      validate &= ~GNMI_CONFIG_HOTPLUG_MODE;
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Unsupported operation, No device is hotplugged to be deleted";
     }
-    RETURN_IF_ERROR(HotplugPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+    RETURN_IF_ERROR(
+        HotplugPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
     validate &= ~(GNMI_CONFIG_HOTPLUG_DONE);
     validate &= ~GNMI_CONFIG_HOTPLUG_ALL;
     // Unset this entry to allow future entries
@@ -328,8 +346,7 @@ bool DpdkChassisManager::IsPortParamSet(
 
 // Sets the value of a port configuration parameter.
 ::util::Status DpdkChassisManager::SetPortParam(
-    uint64 node_id, uint32 port_id,
-    const SingletonPort& singleton_port,
+    uint64 node_id, uint32 port_id, const SingletonPort& singleton_port,
     SetRequest::Request::Port::ValueCase value_case) {
   auto unit = node_id_to_unit_[node_id];
   uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
@@ -347,7 +364,8 @@ bool DpdkChassisManager::IsPortParamSet(
     case SetRequest::Request::Port::ValueCase::kDeviceType:
       validate |= GNMI_CONFIG_DEVICE_TYPE;
       config.device_type = config_params.device_type();
-      LOG(INFO) << "SetPortParam::kDeviceType = " << config_params.device_type();
+      LOG(INFO) << "SetPortParam::kDeviceType = "
+                << config_params.device_type();
       break;
 
     case SetRequest::Request::Port::ValueCase::kQueueCount:
@@ -393,8 +411,8 @@ bool DpdkChassisManager::IsPortParamSet(
         validate = 0;
         node_id_port_id_to_backend_[node_id][port_id] = validate;
         return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Unsupported MTU = " << config_params.mtu()
-             << ". MTU should be less than " << MAX_MTU;
+               << "Unsupported MTU = " << config_params.mtu()
+               << ". MTU should be less than " << MAX_MTU;
       }
       config.mtu = config_params.mtu();
       validate |= GNMI_CONFIG_MTU_VALUE;
@@ -421,11 +439,11 @@ bool DpdkChassisManager::IsPortParamSet(
   if (((validate & GNMI_CONFIG_PORT_TYPE) == GNMI_CONFIG_PORT_TYPE) &&
       !((validate & GNMI_CONFIG_PORT_DONE) == GNMI_CONFIG_PORT_DONE)) {
     if (((config.port_type == PORT_TYPE_VHOST) &&
-       ((validate & GNMI_CONFIG_VHOST) == GNMI_CONFIG_VHOST)) ||
-       ((config.port_type == PORT_TYPE_LINK) &&
-       ((validate & GNMI_CONFIG_LINK) == GNMI_CONFIG_LINK)) ||
-       ((config.port_type == PORT_TYPE_TAP) &&
-       ((validate & GNMI_CONFIG_TAP) == GNMI_CONFIG_TAP))) {
+         ((validate & GNMI_CONFIG_VHOST) == GNMI_CONFIG_VHOST)) ||
+        ((config.port_type == PORT_TYPE_LINK) &&
+         ((validate & GNMI_CONFIG_LINK) == GNMI_CONFIG_LINK)) ||
+        ((config.port_type == PORT_TYPE_TAP) &&
+         ((validate & GNMI_CONFIG_TAP) == GNMI_CONFIG_TAP))) {
       // Check if Mandatory parameters are configured
       LOG(INFO) << "Required parameters are configured, configure port via TDI";
       LOG(INFO) << "SDK_PORT ID while validating = " << sdk_port_id;
@@ -450,27 +468,27 @@ bool DpdkChassisManager::IsPortParamSet(
         validate |= GNMI_CONFIG_PACKET_DIR;
       }
       if (((config.port_type == PORT_TYPE_VHOST) &&
-         (validate & GNMI_CONFIG_UNSUPPORTED_MASK_VHOST)) ||
-         ((config.port_type == PORT_TYPE_LINK) &&
-         (validate & GNMI_CONFIG_UNSUPPORTED_MASK_LINK)) ||
-         ((config.port_type == PORT_TYPE_TAP) &&
-         (validate & GNMI_CONFIG_UNSUPPORTED_MASK_TAP))) {
+           (validate & GNMI_CONFIG_UNSUPPORTED_MASK_VHOST)) ||
+          ((config.port_type == PORT_TYPE_LINK) &&
+           (validate & GNMI_CONFIG_UNSUPPORTED_MASK_LINK)) ||
+          ((config.port_type == PORT_TYPE_TAP) &&
+           (validate & GNMI_CONFIG_UNSUPPORTED_MASK_TAP))) {
         // Unsupported list of Params, clear the validate field.
         validate = 0;
         node_id_port_id_to_backend_[node_id][port_id] = validate;
         return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Unsupported parameter list for given Port Type \n";
+               << "Unsupported parameter list for given Port Type \n";
       }
 
       ::util::Status status =
-                 AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config);
+          AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config);
       if (status == ::util::OkStatus()) {
-          validate |= GNMI_CONFIG_PORT_DONE;
-          node_id_port_id_to_backend_[node_id][port_id] = validate;
+        validate |= GNMI_CONFIG_PORT_DONE;
+        node_id_port_id_to_backend_[node_id][port_id] = validate;
       } else {
-          validate = 0;
-          node_id_port_id_to_backend_[node_id][port_id] = validate;
-          RETURN_IF_ERROR(status);
+        validate = 0;
+        node_id_port_id_to_backend_[node_id][port_id] = validate;
+        RETURN_IF_ERROR(status);
       }
     }
   }
@@ -491,13 +509,13 @@ bool DpdkChassisManager::IsPortParamSet(
 
   if (config_params.admin_state() == ADMIN_STATE_UNKNOWN) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Invalid admin state for port " << port_id << " in node " << node_id
-        << " (SDK Port " << sdk_port_id << ").";
+           << "Invalid admin state for port " << port_id << " in node "
+           << node_id << " (SDK Port " << sdk_port_id << ").";
   }
   if (config_params.admin_state() == ADMIN_STATE_DIAG) {
     return MAKE_ERROR(ERR_UNIMPLEMENTED)
-        << "Unsupported 'diags' admin state for port " << port_id << " in node "
-        << node_id << " (SDK Port " << sdk_port_id << ").";
+           << "Unsupported 'diags' admin state for port " << port_id
+           << " in node " << node_id << " (SDK Port " << sdk_port_id << ").";
   }
 
   config->speed_bps = singleton_port.speed_bps();
@@ -522,12 +540,12 @@ bool DpdkChassisManager::IsPortParamSet(
   LOG(INFO) << "Adding port " << port_id << " in node " << node_id
             << " (SDK Port " << sdk_port_id << ").";
 
-  RETURN_IF_ERROR(sde_interface_->AddPort(
-      unit, sdk_port_id, singleton_port.speed_bps(), sde_params,
-      config_params.fec_mode()));
+  RETURN_IF_ERROR(
+      sde_interface_->AddPort(unit, sdk_port_id, singleton_port.speed_bps(),
+                              sde_params, config_params.fec_mode()));
 
   // Check if Control Port Creation is opted in CLI.
-  if(config->control_port.length()) {
+  if (config->control_port.length()) {
     LOG(INFO) << "Autocreating Control TAP port";
     // Packet direction for control port will always be host type
     sde_params.port_type = PORT_TYPE_TAP;
@@ -542,7 +560,7 @@ bool DpdkChassisManager::IsPortParamSet(
         config_params.fec_mode()));
   }
 
-  if(config->mtu) {
+  if (config->mtu) {
     LOG(INFO) << "MTU value - config->mtu= " << *config->mtu;
     RETURN_IF_ERROR(
         sde_interface_->SetPortMtu(unit, sdk_port_id, *config->mtu));
@@ -589,16 +607,16 @@ bool DpdkChassisManager::IsPortParamSet(
   LOG(INFO) << "Hotplugging port " << port_id << " in node " << node_id
             << " (SDK Port " << sdk_port_id << ").";
   TdiSdeInterface::HotplugConfigParams tdi_sde_wrapper_config = {
-                                    config->hotplug_config.qemu_socket_port,
-                                    config->hotplug_config.qemu_vm_mac_address,
-                                    config->hotplug_config.qemu_socket_ip,
-                                    config->hotplug_config.qemu_vm_netdev_id,
-                                    config->hotplug_config.qemu_vm_chardev_id,
-                                    config->hotplug_config.qemu_vm_device_id,
-                                    config->hotplug_config.native_socket_path,
-                                    config->hotplug_config.qemu_hotplug_mode};
-  RETURN_IF_ERROR(sde_interface_->HotplugPort(
-      unit, sdk_port_id, tdi_sde_wrapper_config));
+      config->hotplug_config.qemu_socket_port,
+      config->hotplug_config.qemu_vm_mac_address,
+      config->hotplug_config.qemu_socket_ip,
+      config->hotplug_config.qemu_vm_netdev_id,
+      config->hotplug_config.qemu_vm_chardev_id,
+      config->hotplug_config.qemu_vm_device_id,
+      config->hotplug_config.native_socket_path,
+      config->hotplug_config.qemu_hotplug_mode};
+  RETURN_IF_ERROR(
+      sde_interface_->HotplugPort(unit, sdk_port_id, tdi_sde_wrapper_config));
 
   return ::util::OkStatus();
 }
@@ -617,8 +635,8 @@ bool DpdkChassisManager::IsPortParamSet(
     config->speed_bps.reset();
     config->fec_mode.reset();
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Port " << port_id << " in node " << node_id << " is not valid"
-        << " (SDK Port " << sdk_port_id << ").";
+           << "Port " << port_id << " in node " << node_id << " is not valid"
+           << " (SDK Port " << sdk_port_id << ").";
   }
 
   const auto& config_params = singleton_port.config_params();
@@ -646,29 +664,29 @@ bool DpdkChassisManager::IsPortParamSet(
         port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
       AddPortHelper(node_id, unit, sdk_port_id, port_old, config);
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Could not add port " << port_id << " with new speed "
-          << singleton_port.speed_bps() << " to BF SDE"
-          << " (SDK Port " << sdk_port_id << ").";
+             << "Could not add port " << port_id << " with new speed "
+             << singleton_port.speed_bps() << " to BF SDE"
+             << " (SDK Port " << sdk_port_id << ").";
     }
   }
 
   // same for FEC mode
   if (config_params.fec_mode() != config_old.fec_mode) {
     return MAKE_ERROR(ERR_UNIMPLEMENTED)
-        << "The FEC mode for port " << port_id << " in node " << node_id
-        << " has changed; you need to delete the port and add it again"
-        << " (SDK Port " << sdk_port_id << ").";
+           << "The FEC mode for port " << port_id << " in node " << node_id
+           << " has changed; you need to delete the port and add it again"
+           << " (SDK Port " << sdk_port_id << ").";
   }
 
   if (config_params.admin_state() == ADMIN_STATE_UNKNOWN) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Invalid admin state for port " << port_id << " in node " << node_id
-        << " (SDK Port " << sdk_port_id << ").";
+           << "Invalid admin state for port " << port_id << " in node "
+           << node_id << " (SDK Port " << sdk_port_id << ").";
   }
   if (config_params.admin_state() == ADMIN_STATE_DIAG) {
     return MAKE_ERROR(ERR_UNIMPLEMENTED)
-        << "Unsupported 'diags' admin state for port " << port_id << " in node "
-        << node_id << " (SDK Port " << sdk_port_id << ").";
+           << "Unsupported 'diags' admin state for port " << port_id
+           << " in node " << node_id << " (SDK Port " << sdk_port_id << ").";
   }
 
   bool config_changed = false;
@@ -769,8 +787,8 @@ bool DpdkChassisManager::IsPortParamSet(
     auto* unit = gtl::FindOrNull(node_id_to_unit, node_id);
     if (unit == nullptr) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Invalid ChassisConfig, unknown node id " << node_id
-          << " for port " << port_id << ".";
+             << "Invalid ChassisConfig, unknown node id " << node_id
+             << " for port " << port_id << ".";
     }
     node_id_port_id_to_backend[node_id][port_id] = 0;
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
@@ -815,7 +833,7 @@ bool DpdkChassisManager::IsPortParamSet(
       // new port
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      //RETURN_IF_ERROR(
+      // RETURN_IF_ERROR(
       //    AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
       continue;
     } else {
@@ -838,8 +856,8 @@ bool DpdkChassisManager::IsPortParamSet(
       // was added and the speed_bps was set.
       if (!config_old->speed_bps) {
         return MAKE_ERROR(ERR_INTERNAL)
-            << "Invalid internal state in DpdkChassisManager, "
-            << "speed_bps field should contain a value";
+               << "Invalid internal state in DpdkChassisManager, "
+               << "speed_bps field should contain a value";
       }
 
       // if anything fails, config.admin_state will be set to
@@ -913,10 +931,8 @@ bool DpdkChassisManager::IsPortParamSet(
   for (const auto& node : config.nodes()) {
     RET_CHECK(node.slot() > 0)
         << "No positive slot in " << node.ShortDebugString();
-    RET_CHECK(node.id() > 0)
-        << "No positive ID in " << node.ShortDebugString();
-    RET_CHECK(
-        gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+    RET_CHECK(node.id() > 0) << "No positive ID in " << node.ShortDebugString();
+    RET_CHECK(gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
         << "The id for Node " << PrintNode(node) << " was already recorded "
         << "for another Node in the config.";
   }
@@ -1001,16 +1017,16 @@ bool DpdkChassisManager::IsPortParamSet(
     if (node_id_to_port_id_to_singleton_port_key !=
         node_id_to_port_id_to_singleton_port_key_) {
       return MAKE_ERROR(ERR_REBOOT_REQUIRED)
-          << "The switch is already initialized, but we detected the newly "
-          << "pushed config requires a change in the port layout. The stack "
-          << "needs to be rebooted to finish config push.";
+             << "The switch is already initialized, but we detected the newly "
+             << "pushed config requires a change in the port layout. The stack "
+             << "needs to be rebooted to finish config push.";
     }
 
     if (node_id_to_unit != node_id_to_unit_) {
       return MAKE_ERROR(ERR_REBOOT_REQUIRED)
-          << "The switch is already initialized, but we detected the newly "
-          << "pushed config requires a change in node_id_to_unit. The stack "
-          << "needs to be rebooted to finish config push.";
+             << "The switch is already initialized, but we detected the newly "
+             << "pushed config requires a change in node_id_to_unit. The stack "
+             << "needs to be rebooted to finish config push.";
     }
   }
 
@@ -1068,7 +1084,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId( node_id, port_id));
+  ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
   return sde_interface_->GetPortInfo(unit, sdk_port_id, target_dp_id);
 }
@@ -1245,15 +1261,14 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  RET_CHECK(
-      node_id_to_port_id_to_time_last_changed_.count(node_id));
-  RET_CHECK(
-      node_id_to_port_id_to_time_last_changed_[node_id].count(port_id));
+  RET_CHECK(node_id_to_port_id_to_time_last_changed_.count(node_id));
+  RET_CHECK(node_id_to_port_id_to_time_last_changed_[node_id].count(port_id));
   return node_id_to_port_id_to_time_last_changed_[node_id][port_id];
 }
 
-::util::Status DpdkChassisManager::GetPortCounters(
-    uint64 node_id, uint32 port_id, PortCounters* counters) {
+::util::Status DpdkChassisManager::GetPortCounters(uint64 node_id,
+                                                   uint32 port_id,
+                                                   PortCounters* counters) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -1299,13 +1314,13 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
     if (!config.speed_bps) {
       return MAKE_ERROR(ERR_INTERNAL)
-          << "Invalid internal state in DpdkChassisManager, "
-          << "speed_bps field should contain a value";
+             << "Invalid internal state in DpdkChassisManager, "
+             << "speed_bps field should contain a value";
     }
     if (!config.fec_mode) {
       return MAKE_ERROR(ERR_INTERNAL)
-          << "Invalid internal state in DpdkChassisManager, "
-          << "fec_mode field should contain a value";
+             << "Invalid internal state in DpdkChassisManager, "
+             << "fec_mode field should contain a value";
     }
 
     ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
@@ -1356,8 +1371,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
 std::unique_ptr<DpdkChassisManager> DpdkChassisManager::CreateInstance(
     OperationMode mode, TdiSdeInterface* sde_interface) {
-  return absl::WrapUnique(
-      new DpdkChassisManager(mode, sde_interface));
+  return absl::WrapUnique(new DpdkChassisManager(mode, sde_interface));
 }
 
 ::util::StatusOr<int> DpdkChassisManager::GetUnitFromNodeId(

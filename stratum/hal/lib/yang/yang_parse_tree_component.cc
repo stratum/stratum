@@ -19,8 +19,8 @@ using namespace stratum::hal::yang::helpers;
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/config/name
-void SetUpComponentsComponentConfigName(
-    const std::string& name, TreeNode* node) {
+void SetUpComponentsComponentConfigName(const std::string& name,
+                                        TreeNode* node) {
   auto poll_functor = [name](const GnmiEvent& /*event*/,
                              const ::gnmi::Path& path,
                              GnmiSubscribeStream* stream) {
@@ -52,8 +52,8 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/type
-void SetUpComponentsComponentStateType(
-    const std::string& type, TreeNode* node) {
+void SetUpComponentsComponentStateType(const std::string& type,
+                                       TreeNode* node) {
   auto poll_functor = [type](const GnmiEvent& /*event*/,
                              const ::gnmi::Path& path,
                              GnmiSubscribeStream* stream) {
@@ -67,8 +67,8 @@ void SetUpComponentsComponentStateType(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/description
-void SetUpComponentsComponentStateDescription(
-    const std::string& description, TreeNode* node) {
+void SetUpComponentsComponentStateDescription(const std::string& description,
+                                              TreeNode* node) {
   auto poll_functor = [description](const GnmiEvent& /*event*/,
                                     const ::gnmi::Path& path,
                                     GnmiSubscribeStream* stream) {
@@ -82,8 +82,8 @@ void SetUpComponentsComponentStateDescription(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/part-no
-void SetUpComponentsComponentStatePartNo(
-    uint64 node_id, TreeNode* node, YangParseTree* tree) {
+void SetUpComponentsComponentStatePartNo(uint64 node_id, TreeNode* node,
+                                         YangParseTree* tree) {
   auto poll_functor = [node_id, tree](const GnmiEvent& event,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
@@ -115,8 +115,8 @@ void SetUpComponentsComponentStatePartNo(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/mfg-name
-void SetUpComponentsComponentStateMfgName(
-    uint64 node_id, TreeNode* node, YangParseTree* tree) {
+void SetUpComponentsComponentStateMfgName(uint64 node_id, TreeNode* node,
+                                          YangParseTree* tree) {
   auto poll_functor = [node_id, tree](const GnmiEvent& event,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
@@ -146,7 +146,7 @@ void SetUpComponentsComponentStateMfgName(
       ->SetOnChangeHandler(on_change_functor);
 }
 
-} // namespace component
-} // namespace yang
-} // namespace hal
-} // namespace stratum
+}  // namespace component
+}  // namespace yang
+}  // namespace hal
+}  // namespace stratum

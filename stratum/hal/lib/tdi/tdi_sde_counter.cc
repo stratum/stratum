@@ -4,8 +4,6 @@
 
 // Target-agnostic SDE wrapper for Counter methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -17,7 +15,6 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
-
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -25,6 +22,7 @@
 #include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/macros.h"
 
 namespace stratum {
@@ -39,7 +37,7 @@ using namespace stratum::hal::tdi::helpers;
     absl::optional<uint64> packet_count) {
   ::absl::ReaderMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RET_CHECK(real_session);
 
   const ::tdi::Table* table;
@@ -67,22 +65,21 @@ using namespace stratum::hal::tdi::helpers;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(kCounterPackets);
     RETURN_IF_NULL(dataFieldInfo);
     field_id = dataFieldInfo->idGet();
-    RETURN_IF_TDI_ERROR(
-          table_data->setValue(field_id, packet_count.value()));
+    RETURN_IF_TDI_ERROR(table_data->setValue(field_id, packet_count.value()));
   }
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
-  if(byte_count.value() == 0 && packet_count.value() == 0) {
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
+  if (byte_count.value() == 0 && packet_count.value() == 0) {
     LOG(INFO) << "Resetting counters";
-    RETURN_IF_TDI_ERROR(table->clear(
-      *real_session->tdi_session_, *dev_tgt, *flags));
+    RETURN_IF_TDI_ERROR(
+        table->clear(*real_session->tdi_session_, *dev_tgt, *flags));
   } else {
-    RETURN_IF_TDI_ERROR(table->entryMod(
-     *real_session->tdi_session_, *dev_tgt, *flags, *table_key, *table_data));
+    RETURN_IF_TDI_ERROR(table->entryMod(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *table_key, *table_data));
   }
 
   return ::util::OkStatus();
@@ -102,12 +99,12 @@ using namespace stratum::hal::tdi::helpers;
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);
 
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(counter_id, &table));
   std::vector<std::unique_ptr<::tdi::TableKey>> keys;
@@ -125,13 +122,12 @@ using namespace stratum::hal::tdi::helpers;
     // Key: $COUNTER_INDEX
     RETURN_IF_ERROR(
         SetFieldExact(keys[0].get(), kCounterIndex, counter_index.value()));
-    RETURN_IF_TDI_ERROR(table->entryGet(
-        *real_session->tdi_session_, *dev_tgt, *flags, *keys[0],
-        datums[0].get()));
+    RETURN_IF_TDI_ERROR(table->entryGet(*real_session->tdi_session_, *dev_tgt,
+                                        *flags, *keys[0], datums[0].get()));
 
   } else {
-    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt,
-                                  table, &keys, &datums));
+    RETURN_IF_ERROR(GetAllEntries(real_session->tdi_session_, *dev_tgt, table,
+                                  &keys, &datums));
   }
 
   counter_indices->resize(0);
@@ -142,7 +138,8 @@ using namespace stratum::hal::tdi::helpers;
     const std::unique_ptr<::tdi::TableKey>& table_key = keys[i];
     // Key: $COUNTER_INDEX
     uint32_t tdi_counter_index = 0;
-    RETURN_IF_ERROR(GetFieldExact(*table_key, kCounterIndex, &tdi_counter_index));
+    RETURN_IF_ERROR(
+        GetFieldExact(*table_key, kCounterIndex, &tdi_counter_index));
     counter_indices->push_back(tdi_counter_index);
 
     absl::optional<uint64> byte_count;
@@ -191,7 +188,7 @@ using namespace stratum::hal::tdi::helpers;
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromIdGet(table_id, &table));
 
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
   std::unique_ptr<::tdi::Target> dev_tgt;
   device->createTarget(&dev_tgt);

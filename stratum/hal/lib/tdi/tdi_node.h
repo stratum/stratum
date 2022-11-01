@@ -67,8 +67,7 @@ class TdiNode {
   static std::unique_ptr<TdiNode> CreateInstance(
       TdiTableManager* tdi_table_manager,
       TdiActionProfileManager* tdi_action_profile_manager,
-      TdiPacketioManager* tdi_packetio_manager,
-      TdiPreManager* tdi_pre_manager,
+      TdiPacketioManager* tdi_packetio_manager, TdiPreManager* tdi_pre_manager,
       TdiCounterManager* tdi_counter_manager,
       TdiSdeInterface* tdi_sde_interface, int device_id,
       // Note: bfrt_node defaults are (true, 1)
@@ -92,8 +91,8 @@ class TdiNode {
           TdiPacketioManager* tdi_packetio_manager,
           TdiPreManager* tdi_pre_manager,
           TdiCounterManager* tdi_counter_manager,
-          TdiSdeInterface* tdi_sde_interface, int device_id,
-          bool initialized, uint64 node_id);
+          TdiSdeInterface* tdi_sde_interface, int device_id, bool initialized,
+          uint64 node_id);
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(

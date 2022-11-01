@@ -14,9 +14,9 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/proto_oneof_writer_wrapper.h"
 #include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_pipeline_utils.h"
 #include "stratum/hal/lib/tdi/tdi_sde_interface.h"
-#include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
@@ -37,8 +37,7 @@ TdiNode::TdiNode(TdiTableManager* tdi_table_manager,
       tdi_config_(),
       tdi_sde_interface_(ABSL_DIE_IF_NULL(tdi_sde_interface)),
       tdi_table_manager_(ABSL_DIE_IF_NULL(tdi_table_manager)),
-      tdi_action_profile_manager_(
-          ABSL_DIE_IF_NULL(tdi_action_profile_manager)),
+      tdi_action_profile_manager_(ABSL_DIE_IF_NULL(tdi_action_profile_manager)),
       tdi_packetio_manager_(tdi_packetio_manager),
       tdi_pre_manager_(ABSL_DIE_IF_NULL(tdi_pre_manager)),
       tdi_counter_manager_(ABSL_DIE_IF_NULL(tdi_counter_manager)),
@@ -64,15 +63,13 @@ TdiNode::~TdiNode() = default;
 std::unique_ptr<TdiNode> TdiNode::CreateInstance(
     TdiTableManager* tdi_table_manager,
     TdiActionProfileManager* tdi_action_profile_manager,
-    TdiPacketioManager* tdi_packetio_manager,
-    TdiPreManager* tdi_pre_manager,
-    TdiCounterManager* tdi_counter_manager,
-    TdiSdeInterface* tdi_sde_interface, int device_id,
-    bool initialized, uint64 node_id) {
-  return absl::WrapUnique(new TdiNode(
-      tdi_table_manager, tdi_action_profile_manager, tdi_packetio_manager,
-      tdi_pre_manager, tdi_counter_manager, tdi_sde_interface, device_id,
-      initialized, node_id));
+    TdiPacketioManager* tdi_packetio_manager, TdiPreManager* tdi_pre_manager,
+    TdiCounterManager* tdi_counter_manager, TdiSdeInterface* tdi_sde_interface,
+    int device_id, bool initialized, uint64 node_id) {
+  return absl::WrapUnique(
+      new TdiNode(tdi_table_manager, tdi_action_profile_manager,
+                  tdi_packetio_manager, tdi_pre_manager, tdi_counter_manager,
+                  tdi_sde_interface, device_id, initialized, node_id));
 }
 
 ::util::Status TdiNode::PushChassisConfig(const ChassisConfig& config,
@@ -89,7 +86,7 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
 }
 
 ::util::Status TdiNode::VerifyChassisConfig(const ChassisConfig& config,
-                                             uint64 node_id) {
+                                            uint64 node_id) {
   // RETURN_IF_ERROR(tdi_table_manager_->VerifyChassisConfig(config, node_id));
   // RETURN_IF_ERROR(
   //     tdi_action_profile_manager_->VerifyChassisConfig(config, node_id));
@@ -151,8 +148,7 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
       tdi_table_manager_->PushForwardingPipelineConfig(tdi_config_));
   RETURN_IF_ERROR(
       tdi_action_profile_manager_->PushForwardingPipelineConfig(tdi_config_));
-  RETURN_IF_ERROR(
-      tdi_pre_manager_->PushForwardingPipelineConfig(tdi_config_));
+  RETURN_IF_ERROR(tdi_pre_manager_->PushForwardingPipelineConfig(tdi_config_));
   RETURN_IF_ERROR(
       tdi_counter_manager_->PushForwardingPipelineConfig(tdi_config_));
 
@@ -163,8 +159,7 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
 ::util::Status TdiNode::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) const {
   RET_CHECK(config.has_p4info()) << "Missing P4 info";
-  RET_CHECK(!config.p4_device_config().empty())
-      << "Missing P4 device config";
+  RET_CHECK(!config.p4_device_config().empty()) << "Missing P4 device config";
   BfPipelineConfig bf_config;
   RETURN_IF_ERROR(ExtractBfPipelineConfig(config, &bf_config));
   RETURN_IF_ERROR(tdi_table_manager_->VerifyForwardingPipelineConfig(config));
@@ -197,8 +192,7 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
   absl::WriterMutexLock l(&lock_);
   RET_CHECK(req.device_id() == node_id_)
       << "Request device id must be same as id of this TdiNode.";
-  RET_CHECK(req.atomicity() ==
-                        ::p4::v1::WriteRequest::CONTINUE_ON_ERROR)
+  RET_CHECK(req.atomicity() == ::p4::v1::WriteRequest::CONTINUE_ON_ERROR)
       << "Request atomicity "
       << ::p4::v1::WriteRequest::Atomicity_Name(req.atomicity())
       << " is not supported.";
@@ -371,8 +365,7 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
       }
     }
   }
-  RET_CHECK(writer->Write(resp))
-      << "Write to stream channel failed.";
+  RET_CHECK(writer->Write(resp)) << "Write to stream channel failed.";
   if (!success) {
     return MAKE_ERROR(ERR_AT_LEAST_ONE_OPER_FAILED)
            << "One or more read operations failed.";
@@ -416,8 +409,9 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
       return tdi_packetio_manager_->TransmitPacket(req.packet());
     }
     default:
-      return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unsupported StreamMessageRequest "
-                                      << req.ShortDebugString() << ".";
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
+             << "Unsupported StreamMessageRequest " << req.ShortDebugString()
+             << ".";
   }
 }
 
@@ -427,11 +421,11 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId:
     case kTnaExternActionSelectorId:
-      return tdi_action_profile_manager_->WriteActionProfileEntry(session,
-                                                                   type, entry);
+      return tdi_action_profile_manager_->WriteActionProfileEntry(session, type,
+                                                                  entry);
     default:
-      return MAKE_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
-                     << ".";
+      return MAKE_ERROR() << "Unsupported extern entry: "
+                          << entry.ShortDebugString() << ".";
   }
 }
 
@@ -442,11 +436,11 @@ std::unique_ptr<TdiNode> TdiNode::CreateInstance(
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId:
     case kTnaExternActionSelectorId:
-      return tdi_action_profile_manager_->ReadActionProfileEntry(
-          session, entry, writer);
+      return tdi_action_profile_manager_->ReadActionProfileEntry(session, entry,
+                                                                 writer);
     default:
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-          << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
+             << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
   }
 }
 

@@ -6,18 +6,17 @@
 // Implements the YangParseTreePaths::AddSubtreeInterfaceFromSingleton()
 // method and its supporting functions.
 
-#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
-
 #include "absl/strings/str_format.h"
 #include "gnmi/gnmi.pb.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_component.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
-#include "stratum/hal/lib/yang/yang_parse_tree.h"
-#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
 
 namespace stratum {
 namespace hal {
@@ -29,8 +28,10 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /lacp/interfaces/interface[name=<name>]/state/system-id-mac
-void SetUpLacpInterfacesInterfaceStateSystemIdMac(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpLacpInterfacesInterfaceStateSystemIdMac(uint64 node_id,
+                                                  uint32 port_id,
+                                                  TreeNode* node,
+                                                  YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::lacp_router_mac,
                        &DataResponse::has_lacp_router_mac,
@@ -48,8 +49,10 @@ void SetUpLacpInterfacesInterfaceStateSystemIdMac(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/state/mac-address
-void SetUpInterfacesInterfaceEthernetStateMacAddress(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetStateMacAddress(uint64 node_id,
+                                                     uint32 port_id,
+                                                     TreeNode* node,
+                                                     YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::mac_address,
                        &DataResponse::has_mac_address,
@@ -67,9 +70,11 @@ void SetUpInterfacesInterfaceEthernetStateMacAddress(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/port-speed
-void SetUpInterfacesInterfaceEthernetConfigPortSpeed(
-    uint64 node_id, uint32 port_id, uint64 speed_bps,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
+                                                     uint32 port_id,
+                                                     uint64 speed_bps,
+                                                     TreeNode* node,
+                                                     YangParseTree* tree) {
   auto poll_functor = [speed_bps](const GnmiEvent& event,
                                   const ::gnmi::Path& path,
                                   GnmiSubscribeStream* stream) {
@@ -136,9 +141,11 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/auto-negotiate
-void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(
-    uint64 node_id, uint32 port_id, bool autoneg_status,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
+                                                         uint32 port_id,
+                                                         bool autoneg_status,
+                                                         TreeNode* node,
+                                                         YangParseTree* tree) {
   auto poll_functor = [autoneg_status](const GnmiEvent& event,
                                        const ::gnmi::Path& path,
                                        GnmiSubscribeStream* stream) {
@@ -202,9 +209,9 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/config/enabled
 //
-void SetUpInterfacesInterfaceConfigEnabled(
-    const bool state, uint64 node_id, uint32 port_id,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceConfigEnabled(const bool state, uint64 node_id,
+                                           uint32 port_id, TreeNode* node,
+                                           YangParseTree* tree) {
   auto poll_functor = [state](const GnmiEvent& event, const ::gnmi::Path& path,
                               GnmiSubscribeStream* stream) {
     // This leaf represents configuration data. Return what was known when it
@@ -268,9 +275,10 @@ void SetUpInterfacesInterfaceConfigEnabled(
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/config/loopback-mode
 //
-void SetUpInterfacesInterfaceConfigLoopbackMode(
-    const bool loopback, uint64 node_id, uint32 port_id,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
+                                                uint64 node_id, uint32 port_id,
+                                                TreeNode* node,
+                                                YangParseTree* tree) {
   auto poll_functor = [loopback](const GnmiEvent& event,
                                  const ::gnmi::Path& path,
                                  GnmiSubscribeStream* stream) {
@@ -334,9 +342,11 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/mac-address
-void SetUpInterfacesInterfaceEthernetConfigMacAddress(
-    uint64 node_id, uint32 port_id, uint64 mac_address,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
+                                                      uint32 port_id,
+                                                      uint64 mac_address,
+                                                      TreeNode* node,
+                                                      YangParseTree* tree) {
   auto poll_functor = [mac_address](const GnmiEvent& event,
                                     const ::gnmi::Path& path,
                                     GnmiSubscribeStream* stream) {
@@ -406,8 +416,10 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/present
-void SetUpComponentsComponentTransceiverStatePresent(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStatePresent(TreeNode* node,
+                                                     YangParseTree* tree,
+                                                     uint64 node_id,
+                                                     uint32 port_id) {
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::front_panel_port_info,
       &DataResponse::has_front_panel_port_info,
@@ -421,8 +433,10 @@ void SetUpComponentsComponentTransceiverStatePresent(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/serial-no
-void SetUpComponentsComponentTransceiverStateSerialNo(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStateSerialNo(TreeNode* node,
+                                                      YangParseTree* tree,
+                                                      uint64 node_id,
+                                                      uint32 port_id) {
   auto poll_functor = [tree, node_id, port_id](const GnmiEvent& event,
                                                const ::gnmi::Path& path,
                                                GnmiSubscribeStream* stream) {
@@ -457,8 +471,10 @@ void SetUpComponentsComponentTransceiverStateSerialNo(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/vendor
-void SetUpComponentsComponentTransceiverStateVendor(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStateVendor(TreeNode* node,
+                                                    YangParseTree* tree,
+                                                    uint64 node_id,
+                                                    uint32 port_id) {
   auto poll_functor = [tree, node_id, port_id](const GnmiEvent& event,
                                                const ::gnmi::Path& path,
                                                GnmiSubscribeStream* stream) {
@@ -493,8 +509,10 @@ void SetUpComponentsComponentTransceiverStateVendor(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/vendor-part
-void SetUpComponentsComponentTransceiverStateVendorPart(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStateVendorPart(TreeNode* node,
+                                                        YangParseTree* tree,
+                                                        uint64 node_id,
+                                                        uint32 port_id) {
   auto poll_functor = [tree, node_id, port_id](const GnmiEvent& event,
                                                const ::gnmi::Path& path,
                                                GnmiSubscribeStream* stream) {
@@ -528,8 +546,10 @@ void SetUpComponentsComponentTransceiverStateVendorPart(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/form-factor
-void SetUpComponentsComponentTransceiverStateFormFactor(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+void SetUpComponentsComponentTransceiverStateFormFactor(TreeNode* node,
+                                                        YangParseTree* tree,
+                                                        uint64 node_id,
+                                                        uint32 port_id) {
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::front_panel_port_info,
       &DataResponse::has_front_panel_port_info,
@@ -541,7 +561,7 @@ void SetUpComponentsComponentTransceiverStateFormFactor(
       ->SetOnChangeHandler(on_change_functor);
 }
 
-} // namespace
+}  // namespace
 
 ////////////////////////////////////////
 //  AddSubtreeInterfaceFromSingleton  //

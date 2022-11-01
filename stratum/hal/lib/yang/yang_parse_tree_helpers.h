@@ -19,24 +19,24 @@ namespace helpers {
 ::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path);
 
 // Specialization for 'const char*'.
-::gnmi::SubscribeResponse GetResponse(
-    const ::gnmi::Path& path, const char* contents);
+::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path,
+                                      const char* contents);
 
 // Specialization for 'const std::string&'.
-::gnmi::SubscribeResponse GetResponse(
-    const ::gnmi::Path& path, const std::string& contents);
+::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path,
+                                      const std::string& contents);
 
 // Specialization for 'bool'.
-::gnmi::SubscribeResponse GetResponse(
-    const ::gnmi::Path& path, const bool contents);
+::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path,
+                                      const bool contents);
 
 // Specialization for '::gnmi::Decimal64'.
-::gnmi::SubscribeResponse GetResponse(
-    const ::gnmi::Path& path, const ::gnmi::Decimal64& contents);
+::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path,
+                                      const ::gnmi::Decimal64& contents);
 
 // A helper method that handles writing a response into the output stream.
-::util::Status SendResponse(
-    const ::gnmi::SubscribeResponse& resp, GnmiSubscribeStream* stream);
+::util::Status SendResponse(const ::gnmi::SubscribeResponse& resp,
+                            GnmiSubscribeStream* stream);
 
 // A helper method that returns a dummy functor that returns 'not supported yet'
 // string.

@@ -13,9 +13,9 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
-#include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
-#include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/yang/yang_parse_tree.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
 #include "stratum/public/proto/error.pb.h"
 
 namespace stratum {
@@ -33,10 +33,10 @@ namespace {
 // data from the DataResponse proto received from SwitchInterface, i.e.,
 // "&DataResponse::PortCounters::message", where message field in
 // DataResponse::Counters.
-TreeNodeEventHandler GetPollCounterFunctor(
-    uint64 node_id, uint32 port_id,
-    uint64 (PortCounters::*func_ptr)() const,
-    YangParseTree* tree) {
+TreeNodeEventHandler GetPollCounterFunctor(uint64 node_id, uint32 port_id,
+                                           uint64 (PortCounters::*func_ptr)()
+                                               const,
+                                           YangParseTree* tree) {
   return [tree, node_id, port_id, func_ptr](const GnmiEvent& event,
                                             const ::gnmi::Path& path,
                                             GnmiSubscribeStream* stream) {
@@ -68,8 +68,9 @@ TreeNodeEventHandler GetPollCounterFunctor(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/last-change
-void SetUpInterfacesInterfaceStateLastChange(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateLastChange(uint64 node_id, uint32 port_id,
+                                             TreeNode* node,
+                                             YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::oper_status,
                        &DataResponse::has_oper_status,
@@ -86,8 +87,8 @@ void SetUpInterfacesInterfaceStateLastChange(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/ifindex
-void SetUpInterfacesInterfaceStateIfindex(
-    uint32 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateIfindex(uint32 node_id, uint32 port_id,
+                                          TreeNode* node, YangParseTree* tree) {
   // Returns the port ID for the interface to be used by P4Runtime.
   auto on_poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::sdn_port_id,
@@ -101,8 +102,8 @@ void SetUpInterfacesInterfaceStateIfindex(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/name
-void SetUpInterfacesInterfaceStateName(
-    const std::string& name, TreeNode* node) {
+void SetUpInterfacesInterfaceStateName(const std::string& name,
+                                       TreeNode* node) {
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler([name](const GnmiEvent& event,
                                  const ::gnmi::Path& path,
@@ -119,8 +120,9 @@ void SetUpInterfacesInterfaceStateName(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/oper-status
-void SetUpInterfacesInterfaceStateOperStatus(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateOperStatus(uint64 node_id, uint32 port_id,
+                                             TreeNode* node,
+                                             YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::oper_status,
                        &DataResponse::has_oper_status,
@@ -138,8 +140,9 @@ void SetUpInterfacesInterfaceStateOperStatus(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/admin-status
-void SetUpInterfacesInterfaceStateAdminStatus(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
+                                              TreeNode* node,
+                                              YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::admin_status,
                        &DataResponse::has_admin_status,
@@ -158,8 +161,9 @@ void SetUpInterfacesInterfaceStateAdminStatus(
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/loopback-mode
 //
-void SetUpInterfacesInterfaceStateLoopbackMode(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateLoopbackMode(uint64 node_id, uint32 port_id,
+                                               TreeNode* node,
+                                               YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
                        &DataResponse::has_loopback_status,
@@ -177,8 +181,9 @@ void SetUpInterfacesInterfaceStateLoopbackMode(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/hardware-port
-void SetUpInterfacesInterfaceStateHardwarePort(
-    const std::string& name, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateHardwarePort(const std::string& name,
+                                               TreeNode* node,
+                                               YangParseTree* tree) {
   // This leaf is a reference to the /components/component[name=<name>]/name
   // leaf. We return the name directly here, as it is the same.
   auto poll_functor = [name](const GnmiEvent& event, const ::gnmi::Path& path,
@@ -193,8 +198,10 @@ void SetUpInterfacesInterfaceStateHardwarePort(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/state/port-speed
-void SetUpInterfacesInterfaceEthernetStatePortSpeed(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetStatePortSpeed(uint64 node_id,
+                                                    uint32 port_id,
+                                                    TreeNode* node,
+                                                    YangParseTree* tree) {
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::port_speed,
       &DataResponse::has_port_speed, &DataRequest::Request::mutable_port_speed,
@@ -231,8 +238,10 @@ void SetUpInterfacesInterfaceEthernetStateNegotiatedPortSpeed(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-octets
-void SetUpInterfacesInterfaceStateCountersInOctets(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInOctets(uint64 node_id,
+                                                   uint32 port_id,
+                                                   TreeNode* node,
+                                                   YangParseTree* tree) {
   auto poll_functor =
       GetPollCounterFunctor(node_id, port_id, &PortCounters::in_octets, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -252,8 +261,10 @@ void SetUpInterfacesInterfaceStateCountersInOctets(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/out-octets
-void SetUpInterfacesInterfaceStateCountersOutOctets(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersOutOctets(uint64 node_id,
+                                                    uint32 port_id,
+                                                    TreeNode* node,
+                                                    YangParseTree* tree) {
   auto poll_functor =
       GetPollCounterFunctor(node_id, port_id, &PortCounters::out_octets, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -273,8 +284,10 @@ void SetUpInterfacesInterfaceStateCountersOutOctets(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-unicast-pkts
-void SetUpInterfacesInterfaceStateCountersInUnicastPkts(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInUnicastPkts(uint64 node_id,
+                                                        uint32 port_id,
+                                                        TreeNode* node,
+                                                        YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(
       node_id, port_id, &PortCounters::in_unicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -294,8 +307,10 @@ void SetUpInterfacesInterfaceStateCountersInUnicastPkts(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/out-unicast-pkts
-void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(uint64 node_id,
+                                                         uint32 port_id,
+                                                         TreeNode* node,
+                                                         YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(
       node_id, port_id, &PortCounters::out_unicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -315,8 +330,10 @@ void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-broadcast-pkts
-void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
+                                                          uint32 port_id,
+                                                          TreeNode* node,
+                                                          YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(
       node_id, port_id, &PortCounters::in_broadcast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -357,8 +374,10 @@ void SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-multicast-pkts
-void SetUpInterfacesInterfaceStateCountersInMulticastPkts(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInMulticastPkts(uint64 node_id,
+                                                          uint32 port_id,
+                                                          TreeNode* node,
+                                                          YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(
       node_id, port_id, &PortCounters::in_multicast_pkts, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -399,8 +418,10 @@ void SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-discards
-void SetUpInterfacesInterfaceStateCountersInDiscards(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInDiscards(uint64 node_id,
+                                                     uint32 port_id,
+                                                     TreeNode* node,
+                                                     YangParseTree* tree) {
   auto poll_functor =
       GetPollCounterFunctor(node_id, port_id, &PortCounters::in_discards, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -420,8 +441,10 @@ void SetUpInterfacesInterfaceStateCountersInDiscards(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/out-discards
-void SetUpInterfacesInterfaceStateCountersOutDiscards(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersOutDiscards(uint64 node_id,
+                                                      uint32 port_id,
+                                                      TreeNode* node,
+                                                      YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(node_id, port_id,
                                             &PortCounters::out_discards, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -441,8 +464,10 @@ void SetUpInterfacesInterfaceStateCountersOutDiscards(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-unknown-protos
-void SetUpInterfacesInterfaceStateCountersInUnknownProtos(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInUnknownProtos(uint64 node_id,
+                                                          uint32 port_id,
+                                                          TreeNode* node,
+                                                          YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(
       node_id, port_id, &PortCounters::in_unknown_protos, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -462,8 +487,10 @@ void SetUpInterfacesInterfaceStateCountersInUnknownProtos(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-errors
-void SetUpInterfacesInterfaceStateCountersInErrors(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInErrors(uint64 node_id,
+                                                   uint32 port_id,
+                                                   TreeNode* node,
+                                                   YangParseTree* tree) {
   auto poll_functor =
       GetPollCounterFunctor(node_id, port_id, &PortCounters::in_errors, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -483,8 +510,10 @@ void SetUpInterfacesInterfaceStateCountersInErrors(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/out-errors
-void SetUpInterfacesInterfaceStateCountersOutErrors(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersOutErrors(uint64 node_id,
+                                                    uint32 port_id,
+                                                    TreeNode* node,
+                                                    YangParseTree* tree) {
   auto poll_functor =
       GetPollCounterFunctor(node_id, port_id, &PortCounters::out_errors, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -504,8 +533,10 @@ void SetUpInterfacesInterfaceStateCountersOutErrors(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/counters/in-fcs-errors
-void SetUpInterfacesInterfaceStateCountersInFcsErrors(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
+                                                      uint32 port_id,
+                                                      TreeNode* node,
+                                                      YangParseTree* tree) {
   auto poll_functor = GetPollCounterFunctor(node_id, port_id,
                                             &PortCounters::in_fcs_errors, tree);
   auto on_change_functor = GetOnChangeFunctor(
@@ -525,8 +556,10 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /lacp/interfaces/interface[name=<name>]/state/system-priority
-void SetUpLacpInterfacesInterfaceStateSystemPriority(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpLacpInterfacesInterfaceStateSystemPriority(uint64 node_id,
+                                                     uint32 port_id,
+                                                     TreeNode* node,
+                                                     YangParseTree* tree) {
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::lacp_system_priority,
       &DataResponse::has_lacp_system_priority,
@@ -544,9 +577,11 @@ void SetUpLacpInterfacesInterfaceStateSystemPriority(
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/config/health-indicator
 //
-void SetUpInterfacesInterfaceConfigHealthIndicator(
-    const std::string& state, uint64 node_id, uint64 port_id,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceConfigHealthIndicator(const std::string& state,
+                                                   uint64 node_id,
+                                                   uint64 port_id,
+                                                   TreeNode* node,
+                                                   YangParseTree* tree) {
   auto poll_functor = [state](const GnmiEvent& event, const ::gnmi::Path& path,
                               GnmiSubscribeStream* stream) {
     // This leaf represents configuration data. Return what was known when it
@@ -613,8 +648,10 @@ void SetUpInterfacesInterfaceConfigHealthIndicator(
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/health-indicator
 //
-void SetUpInterfacesInterfaceStateHealthIndicator(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateHealthIndicator(uint64 node_id,
+                                                  uint32 port_id,
+                                                  TreeNode* node,
+                                                  YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::health_indicator,
                        &DataResponse::has_health_indicator,
@@ -667,11 +704,9 @@ void SetUpInterfacesInterfaceEthernetConfigForwardingViability(
     auto poll_functor = [new_forwarding_viability](
                             const GnmiEvent& event, const ::gnmi::Path& path,
                             GnmiSubscribeStream* stream) {
-      return SendResponse(
-          GetResponse(
-              path,
-              ConvertTrunkMemberBlockStateToBool(new_forwarding_viability)),
-          stream);
+      return SendResponse(GetResponse(path, ConvertTrunkMemberBlockStateToBool(
+                                                new_forwarding_viability)),
+                          stream);
     };
     node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
@@ -707,8 +742,10 @@ void SetUpInterfacesInterfaceEthernetStateForwardingViability(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/state/auto-negotiate
-void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(
-    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(uint64 node_id,
+                                                        uint32 port_id,
+                                                        TreeNode* node,
+                                                        YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::autoneg_status,
                        &DataResponse::has_autoneg_status,
@@ -742,9 +779,11 @@ void SetUpQosInterfacesInterfaceOutputQueuesQueueStateName(
 ////////////////////////////////////////////////////////////////////////////////
 // /qos/interfaces/interface[name=<name>]
 //                    /output/queues/queue[name=<name>]/state/id
-void SetUpQosInterfacesInterfaceOutputQueuesQueueStateId(
-    uint64 node_id, uint32 port_id, uint32 queue_id,
-    TreeNode* node, YangParseTree* tree) {
+void SetUpQosInterfacesInterfaceOutputQueuesQueueStateId(uint64 node_id,
+                                                         uint32 port_id,
+                                                         uint32 queue_id,
+                                                         TreeNode* node,
+                                                         YangParseTree* tree) {
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, queue_id, tree, &DataResponse::port_qos_counters,
       &DataResponse::has_port_qos_counters,
@@ -823,8 +862,8 @@ void SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /qos/queues/queue[name=<name>]/config/id
-void SetUpQosQueuesQueueConfigId(
-    uint32 queue_id, TreeNode* node, YangParseTree* tree) {
+void SetUpQosQueuesQueueConfigId(uint32 queue_id, TreeNode* node,
+                                 YangParseTree* tree) {
   auto poll_functor = [queue_id](const GnmiEvent& event,
                                  const ::gnmi::Path& path,
                                  GnmiSubscribeStream* stream) {
@@ -840,8 +879,8 @@ void SetUpQosQueuesQueueConfigId(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /qos/queues/queue[name=<name>]/state/id
-void SetUpQosQueuesQueueStateId(
-    uint32 queue_id, TreeNode* node, YangParseTree* tree) {
+void SetUpQosQueuesQueueStateId(uint32 queue_id, TreeNode* node,
+                                YangParseTree* tree) {
   auto poll_functor = [queue_id](const GnmiEvent& event,
                                  const ::gnmi::Path& path,
                                  GnmiSubscribeStream* stream) {

@@ -4,7 +4,6 @@
 // Target-agnostic utility functions exposed for use outside TdiSdeWrapper.
 
 #include "stratum/hal/lib/tdi/tdi_sde_utils.h"
-
 #include "tdi/common/tdi_table.hpp"
 #include "tdi_tofino/tdi_tofino_defs.h"
 
@@ -13,19 +12,19 @@ namespace hal {
 namespace tdi {
 
 tdi_sde_table_type GetSdeTableType(const ::tdi::Table& table) {
-  auto table_type =
-      static_cast<tdi_tofino_table_type_e>(table.tableInfoGet()->tableTypeGet());
+  auto table_type = static_cast<tdi_tofino_table_type_e>(
+      table.tableInfoGet()->tableTypeGet());
   switch (table_type) {
-  case TDI_TOFINO_TABLE_TYPE_ACTION_PROFILE:
-    return TDI_SDE_TABLE_TYPE_ACTION_PROFILE;
-  case TDI_TOFINO_TABLE_TYPE_COUNTER:
-    return TDI_SDE_TABLE_TYPE_ACTION_PROFILE;
-  case TDI_TOFINO_TABLE_TYPE_METER:
-    return TDI_SDE_TABLE_TYPE_METER;
-  case TDI_TOFINO_TABLE_TYPE_SELECTOR:
-    return TDI_SDE_TABLE_TYPE_SELECTOR;
-  default:
-    return TDI_SDE_TABLE_TYPE_NONE;
+    case TDI_TOFINO_TABLE_TYPE_ACTION_PROFILE:
+      return TDI_SDE_TABLE_TYPE_ACTION_PROFILE;
+    case TDI_TOFINO_TABLE_TYPE_COUNTER:
+      return TDI_SDE_TABLE_TYPE_ACTION_PROFILE;
+    case TDI_TOFINO_TABLE_TYPE_METER:
+      return TDI_SDE_TABLE_TYPE_METER;
+    case TDI_TOFINO_TABLE_TYPE_SELECTOR:
+      return TDI_SDE_TABLE_TYPE_SELECTOR;
+    default:
+      return TDI_SDE_TABLE_TYPE_NONE;
   }
 }
 

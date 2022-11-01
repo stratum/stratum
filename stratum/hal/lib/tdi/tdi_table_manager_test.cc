@@ -13,8 +13,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/tdi/tdi_sde_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/hal/lib/tdi/tdi_sde_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
@@ -161,8 +161,9 @@ TEST_F(TdiTableManagerTest, WriteDirectCounterEntryTest) {
           ::util::StatusOr<std::unique_ptr<TdiSdeInterface::TableKeyInterface>>(
               std::move(table_key_mock)))));
   EXPECT_CALL(*tdi_sde_wrapper_mock_, CreateTableData(kTdiRtTableId, _))
-      .WillOnce(Return(ByMove(
-          ::util::StatusOr<std::unique_ptr<TdiSdeInterface::TableDataInterface>>(
+      .WillOnce(
+          Return(ByMove(::util::StatusOr<
+                        std::unique_ptr<TdiSdeInterface::TableDataInterface>>(
               std::move(table_data_mock)))));
 
   const std::string kDirectCounterEntryText = R"PROTO(
@@ -276,7 +277,7 @@ TEST_F(TdiTableManagerTest, RejectMeterEntryInsertDelete) {
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
 
   ret = tdi_table_manager_->WriteMeterEntry(session_mock,
-                                             ::p4::v1::Update::DELETE, entry);
+                                            ::p4::v1::Update::DELETE, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
 }

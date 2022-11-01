@@ -14,11 +14,11 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/tdi/tdi.pb.h"
-#include "stratum/hal/lib/tdi/tdi_sde_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/tdi/tdi.pb.h"
+#include "stratum/hal/lib/tdi/tdi_sde_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -76,7 +76,7 @@ class TdiActionProfileManager {
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   explicit TdiActionProfileManager(TdiSdeInterface* tdi_sde_interface,
-                                    int device);
+                                   int device);
 
   // Internal version of WriteActionProfileMember which takes no locks.
   ::util::Status DoWriteActionProfileMember(

@@ -6,4 +6,3 @@
 int main(int argc, char* argv[]) {
   return stratum::hal::tdi::DpdkMain(argc, argv).error_code();
 }
-

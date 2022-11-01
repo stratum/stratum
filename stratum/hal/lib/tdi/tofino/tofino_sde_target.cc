@@ -4,26 +4,24 @@
 
 // Tofino-specific SDE wrapper methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <algorithm>
 #include <atomic>
 #include <memory>
 #include <ostream>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-
-#include "absl/cleanup/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
@@ -36,6 +34,7 @@
 #include "stratum/hal/lib/tdi/tdi.pb.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
@@ -44,16 +43,16 @@ extern "C" {
 #include "bf_switchd/bf_switchd.h"
 #include "bf_types/bf_types.h"
 #include "lld/lld_sku.h"
+#include "tdi_tofino/tdi_tofino_defs.h"
 #include "tofino/bf_pal/bf_pal_port_intf.h"
 #include "tofino/bf_pal/dev_intf.h"
 #include "tofino/bf_pal/pltfm_intf.h"
 #include "tofino/pdfixed/pd_devport_mgr.h"
 #include "tofino/pdfixed/pd_tm.h"
-#include "tdi_tofino/tdi_tofino_defs.h"
 
 // Flag to enable detailed logging in the SDE pipe manager.
 extern bool stat_mgr_enable_detail_trace;
-} // extern "C"
+}  // extern "C"
 
 namespace stratum {
 namespace hal {
@@ -95,15 +94,16 @@ namespace {
   }
 }
 
-::util::StatusOr<bf_fec_type_t> FecModeHalToBf(
-    FecMode fec_mode, uint64 speed_bps) {
+::util::StatusOr<bf_fec_type_t> FecModeHalToBf(FecMode fec_mode,
+                                               uint64 speed_bps) {
   if (fec_mode == FEC_MODE_UNKNOWN || fec_mode == FEC_MODE_OFF) {
     return BF_FEC_TYP_NONE;
   } else if (fec_mode == FEC_MODE_ON || fec_mode == FEC_MODE_AUTO) {
     // we have to "guess" the FEC type to use based on the port speed.
     switch (speed_bps) {
       case kOneGigBps:
-        return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode for 1Gbps mode.";
+        return MAKE_ERROR(ERR_INVALID_PARAM)
+               << "Invalid FEC mode for 1Gbps mode.";
       case kTenGigBps:
       case kFortyGigBps:
         return BF_FEC_TYP_FIRECODE;
@@ -129,14 +129,14 @@ namespace {
       return BF_LPBK_MAC_NEAR;
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Unsupported loopback mode: " << LoopbackState_Name(loopback_mode)
-          << ".";
+             << "Unsupported loopback mode: "
+             << LoopbackState_Name(loopback_mode) << ".";
   }
 }
 
 // A callback function executed in SDE port state change thread context.
-bf_status_t sde_port_status_callback(
-    bf_dev_id_t device, bf_dev_port_t dev_port, bool up, void* cookie) {
+bf_status_t sde_port_status_callback(bf_dev_id_t device, bf_dev_port_t dev_port,
+                                     bool up, void* cookie) {
   absl::Time timestamp = absl::Now();
   TdiSdeWrapper* tdi_sde_wrapper = TdiSdeWrapper::GetSingleton();
   if (!tdi_sde_wrapper) {
@@ -160,8 +160,8 @@ bf_status_t sde_port_status_callback(
   return state ? PORT_STATE_UP : PORT_STATE_DOWN;
 }
 
-::util::Status TdiSdeWrapper::GetPortCounters(
-    int device, int port, PortCounters* counters) {
+::util::Status TdiSdeWrapper::GetPortCounters(int device, int port,
+                                              PortCounters* counters) {
   uint64_t stats[BF_NUM_RMON_COUNTERS] = {0};
   RETURN_IF_TDI_ERROR(
       bf_pal_port_all_stats_get(static_cast<bf_dev_id_t>(device),
@@ -198,30 +198,29 @@ bf_status_t sde_port_status_callback(
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::GetPortInfo(
-    int device, int port, TargetDatapathId *target_dp_id) {
+::util::Status TdiSdeWrapper::GetPortInfo(int device, int port,
+                                          TargetDatapathId* target_dp_id) {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::HotplugPort(
-    int device, int port, HotplugConfigParams& hotplug_config) {
+::util::Status TdiSdeWrapper::HotplugPort(int device, int port,
+                                          HotplugConfigParams& hotplug_config) {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::AddPort(
-    int device, int port, uint64 speed_bps, FecMode fec_mode) {
+::util::Status TdiSdeWrapper::AddPort(int device, int port, uint64 speed_bps,
+                                      FecMode fec_mode) {
   ASSIGN_OR_RETURN(auto bf_speed, PortSpeedHalToBf(speed_bps));
   ASSIGN_OR_RETURN(auto bf_fec_mode, FecModeHalToBf(fec_mode, speed_bps));
   RETURN_IF_TDI_ERROR(bf_pal_port_add(static_cast<bf_dev_id_t>(device),
                                       static_cast<bf_dev_port_t>(port),
-                                      bf_speed,
-                                      bf_fec_mode));
+                                      bf_speed, bf_fec_mode));
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::AddPort(
-    int device, int port, uint64 speed_bps, const PortConfigParams& config,
-    FecMode fec_mode) {
+::util::Status TdiSdeWrapper::AddPort(int device, int port, uint64 speed_bps,
+                                      const PortConfigParams& config,
+                                      FecMode fec_mode) {
   return ::util::OkStatus();
 }
 
@@ -243,9 +242,10 @@ bf_status_t sde_port_status_callback(
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::SetPortShapingRate(
-    int device, int port, bool is_in_pps, uint32 burst_size,
-    uint64 rate_per_second) {
+::util::Status TdiSdeWrapper::SetPortShapingRate(int device, int port,
+                                                 bool is_in_pps,
+                                                 uint32 burst_size,
+                                                 uint64 rate_per_second) {
   if (!is_in_pps) {
     rate_per_second /= 1000;  // The SDE expects the bitrate in kbps.
   }
@@ -255,8 +255,8 @@ bf_status_t sde_port_status_callback(
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::EnablePortShaping(
-    int device, int port, TriState enable) {
+::util::Status TdiSdeWrapper::EnablePortShaping(int device, int port,
+                                                TriState enable) {
   if (enable == TriState::TRI_STATE_TRUE) {
     RETURN_IF_TDI_ERROR(p4_pd_tm_enable_port_shaping(device, port));
   } else if (enable == TriState::TRI_STATE_FALSE) {
@@ -266,8 +266,8 @@ bf_status_t sde_port_status_callback(
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::SetPortAutonegPolicy(
-    int device, int port, TriState autoneg) {
+::util::Status TdiSdeWrapper::SetPortAutonegPolicy(int device, int port,
+                                                   TriState autoneg) {
   ASSIGN_OR_RETURN(auto autoneg_v, AutonegHalToBf(autoneg));
   RETURN_IF_TDI_ERROR(bf_pal_port_autoneg_policy_set(
       static_cast<bf_dev_id_t>(device), static_cast<bf_dev_port_t>(port),
@@ -290,8 +290,8 @@ bool TdiSdeWrapper::IsValidPort(int device, int port) {
   return bf_pal_port_is_valid(device, port) == BF_SUCCESS;
 }
 
-::util::Status TdiSdeWrapper::SetPortLoopbackMode(
-    int device, int port, LoopbackState loopback_mode) {
+::util::Status TdiSdeWrapper::SetPortLoopbackMode(int device, int port,
+                                                  LoopbackState loopback_mode) {
   if (loopback_mode == LOOPBACK_STATE_UNKNOWN) {
     // Do nothing if we try to set loopback mode to the default one (UNKNOWN).
     return ::util::OkStatus();
@@ -306,8 +306,7 @@ bool TdiSdeWrapper::IsValidPort(int device, int port) {
 ::util::StatusOr<bool> TdiSdeWrapper::IsSoftwareModel(int device) {
   bool is_sw_model = true;
   auto bf_status = bf_pal_pltfm_type_get(device, &is_sw_model);
-  RET_CHECK(bf_status == BF_SUCCESS)
-      << "Error getting software model status.";
+  RET_CHECK(bf_status == BF_SUCCESS) << "Error getting software model status.";
   return is_sw_model;
 }
 
@@ -341,7 +340,6 @@ std::string GetBfChipId(int device) {
 
 }  // namespace
 
-
 std::string TdiSdeWrapper::GetChipType(int device) const {
   return absl::StrCat(GetBfChipFamilyAndType(device), ", revision ",
                       GetBfChipRevision(device), ", chip_id ",
@@ -349,16 +347,13 @@ std::string TdiSdeWrapper::GetChipType(int device) const {
 }
 
 // NOTE: This is Tofino-specific.
-std::string TdiSdeWrapper::GetSdeVersion() const {
-  return "9.11.0";
-}
+std::string TdiSdeWrapper::GetSdeVersion() const { return "9.11.0"; }
 
 ::util::StatusOr<uint32> TdiSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;
-  RET_CHECK(port >= 0)
-      << "Port ID must be non-negative. Attempted to get port " << port
-      << " on dev " << device << ".";
+  RET_CHECK(port >= 0) << "Port ID must be non-negative. Attempted to get port "
+                       << port << " on dev " << device << ".";
 
   // PortKey uses three possible values for channel:
   //     > 0: port is channelized (first channel is 1)
@@ -369,8 +364,8 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   //     Otherwise, port is already 0 in the non-channelized case
   const int channel =
       (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
-  RET_CHECK(channel >= 0)
-      << "Channel must be set for port " << port << " on dev " << device << ".";
+  RET_CHECK(channel >= 0) << "Channel must be set for port " << port
+                          << " on dev " << device << ".";
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
@@ -396,8 +391,8 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::SetDeflectOnDropDestination(
-    int device, int port, int queue) {
+::util::Status TdiSdeWrapper::SetDeflectOnDropDestination(int device, int port,
+                                                          int queue) {
   // The DoD destination must be a pipe-local port.
   p4_pd_tm_pipe_t pipe = DEV_PORT_TO_PIPE(port);
   RETURN_IF_TDI_ERROR(
@@ -405,11 +400,10 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::InitializeSde(
-    const std::string& sde_install_path, const std::string& sde_config_file,
-    bool run_in_background) {
-  RET_CHECK(sde_install_path != "")
-      << "sde_install_path is required";
+::util::Status TdiSdeWrapper::InitializeSde(const std::string& sde_install_path,
+                                            const std::string& sde_config_file,
+                                            bool run_in_background) {
+  RET_CHECK(sde_install_path != "") << "sde_install_path is required";
   RET_CHECK(sde_config_file != "") << "sde_config_file is required";
 
   // Parse bf_switchd arguments.
@@ -446,9 +440,9 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::AddDevice(
-    int dev_id, const TdiDeviceConfig& device_config) {
-  const ::tdi::Device *device = nullptr;
+::util::Status TdiSdeWrapper::AddDevice(int dev_id,
+                                        const TdiDeviceConfig& device_config) {
+  const ::tdi::Device* device = nullptr;
   absl::WriterMutexLock l(&data_lock_);
 
   RET_CHECK(device_config.programs_size() > 0);
@@ -519,20 +513,20 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   // levels to enable for which modules?
   RET_CHECK(
       bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  RET_CHECK(
-      bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  RET_CHECK(bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) ==
+            0);
   RET_CHECK(
       bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   stat_mgr_enable_detail_trace = false;
   if (VLOG_IS_ON(2)) {
     RET_CHECK(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
-                                               BF_LOG_WARN) == 0);
+                                   BF_LOG_WARN) == 0);
     stat_mgr_enable_detail_trace = true;
   }
 
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
-  RETURN_IF_TDI_ERROR(device->tdiInfoGet(
-       device_config.programs(0).name(), &tdi_info_));
+  RETURN_IF_TDI_ERROR(
+      device->tdiInfoGet(device_config.programs(0).name(), &tdi_info_));
 
   // FIXME: if all we ever do is create and push, this could be one call.
   tdi_id_mapper_ = TdiIdMapper::CreateInstance();
@@ -599,12 +593,12 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::HandlePacketRx(
-    bf_dev_id_t device, bf_pkt* pkt, bf_pkt_rx_ring_t rx_ring) {
+::util::Status TdiSdeWrapper::HandlePacketRx(bf_dev_id_t device, bf_pkt* pkt,
+                                             bf_pkt_rx_ring_t rx_ring) {
   absl::ReaderMutexLock l(&packet_rx_callback_lock_);
   auto rx_writer = gtl::FindOrNull(device_to_packet_rx_writer_, device);
-  RET_CHECK(rx_writer)
-      << "No Rx callback registered for device id " << device << ".";
+  RET_CHECK(rx_writer) << "No Rx callback registered for device id " << device
+                       << ".";
 
   std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
                      bf_pkt_get_pkt_size(pkt));
@@ -616,9 +610,10 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
-bf_status_t TdiSdeWrapper::BfPktTxNotifyCallback(
-    bf_dev_id_t device, bf_pkt_tx_ring_t tx_ring, uint64 tx_cookie,
-    uint32 status) {
+bf_status_t TdiSdeWrapper::BfPktTxNotifyCallback(bf_dev_id_t device,
+                                                 bf_pkt_tx_ring_t tx_ring,
+                                                 uint64 tx_cookie,
+                                                 uint32 status) {
   VLOG(1) << "Tx done notification for device: " << device
           << " tx ring: " << tx_ring << " tx cookie: " << tx_cookie
           << " status: " << status;
@@ -627,8 +622,9 @@ bf_status_t TdiSdeWrapper::BfPktTxNotifyCallback(
   return bf_pkt_free(device, pkt);
 }
 
-bf_status_t TdiSdeWrapper::BfPktRxNotifyCallback(
-    bf_dev_id_t device, bf_pkt* pkt, void* cookie, bf_pkt_rx_ring_t rx_ring) {
+bf_status_t TdiSdeWrapper::BfPktRxNotifyCallback(bf_dev_id_t device,
+                                                 bf_pkt* pkt, void* cookie,
+                                                 bf_pkt_rx_ring_t rx_ring) {
   TdiSdeWrapper* tdi_sde_wrapper = TdiSdeWrapper::GetSingleton();
   // TODO(max): Handle error
   tdi_sde_wrapper->HandlePacketRx(device, pkt, rx_ring);

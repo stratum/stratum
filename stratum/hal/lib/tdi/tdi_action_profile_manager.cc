@@ -22,7 +22,7 @@ TdiActionProfileManager::TdiActionProfileManager(
 
 std::unique_ptr<TdiActionProfileManager>
 TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
-                                         int device) {
+                                        int device) {
   return absl::WrapUnique(
       new TdiActionProfileManager(tdi_sde_interface, device));
 }
@@ -63,7 +63,7 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
     }
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Unsupported extern type " << entry.extern_type_id() << ".";
+             << "Unsupported extern type " << entry.extern_type_id() << ".";
   }
 }
 
@@ -96,7 +96,7 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
     }
     default:
       return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-          << "Unsupported extern type " << entry.extern_type_id() << ".";
+             << "Unsupported extern type " << entry.extern_type_id() << ".";
   }
 
   return ::util::OkStatus();
@@ -107,9 +107,9 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
   absl::WriterMutexLock l(&lock_);
-  ASSIGN_OR_RETURN(
-      uint32 bfrt_table_id,
-      tdi_sde_interface_->GetTdiRtId(action_profile_member.action_profile_id()));
+  ASSIGN_OR_RETURN(uint32 bfrt_table_id,
+                   tdi_sde_interface_->GetTdiRtId(
+                       action_profile_member.action_profile_id()));
   return DoWriteActionProfileMember(session, bfrt_table_id, type,
                                     action_profile_member);
 }
@@ -119,9 +119,9 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
     const ::p4::v1::ActionProfileMember& action_profile_member,
     WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
-  ASSIGN_OR_RETURN(
-      uint32 bfrt_table_id,
-      tdi_sde_interface_->GetTdiRtId(action_profile_member.action_profile_id()));
+  ASSIGN_OR_RETURN(uint32 bfrt_table_id,
+                   tdi_sde_interface_->GetTdiRtId(
+                       action_profile_member.action_profile_id()));
   return DoReadActionProfileMember(session, bfrt_table_id,
                                    action_profile_member, writer);
 }
@@ -192,7 +192,8 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
       break;
     }
     default:
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Unsupported update type: " << type;
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Unsupported update type: " << type;
   }
 
   return ::util::OkStatus();
@@ -207,7 +208,8 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
       << "Reading all action profiles is not supported yet.";
 
   std::vector<int> member_ids;
-  std::vector<std::unique_ptr<TdiSdeInterface::TableDataInterface>> table_values;
+  std::vector<std::unique_ptr<TdiSdeInterface::TableDataInterface>>
+      table_values;
   RETURN_IF_ERROR(tdi_sde_interface_->GetActionProfileMembers(
       device_, session, bfrt_table_id, action_profile_member.member_id(),
       &member_ids, &table_values));
@@ -283,7 +285,8 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
       break;
     }
     default:
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Unsupported update type: " << type;
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Unsupported update type: " << type;
   }
 
   return ::util::OkStatus();
@@ -313,8 +316,9 @@ TdiActionProfileManager::CreateInstance(TdiSdeInterface* tdi_sde_interface,
     const std::vector<bool>& member_status = member_statuses[i];
     ::p4::v1::ActionProfileGroup result;
     // Action profile id
-    ASSIGN_OR_RETURN(auto action_profile_id,
-                     tdi_sde_interface_->GetActionProfileTdiRtId(bfrt_table_id));
+    ASSIGN_OR_RETURN(
+        auto action_profile_id,
+        tdi_sde_interface_->GetActionProfileTdiRtId(bfrt_table_id));
     ASSIGN_OR_RETURN(auto p4_action_profile_id,
                      tdi_sde_interface_->GetP4InfoId(action_profile_id));
     result.set_action_profile_id(p4_action_profile_id);

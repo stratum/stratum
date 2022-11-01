@@ -12,7 +12,7 @@ namespace tdi {
 
 ::util::Status TofinoMain(int argc, char* argv[]);
 
-}  // namespace barefoot
+}  // namespace tdi
 }  // namespace hal
 }  // namespace stratum
 

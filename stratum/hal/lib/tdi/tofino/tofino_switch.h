@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/tdi/tdi_node.h"
 #include "stratum/hal/lib/tdi/tofino/tofino_chassis_manager.h"
-#include "stratum/hal/lib/common/switch_interface.h"
 
 // Suppress clang errors
 #undef LOCKS_EXCLUDED
@@ -92,7 +92,7 @@ class TofinoSwitch : public SwitchInterface {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   TofinoSwitch(TofinoChassisManager* chassis_manager,
-      const std::map<int, TdiNode*>& device_id_to_tdi_node);
+               const std::map<int, TdiNode*>& device_id_to_tdi_node);
 
   // Helper to get TdiNode pointer from device_id number or return error
   // indicating invalid device_id.

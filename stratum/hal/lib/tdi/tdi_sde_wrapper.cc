@@ -16,7 +16,6 @@
 #include "absl/hash/hash.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
-
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
@@ -49,8 +48,8 @@ ABSL_CONST_INIT absl::Mutex TdiSdeWrapper::init_lock_(absl::kConstInit);
 
 TdiSdeWrapper::TdiSdeWrapper() : port_status_event_writer_(nullptr) {}
 
-::util::Status TdiSdeWrapper::OnPortStatusEvent(
-    int device, int port, bool up, absl::Time timestamp) {
+::util::Status TdiSdeWrapper::OnPortStatusEvent(int device, int port, bool up,
+                                                absl::Time timestamp) {
   // Create PortStatusEvent message.
   PortState state = up ? PORT_STATE_UP : PORT_STATE_DOWN;
   PortStatusEvent event = {device, port, state, timestamp};

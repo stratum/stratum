@@ -4,15 +4,14 @@
 
 // DPDK-specific SDE wrapper methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <algorithm>
 #include <memory>
 #include <ostream>
 #include <set>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -26,15 +25,16 @@
 #include "stratum/hal/lib/tdi/macros.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/utils.h"
 
 extern "C" {
-#include "bf_switchd/lib/bf_switchd_lib_init.h"
 #include "bf_pal/bf_pal_port_intf.h"
 #include "bf_pal/dev_intf.h"
+#include "bf_switchd/lib/bf_switchd_lib_init.h"
 #include "tdi_rt/tdi_rt_defs.h"
-} // extern "C"
+}  // extern "C"
 
 namespace stratum {
 namespace hal {
@@ -46,8 +46,8 @@ using namespace stratum::hal::tdi::helpers;
   return PORT_STATE_UP;
 }
 
-::util::Status TdiSdeWrapper::GetPortCounters(
-    int device, int port, PortCounters* counters) {
+::util::Status TdiSdeWrapper::GetPortCounters(int device, int port,
+                                              PortCounters* counters) {
   uint64_t stats[BF_PORT_NUM_COUNTERS] = {0};
   RETURN_IF_TDI_ERROR(
       bf_pal_port_all_stats_get(static_cast<bf_dev_id_t>(device),
@@ -79,21 +79,27 @@ using namespace stratum::hal::tdi::helpers;
 
 namespace {
 dpdk_port_type_t get_target_port_type(DpdkPortType type) {
-  switch(type) {
-    case PORT_TYPE_VHOST: return BF_DPDK_LINK;
-    case PORT_TYPE_TAP: return BF_DPDK_TAP;
-    case PORT_TYPE_LINK: return BF_DPDK_LINK;
-    case PORT_TYPE_SOURCE: return BF_DPDK_SOURCE;
-    case PORT_TYPE_SINK: return BF_DPDK_SINK;
-    default: break;
+  switch (type) {
+    case PORT_TYPE_VHOST:
+      return BF_DPDK_LINK;
+    case PORT_TYPE_TAP:
+      return BF_DPDK_TAP;
+    case PORT_TYPE_LINK:
+      return BF_DPDK_LINK;
+    case PORT_TYPE_SOURCE:
+      return BF_DPDK_SOURCE;
+    case PORT_TYPE_SINK:
+      return BF_DPDK_SINK;
+    default:
+      break;
   }
   return BF_DPDK_PORT_MAX;
 }
-} // namespace
+}  // namespace
 
-::util::Status TdiSdeWrapper::GetPortInfo(
-    int device, int port, TargetDatapathId *target_dp_id) {
-  struct port_info_t *port_info = NULL;
+::util::Status TdiSdeWrapper::GetPortInfo(int device, int port,
+                                          TargetDatapathId* target_dp_id) {
+  struct port_info_t* port_info = NULL;
   RETURN_IF_TDI_ERROR(bf_pal_port_info_get(static_cast<bf_dev_id_t>(device),
                                            static_cast<bf_dev_port_t>(port),
                                            &port_info));
@@ -103,11 +109,10 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::HotplugPort(
-    int device, int port, HotplugConfigParams& hotplug_config) {
+::util::Status TdiSdeWrapper::HotplugPort(int device, int port,
+                                          HotplugConfigParams& hotplug_config) {
   auto hotplug_attrs = absl::make_unique<hotplug_attributes_t>();
-  strncpy(hotplug_attrs->qemu_socket_ip,
-          hotplug_config.qemu_socket_ip.c_str(),
+  strncpy(hotplug_attrs->qemu_socket_ip, hotplug_config.qemu_socket_ip.c_str(),
           sizeof(hotplug_attrs->qemu_socket_ip));
   strncpy(hotplug_attrs->qemu_vm_netdev_id,
           hotplug_config.qemu_vm_netdev_id.c_str(),
@@ -126,13 +131,11 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
   hotplug_attrs->qemu_socket_port = hotplug_config.qemu_socket_port;
   uint64 mac_address = hotplug_config.qemu_vm_mac_address;
 
-  std::string string_mac = (absl::StrFormat("%02x:%02x:%02x:%02x:%02x:%02x",
-                                            (mac_address >> 40) & 0xFF,
-                                            (mac_address >> 32) & 0xFF,
-                                            (mac_address >> 24) & 0xFF,
-                                            (mac_address >> 16) & 0xFF,
-                                            (mac_address >> 8) & 0xFF,
-                                             mac_address & 0xFF));
+  std::string string_mac =
+      (absl::StrFormat("%02x:%02x:%02x:%02x:%02x:%02x",
+                       (mac_address >> 40) & 0xFF, (mac_address >> 32) & 0xFF,
+                       (mac_address >> 24) & 0xFF, (mac_address >> 16) & 0xFF,
+                       (mac_address >> 8) & 0xFF, mac_address & 0xFF));
   strcpy(hotplug_attrs->qemu_vm_mac_address, string_mac.c_str());
 
   LOG(INFO) << "Parameters for hotplug are:"
@@ -146,27 +149,27 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
             << " qemu_hotplug=" << hotplug_attrs->qemu_hotplug;
 
   if (hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_ADD) {
-       RETURN_IF_TDI_ERROR(bf_pal_hotplug_add(static_cast<bf_dev_id_t>(device),
-                                              static_cast<bf_dev_port_t>(port),
-                                              hotplug_attrs.get()));
+    RETURN_IF_TDI_ERROR(bf_pal_hotplug_add(static_cast<bf_dev_id_t>(device),
+                                           static_cast<bf_dev_port_t>(port),
+                                           hotplug_attrs.get()));
   } else if (hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_DEL) {
-       RETURN_IF_TDI_ERROR(bf_pal_hotplug_del(static_cast<bf_dev_id_t>(device),
-                                              static_cast<bf_dev_port_t>(port),
-                                              hotplug_attrs.get()));
+    RETURN_IF_TDI_ERROR(bf_pal_hotplug_del(static_cast<bf_dev_id_t>(device),
+                                           static_cast<bf_dev_port_t>(port),
+                                           hotplug_attrs.get()));
   }
 
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::AddPort(
-    int device, int port, uint64 speed_bps, FecMode fec_mode) {
+::util::Status TdiSdeWrapper::AddPort(int device, int port, uint64 speed_bps,
+                                      FecMode fec_mode) {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-      << "AddPort(device, port, speed, fec_mode) not supported";
+         << "AddPort(device, port, speed, fec_mode) not supported";
 }
 
-::util::Status TdiSdeWrapper::AddPort(
-    int device, int port, uint64 speed_bps, const PortConfigParams& config,
-    FecMode fec_mode) {
+::util::Status TdiSdeWrapper::AddPort(int device, int port, uint64 speed_bps,
+                                      const PortConfigParams& config,
+                                      FecMode fec_mode) {
   static int port_in;
   static int port_out;
 
@@ -198,34 +201,33 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
 
   if (port_attrs->port_type == BF_DPDK_LINK) {
     // Update LINK parameters
-    if(config.port_type == PORT_TYPE_VHOST) {
+    if (config.port_type == PORT_TYPE_VHOST) {
       port_attrs->link.dev_hotplug_enabled = 1;
       strncpy(port_attrs->link.pcie_domain_bdf, config.port_name.c_str(),
-          sizeof(port_attrs->link.pcie_domain_bdf));
+              sizeof(port_attrs->link.pcie_domain_bdf));
       snprintf(port_attrs->link.dev_args, DEV_ARGS_LEN, "iface=%s,queues=%d",
-             config.socket_path.c_str(), config.queues);
+               config.socket_path.c_str(), config.queues);
     } else {
       strncpy(port_attrs->link.pcie_domain_bdf, config.pci_bdf.c_str(),
-          sizeof(port_attrs->link.pcie_domain_bdf));
+              sizeof(port_attrs->link.pcie_domain_bdf));
     }
-      LOG(INFO) << "LINK Parameters of the port are "
-                << " pcie_domain_bdf=" << port_attrs->link.pcie_domain_bdf
-                << " dev_args=" << port_attrs->link.dev_args;
-  }
-  else if (port_attrs->port_type == BF_DPDK_TAP) {
-      port_attrs->tap.mtu = config.mtu;
-      LOG(INFO) << "TAP Parameters of the port are "
-                << "mtu = " << port_attrs->tap.mtu;
+    LOG(INFO) << "LINK Parameters of the port are "
+              << " pcie_domain_bdf=" << port_attrs->link.pcie_domain_bdf
+              << " dev_args=" << port_attrs->link.dev_args;
+  } else if (port_attrs->port_type == BF_DPDK_TAP) {
+    port_attrs->tap.mtu = config.mtu;
+    LOG(INFO) << "TAP Parameters of the port are "
+              << "mtu = " << port_attrs->tap.mtu;
   }
 
-  auto bf_status = bf_pal_port_add(static_cast<bf_dev_id_t>(device),
-                                   static_cast<bf_dev_port_t>(port),
-                                   port_attrs.get());
+  auto bf_status =
+      bf_pal_port_add(static_cast<bf_dev_id_t>(device),
+                      static_cast<bf_dev_port_t>(port), port_attrs.get());
   if (bf_status != BF_SUCCESS) {
-      // Revert the port_in and port_out values
-      port_in--;
-      port_out--;
-      RETURN_IF_TDI_ERROR(bf_status);
+    // Revert the port_in and port_out values
+    port_in--;
+    port_out--;
+    RETURN_IF_TDI_ERROR(bf_status);
   }
 
   return ::util::OkStatus();
@@ -245,23 +247,24 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "DisablePort not implemented";
 }
 
-::util::Status TdiSdeWrapper::SetPortShapingRate(
-    int device, int port, bool is_in_pps, uint32 burst_size,
-    uint64 rate_per_second) {
+::util::Status TdiSdeWrapper::SetPortShapingRate(int device, int port,
+                                                 bool is_in_pps,
+                                                 uint32 burst_size,
+                                                 uint64 rate_per_second) {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-      << "SetPortShapingRate not supported";
+         << "SetPortShapingRate not supported";
 }
 
-::util::Status TdiSdeWrapper::EnablePortShaping(
-    int device, int port, TriState enable) {
+::util::Status TdiSdeWrapper::EnablePortShaping(int device, int port,
+                                                TriState enable) {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-      << "EnablePortShaping not supported";
+         << "EnablePortShaping not supported";
 }
 
-::util::Status TdiSdeWrapper::SetPortAutonegPolicy(
-    int device, int port, TriState autoneg) {
+::util::Status TdiSdeWrapper::SetPortAutonegPolicy(int device, int port,
+                                                   TriState autoneg) {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-      << "SetPortAutonegPolicy not supported";
+         << "SetPortAutonegPolicy not supported";
 }
 
 ::util::Status TdiSdeWrapper::SetPortMtu(int device, int port, int32 mtu) {
@@ -277,19 +280,17 @@ bool TdiSdeWrapper::IsValidPort(int device, int port) {
   return BF_SUCCESS;
 }
 
-::util::Status TdiSdeWrapper::SetPortLoopbackMode(
-    int device, int port, LoopbackState loopback_mode) {
+::util::Status TdiSdeWrapper::SetPortLoopbackMode(int device, int port,
+                                                  LoopbackState loopback_mode) {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-      << "SetPortLoopbackMode not supported";
+         << "SetPortLoopbackMode not supported";
 }
 
 ::util::StatusOr<bool> TdiSdeWrapper::IsSoftwareModel(int device) {
   return true;
 }
 
-std::string TdiSdeWrapper::GetChipType(int device) const {
-  return "DPDK";
-}
+std::string TdiSdeWrapper::GetChipType(int device) const { return "DPDK"; }
 
 std::string TdiSdeWrapper::GetSdeVersion() const {
   // TODO tdi version
@@ -299,9 +300,8 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
 ::util::StatusOr<uint32> TdiSdeWrapper::GetPortIdFromPortKey(
     int device, const PortKey& port_key) {
   const int port = port_key.port;
-  RET_CHECK(port >= 0)
-      << "Port ID must be non-negative. Attempted to get port " << port
-      << " on dev " << device << ".";
+  RET_CHECK(port >= 0) << "Port ID must be non-negative. Attempted to get port "
+                       << port << " on dev " << device << ".";
 
   // PortKey uses three possible values for channel:
   //     > 0: port is channelized (first channel is 1)
@@ -312,8 +312,8 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   //     Otherwise, port is already 0 in the non-channelized case
   const int channel =
       (port_key.channel > 0) ? port_key.channel - 1 : port_key.channel;
-  RET_CHECK(channel >= 0)
-      << "Channel must be set for port " << port << " on dev " << device << ".";
+  RET_CHECK(channel >= 0) << "Channel must be set for port " << port
+                          << " on dev " << device << ".";
 
   char port_string[MAX_PORT_HDL_STRING_LEN];
   int r = snprintf(port_string, sizeof(port_string), "%d/%d", port, channel);
@@ -335,17 +335,16 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED) << "SetTmCpuPort not supported";
 }
 
-::util::Status TdiSdeWrapper::SetDeflectOnDropDestination(
-    int device, int port, int queue) {
+::util::Status TdiSdeWrapper::SetDeflectOnDropDestination(int device, int port,
+                                                          int queue) {
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "SetDeflectOnDropDestination not implemented";
+         << "SetDeflectOnDropDestination not implemented";
 }
 
-::util::Status TdiSdeWrapper::InitializeSde(
-    const std::string& sde_install_path, const std::string& sde_config_file,
-    bool run_in_background) {
-  RET_CHECK(sde_install_path != "")
-      << "sde_install_path is required";
+::util::Status TdiSdeWrapper::InitializeSde(const std::string& sde_install_path,
+                                            const std::string& sde_config_file,
+                                            bool run_in_background) {
+  RET_CHECK(sde_install_path != "") << "sde_install_path is required";
   RET_CHECK(sde_config_file != "") << "sde_config_file is required";
 
   // Parse bf_switchd arguments.
@@ -381,18 +380,18 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::AddDevice(
-    int dev_id, const TdiDeviceConfig& device_config) {
-  const ::tdi::Device *device = nullptr;
+::util::Status TdiSdeWrapper::AddDevice(int dev_id,
+                                        const TdiDeviceConfig& device_config) {
+  const ::tdi::Device* device = nullptr;
   absl::WriterMutexLock l(&data_lock_);
 
   RET_CHECK(device_config.programs_size() > 0);
 
   tdi_id_mapper_.reset();
 
-  RETURN_IF_TDI_ERROR(bf_pal_device_warm_init_begin(
-      dev_id, BF_DEV_WARM_INIT_FAST_RECFG,
-      /* upgrade_agents */ true));
+  RETURN_IF_TDI_ERROR(bf_pal_device_warm_init_begin(dev_id,
+                                                    BF_DEV_WARM_INIT_FAST_RECFG,
+                                                    /* upgrade_agents */ true));
   bf_device_profile_t device_profile = {};
 
   // Commit new files to disk and build device profile for SDE to load.
@@ -454,18 +453,18 @@ std::string TdiSdeWrapper::GetSdeVersion() const {
   // levels to enable for which modules?
   RET_CHECK(
       bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
-  RET_CHECK(
-      bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  RET_CHECK(bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) ==
+            0);
   RET_CHECK(
       bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
   if (VLOG_IS_ON(2)) {
     RET_CHECK(bf_sys_log_level_set(BF_MOD_PIPE, BF_LOG_DEST_STDOUT,
-                                               BF_LOG_WARN) == 0);
+                                   BF_LOG_WARN) == 0);
   }
 
   ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
-  RETURN_IF_TDI_ERROR(device->tdiInfoGet(
-       device_config.programs(0).name(), &tdi_info_));
+  RETURN_IF_TDI_ERROR(
+      device->tdiInfoGet(device_config.programs(0).name(), &tdi_info_));
 
   // FIXME: if all we ever do is create and push, this could be one call.
   tdi_id_mapper_ = TdiIdMapper::CreateInstance();

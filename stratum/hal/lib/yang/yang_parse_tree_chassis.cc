@@ -6,17 +6,16 @@
 // Implements the YangParseTreePaths::AddSubtreeChassis() method and its
 // supporting functions.
 
-#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
-
 #include "gnmi/gnmi.pb.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_component.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
-#include "stratum/hal/lib/yang/yang_parse_tree.h"
-#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
 
 namespace stratum {
 namespace hal {
@@ -28,8 +27,8 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/chassis/alarms/memory-error
-void SetUpComponentsComponentChassisAlarmsMemoryError(
-    TreeNode* node, YangParseTree* tree) {
+void SetUpComponentsComponentChassisAlarmsMemoryError(TreeNode* node,
+                                                      YangParseTree* tree) {
   auto register_functor = RegisterFunc<MemoryErrorAlarm>();
   node->SetOnChangeRegistration(register_functor);
 }
@@ -69,8 +68,8 @@ void SetUpComponentsComponentChassisAlarmsMemoryErrorTimeCreated(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/chassis/alarms/memory-error/info
-void SetUpComponentsComponentChassisAlarmsMemoryErrorInfo(
-    TreeNode* node, YangParseTree* tree) {
+void SetUpComponentsComponentChassisAlarmsMemoryErrorInfo(TreeNode* node,
+                                                          YangParseTree* tree) {
   // Regular method using a template cannot be used to get the OnPoll functor as
   // std::string fields are treated differently by the PROTO-to-C++ generator:
   // the getter returns "const std::string&" instead of "string" which leads to
@@ -229,14 +228,14 @@ void SetUpComponentsComponentChassisAlarmsFlowProgrammingExceptionSeverity(
       ->SetOnChangeHandler(on_change_functor);
 }
 
-} // namespace
+}  // namespace
 
 /////////////////////////
 //  AddSubtreeChassis  //
 /////////////////////////
 
-void YangParseTreePaths::AddSubtreeChassis(
-    const Chassis& chassis, YangParseTree* tree) {
+void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
+                                           YangParseTree* tree) {
   const std::string& name = chassis.name().empty() ? "chassis" : chassis.name();
   TreeNode* node = tree->AddNode(GetPath("components")(
       "component", name)("chassis")("alarms")("memory-error")());

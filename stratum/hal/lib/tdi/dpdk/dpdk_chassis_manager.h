@@ -82,9 +82,9 @@ class DpdkChassisManager {
                               SetRequest::Request::Port::ValueCase value_case);
 
   // Sets the value of a hotplug configuration parameter.
-  ::util::Status SetHotplugParam(
-      uint64 node_id, uint32 port_id, const SingletonPort& singleton_port,
-      DpdkHotplugParam param_type);
+  ::util::Status SetHotplugParam(uint64 node_id, uint32 port_id,
+                                 const SingletonPort& singleton_port,
+                                 DpdkHotplugParam param_type);
 
   // DpdkChassisManager is neither copyable nor movable.
   DpdkChassisManager(const DpdkChassisManager&) = delete;
@@ -114,9 +114,10 @@ class DpdkChassisManager {
     std::string native_socket_path;
     QemuHotplugMode qemu_hotplug_mode;
 
-    HotplugConfig() : qemu_socket_port(0),
-                      qemu_vm_mac_address(0),
-                      qemu_hotplug_mode(HOTPLUG_MODE_NONE) {}
+    HotplugConfig()
+        : qemu_socket_port(0),
+          qemu_vm_mac_address(0),
+          qemu_hotplug_mode(HOTPLUG_MODE_NONE) {}
   };
 
   struct PortConfig {
@@ -142,12 +143,12 @@ class DpdkChassisManager {
     std::string pci_bdf;
     HotplugConfig hotplug_config;
 
-    PortConfig() : admin_state(ADMIN_STATE_UNKNOWN),
-                   port_type(PORT_TYPE_NONE),
-                   device_type(DEVICE_TYPE_NONE),
-                   packet_dir (DIRECTION_HOST),
-                   queues(0) {
-    }
+    PortConfig()
+        : admin_state(ADMIN_STATE_UNKNOWN),
+          port_type(PORT_TYPE_NONE),
+          device_type(DEVICE_TYPE_NONE),
+          packet_dir(DIRECTION_HOST),
+          queues(0) {}
   };
 
   // Maximum depth of port status change event channel.
