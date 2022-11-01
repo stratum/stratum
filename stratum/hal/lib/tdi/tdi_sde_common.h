@@ -13,11 +13,11 @@
 // Get the /sys fs file name of the first Tofino ASIC.
 extern "C" int switch_pci_sysfs_str_get(char* name, size_t name_size);
 
-#define RETURN_IF_NULL(expr)                                                 \
-  do {                                                                       \
-    if (expr == nullptr) {                                                   \
-      return MAKE_ERROR() << "'" << #expr << "' must be non-null";           \
-    }                                                                        \
+#define RETURN_IF_NULL(expr)                                       \
+  do {                                                             \
+    if (expr == nullptr) {                                         \
+      return MAKE_ERROR() << "'" << #expr << "' must be non-null"; \
+    }                                                              \
   } while (0)
 
 DECLARE_string(tdi_sde_config_dir);

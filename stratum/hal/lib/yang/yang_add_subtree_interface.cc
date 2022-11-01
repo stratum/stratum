@@ -6,14 +6,13 @@
 // Implements the YangParseTreePaths::AddSubtreeInterface() method.
 // The supporting functions are in a separate file.
 
-#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
-
 #include <string>
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/yang/yang_parse_tree_interface.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
 
 namespace stratum {
 namespace hal {
@@ -63,8 +62,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("negotiated-port-speed")());
-  SetUpInterfacesInterfaceEthernetStateNegotiatedPortSpeed(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceEthernetStateNegotiatedPortSpeed(node_id, port_id,
+                                                           node, tree);
 
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
@@ -84,33 +83,33 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-unicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersInUnicastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInUnicastPkts(node_id, port_id, node,
+                                                     tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("out-unicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersOutUnicastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutUnicastPkts(node_id, port_id, node,
+                                                      tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-broadcast-pkts")());
-  SetUpInterfacesInterfaceStateCountersInBroadcastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInBroadcastPkts(node_id, port_id, node,
+                                                       tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("out-broadcast-pkts")());
-  SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(node_id, port_id, node,
+                                                        tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-multicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersInMulticastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInMulticastPkts(node_id, port_id, node,
+                                                       tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("out-multicast-pkts")());
-  SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutMulticastPkts(node_id, port_id, node,
+                                                        tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-discards")());
@@ -118,13 +117,13 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("out-discards")());
-  SetUpInterfacesInterfaceStateCountersOutDiscards(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersOutDiscards(node_id, port_id, node,
+                                                   tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-unknown-protos")());
-  SetUpInterfacesInterfaceStateCountersInUnknownProtos(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInUnknownProtos(node_id, port_id, node,
+                                                       tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-errors")());
@@ -136,8 +135,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("counters")("in-fcs-errors")());
-  SetUpInterfacesInterfaceStateCountersInFcsErrors(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateCountersInFcsErrors(node_id, port_id, node,
+                                                   tree);
 
   node = tree->AddNode(GetPath("lacp")("interfaces")(
       "interface", name)("state")("system-priority")());
@@ -146,8 +145,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("health-indicator")());
   // TODO(tmadejski): Fix this value once common.proto has corresponding field.
-  SetUpInterfacesInterfaceConfigHealthIndicator(
-      "GOOD", node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceConfigHealthIndicator("GOOD", node_id, port_id, node,
+                                                tree);
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("health-indicator")());
@@ -162,13 +161,13 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("forwarding-viable")());
-  SetUpInterfacesInterfaceEthernetStateForwardingViability(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceEthernetStateForwardingViability(node_id, port_id,
+                                                           node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("auto-negotiate")());
-  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(
-      node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(node_id, port_id, node,
+                                                     tree);
 
   absl::flat_hash_map<uint32, uint32> internal_priority_to_q_num;
   absl::flat_hash_map<uint32, TrafficClass> q_num_to_traffic_class;
@@ -197,8 +196,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
     node = tree->AddNode(GetPath("qos")("interfaces")("interface", name)(
         "output")("queues")("queue", queue_name)("state")("id")());
-    SetUpQosInterfacesInterfaceOutputQueuesQueueStateId(
-        node_id, port_id, queue_id, node, tree);
+    SetUpQosInterfacesInterfaceOutputQueuesQueueStateId(node_id, port_id,
+                                                        queue_id, node, tree);
 
     node = tree->AddNode(GetPath("qos")("interfaces")("interface", name)(
         "output")("queues")("queue", queue_name)("state")("transmit-pkts")());

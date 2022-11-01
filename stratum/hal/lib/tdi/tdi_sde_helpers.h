@@ -43,11 +43,9 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
 ::util::StatusOr<std::string> DumpTableData(const ::tdi::TableData* table_data);
 
 ::util::Status GetFieldExact(const ::tdi::TableKey& table_key,
-                             std::string field_name,
-                             uint32_t *field_value);
+                             std::string field_name, uint32_t* field_value);
 
-::util::Status SetFieldExact(::tdi::TableKey* table_key,
-                             std::string field_name,
+::util::Status SetFieldExact(::tdi::TableKey* table_key, std::string field_name,
                              uint64 field_value);
 
 ::util::Status SetField(::tdi::TableKey* table_key, std::string field_name,
@@ -60,7 +58,7 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
                         std::string field_name, std::string* field_value);
 
 ::util::Status GetFieldBool(const ::tdi::TableData& table_data,
-			    std::string field_name, bool* field_value);
+                            std::string field_name, bool* field_value);
 
 template <typename T>
 ::util::Status GetField(const ::tdi::TableData& table_data,
@@ -68,7 +66,7 @@ template <typename T>
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(table_data.getParent(&table));
 
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   tdi_id_t action_id = table_data.actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
   RETURN_IF_NULL(dataFieldInfo);
@@ -76,7 +74,7 @@ template <typename T>
   auto field_id = dataFieldInfo->idGet();
   auto data_type = dataFieldInfo->dataTypeGet();
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_INT_ARR ||
-                        data_type == TDI_FIELD_DATA_TYPE_BOOL_ARR)
+            data_type == TDI_FIELD_DATA_TYPE_BOOL_ARR)
       << "Requested array but field has type " << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_values));
 
@@ -99,13 +97,14 @@ template <typename T>
   RETURN_IF_TDI_ERROR(table_data->getParent(&table));
 
   auto action_id = table_data->actionIdGet();
-  auto dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
+  auto dataFieldInfo =
+      table->tableInfoGet()->dataFieldGet(field_name, action_id);
   RETURN_IF_NULL(dataFieldInfo);
 
   auto field_id = dataFieldInfo->idGet();
   auto data_type = dataFieldInfo->dataTypeGet();
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_INT_ARR ||
-                        data_type == TDI_FIELD_DATA_TYPE_BOOL_ARR)
+            data_type == TDI_FIELD_DATA_TYPE_BOOL_ARR)
       << "Requested array but field has type " << static_cast<int>(data_type);
 
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, field_value));
@@ -114,8 +113,8 @@ template <typename T>
 }
 
 ::util::Status GetAllEntries(
-    std::shared_ptr<::tdi::Session> tdi_session,
-    ::tdi::Target tdi_dev_target, const ::tdi::Table* table,
+    std::shared_ptr<::tdi::Session> tdi_session, ::tdi::Target tdi_dev_target,
+    const ::tdi::Table* table,
     std::vector<std::unique_ptr<::tdi::TableKey>>* table_keys,
     std::vector<std::unique_ptr<::tdi::TableData>>* table_values);
 

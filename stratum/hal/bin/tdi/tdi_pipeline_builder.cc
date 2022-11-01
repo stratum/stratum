@@ -48,7 +48,8 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
   // TODO(max): replace with <filesystem> once we move to C++17
   char* resolved_path = realpath(FLAGS_unpack_dir.c_str(), nullptr);
   if (!resolved_path) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Unable to resolve path " << FLAGS_unpack_dir;
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Unable to resolve path " << FLAGS_unpack_dir;
   }
   std::string base_path(resolved_path);
   free(resolved_path);
@@ -87,8 +88,7 @@ p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
     return Unpack();
   }
 
-  RET_CHECK(!FLAGS_p4c_conf_file.empty())
-      << "p4c_conf_file must be specified.";
+  RET_CHECK(!FLAGS_p4c_conf_file.empty()) << "p4c_conf_file must be specified.";
 
   nlohmann::json conf;
   {

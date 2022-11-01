@@ -33,8 +33,7 @@ namespace helpers {
                       ", table_type: ", table_type);
 }
 
-::util::StatusOr<std::string> DumpTableKey(
-    const ::tdi::TableKey* table_key) {
+::util::StatusOr<std::string> DumpTableKey(const ::tdi::TableKey* table_key) {
   const ::tdi::Table* table;
   RETURN_IF_TDI_ERROR(table_key->tableGet(&table));
   std::vector<tdi_id_t> key_field_ids;
@@ -43,24 +42,26 @@ namespace helpers {
   std::string s;
   absl::StrAppend(&s, "tdi_table_key { ");
   for (const auto& field_id : key_field_ids) {
-    const ::tdi::KeyFieldInfo *keyFieldInfo = table->tableInfoGet()->keyFieldGet(field_id);
+    const ::tdi::KeyFieldInfo* keyFieldInfo =
+        table->tableInfoGet()->keyFieldGet(field_id);
     std::string field_name;
     tdi_match_type_core_e key_type;
     size_t field_size;
 
     RETURN_IF_NULL(keyFieldInfo);
     field_name = keyFieldInfo->nameGet().c_str();
-    key_type = static_cast<tdi_match_type_core_e>((*keyFieldInfo).matchTypeGet());
+    key_type =
+        static_cast<tdi_match_type_core_e>((*keyFieldInfo).matchTypeGet());
     field_size = keyFieldInfo->sizeGet();
     std::string value;
 
     switch (key_type) {
       case TDI_MATCH_TYPE_EXACT: {
         std::string v(NumBitsToNumBytes(field_size), '\x00');
-        const char *valueExact = reinterpret_cast<const char *>(v.data());
+        const char* valueExact = reinterpret_cast<const char*>(v.data());
         size_t size = reinterpret_cast<size_t>(v.size());
 
-        ::tdi::KeyFieldValueExact<const char *> exactKey(valueExact, size);
+        ::tdi::KeyFieldValueExact<const char*> exactKey(valueExact, size);
         RETURN_IF_TDI_ERROR(table_key->getValue(field_id, &exactKey));
         value = absl::StrCat("0x", StringToHex(v));
         break;
@@ -69,11 +70,11 @@ namespace helpers {
       case TDI_MATCH_TYPE_TERNARY: {
         std::string v(NumBitsToNumBytes(field_size), '\x00');
         std::string m(NumBitsToNumBytes(field_size), '\x00');
-        const char *valueTernary = reinterpret_cast<const char *>(v.data());
-        const char *maskTernary = reinterpret_cast<const char *>(m.data());
+        const char* valueTernary = reinterpret_cast<const char*>(v.data());
+        const char* maskTernary = reinterpret_cast<const char*>(m.data());
         size_t sizeTernary = reinterpret_cast<size_t>(v.size());
-        ::tdi::KeyFieldValueTernary<const char *> ternaryKey(valueTernary, maskTernary,
-                                                  sizeTernary);
+        ::tdi::KeyFieldValueTernary<const char*> ternaryKey(
+            valueTernary, maskTernary, sizeTernary);
 
         RETURN_IF_TDI_ERROR(table_key->getValue(field_id, &ternaryKey));
         value = absl::StrCat("0x", StringToHex(v), " & ", "0x", StringToHex(m));
@@ -83,10 +84,11 @@ namespace helpers {
       case TDI_MATCH_TYPE_RANGE: {
         std::string l(NumBitsToNumBytes(field_size), '\x00');
         std::string h(NumBitsToNumBytes(field_size), '\x00');
-        const char *lowRange =  reinterpret_cast<const char *>(l.data());
-        const char *highRange =  reinterpret_cast<const char *>(h.data());
+        const char* lowRange = reinterpret_cast<const char*>(l.data());
+        const char* highRange = reinterpret_cast<const char*>(h.data());
         size_t sizeRange = reinterpret_cast<size_t>(l.size());
-        ::tdi::KeyFieldValueRange<const char*> rangeKey(lowRange, highRange, sizeRange);
+        ::tdi::KeyFieldValueRange<const char*> rangeKey(lowRange, highRange,
+                                                        sizeRange);
         RETURN_IF_TDI_ERROR(table_key->getValue(field_id, &rangeKey));
         value = absl::StrCat("0x", StringToHex(l), " - ", "0x", StringToHex(h));
         break;
@@ -95,16 +97,17 @@ namespace helpers {
       case TDI_MATCH_TYPE_LPM: {
         std::string v(NumBitsToNumBytes(field_size), '\x00');
         uint16 prefix_length = 0;
-        const char *valueLpm =  reinterpret_cast<const char *>(v.data());
+        const char* valueLpm = reinterpret_cast<const char*>(v.data());
         size_t sizeLpm = reinterpret_cast<size_t>(v.size());
-        ::tdi::KeyFieldValueLPM<const char *> lpmKey(valueLpm, prefix_length, sizeLpm);
+        ::tdi::KeyFieldValueLPM<const char*> lpmKey(valueLpm, prefix_length,
+                                                    sizeLpm);
         RETURN_IF_TDI_ERROR(table_key->getValue(field_id, &lpmKey));
         value = absl::StrCat("0x", StringToHex(v), "/", prefix_length);
         break;
       }
       default:
         return MAKE_ERROR(ERR_INTERNAL)
-            << "Unknown key_type: " << static_cast<int>(key_type) << ".";
+               << "Unknown key_type: " << static_cast<int>(key_type) << ".";
     }
 
     absl::StrAppend(&s, field_name, " { field_id: ", field_id,
@@ -133,7 +136,7 @@ namespace helpers {
     tdi_field_data_type_e data_type;
     size_t field_size;
     bool is_active;
-    const ::tdi::DataFieldInfo *dataFieldInfo;
+    const ::tdi::DataFieldInfo* dataFieldInfo;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id, action_id);
     RETURN_IF_NULL(dataFieldInfo);
 
@@ -178,7 +181,7 @@ namespace helpers {
       }
       default:
         return MAKE_ERROR(ERR_INTERNAL)
-            << "Unknown data_type: " << static_cast<int>(data_type) << ".";
+               << "Unknown data_type: " << static_cast<int>(data_type) << ".";
     }
 
     absl::StrAppend(&s, field_name, " { field_id: ", field_id,
@@ -192,22 +195,22 @@ namespace helpers {
 }
 
 ::util::Status GetFieldExact(const ::tdi::TableKey& table_key,
-                             std::string field_name,
-                             uint32_t *field_value) {
+                             std::string field_name, uint32_t* field_value) {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
   RETURN_IF_TDI_ERROR(table_key.tableGet(&table));
-  ::tdi::KeyFieldValueExact <uint64_t> key_field_value(*field_value);
-  const ::tdi::KeyFieldInfo *keyFieldInfo = table->tableInfoGet()->keyFieldGet(field_name);
+  ::tdi::KeyFieldValueExact<uint64_t> key_field_value(*field_value);
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      table->tableInfoGet()->keyFieldGet(field_name);
   RETURN_IF_NULL(keyFieldInfo);
 
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
-      << "Requested uint64 but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Requested uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
 
   RETURN_IF_TDI_ERROR(table_key.getValue(field_id, &key_field_value));
 
@@ -216,23 +219,23 @@ namespace helpers {
   return ::util::OkStatus();
 }
 
-::util::Status SetFieldExact(::tdi::TableKey* table_key,
-                             std::string field_name,
+::util::Status SetFieldExact(::tdi::TableKey* table_key, std::string field_name,
                              uint64 field_value) {
-  ::tdi::KeyFieldValueExact <uint64_t> key_field_value(field_value);
+  ::tdi::KeyFieldValueExact<uint64_t> key_field_value(field_value);
   const ::tdi::Table* table;
   tdi_id_t field_id;
   tdi_field_data_type_e data_type;
   RETURN_IF_TDI_ERROR(table_key->tableGet(&table));
-  const ::tdi::KeyFieldInfo *keyFieldInfo = table->tableInfoGet()->keyFieldGet(field_name);
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      table->tableInfoGet()->keyFieldGet(field_name);
   RETURN_IF_NULL(keyFieldInfo);
 
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
-      << "Setting uint64 but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Setting uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_key->setValue(field_id, key_field_value));
   return ::util::OkStatus();
 }
@@ -243,15 +246,16 @@ namespace helpers {
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
   RETURN_IF_TDI_ERROR(table_key->tableGet(&table));
-  const ::tdi::KeyFieldInfo *keyFieldInfo = table->tableInfoGet()->keyFieldGet(field_name);
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      table->tableInfoGet()->keyFieldGet(field_name);
   RETURN_IF_NULL(keyFieldInfo);
 
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
-      << "Setting uint64 but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Setting uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_key->setValue(field_id, value));
 
   return ::util::OkStatus();
@@ -262,7 +266,7 @@ namespace helpers {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RETURN_IF_TDI_ERROR(table_data.getParent(&table));
 
   tdi_id_t action_id = table_data.actionIdGet();
@@ -272,8 +276,8 @@ namespace helpers {
   data_type = dataFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
-      << "Requested uint64 but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Requested uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -284,7 +288,7 @@ namespace helpers {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RETURN_IF_TDI_ERROR(table_data.getParent(&table));
 
   tdi_id_t action_id = table_data.actionIdGet();
@@ -294,20 +298,19 @@ namespace helpers {
   data_type = dataFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_STRING)
-      << "Requested string but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Requested string but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_value));
 
   return ::util::OkStatus();
 }
 
 ::util::Status GetFieldBool(const ::tdi::TableData& table_data,
-                        std::string field_name, bool* field_value) {
-
+                            std::string field_name, bool* field_value) {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RETURN_IF_TDI_ERROR(table_data.getParent(&table));
 
   tdi_id_t action_id = table_data.actionIdGet();
@@ -317,8 +320,8 @@ namespace helpers {
   data_type = dataFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_BOOL)
-      << "Requested bool but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Requested bool but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data.getValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -329,7 +332,7 @@ namespace helpers {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RETURN_IF_TDI_ERROR(table_data->getParent(&table));
 
   tdi_id_t action_id = table_data->actionIdGet();
@@ -339,8 +342,8 @@ namespace helpers {
   data_type = dataFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_UINT64)
-      << "Setting uint64 but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Setting uint64 but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, value));
 
   return ::util::OkStatus();
@@ -351,7 +354,7 @@ namespace helpers {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RETURN_IF_TDI_ERROR(table_data->getParent(&table));
 
   tdi_id_t action_id = table_data->actionIdGet();
@@ -361,8 +364,8 @@ namespace helpers {
   data_type = dataFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_STRING)
-      << "Setting string but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Setting string but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, field_value));
 
   return ::util::OkStatus();
@@ -373,7 +376,7 @@ namespace helpers {
   tdi_id_t field_id;
   const ::tdi::Table* table;
   tdi_field_data_type_e data_type;
-  const ::tdi::DataFieldInfo *dataFieldInfo;
+  const ::tdi::DataFieldInfo* dataFieldInfo;
   RETURN_IF_TDI_ERROR(table_data->getParent(&table));
 
   tdi_id_t action_id = table_data->actionIdGet();
@@ -383,16 +386,16 @@ namespace helpers {
   data_type = dataFieldInfo->dataTypeGet();
 
   RET_CHECK(data_type == TDI_FIELD_DATA_TYPE_BOOL)
-      << "Setting bool but field " << field_name
-      << " has type " << static_cast<int>(data_type);
+      << "Setting bool but field " << field_name << " has type "
+      << static_cast<int>(data_type);
   RETURN_IF_TDI_ERROR(table_data->setValue(field_id, field_value));
 
   return ::util::OkStatus();
 }
 
 ::util::Status GetAllEntries(
-    std::shared_ptr<::tdi::Session> tdi_session,
-    ::tdi::Target tdi_dev_target, const ::tdi::Table* table,
+    std::shared_ptr<::tdi::Session> tdi_session, ::tdi::Target tdi_dev_target,
+    const ::tdi::Table* table,
     std::vector<std::unique_ptr<::tdi::TableKey>>* table_keys,
     std::vector<std::unique_ptr<::tdi::TableData>>* table_values) {
   RET_CHECK(table_keys) << "table_keys is null";
@@ -400,9 +403,9 @@ namespace helpers {
 
   // Get number of entries. Some types of tables are preallocated and are always
   // "full". The SDE does not support querying the usage on these.
-  const ::tdi::Device *device = nullptr;
+  const ::tdi::Device* device = nullptr;
   ::tdi::DevMgr::getInstance().deviceGet(0, &device);
-  ::tdi::Flags *flags = new ::tdi::Flags(0);
+  ::tdi::Flags* flags = new ::tdi::Flags(0);
   uint32 entries = 0;
   if (IsPreallocatedTable(*table)) {
     size_t table_size;
@@ -411,7 +414,7 @@ namespace helpers {
     entries = table_size;
   } else {
     RETURN_IF_TDI_ERROR(
-	table->usageGet(*tdi_session, tdi_dev_target, *flags, &entries));
+        table->usageGet(*tdi_session, tdi_dev_target, *flags, &entries));
   }
 
   table_keys->resize(0);
@@ -424,10 +427,9 @@ namespace helpers {
     std::unique_ptr<::tdi::TableData> table_data;
     RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
     RETURN_IF_TDI_ERROR(table->dataAllocate(&table_data));
-    RETURN_IF_TDI_ERROR(table->entryGetFirst(
-        *tdi_session, tdi_dev_target,
-        *flags, table_key.get(),
-        table_data.get()));
+    RETURN_IF_TDI_ERROR(table->entryGetFirst(*tdi_session, tdi_dev_target,
+                                             *flags, table_key.get(),
+                                             table_data.get()));
 
     table_keys->push_back(std::move(table_key));
     table_values->push_back(std::move(table_data));
@@ -445,9 +447,9 @@ namespace helpers {
       pairs.push_back(std::make_pair(keys[i].get(), data[i].get()));
     }
     uint32 actual = 0;
-    RETURN_IF_TDI_ERROR(table->entryGetNextN(
-        *tdi_session, tdi_dev_target, *flags, *(*table_keys)[0], pairs.size(),
-        &pairs, &actual));
+    RETURN_IF_TDI_ERROR(table->entryGetNextN(*tdi_session, tdi_dev_target,
+                                             *flags, *(*table_keys)[0],
+                                             pairs.size(), &pairs, &actual));
 
     table_keys->insert(table_keys->end(), std::make_move_iterator(keys.begin()),
                        std::make_move_iterator(keys.end()));
@@ -474,4 +476,3 @@ bool IsPreallocatedTable(const ::tdi::Table& table) {
 }  // namespace tdi
 }  // namespace hal
 }  // namespace stratum
-

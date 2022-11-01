@@ -14,31 +14,30 @@ namespace yang {
 namespace component {
 
 // /components/component[name=<name>]/config/name
-void SetUpComponentsComponentConfigName(
-    const std::string& name, TreeNode* node);
+void SetUpComponentsComponentConfigName(const std::string& name,
+                                        TreeNode* node);
 
 // /components/component[name=<name>]/name
 void SetUpComponentsComponentName(const std::string& name, TreeNode* node);
 
 // /components/component[name=<name>]/state/type
-void SetUpComponentsComponentStateType(
-    const std::string& type, TreeNode* node);
+void SetUpComponentsComponentStateType(const std::string& type, TreeNode* node);
 
 // /components/component[name=<name>]/state/description
-void SetUpComponentsComponentStateDescription(
-    const std::string& description, TreeNode* node);
+void SetUpComponentsComponentStateDescription(const std::string& description,
+                                              TreeNode* node);
 
 // /components/component[name=<name>]/state/part-no
-void SetUpComponentsComponentStatePartNo(
-    uint64 node_id, TreeNode* node, YangParseTree* tree);
+void SetUpComponentsComponentStatePartNo(uint64 node_id, TreeNode* node,
+                                         YangParseTree* tree);
 
 // /components/component[name=<name>]/state/mfg-name
-void SetUpComponentsComponentStateMfgName(
-    uint64 node_id, TreeNode* node, YangParseTree* tree);
- 
-} // namespace component
-} // namespace yang
-} // namespace hal
-} // namespace stratum
+void SetUpComponentsComponentStateMfgName(uint64 node_id, TreeNode* node,
+                                          YangParseTree* tree);
+
+}  // namespace component
+}  // namespace yang
+}  // namespace hal
+}  // namespace stratum
 
 #endif  // STRATUM_HAL_LIB_YANG_YANG_PARSE_TREE_COMPONENT_H_

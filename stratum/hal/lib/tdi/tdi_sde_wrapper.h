@@ -13,14 +13,13 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
-
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/tdi/tdi_sde_interface.h"
-#include "stratum/hal/lib/tdi/tdi_id_mapper.h"
-#include "stratum/hal/lib/tdi/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/tdi/macros.h"
+#include "stratum/hal/lib/tdi/tdi_id_mapper.h"
+#include "stratum/hal/lib/tdi/tdi_sde_interface.h"
 #include "stratum/lib/channel/channel.h"
 
 #ifdef TOFINO_TARGET
@@ -84,8 +83,7 @@ class TableData : public TdiSdeInterface::TableDataInterface {
 
   // Allocates a new table data object.
   static ::util::StatusOr<std::unique_ptr<TdiSdeInterface::TableDataInterface>>
-  CreateTableData(const ::tdi::TdiInfo* tdi_info_, int table_id,
-                  int action_id);
+  CreateTableData(const ::tdi::TdiInfo* tdi_info_, int table_id, int action_id);
 
   // Stores the underlying SDE object.
   std::unique_ptr<::tdi::TableData> table_data_;
@@ -118,7 +116,7 @@ class TdiSdeWrapper : public TdiSdeInterface {
     static ::util::StatusOr<std::shared_ptr<TdiSdeInterface::SessionInterface>>
     CreateSession() {
       std::shared_ptr<::tdi::Session> tdi_session;
-      const ::tdi::Device *device = nullptr;
+      const ::tdi::Device* device = nullptr;
       uint32 dev_id = 0;
       ::tdi::DevMgr::getInstance().deviceGet(dev_id, &device);
       device->createSession(&tdi_session);
@@ -160,14 +158,14 @@ class TdiSdeWrapper : public TdiSdeInterface {
   ::util::Status UnregisterPortStatusEventWriter() override
       LOCKS_EXCLUDED(port_status_event_writer_lock_);
   ::util::Status GetPortInfo(int device, int port,
-                             TargetDatapathId *target_dp_id) override;
+                             TargetDatapathId* target_dp_id) override;
   ::util::Status AddPort(int device, int port, uint64 speed_bps,
                          FecMode fec_mode) override;
-  ::util::Status AddPort(
-      int device, int port, uint64 speed_bps,
-      const PortConfigParams& config, FecMode fec_mode) override;
+  ::util::Status AddPort(int device, int port, uint64 speed_bps,
+                         const PortConfigParams& config,
+                         FecMode fec_mode) override;
   ::util::Status HotplugPort(int device, int port,
-                            HotplugConfigParams& hotplug_config) override;
+                             HotplugConfigParams& hotplug_config) override;
   ::util::Status DeletePort(int device, int port) override;
   ::util::Status EnablePort(int device, int port) override;
   ::util::Status DisablePort(int device, int port) override;
@@ -497,7 +495,6 @@ class TdiSdeWrapper : public TdiSdeInterface {
 
   // Pointer to the current BfR info object. Not owned by this class.
   const ::tdi::TdiInfo* tdi_info_ GUARDED_BY(data_lock_);
-
 };
 
 }  // namespace tdi

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Nicira, Inc.
- * Copyright (c) 2022 Intel Corporation.
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017
+ * Nicira, Inc. Copyright (c) 2022 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@
 extern "C" {
 #endif
 
-bool client_parse_key_value(char **stringp, char **keyp, char **valuep);
+bool client_parse_key_value(char** stringp, char** keyp, char** valuep);
 
-void client_strzcpy(char *dst, const char *src, size_t size);
+void client_strzcpy(char* dst, const char* src, size_t size);
 
 #ifdef __cplusplus
 }

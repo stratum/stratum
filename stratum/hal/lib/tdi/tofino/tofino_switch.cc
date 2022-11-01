@@ -14,8 +14,8 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/tdi/tofino/tofino_chassis_manager.h"
 #include "stratum/hal/lib/tdi/tdi_node.h"
+#include "stratum/hal/lib/tdi/tofino/tofino_chassis_manager.h"
 #include "stratum/hal/lib/tdi/utils.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -24,9 +24,8 @@ namespace stratum {
 namespace hal {
 namespace tdi {
 
-TofinoSwitch::TofinoSwitch(
-    TofinoChassisManager* chassis_manager,
-    const std::map<int, TdiNode*>& device_id_to_tdi_node)
+TofinoSwitch::TofinoSwitch(TofinoChassisManager* chassis_manager,
+                           const std::map<int, TdiNode*>& device_id_to_tdi_node)
     : chassis_manager_(ABSL_DIE_IF_NULL(chassis_manager)),
       device_id_to_tdi_node_(device_id_to_tdi_node),
       node_id_to_tdi_node_() {
@@ -177,8 +176,7 @@ TofinoSwitch::~TofinoSwitch() {}
 }
 
 ::util::Status TofinoSwitch::RetrieveValue(
-    uint64 node_id,
-    const DataRequest& request,
+    uint64 node_id, const DataRequest& request,
     WriterInterface<DataResponse>* writer,
     std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
@@ -239,9 +237,8 @@ TofinoSwitch::~TofinoSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status TofinoSwitch::SetValue(
-    uint64 node_id, const SetRequest& request,
-    std::vector<::util::Status>* details) {
+::util::Status TofinoSwitch::SetValue(uint64 node_id, const SetRequest& request,
+                                      std::vector<::util::Status>* details) {
   LOG(INFO) << "TofinoSwitch::SetValue is not implemented yet. Changes will "
             << "be applied when ChassisConfig is pushed again. "
             << request.ShortDebugString() << ".";

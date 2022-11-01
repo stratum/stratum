@@ -27,16 +27,16 @@ stratum_common_deps = [
 stratum_cc_binary(
     name = "stratum_tofino",
     srcs = [
+        "main.cc",
         "tofino_main.cc",
         "tofino_main.h",
-        "main.cc",
     ],
     arches = HOST_ARCHES,
-    defines = ["TOFINO_TARGET"],
     data = [
         "//stratum/hal/bin/barefoot:tofino_skip_p4.conf",
         "//stratum/hal/bin/barefoot:tofino_skip_p4_no_bsp.conf",
     ],
+    defines = ["TOFINO_TARGET"],
     deps = [
         "//stratum/hal/lib/tdi/tofino:tofino_chassis_manager",
         "//stratum/hal/lib/tdi/tofino:tofino_hal",
@@ -58,8 +58,8 @@ pkg_tar(
     srcs = [
         "deb/attach-bf-shell.sh",
         "deb/start-stratum.sh",
-        "//stratum/hal/bin/tdi:tdi_pipeline_builder",
         ":stratum_tofino",
+        "//stratum/hal/bin/tdi:tdi_pipeline_builder",
     ],
     mode = "0755",
     package_dir = "/usr/bin",
@@ -104,9 +104,9 @@ pkg_tar(
         ":stratum_configs",
         ":stratum_shareable_files",
         ":systemd_service",
+        "@local_tofino_bin//:tofino_kernel_module",
         "@local_tofino_bin//:tofino_library_files",
         "@local_tofino_bin//:tofino_shareable_files",
-        "@local_tofino_bin//:tofino_kernel_module",
     ],
 )
 
@@ -114,8 +114,8 @@ pkg_tar(
     name = "stratum_tofino_data",
     extension = "tar.bz2",
     deps = [
-        ":stratum_tofino_binaries",
         ":stratum_common_data",
+        ":stratum_tofino_binaries",
     ],
 )
 

@@ -4,11 +4,10 @@
 
 // Target-agnostic SDE wrapper Table Key methods.
 
-#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
-
-#include <memory>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -21,7 +20,7 @@
 #include "stratum/hal/lib/tdi/tdi_constants.h"
 #include "stratum/hal/lib/tdi/tdi_sde_common.h"
 #include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
-#include "stratum/hal/lib/tdi/tdi_constants.h"
+#include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/hal/lib/tdi/utils.h"
 
 DECLARE_bool(incompatible_enable_tdi_legacy_bytestring_responses);
@@ -37,20 +36,21 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   std::string v = P4RuntimeByteStringToPaddedByteString(
       value, NumBitsToNumBytes(field_size_bits));
 
-  const char *valueExact = reinterpret_cast<const char *>(v.data());
+  const char* valueExact = reinterpret_cast<const char*>(v.data());
   size_t size = reinterpret_cast<size_t>(v.size());
 
-  ::tdi::KeyFieldValueExact<const char *> exactKey(valueExact, size);
+  ::tdi::KeyFieldValueExact<const char*> exactKey(valueExact, size);
 
-  RETURN_IF_TDI_ERROR(table_key_->setValue(static_cast<tdi_id_t>(id),
-                      exactKey));
+  RETURN_IF_TDI_ERROR(
+      table_key_->setValue(static_cast<tdi_id_t>(id), exactKey));
 
   return ::util::OkStatus();
 }
@@ -61,7 +61,8 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
@@ -70,15 +71,15 @@ using namespace stratum::hal::tdi::helpers;
   std::string m = P4RuntimeByteStringToPaddedByteString(
       mask, NumBitsToNumBytes(field_size_bits));
   DCHECK_EQ(v.size(), m.size());
-  const char *valueTernary = reinterpret_cast<const char *>(v.data());
-  const char *maskTernary = reinterpret_cast<const char *>(m.data());
+  const char* valueTernary = reinterpret_cast<const char*>(v.data());
+  const char* maskTernary = reinterpret_cast<const char*>(m.data());
   size_t sizeTernary = reinterpret_cast<size_t>(v.size());
 
-  ::tdi::KeyFieldValueTernary<const char *> ternaryKey(valueTernary, maskTernary,
-                                                  sizeTernary);
+  ::tdi::KeyFieldValueTernary<const char*> ternaryKey(valueTernary, maskTernary,
+                                                      sizeTernary);
 
-  RETURN_IF_TDI_ERROR(table_key_->setValue(static_cast<tdi_id_t>(id),
-                                           ternaryKey));
+  RETURN_IF_TDI_ERROR(
+      table_key_->setValue(static_cast<tdi_id_t>(id), ternaryKey));
   return ::util::OkStatus();
 }
 
@@ -88,18 +89,18 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   std::string p = P4RuntimeByteStringToPaddedByteString(
       prefix, NumBitsToNumBytes(field_size_bits));
 
-  const char *valueLpm =  reinterpret_cast<const char *>(p.data());
+  const char* valueLpm = reinterpret_cast<const char*>(p.data());
   size_t sizeLpm = reinterpret_cast<size_t>(p.size());
-  ::tdi::KeyFieldValueLPM<const char *> lpmKey(valueLpm, prefix_length, sizeLpm);
-  RETURN_IF_TDI_ERROR(table_key_->setValue(static_cast<tdi_id_t>(id),
-                                           lpmKey));
+  ::tdi::KeyFieldValueLPM<const char*> lpmKey(valueLpm, prefix_length, sizeLpm);
+  RETURN_IF_TDI_ERROR(table_key_->setValue(static_cast<tdi_id_t>(id), lpmKey));
 
   return ::util::OkStatus();
 }
@@ -110,7 +111,8 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
@@ -120,12 +122,13 @@ using namespace stratum::hal::tdi::helpers;
       high, NumBitsToNumBytes(field_size_bits));
   DCHECK_EQ(l.size(), h.size());
 
-  const char *lowRange =  reinterpret_cast<const char *>(l.data());
-  const char *highRange =  reinterpret_cast<const char *>(h.data());
+  const char* lowRange = reinterpret_cast<const char*>(l.data());
+  const char* highRange = reinterpret_cast<const char*>(h.data());
   size_t sizeRange = reinterpret_cast<size_t>(l.size());
-  ::tdi::KeyFieldValueRange<const char*> rangeKey(lowRange, highRange, sizeRange);
-  RETURN_IF_TDI_ERROR(table_key_->setValue(static_cast<tdi_id_t>(id),
-                                           rangeKey));
+  ::tdi::KeyFieldValueRange<const char*> rangeKey(lowRange, highRange,
+                                                  sizeRange);
+  RETURN_IF_TDI_ERROR(
+      table_key_->setValue(static_cast<tdi_id_t>(id), rangeKey));
   return ::util::OkStatus();
 }
 
@@ -138,20 +141,21 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   value->clear();
   value->resize(NumBitsToNumBytes(field_size_bits));
 
-  const char *valueExact = reinterpret_cast<const char *>(value->data());
+  const char* valueExact = reinterpret_cast<const char*>(value->data());
   size_t size = reinterpret_cast<size_t>(value->size());
 
-  ::tdi::KeyFieldValueExact<const char *> exactKey(valueExact, size);
+  ::tdi::KeyFieldValueExact<const char*> exactKey(valueExact, size);
 
-  RETURN_IF_TDI_ERROR(table_key_->getValue(static_cast<tdi_id_t>(id),
-                      &exactKey));
+  RETURN_IF_TDI_ERROR(
+      table_key_->getValue(static_cast<tdi_id_t>(id), &exactKey));
 
   if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
     *value = ByteStringToP4RuntimeByteString(*value);
@@ -166,7 +170,8 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
@@ -176,14 +181,14 @@ using namespace stratum::hal::tdi::helpers;
   mask->resize(NumBitsToNumBytes(field_size_bits));
   DCHECK_EQ(value->size(), mask->size());
 
-  const char *valueTernary = reinterpret_cast<const char *>(value->data());
-  const char *maskTernary = reinterpret_cast<const char *>(mask->data());
+  const char* valueTernary = reinterpret_cast<const char*>(value->data());
+  const char* maskTernary = reinterpret_cast<const char*>(mask->data());
   size_t sizeTernary = reinterpret_cast<size_t>(value->size());
 
-  ::tdi::KeyFieldValueTernary<const char *> ternaryKey(valueTernary, maskTernary,
-                                                  sizeTernary);
-  RETURN_IF_TDI_ERROR(table_key_->getValue(static_cast<tdi_id_t>(id),
-                                           &ternaryKey));
+  ::tdi::KeyFieldValueTernary<const char*> ternaryKey(valueTernary, maskTernary,
+                                                      sizeTernary);
+  RETURN_IF_TDI_ERROR(
+      table_key_->getValue(static_cast<tdi_id_t>(id), &ternaryKey));
 
   if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
     *value = ByteStringToP4RuntimeByteString(*value);
@@ -199,19 +204,20 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   prefix->clear();
   prefix->resize(NumBitsToNumBytes(field_size_bits));
 
-  const char *valueLpm =  reinterpret_cast<const char *>(prefix->data());
+  const char* valueLpm = reinterpret_cast<const char*>(prefix->data());
   size_t sizeLpm = reinterpret_cast<size_t>(prefix->size());
-  ::tdi::KeyFieldValueLPM<const char *> lpmKey(valueLpm, *prefix_length, sizeLpm);
+  ::tdi::KeyFieldValueLPM<const char*> lpmKey(valueLpm, *prefix_length,
+                                              sizeLpm);
 
-  RETURN_IF_TDI_ERROR(table_key_->getValue(static_cast<tdi_id_t>(id),
-                                           &lpmKey));
+  RETURN_IF_TDI_ERROR(table_key_->getValue(static_cast<tdi_id_t>(id), &lpmKey));
 
   if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
     *prefix = ByteStringToP4RuntimeByteString(*prefix);
@@ -226,7 +232,8 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_key_->tableGet(&table));
   size_t field_size_bits;
   auto tableInfo = table->tableInfoGet();
-  const ::tdi::KeyFieldInfo *keyFieldInfo = tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
+  const ::tdi::KeyFieldInfo* keyFieldInfo =
+      tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
   RETURN_IF_NULL(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
@@ -235,13 +242,14 @@ using namespace stratum::hal::tdi::helpers;
   high->clear();
   high->resize(NumBitsToNumBytes(field_size_bits));
 
-  const char *lowRange =  reinterpret_cast<const char *>(low->data());
-  const char *highRange =  reinterpret_cast<const char *>(high->data());
+  const char* lowRange = reinterpret_cast<const char*>(low->data());
+  const char* highRange = reinterpret_cast<const char*>(high->data());
   size_t sizeRange = reinterpret_cast<size_t>(low->size());
-  ::tdi::KeyFieldValueRange<const char*> rangeKey(lowRange, highRange, sizeRange);
+  ::tdi::KeyFieldValueRange<const char*> rangeKey(lowRange, highRange,
+                                                  sizeRange);
 
-  RETURN_IF_TDI_ERROR(table_key_->getValue(static_cast<tdi_id_t>(id),
-                                           &rangeKey));
+  RETURN_IF_TDI_ERROR(
+      table_key_->getValue(static_cast<tdi_id_t>(id), &rangeKey));
   if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
     *low = ByteStringToP4RuntimeByteString(*low);
     *high = ByteStringToP4RuntimeByteString(*high);

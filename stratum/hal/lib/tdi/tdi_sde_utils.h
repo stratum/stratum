@@ -6,7 +6,9 @@
 #ifndef STRATUM_HAL_LIB_TDI_TDI_SDE_UTILS_H_
 #define STRATUM_HAL_LIB_TDI_TDI_SDE_UTILS_H_
 
-namespace tdi { class Table; }
+namespace tdi {
+class Table;
+}
 
 namespace stratum {
 namespace hal {
@@ -17,11 +19,11 @@ namespace tdi {
 // It consists solely of table types we need to be able to test for
 // in vendor-neutral code.
 enum tdi_sde_table_type {
-    TDI_SDE_TABLE_TYPE_NONE = 0,
-    TDI_SDE_TABLE_TYPE_ACTION_PROFILE,
-    TDI_SDE_TABLE_TYPE_COUNTER,
-    TDI_SDE_TABLE_TYPE_METER,
-    TDI_SDE_TABLE_TYPE_SELECTOR,
+  TDI_SDE_TABLE_TYPE_NONE = 0,
+  TDI_SDE_TABLE_TYPE_ACTION_PROFILE,
+  TDI_SDE_TABLE_TYPE_COUNTER,
+  TDI_SDE_TABLE_TYPE_METER,
+  TDI_SDE_TABLE_TYPE_SELECTOR,
 };
 
 tdi_sde_table_type GetSdeTableType(const ::tdi::Table& table);

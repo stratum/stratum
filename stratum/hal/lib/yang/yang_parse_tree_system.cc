@@ -6,16 +6,15 @@
 // Implements the YangParseTreePaths::AddSubtreeSystem() method and its
 // supporting functions.
 
-#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
-
 #include "gnmi/gnmi.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
-#include "stratum/hal/lib/yang/yang_parse_tree.h"
 #include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/yang/yang_parse_tree.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_helpers.h"
+#include "stratum/hal/lib/yang/yang_parse_tree_paths.h"
 
 namespace stratum {
 namespace hal {
@@ -26,8 +25,9 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /system/logging/console/config/severity
-void SetUpSystemLoggingConsoleConfigSeverity(
-    LoggingConfig logging_config, TreeNode* node, YangParseTree* tree) {
+void SetUpSystemLoggingConsoleConfigSeverity(LoggingConfig logging_config,
+                                             TreeNode* node,
+                                             YangParseTree* tree) {
   auto poll_functor = [logging_config](const GnmiEvent& event,
                                        const ::gnmi::Path& path,
                                        GnmiSubscribeStream* stream) {
@@ -86,8 +86,8 @@ void SetUpSystemLoggingConsoleConfigSeverity(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /system/logging/console/state/severity
-void SetUpSystemLoggingConsoleStateSeverity(
-    TreeNode* node, YangParseTree* tree) {
+void SetUpSystemLoggingConsoleStateSeverity(TreeNode* node,
+                                            YangParseTree* tree) {
   auto poll_functor = [](const GnmiEvent& event, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) -> ::util::Status {
     return SendResponse(
@@ -103,7 +103,7 @@ void SetUpSystemLoggingConsoleStateSeverity(
       ->SetOnChangeHandler(on_change_functor);
 }
 
-} // namespace
+}  // namespace
 
 ////////////////////////
 //  AddSubtreeSystem  //
@@ -120,5 +120,5 @@ void YangParseTreePaths::AddSubtreeSystem(YangParseTree* tree) {
   SetUpSystemLoggingConsoleStateSeverity(node, tree);
 }
 
-} // namespace hal
-} // namespace stratum
+}  // namespace hal
+}  // namespace stratum

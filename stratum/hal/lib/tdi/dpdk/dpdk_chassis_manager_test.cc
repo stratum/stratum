@@ -29,13 +29,13 @@
 #undef IPU_ADD_NEW_PORT
 
 #if !defined(IPU_ADD_NEW_PORT)
-  #define EXPECT_ADD_PORT_CALL(unit, port, speed, fec_mode)
-  #define EXPECT_ENABLE_PORT_CALL(unit, port)
+#define EXPECT_ADD_PORT_CALL(unit, port, speed, fec_mode)
+#define EXPECT_ENABLE_PORT_CALL(unit, port)
 #else
-  #define EXPECT_ADD_PORT_CALL(unit, port, speed, fec_mode) \
-    EXPECT_CALL(*sde_mock_, AddPort((unit), (port), (speed), _, (fec_mode)))
-  #define EXPECT_ENABLE_PORT_CALL(unit, port) \
-    EXPECT_CALL(*sde_mock_, EnablePort(unit, port))
+#define EXPECT_ADD_PORT_CALL(unit, port, speed, fec_mode) \
+  EXPECT_CALL(*sde_mock_, AddPort((unit), (port), (speed), _, (fec_mode)))
+#define EXPECT_ENABLE_PORT_CALL(unit, port) \
+  EXPECT_CALL(*sde_mock_, EnablePort(unit, port))
 #endif
 
 namespace stratum {
@@ -180,18 +180,13 @@ class DpdkChassisManagerTest : public ::testing::Test {
   ::util::Status CheckCleanInternalState() {
     RET_CHECK(m_chassis_manager_->unit_to_node_id_.empty());
     RET_CHECK(m_chassis_manager_->node_id_to_unit_.empty());
-    RET_CHECK(
-        m_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
-    RET_CHECK(
-        m_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
+    RET_CHECK(m_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
+    RET_CHECK(m_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
     RET_CHECK(
         m_chassis_manager_->node_id_to_port_id_to_singleton_port_key_.empty());
-    RET_CHECK(
-        m_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
-    RET_CHECK(
-        m_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
-    RET_CHECK(
-        m_chassis_manager_->node_id_port_id_to_backend_.empty());
+    RET_CHECK(m_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
+    RET_CHECK(m_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
+    RET_CHECK(m_chassis_manager_->node_id_port_id_to_backend_.empty());
     return ::util::OkStatus();
   }
 
@@ -226,8 +221,7 @@ class DpdkChassisManagerTest : public ::testing::Test {
     auto unit = GetUnitFromNodeId(kNodeId);
     RET_CHECK(unit.ok());
     RET_CHECK(unit.ValueOrDie() == kUnit) << "Invalid unit number!";
-    RET_CHECK(Initialized())
-        << "Class is not initialized after push!";
+    RET_CHECK(Initialized()) << "Class is not initialized after push!";
     return ::util::OkStatus();
   }
 
@@ -306,12 +300,13 @@ TEST_F(DpdkChassisManagerTest, RemovePort) {
 TEST_F(DpdkChassisManagerTest, IsPortParamSet) {
   SingletonPort sport;
   sport.mutable_config_params()->set_port_type(PORT_TYPE_VHOST);
-  ASSERT_FALSE(m_chassis_manager_->IsPortParamSet(
-      kUnit, kPort, ValueCase::kPortType));
-  ASSERT_TRUE(m_chassis_manager_->SetPortParam(
-      kUnit, kPort, sport, ValueCase::kPortType).ok());
-  ASSERT_TRUE(m_chassis_manager_->IsPortParamSet(
-      kUnit, kPort, ValueCase::kPortType));
+  ASSERT_FALSE(
+      m_chassis_manager_->IsPortParamSet(kUnit, kPort, ValueCase::kPortType));
+  ASSERT_TRUE(m_chassis_manager_
+                  ->SetPortParam(kUnit, kPort, sport, ValueCase::kPortType)
+                  .ok());
+  ASSERT_TRUE(
+      m_chassis_manager_->IsPortParamSet(kUnit, kPort, ValueCase::kPortType));
 }
 
 TEST_F(DpdkChassisManagerTest, SetPortParam) {
@@ -334,16 +329,21 @@ TEST_F(DpdkChassisManagerTest, SetPortParam) {
   config_params->set_socket_path("/socket/to/me");
   config_params->set_host_name("Fawlty");
 
-  ASSERT_TRUE(m_chassis_manager_->SetPortParam(
-                  kUnit, kPort, *sport, ValueCase::kPortType).ok());
-  ASSERT_TRUE(m_chassis_manager_->SetPortParam(
-                  kUnit, kPort, *sport, ValueCase::kDeviceType).ok());
-  ASSERT_TRUE(m_chassis_manager_->SetPortParam(
-                  kUnit, kPort, *sport, ValueCase::kQueueCount).ok());
-  ASSERT_TRUE(m_chassis_manager_->SetPortParam(
-                  kUnit, kPort, *sport, ValueCase::kSockPath).ok());
-  ASSERT_TRUE(m_chassis_manager_->SetPortParam(
-                  kUnit, kPort, *sport, ValueCase::kHostConfig).ok());
+  ASSERT_TRUE(m_chassis_manager_
+                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kPortType)
+                  .ok());
+  ASSERT_TRUE(m_chassis_manager_
+                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kDeviceType)
+                  .ok());
+  ASSERT_TRUE(m_chassis_manager_
+                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kQueueCount)
+                  .ok());
+  ASSERT_TRUE(m_chassis_manager_
+                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kSockPath)
+                  .ok());
+  ASSERT_TRUE(m_chassis_manager_
+                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kHostConfig)
+                  .ok());
 }
 
 TEST_F(DpdkChassisManagerTest, SetHotplugParam) {
@@ -351,8 +351,9 @@ TEST_F(DpdkChassisManagerTest, SetHotplugParam) {
   PortConfigParams* config_params = sport.mutable_config_params();
   HotplugConfig* hotplug_config = config_params->mutable_hotplug_config();
   hotplug_config->set_qemu_socket_ip("/qemu/socket_ip");
-  ASSERT_TRUE(m_chassis_manager_->SetHotplugParam(
-                  kUnit, kPort, sport, PARAM_SOCK_IP).ok());
+  ASSERT_TRUE(
+      m_chassis_manager_->SetHotplugParam(kUnit, kPort, sport, PARAM_SOCK_IP)
+          .ok());
 }
 
 TEST_F(DpdkChassisManagerTest, SetPortLoopback) {
@@ -362,9 +363,8 @@ TEST_F(DpdkChassisManagerTest, SetPortLoopback) {
   SingletonPort* sport = builder.GetPort(kPortId);
   sport->mutable_config_params()->set_loopback_mode(LOOPBACK_STATE_MAC);
 
-  EXPECT_CALL(
-      *sde_mock_,
-      SetPortLoopbackMode(kUnit, kDefaultPortId, LOOPBACK_STATE_MAC));
+  EXPECT_CALL(*sde_mock_,
+              SetPortLoopbackMode(kUnit, kDefaultPortId, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*sde_mock_, EnablePort(kUnit, kDefaultPortId));
 
   ASSERT_OK(PushChassisConfig(builder));

@@ -5,7 +5,6 @@
 # Copyright 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 
 licenses(["notice"])  # Apache v2

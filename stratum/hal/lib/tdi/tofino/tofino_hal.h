@@ -88,7 +88,8 @@ class TofinoHal final {
   TofinoHal(const TofinoHal&) = delete;
   TofinoHal& operator=(const TofinoHal&) = delete;
 
-  // Pipe file descriptors used to deliver signals from the handler to TofinoHal.
+  // Pipe file descriptors used to deliver signals from the handler to
+  // TofinoHal.
   static int pipe_read_fd_;
   static int pipe_write_fd_;
 

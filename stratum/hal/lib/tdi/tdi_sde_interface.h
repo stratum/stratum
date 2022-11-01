@@ -13,9 +13,9 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/tdi/tdi.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/tdi/tdi.pb.h"
 #include "stratum/lib/channel/channel.h"
 
 namespace stratum {
@@ -195,7 +195,7 @@ class TdiSdeInterface {
 
   // Get Port Info
   virtual ::util::Status GetPortInfo(int device, int port,
-                                     TargetDatapathId *target_dp_id) = 0;
+                                     TargetDatapathId* target_dp_id) = 0;
 
   // Add a new port with the given parameters.
   virtual ::util::Status AddPort(int device, int port, uint64 speed_bps,
@@ -204,11 +204,11 @@ class TdiSdeInterface {
   // Add a new port with the given parameters.
   virtual ::util::Status AddPort(int device, int port, uint64 speed_bps,
                                  const PortConfigParams& config,
-                                 FecMode fec_mode = FEC_MODE_UNKNOWN) = 0 ;
+                                 FecMode fec_mode = FEC_MODE_UNKNOWN) = 0;
 
   // Hotplug add/delete the port
   virtual ::util::Status HotplugPort(int device, int port,
-                            HotplugConfigParams& hotplug_config) = 0;
+                                     HotplugConfigParams& hotplug_config) = 0;
 
   // Delete a port.
   virtual ::util::Status DeletePort(int device, int port) = 0;

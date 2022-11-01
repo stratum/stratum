@@ -55,14 +55,13 @@ namespace tdi {
 
   auto sde_wrapper = TdiSdeWrapper::CreateSingleton();
 
-  RETURN_IF_ERROR(sde_wrapper->InitializeSde(
-      FLAGS_dpdk_sde_install, FLAGS_dpdk_infrap4d_cfg,
-      FLAGS_dpdk_infrap4d_background));
+  RETURN_IF_ERROR(sde_wrapper->InitializeSde(FLAGS_dpdk_sde_install,
+                                             FLAGS_dpdk_infrap4d_cfg,
+                                             FLAGS_dpdk_infrap4d_background));
 
   /* ========== */
   // NOTE: Rework for DPDK
-  ASSIGN_OR_RETURN(bool is_sw_model,
-                   sde_wrapper->IsSoftwareModel(device_id));
+  ASSIGN_OR_RETURN(bool is_sw_model, sde_wrapper->IsSoftwareModel(device_id));
   const OperationMode mode =
       is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
 
@@ -80,23 +79,20 @@ namespace tdi {
   auto packetio_manager =
       TdiPacketioManager::CreateInstance(sde_wrapper, device_id);
 
-  auto pre_manager =
-      TdiPreManager::CreateInstance(sde_wrapper, device_id);
+  auto pre_manager = TdiPreManager::CreateInstance(sde_wrapper, device_id);
 
   auto counter_manager =
       TdiCounterManager::CreateInstance(sde_wrapper, device_id);
 
   auto dpdk_node = TdiNode::CreateInstance(
-      table_manager.get(), action_profile_manager.get(),
-      packetio_manager.get(), pre_manager.get(),
-      counter_manager.get(), sde_wrapper, device_id);
+      table_manager.get(), action_profile_manager.get(), packetio_manager.get(),
+      pre_manager.get(), counter_manager.get(), sde_wrapper, device_id);
 
   std::map<int, TdiNode*> device_id_to_dpdk_node = {
       {device_id, dpdk_node.get()},
   };
 
-  auto chassis_manager =
-      DpdkChassisManager::CreateInstance(mode, sde_wrapper);
+  auto chassis_manager = DpdkChassisManager::CreateInstance(mode, sde_wrapper);
 
   auto dpdk_switch = DpdkSwitch::CreateInstance(
       chassis_manager.get(), sde_wrapper, device_id_to_dpdk_node);

@@ -315,7 +315,8 @@ TEST_F(DpdkHalTest, ColdbootSetupFailureWhenChassisConfigPushFails) {
 // Test fails for DPDK because the the forwarding pipeline config is missing
 // or empty and PushSavedForwardingPipelineConfigs() returns OkStatus without
 // invoking switch_mock.
-TEST_F(DpdkHalTest, DISABLED_ColdbootSetupFailureWhenPipelineConfigPushFailsForSomeNodes) {
+TEST_F(DpdkHalTest,
+       DISABLED_ColdbootSetupFailureWhenPipelineConfigPushFailsForSomeNodes) {
   // Setup and save the test config(s).
   ChassisConfig chassis_config;
   ForwardingPipelineConfigs forwarding_pipeline_configs;

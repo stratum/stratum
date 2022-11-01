@@ -6,8 +6,9 @@
 #include "stratum/hal/lib/tdi/dpdk/dpdk_hal.h"
 
 #include <limits.h>
-#include <utility>
 #include <stdio.h>
+
+#include <utility>
 
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
@@ -109,13 +110,10 @@ DpdkHal::~DpdkHal() {
 
   auto it = std::find_if(
       external_stratum_urls.begin(), external_stratum_urls.end(),
-      [](const std::string& url) {
-          return (url == FLAGS_local_stratum_url);
-      });
+      [](const std::string& url) { return (url == FLAGS_local_stratum_url); });
   RET_CHECK(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as an external URL: "
-      << FLAGS_local_stratum_url
-      << ".";
+      << FLAGS_local_stratum_url << ".";
 
   RET_CHECK(!FLAGS_persistent_config_dir.empty())
       << "persistent_config_dir flag needs to be explicitly given.";
@@ -125,13 +123,11 @@ DpdkHal::~DpdkHal() {
   return ::util::OkStatus();
 }
 
-::util::Status DpdkHal::Setup() {
-    return Setup(FLAGS_warmboot);
-}
+::util::Status DpdkHal::Setup() { return Setup(FLAGS_warmboot); }
 
 ::util::Status DpdkHal::Setup(bool warmboot) {
-  LOG(INFO) << "Setting up HAL in "
-            << (warmboot ? "WARMBOOT" : "COLDBOOT") << " mode...";
+  LOG(INFO) << "Setting up HAL in " << (warmboot ? "WARMBOOT" : "COLDBOOT")
+            << " mode...";
 
   RETURN_IF_ERROR(RecursivelyCreateDir(FLAGS_persistent_config_dir));
 
@@ -139,7 +135,7 @@ DpdkHal::~DpdkHal() {
   // created, so we ensure that the saved configuration file is empty
   // on startup.
   FILE* pipeline_cfg_file =
-    fopen(FLAGS_forwarding_pipeline_configs_file.c_str(), "wb");
+      fopen(FLAGS_forwarding_pipeline_configs_file.c_str(), "wb");
   if (pipeline_cfg_file != NULL) {
     LOG(INFO) << "Truncating saved pipeline configuration file.";
     fclose(pipeline_cfg_file);
@@ -323,8 +319,8 @@ DpdkHal* DpdkHal::GetSingleton() {
   RETURN_IF_ERROR(CreatePipeForSignalHandling(&pipe_read_fd_, &pipe_write_fd_));
 
   // Start the signal waiter thread that initiates shutdown.
-  RET_CHECK(pthread_create(&signal_waiter_tid_, nullptr,
-                                       SignalWaiterThreadFunc, nullptr) == 0)
+  RET_CHECK(pthread_create(&signal_waiter_tid_, nullptr, SignalWaiterThreadFunc,
+                           nullptr) == 0)
       << "Could not start the signal waiter thread.";
 
   return ::util::OkStatus();

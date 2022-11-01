@@ -19,7 +19,8 @@ namespace hal {
 namespace tdi {
 
 TdiPreManager::TdiPreManager(TdiSdeInterface* tdi_sde_interface, int device)
-    : tdi_sde_interface_(ABSL_DIE_IF_NULL(tdi_sde_interface)), device_(device) {}
+    : tdi_sde_interface_(ABSL_DIE_IF_NULL(tdi_sde_interface)),
+      device_(device) {}
 
 ::util::Status TdiPreManager::PushForwardingPipelineConfig(
     const TdiDeviceConfig& config) {
@@ -39,7 +40,7 @@ TdiPreManager::TdiPreManager(TdiSdeInterface* tdi_sde_interface, int device)
       return WriteCloneSessionEntry(session, type, entry.clone_session_entry());
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-          << "Unsupported PRE entry: " << entry.ShortDebugString();
+             << "Unsupported PRE entry: " << entry.ShortDebugString();
   }
 }
 
@@ -60,7 +61,7 @@ TdiPreManager::TdiPreManager(TdiSdeInterface* tdi_sde_interface, int device)
     }
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-          << "Unsupported PRE entry: " << entry.ShortDebugString();
+             << "Unsupported PRE entry: " << entry.ShortDebugString();
   }
 
   return ::util::OkStatus();
@@ -143,7 +144,7 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
                            device_, session, entry.multicast_group_id()));
       RETURN_IF_ERROR_WITH_APPEND(
           tdi_sde_interface_->DeleteMulticastGroup(device_, session,
-                                                  entry.multicast_group_id()))
+                                                   entry.multicast_group_id()))
               .with_logging()
           << "Failed to delete multicast group for request "
           << entry.ShortDebugString() << ".";
@@ -155,7 +156,8 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
       break;
     }
     default:
-      return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Unsupported update type: " << type;
+      return MAKE_ERROR(ERR_UNIMPLEMENTED)
+             << "Unsupported update type: " << type;
   }
   return ::util::OkStatus();
 }
@@ -222,8 +224,7 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
     std::shared_ptr<TdiSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type& type,
     const ::p4::v1::CloneSessionEntry& entry) {
-  RET_CHECK(entry.session_id() != 0 &&
-                        entry.session_id() <= kMaxCloneSessionId)
+  RET_CHECK(entry.session_id() != 0 && entry.session_id() <= kMaxCloneSessionId)
       << "Invalid session id in CloneSessionEntry " << entry.ShortDebugString()
       << ".";
   RET_CHECK(entry.packet_length_bytes() <= UINT16_MAX)
@@ -273,8 +274,8 @@ std::unique_ptr<TdiPreManager> TdiPreManager::CreateInstance(
     }
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
-          << "Unsupported update type: " << type << " on CloneSessionEntry "
-          << entry.ShortDebugString() << ".";
+             << "Unsupported update type: " << type << " on CloneSessionEntry "
+             << entry.ShortDebugString() << ".";
   }
 
   return ::util::OkStatus();
