@@ -197,7 +197,7 @@ bool DpdkChassisManager::IsPortParamSet(
       }
       break;
 
-    case SetRequest::Request::Port::ValueCase::kHostConfig:
+    case SetRequest::Request::Port::ValueCase::kHostName:
       if (validate & GNMI_CONFIG_HOST_NAME) {
         return true;
       }
@@ -419,10 +419,10 @@ bool DpdkChassisManager::IsPortParamSet(
       LOG(INFO) << "SetPortParam::kMtuValue= " << config_params.mtu();
       break;
 
-    case SetRequest::Request::Port::ValueCase::kHostConfig:
+    case SetRequest::Request::Port::ValueCase::kHostName:
       validate |= GNMI_CONFIG_HOST_NAME;
       config.host_name = config_params.host_name();
-      LOG(INFO) << "SetPortParam::kHostConfig = " << config_params.host_name();
+      LOG(INFO) << "SetPortParam::kHostName = " << config_params.host_name();
       break;
 
     case SetRequest::Request::Port::ValueCase::kPacketDir:

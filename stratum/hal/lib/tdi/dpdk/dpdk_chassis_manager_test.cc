@@ -342,7 +342,7 @@ TEST_F(DpdkChassisManagerTest, SetPortParam) {
                   ->SetPortParam(kUnit, kPort, *sport, ValueCase::kSockPath)
                   .ok());
   ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kHostConfig)
+                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kHostName)
                   .ok());
 }
 

@@ -80,7 +80,7 @@ void SetUpInterfacesInterfaceConfigHost(const char* host_val, uint64 node_id,
     }
 
     if (IsPortParamSet(tree, node_id, port_id,
-                       SetRequest::Request::Port::ValueCase::kHostConfig)) {
+                       SetRequest::Request::Port::ValueCase::kHostName)) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Host is already set or the PORT is already configured";
     }
@@ -90,7 +90,7 @@ void SetUpInterfacesInterfaceConfigHost(const char* host_val, uint64 node_id,
     auto* request = req.add_requests()->mutable_port();
     request->set_node_id(node_id);
     request->set_port_id(port_id);
-    request->mutable_host_config()->set_host_name(host_name);
+    request->mutable_host_name()->set_host_name(host_name);
 
     // Update the chassis config and setValue
     ChassisConfig* new_config = config->writable();
@@ -101,7 +101,7 @@ void SetUpInterfacesInterfaceConfigHost(const char* host_val, uint64 node_id,
         // Validate if all mandatory params are set and call SDE API
         RETURN_IF_ERROR(
             SetPortParam(tree, node_id, port_id, singleton_port,
-                         SetRequest::Request::Port::ValueCase::kHostConfig));
+                         SetRequest::Request::Port::ValueCase::kHostName));
         break;
       }
     }
