@@ -1320,7 +1320,7 @@ message DpdkDeviceTypeValue {
 }
 
 // Specifies host to be used by the device
-message HostNameValue {
+message HostName {
   string host_name = 1;  // required
 }
 
@@ -1558,7 +1558,7 @@ message DataResponse {
     NodeInfo node_info = 21;
     SdnPortId sdn_port_id = 22;
     DpdkPortTypeValue port_type = 23;
-    HostNameValue host_config = 24;
+    HostName host_name = 24;
     QueuesConfigured queue_count = 25;
     SocketPathConfigured sock_path = 26;
     DpdkDeviceTypeValue device_type = 27;
@@ -1604,7 +1604,7 @@ message SetRequest {
         // The new device to be used.
         DpdkDeviceTypeValue device_type = 13;
         // The hostname to be used by backend.
-        HostNameValue host_config = 14;
+        HostName host_name = 14;
         // The no of queues to be used by backend.
         QueuesConfigured queue_count = 15;
         // The socket path to be used by backend.
