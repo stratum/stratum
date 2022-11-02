@@ -521,20 +521,28 @@ bool DpdkChassisManager::IsPortParamSet(
   config->speed_bps = singleton_port.speed_bps();
   config->admin_state = ADMIN_STATE_DISABLED;
   config->fec_mode = config_params.fec_mode();
+  config->port_type = config_params.port_type();
+  config->pipeline_name = !config_params.pipeline_name().empty()
+                              ? config->pipeline_name
+                              : DEFAULT_PIPELINE;
+  config->mempool_name =
+      !config->mempool_name.empty() ? config->mempool_name : DEFAULT_MEMPOOL;
+  config->mtu = config_params.mtu() ? config_params.mtu() : DEFAULT_MTU;
 
   TdiSdeInterface::PortConfigParams sde_params;
-  sde_params.port_type = config->port_type;
+  sde_params.port_type = config_params.port_type();
   sde_params.device_type = config->device_type;
-  sde_params.packet_dir = config->packet_dir;
+  sde_params.packet_dir =
+      config->packet_dir ? config->packet_dir : DEFAULT_PACKET_DIR;
   sde_params.queues = config->queues;
-  if (config->mtu.has_value()) {
-    sde_params.mtu = *config->mtu;
-  }
+  sde_params.mtu = *config->mtu;
   sde_params.socket_path = config->socket_path;
   sde_params.host_name = config->host_name;
   sde_params.port_name = port_name;
-  sde_params.pipeline_name = config->pipeline_name;
-  sde_params.mempool_name = config->mempool_name;
+  sde_params.pipeline_name =
+      !config->pipeline_name.empty() ? config->pipeline_name : DEFAULT_PIPELINE;
+  sde_params.mempool_name =
+      !config->mempool_name.empty() ? config->mempool_name : DEFAULT_MEMPOOL;
   sde_params.pci_bdf = config->pci_bdf;
 
   LOG(INFO) << "Adding port " << port_id << " in node " << node_id
@@ -562,12 +570,12 @@ bool DpdkChassisManager::IsPortParamSet(
 
   if (config->mtu) {
     LOG(INFO) << "MTU value - config->mtu= " << *config->mtu;
-    RETURN_IF_ERROR(
-        sde_interface_->SetPortMtu(unit, sdk_port_id, *config->mtu));
+    // RETURN_IF_ERROR(
+    //     sde_interface_->SetPortMtu(unit, sdk_port_id, *config->mtu));
   } else if (config_params.mtu() != 0) {
     LOG(INFO) << "MTU value - config_params.mtu= " << config_params.mtu();
-    RETURN_IF_ERROR(
-        sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
+    // RETURN_IF_ERROR(
+    //     sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
     config->mtu = config_params.mtu();
   }
 
@@ -589,7 +597,7 @@ bool DpdkChassisManager::IsPortParamSet(
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
+    // RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -696,8 +704,8 @@ bool DpdkChassisManager::IsPortParamSet(
             << " changed"
             << " (SDK Port " << sdk_port_id << ").";
     config->mtu.reset();
-    RETURN_IF_ERROR(
-        sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
+    // RETURN_IF_ERROR(
+    //     sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
     config->mtu = config_params.mtu();
     config_changed = true;
   }
@@ -747,7 +755,7 @@ bool DpdkChassisManager::IsPortParamSet(
   if (need_enable) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
+    // RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -833,8 +841,8 @@ bool DpdkChassisManager::IsPortParamSet(
       // new port
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      // RETURN_IF_ERROR(
-      //    AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+      RETURN_IF_ERROR(
+          AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
       continue;
     } else {
       // port already exists, config may have changed
@@ -1331,8 +1339,8 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     config_new->fec_mode = *config.fec_mode;
 
     if (config.mtu) {
-      RETURN_IF_ERROR(
-          sde_interface_->SetPortMtu(unit, sdk_port_id, *config.mtu));
+      // RETURN_IF_ERROR(
+      //     sde_interface_->SetPortMtu(unit, sdk_port_id, *config.mtu));
       config_new->mtu = *config.mtu;
     }
     if (config.autoneg) {
@@ -1349,7 +1357,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     if (config.admin_state == ADMIN_STATE_ENABLED) {
       VLOG(1) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK port " << sdk_port_id << ").";
-      RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
+      // RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;
     }
 
