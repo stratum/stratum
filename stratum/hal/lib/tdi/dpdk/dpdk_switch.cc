@@ -25,9 +25,9 @@ namespace stratum {
 namespace hal {
 namespace tdi {
 
-DpdkSwitch::DpdkSwitch(DpdkChassisManager* chassis_manager,
-                       TdiSdeInterface* sde_interface,
-                       const std::map<int, TdiNode*>& device_id_to_tdi_node)
+DpdkSwitch::DpdkSwitch(
+    DpdkChassisManager* chassis_manager, TdiSdeInterface* sde_interface,
+    const absl::flat_hash_map<int, TdiNode*>& device_id_to_tdi_node)
     : sde_interface_(ABSL_DIE_IF_NULL(sde_interface)),
       chassis_manager_(ABSL_DIE_IF_NULL(chassis_manager)),
       device_id_to_tdi_node_(device_id_to_tdi_node),
@@ -259,7 +259,7 @@ bool DpdkSwitch::IsPortParamSet(
 
 std::unique_ptr<DpdkSwitch> DpdkSwitch::CreateInstance(
     DpdkChassisManager* chassis_manager, TdiSdeInterface* sde_interface,
-    const std::map<int, TdiNode*>& device_id_to_tdi_node) {
+    const absl::flat_hash_map<int, TdiNode*>& device_id_to_tdi_node) {
   return absl::WrapUnique(
       new DpdkSwitch(chassis_manager, sde_interface, device_id_to_tdi_node));
 }
