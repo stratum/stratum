@@ -115,7 +115,7 @@ class DpdkSwitch : virtual public SwitchInterface,
   // Factory function for creating the instance of the class.
   static std::unique_ptr<DpdkSwitch> CreateInstance(
       DpdkChassisManager* chassis_manager, TdiSdeInterface* sde_interface,
-      const std::map<int, TdiNode*>& device_id_to_tdi_node);
+      const absl::flat_hash_map<int, TdiNode*>& device_id_to_tdi_node);
 
   // DpdkSwitch is neither copyable nor movable.
   DpdkSwitch(const DpdkSwitch&) = delete;
@@ -128,7 +128,7 @@ class DpdkSwitch : virtual public SwitchInterface,
   // class.
   DpdkSwitch(DpdkChassisManager* chassis_manager,
              TdiSdeInterface* sde_interface,
-             const std::map<int, TdiNode*>& device_id_to_tdi_node);
+             const absl::flat_hash_map<int, TdiNode*>& device_id_to_tdi_node);
 
   // Helper to get TdiNode pointer from device_id number or return error
   // indicating invalid device_id.
@@ -150,7 +150,8 @@ class DpdkSwitch : virtual public SwitchInterface,
   // node/ASIC. This map is initialized in the constructor and will not change
   // during the lifetime of the class.
   // TODO(max): Does this need to be protected by chassis_lock?
-  const std::map<int, TdiNode*> device_id_to_tdi_node_;  // pointers not owned
+  const absl::flat_hash_map<int, TdiNode*>
+      device_id_to_tdi_node_;  // pointers not owned
 
   // Map from the node ids to to a pointer to TdiNode which contain all the
   // per-node managers for that node/ASIC. Created whenever a config is pushed.
