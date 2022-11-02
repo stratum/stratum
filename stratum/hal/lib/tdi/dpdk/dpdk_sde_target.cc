@@ -78,7 +78,7 @@ using namespace stratum::hal::tdi::helpers;
 }
 
 namespace {
-dpdk_port_type_t get_target_port_type(DpdkPortType type) {
+::util::StatusOr<dpdk_port_type_t> get_target_port_type(DpdkPortType type) {
   switch (type) {
     case PORT_TYPE_VHOST:
       return BF_DPDK_LINK;
@@ -93,7 +93,8 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
     default:
       break;
   }
-  return BF_DPDK_PORT_MAX;
+
+  return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid port type " << type << ".";
 }
 }  // namespace
 
@@ -182,7 +183,8 @@ dpdk_port_type_t get_target_port_type(DpdkPortType type) {
           sizeof(port_attrs->pipe_out));
   strncpy(port_attrs->mempool_name, config.mempool_name.c_str(),
           sizeof(port_attrs->mempool_name));
-  port_attrs->port_type = get_target_port_type(config.port_type);
+  ASSIGN_OR_RETURN(port_attrs->port_type,
+                   get_target_port_type(config.port_type));
   port_attrs->port_dir = PM_PORT_DIR_DEFAULT;
   port_attrs->port_in_id = port_in++;
   port_attrs->port_out_id = port_out++;
