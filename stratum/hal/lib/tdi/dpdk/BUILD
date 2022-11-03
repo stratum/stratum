@@ -1,5 +1,3 @@
-# stratum/hal/lib/tdi/dpdk/BUILD
-
 # Copyright 2018 Google LLC
 # Copyright 2018-present Open Networking Foundation
 # Copyright 2022 Intel Corporation
