@@ -56,9 +56,6 @@ bmv2_configure(name = "local_bmv2_bin")
 load("//stratum/hal/lib/barefoot:barefoot.bzl", "barefoot_configure")
 barefoot_configure(name = "local_barefoot_bin")
 
-load("//stratum/hal/lib/tdi/tofino:tofino.bzl", "tofino_configure")
-tofino_configure(name = "local_tofino_bin")
-
 load("//stratum/hal/lib/tdi/dpdk:dpdk.bzl", "dpdk_configure")
 dpdk_configure(name = "local_dpdk_bin")
 

@@ -92,7 +92,7 @@ if [ "$NP4_INTEL" == YES ]; then
     DOCKER_FILE=$THIS_DIR/Dockerfile.np4intel.dev
     BAZEL_CACHE=$HOME/.np4intel_cache
 else
-    IMAGE_NAME=stratum-dev-dpdk
+    IMAGE_NAME=stratum-dev
     DOCKER_FILE=$THIS_DIR/Dockerfile.dev
 fi
 
@@ -117,7 +117,7 @@ if [ $ERR -ne 0 ]; then
     exit $ERR
 fi
 
-DOCKER_RUN_OPTIONS="--rm --privileged -ti -v $THIS_DIR:/stratum -w /stratum"
+DOCKER_RUN_OPTIONS="--rm -ti -v $THIS_DIR:/stratum -w /stratum"
 DOCKER_GID=$(id -g $USER)
 if [ -n "$DOCKER_GID" ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS --user $USER:$DOCKER_GID"
