@@ -1,5 +1,3 @@
-# bazel/external/dpdk.BUILD
-
 # Copyright 2020-present Open Networking Foundation
 # Copyright 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
