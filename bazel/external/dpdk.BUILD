@@ -25,7 +25,9 @@ cc_library(
         "dpdk-bin/lib/libtdi_json_parser.so*",
         "dpdk-bin/lib/libtdi_pna.so*",
         "dpdk-bin/lib/libtdi.so*",
-        "dpdk-bin/lib/x86_64-linux-gnu/librte_*.so*",  # DPDK libs
+        # DPDK libs
+        "dpdk-bin/lib/x86_64-linux-gnu/dpdk/pmds-22.2/*.so*",
+        "dpdk-bin/lib/x86_64-linux-gnu/librte_*.so*",
     ]),
     hdrs = glob([
         "dpdk-bin/include/bf_pal/*.h",
@@ -40,10 +42,10 @@ cc_library(
         "dpdk-bin/include/port_mgr/**/*.h",
         "dpdk-bin/include/target-sys/**/*.h",
         "dpdk-bin/include/target-utils/**/*.h",
-        "dpdk-bin/include/tdi/**/*.h",
-        "dpdk-bin/include/tdi/**/*.hpp",
         "dpdk-bin/include/tdi_rt/**/*.h",
         "dpdk-bin/include/tdi_rt/**/*.hpp",
+        "dpdk-bin/include/tdi/**/*.h",
+        "dpdk-bin/include/tdi/**/*.hpp",
     ]),
     linkopts = [
         "-lpthread",
@@ -68,7 +70,9 @@ pkg_tar_with_symlinks(
         "dpdk-bin/lib/libtdi_json_parser.so*",
         "dpdk-bin/lib/libtdi_pna.so*",
         "dpdk-bin/lib/libtdi.so*",
-        "dpdk-bin/lib/x86_64-linux-gnu/librte_*.so*",  # DPDK libs
+        # DPDK libs
+        "dpdk-bin/lib/x86_64-linux-gnu/dpdk/pmds-22.2/*.so*",
+        "dpdk-bin/lib/x86_64-linux-gnu/librte_*.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",
@@ -80,6 +84,7 @@ pkg_tar_with_symlinks(
     srcs = glob([
         "dpdk-bin/share/bf_rt_shared/**",
         "dpdk-bin/share/cli/xml/**",
+        "dpdk-bin/share/target_sys/**",
     ]),
     mode = "0644",
     package_dir = "/usr",
