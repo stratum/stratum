@@ -1,0 +1,64 @@
+description: "Default Chassis Config for DPDK Backend"
+chassis {
+  platform: PLT_P4_DPDK_SOFTWARE_SWITCH
+  name: "DPDK"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 500
+  name: "TAP0"
+  slot: 1
+  port: 5
+  channel: 1
+  speed_bps: 10000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+    pipeline_name: "pipe"
+    port_type: PORT_TYPE_TAP
+  }
+  node: 1
+}
+singleton_ports {
+  id: 501
+  name: "TAP1"
+  slot: 1
+  port: 5
+  channel: 2
+  speed_bps: 10000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+    port_type: PORT_TYPE_TAP
+  }
+  node: 1
+}
+singleton_ports {
+  id: 502
+  name: "TAP2"
+  slot: 1
+  port: 5
+  channel: 3
+  speed_bps: 10000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+    port_type: PORT_TYPE_TAP
+  }
+  node: 1
+}
+singleton_ports {
+  id: 503
+  name: "TAP3"
+  slot: 1
+  port: 5
+  channel: 4
+  speed_bps: 10000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+    port_type: PORT_TYPE_TAP
+  }
+  node: 1
+}
+

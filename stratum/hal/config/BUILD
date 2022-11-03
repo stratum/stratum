@@ -65,6 +65,11 @@ platform_config_test(
 )
 
 platform_config_test(
+    "p4-dpdk-software-switch",
+    sim_target = True,
+)
+
+platform_config_test(
     "x86-64-accton-wedge100bf-32x-r0",
     tofino_target = True,
 )
