@@ -237,26 +237,6 @@ DpdkSwitch::~DpdkSwitch() {}
   return std::vector<std::string>();
 }
 
-bool DpdkSwitch::IsPortParamSet(
-    uint64 node_id, uint32 port_id,
-    SetRequest::Request::Port::ValueCase value_case) {
-  return chassis_manager_->IsPortParamSet(node_id, port_id, value_case);
-}
-
-::util::Status DpdkSwitch::SetPortParam(
-    uint64 node_id, uint32 port_id, const SingletonPort& singleton_port,
-    SetRequest::Request::Port::ValueCase value_case) {
-  return chassis_manager_->SetPortParam(node_id, port_id, singleton_port,
-                                        value_case);
-}
-
-::util::Status DpdkSwitch::SetHotplugParam(uint64 node_id, uint32 port_id,
-                                           const SingletonPort& singleton_port,
-                                           DpdkHotplugParam param_type) {
-  return chassis_manager_->SetHotplugParam(node_id, port_id, singleton_port,
-                                           param_type);
-}
-
 std::unique_ptr<DpdkSwitch> DpdkSwitch::CreateInstance(
     DpdkChassisManager* chassis_manager, TdiSdeInterface* sde_interface,
     const absl::flat_hash_map<int, TdiNode*>& device_id_to_tdi_node) {
