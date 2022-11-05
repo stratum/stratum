@@ -64,20 +64,6 @@ enum TrafficClass {
   LLQ2 = 30;  // Low-latency congestion-control queue (go/llq)
 };
 
-// Mode of hotplug request
-enum QemuHotplugMode {
-  HOTPLUG_MODE_NONE = 0;
-  HOTPLUG_MODE_ADD = 1;
-  HOTPLUG_MODE_DEL = 2;
-}
-
-// Packet Direction type
-enum PacketDirection {
-  DIRECTION_HOST = 0;
-  DIRECTION_NETWORK = 1;
-  DIRECTION_NONE = 2;
-};
-
 //------------------------------------------------------------------------------
 // Definition of chassis, nodes, singleton ports, trunk ports, etc in the
 // internal chassis config (defined later in this file) pushed to the managers.
@@ -275,39 +261,6 @@ enum DpdkDeviceType {
   DEVICE_TYPE_VIRTIO_BLK = 2;
 }
 
-// QEMU Hotplug parameters.
-enum DpdkHotplugParam {
-  PARAM_NONE = 0;
-  PARAM_SOCK_IP = 1;
-  PARAM_SOCK_PORT = 2;
-  PARAM_HOTPLUG_MODE = 3;
-  PARAM_VM_MAC = 4;
-  PARAM_NETDEV_ID = 5;
-  PARAM_CHARDEV_ID = 6;
-  PARAM_NATIVE_SOCK_PATH = 7;
-  PARAM_DEVICE_ID = 8;
-}
-
-// Hotplug config parameters for QEMU-based VM.
-message HotplugConfig {
-  // IP address for qemu monitor socket
-  string qemu_socket_ip = 1;
-  // Port number for qemu monitor socket
-  uint32 qemu_socket_port = 2;
-  // Qemu Hotplug mode
-  QemuHotplugMode qemu_hotplug_mode = 3;
-  // The configured mac address for this port.
-  uint64 qemu_vm_mac_address = 4;
-  // VM netdev id for hotplug
-  string qemu_vm_netdev_id = 5;
-  // VM chardev id for hotplug
-  string qemu_vm_chardev_id = 6;
-  // Native socket path (applicable for containers)
-  string native_socket_path = 7;
-  // VM device id for hotplug
-  string qemu_vm_device_id = 8;
-}
-
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
   // Per-port hash config. Most of the hash configuration is given per node.
@@ -361,10 +314,6 @@ message PortConfigParams {
   string control_port = 17;
   // PCI BDF value to be used for the LINK port
   string pci_bdf = 18;
-  // Per Qemu VM hotplug config
-  HotplugConfig hotplug_config = 19;
-  // Packet direction
-  PacketDirection packet_dir = 20;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
@@ -1345,11 +1294,6 @@ message MempoolNameConfigured {
   string mempool_name = 1;  // required
 }
 
-// Specifies packet direction to be used for port association
-message PacketDirValue {
-  PacketDirection packet_dir = 1;  // required
-}
-
 // Specifies if Auto creation of back-end control TAP ports is needed.
 message ControlPortConfigured {
   string control_port = 1;  // required
@@ -1525,7 +1469,6 @@ message DataRequest {
       Port loopback_status = 20;
       Node node_info = 21;
       Port sdn_port_id = 22;
-      Port target_dp_id = 23;
     }
   }
   repeated Request requests = 1;
@@ -1558,19 +1501,6 @@ message DataResponse {
     LoopbackStatus loopback_status = 20;
     NodeInfo node_info = 21;
     SdnPortId sdn_port_id = 22;
-    DpdkPortTypeValue port_type = 23;
-    HostName host_name = 24;
-    QueuesConfigured queue_count = 25;
-    SocketPathConfigured sock_path = 26;
-    DpdkDeviceTypeValue device_type = 27;
-    PipelineNameConfigured pipeline_name = 28;
-    MempoolNameConfigured mempool_name = 29;
-    ControlPortConfigured control_port = 30;
-    PciBdfConfigured pci_bdf = 31;
-    MtuValue mtu_value = 32;
-    HotplugConfig hotplug_config = 33;
-    TargetDatapathId target_dp_id = 34;
-    PacketDirValue packet_dir = 35;
   }
 }
 
@@ -1600,30 +1530,6 @@ message SetRequest {
         ForwardingViability forwarding_viability = 10;
         // The intended loopback state of the port.
         LoopbackStatus loopback_status = 11;
-        // The new port type to be used.
-        DpdkPortTypeValue port_type = 12;
-        // The new device to be used.
-        DpdkDeviceTypeValue device_type = 13;
-        // The hostname to be used by backend.
-        HostName host_name = 14;
-        // The no of queues to be used by backend.
-        QueuesConfigured queue_count = 15;
-        // The socket path to be used by backend.
-        SocketPathConfigured sock_path = 16;
-        // The Pipeline name to be used for port association.
-        PipelineNameConfigured pipeline_name = 17;
-        // The Mempool name to be used for port association.
-        MempoolNameConfigured mempool_name = 18;
-        // The control port to be used for creation of back-end TAP ports/rules
-        ControlPortConfigured control_port = 19;
-        // PCI BDF value to be used for the LINK port
-        PciBdfConfigured pci_bdf = 20;
-        // MTU value to be used for the Port
-        MtuValue mtu_value = 21;
-        // Per Qemu VM hotplug config
-        HotplugConfig hotplug_config = 22;
-        // The packet direction to be used for port association.
-        PacketDirValue packet_dir = 23;
       }
     }
     // Data required to set info for a specific node.

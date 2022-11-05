@@ -110,58 +110,6 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status TdiSdeWrapper::HotplugPort(int device, int port,
-                                          HotplugConfigParams& hotplug_config) {
-  auto hotplug_attrs = absl::make_unique<hotplug_attributes_t>();
-  strncpy(hotplug_attrs->qemu_socket_ip, hotplug_config.qemu_socket_ip.c_str(),
-          sizeof(hotplug_attrs->qemu_socket_ip));
-  strncpy(hotplug_attrs->qemu_vm_netdev_id,
-          hotplug_config.qemu_vm_netdev_id.c_str(),
-          sizeof(hotplug_attrs->qemu_vm_netdev_id));
-  strncpy(hotplug_attrs->qemu_vm_chardev_id,
-          hotplug_config.qemu_vm_chardev_id.c_str(),
-          sizeof(hotplug_attrs->qemu_vm_chardev_id));
-  strncpy(hotplug_attrs->qemu_vm_device_id,
-          hotplug_config.qemu_vm_device_id.c_str(),
-          sizeof(hotplug_attrs->qemu_vm_device_id));
-  strncpy(hotplug_attrs->native_socket_path,
-          hotplug_config.native_socket_path.c_str(),
-          sizeof(hotplug_attrs->native_socket_path));
-  // Convert enum to Boolean (NONE == false, ADD or DEL == true)
-  hotplug_attrs->qemu_hotplug = (hotplug_config.qemu_hotplug_mode != 0);
-  hotplug_attrs->qemu_socket_port = hotplug_config.qemu_socket_port;
-  uint64 mac_address = hotplug_config.qemu_vm_mac_address;
-
-  std::string string_mac =
-      (absl::StrFormat("%02x:%02x:%02x:%02x:%02x:%02x",
-                       (mac_address >> 40) & 0xFF, (mac_address >> 32) & 0xFF,
-                       (mac_address >> 24) & 0xFF, (mac_address >> 16) & 0xFF,
-                       (mac_address >> 8) & 0xFF, mac_address & 0xFF));
-  strcpy(hotplug_attrs->qemu_vm_mac_address, string_mac.c_str());
-
-  LOG(INFO) << "Parameters for hotplug are:"
-            << " qemu_socket_port=" << hotplug_attrs->qemu_socket_port
-            << " qemu_vm_mac_address=" << hotplug_attrs->qemu_vm_mac_address
-            << " qemu_socket_ip=" << hotplug_attrs->qemu_socket_ip
-            << " qemu_vm_netdev_id=" << hotplug_attrs->qemu_vm_netdev_id
-            << " qemu_vm_chardev_id=" << hotplug_attrs->qemu_vm_chardev_id
-            << " qemu_vm_device_id=" << hotplug_attrs->qemu_vm_device_id
-            << " native_socket_path=" << hotplug_attrs->native_socket_path
-            << " qemu_hotplug=" << hotplug_attrs->qemu_hotplug;
-
-  if (hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_ADD) {
-    RETURN_IF_TDI_ERROR(bf_pal_hotplug_add(static_cast<bf_dev_id_t>(device),
-                                           static_cast<bf_dev_port_t>(port),
-                                           hotplug_attrs.get()));
-  } else if (hotplug_config.qemu_hotplug_mode == HOTPLUG_MODE_DEL) {
-    RETURN_IF_TDI_ERROR(bf_pal_hotplug_del(static_cast<bf_dev_id_t>(device),
-                                           static_cast<bf_dev_port_t>(port),
-                                           hotplug_attrs.get()));
-  }
-
-  return ::util::OkStatus();
-}
-
 ::util::Status TdiSdeWrapper::AddPort(int device, int port, uint64 speed_bps,
                                       FecMode fec_mode) {
   return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)

@@ -41,7 +41,8 @@ constexpr int DpdkChassisManager::kMaxXcvrEventDepth;
 constexpr int DpdkChassisManager::kSdkPortControlBase;
 constexpr int DpdkChassisManager::kDefaultMtu;
 constexpr int DpdkChassisManager::kMaxMtu;
-constexpr PacketDirection DpdkChassisManager::kDefaultPortPacketDirection;
+constexpr TdiSdeInterface::PacketDirection
+    DpdkChassisManager::kDefaultPortPacketDirection;
 constexpr char DpdkChassisManager::kDefaultPipelineName[];
 constexpr char DpdkChassisManager::kDefaultMempoolName[];
 
@@ -105,9 +106,9 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   config->pipeline_name = !config_params.pipeline_name().empty()
                               ? config->pipeline_name
                               : kDefaultPipelineName;
-  config->mempool_name =
-      !config->mempool_name.empty() ? config->mempool_name : kDefaultMempoolName;
-  config->mtu = config_params.mtu() ? config_params.mtu() : kMaxMtu;
+  config->mempool_name = !config->mempool_name.empty() ? config->mempool_name
+                                                       : kDefaultMempoolName;
+  config->mtu = config_params.mtu() ? config_params.mtu() : kDefaultMtu;
 
   TdiSdeInterface::PortConfigParams sde_params;
   sde_params.port_type = config_params.port_type();
@@ -119,10 +120,11 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   sde_params.socket_path = config->socket_path;
   sde_params.host_name = config->host_name;
   sde_params.port_name = port_name;
-  sde_params.pipeline_name =
-      !config->pipeline_name.empty() ? config->pipeline_name : kDefaultPipelineName;
-  sde_params.mempool_name =
-      !config->mempool_name.empty() ? config->mempool_name : kDefaultMempoolName;
+  sde_params.pipeline_name = !config->pipeline_name.empty()
+                                 ? config->pipeline_name
+                                 : kDefaultPipelineName;
+  sde_params.mempool_name = !config->mempool_name.empty() ? config->mempool_name
+                                                          : kDefaultMempoolName;
   sde_params.pci_bdf = config->pci_bdf;
 
   LOG(INFO) << "Adding port " << port_id << " in node " << node_id
@@ -753,12 +755,6 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
                        GetSdkPortId(request.sdn_port_id().node_id(),
                                     request.sdn_port_id().port_id()));
       resp.mutable_sdn_port_id()->set_port_id(sdk_port_id);
-      break;
-    }
-    case Request::kTargetDpId: {
-      RETURN_IF_ERROR(GetTargetDatapathId(request.target_dp_id().node_id(),
-                                          request.target_dp_id().port_id(),
-                                          resp.mutable_target_dp_id()));
       break;
     }
     case Request::kForwardingViability: {

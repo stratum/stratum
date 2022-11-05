@@ -101,7 +101,7 @@ class DpdkChassisManager {
 
     DpdkPortType port_type;
     DpdkDeviceType device_type;
-    PacketDirection packet_dir;
+    TdiSdeInterface::PacketDirection packet_dir;
     int32 queues;
     std::string socket_path;
     std::string host_name;
@@ -114,7 +114,7 @@ class DpdkChassisManager {
         : admin_state(ADMIN_STATE_UNKNOWN),
           port_type(PORT_TYPE_NONE),
           device_type(DEVICE_TYPE_NONE),
-          packet_dir(DIRECTION_HOST),
+          packet_dir(TdiSdeInterface::DIRECTION_HOST),
           queues(0) {}
   };
 
@@ -124,7 +124,8 @@ class DpdkChassisManager {
   static constexpr int kSdkPortControlBase = 256;
   static constexpr int kDefaultMtu = 1500;
   static constexpr int kMaxMtu = 65535;
-  static constexpr PacketDirection kDefaultPortPacketDirection = DIRECTION_HOST;
+  static constexpr TdiSdeInterface::PacketDirection
+      kDefaultPortPacketDirection = TdiSdeInterface::DIRECTION_HOST;
   static constexpr char kDefaultPipelineName[] = "pipe";
   static constexpr char kDefaultMempoolName[] = "MEMPOOL0";
 

@@ -38,6 +38,33 @@ class TdiSdeInterface {
     absl::Time time_last_changed;
   };
 
+  // QEMU Hotplug parameters.
+  enum DpdkHotplugParam {
+    PARAM_NONE = 0,
+    PARAM_SOCK_IP = 1,
+    PARAM_SOCK_PORT = 2,
+    PARAM_HOTPLUG_MODE = 3,
+    PARAM_VM_MAC = 4,
+    PARAM_NETDEV_ID = 5,
+    PARAM_CHARDEV_ID = 6,
+    PARAM_NATIVE_SOCK_PATH = 7,
+    PARAM_DEVICE_ID = 8,
+  };
+
+  // Mode of hotplug request.
+  enum QemuHotplugMode {
+    HOTPLUG_MODE_NONE = 0,
+    HOTPLUG_MODE_ADD = 1,
+    HOTPLUG_MODE_DEL = 2,
+  };
+
+  // Packet Direction type.
+  enum PacketDirection {
+    DIRECTION_HOST = 0,
+    DIRECTION_NETWORK = 1,
+    DIRECTION_NONE = 2,
+  };
+
   struct HotplugConfigParams {
     uint32 qemu_socket_port;
     uint64 qemu_vm_mac_address;
@@ -205,10 +232,6 @@ class TdiSdeInterface {
   virtual ::util::Status AddPort(int device, int port, uint64 speed_bps,
                                  const PortConfigParams& config,
                                  FecMode fec_mode = FEC_MODE_UNKNOWN) = 0;
-
-  // Hotplug add/delete the port
-  virtual ::util::Status HotplugPort(int device, int port,
-                                     HotplugConfigParams& hotplug_config) = 0;
 
   // Delete a port.
   virtual ::util::Status DeletePort(int device, int port) = 0;
