@@ -77,8 +77,8 @@ class TdiSdeInterface {
   };
 
   struct PortConfigParams {
-    DpdkPortType port_type;
-    DpdkDeviceType device_type;
+    hal::PortConfigParams::DpdkPortType port_type;
+    hal::PortConfigParams::DpdkDeviceType device_type;
     PacketDirection packet_dir;
     int queues;
     int mtu;
@@ -89,6 +89,11 @@ class TdiSdeInterface {
     std::string mempool_name;
     std::string pci_bdf;
     struct HotplugConfigParams hotplug_config;
+  };
+
+  struct TargetDatapathId {
+    uint32 tdi_portin_id = 1;   // Port ID for Pipeline in Input Direction
+    uint32 tdi_portout_id = 2;  // Port ID for Pipeline in Output Direction
   };
 
   // SessionInterface is a proxy class for TDI sessions. Most API calls require

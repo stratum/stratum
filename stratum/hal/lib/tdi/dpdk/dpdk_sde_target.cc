@@ -78,17 +78,18 @@ using namespace stratum::hal::tdi::helpers;
 }
 
 namespace {
-::util::StatusOr<dpdk_port_type_t> get_target_port_type(DpdkPortType type) {
+::util::StatusOr<dpdk_port_type_t> get_target_port_type(
+    PortConfigParams::DpdkPortType type) {
   switch (type) {
-    case PORT_TYPE_VHOST:
+    case PortConfigParams::PORT_TYPE_VHOST:
       return BF_DPDK_LINK;
-    case PORT_TYPE_TAP:
+    case PortConfigParams::PORT_TYPE_TAP:
       return BF_DPDK_TAP;
-    case PORT_TYPE_LINK:
+    case PortConfigParams::PORT_TYPE_LINK:
       return BF_DPDK_LINK;
-    case PORT_TYPE_SOURCE:
+    case PortConfigParams::PORT_TYPE_SOURCE:
       return BF_DPDK_SOURCE;
-    case PORT_TYPE_SINK:
+    case PortConfigParams::PORT_TYPE_SINK:
       return BF_DPDK_SINK;
     default:
       break;
@@ -104,8 +105,8 @@ namespace {
   RETURN_IF_TDI_ERROR(bf_pal_port_info_get(static_cast<bf_dev_id_t>(device),
                                            static_cast<bf_dev_port_t>(port),
                                            &port_info));
-  target_dp_id->set_tdi_portin_id((port_info)->port_attrib.port_in_id);
-  target_dp_id->set_tdi_portout_id((port_info)->port_attrib.port_out_id);
+  target_dp_id->tdi_portin_id = port_info->port_attrib.port_in_id;
+  target_dp_id->tdi_portout_id = port_info->port_attrib.port_out_id;
 
   return ::util::OkStatus();
 }
@@ -151,7 +152,7 @@ namespace {
 
   if (port_attrs->port_type == BF_DPDK_LINK) {
     // Update LINK parameters
-    if (config.port_type == PORT_TYPE_VHOST) {
+    if (config.port_type == hal::PortConfigParams::PORT_TYPE_VHOST) {
       port_attrs->link.dev_hotplug_enabled = 1;
       strncpy(port_attrs->link.pcie_domain_bdf, config.port_name.c_str(),
               sizeof(port_attrs->link.pcie_domain_bdf));
