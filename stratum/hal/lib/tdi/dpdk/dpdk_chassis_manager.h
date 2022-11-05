@@ -70,22 +70,6 @@ class DpdkChassisManager {
   static std::unique_ptr<DpdkChassisManager> CreateInstance(
       OperationMode mode, TdiSdeInterface* sde_interface);
 
-  // Determines whether the specified port configuration parameter has
-  // already been set. Once set, it may not be set again.
-  bool IsPortParamSet(uint64 node_id, uint32 port_id,
-                      SetRequest::Request::Port::ValueCase value_case);
-
-  // Sets the value of a port configuration parameter.
-  // Once set, it may not be set again.
-  ::util::Status SetPortParam(uint64 node_id, uint32 port_id,
-                              const SingletonPort& singleton_port,
-                              SetRequest::Request::Port::ValueCase value_case);
-
-  // Sets the value of a hotplug configuration parameter.
-  ::util::Status SetHotplugParam(uint64 node_id, uint32 port_id,
-                                 const SingletonPort& singleton_port,
-                                 DpdkHotplugParam param_type);
-
   // DpdkChassisManager is neither copyable nor movable.
   DpdkChassisManager(const DpdkChassisManager&) = delete;
   DpdkChassisManager& operator=(const DpdkChassisManager&) = delete;
@@ -102,22 +86,6 @@ class DpdkChassisManager {
   struct ReaderArgs {
     DpdkChassisManager* manager;
     std::unique_ptr<ChannelReader<T>> reader;
-  };
-
-  struct HotplugConfig {
-    uint32 qemu_socket_port;
-    uint64 qemu_vm_mac_address;
-    std::string qemu_socket_ip;
-    std::string qemu_vm_netdev_id;
-    std::string qemu_vm_chardev_id;
-    std::string qemu_vm_device_id;
-    std::string native_socket_path;
-    QemuHotplugMode qemu_hotplug_mode;
-
-    HotplugConfig()
-        : qemu_socket_port(0),
-          qemu_vm_mac_address(0),
-          qemu_hotplug_mode(HOTPLUG_MODE_NONE) {}
   };
 
   struct PortConfig {
@@ -141,7 +109,6 @@ class DpdkChassisManager {
     std::string mempool_name;
     std::string control_port;
     std::string pci_bdf;
-    HotplugConfig hotplug_config;
 
     PortConfig()
         : admin_state(ADMIN_STATE_UNKNOWN),
@@ -154,6 +121,12 @@ class DpdkChassisManager {
   // Maximum depth of port status change event channel.
   static constexpr int kMaxPortStatusEventDepth = 1024;
   static constexpr int kMaxXcvrEventDepth = 1024;
+  static constexpr int kSdkPortControlBase = 256;
+  static constexpr int kDefaultMtu = 1500;
+  static constexpr int kMaxMtu = 65535;
+  static constexpr PacketDirection kDefaultPortPacketDirection = DIRECTION_HOST;
+  static constexpr char kDefaultPipelineName[] = "pipe";
+  static constexpr char kDefaultMempoolName[] = "MEMPOOL0";
 
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
@@ -185,11 +158,6 @@ class DpdkChassisManager {
   ::util::Status AddPortHelper(uint64 node_id, int unit, uint32 port_id,
                                const SingletonPort& singleton_port,
                                PortConfig* config);
-
-  // helper to hotplug add / delete a port with TdiSdeInterface
-  ::util::Status HotplugPortHelper(uint64 node_id, int unit, uint32 port_id,
-                                   const SingletonPort& singleton_port,
-                                   PortConfig* config);
 
   // helper to update port configuration with TdiSdeInterface
   ::util::Status UpdatePortHelper(uint64 node_id, int unit, uint32 port_id,
@@ -254,10 +222,6 @@ class DpdkChassisManager {
   // This contains the inverse mapping of: node_id_to_port_id_to_sdk_port_id_
   // This map is updated as part of each config push.
   std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id_
-      GUARDED_BY(chassis_lock);
-
-  // Bitmask indicating which attributes have been configured.
-  std::map<uint64, std::map<uint32, uint32>> node_id_port_id_to_backend_
       GUARDED_BY(chassis_lock);
 
   // Pointer to a TdiSdeInterface implementation that wraps all the SDE calls.

@@ -297,64 +297,6 @@ TEST_F(DpdkChassisManagerTest, RemovePort) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-TEST_F(DpdkChassisManagerTest, IsPortParamSet) {
-  SingletonPort sport;
-  sport.mutable_config_params()->set_port_type(PORT_TYPE_VHOST);
-  ASSERT_FALSE(
-      m_chassis_manager_->IsPortParamSet(kUnit, kPort, ValueCase::kPortType));
-  ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, sport, ValueCase::kPortType)
-                  .ok());
-  ASSERT_TRUE(
-      m_chassis_manager_->IsPortParamSet(kUnit, kPort, ValueCase::kPortType));
-}
-
-TEST_F(DpdkChassisManagerTest, SetPortParam) {
-  ChassisConfigBuilder builder;
-  ASSERT_OK(PushBaseChassisConfig(&builder));
-
-  const uint32 portId = kPortId + 1;
-  const int port = kPort + 1;
-  const uint32 sdkPortId = portId + kSdkPortOffset;
-
-  auto sport = builder.AddPort(portId, port, ADMIN_STATE_ENABLED);
-  RegisterSdkPortId(sport);
-  EXPECT_CALL(*sde_mock_, AddPort(_, _, _, _, _));
-
-  PortConfigParams* config_params = sport->mutable_config_params();
-  config_params->set_admin_state(ADMIN_STATE_ENABLED);
-  config_params->set_port_type(PORT_TYPE_VHOST);
-  config_params->set_device_type(DEVICE_TYPE_VIRTIO_NET);
-  config_params->set_queues(2);
-  config_params->set_socket_path("/socket/to/me");
-  config_params->set_host_name("Fawlty");
-
-  ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kPortType)
-                  .ok());
-  ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kDeviceType)
-                  .ok());
-  ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kQueueCount)
-                  .ok());
-  ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kSockPath)
-                  .ok());
-  ASSERT_TRUE(m_chassis_manager_
-                  ->SetPortParam(kUnit, kPort, *sport, ValueCase::kHostName)
-                  .ok());
-}
-
-TEST_F(DpdkChassisManagerTest, SetHotplugParam) {
-  SingletonPort sport;
-  PortConfigParams* config_params = sport.mutable_config_params();
-  HotplugConfig* hotplug_config = config_params->mutable_hotplug_config();
-  hotplug_config->set_qemu_socket_ip("/qemu/socket_ip");
-  ASSERT_TRUE(
-      m_chassis_manager_->SetHotplugParam(kUnit, kPort, sport, PARAM_SOCK_IP)
-          .ok());
-}
 
 TEST_F(DpdkChassisManagerTest, SetPortLoopback) {
   ChassisConfigBuilder builder;

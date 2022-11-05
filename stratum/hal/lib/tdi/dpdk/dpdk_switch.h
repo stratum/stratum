@@ -25,25 +25,7 @@ class DpdkChassisManager;
 class TdiSdeInterface;
 class TdiNode;
 
-class PortParamInterface {
- public:
-  virtual ~PortParamInterface() {}
-
-  virtual bool IsPortParamSet(
-      uint64 node_id, uint32 port_id,
-      SetRequest::Request::Port::ValueCase value_case) = 0;
-
-  virtual ::util::Status SetPortParam(
-      uint64 node_id, uint32 port_id, const SingletonPort& singleton_port,
-      SetRequest::Request::Port::ValueCase value_case) = 0;
-
-  virtual ::util::Status SetHotplugParam(uint64 node_id, uint32 port_id,
-                                         const SingletonPort& singleton_port,
-                                         DpdkHotplugParam param_type) = 0;
-};
-
-class DpdkSwitch : virtual public SwitchInterface,
-                   virtual public PortParamInterface {
+class DpdkSwitch : public SwitchInterface {
  public:
   ~DpdkSwitch() override;
 
@@ -96,21 +78,6 @@ class DpdkSwitch : virtual public SwitchInterface,
                           std::vector<::util::Status>* details) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
-
-  // Determines whether the specified port configuration parameter
-  // has already been set.
-  bool IsPortParamSet(uint64 node_id, uint32 port_id,
-                      SetRequest::Request::Port::ValueCase value_case) override;
-
-  // Sets the value of a port configuration parameter.
-  ::util::Status SetPortParam(
-      uint64 node_id, uint32 port_id, const SingletonPort& singleton_port,
-      SetRequest::Request::Port::ValueCase value_case) override;
-
-  // Sets the value of a hotplug configuration parameter.
-  ::util::Status SetHotplugParam(uint64 node_id, uint32 port_id,
-                                 const SingletonPort& singleton_port,
-                                 DpdkHotplugParam param_type) override;
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<DpdkSwitch> CreateInstance(
