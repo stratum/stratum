@@ -99,8 +99,8 @@ class DpdkChassisManager {
     // empty if loopback mode configuration failed
     absl::optional<LoopbackState> loopback_mode;
 
-    DpdkPortType port_type;
-    DpdkDeviceType device_type;
+    PortConfigParams::DpdkPortType port_type;
+    PortConfigParams::DpdkDeviceType device_type;
     TdiSdeInterface::PacketDirection packet_dir;
     int32 queues;
     std::string socket_path;
@@ -112,8 +112,8 @@ class DpdkChassisManager {
 
     PortConfig()
         : admin_state(ADMIN_STATE_UNKNOWN),
-          port_type(PORT_TYPE_NONE),
-          device_type(DEVICE_TYPE_NONE),
+          port_type(PortConfigParams::PORT_TYPE_NONE),
+          device_type(PortConfigParams::DEVICE_TYPE_NONE),
           packet_dir(TdiSdeInterface::DIRECTION_HOST),
           queues(0) {}
   };
@@ -147,8 +147,9 @@ class DpdkChassisManager {
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Returns the port in id and port out id required to configure pipeline
-  ::util::Status GetTargetDatapathId(uint64 node_id, uint32 port_id,
-                                     TargetDatapathId* target_dp_id)
+  ::util::Status GetTargetDatapathId(
+      uint64 node_id, uint32 port_id,
+      TdiSdeInterface::TargetDatapathId* target_dp_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Cleans up the internal state. Resets all the internal port maps and

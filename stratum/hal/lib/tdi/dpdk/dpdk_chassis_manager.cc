@@ -138,7 +138,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   if (config->control_port.length()) {
     LOG(INFO) << "Autocreating Control TAP port";
     // Packet direction for control port will always be host type
-    sde_params.port_type = PORT_TYPE_TAP;
+    sde_params.port_type = PortConfigParams::PORT_TYPE_TAP;
     sde_params.packet_dir = kDefaultPortPacketDirection;
 
     /* sdk_ctl_port_id is uniquely derived from the kSdkPortControlBase range
@@ -641,7 +641,8 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 }
 
 ::util::Status DpdkChassisManager::GetTargetDatapathId(
-    uint64 node_id, uint32 port_id, TargetDatapathId* target_dp_id) {
+    uint64 node_id, uint32 port_id,
+    TdiSdeInterface::TargetDatapathId* target_dp_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }

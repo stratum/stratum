@@ -244,23 +244,6 @@ enum FecMode {
   FEC_MODE_AUTO = 3;
 }
 
-// DPDK port types.
-enum DpdkPortType {
-  PORT_TYPE_NONE = 0;
-  PORT_TYPE_VHOST = 1;
-  PORT_TYPE_TAP = 2;
-  PORT_TYPE_LINK = 3;
-  PORT_TYPE_SOURCE = 4;
-  PORT_TYPE_SINK = 5;
-}
-
-// DPDK device types.
-enum DpdkDeviceType {
-  DEVICE_TYPE_NONE = 0;
-  DEVICE_TYPE_VIRTIO_NET = 1;
-  DEVICE_TYPE_VIRTIO_BLK = 2;
-}
-
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
   // Per-port hash config. Most of the hash configuration is given per node.
@@ -277,6 +260,21 @@ message PortConfigParams {
     PORT_MODULATION_UNKNOWN = 0;
     PORT_MODULATION_NRZ = 1;
     PORT_MODULATION_PAM4 = 2;
+  }
+  // DPDK port types.
+  enum DpdkPortType {
+    PORT_TYPE_NONE = 0;
+    PORT_TYPE_VHOST = 1;
+    PORT_TYPE_TAP = 2;
+    PORT_TYPE_LINK = 3;
+    PORT_TYPE_SOURCE = 4;
+    PORT_TYPE_SINK = 5;
+  }
+  // DPDK device types.
+  enum DpdkDeviceType {
+    DEVICE_TYPE_NONE = 0;
+    DEVICE_TYPE_VIRTIO_NET = 1;
+    DEVICE_TYPE_VIRTIO_BLK = 2;
   }
   // The configured admin state for this port.
   AdminState admin_state = 1;
@@ -1259,54 +1257,9 @@ message LoopbackStatus {
   LoopbackState state = 1;  // required
 }
 
-// Wrapper around DPDK port type.
-message DpdkPortTypeValue {
-  DpdkPortType type = 1;  // required
-}
-
-// Wrapper around DPDK device type
-message DpdkDeviceTypeValue {
-  DpdkDeviceType device_type = 1;  // required
-}
-
-// Specifies host to be used by the device
-message HostName {
-  string host_name = 1;  // required
-}
-
-// Specifies number of queues needed for backend
-message QueuesConfigured {
-  int32 queue_count = 1;  // required
-}
-
-// Specifies socket path to be used for port creation
-message SocketPathConfigured {
-  string sock_path = 1;  // required
-}
-
-// Specifies pipeline name to be used for port association
-message PipelineNameConfigured {
-  string pipeline_name = 1;  // required
-}
-
-// Specifies mempool name to be used for port association
-message MempoolNameConfigured {
-  string mempool_name = 1;  // required
-}
-
-// Specifies if Auto creation of back-end control TAP ports is needed.
-message ControlPortConfigured {
-  string control_port = 1;  // required
-}
-
-// Specifies PCI BDF value to be used for the LINK port.
-message PciBdfConfigured {
-  string pci_bdf = 1;  // required
-}
-
 // Specifies the MTU value to be used
-message MtuValue {
-  int32 mtu_value = 1;  // required
+message Mtu {
+  int32 mtu = 1;  // required
 }
 
 // Wrapper around admin state of a HW component.
@@ -1412,12 +1365,6 @@ message FecStatus {
 // the interface.
 message SdnPortId {
   uint32 port_id = 1;
-}
-
-// Wrapper around Target datapath index required for pipeline configuration
-message TargetDatapathId {
-  uint32 tdi_portin_id = 1;   // Port ID for Pipeline in Input Direction
-  uint32 tdi_portout_id = 2;  // Port ID for Pipeline in Output Direction
 }
 
 // DataRequest is a message used internally to request data about a component
