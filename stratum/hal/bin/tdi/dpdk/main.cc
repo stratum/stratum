@@ -5,10 +5,9 @@
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-// #include "stratum/hal/lib/common/hal.h" // FIXME
+#include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
 #include "stratum/hal/lib/tdi/dpdk/dpdk_chassis_manager.h"
-#include "stratum/hal/lib/tdi/dpdk/dpdk_hal.h"
 #include "stratum/hal/lib/tdi/dpdk/dpdk_switch.h"
 #include "stratum/hal/lib/tdi/tdi_action_profile_manager.h"
 #include "stratum/hal/lib/tdi/tdi_counter_manager.h"
@@ -71,13 +70,14 @@ namespace dpdk {
   auto chassis_manager = DpdkChassisManager::CreateInstance(mode, sde_wrapper);
   auto dpdk_switch = DpdkSwitch::CreateInstance(
       chassis_manager.get(), sde_wrapper, device_id_to_dpdk_node);
-  auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
 
   // Create the 'Hal' class instance.
-  auto* hal = DpdkHal::CreateSingleton(
-      // NOTE: Shouldn't first parameter be 'mode'?
-      stratum::hal::OPERATION_MODE_STANDALONE, dpdk_switch.get(),
-      auth_policy_checker.get());
+  auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
+  auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
+                                   dpdk_switch.get(), auth_policy_checker.get(),
+                                   credentials_manager.get());
   RET_CHECK(hal) << "Failed to create the Stratum Hal instance.";
 
   // Sanity check, setup and start serving RPCs.
