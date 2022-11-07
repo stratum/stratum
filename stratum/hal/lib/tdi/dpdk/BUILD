@@ -163,55 +163,6 @@ stratum_cc_library(
     ],
 )
 
-# Not yet integrated or tested.
-stratum_cc_library(
-    name = "dpdk_hal",
-    srcs = ["dpdk_hal.cc"],
-    hdrs = ["dpdk_hal.h"],
-    defines = target_defines,
-    deps = [
-        "//stratum/glue:logging",
-        "//stratum/hal/lib/common:common_cc_proto",
-        "//stratum/hal/lib/common:config_monitoring_service",
-        "//stratum/hal/lib/common:error_buffer",
-        "//stratum/hal/lib/common:p4_service",
-        "//stratum/hal/lib/common:switch_interface",
-        "//stratum/lib:constants",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
-        "//stratum/lib/security:auth_policy_checker",
-        "@com_github_google_glog//:glog",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/synchronization",
-    ],
-)
-
-stratum_cc_test(
-    name = "dpdk_hal_test",
-    srcs = [
-        "dpdk_hal_test.cc",
-    ],
-    defines = target_defines,
-    deps = [
-        ":dpdk_hal",
-        ":test_main",
-        "//stratum/glue/net_util:ports",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/hal/lib/common:switch_mock",
-        "//stratum/lib:utils",
-        "//stratum/lib/security:auth_policy_checker_mock",
-        "//stratum/lib/test_utils:matchers",
-        "//stratum/public/lib:error",
-        "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest",
-    ],
-)
-
 stratum_cc_test(
     name = "dpdk_switch_test",
     srcs = [
