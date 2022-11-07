@@ -17,10 +17,6 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-target_defines = [
-    "DPDK_TARGET",  # shouldn't be necessary
-]
-
 stratum_cc_library(
     name = "dpdk_chassis_manager",
     srcs = ["dpdk_chassis_manager.cc"],
@@ -28,7 +24,6 @@ stratum_cc_library(
     copts = [
         "-Wno-thread-safety-analysis",  # FIXME
     ],
-    defines = target_defines,
     deps = [
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -61,7 +56,7 @@ stratum_cc_library(
         "//stratum/hal/lib/tdi:tdi_sde_utils.h",
     ],
     deps = [
-        "@local_dpdk_bin//:dpdk_sde",
+        "@local_tdi_bin//:tdi_sde",
     ],
 )
 
@@ -79,7 +74,7 @@ stratum_cc_library(
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
-        "@local_dpdk_bin//:dpdk_sde",
+        "@local_tdi_bin//:tdi_sde",
     ],
 )
 
@@ -90,7 +85,6 @@ stratum_cc_library(
     copts = [
         "-Wno-thread-safety-analysis",  # FIXME
     ],
-    defines = target_defines,
     deps = [
         ":dpdk_chassis_manager",
         "//stratum/glue:integral_types",
@@ -114,7 +108,6 @@ stratum_cc_library(
 stratum_cc_test(
     name = "dpdk_chassis_manager_test",
     srcs = ["dpdk_chassis_manager_test.cc"],
-    defines = target_defines,
     deps = [
         ":dpdk_chassis_manager",
         ":test_main",
@@ -143,7 +136,6 @@ stratum_cc_library(
     testonly = 1,
     hdrs = ["dpdk_chassis_manager_mock.h"],
     arches = HOST_ARCHES,
-    defines = target_defines,
     deps = [
         ":dpdk_chassis_manager",
         "@com_google_googletest//:gtest",
@@ -154,7 +146,6 @@ stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
-    defines = target_defines,
     deps = [
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
@@ -168,7 +159,6 @@ stratum_cc_test(
     srcs = [
         "dpdk_switch_test.cc",
     ],
-    defines = target_defines,
     deps = [
         ":dpdk_chassis_manager_mock",
         ":dpdk_switch",

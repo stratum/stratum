@@ -95,8 +95,8 @@ pkg_tar(
     deps = [
         ":stratum_configs",
         ":stratum_shareable_files",
-        "@local_dpdk_bin//:dpdk_library_files",
-        "@local_dpdk_bin//:dpdk_shareable_files",
+        "@local_tdi_bin//:tdi_library_files",
+        "@local_tdi_bin//:tdi_shareable_files",
     ],
 )
 

@@ -19,29 +19,18 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-config_setting(
-    name = "dpdk_target",
-    define_values = {
-        "target": "dpdk",
+SDE_DEFINES = select(
+    {
+        "@local_tdi_bin//:tdi_backend_dpdk": ["DPDK_TARGET"],
+        "@local_tdi_bin//:tdi_backend_tofino": ["TOFINO_TARGET"],
     },
-)
-
-config_setting(
-    name = "tofino_target",
-    define_values = {
-        "target": "tofino",
+    no_match_error = "Unsupported SDE backend",
+) + select(
+    {
+        "@local_tdi_bin//:sde_version_0.1.0": ["SDE_0_1_0"],
     },
+    no_match_error = "Unsupported SDE version",
 )
-
-target_defines = select({
-    ":dpdk_target": ["DPDK_TARGET"],
-    ":tofino_target": ["TOFINO_TARGET"],
-})
-
-target_sdk = select({
-    ":dpdk_target": ["@local_dpdk_bin//:dpdk_sde"],
-    ":tofino_target": ["@local_tofino_bin//:tofino_sde"],
-})
 
 stratum_cc_library(
     name = "tdi_sde_interface",
@@ -83,17 +72,17 @@ stratum_cc_library(
         "tdi_sde_table_key.cc",
         "tdi_sde_wrapper.cc",
     ],
-    defines = target_defines,
+    hdrs = ["tdi_sde_wrapper.h"],
+    defines = SDE_DEFINES,
     deps = [
-        ":tdi_sde_interface",
-        ":tdi_sde_headers",
+        ":macros",
         ":tdi_constants",
         ":tdi_id_mapper",
-        ":macros",
+        ":tdi_sde_headers",
+        ":tdi_sde_interface",
         ":utils",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
-        "@com_google_absl//absl/cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/status",
@@ -104,8 +93,10 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
-    ] + target_sdk,
+        "@local_tdi_bin//:tdi_sde",
+    ],
 )
 
 stratum_cc_library(
@@ -277,7 +268,7 @@ stratum_cc_library(
         "tdi_id_mapper.h",
         "tdi_sde_utils.h",
     ],
-    defines = target_defines,
+    defines = SDE_DEFINES,
     deps = [
         ":macros",
         ":tdi_cc_proto",
@@ -305,10 +296,11 @@ stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     # macros.h depends on bf_types
-    defines = target_defines,
+    defines = SDE_DEFINES,
     deps = [
         "//stratum/lib:macros",
-    ] + target_sdk,
+        "@local_tdi_bin//:tdi_sde",
+    ],
 )
 
 stratum_cc_library(
