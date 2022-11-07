@@ -12,7 +12,7 @@ def _impl(repository_ctx):
         print("SDE_INSTALL_TAR is not defined")
         repository_ctx.file("BUILD", "")
         return
-    local_install_path = "dpdk-bin"
+    local_install_path = "tdi-bin"
     if "SDE_INSTALL_TAR" in repository_ctx.os.environ:
         p4_sde_install_tar_path = repository_ctx.os.environ["SDE_INSTALL_TAR"]
         repository_ctx.extract(p4_sde_install_tar_path, local_install_path)
@@ -20,9 +20,21 @@ def _impl(repository_ctx):
         print("SDE_INSTALL is deprecated, please use SDE_INSTALL_TAR")
         p4_sde_install_path = repository_ctx.os.environ["SDE_INSTALL"]
         repository_ctx.symlink(p4_sde_install_path, local_install_path)
-    repository_ctx.symlink(Label("@//bazel:external/dpdk.BUILD"), "BUILD")
+    ver = repository_ctx.read(local_install_path + "/share/VERSION").strip("\n")
+    print("Detected SDE version: " + ver + ".")
+    is_dpdk = repository_ctx.path(local_install_path + "/lib/x86_64-linux-gnu/librte_acl.so").exists
+    if is_dpdk:
+      print("TDI SDE for DPDK.")
+      repository_ctx.template(
+          "BUILD",
+          Label("@//bazel:external/dpdk.BUILD"),
+          {"{SDE_VERSION}": ver},
+          executable = False,
+      )
+    else:
+      fail("Tofino TDI is not yet supported.")
 
-dpdk_configure = repository_rule(
+tdi_configure = repository_rule(
     implementation = _impl,
     local = True,
     environ = ["SDE_INSTALL", "SDE_INSTALL_TAR"],
