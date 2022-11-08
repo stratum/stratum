@@ -9,7 +9,7 @@ nodes {
   index: 1
 }
 singleton_ports {
-  id: 500
+  id: 0  # Fixed. Do not edit.
   name: "TAP0"
   slot: 1
   port: 5
@@ -23,7 +23,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 501
+  id: 1  # Fixed. Do not edit.
   name: "TAP1"
   slot: 1
   port: 5
@@ -36,7 +36,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 502
+  id: 2  # Fixed. Do not edit.
   name: "TAP2"
   slot: 1
   port: 5
@@ -49,7 +49,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 503
+  id: 3  # Fixed. Do not edit.
   name: "TAP3"
   slot: 1
   port: 5
