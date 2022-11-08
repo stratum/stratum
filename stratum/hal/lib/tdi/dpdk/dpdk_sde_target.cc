@@ -120,9 +120,6 @@ namespace {
 ::util::Status TdiSdeWrapper::AddPort(int device, int port, uint64 speed_bps,
                                       const PortConfigParams& config,
                                       FecMode fec_mode) {
-  static int port_in;
-  static int port_out;
-
   auto port_attrs = absl::make_unique<port_attributes_t>();
   strncpy(port_attrs->port_name, config.port_name.c_str(),
           sizeof(port_attrs->port_name));
@@ -135,8 +132,8 @@ namespace {
   ASSIGN_OR_RETURN(port_attrs->port_type,
                    get_target_port_type(config.port_type));
   port_attrs->port_dir = PM_PORT_DIR_DEFAULT;
-  port_attrs->port_in_id = port_in++;
-  port_attrs->port_out_id = port_out++;
+  port_attrs->port_in_id = port;
+  port_attrs->port_out_id = port;
   port_attrs->net_port = config.packet_dir;
 
   LOG(INFO) << "Parameters for backend are:"
@@ -171,15 +168,9 @@ namespace {
               << "mtu = " << port_attrs->tap.mtu;
   }
 
-  auto bf_status =
-      bf_pal_port_add(static_cast<bf_dev_id_t>(device),
-                      static_cast<bf_dev_port_t>(port), port_attrs.get());
-  if (bf_status != BF_SUCCESS) {
-    // Revert the port_in and port_out values
-    port_in--;
-    port_out--;
-    RETURN_IF_TDI_ERROR(bf_status);
-  }
+  RETURN_IF_TDI_ERROR(bf_pal_port_add(static_cast<bf_dev_id_t>(device),
+                                      static_cast<bf_dev_port_t>(port),
+                                      port_attrs.get()));
 
   return ::util::OkStatus();
 }
