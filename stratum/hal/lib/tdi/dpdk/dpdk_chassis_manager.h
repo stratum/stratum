@@ -122,7 +122,8 @@ class DpdkChassisManager {
   static constexpr int kMaxPortStatusEventDepth = 1024;
   static constexpr int kMaxXcvrEventDepth = 1024;
   static constexpr int kSdkPortControlBase = 256;
-  static constexpr int kDefaultMtu = 1500;
+  // DPDK uses a L2 MTU including the Ethernet header.
+  static constexpr int kDefaultMtu = 1514;
   static constexpr int kMaxMtu = 65535;
   static constexpr TdiSdeInterface::PacketDirection
       kDefaultPortPacketDirection = TdiSdeInterface::DIRECTION_HOST;
