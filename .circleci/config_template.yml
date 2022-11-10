@@ -41,6 +41,12 @@ fetch_sde_tars: &fetch_sde_tars
     from: 's3://stratum-artifacts'
     to: /tmp/bf-sde-tars
 
+fetch_dpdk_sde_tars: &fetch_dpdk_sde_tars
+  aws-s3/sync:
+    arguments: '--exclude "*" --include "p4-sde-*-install.tgz"'
+    from: 's3://stratum-artifacts'
+    to: /tmp/p4-sde-tars
+
 # Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
   run:
@@ -199,19 +205,26 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: tools/mininet/Dockerfile
-      - DOCKER_IMG: opennetworking/mn-stratum
+      - DOCKER_IMG: opennetworking/mn-stratum:dpdk
       - CC: clang
       - CXX: clang++
+      - SDE_INSTALL_TAR: /tmp/p4-sde-tars/p4-sde-0.1.0-install.tgz
     steps:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
+      - *fetch_sde_tars
       - *set_bazelrc
       - run:
           name: Build stratum-bmv2
           command: |
             bazel build --config=release //stratum/hal/bin/bmv2:stratum_bmv2_deb
             cp bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2_deb.deb $DOCKER_SCOPE
+      - run:
+          name: Build stratum-dpdk
+          command: |
+            bazel build --config=release //stratum/hal/bin/tdi/dpdk:stratum_dpdk_deb
+            cp bazel-bin/stratum/hal/bin/tdi/dpdk/stratum_dpdk_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - run:
@@ -432,9 +445,9 @@ workflows:
           filters:
             branches:
               only: main
-      - publish-docker-mininet:
-          requires:
-            - publish-docker-build
+      - publish-docker-mininet
+          # requires:
+          #   - publish-docker-build
       - publish-docker-p4c-fpm:
           requires:
             - publish-docker-build
