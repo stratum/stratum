@@ -23,8 +23,8 @@ stratum_cc_binary(
     deps = [
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
-        "//stratum/hal/lib/phal",
         "//stratum/hal/lib/common:hal",
+        "//stratum/hal/lib/phal",
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/tdi:tdi_action_profile_manager",
         "//stratum/hal/lib/tdi:tdi_counter_manager",
