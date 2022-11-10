@@ -15,6 +15,10 @@ Files: stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf
 Copyright: 2019 Barefoot Networks, Inc.
 License: Apache-2.0
 
+Files: stratum/hal/bin/tdi/dpdk/dpdk_skip_p4.conf
+Copyright: 2022 Intel Corporation
+License: Apache-2.0
+
 Files: stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8
 Copyright: 2018 Google LLC
 Copyright: 2018-present Open Networking Foundation
