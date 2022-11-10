@@ -64,6 +64,9 @@ COPY --from=builder /output /
 
 ADD ./stratum_bmv2_deb.deb /
 RUN install_packages /stratum_bmv2_deb.deb
+ADD ./stratum_dpdk_deb.deb /
+# Some files are present in both packages. Force overwrite them here.
+RUN install_packages -o Dpkg::Options::="--force-overwrite" -f /stratum_dpdk_deb.deb
 RUN ldconfig
 
 WORKDIR /root

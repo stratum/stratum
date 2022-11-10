@@ -12,8 +12,7 @@ singleton_ports {
   id: 0  # Fixed. Do not edit.
   name: "TAP0"
   slot: 1
-  port: 5
-  channel: 1
+  port: 1
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -26,8 +25,7 @@ singleton_ports {
   id: 1  # Fixed. Do not edit.
   name: "TAP1"
   slot: 1
-  port: 5
-  channel: 2
+  port: 2
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -39,8 +37,7 @@ singleton_ports {
   id: 2  # Fixed. Do not edit.
   name: "TAP2"
   slot: 1
-  port: 5
-  channel: 3
+  port: 3
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -52,8 +49,7 @@ singleton_ports {
   id: 3  # Fixed. Do not edit.
   name: "TAP3"
   slot: 1
-  port: 5
-  channel: 4
+  port: 4
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
