@@ -297,7 +297,6 @@ TEST_F(DpdkChassisManagerTest, RemovePort) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-
 TEST_F(DpdkChassisManagerTest, SetPortLoopback) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
@@ -314,7 +313,7 @@ TEST_F(DpdkChassisManagerTest, SetPortLoopback) {
 }
 
 TEST_F(DpdkChassisManagerTest, ReplayPorts) {
-  const std::string kVendorConfigText = R"PROTO(
+  const std::string kVendorConfigText = R"pb(
     tofino_config {
       node_id_to_deflect_on_drop_configs {
         key: 7654321
@@ -344,7 +343,7 @@ TEST_F(DpdkChassisManagerTest, ReplayPorts) {
         }
       }
     }
-  )PROTO";
+  )pb";
 
   VendorConfig vendor_config;
   ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
