@@ -233,12 +233,15 @@ namespace {
   // TODO TDI comments : Need to uncomment this after SDE exposes
   // registerSyncSet
 #if 0
-  if (supported_ops.count(static_cast<tdi_operations_type_e>(tdi_rt_operations_type_e::REGISTER_SYNC))) {
+  if (supported_ops.count(static_cast<tdi_operations_type_e>(
+          tdi_rt_operations_type_e::REGISTER_SYNC))) {
     auto sync_notifier = std::make_shared<absl::Notification>();
     std::weak_ptr<absl::Notification> weak_ref(sync_notifier);
     std::unique_ptr<::tdi::TableOperations> table_op;
-    RETURN_IF_TDI_ERROR(table->operationsAllocate(
-          static_cast<tdi_operations_type_e>(tdi_rt_operations_type_e::REGISTER_SYNC), &table_op));
+    RETURN_IF_TDI_ERROR(
+        table->operationsAllocate(static_cast<tdi_operations_type_e>(
+                                      tdi_rt_operations_type_e::REGISTER_SYNC),
+                                  &table_op));
     RETURN_IF_TDI_ERROR(table_op->registerSyncSet(
         *real_session->tdi_session_, dev_tgt,
         [table_id, weak_ref](const ::tdi::Target& dev_tgt, void* cookie) {
