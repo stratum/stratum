@@ -213,7 +213,7 @@ jobs:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *fetch_sde_tars
+      - *fetch_dpdk_sde_tars
       - *set_bazelrc
       - run:
           name: Build stratum-bmv2
