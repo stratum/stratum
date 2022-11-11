@@ -53,7 +53,7 @@ DEFAULT_NODE_ID = 1
 DEFAULT_CPU_PORT = 255
 DEFAULT_PIPECONF = "org.onosproject.pipelines.basic"
 STRATUM_BMV2 = 'stratum_bmv2'
-STRATUM_DPDK = 'stratum_dpdk' # replace with start-stratum.sh ?
+STRATUM_DPDK = 'start-stratum.sh'
 STRATUM_INIT_PIPELINE = '/root/dummy.json'
 MAX_CONTROLLERS_PER_NODE = 10
 BMV2_LOG_LINES = 5
@@ -443,11 +443,8 @@ nodes {{
             self.logfd.write(cmd_string + "\n\n" + "-" * 80 + "\n\n")
             self.logfd.flush()
 
-            # TODO: setup hugepages
-
             self.dpdkpopen = self.popen(cmd_string, stdout=self.logfd, stderr=self.logfd)
-            print("⚡️ %s @ %d" % (STRATUM_DPDK, self.grpcPort))
-
+            print("⚡️ %s @ %d" % ("stratum_dpdk", self.grpcPort))
 
             # Enable the DPDK TAP interfaces.
             time.sleep(1)
