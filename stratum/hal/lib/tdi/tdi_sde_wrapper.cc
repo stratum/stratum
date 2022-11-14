@@ -29,10 +29,6 @@
 
 DEFINE_string(tdi_sde_config_dir, "/var/run/stratum/tdi_config",
               "The dir used by the SDE to load the device configuration.");
-DEFINE_bool(incompatible_enable_tdi_legacy_bytestring_responses, true,
-            "Enables the legacy padded byte string format in P4Runtime "
-            "responses for Stratum-tdi. The strings are left unchanged from "
-            "the underlying SDE.");
 
 namespace stratum {
 namespace hal {

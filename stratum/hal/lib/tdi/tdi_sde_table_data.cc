@@ -24,8 +24,6 @@
 #include "stratum/hal/lib/tdi/utils.h"
 #include "stratum/lib/macros.h"
 
-DECLARE_bool(incompatible_enable_tdi_legacy_bytestring_responses);
-
 namespace stratum {
 namespace hal {
 namespace tdi {
@@ -68,9 +66,7 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table_data_->getValue(
       id, value->size(),
       reinterpret_cast<uint8*>(gtl::string_as_array(value))));
-  if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
-    *value = ByteStringToP4RuntimeByteString(*value);
-  }
+  *value = ByteStringToP4RuntimeByteString(*value);
   return ::util::OkStatus();
 }
 

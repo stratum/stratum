@@ -23,8 +23,6 @@
 #include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/hal/lib/tdi/utils.h"
 
-DECLARE_bool(incompatible_enable_tdi_legacy_bytestring_responses);
-
 namespace stratum {
 namespace hal {
 namespace tdi {
@@ -156,10 +154,7 @@ using namespace stratum::hal::tdi::helpers;
 
   RETURN_IF_TDI_ERROR(
       table_key_->getValue(static_cast<tdi_id_t>(id), &exactKey));
-
-  if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
-    *value = ByteStringToP4RuntimeByteString(*value);
-  }
+  *value = ByteStringToP4RuntimeByteString(*value);
 
   return ::util::OkStatus();
 }
@@ -190,10 +185,8 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(
       table_key_->getValue(static_cast<tdi_id_t>(id), &ternaryKey));
 
-  if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
-    *value = ByteStringToP4RuntimeByteString(*value);
-    *mask = ByteStringToP4RuntimeByteString(*mask);
-  }
+  *value = ByteStringToP4RuntimeByteString(*value);
+  *mask = ByteStringToP4RuntimeByteString(*mask);
 
   return ::util::OkStatus();
 }
@@ -219,9 +212,7 @@ using namespace stratum::hal::tdi::helpers;
 
   RETURN_IF_TDI_ERROR(table_key_->getValue(static_cast<tdi_id_t>(id), &lpmKey));
 
-  if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
-    *prefix = ByteStringToP4RuntimeByteString(*prefix);
-  }
+  *prefix = ByteStringToP4RuntimeByteString(*prefix);
 
   return ::util::OkStatus();
 }
@@ -250,10 +241,9 @@ using namespace stratum::hal::tdi::helpers;
 
   RETURN_IF_TDI_ERROR(
       table_key_->getValue(static_cast<tdi_id_t>(id), &rangeKey));
-  if (!FLAGS_incompatible_enable_tdi_legacy_bytestring_responses) {
-    *low = ByteStringToP4RuntimeByteString(*low);
-    *high = ByteStringToP4RuntimeByteString(*high);
-  }
+  *low = ByteStringToP4RuntimeByteString(*low);
+  *high = ByteStringToP4RuntimeByteString(*high);
+
   return ::util::OkStatus();
 }
 
