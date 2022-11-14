@@ -52,7 +52,7 @@ namespace {
   for (const auto& field_id : data_field_ids) {
     std::string field_name;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id);
-    RETURN_IF_NULL(dataFieldInfo);
+    RET_CHECK(dataFieldInfo);
     field_name = dataFieldInfo->nameGet();
     if (absl::EndsWith(field_name, ".f1")) {
       return field_id;
@@ -88,7 +88,7 @@ namespace {
   size_t data_field_size_bits;
   const ::tdi::DataFieldInfo* dataFieldInfo;
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   data_field_size_bits = dataFieldInfo->sizeGet();
   // The SDE expects a string with the full width.
   std::string value = P4RuntimeByteStringToPaddedByteString(
@@ -182,7 +182,7 @@ namespace {
     tdi_field_data_type_e data_type;
     const ::tdi::DataFieldInfo* dataFieldInfo;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(f1_field_id);
-    RETURN_IF_NULL(dataFieldInfo);
+    RET_CHECK(dataFieldInfo);
     data_type = dataFieldInfo->dataTypeGet();
     switch (data_type) {
       case TDI_FIELD_DATA_TYPE_BYTE_STREAM: {

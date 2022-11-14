@@ -48,7 +48,7 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
   tdi_id_t action_id;
   dataFieldInfo = table->tableInfoGet()->dataFieldGet("$normal");
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   action_id = dataFieldInfo->idGet();
   RETURN_IF_TDI_ERROR(table->dataAllocate(action_id, &table_data));
 
@@ -111,7 +111,7 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(table->keyAllocate(&table_key));
   tdi_id_t action_id;
   dataFieldInfo = table->tableInfoGet()->dataFieldGet("$normal");
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   action_id = dataFieldInfo->idGet();
   RETURN_IF_TDI_ERROR(table->dataAllocate(action_id, &table_data));
   // Key: $sid
@@ -153,7 +153,7 @@ using namespace stratum::hal::tdi::helpers;
   RETURN_IF_TDI_ERROR(tdi_info_->tableFromNameGet(kMirrorConfigTable, &table));
   tdi_id_t action_id;
   dataFieldInfo = table->tableInfoGet()->dataFieldGet("$normal");
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   action_id = dataFieldInfo->idGet();
   std::vector<std::unique_ptr<::tdi::TableKey>> keys;
   std::vector<std::unique_ptr<::tdi::TableData>> datums;

@@ -157,7 +157,7 @@ using namespace stratum::hal::tdi::helpers;
       std::string field_name;
       const ::tdi::DataFieldInfo* dataFieldInfo;
       dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id);
-      RETURN_IF_NULL(dataFieldInfo);
+      RET_CHECK(dataFieldInfo);
       field_name = dataFieldInfo->nameGet();
       if (field_name == kMeterCirKbps) {  // kbits
         uint64 cir;

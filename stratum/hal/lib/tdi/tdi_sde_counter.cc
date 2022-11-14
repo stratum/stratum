@@ -55,7 +55,7 @@ using namespace stratum::hal::tdi::helpers;
   if (byte_count.has_value()) {
     tdi_id_t field_id;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(kCounterBytes);
-    RETURN_IF_NULL(dataFieldInfo);
+    RET_CHECK(dataFieldInfo);
     field_id = dataFieldInfo->idGet();
     RETURN_IF_TDI_ERROR(table_data->setValue(field_id, byte_count.value()));
   }
@@ -63,7 +63,7 @@ using namespace stratum::hal::tdi::helpers;
   if (packet_count.has_value()) {
     tdi_id_t field_id;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(kCounterPackets);
-    RETURN_IF_NULL(dataFieldInfo);
+    RET_CHECK(dataFieldInfo);
     field_id = dataFieldInfo->idGet();
     RETURN_IF_TDI_ERROR(table_data->setValue(field_id, packet_count.value()));
   }
