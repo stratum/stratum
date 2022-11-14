@@ -268,7 +268,6 @@ stratum_cc_library(
         "tdi_id_mapper.h",
         "tdi_sde_utils.h",
     ],
-    defines = SDE_DEFINES,
     deps = [
         ":macros",
         ":tdi_cc_proto",
@@ -296,7 +295,6 @@ stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     # macros.h depends on bf_types
-    defines = SDE_DEFINES,
     deps = [
         "//stratum/lib:macros",
         "@local_tdi_bin//:tdi_sde",
