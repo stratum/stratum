@@ -39,7 +39,7 @@ using namespace stratum::hal::tdi::helpers;
 
   action_id = table_data_->actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(id, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_size_bits = dataFieldInfo->sizeGet();
 
   std::string p = P4RuntimeByteStringToPaddedByteString(
@@ -58,7 +58,7 @@ using namespace stratum::hal::tdi::helpers;
 
   tdi_id_t action_id = table_data_->actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(id, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_size_bits = dataFieldInfo->sizeGet();
 
   value->clear();
@@ -106,8 +106,8 @@ using namespace stratum::hal::tdi::helpers;
       table->tableInfoGet()->dataFieldGet(kCounterPackets, action_id);
   dataFieldInfoBytes =
       table->tableInfoGet()->dataFieldGet(kCounterBytes, action_id);
-  RETURN_IF_NULL(dataFieldInfoPackets);
-  RETURN_IF_NULL(dataFieldInfoBytes);
+  RET_CHECK(dataFieldInfoPackets);
+  RET_CHECK(dataFieldInfoBytes);
   field_id_packets = dataFieldInfoPackets->idGet();
   field_id_bytes = dataFieldInfoBytes->idGet();
 
@@ -132,8 +132,8 @@ using namespace stratum::hal::tdi::helpers;
       table->tableInfoGet()->dataFieldGet(kCounterPackets, action_id);
   dataFieldInfoBytes =
       table->tableInfoGet()->dataFieldGet(kCounterBytes, action_id);
-  RETURN_IF_NULL(dataFieldInfoPackets);
-  RETURN_IF_NULL(dataFieldInfoBytes);
+  RET_CHECK(dataFieldInfoPackets);
+  RET_CHECK(dataFieldInfoBytes);
   field_id_packets = dataFieldInfoPackets->idGet();
   field_id_bytes = dataFieldInfoBytes->idGet();
 

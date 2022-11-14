@@ -36,7 +36,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   std::string v = P4RuntimeByteStringToPaddedByteString(
@@ -61,7 +61,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   std::string v = P4RuntimeByteStringToPaddedByteString(
@@ -89,7 +89,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   std::string p = P4RuntimeByteStringToPaddedByteString(
@@ -111,7 +111,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   std::string l = P4RuntimeByteStringToPaddedByteString(
@@ -141,7 +141,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   value->clear();
@@ -167,7 +167,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   value->clear();
@@ -199,7 +199,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   prefix->clear();
@@ -225,7 +225,7 @@ using namespace stratum::hal::tdi::helpers;
   auto tableInfo = table->tableInfoGet();
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       tableInfo->keyFieldGet(static_cast<tdi_id_t>(id));
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_size_bits = keyFieldInfo->sizeGet();
   low->clear();

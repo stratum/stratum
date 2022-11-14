@@ -69,7 +69,7 @@ template <typename T>
   const ::tdi::DataFieldInfo* dataFieldInfo;
   tdi_id_t action_id = table_data.actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
 
   auto field_id = dataFieldInfo->idGet();
   auto data_type = dataFieldInfo->dataTypeGet();
@@ -99,7 +99,7 @@ template <typename T>
   auto action_id = table_data->actionIdGet();
   auto dataFieldInfo =
       table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
 
   auto field_id = dataFieldInfo->idGet();
   auto data_type = dataFieldInfo->dataTypeGet();

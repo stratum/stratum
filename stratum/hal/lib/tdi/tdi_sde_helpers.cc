@@ -48,7 +48,7 @@ namespace helpers {
     tdi_match_type_core_e key_type;
     size_t field_size;
 
-    RETURN_IF_NULL(keyFieldInfo);
+    RET_CHECK(keyFieldInfo);
     field_name = keyFieldInfo->nameGet().c_str();
     key_type =
         static_cast<tdi_match_type_core_e>((*keyFieldInfo).matchTypeGet());
@@ -138,7 +138,7 @@ namespace helpers {
     bool is_active;
     const ::tdi::DataFieldInfo* dataFieldInfo;
     dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_id, action_id);
-    RETURN_IF_NULL(dataFieldInfo);
+    RET_CHECK(dataFieldInfo);
 
     field_name = dataFieldInfo->nameGet().c_str();
     data_type = dataFieldInfo->dataTypeGet();
@@ -203,7 +203,7 @@ namespace helpers {
   ::tdi::KeyFieldValueExact<uint64_t> key_field_value(*field_value);
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       table->tableInfoGet()->keyFieldGet(field_name);
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
@@ -228,7 +228,7 @@ namespace helpers {
   RETURN_IF_TDI_ERROR(table_key->tableGet(&table));
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       table->tableInfoGet()->keyFieldGet(field_name);
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
@@ -248,7 +248,7 @@ namespace helpers {
   RETURN_IF_TDI_ERROR(table_key->tableGet(&table));
   const ::tdi::KeyFieldInfo* keyFieldInfo =
       table->tableInfoGet()->keyFieldGet(field_name);
-  RETURN_IF_NULL(keyFieldInfo);
+  RET_CHECK(keyFieldInfo);
 
   field_id = keyFieldInfo->idGet();
   data_type = keyFieldInfo->dataTypeGet();
@@ -271,7 +271,7 @@ namespace helpers {
 
   tdi_id_t action_id = table_data.actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
@@ -293,7 +293,7 @@ namespace helpers {
 
   tdi_id_t action_id = table_data.actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
@@ -315,7 +315,7 @@ namespace helpers {
 
   tdi_id_t action_id = table_data.actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
@@ -337,7 +337,7 @@ namespace helpers {
 
   tdi_id_t action_id = table_data->actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
@@ -359,7 +359,7 @@ namespace helpers {
 
   tdi_id_t action_id = table_data->actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
@@ -381,7 +381,7 @@ namespace helpers {
 
   tdi_id_t action_id = table_data->actionIdGet();
   dataFieldInfo = table->tableInfoGet()->dataFieldGet(field_name, action_id);
-  RETURN_IF_NULL(dataFieldInfo);
+  RET_CHECK(dataFieldInfo);
   field_id = dataFieldInfo->idGet();
   data_type = dataFieldInfo->dataTypeGet();
 
