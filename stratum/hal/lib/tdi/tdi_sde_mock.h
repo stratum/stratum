@@ -12,11 +12,6 @@
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/tdi/tdi_sde_interface.h"
 
-DEFINE_bool(incompatible_enable_tdi_legacy_bytestring_responses, true,
-            "Enables the legacy padded byte string format in P4Runtime "
-            "responses for Stratum-tdi. The strings are left unchanged from "
-            "the underlying SDE.");
-
 namespace stratum {
 namespace hal {
 namespace tdi {
