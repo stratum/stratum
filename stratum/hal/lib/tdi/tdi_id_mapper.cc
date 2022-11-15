@@ -11,7 +11,14 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/tdi/macros.h"
 #include "stratum/hal/lib/tdi/tdi_constants.h"
-#include "stratum/hal/lib/tdi/tdi_sde_utils.h"
+
+#ifdef DPDK_TARGET
+#include "tdi_rt/tdi_rt_defs.h"
+#elif TOFINO_TARGET
+#include "tdi_tofino/tdi_tofino_defs.h"
+#else
+#error "Unknown backend"
+#endif
 
 namespace stratum {
 namespace hal {
@@ -192,13 +199,25 @@ std::unique_ptr<TdiIdMapper> TdiIdMapper::CreateInstance() {
   for (const auto* table : tdi_tables) {
     auto table_id = table->tableInfoGet()->idGet();
     auto table_name = table->tableInfoGet()->nameGet();
-    auto table_type = GetSdeTableType(*table);
-
-    if (table_type == TDI_SDE_TABLE_TYPE_ACTION_PROFILE) {
+#ifdef DPDK_TARGET
+    auto table_type =
+        static_cast<tdi_rt_table_type_e>(table->tableInfoGet()->tableTypeGet());
+    bool isActionProfileTable = table_type == TDI_RT_TABLE_TYPE_ACTION_PROFILE;
+    bool isActionSelectorTable = table_type == TDI_RT_TABLE_TYPE_SELECTOR;
+#elif TOFINO_TARGET
+    auto table_type = static_cast<tdi_tofino_table_type_e>(
+        table->tableInfoGet()->tableTypeGet());
+    bool isActionProfileTable =
+        table_type == TDI_TOFINO_TABLE_TYPE_ACTION_PROFILE;
+    bool isActionSelectorTable = table_type == TDI_TOFINO_TABLE_TYPE_SELECTOR;
+#else
+#error "Unsupported backend"
+#endif
+    if (isActionProfileTable) {
       RET_CHECK(
           gtl::InsertIfNotPresent(&act_prof_tdi_ids, table_name, table_id))
           << "Action profile with name " << table_name << " already exists.";
-    } else if (table_type == TDI_SDE_TABLE_TYPE_SELECTOR) {
+    } else if (isActionSelectorTable) {
       RET_CHECK(
           gtl::InsertIfNotPresent(&selector_tdi_ids, table_name, table_id))
           << "Action selector with name " << table_name << " already exists.";

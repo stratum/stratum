@@ -23,11 +23,11 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/tdi/macros.h"
-#include "stratum/hal/lib/tdi/tdi_sde_common.h"
-#include "stratum/hal/lib/tdi/tdi_sde_helpers.h"
 #include "stratum/hal/lib/tdi/tdi_sde_wrapper.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/utils.h"
+
+DECLARE_string(tdi_sde_config_dir);
 
 extern "C" {
 #include "bf_pal/bf_pal_port_intf.h"
@@ -39,8 +39,6 @@ extern "C" {
 namespace stratum {
 namespace hal {
 namespace tdi {
-
-using namespace stratum::hal::tdi::helpers;
 
 ::util::StatusOr<PortState> TdiSdeWrapper::GetPortState(int device, int port) {
   return PORT_STATE_UP;

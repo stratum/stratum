@@ -60,16 +60,6 @@ stratum_cc_library(
 stratum_cc_library(
     name = "tdi_sde_wrapper",
     srcs = [
-        "tdi_sde_action_profile.cc",
-        "tdi_sde_clone_session.cc",
-        "tdi_sde_counter.cc",
-        "tdi_sde_helpers.cc",
-        "tdi_sde_meter.cc",
-        "tdi_sde_multicast.cc",
-        "tdi_sde_register.cc",
-        "tdi_sde_table_data.cc",
-        "tdi_sde_table_entry.cc",
-        "tdi_sde_table_key.cc",
         "tdi_sde_wrapper.cc",
     ],
     hdrs = ["tdi_sde_wrapper.h"],
@@ -103,10 +93,9 @@ stratum_cc_library(
     name = "tdi_sde_headers",
     hdrs = [
         "tdi_id_mapper.h",
-        "tdi_sde_common.h",
-        "tdi_sde_helpers.h",
         "tdi_sde_wrapper.h",
     ],
+    defines = SDE_DEFINES,
     deps = [
         ":macros",
         ":tdi_sde_interface",
@@ -266,8 +255,8 @@ stratum_cc_library(
     srcs = ["tdi_id_mapper.cc"],
     hdrs = [
         "tdi_id_mapper.h",
-        "tdi_sde_utils.h",
     ],
+    defines = SDE_DEFINES,
     deps = [
         ":macros",
         ":tdi_cc_proto",
