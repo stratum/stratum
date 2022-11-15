@@ -34,7 +34,6 @@ stratum_cc_binary(
         "//stratum/hal/lib/tdi:tdi_table_manager",
         "//stratum/hal/lib/tdi/dpdk:dpdk_chassis_manager",
         "//stratum/hal/lib/tdi/dpdk:dpdk_sde_target",
-        "//stratum/hal/lib/tdi/dpdk:dpdk_sde_utils",
         "//stratum/hal/lib/tdi/dpdk:dpdk_switch",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",

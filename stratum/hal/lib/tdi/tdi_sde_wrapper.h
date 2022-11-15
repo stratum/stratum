@@ -26,6 +26,11 @@
 #include "pkt_mgr/pkt_mgr_intf.h"
 #endif
 
+extern "C" {
+// Get the /sys fs file name of the ...
+int switch_pci_sysfs_str_get(char* name, size_t name_size);
+}
+
 namespace stratum {
 namespace hal {
 namespace tdi {
@@ -401,6 +406,8 @@ class TdiSdeWrapper : public TdiSdeInterface {
  private:
   // Timeout for Write() operations on port status events.
   static constexpr absl::Duration kWriteTimeout = absl::InfiniteDuration();
+  static constexpr int MAX_PORT_HDL_STRING_LEN = 100;
+  static constexpr int _PI_UPDATE_MAX_NAME_SIZE = 100;
 
   // Private constructor, use CreateSingleton and GetSingleton().
   TdiSdeWrapper();

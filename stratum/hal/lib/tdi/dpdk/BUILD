@@ -50,17 +50,6 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "dpdk_sde_utils",
-    srcs = ["dpdk_sde_utils.cc"],
-    hdrs = [
-        "//stratum/hal/lib/tdi:tdi_sde_utils.h",
-    ],
-    deps = [
-        "@local_tdi_bin//:tdi_sde",
-    ],
-)
-
-stratum_cc_library(
     name = "dpdk_sde_target",
     srcs = ["dpdk_sde_target.cc"],
     deps = [
