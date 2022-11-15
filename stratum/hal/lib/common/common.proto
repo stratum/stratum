@@ -71,18 +71,18 @@ enum TrafficClass {
 // Config-related parameters for the entire chassis.
 message ChassisConfigParams {
   message LacpConfig {
-    // Router MAC portion of LACP system ID. A mac address stored on 6
-    // least-siginificant bytes.
+    // Router MAC portion of LACP system ID. A mac address stored in 6
+    // least-significant bytes.
     uint64 lacp_router_mac = 1;
     // System priority portion of LACP system ID.
     uint32 lacp_system_priority = 2;
   }
   message NtpConfig {
-    // TODO(unknown): See if there is anything in YANG models which can ne
+    // TODO(unknown): See if there is anything in YANG models which can be
     // used here.
   }
   message PowerConfig {
-    // TODO(unknown): See if there is anything in YANG models which can ne
+    // TODO(unknown): See if there is anything in YANG models which can be
     // used here.
   }
   message FanConfig {
@@ -112,7 +112,7 @@ message ChassisConfigParams {
     string name = 1;
     // Dataplane mode (typically set to LOAD_BALANCE).
     Mode mode = 2;
-    // v4 and v6 IP addresses and prefixelens.
+    // v4 and v6 IP addresses and prefixlens.
     string ipv4_address = 3;
     uint32 ipv4_prefixlen = 4;
     string ipv6_address = 5;
@@ -246,7 +246,7 @@ enum FecMode {
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
   // Per port hash config. Most of the hash configuration is given per node.
-  // These are the only hash config we need to provide per node, for ports that
+  // This is the only hash config we need to provide per node, for ports that
   // are part of a trunk/lag or ECMP group.
   message HashConfig {
     // TODO(unknown): Instead of hash_select, we need a better way. this is
@@ -325,10 +325,10 @@ message Node {
 // class. For example:
 // SaiSwitch: An implementation of SwitchInterface based on SAI. This class
 //            translates SingletonPort to SAI port of type sai_object_id_t
-//            and viceversa.
+//            and vice versa.
 // BcmSwitch: An implementation of SwitchInterface that uses BCM SDK directly.
 //            This class translates SingletonPort to a tuple of
-//            (int unit, bcm_port_t port) and viceversa.
+//            (int unit, bcm_port_t port) and vice versa.
 message SingletonPort {
   // The unique ID of the singleton port. Used for operations which need a
   // single unique integer ID for each port (e.g. flow programming). Note that
@@ -1228,7 +1228,7 @@ message AdminStatus {
 
 // Wrapper around mac address (for example LACP router MAC).
 message MacAddress {
-  // A mac address stored on 6 least-siginificant bytes.
+  // A mac address stored in 6 least-significant bytes.
   uint64 mac_address = 1;  // required
 }
 
