@@ -272,6 +272,18 @@ def stratum_deps():
             ],
         )
 
+    # TODO(max): change name to `com_github_p4lang_p4_dpdk_target`
+    # if "com_github_p4lang_p4_dpdk_target" not in native.existing_rules():
+    if "local_tdi_bin" not in native.existing_rules():
+        http_archive(
+            # name = "com_github_p4lang_p4_dpdk_target",
+            name = "local_tdi_bin",
+            sha256 = "c58e7a3f13b12515bbcf0f784486125b9c605e54ca93fd920b262d18dbdac0cb",
+            # TODO(max): host file somewhere more appropriate
+            urls = ["https://github.com/stratum/sonic-base-image/releases/download/2022-08-12/p4-sde-0.1.0-install.tgz"],
+            build_file = "@//bazel:external/dpdk.BUILD",
+        )
+
     # -----------------------------------------------------------------------------
     #        P4 testing modules
     # -----------------------------------------------------------------------------

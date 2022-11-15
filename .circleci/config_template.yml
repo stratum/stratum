@@ -41,12 +41,6 @@ fetch_sde_tars: &fetch_sde_tars
     from: 's3://stratum-artifacts'
     to: /tmp/bf-sde-tars
 
-fetch_dpdk_sde_tars: &fetch_dpdk_sde_tars
-  aws-s3/sync:
-    arguments: '--exclude "*" --include "p4-sde-*-install.tgz"'
-    from: 's3://stratum-artifacts'
-    to: /tmp/p4-sde-tars
-
 # Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
   run:
@@ -208,12 +202,10 @@ jobs:
       - DOCKER_IMG: opennetworking/mn-stratum:dpdk
       - CC: clang
       - CXX: clang++
-      - SDE_INSTALL_TAR: /tmp/p4-sde-tars/p4-sde-0.1.0-install.tgz
     steps:
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
-      - *fetch_dpdk_sde_tars
       - *set_bazelrc
       - run:
           name: Build stratum-bmv2
