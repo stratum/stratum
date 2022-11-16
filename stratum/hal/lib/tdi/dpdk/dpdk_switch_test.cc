@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -109,7 +110,7 @@ class DpdkSwitchTest : public ::testing::Test {
   std::unique_ptr<TdiSdeMock> sde_mock_;
   std::unique_ptr<DpdkChassisManagerMock> chassis_manager_mock_;
   std::unique_ptr<TdiNodeMock> node_mock_;
-  std::map<int, TdiNode*> unit_to_tdi_node_mock_;
+  absl::flat_hash_map<int, TdiNode*> unit_to_tdi_node_mock_;
   std::unique_ptr<DpdkSwitch> switch_;
 };
 
