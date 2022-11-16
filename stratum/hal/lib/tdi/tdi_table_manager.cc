@@ -15,9 +15,9 @@
 #include "gflags/gflags.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/hal/lib/tdi/tdi_constants.h"
-#include "stratum/hal/lib/tdi/utils.h"
 #include "stratum/lib/utils.h"
 
 DEFINE_uint32(
@@ -30,6 +30,12 @@ DEFINE_bool(incompatible_enable_register_reset_annotations, false,
 namespace stratum {
 namespace hal {
 namespace tdi {
+
+using barefoot::ConvertPriorityFromBfrtToP4rt;
+using barefoot::ConvertPriorityFromP4rtToBfrt;
+using barefoot::IsDontCareMatch;
+using barefoot::RangeDefaultHigh;
+using barefoot::RangeDefaultLow;
 
 TdiTableManager::TdiTableManager(OperationMode mode,
                                  TdiSdeInterface* tdi_sde_interface, int device)
@@ -170,7 +176,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
            << "Zero priority for ternary/range/optional match.";
   } else if (needs_priority) {
     ASSIGN_OR_RETURN(uint64 priority,
-                     ConvertPriorityFromP4rtToTdi(table_entry.priority()));
+                     ConvertPriorityFromP4rtToBfrt(table_entry.priority()));
     RETURN_IF_ERROR(table_key->SetPriority(priority));
   }
 
@@ -373,7 +379,7 @@ std::unique_ptr<TdiTableManager> TdiTableManager::CreateInstance(
     uint32 bf_priority;
     RETURN_IF_ERROR(table_key->GetPriority(&bf_priority));
     ASSIGN_OR_RETURN(uint64 p4rt_priority,
-                     ConvertPriorityFromTdiToP4rt(bf_priority));
+                     ConvertPriorityFromBfrtToP4rt(bf_priority));
     result.set_priority(p4rt_priority);
   }
 

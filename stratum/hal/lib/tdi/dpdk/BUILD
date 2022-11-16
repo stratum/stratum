@@ -85,7 +85,6 @@ stratum_cc_library(
         "//stratum/hal/lib/tdi:tdi_node",
         "//stratum/hal/lib/tdi:tdi_pipeline_utils",
         "//stratum/hal/lib/tdi:tdi_sde_interface",
-        "//stratum/hal/lib/tdi:utils",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
