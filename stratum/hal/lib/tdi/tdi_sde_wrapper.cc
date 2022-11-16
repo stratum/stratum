@@ -22,11 +22,11 @@
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/hal/lib/tdi/macros.h"
 #include "stratum/hal/lib/tdi/tdi_constants.h"
-#include "stratum/hal/lib/tdi/utils.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/utils.h"
 
@@ -49,6 +49,8 @@ constexpr absl::Duration TdiSdeWrapper::kWriteTimeout;
 constexpr int32 TdiSdeWrapper::kBfDefaultMtu;
 constexpr int TdiSdeWrapper::MAX_PORT_HDL_STRING_LEN;
 constexpr int TdiSdeWrapper::_PI_UPDATE_MAX_NAME_SIZE;
+
+using barefoot::NumBitsToNumBytes;
 
 // Helper functions for dealing with the TDI API.
 namespace {
