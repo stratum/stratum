@@ -96,6 +96,9 @@ stratum_cc_library(
 stratum_cc_test(
     name = "dpdk_chassis_manager_test",
     srcs = ["dpdk_chassis_manager_test.cc"],
+    copts = [
+        "-Wno-thread-safety-analysis",  # FIXME
+    ],
     deps = [
         ":dpdk_chassis_manager",
         ":test_main",
