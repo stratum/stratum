@@ -36,6 +36,18 @@ TdiPacketioManager::TdiPacketioManager(TdiSdeInterface* tdi_sde_interface,
       tdi_sde_interface_(ABSL_DIE_IF_NULL(tdi_sde_interface)),
       device_(device) {}
 
+TdiPacketioManager::TdiPacketioManager()
+    : initialized_(false),
+      rx_writer_(nullptr),
+      packetin_header_(),
+      packetout_header_(),
+      packetin_header_size_(),
+      packetout_header_size_(),
+      packet_receive_channel_(nullptr),
+      sde_rx_thread_id_(),
+      tdi_sde_interface_(nullptr),
+      device_(-1) {}
+
 TdiPacketioManager::~TdiPacketioManager() {}
 
 std::unique_ptr<TdiPacketioManager> TdiPacketioManager::CreateInstance(
@@ -50,28 +62,25 @@ std::unique_ptr<TdiPacketioManager> TdiPacketioManager::CreateInstance(
 
 ::util::Status TdiPacketioManager::PushForwardingPipelineConfig(
     const TdiDeviceConfig& config) {
+  absl::WriterMutexLock l(&data_lock_);
   RET_CHECK(config.programs_size() == 1) << "Only one program is supported.";
   const auto& program = config.programs(0);
-  {
-    absl::WriterMutexLock l(&data_lock_);
-    RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
-    // PushForwardingPipelineConfig resets the bf_pkt driver.
-    RETURN_IF_ERROR(tdi_sde_interface_->StartPacketIo(device_));
-    if (!initialized_) {
-      packet_receive_channel_ = Channel<std::string>::Create(128);
-      if (sde_rx_thread_id_ == 0) {
-        int ret = pthread_create(&sde_rx_thread_id_, nullptr,
-                                 &TdiPacketioManager::SdeRxThreadFunc, this);
-        if (ret != 0) {
-          return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for "
-                                             "SDE wrapper for device with ID "
-                                          << device_ << ". Err: " << ret << ".";
-        }
+  RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
+  // PushForwardingPipelineConfig resets the bf_pkt driver.
+  RETURN_IF_ERROR(tdi_sde_interface_->StartPacketIo(device_));
+  if (!initialized_) {
+    packet_receive_channel_ = Channel<std::string>::Create(128);
+    if (sde_rx_thread_id_ == 0) {
+      int ret = pthread_create(&sde_rx_thread_id_, nullptr,
+                               &TdiPacketioManager::SdeRxThreadFunc, this);
+      if (ret != 0) {
+        return MAKE_ERROR(ERR_INTERNAL) << "Failed to spawn RX thread for SDE "
+                                        << "wrapper for device with ID "
+                                        << device_ << ". Err: " << ret << ".";
       }
-      RETURN_IF_ERROR(tdi_sde_interface_->RegisterPacketReceiveWriter(
-          device_,
-          ChannelWriter<std::string>::Create(packet_receive_channel_)));
     }
+    RETURN_IF_ERROR(tdi_sde_interface_->RegisterPacketReceiveWriter(
+        device_, ChannelWriter<std::string>::Create(packet_receive_channel_)));
     initialized_ = true;
   }
 
@@ -259,9 +268,8 @@ class BitBuffer {
   for (const auto& p : packetin_header_) {
     auto metadata = packet->add_metadata();
     metadata->set_metadata_id(p.first);
-    metadata->set_value(bit_buf.PopField(p.second));
-    *metadata->mutable_value() =
-        ByteStringToP4RuntimeByteString(metadata->value());
+    metadata->set_value(
+        ByteStringToP4RuntimeByteString(bit_buf.PopField(p.second)));
     VLOG(1) << "Encoded PacketIn metadata field with id " << p.first
             << " bitwidth " << p.second << " value 0x"
             << StringToHex(metadata->value());
@@ -287,7 +295,6 @@ class BitBuffer {
   return ::util::OkStatus();
 }
 
-// TODO(max): drop Sde in name?
 ::util::Status TdiPacketioManager::HandleSdePacketRx() {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {
@@ -307,9 +314,11 @@ class BitBuffer {
     }
 
     ::p4::v1::PacketIn packet_in;
-    // FIXME: returning here in case of parsing errors might not be the best
-    // solution.
-    RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
+    ::util::Status status = ParsePacketIn(buffer, &packet_in);
+    if (!status.ok()) {
+      LOG(ERROR) << "ParsePacketIn failed: " << status;
+      continue;
+    }
     {
       absl::WriterMutexLock l(&rx_writer_lock_);
       rx_writer_->Write(packet_in);
