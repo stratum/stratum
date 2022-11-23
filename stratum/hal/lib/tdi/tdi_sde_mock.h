@@ -86,18 +86,8 @@ class TdiSdeMock : public TdiSdeInterface {
   MOCK_METHOD2(DeletePort, ::util::Status(int device, int port));
   MOCK_METHOD2(EnablePort, ::util::Status(int device, int port));
   MOCK_METHOD2(DisablePort, ::util::Status(int device, int port));
-  MOCK_METHOD5(SetPortShapingRate,
-               ::util::Status(int device, int port, bool is_in_pps,
-                              uint32 burst_size, uint64 rate_per_second));
-  MOCK_METHOD3(EnablePortShaping,
-               ::util::Status(int device, int port, TriState enable));
-  MOCK_METHOD3(SetPortAutonegPolicy,
-               ::util::Status(int device, int port, TriState autoneg));
   MOCK_METHOD3(SetPortMtu, ::util::Status(int device, int port, int32 mtu));
   MOCK_METHOD2(IsValidPort, bool(int device, int port));
-  MOCK_METHOD3(SetPortLoopbackMode,
-               ::util::Status(int device, int port,
-                              LoopbackState loopback_mode));
   MOCK_METHOD2(GetPortIdFromPortKey,
                ::util::StatusOr<uint32>(int device, const PortKey& port_key));
   MOCK_METHOD1(GetPcieCpuPort, ::util::StatusOr<int>(int device));

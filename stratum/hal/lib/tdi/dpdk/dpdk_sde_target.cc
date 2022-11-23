@@ -187,26 +187,6 @@ namespace {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "DisablePort not implemented";
 }
 
-::util::Status TdiSdeWrapper::SetPortShapingRate(int device, int port,
-                                                 bool is_in_pps,
-                                                 uint32 burst_size,
-                                                 uint64 rate_per_second) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "SetPortShapingRate not supported";
-}
-
-::util::Status TdiSdeWrapper::EnablePortShaping(int device, int port,
-                                                TriState enable) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "EnablePortShaping not supported";
-}
-
-::util::Status TdiSdeWrapper::SetPortAutonegPolicy(int device, int port,
-                                                   TriState autoneg) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "SetPortAutonegPolicy not supported";
-}
-
 ::util::Status TdiSdeWrapper::SetPortMtu(int device, int port, int32 mtu) {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "SetPortMtu not implemented";
 }
@@ -218,12 +198,6 @@ bool TdiSdeWrapper::IsValidPort(int device, int port) {
   // that it is supposed to succeed, but BF_SUCCESS == 0, which when
   // converted to a Boolean is FALSE, so it is actually failure.
   return BF_SUCCESS;
-}
-
-::util::Status TdiSdeWrapper::SetPortLoopbackMode(int device, int port,
-                                                  LoopbackState loopback_mode) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "SetPortLoopbackMode not supported";
 }
 
 ::util::StatusOr<bool> TdiSdeWrapper::IsSoftwareModel(int device) {
