@@ -95,10 +95,6 @@ class DpdkChassisManager {
     AdminState admin_state;
     absl::optional<uint64> speed_bps;  // empty if port add failed
     absl::optional<int32> mtu;         // empty if MTU configuration failed
-    absl::optional<TriState> autoneg;  // empty if Autoneg configuration failed
-    absl::optional<FecMode> fec_mode;  // empty if port add failed
-    // empty if loopback mode configuration failed
-    absl::optional<LoopbackState> loopback_mode;
 
     PortConfigParams::DpdkPortType port_type;
     PortConfigParams::DpdkDeviceType device_type;
