@@ -38,9 +38,10 @@ class DpdkChassisManagerMock : public DpdkChassisManager {
   //  MOCK_METHOD3(GetFrontPanelPortInfo,
   //               ::util::Status(uint64 node_id, uint32 port_id,
   //                              FrontPanelPortInfo* fp_port_info));
-  MOCK_CONST_METHOD0(GetNodeIdToUnitMap,
+  MOCK_CONST_METHOD0(GetNodeIdToDeviceMap,
                      ::util::StatusOr<std::map<uint64, int>>());
-  MOCK_CONST_METHOD1(GetUnitFromNodeId, ::util::StatusOr<int>(uint64 node_id));
+  MOCK_CONST_METHOD1(GetDeviceFromNodeId,
+                     ::util::StatusOr<int>(uint64 node_id));
 };
 
 }  // namespace tdi

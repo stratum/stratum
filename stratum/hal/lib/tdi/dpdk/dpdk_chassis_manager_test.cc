@@ -29,13 +29,13 @@
 #undef IPU_ADD_NEW_PORT
 
 #if !defined(IPU_ADD_NEW_PORT)
-#define EXPECT_ADD_PORT_CALL(unit, port, speed, fec_mode)
-#define EXPECT_ENABLE_PORT_CALL(unit, port)
+#define EXPECT_ADD_PORT_CALL(device, port, speed, fec_mode)
+#define EXPECT_ENABLE_PORT_CALL(device, port)
 #else
-#define EXPECT_ADD_PORT_CALL(unit, port, speed, fec_mode) \
-  EXPECT_CALL(*sde_mock_, AddPort((unit), (port), (speed), _, (fec_mode)))
-#define EXPECT_ENABLE_PORT_CALL(unit, port) \
-  EXPECT_CALL(*sde_mock_, EnablePort(unit, port))
+#define EXPECT_ADD_PORT_CALL(device, port, speed, fec_mode) \
+  EXPECT_CALL(*sde_mock_, AddPort((device), (port), (speed), _, (fec_mode)))
+#define EXPECT_ENABLE_PORT_CALL(device, port) \
+  EXPECT_CALL(*sde_mock_, EnablePort(device, port))
 #endif
 
 namespace stratum {
@@ -62,8 +62,8 @@ using ::testing::WithArg;
 namespace {
 
 constexpr uint64 kNodeId = 7654321ULL;
-// For Tofino, unit is the 0-based index of the node in the ChassisConfig.
-constexpr int kUnit = 0;
+// For Tofino, device is the 0-based index of the node in the ChassisConfig.
+constexpr int kDevice = 0;
 constexpr int kSlot = 1;
 constexpr int kPort = 1;
 constexpr uint32 kPortId = 12345;
@@ -93,7 +93,7 @@ class ChassisConfigBuilder {
   explicit ChassisConfigBuilder(uint64 node_id = kNodeId) : node_id(node_id) {
     config_.set_description("Test config for DpdkChassisManager");
     auto* chassis = config_.mutable_chassis();
-    chassis->set_platform(PLT_P4_SOFT_SWITCH);
+    chassis->set_platform(PLT_P4_DPDK_SOFTWARE_SWITCH);
     chassis->set_name("tdi-dpdk");
 
     auto* node = config_.add_nodes();
@@ -174,12 +174,12 @@ class DpdkChassisManagerTest : public ::testing::Test {
   void RegisterSdkPortId(const SingletonPort* singleton_port) {
     RegisterSdkPortId(singleton_port->id(), singleton_port->slot(),
                       singleton_port->port(), singleton_port->channel(),
-                      kUnit);  // TODO(bocon): look up unit from node
+                      kDevice);  // TODO(bocon): look up device from node
   }
 
   ::util::Status CheckCleanInternalState() {
-    RET_CHECK(dpdk_chassis_manager_->unit_to_node_id_.empty());
-    RET_CHECK(dpdk_chassis_manager_->node_id_to_unit_.empty());
+    RET_CHECK(dpdk_chassis_manager_->device_to_node_id_.empty());
+    RET_CHECK(dpdk_chassis_manager_->node_id_to_device_.empty());
     RET_CHECK(dpdk_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
     RET_CHECK(
         dpdk_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
@@ -215,21 +215,20 @@ class DpdkChassisManagerTest : public ::testing::Test {
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     RegisterSdkPortId(builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED));
 
-    EXPECT_ADD_PORT_CALL(kUnit, kDefaultPortId, kDefaultSpeedBps,
+    EXPECT_ADD_PORT_CALL(kDevice, kDefaultPortId, kDefaultSpeedBps,
                          kDefaultFecMode);
-    EXPECT_ENABLE_PORT_CALL(kUnit, kDefaultPortId);
+    EXPECT_ENABLE_PORT_CALL(kDevice, kDefaultPortId);
 
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
 
-    auto unit = GetUnitFromNodeId(kNodeId);
-    RET_CHECK(unit.ok());
-    RET_CHECK(unit.ValueOrDie() == kUnit) << "Invalid unit number!";
+    auto device = GetDeviceFromNodeId(kNodeId);
+    RET_CHECK(device.ok());
+    RET_CHECK(device.ValueOrDie() == kDevice) << "Invalid device number!";
     RET_CHECK(Initialized()) << "Class is not initialized after push!";
     return ::util::OkStatus();
   }
 
   ::util::Status ReplayPortsConfig(uint64 node_id) {
-    absl::WriterMutexLock l(&chassis_lock);
     return dpdk_chassis_manager_->ReplayPortsConfig(node_id);
   }
 
@@ -238,9 +237,9 @@ class DpdkChassisManagerTest : public ::testing::Test {
     return PushBaseChassisConfig(&builder);
   }
 
-  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const {
+  ::util::StatusOr<int> GetDeviceFromNodeId(uint64 node_id) const {
     absl::ReaderMutexLock l(&chassis_lock);
-    return dpdk_chassis_manager_->GetUnitFromNodeId(node_id);
+    return dpdk_chassis_manager_->GetDeviceFromNodeId(node_id);
   }
 
   ::util::Status Shutdown() { return dpdk_chassis_manager_->Shutdown(); }
@@ -294,70 +293,56 @@ TEST_F(DpdkChassisManagerTest, RemovePort) {
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
   builder.RemoveLastPort();
-  EXPECT_CALL(*sde_mock_, DeletePort(kUnit, kDefaultPortId));
+  EXPECT_CALL(*sde_mock_, DeletePort(kDevice, kDefaultPortId));
   ASSERT_OK(PushChassisConfig(builder));
 
-  ASSERT_OK(ShutdownAndTestCleanState());
-}
-
-TEST_F(DpdkChassisManagerTest, SetPortLoopback) {
-  ChassisConfigBuilder builder;
-  ASSERT_OK(PushBaseChassisConfig(&builder));
-
-  SingletonPort* sport = builder.GetPort(kPortId);
-  sport->mutable_config_params()->set_loopback_mode(LOOPBACK_STATE_MAC);
-
-  EXPECT_CALL(*sde_mock_,
-              SetPortLoopbackMode(kUnit, kDefaultPortId, LOOPBACK_STATE_MAC));
-  EXPECT_CALL(*sde_mock_, EnablePort(kUnit, kDefaultPortId));
-
-  ASSERT_OK(PushChassisConfig(builder));
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
 TEST_F(DpdkChassisManagerTest, ReplayPorts) {
-  const std::string kVendorConfigText = R"pb(
-    tofino_config {
-      node_id_to_deflect_on_drop_configs {
-        key: 7654321
-        value {
-          drop_targets {
-            port: 12345
-            queue: 4
-          }
-          drop_targets {
-            sdk_port: 56789
-            queue: 1
-          }
-        }
-      }
-      node_id_to_port_shaping_config {
-        key: 7654321
-        value {
-          per_port_shaping_configs {
-            key: 12345
-            value {
-              byte_shaping {
-                max_rate_bps: 10000000000
-                max_burst_bytes: 16384
-              }
-            }
-          }
-        }
-      }
-    }
-  )pb";
+  // const std::string kVendorConfigText = R"pb(
+  //   tofino_config {
+  //     node_id_to_deflect_on_drop_configs {
+  //       key: 7654321
+  //       value {
+  //         drop_targets {
+  //           port: 12345
+  //           queue: 4
+  //         }
+  //         drop_targets {
+  //           sdk_port: 56789
+  //           queue: 1
+  //         }
+  //       }
+  //     }
+  //     node_id_to_port_shaping_config {
+  //       key: 7654321
+  //       value {
+  //         per_port_shaping_configs {
+  //           key: 12345
+  //           value {
+  //             byte_shaping {
+  //               max_rate_bps: 10000000000
+  //               max_burst_bytes: 16384
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // )pb";
 
-  VendorConfig vendor_config;
-  ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
+  // VendorConfig vendor_config;
+  // ASSERT_OK(ParseProtoFromString(kVendorConfigText, &vendor_config));
 
-  ChassisConfigBuilder builder;
-  builder.SetVendorConfig(vendor_config);
-  ASSERT_OK(PushBaseChassisConfig(&builder));
+  // ChassisConfigBuilder builder;
+  // builder.SetVendorConfig(vendor_config);
+  // ASSERT_OK(PushBaseChassisConfig(&builder));
+  ASSERT_OK(PushBaseChassisConfig());
 
   const uint32 sdkPortId = kDefaultPortId;
-  EXPECT_ADD_PORT_CALL(kUnit, sdkPortId, kDefaultSpeedBps, kDefaultFecMode);
-  EXPECT_ENABLE_PORT_CALL(kUnit, sdkPortId);
+  EXPECT_ADD_PORT_CALL(kDevice, sdkPortId, kDefaultSpeedBps, kDefaultFecMode);
+  EXPECT_ENABLE_PORT_CALL(kDevice, sdkPortId);
 
   EXPECT_OK(ReplayPortsConfig(kNodeId));
 
@@ -373,13 +358,13 @@ TEST_F(DpdkChassisManagerTest, DISABLED_UpdateInvalidPort) {
       builder.AddPort(portId, kPort + 1, ADMIN_STATE_ENABLED);
   RegisterSdkPortId(new_port);
   EXPECT_CALL(*sde_mock_,
-              AddPort(kUnit, sdkPortId, kDefaultSpeedBps, FEC_MODE_UNKNOWN))
+              AddPort(kDevice, sdkPortId, kDefaultSpeedBps, FEC_MODE_UNKNOWN))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*sde_mock_, EnablePort(kUnit, sdkPortId))
+  EXPECT_CALL(*sde_mock_, EnablePort(kDevice, sdkPortId))
       .WillOnce(Return(::util::OkStatus()));
   ASSERT_OK(PushChassisConfig(builder));
 
-  EXPECT_CALL(*sde_mock_, IsValidPort(kUnit, sdkPortId))
+  EXPECT_CALL(*sde_mock_, IsValidPort(kDevice, sdkPortId))
       .WillOnce(Return(false));
 
   // Update port, but port is invalid.
@@ -399,7 +384,7 @@ TEST_F(DpdkChassisManagerTest, VerifyChassisConfigSuccess) {
   const std::string kConfigText1 = R"(
       description: "Sample Generic Tofino config 2x25G ports."
       chassis {
-        platform: PLT_GENERIC_BAREFOOT_TOFINO
+        platform: PLT_P4_DPDK_SOFTWARE_SWITCH
         name: "standalone"
       }
       nodes {
@@ -433,9 +418,9 @@ TEST_F(DpdkChassisManagerTest, VerifyChassisConfigSuccess) {
   ChassisConfig config1;
   ASSERT_OK(ParseProtoFromString(kConfigText1, &config1));
 
-  EXPECT_CALL(*sde_mock_, GetPortIdFromPortKey(kUnit, PortKey(1, 1, 1)))
+  EXPECT_CALL(*sde_mock_, GetPortIdFromPortKey(kDevice, PortKey(1, 1, 1)))
       .WillRepeatedly(Return(1 + kSdkPortOffset));
-  EXPECT_CALL(*sde_mock_, GetPortIdFromPortKey(kUnit, PortKey(1, 1, 2)))
+  EXPECT_CALL(*sde_mock_, GetPortIdFromPortKey(kDevice, PortKey(1, 1, 2)))
       .WillRepeatedly(Return(2 + kSdkPortOffset));
 
   ASSERT_OK(VerifyChassisConfig(config1));

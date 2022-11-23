@@ -52,8 +52,8 @@ DpdkChassisManager::DpdkChassisManager(OperationMode mode,
     : mode_(mode),
       initialized_(false),
       gnmi_event_writer_(nullptr),
-      unit_to_node_id_(),
-      node_id_to_unit_(),
+      device_to_node_id_(),
+      node_id_to_device_(),
       node_id_to_port_id_to_port_state_(),
       node_id_to_port_id_to_time_last_changed_(),
       node_id_to_port_id_to_port_config_(),
@@ -66,8 +66,8 @@ DpdkChassisManager::DpdkChassisManager()
     : mode_(OPERATION_MODE_STANDALONE),
       initialized_(false),
       gnmi_event_writer_(nullptr),
-      unit_to_node_id_(),
-      node_id_to_unit_(),
+      device_to_node_id_(),
+      node_id_to_device_(),
       node_id_to_port_id_to_port_state_(),
       node_id_to_port_id_to_time_last_changed_(),
       node_id_to_port_id_to_port_config_(),
@@ -79,7 +79,7 @@ DpdkChassisManager::DpdkChassisManager()
 DpdkChassisManager::~DpdkChassisManager() = default;
 
 ::util::Status DpdkChassisManager::AddPortHelper(
-    uint64 node_id, int unit, uint32 sdk_port_id,
+    uint64 node_id, int device, uint32 sdk_port_id,
     const SingletonPort& singleton_port /* desired config */,
     /* out */ PortConfig* config /* new config */) {
   config->admin_state = ADMIN_STATE_UNKNOWN;
@@ -88,7 +88,6 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   std::string port_name = singleton_port.name();
 
   const auto& config_params = singleton_port.config_params();
-
   if (config_params.admin_state() == ADMIN_STATE_UNKNOWN) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid admin state for port " << port_id << " in node "
@@ -132,7 +131,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
             << " (SDK Port " << sdk_port_id << ").";
 
   RETURN_IF_ERROR(
-      sde_interface_->AddPort(unit, port_id, singleton_port.speed_bps(),
+      sde_interface_->AddPort(device, port_id, singleton_port.speed_bps(),
                               sde_params, config_params.fec_mode()));
 
   // Check if Control Port Creation is opted in CLI.
@@ -147,40 +146,32 @@ DpdkChassisManager::~DpdkChassisManager() = default;
      */
     uint32 sdk_ctl_port_id = kSdkPortControlBase + sdk_port_id;
     RETURN_IF_ERROR(sde_interface_->AddPort(
-        unit, sdk_ctl_port_id, singleton_port.speed_bps(), sde_params,
+        device, sdk_ctl_port_id, singleton_port.speed_bps(), sde_params,
         config_params.fec_mode()));
   }
 
   if (config->mtu) {
     LOG(INFO) << "MTU value - config->mtu= " << *config->mtu;
     // RETURN_IF_ERROR(
-    //     sde_interface_->SetPortMtu(unit, sdk_port_id, *config->mtu));
+    //     sde_interface_->SetPortMtu(device, sdk_port_id, *config->mtu));
   } else if (config_params.mtu() != 0) {
     LOG(INFO) << "MTU value - config_params.mtu= " << config_params.mtu();
     // RETURN_IF_ERROR(
-    //     sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
+    //     sde_interface_->SetPortMtu(device, sdk_port_id,
+    //     config_params.mtu()));
     config->mtu = config_params.mtu();
   }
 
-  if (config_params.autoneg() != TRI_STATE_UNKNOWN) {
-    RETURN_IF_ERROR(sde_interface_->SetPortAutonegPolicy(
-        unit, sdk_port_id, config_params.autoneg()));
-  }
-  config->autoneg = config_params.autoneg();
-
+  // Use RET_CHECK?
   if (config_params.loopback_mode() != LOOPBACK_STATE_UNKNOWN) {
-    LOG(INFO) << "Setting port " << port_id << " to loopback mode "
-              << config_params.loopback_mode() << " (SDK Port " << sdk_port_id
-              << ").";
-    RETURN_IF_ERROR(sde_interface_->SetPortLoopbackMode(
-        unit, sdk_port_id, config_params.loopback_mode()));
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Loopback mode is not supported.";
   }
   config->loopback_mode = config_params.loopback_mode();
 
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    // RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
+    // RETURN_IF_ERROR(sde_interface_->EnablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -188,7 +179,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
 }
 
 ::util::Status DpdkChassisManager::UpdatePortHelper(
-    uint64 node_id, int unit, uint32 sdk_port_id,
+    uint64 node_id, int device, uint32 sdk_port_id,
     const SingletonPort& singleton_port /* desired config */,
     const PortConfig& config_old /* current config */,
     /* out */ PortConfig* config /* new config */) {
@@ -196,7 +187,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   // SingletonPort ID is the SDN/Stratum port ID
   uint32 port_id = singleton_port.id();
 
-  if (!sde_interface_->IsValidPort(unit, sdk_port_id)) {
+  if (!sde_interface_->IsValidPort(device, sdk_port_id)) {
     config->admin_state = ADMIN_STATE_UNKNOWN;
     config->speed_bps.reset();
     config->fec_mode.reset();
@@ -207,11 +198,11 @@ DpdkChassisManager::~DpdkChassisManager() = default;
 
   const auto& config_params = singleton_port.config_params();
   if (singleton_port.speed_bps() != config_old.speed_bps) {
-    RETURN_IF_ERROR(sde_interface_->DisablePort(unit, sdk_port_id));
-    RETURN_IF_ERROR(sde_interface_->DeletePort(unit, sdk_port_id));
+    RETURN_IF_ERROR(sde_interface_->DisablePort(device, sdk_port_id));
+    RETURN_IF_ERROR(sde_interface_->DeletePort(device, sdk_port_id));
 
     ::util::Status status =
-        AddPortHelper(node_id, unit, sdk_port_id, singleton_port, config);
+        AddPortHelper(node_id, device, sdk_port_id, singleton_port, config);
     if (status.ok()) {
       return ::util::OkStatus();
     } else {
@@ -228,14 +219,13 @@ DpdkChassisManager::~DpdkChassisManager() = default;
         port_old.mutable_config_params()->set_mtu(*config_old.mtu);
       if (config_old.fec_mode)
         port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
-      AddPortHelper(node_id, unit, sdk_port_id, port_old, config);
+      AddPortHelper(node_id, device, sdk_port_id, port_old, config);
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Could not add port " << port_id << " with new speed "
              << singleton_port.speed_bps() << " to BF SDE"
              << " (SDK Port " << sdk_port_id << ").";
     }
   }
-
   // same for FEC mode
   if (config_params.fec_mode() != config_old.fec_mode) {
     return MAKE_ERROR(ERR_UNIMPLEMENTED)
@@ -263,26 +253,16 @@ DpdkChassisManager::~DpdkChassisManager() = default;
             << " (SDK Port " << sdk_port_id << ").";
     config->mtu.reset();
     // RETURN_IF_ERROR(
-    //     sde_interface_->SetPortMtu(unit, sdk_port_id, config_params.mtu()));
+    //     sde_interface_->SetPortMtu(device, sdk_port_id,
+    //     config_params.mtu()));
     config->mtu = config_params.mtu();
-    config_changed = true;
-  }
-
-  if (config_params.autoneg() != config_old.autoneg) {
-    VLOG(1) << "Autoneg policy for port " << port_id << " in node " << node_id
-            << " changed"
-            << " (SDK Port " << sdk_port_id << ").";
-    config->autoneg.reset();
-    RETURN_IF_ERROR(sde_interface_->SetPortAutonegPolicy(
-        unit, sdk_port_id, config_params.autoneg()));
-    config->autoneg = config_params.autoneg();
     config_changed = true;
   }
 
   if (config_params.loopback_mode() != config_old.loopback_mode) {
     config->loopback_mode.reset();
-    RETURN_IF_ERROR(sde_interface_->SetPortLoopbackMode(
-        unit, sdk_port_id, config_params.loopback_mode()));
+    // RETURN_IF_ERROR(sde_interface_->SetPortLoopbackMode(
+    //     device, sdk_port_id, config_params.loopback_mode()));
     config->loopback_mode = config_params.loopback_mode();
     config_changed = true;
   }
@@ -307,13 +287,13 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   if (need_disable) {
     LOG(INFO) << "Disabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    RETURN_IF_ERROR(sde_interface_->DisablePort(unit, sdk_port_id));
+    RETURN_IF_ERROR(sde_interface_->DisablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_DISABLED;
   }
   if (need_enable) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK Port " << sdk_port_id << ").";
-    // RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
+    // RETURN_IF_ERROR(sde_interface_->EnablePort(device, sdk_port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
 
@@ -323,8 +303,8 @@ DpdkChassisManager::~DpdkChassisManager() = default;
 ::util::Status DpdkChassisManager::PushChassisConfig(
     const ChassisConfig& config) {
   // new maps
-  std::map<int, uint64> unit_to_node_id;
-  std::map<uint64, int> node_id_to_unit;
+  std::map<int, uint64> device_to_node_id;
+  std::map<uint64, int> node_id_to_device;
   std::map<uint64, std::map<uint32, PortState>>
       node_id_to_port_id_to_port_state;
   std::map<uint64, std::map<uint32, absl::Time>>
@@ -337,11 +317,11 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   std::map<uint64, std::map<uint32, uint32>> node_id_to_sdk_port_id_to_port_id;
 
   {
-    int unit = 0;
+    int device = 0;
     for (const auto& node : config.nodes()) {
-      unit_to_node_id[unit] = node.id();
-      node_id_to_unit[node.id()] = unit;
-      unit++;
+      device_to_node_id[device] = node.id();
+      node_id_to_device[node.id()] = device;
+      device++;
     }
   }
 
@@ -349,8 +329,8 @@ DpdkChassisManager::~DpdkChassisManager() = default;
     uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
 
-    auto* unit = gtl::FindOrNull(node_id_to_unit, node_id);
-    if (unit == nullptr) {
+    auto* device = gtl::FindOrNull(node_id_to_device, node_id);
+    if (device == nullptr) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Invalid ChassisConfig, unknown node id " << node_id
              << " for port " << port_id << ".";
@@ -366,7 +346,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
 
     // Translate the logical SDN port to SDK port (BF device port ID)
     ASSIGN_OR_RETURN(uint32 sdk_port, sde_interface_->GetPortIdFromPortKey(
-                                          *unit, singleton_port_key));
+                                          *device, singleton_port_key));
     node_id_to_port_id_to_sdk_port_id[node_id][port_id] = sdk_port;
     LOG(INFO) << "SDK_PORT = " << sdk_port << " for port_id = " << port_id;
     node_id_to_sdk_port_id_to_port_id[node_id][sdk_port] = port_id;
@@ -378,7 +358,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
     uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
     // we checked that node_id was valid in the previous loop
-    auto unit = node_id_to_unit[node_id];
+    auto device = node_id_to_device[node_id];
 
     // TODO(antonin): we currently ignore slot
     // Stratum requires slot and port to be set. We use port and channel to
@@ -398,7 +378,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
       RETURN_IF_ERROR(
-          AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+          AddPortHelper(node_id, device, sdk_port_id, singleton_port, &config));
       continue;
     } else {
       // port already exists, config may have changed
@@ -406,11 +386,11 @@ DpdkChassisManager::~DpdkChassisManager() = default;
         // something is wrong with the port. We make sure the port is deleted
         // first (and ignore the error status if there is one), then add the
         // port again.
-        if (sde_interface_->IsValidPort(unit, sdk_port_id)) {
-          sde_interface_->DeletePort(unit, sdk_port_id);
+        if (sde_interface_->IsValidPort(device, sdk_port_id)) {
+          sde_interface_->DeletePort(device, sdk_port_id);
         }
-        RETURN_IF_ERROR(
-            AddPortHelper(node_id, unit, sdk_port_id, singleton_port, &config));
+        RETURN_IF_ERROR(AddPortHelper(node_id, device, sdk_port_id,
+                                      singleton_port, &config));
         continue;
       }
 
@@ -426,12 +406,14 @@ DpdkChassisManager::~DpdkChassisManager() = default;
 
       // if anything fails, config.admin_state will be set to
       // ADMIN_STATE_UNKNOWN (invalid)
-      RETURN_IF_ERROR(UpdatePortHelper(node_id, unit, sdk_port_id,
+      RETURN_IF_ERROR(UpdatePortHelper(node_id, device, sdk_port_id,
                                        singleton_port, *config_old, &config));
     }
   }
 
-  // Clean up from old config.
+  // Remove ports which are no longer present in the ChassisConfig.
+  // Currently this code path is never hit, as we do not allow changes to the
+  // port layout (adds or deletes) at runtime.
   for (const auto& node_ports_old : node_id_to_port_id_to_port_config_) {
     auto node_id = node_ports_old.first;
     for (const auto& port_old : node_ports_old.second) {
@@ -440,18 +422,18 @@ DpdkChassisManager::~DpdkChassisManager() = default;
           node_id_to_port_id_to_port_config[node_id].count(port_id) > 0) {
         continue;
       }
-      auto unit = node_id_to_unit_[node_id];
+      auto device = node_id_to_device_[node_id];
       uint32 sdk_port_id = node_id_to_port_id_to_sdk_port_id_[node_id][port_id];
       // remove ports which are no longer present in the ChassisConfig
       // TODO(bocon): Collect these errors and keep trying to remove old ports
       LOG(INFO) << "Deleting port " << port_id << " in node " << node_id
                 << " (SDK port " << sdk_port_id << ").";
-      RETURN_IF_ERROR(sde_interface_->DeletePort(unit, sdk_port_id));
+      RETURN_IF_ERROR(sde_interface_->DeletePort(device, sdk_port_id));
     }
   }
 
-  unit_to_node_id_ = unit_to_node_id;
-  node_id_to_unit_ = node_id_to_unit;
+  device_to_node_id_ = device_to_node_id;
+  node_id_to_device_ = node_id_to_device;
   node_id_to_port_id_to_port_state_ = node_id_to_port_id_to_port_state;
   node_id_to_port_id_to_time_last_changed_ =
       node_id_to_port_id_to_time_last_changed;
@@ -477,34 +459,26 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   // Find the supported Tofino chip types based on the given platform.
   RET_CHECK(config.has_chassis() && config.chassis().platform())
       << "Config needs a Chassis message with correct platform.";
-  switch (config.chassis().platform()) {
-    case PLT_GENERIC_BAREFOOT_TOFINO:
-    case PLT_GENERIC_BAREFOOT_TOFINO2:
-    case PLT_P4_SOFT_SWITCH:
-      break;
-    default:
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Unsupported platform: "
-             << Platform_Name(config.chassis().platform());
-  }
+  RET_CHECK(config.chassis().platform() == PLT_P4_DPDK_SOFTWARE_SWITCH)
+      << "Unsupported platform: " << Platform_Name(config.chassis().platform());
 
   // Validate Node messages. Make sure there is no two nodes with the same id.
-  std::map<uint64, int> node_id_to_unit;
-  std::map<int, uint64> unit_to_node_id;
+  std::map<uint64, int> node_id_to_device;
+  std::map<int, uint64> device_to_node_id;
   for (const auto& node : config.nodes()) {
     RET_CHECK(node.slot() > 0)
         << "No positive slot in " << node.ShortDebugString();
     RET_CHECK(node.id() > 0) << "No positive ID in " << node.ShortDebugString();
-    RET_CHECK(gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+    RET_CHECK(gtl::InsertIfNotPresent(&node_id_to_device, node.id(), -1))
         << "The id for Node " << PrintNode(node) << " was already recorded "
         << "for another Node in the config.";
   }
   {
-    int unit = 0;
+    int device = 0;
     for (const auto& node : config.nodes()) {
-      unit_to_node_id[unit] = node.id();
-      node_id_to_unit[node.id()] = unit;
-      ++unit;
+      device_to_node_id[device] = node.id();
+      node_id_to_device[node.id()] = device;
+      ++device;
     }
   }
 
@@ -532,6 +506,9 @@ DpdkChassisManager::~DpdkChassisManager() = default;
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
     RET_CHECK(singleton_port.speed_bps() > 0)
         << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
+    RET_CHECK(singleton_port.config_params().loopback_mode() == 0)
+        << "SingletonPort " << PrintSingletonPort(singleton_port)
+        << " has the loopback mode enabled.";
     PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
                                singleton_port.channel());
     RET_CHECK(!singleton_port_keys.count(singleton_port_key))
@@ -541,7 +518,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
     singleton_port_keys.insert(singleton_port_key);
     RET_CHECK(singleton_port.node() > 0)
         << "No valid node ID in " << singleton_port.ShortDebugString() << ".";
-    RET_CHECK(node_id_to_unit.count(singleton_port.node()))
+    RET_CHECK(node_id_to_device.count(singleton_port.node()))
         << "Node ID " << singleton_port.node() << " given for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " has not been given to any Node in the config.";
@@ -566,11 +543,11 @@ DpdkChassisManager::~DpdkChassisManager() = default;
         singleton_port_key;
 
     // Make sure that the port exists by getting the SDK port ID.
-    const int* unit = gtl::FindOrNull(node_id_to_unit, node_id);
-    RET_CHECK(unit != nullptr)
+    const int* device = gtl::FindOrNull(node_id_to_device, node_id);
+    RET_CHECK(device != nullptr)
         << "Node " << node_id << " not found for port " << port_id << ".";
     RETURN_IF_ERROR(
-        sde_interface_->GetPortIdFromPortKey(*unit, singleton_port_key)
+        sde_interface_->GetPortIdFromPortKey(*device, singleton_port_key)
             .status());
   }
 
@@ -585,10 +562,11 @@ DpdkChassisManager::~DpdkChassisManager() = default;
              << "needs to be rebooted to finish config push.";
     }
 
-    if (node_id_to_unit != node_id_to_unit_) {
+    if (node_id_to_device != node_id_to_device_) {
       return MAKE_ERROR(ERR_REBOOT_REQUIRED)
              << "The switch is already initialized, but we detected the newly "
-             << "pushed config requires a change in node_id_to_unit. The stack "
+             << "pushed config requires a change in node_id_to_device. The "
+                "stack "
              << "needs to be rebooted to finish config push.";
     }
   }
@@ -649,8 +627,8 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   }
 
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
-  return sde_interface_->GetPortInfo(unit, sdk_port_id, target_dp_id);
+  ASSIGN_OR_RETURN(auto device, GetDeviceFromNodeId(node_id));
+  return sde_interface_->GetPortInfo(device, sdk_port_id, target_dp_id);
 }
 
 ::util::StatusOr<DataResponse> DpdkChassisManager::GetPortData(
@@ -732,10 +710,13 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
         resp.mutable_autoneg_status()->set_state(*config->autoneg);
       break;
     }
-    case Request::kFrontPanelPortInfo: {
-      // NOTE: return error?
-      break;
-    }
+    // case Request::kFrontPanelPortInfo: {
+    //   RETURN_IF_ERROR(
+    //       GetFrontPanelPortInfo(request.front_panel_port_info().node_id(),
+    //                             request.front_panel_port_info().port_id(),
+    //                             resp.mutable_front_panel_port_info()));
+    //   break;
+    // }
     case Request::kFecStatus: {
       ASSIGN_OR_RETURN(auto* config,
                        GetPortConfig(request.fec_status().node_id(),
@@ -787,7 +768,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto device, GetDeviceFromNodeId(node_id));
 
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
@@ -806,7 +787,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
             << ".";
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
   ASSIGN_OR_RETURN(auto port_state,
-                   sde_interface_->GetPortState(unit, sdk_port_id));
+                   sde_interface_->GetPortState(device, sdk_port_id));
   LOG(INFO) << "State of port " << port_id << " in node " << node_id
             << " (SDK port " << sdk_port_id
             << "): " << PrintPortState(port_state);
@@ -830,17 +811,17 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto device, GetDeviceFromNodeId(node_id));
   ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
-  return sde_interface_->GetPortCounters(unit, sdk_port_id, counters);
+  return sde_interface_->GetPortCounters(device, sdk_port_id, counters);
 }
 
-::util::StatusOr<std::map<uint64, int>> DpdkChassisManager::GetNodeIdToUnitMap()
-    const {
+::util::StatusOr<std::map<uint64, int>>
+DpdkChassisManager::GetNodeIdToDeviceMap() const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  return node_id_to_unit_;
+  return node_id_to_device_;
 }
 
 ::util::Status DpdkChassisManager::ReplayPortsConfig(uint64 node_id) {
@@ -848,7 +829,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto device, GetDeviceFromNodeId(node_id));
 
   for (auto& p : node_id_to_port_id_to_port_state_[node_id])
     p.second = PORT_STATE_UNKNOWN;
@@ -859,7 +840,7 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
   LOG(INFO) << "Replaying ports for node " << node_id << ".";
 
-  auto replay_one_port = [node_id, unit, this](
+  auto replay_one_port = [node_id, device, this](
                              uint32 port_id, const PortConfig& config,
                              PortConfig* config_new) -> ::util::Status {
     VLOG(1) << "Replaying port " << port_id << " in node " << node_id << ".";
@@ -883,31 +864,26 @@ DpdkChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 
     ASSIGN_OR_RETURN(auto sdk_port_id, GetSdkPortId(node_id, port_id));
     RETURN_IF_ERROR(sde_interface_->AddPort(
-        unit, sdk_port_id, *config.speed_bps, *config.fec_mode));
+        device, sdk_port_id, *config.speed_bps, *config.fec_mode));
     config_new->speed_bps = *config.speed_bps;
     config_new->admin_state = ADMIN_STATE_DISABLED;
     config_new->fec_mode = *config.fec_mode;
 
     if (config.mtu) {
       // RETURN_IF_ERROR(
-      //     sde_interface_->SetPortMtu(unit, sdk_port_id, *config.mtu));
+      //     sde_interface_->SetPortMtu(device, sdk_port_id, *config.mtu));
       config_new->mtu = *config.mtu;
     }
-    if (config.autoneg) {
-      RETURN_IF_ERROR(sde_interface_->SetPortAutonegPolicy(unit, sdk_port_id,
-                                                           *config.autoneg));
-      config_new->autoneg = *config.autoneg;
-    }
     if (config.loopback_mode) {
-      RETURN_IF_ERROR(sde_interface_->SetPortLoopbackMode(
-          unit, sdk_port_id, *config.loopback_mode));
+      // RETURN_IF_ERROR(sde_interface_->SetPortLoopbackMode(
+      //     device, sdk_port_id, *config.loopback_mode));
       config_new->loopback_mode = *config.loopback_mode;
     }
 
     if (config.admin_state == ADMIN_STATE_ENABLED) {
       VLOG(1) << "Enabling port " << port_id << " in node " << node_id
               << " (SDK port " << sdk_port_id << ").";
-      // RETURN_IF_ERROR(sde_interface_->EnablePort(unit, sdk_port_id));
+      // RETURN_IF_ERROR(sde_interface_->EnablePort(device, sdk_port_id));
       config_new->admin_state = ADMIN_STATE_ENABLED;
     }
 
@@ -932,21 +908,21 @@ std::unique_ptr<DpdkChassisManager> DpdkChassisManager::CreateInstance(
   return absl::WrapUnique(new DpdkChassisManager(mode, sde_interface));
 }
 
-::util::StatusOr<int> DpdkChassisManager::GetUnitFromNodeId(
+::util::StatusOr<int> DpdkChassisManager::GetDeviceFromNodeId(
     uint64 node_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  RET_CHECK(unit != nullptr)
+  const int* device = gtl::FindOrNull(node_id_to_device_, node_id);
+  RET_CHECK(device != nullptr)
       << "Node " << node_id << " is not configured or not known.";
 
-  return *unit;
+  return *device;
 }
 
 void DpdkChassisManager::CleanupInternalState() {
-  unit_to_node_id_.clear();
-  node_id_to_unit_.clear();
+  device_to_node_id_.clear();
+  node_id_to_device_.clear();
   node_id_to_port_id_to_port_state_.clear();
   node_id_to_port_id_to_time_last_changed_.clear();
   node_id_to_port_id_to_port_config_.clear();
