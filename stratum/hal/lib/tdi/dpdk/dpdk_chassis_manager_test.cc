@@ -155,7 +155,7 @@ class DpdkChassisManagerTest : public ::testing::Test {
     // Use NiceMock to suppress default action/value warnings.
     sde_mock_ = absl::make_unique<NiceMock<TdiSdeMock>>();
     // TODO(max): create parametrized test suite over mode.
-    m_chassis_manager_ = DpdkChassisManager::CreateInstance(
+    dpdk_chassis_manager_ = DpdkChassisManager::CreateInstance(
         OPERATION_MODE_STANDALONE, sde_mock_.get());
 
     // Expectations
@@ -178,33 +178,36 @@ class DpdkChassisManagerTest : public ::testing::Test {
   }
 
   ::util::Status CheckCleanInternalState() {
-    RET_CHECK(m_chassis_manager_->unit_to_node_id_.empty());
-    RET_CHECK(m_chassis_manager_->node_id_to_unit_.empty());
-    RET_CHECK(m_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
-    RET_CHECK(m_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
+    RET_CHECK(dpdk_chassis_manager_->unit_to_node_id_.empty());
+    RET_CHECK(dpdk_chassis_manager_->node_id_to_unit_.empty());
+    RET_CHECK(dpdk_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
     RET_CHECK(
-        m_chassis_manager_->node_id_to_port_id_to_singleton_port_key_.empty());
-    RET_CHECK(m_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
-    RET_CHECK(m_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
-    RET_CHECK(m_chassis_manager_->node_id_port_id_to_backend_.empty());
+        dpdk_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
+    RET_CHECK(dpdk_chassis_manager_->node_id_to_port_id_to_singleton_port_key_
+                  .empty());
+    RET_CHECK(
+        dpdk_chassis_manager_->node_id_to_port_id_to_sdk_port_id_.empty());
+    RET_CHECK(
+        dpdk_chassis_manager_->node_id_to_sdk_port_id_to_port_id_.empty());
+
     return ::util::OkStatus();
   }
 
-  bool Initialized() { return m_chassis_manager_->initialized_; }
+  bool Initialized() { return dpdk_chassis_manager_->initialized_; }
 
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) {
     absl::ReaderMutexLock l(&chassis_lock);
-    return m_chassis_manager_->VerifyChassisConfig(config);
+    return dpdk_chassis_manager_->VerifyChassisConfig(config);
   }
 
   ::util::Status PushChassisConfig(const ChassisConfig& config) {
     absl::WriterMutexLock l(&chassis_lock);
-    return m_chassis_manager_->PushChassisConfig(config);
+    return dpdk_chassis_manager_->PushChassisConfig(config);
   }
 
   ::util::Status PushChassisConfig(const ChassisConfigBuilder& builder) {
     absl::WriterMutexLock l(&chassis_lock);
-    return m_chassis_manager_->PushChassisConfig(builder.Get());
+    return dpdk_chassis_manager_->PushChassisConfig(builder.Get());
   }
 
   ::util::Status PushBaseChassisConfig(ChassisConfigBuilder* builder) {
@@ -227,7 +230,7 @@ class DpdkChassisManagerTest : public ::testing::Test {
 
   ::util::Status ReplayPortsConfig(uint64 node_id) {
     absl::WriterMutexLock l(&chassis_lock);
-    return m_chassis_manager_->ReplayPortsConfig(node_id);
+    return dpdk_chassis_manager_->ReplayPortsConfig(node_id);
   }
 
   ::util::Status PushBaseChassisConfig() {
@@ -237,10 +240,10 @@ class DpdkChassisManagerTest : public ::testing::Test {
 
   ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const {
     absl::ReaderMutexLock l(&chassis_lock);
-    return m_chassis_manager_->GetUnitFromNodeId(node_id);
+    return dpdk_chassis_manager_->GetUnitFromNodeId(node_id);
   }
 
-  ::util::Status Shutdown() { return m_chassis_manager_->Shutdown(); }
+  ::util::Status Shutdown() { return dpdk_chassis_manager_->Shutdown(); }
 
   ::util::Status ShutdownAndTestCleanState() {
     RETURN_IF_ERROR(Shutdown());
@@ -250,11 +253,11 @@ class DpdkChassisManagerTest : public ::testing::Test {
 
   ::util::Status RegisterEventNotifyWriter(
       const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
-    return m_chassis_manager_->RegisterEventNotifyWriter(writer);
+    return dpdk_chassis_manager_->RegisterEventNotifyWriter(writer);
   }
 
   ::util::Status UnregisterEventNotifyWriter() {
-    return m_chassis_manager_->UnregisterEventNotifyWriter();
+    return dpdk_chassis_manager_->UnregisterEventNotifyWriter();
   }
 
   void TriggerPortStatusEvent(int device, int port, PortState state,
@@ -269,7 +272,7 @@ class DpdkChassisManagerTest : public ::testing::Test {
 
   std::unique_ptr<TdiSdeMock> sde_mock_;
   std::unique_ptr<ChannelWriter<PortStatusEvent>> sde_event_writer_;
-  std::unique_ptr<DpdkChassisManager> m_chassis_manager_;
+  std::unique_ptr<DpdkChassisManager> dpdk_chassis_manager_;
 
   static constexpr int kTestTransceiverWriterId = 20;
 };
