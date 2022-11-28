@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <net/if.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -13,13 +14,65 @@
 #include <string>
 
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
 
+// Must be included after net/if.h because of re-defines.
+#include <linux/if.h>
+#include <linux/if_tun.h>
+
+DEFINE_bool(experimental_enable_bfrt_tofino_virtual_cpu_interface, false,
+            "enable exposure of a virtual CPU interface on Tofino switches.");
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+namespace {
+::util::StatusOr<int> CreateTapIntf(std::string name) {
+  // Note: The canonical TUN device at /dev/net/tun failed to open. The BF team
+  //       created a copy of the tun driver, bf_tun, which is loaded by default
+  //       and does work.
+  int fd = open("/dev/net/bf_tun", O_RDWR);
+  RET_CHECK(fd >= 0) << "Failed to open: " << strerror(errno);
+  struct ifreq ifr = {};
+  ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
+  strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ);
+  if (ioctl(fd, TUNSETIFF, &ifr) == -1) {
+    close(fd);
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Couldn't create TAP interface " << ifr.ifr_name << ": "
+           << strerror(errno) << ".";
+  }
+
+  LOG(WARNING) << "Created TAP interface with name " << ifr.ifr_name << ".";
+  CHECK_EQ(ifr.ifr_name, name) << "Actual and requested TAP intf name differ.";
+
+  // Set interface to UP.
+  // Create a dummy socket and use IOCTL to setup the interface.
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ);
+  if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
+    close(sock);
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Couldn't get IFFLAGS for TAP interface " << ifr.ifr_name << ": "
+           << strerror(errno) << ".";
+  }
+  ifr.ifr_flags |= IFF_UP;
+  if (ioctl(sock, SIOCSIFFLAGS, &ifr) == -1) {
+    close(sock);
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Couldn't set IFFLAGS for TAP interface " << ifr.ifr_name << ": "
+           << strerror(errno) << ".";
+  }
+  close(sock);
+
+  return fd;
+}
+}  // namespace
 
 BfrtPacketioManager::BfrtPacketioManager(
     BfSdeInterface* bf_sde_interface,
@@ -31,7 +84,9 @@ BfrtPacketioManager::BfrtPacketioManager(
       packetin_header_size_(),
       packetout_header_size_(),
       packet_receive_channel_(nullptr),
+      tap_intf_fd_(-1),
       sde_rx_thread_id_(),
+      virtual_cpu_intf_rx_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       device_(device) {}
@@ -44,7 +99,9 @@ BfrtPacketioManager::BfrtPacketioManager()
       packetin_header_size_(),
       packetout_header_size_(),
       packet_receive_channel_(nullptr),
+      tap_intf_fd_(-1),
       sde_rx_thread_id_(),
+      virtual_cpu_intf_rx_thread_id_(),
       bf_sde_interface_(nullptr),
       device_(-1) {}
 
@@ -86,6 +143,21 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     }
     RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
         device_, ChannelWriter<std::string>::Create(packet_receive_channel_)));
+    // Create TAP interface and start rx/tx handler.
+    if (FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
+      ASSIGN_OR_RETURN(tap_intf_fd_, CreateTapIntf("tapSwCpu"));
+      if (virtual_cpu_intf_rx_thread_id_ == 0) {
+        int ret = pthread_create(
+            &virtual_cpu_intf_rx_thread_id_, nullptr,
+            &BfrtPacketioManager::VirtualCpuIntfRxThreadFunc, this);
+        if (ret != 0) {
+          return MAKE_ERROR(ERR_INTERNAL)
+                 << "Failed to spawn RX thread for virtual CPU interface "
+                 << "for device with ID " << device_ << ". Err: " << ret << ".";
+        }
+      }
+    }
+
     initialized_ = true;
   }
 
@@ -114,6 +186,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
                                << "Packet Rx channel is already closed.";
         APPEND_STATUS_IF_ERROR(status, error);
       }
+      close(tap_intf_fd_);
     }
     packetin_header_.clear();
     packetout_header_.clear();
@@ -133,10 +206,20 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
                              << "Failed to join thread " << sde_rx_thread_id_;
       APPEND_STATUS_IF_ERROR(status, error);
     }
+    if (FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
+      if (virtual_cpu_intf_rx_thread_id_ != 0 &&
+          pthread_join(virtual_cpu_intf_rx_thread_id_, nullptr) != 0) {
+        ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                               << "Failed to join thread "
+                               << virtual_cpu_intf_rx_thread_id_;
+        APPEND_STATUS_IF_ERROR(status, error);
+      }
+    }
   }
   {
     absl::WriterMutexLock l(&data_lock_);
     sde_rx_thread_id_ = 0;
+    virtual_cpu_intf_rx_thread_id_ = 0;
   }
   return ::util::OkStatus();
 }
@@ -302,6 +385,81 @@ class BitBuffer {
   return ::util::OkStatus();
 }
 
+namespace {
+
+// This enum defines the possible pre-header values on packets on the PCIe bus.
+enum class PacketioPreHeader : char {
+  INVALID = 0,
+  REGULAR_PACKETIO = 1,  // This is a regular P4Runtime PacketIn/Out.
+  VIRTUAL_CPU_INTF = 2,  // This packet is from/to the virtual CPU interface.
+};
+
+::util::Status IsVirtualCpuIntfTraffic(const std::string& buffer) {
+  if (buffer.length() < 1) {
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Packet too short.";
+  }
+  if (buffer[0] == static_cast<char>(PacketioPreHeader::VIRTUAL_CPU_INTF)) {
+    return ::util::OkStatus();
+  } else if (buffer[0] ==
+             static_cast<char>(PacketioPreHeader::REGULAR_PACKETIO)) {
+    return MAKE_ERROR(ERR_INVALID_PARAM).with_logging() << "Normal traffic.";
+  } else {
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown pre packet header.";
+  }
+}
+
+}  // namespace
+
+::util::Status BfrtPacketioManager::SendToVirtualCpuIntf(
+    const std::string& buffer) const {
+  absl::ReaderMutexLock l(&data_lock_);
+  if (!FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
+    return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
+           << "Virtual CPU interface not enabled.";
+  }
+
+  if (tap_intf_fd_ < 0) {
+    return MAKE_ERROR(ERR_INTERNAL) << "TAP interface not initialized";
+  }
+
+  RET_CHECK(write(tap_intf_fd_, buffer.data(), buffer.size()) > 0)
+      << "write to TAP interface failed";
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtPacketioManager::HandleVirtualCpuIntfPacketRx() {
+  static constexpr size_t kMaxRxBufferSize = 32768;
+
+  int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
+  {
+    absl::ReaderMutexLock l(&data_lock_);
+    if (!FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
+      return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
+             << "Virtual CPU interface not enabled.";
+    }
+
+    if (tap_intf_fd_ < 0) {
+      return MAKE_ERROR(ERR_INTERNAL) << "TAP interface not initialized";
+    }
+    fd = tap_intf_fd_;
+  }
+
+  while (true) {
+    std::string buf(kMaxRxBufferSize, '\x00');
+    int ret = read(fd, gtl::string_as_array(&buf), buf.size());
+    if (ret < 0) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "read from TAP interface failed: " << strerror(errno) << ".";
+    }
+
+    buf.insert(0 /*position*/, 1 /*count*/,
+               static_cast<char>(PacketioPreHeader::VIRTUAL_CPU_INTF));
+
+    RETURN_IF_ERROR(bf_sde_interface_->TxPacket(device_, buf));
+  }
+}
+
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
   std::unique_ptr<ChannelReader<std::string>> reader;
   {
@@ -317,6 +475,14 @@ class BitBuffer {
     if (code == ERR_CANCELLED) break;
     if (code == ERR_ENTRY_NOT_FOUND) {
       LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
+      continue;
+    }
+
+    // Check if this packet is to be forwarded to the virtual CPU interface.
+    if (FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface &&
+        IsVirtualCpuIntfTraffic(buffer).ok()) {
+      buffer.erase(0 /*position*/, 1 /*count*/);
+      SendToVirtualCpuIntf(buffer);
       continue;
     }
 
@@ -390,6 +556,16 @@ void* BfrtPacketioManager::SdeRxThreadFunc(void* arg) {
   ::util::Status status = mgr->HandleSdePacketRx();
   if (!status.ok()) {
     LOG(ERROR) << "Non-OK exit of RX thread for SDE interface.";
+  }
+
+  return nullptr;
+}
+
+void* BfrtPacketioManager::VirtualCpuIntfRxThreadFunc(void* arg) {
+  BfrtPacketioManager* mgr = reinterpret_cast<BfrtPacketioManager*>(arg);
+  ::util::Status status = mgr->HandleVirtualCpuIntfPacketRx();
+  if (!status.ok()) {
+    LOG(ERROR) << "Non-OK exit of RX thread for virtual CPU interface.";
   }
 
   return nullptr;
