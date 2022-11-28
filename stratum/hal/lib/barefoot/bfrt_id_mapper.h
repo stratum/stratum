@@ -71,7 +71,7 @@ class BfrtIdMapper {
   // Reader-writer lock used to protect access to mapping.
   mutable absl::Mutex lock_;
 
-  // Maps from bfrt ID to P4Runtime ID and viceversa.
+  // Maps from bfrt ID to P4Runtime ID and vice versa.
   absl::flat_hash_map<bf_rt_id_t, uint32> bfrt_to_p4info_id_ GUARDED_BY(lock_);
   absl::flat_hash_map<uint32, bf_rt_id_t> p4info_to_bfrt_id_ GUARDED_BY(lock_);
 
