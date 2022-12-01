@@ -1857,6 +1857,12 @@ std::string BfSdeWrapper::GetSdeVersion() const {
   RETURN_IF_ERROR(
       bfrt_id_mapper_->PushForwardingPipelineConfig(device_config, bfrt_info_));
 
+  // int instance = 0; /* instance 1 for eth2 */
+  // char name[200] = {};
+  // RETURN_IF_BFRT_ERROR(bf_pal_cpuif_10g_netdev_name_get(
+  //     device, "/sys/bus/pci/devices/0000:04:00", instance, name, 200));
+  // LOG(ERROR) << "bf_pal_cpuif_10g_netdev_name_get: " << name;
+
   return ::util::OkStatus();
 }
 
@@ -1958,11 +1964,11 @@ BfSdeWrapper::CreateTableData(int table_id, int action_id) {
 
   std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
                      bf_pkt_get_pkt_size(pkt));
-  ::util::Status status = (*rx_writer)->TryWrite(buffer);
+  // VLOG(1) << "Received " << buffer.size() << " byte packet from CPU "
+  //         << StringToHex(buffer);
+  ::util::Status status = (*rx_writer)->TryWrite(std::move(buffer));
   LOG_IF_EVERY_N(INFO, !status.ok(), 500)
       << "Dropped packet received from CPU: " << status;
-  VLOG(1) << "Received " << buffer.size() << " byte packet from CPU "
-          << StringToHex(buffer);
 
   return ::util::OkStatus();
 }

@@ -108,7 +108,7 @@ class BfrtPacketioManager {
   ::util::Status HandleVirtualCpuIntfPacketRx() LOCKS_EXCLUDED(data_lock_);
 
   // Sends the buffer to the virtual TAP CPU port.
-  ::util::Status SendToVirtualCpuIntf(const std::string& buffer) const
+  ::util::Status SendToVirtualCpuIntf(absl::string_view buffer) const
       LOCKS_EXCLUDED(data_lock_);
 
   // SDE cpu interface RX thread function.

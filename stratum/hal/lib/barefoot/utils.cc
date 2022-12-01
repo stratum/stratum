@@ -28,6 +28,7 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
 
 namespace {
 // Strip leading zeros from a string, but keep at least one byte.
+// Does this work for empty strings?
 std::string StripLeadingZeroBytes(std::string str) {
   str.erase(0, std::min(str.find_first_not_of('\x00'), str.size() - 1));
   return str;

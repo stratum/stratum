@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <net/if.h>
+#include <net/if_arp.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -13,6 +14,7 @@
 #include <deque>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -50,9 +52,24 @@ namespace {
   LOG(WARNING) << "Created TAP interface with name " << ifr.ifr_name << ".";
   CHECK_EQ(ifr.ifr_name, name) << "Actual and requested TAP intf name differ.";
 
-  // Set interface to UP.
-  // Create a dummy socket and use IOCTL to setup the interface.
+  // Configure the new TAP interface.
+  // We use a dummy socket and IOCTL to setup the interface.
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+  // Set MAC address.
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ);
+  ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+  const uint8 mac[6] = {'\x00', '\x00', '\x00', '\x33', '\x33', '\x33'};
+  memcpy(ifr.ifr_hwaddr.sa_data, mac, 6);
+  if (ioctl(sock, SIOCSIFHWADDR, &ifr) == -1) {
+    close(sock);
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Couldn't set MAC address for TAP interface " << ifr.ifr_name
+           << ": " << strerror(errno) << ".";
+  }
+
+  // Set interface to UP.
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ);
   if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
@@ -72,6 +89,14 @@ namespace {
 
   return fd;
 }
+
+::util::Status SetOwnThreadName(std::string name) {
+  name.resize(15);  // Linux limit.
+  RET_CHECK(pthread_setname_np(pthread_self(), name.c_str()) == 0);
+  return ::util::OkStatus();
+}
+
+std::string GetOwnThreadId() { return absl::StrCat(pthread_self()); }
 }  // namespace
 
 BfrtPacketioManager::BfrtPacketioManager(
@@ -131,7 +156,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
   // PushForwardingPipelineConfig resets the bf_pkt driver.
   RETURN_IF_ERROR(bf_sde_interface_->StartPacketIo(device_));
   if (!initialized_) {
-    packet_receive_channel_ = Channel<std::string>::Create(128);
+    packet_receive_channel_ = Channel<std::string>::Create(1024);
     if (sde_rx_thread_id_ == 0) {
       int ret = pthread_create(&sde_rx_thread_id_, nullptr,
                                &BfrtPacketioManager::SdeRxThreadFunc, this);
@@ -186,7 +211,6 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
                                << "Packet Rx channel is already closed.";
         APPEND_STATUS_IF_ERROR(status, error);
       }
-      close(tap_intf_fd_);
     }
     packetin_header_.clear();
     packetout_header_.clear();
@@ -198,6 +222,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
   // TODO(max): we release the locks between closing the channel and joining the
   // thread to prevent deadlocks with the RX handler. But there might still be a
   // bug hiding here.
+  absl::SleepFor(absl::Milliseconds(500));
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (sde_rx_thread_id_ != 0 &&
@@ -214,6 +239,10 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
                                << virtual_cpu_intf_rx_thread_id_;
         APPEND_STATUS_IF_ERROR(status, error);
       }
+      // Only close the interface after the threads have been joined. Otherwise
+      // this is a race condition.
+      close(tap_intf_fd_);
+      VLOG(1) << "Closed TAP interface.";
     }
   }
   {
@@ -411,7 +440,7 @@ enum class PacketioPreHeader : char {
 }  // namespace
 
 ::util::Status BfrtPacketioManager::SendToVirtualCpuIntf(
-    const std::string& buffer) const {
+    absl::string_view buffer) const {
   absl::ReaderMutexLock l(&data_lock_);
   if (!FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
     return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
@@ -429,6 +458,8 @@ enum class PacketioPreHeader : char {
 }
 
 ::util::Status BfrtPacketioManager::HandleVirtualCpuIntfPacketRx() {
+  SetOwnThreadName("HandleVirtualCpuIntfPacketRx");
+  LOG(WARNING) << "HandleVirtualCpuIntfPacketRx tid: " << GetOwnThreadId();
   static constexpr size_t kMaxRxBufferSize = 32768;
 
   int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
@@ -438,36 +469,62 @@ enum class PacketioPreHeader : char {
       return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
              << "Virtual CPU interface not enabled.";
     }
-
-    if (tap_intf_fd_ < 0) {
-      return MAKE_ERROR(ERR_INTERNAL) << "TAP interface not initialized";
-    }
+    RET_CHECK(tap_intf_fd_ > 0) << "TAP interface not initialized";
     fd = tap_intf_fd_;
   }
 
+  // Create buffer with fake Ethernet header already in place.
+  // Insert fake ethernet header to help parsing.
+  constexpr size_t kPreHeaderLength = 14;  // 6 + 6 + 2.
+  const std::string fake_mac("\x00\x00\x00\x00\x00\x00", 6);
+  const std::string fake_eth_type("\xbf\x02", 2);  // Reserved ether type.
+  std::string buf = absl::StrCat(fake_mac, fake_mac, fake_eth_type);
+  buf.resize(kMaxRxBufferSize);            // Pad with zeros.
+  char* buf_ptr = &buf[kPreHeaderLength];  // 1st byte after the header.
+
   while (true) {
-    std::string buf(kMaxRxBufferSize, '\x00');
-    int ret = read(fd, gtl::string_as_array(&buf), buf.size());
+    // This is the graceful shutdown check.
+    {
+      absl::ReaderMutexLock l(&data_lock_);
+      if (!initialized_) break;
+    }
+
+    buf.resize(kMaxRxBufferSize);  // Pad with zeros.
+    int ret = read(fd, buf_ptr, kMaxRxBufferSize - kPreHeaderLength);
     if (ret < 0) {
       return MAKE_ERROR(ERR_INTERNAL)
              << "read from TAP interface failed: " << strerror(errno) << ".";
     }
-
-    buf.insert(0 /*position*/, 1 /*count*/,
-               static_cast<char>(PacketioPreHeader::VIRTUAL_CPU_INTF));
-
+    if (ret == 0) {
+      LOG(ERROR) << "read zero bytes TAP interface?";
+      continue;
+    }
+    buf.resize(kPreHeaderLength + ret);  // Trim trailing zero bytes.
     RETURN_IF_ERROR(bf_sde_interface_->TxPacket(device_, buf));
+    // VLOG(1) << "Read buf from TAP interface and sent to pcie cpu port: "
+    //         << StringToHex(buf) << ".";
   }
+
+  LOG(INFO) << "Killed RX thread for virtual CPU interface.";
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
+  SetOwnThreadName("HandleSdePacketRx");
+  LOG(WARNING) << "HandleSdePacketRx tid: " << GetOwnThreadId();
   std::unique_ptr<ChannelReader<std::string>> reader;
+  int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<std::string>::Create(packet_receive_channel_);
+    fd = tap_intf_fd_;
   }
+
+  bool virtual_cpu_interface_enabled =
+      FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface;
 
   while (true) {
     std::string buffer;
@@ -479,10 +536,23 @@ enum class PacketioPreHeader : char {
     }
 
     // Check if this packet is to be forwarded to the virtual CPU interface.
-    if (FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface &&
-        IsVirtualCpuIntfTraffic(buffer).ok()) {
-      buffer.erase(0 /*position*/, 1 /*count*/);
-      SendToVirtualCpuIntf(buffer);
+    if (virtual_cpu_interface_enabled && IsVirtualCpuIntfTraffic(buffer).ok()) {
+      // Skip pre header
+      // buffer.erase(0 /*position*/, 1 /*count*/);
+      // absl::string_view view(buffer.data() + 1, buffer.size() - 1);
+      // SendToVirtualCpuIntf(view);
+      // if (!status.ok()) {
+      //   LOG(ERROR) << "Failed to send to virtual cpu interface: " << status;
+      // }
+
+      int ret = write(fd, buffer.data() + 1, buffer.size() - 1);
+      if (ret < 0) {
+        LOG(ERROR) << "write to TAP interface failed: " << ret;
+      }
+
+      // VLOG(1) << "read buf from pcie cpu interface and sent to tap interface:
+      // "
+      //         << StringToHex(buffer) << ".";
       continue;
     }
 
@@ -552,6 +622,7 @@ enum class PacketioPreHeader : char {
 }
 
 void* BfrtPacketioManager::SdeRxThreadFunc(void* arg) {
+  // SetOwnThreadName("SdeRxThreadFunc");
   BfrtPacketioManager* mgr = reinterpret_cast<BfrtPacketioManager*>(arg);
   ::util::Status status = mgr->HandleSdePacketRx();
   if (!status.ok()) {
@@ -562,6 +633,7 @@ void* BfrtPacketioManager::SdeRxThreadFunc(void* arg) {
 }
 
 void* BfrtPacketioManager::VirtualCpuIntfRxThreadFunc(void* arg) {
+  // SetOwnThreadName("VirtualCpuIntfRxThreadFunc");
   BfrtPacketioManager* mgr = reinterpret_cast<BfrtPacketioManager*>(arg);
   ::util::Status status = mgr->HandleVirtualCpuIntfPacketRx();
   if (!status.ok()) {
