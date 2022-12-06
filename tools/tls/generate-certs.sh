@@ -14,6 +14,7 @@ echo "[ req ]
 default_bits           = 2048
 distinguished_name     = stratum
 prompt                 = no
+req_extensions         = req_ext
 
 [ stratum ]
 C                      = US
@@ -22,6 +23,12 @@ L                      = Menlo Park
 O                      = Open Networking Foundation
 OU                     = Stratum
 CN                     = $COMMON_NAME
+
+[ alternate_names ]
+DNS.1                  = $COMMON_NAME
+
+[ req_ext ]
+subjectAltName         = @alternate_names
 " > "$SERVER_CONF_FILE"
 
 # Generate Private keys and certificates for CA
@@ -36,7 +43,8 @@ openssl req -new -config "$SERVER_CONF_FILE" -key "$THIS_DIR/certs/stratum.key" 
 # Sing a certificate for Stratum with CA
 openssl x509 -req -in "$THIS_DIR/certs/stratum.csr" -CA "$THIS_DIR/certs/ca.crt" \
              -CAkey "$THIS_DIR/certs/ca.key" -CAcreateserial \
-             -out "$THIS_DIR/certs/stratum.crt" -days 30
+             -out "$THIS_DIR/certs/stratum.crt" -days 30 \
+             -extensions req_ext -extfile "$SERVER_CONF_FILE"
 
 # (Optional) Generate Private keys and certificate for gRPC client
 openssl genrsa -out "$THIS_DIR/certs/client.key" 2048
