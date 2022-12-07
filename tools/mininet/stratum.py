@@ -102,11 +102,14 @@ class StratumBmv2Switch(Switch):
 
     def __init__(self, name, json=STRATUM_INIT_PIPELINE, loglevel="warn",
                  cpuport=DEFAULT_CPU_PORT, pipeconf=DEFAULT_PIPECONF,
-                 onosdevid=None, adminstate=True,
+                 onosdevid=None, adminstate=True, grpcPort=None,
                  **kwargs):
         Switch.__init__(self, name, **kwargs)
-        self.grpcPort = StratumBmv2Switch.nextGrpcPort
-        StratumBmv2Switch.nextGrpcPort += 1
+        if grpcPort is not None:
+          self.grpcPort = grpcPort
+        else:
+          self.grpcPort = StratumBmv2Switch.nextGrpcPort
+          StratumBmv2Switch.nextGrpcPort += 1
         self.cpuPort = cpuport
         self.json = json
         self.loglevel = loglevel
