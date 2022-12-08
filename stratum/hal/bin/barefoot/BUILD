@@ -152,6 +152,7 @@ pkg_deb(
     data = ":stratum_bfrt_data",
     depends = [
         "kmod",
+        "libatomic1",
         "libedit2",
         "libexpat1",
         "libssl1.1",
