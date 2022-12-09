@@ -168,7 +168,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   auto status = ::util::OkStatus();
   // TODO(max): Check if we need to de-init the ASIC or SDE
   // TODO(max): Enable other Shutdown calls once implemented.
-  // APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, bfrt_packetio_manager_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bfrt_pre_manager_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bfrt_counter_manager_->Shutdown());
@@ -380,8 +380,17 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
           writer, &::p4::v1::StreamMessageResponse::mutable_packet);
+  RETURN_IF_ERROR(
+      bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer));
 
-  return bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer);
+  auto idle_notif_writer = std::make_shared<ProtoOneofWriterWrapper<
+      ::p4::v1::StreamMessageResponse, ::p4::v1::IdleTimeoutNotification>>(
+      writer,
+      &::p4::v1::StreamMessageResponse::mutable_idle_timeout_notification);
+  RETURN_IF_ERROR(
+      bfrt_table_manager_->RegisterIdleTimeoutReceiveWriter(idle_notif_writer));
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtNode::UnregisterStreamMessageResponseWriter() {
