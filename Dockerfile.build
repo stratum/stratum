@@ -78,6 +78,7 @@ RUN git clone https://github.com/p4lang/PI.git /tmp/PI && \
 
 ARG BMV2_COMMIT
 ENV BMV2_INSTALL /usr/local
+# TODO(max): switch back to upstream repo once merged
 RUN git clone https://github.com/pudelkoM/behavioral-model.git /tmp/bmv2 && \
     cd /tmp/bmv2 && git checkout ${BMV2_COMMIT} && \
     ./autogen.sh && \
