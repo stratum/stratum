@@ -235,6 +235,36 @@ inline constexpr uint64 BytesPerSecondToKbits(uint64 bytes) {
   return s;
 }
 
+::util::StatusOr<std::string> DumpLearnData(
+    const bfrt::BfRtLearnData* learn_data) {
+  const bfrt::BfRtLearn* learn;
+  RETURN_IF_BFRT_ERROR(learn_data->getParent(&learn));
+
+  std::string s;
+  absl::StrAppend(&s, "bfrt_learn_data { ");
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(learn->learnFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    size_t field_size;
+    bool is_active;
+    RETURN_IF_BFRT_ERROR(learn->learnFieldNameGet(field_id, &field_name));
+    RETURN_IF_BFRT_ERROR(learn->learnFieldSizeGet(field_id, &field_size));
+    RETURN_IF_BFRT_ERROR(learn_data->isActive(field_id, &is_active));
+    std::string v(NumBitsToNumBytes(field_size), '\x00');
+    RETURN_IF_BFRT_ERROR(learn_data->getValue(
+        field_id, v.size(),
+        reinterpret_cast<uint8*>(gtl::string_as_array(&v))));
+    std::string value = absl::StrCat("0x", StringToHex(v));
+    absl::StrAppend(&s, field_name, " { field_id: ", field_id,
+                    " field_size: ", field_size, " value: ", value,
+                    " is_active: ", is_active, " } ");
+  }
+  absl::StrAppend(&s, "}");
+
+  return s;
+}
+
 ::util::Status GetField(const bfrt::BfRtTableKey& table_key,
                         std::string field_name, uint64* field_value) {
   bf_rt_id_t field_id;
@@ -1988,6 +2018,79 @@ bf_status_t BfSdeWrapper::BfPktRxNotifyCallback(bf_dev_id_t device, bf_pkt* pkt,
   return bf_pkt_free(device, pkt);
 }
 
+::util::Status BfSdeWrapper::RegisterDigestListWriter(
+    int device, std::unique_ptr<ChannelWriter<DigestList>> writer) {
+  absl::WriterMutexLock l(&digest_list_callback_lock_);
+  device_to_digest_list_writer_[device] = std::move(writer);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::UnregisterDigestListWriter(int device) {
+  absl::WriterMutexLock l(&digest_list_callback_lock_);
+  device_to_digest_list_writer_.erase(device);
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::HandleDigestList(
+    const bf_rt_target_t& bf_dev_tgt,
+    const std::shared_ptr<bfrt::BfRtSession> session,
+    const bfrt::BfRtLearn* learn,
+    std::vector<std::unique_ptr<bfrt::BfRtLearnData>>* learn_data) {
+  absl::ReaderMutexLock l(&digest_list_callback_lock_);
+  bf_rt_id_t digest_id;
+  RETURN_IF_BFRT_ERROR(learn->learnIdGet(&digest_id));
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(learn->learnFieldIdListGet(&data_field_ids));
+
+  DigestList digest_list;
+  digest_list.device = bf_dev_tgt.dev_id;
+  digest_list.digest_id = digest_id;
+  digest_list.timestamp = absl::Now();
+  for (auto& data : *learn_data) {
+    VLOG(2) << DumpLearnData(data.get()).ValueOr("<error parsing data>");
+    DigestList::Digest digest;
+    for (const auto& field_id : data_field_ids) {
+      size_t field_size;
+      RETURN_IF_BFRT_ERROR(learn->learnFieldSizeGet(field_id, &field_size));
+      std::string value(NumBitsToNumBytes(field_size), '\x00');
+      RETURN_IF_BFRT_ERROR(data->getValue(
+          field_id, value.size(),
+          reinterpret_cast<uint8*>(gtl::string_as_array(&value))));
+      digest.push_back(ByteStringToP4RuntimeByteString(value));
+    }
+    digest_list.digests.push_back(digest);
+  }
+
+  auto rx_writer =
+      gtl::FindOrNull(device_to_digest_list_writer_, bf_dev_tgt.dev_id);
+  RET_CHECK(rx_writer) << "No digest callback registered for device id "
+                       << bf_dev_tgt.dev_id << ".";
+  ::util::Status status = (*rx_writer)->TryWrite(std::move(digest_list));
+  LOG_IF_EVERY_N(INFO, !status.ok(), 500)
+      << "Dropped digest list received from ASIC.";
+  VLOG(1) << "Received learn data from ASIC for device " << bf_dev_tgt.dev_id
+          << ".";
+
+  return ::util::OkStatus();
+}
+
+bf_status_t BfSdeWrapper::BfDigestCallback(
+    const bf_rt_target_t& bf_dev_tgt,
+    const std::shared_ptr<bfrt::BfRtSession> session,
+    std::vector<std::unique_ptr<bfrt::BfRtLearnData>> learn_data,
+    bf_rt_learn_msg_hdl* const learn_msg_hdl, const void* cookie) {
+  const bfrt::BfRtLearn* learn;
+  auto bf_status = learn_data.front()->getParent(&learn);
+  if (bf_status != BF_SUCCESS) {
+    LOG(ERROR) << "failed to get parent of learn data: " << bf_status << ".";
+    return bf_status;
+  }
+  BfSdeWrapper* bf_sde_wrapper = BfSdeWrapper::GetSingleton();
+  bf_sde_wrapper->HandleDigestList(bf_dev_tgt, session, learn, &learn_data);
+  // Acknowledge the learn data immediately. We don't support digest acks yet.
+  return learn->bfRtLearnNotifyAck(session, learn_msg_hdl);
+}
+
 bf_rt_target_t BfSdeWrapper::GetDeviceTarget(int device) const {
   bf_rt_target_t dev_tgt = {};
   dev_tgt.dev_id = device;
@@ -3524,6 +3627,52 @@ namespace {
       *real_session->bfrt_session_, bf_dev_tgt,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
       real_table_data->table_data_.get()));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::InsertDigestEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id) {
+  ::absl::WriterMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  RET_CHECK(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtLearn* learn_obj;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtLearnFromIdGet(table_id, &learn_obj));
+  RETURN_IF_BFRT_ERROR(learn_obj->bfRtLearnCallbackRegister(
+      real_session->bfrt_session_, bf_dev_tgt, BfSdeWrapper::BfDigestCallback,
+      nullptr));
+
+  // TODO(max): handle digest config params.
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ModifyDigestEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id) {
+  ::absl::WriterMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  RET_CHECK(real_session);
+
+  // Noop until we support digest config params.
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "ModifyDigest is not implemented";
+}
+
+::util::Status BfSdeWrapper::DeleteDigestEntry(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id) {
+  ::absl::WriterMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  RET_CHECK(real_session);
+
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtLearn* learn_obj;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtLearnFromIdGet(table_id, &learn_obj));
+  RETURN_IF_BFRT_ERROR(learn_obj->bfRtLearnCallbackDeregister(
+      real_session->bfrt_session_, bf_dev_tgt));
 
   return ::util::OkStatus();
 }

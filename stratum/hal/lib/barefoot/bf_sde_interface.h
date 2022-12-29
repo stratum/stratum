@@ -37,6 +37,17 @@ class BfSdeInterface {
     absl::Time time_last_changed;
   };
 
+  // Digest and DigestList encapsulate digest information received from the
+  // device. We use plain data types to decouple this from SDE internal types
+  // and object lifetimes.
+  struct DigestList {
+    using Digest = std::vector<std::string>;
+    int device;
+    uint32 digest_id;
+    std::vector<Digest> digests;
+    absl::Time timestamp;
+  };
+
   // SessionInterface is a proxy class for BfRt sessions. Most API calls require
   // an active session. It also allows batching requests for performance.
   class SessionInterface {
@@ -258,6 +269,15 @@ class BfSdeInterface {
   // Unregisters the writer registered to this device by
   // RegisterPacketReceiveWriter().
   virtual ::util::Status UnregisterPacketReceiveWriter(int device) = 0;
+
+  // Registers a writer to be invoked when we receive a digest list from the
+  // ASIC. There can only be one writer per device.
+  virtual ::util::Status RegisterDigestListWriter(
+      int device, std::unique_ptr<ChannelWriter<DigestList>> writer) = 0;
+
+  // Unregisters the writer registered to this device by
+  // RegisterDigestListWriter().
+  virtual ::util::Status UnregisterDigestListWriter(int device) = 0;
 
   // Create a new multicast node with the given parameters. Returns the newly
   // allocated node id.
@@ -490,6 +510,21 @@ class BfSdeInterface {
   virtual ::util::Status GetDefaultTableEntry(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, TableDataInterface* table_data) = 0;
+
+  // Inserts/configures a digest instance.
+  virtual ::util::Status InsertDigestEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id) = 0;
+
+  // Modifies/configures a digest instance.
+  virtual ::util::Status ModifyDigestEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id) = 0;
+
+  // Deletes a digest instance.
+  virtual ::util::Status DeleteDigestEntry(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id) = 0;
 
   // Synchronizes the driver cached counter values with the current hardware
   // state for a given BfRt table.
