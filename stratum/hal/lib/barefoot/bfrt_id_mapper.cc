@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "bf_rt/bf_rt_learn.hpp"
 #include "bf_rt/bf_rt_table.hpp"
 #include "nlohmann/json.hpp"
 #include "stratum/glue/gtl/map_util.h"
@@ -90,6 +91,12 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
       RETURN_IF_ERROR(BuildMapping(meter_entry.preamble().id(),
                                    meter_entry.preamble().name(), bfrt_info));
     }
+
+    // Digests
+    for (const auto& digest_entry : program.p4info().digests()) {
+      RETURN_IF_ERROR(BuildMapping(digest_entry.preamble().id(),
+                                   digest_entry.preamble().name(), bfrt_info));
+    }
   }
 
   return ::util::OkStatus();
@@ -100,14 +107,15 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
                                           const bfrt::BfRtInfo* bfrt_info) {
   const bfrt::BfRtTable* table;
   auto bf_status = bfrt_info->bfrtTableFromIdGet(p4info_id, &table);
-
   if (bf_status == BF_SUCCESS) {
     // Both p4info and bfrt json uses the same id for a specific
-    // table/action selector/profile
+    // table/action selector/profile.
     p4info_to_bfrt_id_[p4info_id] = p4info_id;
     bfrt_to_p4info_id_[p4info_id] = p4info_id;
     return ::util::OkStatus();
   }
+
+  // TODO(max): We should check the return status on tableIdGet() etc calls.
 
   // Unable to find table by id, because bfrt uses a different id, we
   // can try to search it by name.
@@ -138,6 +146,48 @@ std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance() {
       return ::util::OkStatus();
     }
   }
+
+  // Check if it's a learn object with identical bfrt and P4RT ID.
+  const bfrt::BfRtLearn* learn;
+  bf_status = bfrt_info->bfrtLearnFromIdGet(p4info_id, &learn);
+  if (bf_status == BF_SUCCESS) {
+    // Both p4info and bfrt json uses the same id for a specific
+    // table/action selector/profile/digest.
+    p4info_to_bfrt_id_[p4info_id] = p4info_id;
+    bfrt_to_p4info_id_[p4info_id] = p4info_id;
+    return ::util::OkStatus();
+  }
+
+  // Unable to find digest by id, because bfrt uses a different id, we
+  // can try to search it by name.
+  bf_status = bfrt_info->bfrtLearnFromNameGet(p4info_name, &learn);
+  if (bf_status == BF_SUCCESS) {
+    // Table can be found with the given name, but they uses different IDs
+    // We need to store mapping so we can map them later.
+    bf_rt_id_t bfrt_table_id;
+    learn->learnIdGet(&bfrt_table_id);
+    p4info_to_bfrt_id_[p4info_id] = bfrt_table_id;
+    bfrt_to_p4info_id_[bfrt_table_id] = p4info_id;
+    return ::util::OkStatus();
+  }
+
+  // Special case: bfrt includes pipeline name as prefix(e.g., "pipe."), but
+  // p4info doesn't. We need to scan all learns to see if there is a learn
+  // called "[pipeline name].[P4 info table name]"
+  std::vector<const bfrt::BfRtLearn*> bfrt_learns;
+  RETURN_IF_BFRT_ERROR(bfrt_info->bfrtInfoGetLearns(&bfrt_learns));
+  for (const auto* bfrt_learn : bfrt_learns) {
+    bf_rt_id_t bfrt_table_id;
+    std::string bfrt_table_name;
+    bfrt_learn->learnIdGet(&bfrt_table_id);
+    bfrt_learn->learnNameGet(&bfrt_table_name);
+    if (absl::StrContains(bfrt_table_name, p4info_name)) {
+      p4info_to_bfrt_id_[p4info_id] = bfrt_table_id;
+      bfrt_to_p4info_id_[bfrt_table_id] = p4info_id;
+      return ::util::OkStatus();
+    }
+  }
+
   return MAKE_ERROR(ERR_INTERNAL)
          << "Unable to find bfrt ID for P4Info entity " << p4info_name
          << " with ID " << p4info_id << ".";
