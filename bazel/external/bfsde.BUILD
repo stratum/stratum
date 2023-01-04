@@ -108,9 +108,9 @@ pkg_tar(
 
 pkg_tar(
     name = "bf_binary_files",
-    srcs = [
-        "barefoot-bin/bin/credo_firmware.bin",  # firmware for retimers in the 65x
-    ],
+    srcs = glob([
+        "barefoot-bin/bin/credo_firmware.bin*",  # firmware for retimers in the 65x
+    ]),
     mode = "0644",
     package_dir = "/usr",
     strip_prefix = "barefoot-bin",
