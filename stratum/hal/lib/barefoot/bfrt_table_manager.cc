@@ -79,7 +79,9 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
         device_, ChannelWriter<BfSdeInterface::DigestList>::Create(
                      digest_list_receive_channel_)));
   }
-  // TODO: Move session handling into wrapper.
+  // Create a new session for use in digest callbacks. For now we don't modify
+  // table entries in response to digests, that is up the the controller, but a
+  // valid and active session is still required for the callbacks.
   ASSIGN_OR_RETURN(digest_list_session_, bf_sde_interface_->CreateSession());
 
   return ::util::OkStatus();
@@ -116,6 +118,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
       }
     }
     digest_list_receive_channel_.reset();
+    digest_list_session_.reset();
   }
   // TODO(max): we release the locks between closing the channel and joining the
   // thread to prevent deadlocks with the RX handler. But there might still be a
@@ -518,10 +521,10 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   ASSIGN_OR_RETURN(auto digest, p4_info_manager_->FindDigestByID(p4_digest_id));
 
   result.set_digest_id(p4_digest_id);
-  result.set_list_id(123);  // currently not used, as digests are acked already.
+  result.set_list_id(-1);  // currently not used, as digests are acked already.
   result.set_timestamp(absl::ToUnixNanos(digest_list.timestamp));
 
-  digest.type_spec().struct_().name();
+  // TODO(max): check that the digest conforms to its definition in P4Info.
 
   // Transform the SDE digest into a P4RT struct-like digest.
   for (const auto& digest_entry : digest_list.digests) {
@@ -1318,6 +1321,7 @@ BfrtTableManager::ReadDirectCounterEntry(
       LOG(ERROR) << "BuildP4DigestList failed: " << p4rt_digest_list.status();
       continue;
     }
+    // TODO(max): perform P4RT metadata translation
     // const auto& translated_packet_in =
     //     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
     // if (!translated_packet_in.ok()) {

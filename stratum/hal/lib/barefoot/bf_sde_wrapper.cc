@@ -2079,7 +2079,10 @@ bf_status_t BfSdeWrapper::BfDigestCallback(
     const std::shared_ptr<bfrt::BfRtSession> session,
     std::vector<std::unique_ptr<bfrt::BfRtLearnData>> learn_data,
     bf_rt_learn_msg_hdl* const learn_msg_hdl, const void* cookie) {
+  // We only need to grab the first learn object, as this callback is not
+  // invoked with "mixed" digests. All will be from the same digests ID.
   const bfrt::BfRtLearn* learn;
+  if (learn_data.empty()) return BF_SUCCESS;
   auto bf_status = learn_data.front()->getParent(&learn);
   if (bf_status != BF_SUCCESS) {
     LOG(ERROR) << "failed to get parent of learn data: " << bf_status << ".";

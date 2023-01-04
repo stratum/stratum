@@ -41,6 +41,8 @@ class BfSdeInterface {
   // device. We use plain data types to decouple this from SDE internal types
   // and object lifetimes.
   struct DigestList {
+    // A single digest is an array of byte strings containing the digest fields
+    // in the same order as defined in the P4 program.
     using Digest = std::vector<std::string>;
     int device;
     uint32 digest_id;
@@ -511,7 +513,9 @@ class BfSdeInterface {
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, TableDataInterface* table_data) = 0;
 
-  // Inserts/configures a digest instance.
+  // Inserts/configures a digest instance. The session is used in digest
+  // callbacks and must be persistent, i.e. still active at the time of callback
+  // invocation.
   virtual ::util::Status InsertDigestEntry(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) = 0;
