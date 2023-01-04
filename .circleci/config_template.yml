@@ -103,18 +103,6 @@ harbor_push: &harbor_push
     name: Push Docker image to harbor
     command: docker push registry.aetherproject.org/$HARBOR_IMG
 
-docker_set_tag_env: &docker_set_tag_env
-  run:
-    name: Set the DOCKER_TAG env var dynamically based on the release_type parameter
-    command: |
-      if [[ << parameters.release_type >> == "weekly" ]]; then
-        echo 'export DOCKER_TAG=$(date "+%y.%m.%d")' >> "$BASH_ENV"
-      elif [[ << parameters.release_type >> == "latest" ]]; then
-        echo 'export DOCKER_TAG=latest' >> "$BASH_ENV"
-      else
-        echo "Unknown release type: << parameters.release_type >>"
-        exit 1
-      fi
 
 jobs:
 
@@ -325,8 +313,6 @@ jobs:
       release_type:
         description: "The type of release to tag this build with"
         type: string
-        # type: enum
-        # enum: ["latest", "weekly"]
         default: "latest"
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
@@ -338,8 +324,6 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
-      # - *docker_set_tag_env
-      # - run: echo $DOCKER_TAG
       - run: echo << parameters.release_type >>
       - run: echo $DOCKER_IMG
       - run: exit 1
@@ -456,7 +440,7 @@ workflows:
       - publish-docker-stratum-bfrt:
           sde_version: "9.7.0"
           release_type: "DATE_YY_MM_DD"
-  weekly_publish:
+  weekly_docker_publish:
     triggers:
       - schedule:
           cron: "0,15,30,45 * * * *" # every 15 mins
@@ -466,7 +450,11 @@ workflows:
                 - main
                 - cron-ci
     jobs:
-      - publish-docker-build
+      - publish-docker-stratum-bfrt:
+          release_type: "DATE_YY_MM_DD"
+          matrix:
+            parameters:
+              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0", "9.10.0"]
   docker_publish:
     jobs:
       - publish-docker-build:
