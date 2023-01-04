@@ -516,19 +516,26 @@ class BfSdeInterface {
   // Inserts/configures a digest instance. The session is used in digest
   // callbacks and must be persistent, i.e. still active at the time of callback
   // invocation.
-  virtual ::util::Status InsertDigestEntry(
+  virtual ::util::Status InsertDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) = 0;
 
   // Modifies/configures a digest instance.
-  virtual ::util::Status ModifyDigestEntry(
+  virtual ::util::Status ModifyDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) = 0;
 
   // Deletes a digest instance.
-  virtual ::util::Status DeleteDigestEntry(
+  virtual ::util::Status DeleteDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) = 0;
+
+  // Reads the data from a digest, or all digests if table ID is 0.
+  // The table ID must be a BfRt table ID, not P4Runtime. This is a noop until
+  // digest parameters are implemented.
+  virtual ::util::Status ReadDigests(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, std::vector<uint32>* digest_ids) = 0;
 
   // Synchronizes the driver cached counter values with the current hardware
   // state for a given BfRt table.

@@ -354,15 +354,19 @@ class BfSdeWrapper : public BfSdeInterface {
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id, TableDataInterface* table_data) override
       LOCKS_EXCLUDED(data_lock_);
-  ::util::Status InsertDigestEntry(
+  ::util::Status InsertDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) LOCKS_EXCLUDED(data_lock_) override;
-  ::util::Status ModifyDigestEntry(
+  ::util::Status ModifyDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) LOCKS_EXCLUDED(data_lock_) override;
-  ::util::Status DeleteDigestEntry(
+  ::util::Status DeleteDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
       uint32 table_id) LOCKS_EXCLUDED(data_lock_) override;
+  ::util::Status ReadDigests(
+      int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      uint32 table_id, std::vector<uint32>* digest_ids) override
+      LOCKS_EXCLUDED(data_lock_);
 
   ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const override
       LOCKS_EXCLUDED(data_lock_);

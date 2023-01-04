@@ -124,6 +124,12 @@ class BfrtTableManager {
       const ::p4::v1::MeterEntry& meter_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
+  // Read the data of a digest entry.
+  virtual ::util::Status ReadDigestEntry(
+      std::shared_ptr<BfSdeInterface::SessionInterface> session,
+      const ::p4::v1::DigestEntry& digest_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
   // Registers a writer to be invoked when we receive a digest lst from the
   // ASIC.
   virtual ::util::Status RegisterDigestListWriter(

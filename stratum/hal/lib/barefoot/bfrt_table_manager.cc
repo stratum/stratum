@@ -1037,21 +1037,58 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   switch (type) {
     case ::p4::v1::Update::INSERT:
-      RETURN_IF_ERROR(bf_sde_interface_->InsertDigestEntry(
+      RETURN_IF_ERROR(bf_sde_interface_->InsertDigest(
           device_, digest_list_session_, table_id));
       break;
     case ::p4::v1::Update::MODIFY:
-      RETURN_IF_ERROR(bf_sde_interface_->ModifyDigestEntry(
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyDigest(
           device_, digest_list_session_, table_id));
       break;
     case ::p4::v1::Update::DELETE:
-      RETURN_IF_ERROR(bf_sde_interface_->DeleteDigestEntry(
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteDigest(
           device_, digest_list_session_, table_id));
       break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
              << "Unsupported update type: " << type << " in digest entry "
              << translated_digest_entry.ShortDebugString() << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadDigestEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::DigestEntry& digest_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  const auto& translated_digest_entry = digest_entry;
+  // ASSIGN_OR_RETURN(const auto& translated_digest_entry,
+  //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
+  //                      digest_entry, /*to_sdk=*/true));
+  absl::ReaderMutexLock l(&lock_);
+  RET_CHECK(translated_digest_entry.digest_id() != 0)
+      << "Missing digest id in DigestEntry "
+      << translated_digest_entry.ShortDebugString() << ".";
+  ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
+                                        translated_digest_entry.digest_id()));
+  std::vector<uint32> digest_ids;
+  RETURN_IF_ERROR(
+      bf_sde_interface_->ReadDigests(device_, session, table_id, &digest_ids));
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < digest_ids.size(); ++i) {
+    ASSIGN_OR_RETURN(auto p4_digest_id,
+                     bf_sde_interface_->GetP4InfoId(digest_ids[i]));
+    ::p4::v1::DigestEntry result;
+    result.set_digest_id(p4_digest_id);
+    // ASSIGN_OR_RETURN(*resp.add_entities()->mutable_digest_entry(),
+    //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
+    //                      result, /*to_sdk=*/false));
+    *resp.add_entities()->mutable_digest_entry() = result;
+  }
+
+  VLOG(1) << "ReadDigestEntry resp " << resp.ShortDebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
   }
 
   return ::util::OkStatus();

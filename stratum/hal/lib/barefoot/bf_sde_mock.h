@@ -333,20 +333,25 @@ class BfSdeMock : public BfSdeInterface {
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id, TableDataInterface* table_data));
   MOCK_METHOD3(
-      InsertDigestEntry,
+      InsertDigest,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id));
   MOCK_METHOD3(
-      ModifyDigestEntry,
+      ModifyDigest,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id));
   MOCK_METHOD3(
-      DeleteDigestEntry,
+      DeleteDigest,
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id));
+  MOCK_METHOD4(
+      ReadDigests,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, std::vector<uint32>* digest_ids));
   MOCK_METHOD4(
       SynchronizeCounters,
       ::util::Status(int device,

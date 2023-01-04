@@ -3634,7 +3634,7 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BfSdeWrapper::InsertDigestEntry(
+::util::Status BfSdeWrapper::InsertDigest(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     uint32 table_id) {
   ::absl::WriterMutexLock l(&data_lock_);
@@ -3653,7 +3653,7 @@ namespace {
   return ::util::OkStatus();
 }
 
-::util::Status BfSdeWrapper::ModifyDigestEntry(
+::util::Status BfSdeWrapper::ModifyDigest(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     uint32 table_id) {
   ::absl::WriterMutexLock l(&data_lock_);
@@ -3664,7 +3664,7 @@ namespace {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "ModifyDigest is not implemented";
 }
 
-::util::Status BfSdeWrapper::DeleteDigestEntry(
+::util::Status BfSdeWrapper::DeleteDigest(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
     uint32 table_id) {
   ::absl::WriterMutexLock l(&data_lock_);
@@ -3676,6 +3676,33 @@ namespace {
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtLearnFromIdGet(table_id, &learn_obj));
   RETURN_IF_BFRT_ERROR(learn_obj->bfRtLearnCallbackDeregister(
       real_session->bfrt_session_, bf_dev_tgt));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfSdeWrapper::ReadDigests(
+    int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    uint32 table_id, std::vector<uint32>* digest_ids) {
+  ::absl::WriterMutexLock l(&data_lock_);
+  auto real_session = std::dynamic_pointer_cast<Session>(session);
+  RET_CHECK(real_session);
+  auto bf_dev_tgt = GetDeviceTarget(device);
+
+  std::vector<const bfrt::BfRtLearn*> learn_vec;
+  if (table_id) {
+    const bfrt::BfRtLearn* learn_obj;
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtLearnFromIdGet(table_id, &learn_obj));
+    learn_vec.push_back(learn_obj);
+  } else {
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtInfoGetLearns(&learn_vec));
+  }
+
+  digest_ids->resize(0);
+  for (size_t i = 0; i < learn_vec.size(); ++i) {
+    bf_rt_id_t id;
+    RETURN_IF_BFRT_ERROR(learn_vec[i]->learnIdGet(&id));
+    digest_ids->push_back(id);
+  }
 
   return ::util::OkStatus();
 }
