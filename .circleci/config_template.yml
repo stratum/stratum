@@ -309,14 +309,10 @@ jobs:
       sde_version:
         description: "BF SDE version to build with"
         type: string
-      release_type:
-        description: "The type of release to tag this build with"
-        type: string
-        default: "latest"
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bfrt:<< parameters.release_type >>-<< parameters.sde_version >>
+      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-<< parameters.sde_version >>
       - CC: clang
       - CXX: clang++
       - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
@@ -430,21 +426,7 @@ workflows:
             - publish-docker-build
       - license-check
       - markdown-style-check
-  weekly_docker_publish:
-    triggers:
-      - schedule:
-          cron: "0,15,30,45 * * * *" # every 15 mins
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - publish-docker-stratum-bfrt:
-          release_type: "DATE_YY_MM_DD"
-          matrix:
-            parameters:
-              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0", "9.10.0"]
-  docker_publish:
+  docker-publish:
     jobs:
       - publish-docker-build:
           filters:
