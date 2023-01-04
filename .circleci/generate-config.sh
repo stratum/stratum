@@ -10,8 +10,4 @@ if [[ "$CIRCLE_BRANCH" != "main" ]] && [[ -n $DOCKER_LOGIN ]]; then
     STRATUM_BUILDER_IMAGE="stratumproject/build-ci:$DOCKERFILE_SHA"
 fi
 
-DATE_YY_MM_DD=$(date "+%y.%m.%d")
-
-sed -e "s#STRATUM_BUILDER_IMAGE#$STRATUM_BUILDER_IMAGE#g" \
-    -e "s#DATE_YY_MM_DD#$DATE_YY_MM_DD#g" \
-  "$STRATUM_ROOT/.circleci/config_template.yml"
+sed "s#STRATUM_BUILDER_IMAGE#$STRATUM_BUILDER_IMAGE#g" "$STRATUM_ROOT/.circleci/config_template.yml"
