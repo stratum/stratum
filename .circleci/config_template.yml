@@ -103,7 +103,6 @@ harbor_push: &harbor_push
     name: Push Docker image to harbor
     command: docker push registry.aetherproject.org/$HARBOR_IMG
 
-
 jobs:
 
   # Build targets and run unit tests.
@@ -324,9 +323,6 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
-      - run: echo << parameters.release_type >>
-      - run: echo $DOCKER_IMG
-      - run: exit 1
       - *restore_bazel_cache
       - *fetch_sde_tars
       - *set_bazelrc
@@ -434,12 +430,6 @@ workflows:
             - publish-docker-build
       - license-check
       - markdown-style-check
-      - publish-docker-stratum-bfrt:
-          sde_version: "9.7.0"
-          release_type: "latest"
-      - publish-docker-stratum-bfrt:
-          sde_version: "9.7.0"
-          release_type: "DATE_YY_MM_DD"
   weekly_docker_publish:
     triggers:
       - schedule:
@@ -448,7 +438,6 @@ workflows:
             branches:
               only:
                 - main
-                - cron-ci
     jobs:
       - publish-docker-stratum-bfrt:
           release_type: "DATE_YY_MM_DD"
