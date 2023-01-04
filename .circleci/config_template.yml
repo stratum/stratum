@@ -103,6 +103,20 @@ harbor_push: &harbor_push
     name: Push Docker image to harbor
     command: docker push registry.aetherproject.org/$HARBOR_IMG
 
+docker_set_tag_env: &docker_set_tag_env
+  run:
+    name: Set the DOCKER_TAG env var dynamically
+    command: |
+      echo << parameters.release_type >>
+      if [[ << parameters.release_type >> == "weekly" ]]; then
+        echo 'export DOCKER_TAG=$(date "+%y.%m.%d")' >> "$BASH_ENV"
+      elif [[ << parameters.release_type >> == "latest" ]]; then
+        echo 'export DOCKER_TAG=latest' >> "$BASH_ENV"
+      else
+        echo "Unknown release type: << parameters.release_type >>"
+        exit 1
+      fi
+
 jobs:
 
   # Build targets and run unit tests.
@@ -309,6 +323,11 @@ jobs:
       sde_version:
         description: "BF SDE version to build with"
         type: string
+      release_type:
+        description: "The type of release to tag this build with"
+        type: enum
+        enum: ["latest", "weekly"]
+        default: "latest"
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile
@@ -319,6 +338,10 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
+      - *docker_set_tag_env
+      - run: echo << parameters.release_type >>
+      - run: echo $DOCKER_TAG
+      - run: exit 1
       - *restore_bazel_cache
       - *fetch_sde_tars
       - *set_bazelrc
@@ -426,6 +449,12 @@ workflows:
             - publish-docker-build
       - license-check
       - markdown-style-check
+      - publish-docker-stratum-bfrt:
+          sde_version: "9.7.0"
+          release_type: "latest"
+      - publish-docker-stratum-bfrt:
+          sde_version: "9.7.0"
+          release_type: "weekly"
   weekly_publish:
     triggers:
       - schedule:
