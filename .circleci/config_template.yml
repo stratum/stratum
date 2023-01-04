@@ -105,9 +105,8 @@ harbor_push: &harbor_push
 
 docker_set_tag_env: &docker_set_tag_env
   run:
-    name: Set the DOCKER_TAG env var dynamically
+    name: Set the DOCKER_TAG env var dynamically based on the release_type parameter
     command: |
-      echo << parameters.release_type >>
       if [[ << parameters.release_type >> == "weekly" ]]; then
         echo 'export DOCKER_TAG=$(date "+%y.%m.%d")' >> "$BASH_ENV"
       elif [[ << parameters.release_type >> == "latest" ]]; then
@@ -325,22 +324,24 @@ jobs:
         type: string
       release_type:
         description: "The type of release to tag this build with"
-        type: enum
-        enum: ["latest", "weekly"]
+        type: string
+        # type: enum
+        # enum: ["latest", "weekly"]
         default: "latest"
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
       - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bfrt:latest-<< parameters.sde_version >>
+      - DOCKER_IMG: stratumproject/stratum-bfrt:<< parameters.release_type >>-<< parameters.sde_version >>
       - CC: clang
       - CXX: clang++
       - SDE_INSTALL_TAR: /tmp/bf-sde-tars/bf-sde-<< parameters.sde_version >>-install.tgz
     steps:
       - setup_remote_docker
       - checkout
-      - *docker_set_tag_env
+      # - *docker_set_tag_env
+      # - run: echo $DOCKER_TAG
       - run: echo << parameters.release_type >>
-      - run: echo $DOCKER_TAG
+      - run: echo $DOCKER_IMG
       - run: exit 1
       - *restore_bazel_cache
       - *fetch_sde_tars
@@ -454,7 +455,7 @@ workflows:
           release_type: "latest"
       - publish-docker-stratum-bfrt:
           sde_version: "9.7.0"
-          release_type: "weekly"
+          release_type: "DATE_YY_MM_DD"
   weekly_publish:
     triggers:
       - schedule:
