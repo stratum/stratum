@@ -477,13 +477,15 @@ TEST_F(BfrtTableManagerTest, InsertDigestEntrySuccess) {
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
       .WillOnce(Return(kBfRtTableId));
   // TODO(max): figure out how to expect the session mock here.
-  EXPECT_CALL(*bf_sde_wrapper_mock_, InsertDigest(kDevice1, _, kBfRtTableId))
+  EXPECT_CALL(
+      *bf_sde_wrapper_mock_,
+      InsertDigest(kDevice1, _, kBfRtTableId, absl::Nanoseconds(1000000000)))
       .WillOnce(Return(::util::OkStatus()));
 
   const std::string kDigestEntryText = R"pb(
     digest_id: 401732455
     config {
-      ack_timeout_ns: 1000000000
+      ack_timeout_ns: 2000000000
       max_timeout_ns: 1000000000
       max_list_size: 100
     }
@@ -507,13 +509,15 @@ TEST_F(BfrtTableManagerTest, ModifyDigestEntrySuccess) {
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
       .WillOnce(Return(kBfRtTableId));
   // TODO(max): figure out how to expect the session mock here.
-  EXPECT_CALL(*bf_sde_wrapper_mock_, ModifyDigest(kDevice1, _, kBfRtTableId))
+  EXPECT_CALL(
+      *bf_sde_wrapper_mock_,
+      ModifyDigest(kDevice1, _, kBfRtTableId, absl::Nanoseconds(1000000000)))
       .WillOnce(Return(::util::OkStatus()));
 
   const std::string kDigestEntryText = R"pb(
     digest_id: 401732455
     config {
-      ack_timeout_ns: 1000000000
+      ack_timeout_ns: 2000000000
       max_timeout_ns: 1000000000
       max_list_size: 100
     }

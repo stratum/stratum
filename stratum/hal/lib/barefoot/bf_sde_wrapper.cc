@@ -31,6 +31,7 @@
 
 extern "C" {
 #include "bf_switchd/bf_switchd.h"
+#include "pipe_mgr/pipe_mgr_intf.h"
 #include "tofino/bf_pal/bf_pal_port_intf.h"
 #include "tofino/bf_pal/dev_intf.h"
 #include "tofino/bf_pal/pltfm_intf.h"
@@ -3636,7 +3637,7 @@ namespace {
 
 ::util::Status BfSdeWrapper::InsertDigest(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id) {
+    uint32 table_id, absl::Duration max_timeout) {
   ::absl::WriterMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
@@ -3647,21 +3648,47 @@ namespace {
   RETURN_IF_BFRT_ERROR(learn_obj->bfRtLearnCallbackRegister(
       real_session->bfrt_session_, bf_dev_tgt, BfSdeWrapper::BfDigestCallback,
       nullptr));
+  // We need to ensure that there is no partical configuration left behind in
+  // case of failures in later code.
+  auto digest_deleter =
+      absl::MakeCleanup([real_session, learn_obj, bf_dev_tgt]() {
+        // No error handling possible here.
+        pipe_status_t ret = learn_obj->bfRtLearnCallbackDeregister(
+            real_session->bfrt_session_, bf_dev_tgt);
+        LOG_IF(ERROR, ret != PIPE_SUCCESS)
+            << "Error deleting dangling digest. Device is in unknown state.";
+      });
 
-  // TODO(max): handle digest config params.
+  RETURN_IF_BFRT_ERROR(pipe_mgr_flow_lrn_set_timeout(
+      real_session->bfrt_session_->sessHandleGet(), device,
+      absl::ToInt64Microseconds(max_timeout)))
+      << "max_timeout " << max_timeout << " is likely too long.";
+  // TODO(max): handle remaining digest config params.
+
+  std::move(digest_deleter).Cancel();
 
   return ::util::OkStatus();
 }
 
 ::util::Status BfSdeWrapper::ModifyDigest(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id) {
+    uint32 table_id, absl::Duration max_timeout) {
   ::absl::WriterMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
 
-  // Noop until we support digest config params.
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "ModifyDigest is not implemented";
+  // Ensure the digest ID is valid.
+  auto bf_dev_tgt = GetDeviceTarget(device);
+  const bfrt::BfRtLearn* learn_obj;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtLearnFromIdGet(table_id, &learn_obj));
+
+  RETURN_IF_BFRT_ERROR(pipe_mgr_flow_lrn_set_timeout(
+      real_session->bfrt_session_->sessHandleGet(), device,
+      absl::ToInt64Microseconds(max_timeout)))
+      << "max_timeout " << max_timeout << " is likely too long.";
+  // TODO(max): handle remaining digest config params.
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfSdeWrapper::DeleteDigest(
@@ -3682,7 +3709,8 @@ namespace {
 
 ::util::Status BfSdeWrapper::ReadDigests(
     int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-    uint32 table_id, std::vector<uint32>* digest_ids) {
+    uint32 table_id, std::vector<uint32>* digest_ids,
+    absl::Duration* max_timeout) {
   ::absl::WriterMutexLock l(&data_lock_);
   auto real_session = std::dynamic_pointer_cast<Session>(session);
   RET_CHECK(real_session);
@@ -3703,6 +3731,11 @@ namespace {
     RETURN_IF_BFRT_ERROR(learn_vec[i]->learnIdGet(&id));
     digest_ids->push_back(id);
   }
+
+  uint32 learn_timeout_us;
+  RETURN_IF_BFRT_ERROR(
+      pipe_mgr_flow_lrn_get_timeout(device, &learn_timeout_us));
+  *max_timeout = absl::Microseconds(learn_timeout_us);
 
   return ::util::OkStatus();
 }
