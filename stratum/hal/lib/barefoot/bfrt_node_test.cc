@@ -1466,16 +1466,15 @@ TEST_F(BfrtNodeTest, HandleStreamMessageRequest_Invalid) {
                   StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
 }
 
-// HandleStreamMessageRequest() should reject StreamMessageRequests with digest
-// acks.
+// HandleStreamMessageRequest() should blindly accept StreamMessageRequests with
+// digest acks.
 TEST_F(BfrtNodeTest, HandleStreamMessageRequest_DigestAck) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
   ::p4::v1::StreamMessageRequest req;
   req.mutable_digest_ack();
 
-  EXPECT_THAT(HandleStreamMessageRequest(req),
-              DerivedFromStatus(::util::Status(
-                  StratumErrorSpace(), ERR_UNIMPLEMENTED, "Unsupported")));
+  // TODO(max): extend once we actually implement digest acks.
+  EXPECT_OK(HandleStreamMessageRequest(req));
 }
 
 // HandleStreamMessageRequest() should reject StreamMessageRequests with

@@ -47,6 +47,8 @@ class BfrtTableManagerTest : public ::testing::Test {
         bfrt_p4runtime_translator_mock_.get(), kDevice1);
   }
 
+  void TearDown() override { ASSERT_OK(bfrt_table_manager_->Shutdown()); }
+
   ::util::Status PushTestConfig() {
     const std::string kSamplePipelineText = R"pb(
       programs {
@@ -128,11 +130,29 @@ class BfrtTableManagerTest : public ::testing::Test {
             }
             size: 500
           }
+          digests {
+            preamble {
+              id: 401732455
+              name: "Ingress.digest_a"
+              alias: "digest_a"
+            }
+            type_spec {
+              struct {
+                name: "my_digest_t"
+              }
+            }
+          }
         }
       }
     )pb";
     BfrtDeviceConfig config;
     RETURN_IF_ERROR(ParseProtoFromString(kSamplePipelineText, &config));
+    std::shared_ptr<BfSdeInterface::SessionInterface> session_mock =
+        std::make_shared<SessionMock>();
+    EXPECT_CALL(*bf_sde_wrapper_mock_, CreateSession())
+        .WillOnce(Return(session_mock));
+    EXPECT_CALL(*bf_sde_wrapper_mock_, RegisterDigestListWriter(kDevice1, _))
+        .WillOnce(Return(::util::OkStatus()));
     return bfrt_table_manager_->PushForwardingPipelineConfig(config);
   }
 
@@ -446,6 +466,123 @@ TEST_F(BfrtTableManagerTest, RejectMeterEntryReadWithoutId) {
       bfrt_table_manager_->ReadMeterEntry(session_mock, entry, &writer_mock);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+}
+
+TEST_F(BfrtTableManagerTest, InsertDigestEntrySuccess) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_, InsertDigest(kDevice1, _, kBfRtTableId))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
+    config {
+      ack_timeout_ns: 1000000000
+      max_timeout_ns: 1000000000
+      max_list_size: 100
+    }
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+  //             TranslateMeterEntry(EqualsProto(entry), true))
+  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->WriteDigestEntry(
+      session_mock, ::p4::v1::Update::INSERT, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ModifyDigestEntrySuccess) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_, ModifyDigest(kDevice1, _, kBfRtTableId))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
+    config {
+      ack_timeout_ns: 1000000000
+      max_timeout_ns: 1000000000
+      max_list_size: 100
+    }
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+  //             TranslateMeterEntry(EqualsProto(entry), true))
+  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->WriteDigestEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, DeleteDigestEntrySuccess) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_, DeleteDigest(kDevice1, _, kBfRtTableId))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
+    config {
+      ack_timeout_ns: 1000000000
+      max_timeout_ns: 1000000000
+      max_list_size: 100
+    }
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+  //             TranslateMeterEntry(EqualsProto(entry), true))
+  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->WriteDigestEntry(
+      session_mock, ::p4::v1::Update::DELETE, entry));
+}
+
+TEST_F(BfrtTableManagerTest, ReadSingleDigestEntrySuccess) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(writer_mock, Write(_)).WillOnce(Return(true));
+  // TODO(max): figure out how to expect the session mock here.
+  // EXPECT_CALL(*bf_sde_wrapper_mock_, DeleteDigest(kDevice1, _, kBfRtTableId))
+  //     .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+  //             TranslateMeterEntry(EqualsProto(entry), true))
+  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
+
+  EXPECT_OK(
+      bfrt_table_manager_->ReadDigestEntry(session_mock, entry, &writer_mock));
 }
 
 TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
