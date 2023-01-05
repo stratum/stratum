@@ -50,7 +50,7 @@ ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang-format-11 clang-11
+    apt-get install -y --no-install-recommends clang-format-11 clang-11 llvm-11
 # Versioned LLVM releases don't come with the meta packages for the
 # clang -> clang-11 symlinks. We create them manually here.
 RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
