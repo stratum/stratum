@@ -518,12 +518,12 @@ class BfSdeInterface {
   // invocation.
   virtual ::util::Status InsertDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id) = 0;
+      uint32 table_id, absl::Duration max_timeout) = 0;
 
   // Modifies/configures a digest instance.
   virtual ::util::Status ModifyDigest(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id) = 0;
+      uint32 table_id, absl::Duration max_timeout) = 0;
 
   // Deletes a digest instance.
   virtual ::util::Status DeleteDigest(
@@ -531,11 +531,12 @@ class BfSdeInterface {
       uint32 table_id) = 0;
 
   // Reads the data from a digest, or all digests if table ID is 0.
-  // The table ID must be a BfRt table ID, not P4Runtime. This is a noop until
-  // digest parameters are implemented.
+  // The table ID must be a BfRt table ID, not P4Runtime. max_timeout contains
+  // the device-wide learn timeout for the given device.
   virtual ::util::Status ReadDigests(
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session,
-      uint32 table_id, std::vector<uint32>* digest_ids) = 0;
+      uint32 table_id, std::vector<uint32>* digest_ids,
+      absl::Duration* max_timeout) = 0;
 
   // Synchronizes the driver cached counter values with the current hardware
   // state for a given BfRt table.

@@ -1024,6 +1024,8 @@ BfrtTableManager::ReadDirectCounterEntry(
     const ::p4::v1::Update::Type type,
     const ::p4::v1::DigestEntry& digest_entry) {
   absl::ReaderMutexLock l(&lock_);
+  RET_CHECK(digest_entry.has_config()) << "Digest entry is missing its config: "
+                                       << digest_entry.ShortDebugString();
   const auto& translated_digest_entry = digest_entry;
   // ASSIGN_OR_RETURN(const auto& translated_digest_entry,
   //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
@@ -1034,15 +1036,16 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
                                         translated_digest_entry.digest_id()));
-
+  absl::Duration max_timeout =
+      absl::Nanoseconds(digest_entry.config().max_timeout_ns());
   switch (type) {
     case ::p4::v1::Update::INSERT:
       RETURN_IF_ERROR(bf_sde_interface_->InsertDigest(
-          device_, digest_list_session_, table_id));
+          device_, digest_list_session_, table_id, max_timeout));
       break;
     case ::p4::v1::Update::MODIFY:
       RETURN_IF_ERROR(bf_sde_interface_->ModifyDigest(
-          device_, digest_list_session_, table_id));
+          device_, digest_list_session_, table_id, max_timeout));
       break;
     case ::p4::v1::Update::DELETE:
       RETURN_IF_ERROR(bf_sde_interface_->DeleteDigest(
@@ -1072,14 +1075,17 @@ BfrtTableManager::ReadDirectCounterEntry(
   ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
                                         translated_digest_entry.digest_id()));
   std::vector<uint32> digest_ids;
-  RETURN_IF_ERROR(
-      bf_sde_interface_->ReadDigests(device_, session, table_id, &digest_ids));
+  absl::Duration max_timeout;
+  RETURN_IF_ERROR(bf_sde_interface_->ReadDigests(device_, session, table_id,
+                                                 &digest_ids, &max_timeout));
   ::p4::v1::ReadResponse resp;
   for (size_t i = 0; i < digest_ids.size(); ++i) {
     ASSIGN_OR_RETURN(auto p4_digest_id,
                      bf_sde_interface_->GetP4InfoId(digest_ids[i]));
     ::p4::v1::DigestEntry result;
     result.set_digest_id(p4_digest_id);
+    result.mutable_config()->set_max_timeout_ns(
+        absl::ToInt64Nanoseconds(max_timeout));
     // ASSIGN_OR_RETURN(*resp.add_entities()->mutable_digest_entry(),
     //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
     //                      result, /*to_sdk=*/false));
