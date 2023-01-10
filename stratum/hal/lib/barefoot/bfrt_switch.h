@@ -11,6 +11,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_global_vars.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
