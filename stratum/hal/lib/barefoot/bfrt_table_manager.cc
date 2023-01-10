@@ -104,7 +104,6 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     absl::WriterMutexLock l(&digest_list_writer_lock_);
     digest_list_writer_ = nullptr;
   }
-
   {
     absl::WriterMutexLock l(&lock_);
     if (digest_rx_thread_id_ != 0) {
@@ -137,7 +136,8 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     absl::WriterMutexLock l(&lock_);
     digest_rx_thread_id_ = 0;
   }
-  return ::util::OkStatus();
+
+  return status;
 }
 
 ::util::Status BfrtTableManager::BuildTableKey(
@@ -1339,6 +1339,16 @@ BfrtTableManager::ReadDirectCounterEntry(
   return ::util::OkStatus();
 }
 
+void* BfrtTableManager::DigestListThreadFunc(void* arg) {
+  BfrtTableManager* mgr = reinterpret_cast<BfrtTableManager*>(arg);
+  ::util::Status status = mgr->HandleDigestList();
+  if (!status.ok()) {
+    LOG(ERROR) << "Non-OK exit of handler thread for digest lists.";
+  }
+
+  return nullptr;
+}
+
 ::util::Status BfrtTableManager::HandleDigestList() {
   std::unique_ptr<ChannelReader<BfSdeInterface::DigestList>> reader;
   {
@@ -1347,9 +1357,14 @@ BfrtTableManager::ReadDirectCounterEntry(
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<BfSdeInterface::DigestList>::Create(
         digest_list_receive_channel_);
+    if (!reader) return MAKE_ERROR(ERR_INTERNAL) << "Failed to create reader.";
   }
 
   while (true) {
+    {
+      absl::ReaderMutexLock l(&chassis_lock);
+      if (shutdown) break;
+    }
     BfSdeInterface::DigestList digest_list;
     int code =
         reader->Read(&digest_list, absl::InfiniteDuration()).error_code();
@@ -1380,16 +1395,6 @@ BfrtTableManager::ReadDirectCounterEntry(
   }
 
   return ::util::OkStatus();
-}
-
-void* BfrtTableManager::DigestListThreadFunc(void* arg) {
-  BfrtTableManager* mgr = reinterpret_cast<BfrtTableManager*>(arg);
-  ::util::Status status = mgr->HandleDigestList();
-  if (!status.ok()) {
-    LOG(ERROR) << "Non-OK exit of handler thread for digest lists.";
-  }
-
-  return nullptr;
 }
 
 }  // namespace barefoot

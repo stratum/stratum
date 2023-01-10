@@ -13,6 +13,7 @@
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/barefoot/bf_global_vars.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
@@ -23,9 +24,6 @@
 namespace stratum {
 namespace hal {
 namespace barefoot {
-
-// Lock which protects chassis state across the entire switch.
-extern absl::Mutex chassis_lock;
 
 // The "BfChassisManager" class encapsulates all the chassis-related
 // functionalities needed in BfSwitch/BfrtSwitch class. This class is in charge
