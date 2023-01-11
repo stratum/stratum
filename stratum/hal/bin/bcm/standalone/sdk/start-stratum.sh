@@ -29,7 +29,17 @@ sleep 1
 
 mkdir -p /var/run/stratum /var/log/stratum
 
-PLATFORM=$(cat /etc/onl/platform)
+# Try to load the platform string if not already set.
+if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
+    PLATFORM="$(cat /etc/onl/platform)"
+elif [[ -z "$PLATFORM" ]] && [[ -f "/etc/sonic/sonic-environment" ]]; then
+    PLATFORM=$(source /etc/sonic/sonic-environment; echo "$PLATFORM" | sed 's/_/-/g')
+    echo "Stopping SONiC services..."
+    systemctl stop sonic.target &> /dev/null || true
+elif [[ -z "$PLATFORM" ]]; then
+    echo "PLATFORM variable must be set manually on non-ONL switches."
+    exit 255
+fi
 
 exec stratum_bcm_opennsa \
     -base_bcm_chassis_map_file=/etc/stratum/${PLATFORM}/base_bcm_chassis_map.pb.txt \

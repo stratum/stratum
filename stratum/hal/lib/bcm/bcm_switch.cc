@@ -122,7 +122,7 @@ BcmSwitch::~BcmSwitch() {}
 ::util::Status BcmSwitch::Shutdown() {
   // The shutdown flag must be checked on all read or write accesses to
   // state protected by chassis_lock, whether within RPC executions or
-  // event handler threas.
+  // event handler threads.
   {
     absl::WriterMutexLock l(&chassis_lock);
     shutdown = true;

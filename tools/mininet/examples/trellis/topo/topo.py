@@ -71,12 +71,12 @@ class LeafSpineTopo(Topo):
         Topo.__init__(self, *args, **kwargs)
 
         # Leaves
-        leaf1 = self.addSwitch('leaf1')  # gRPC 50001
-        leaf2 = self.addSwitch('leaf2')  # gRPC 50002
+        leaf1 = self.addSwitch('leaf1', grpcPort=50001)
+        leaf2 = self.addSwitch('leaf2', grpcPort=50002)
 
         # Spines
-        spine1 = self.addSwitch('spine1')  # gRPC 50003
-        spine2 = self.addSwitch('spine2')  # gRPC 50004
+        spine1 = self.addSwitch('spine1', grpcPort=50003)
+        spine2 = self.addSwitch('spine2', grpcPort=50004)
 
         # Links
         self.addLink(spine1, leaf1)

@@ -18,7 +18,14 @@ If building from source:
 
 Switch:
 ```bash
+# For ONL-based switch
 cat /etc/onl/platform
+uname -a
+lsmod
+
+# For SONiC-based switch
+cat /etc/sonic/sonic-environment
+cat /etc/sonic/sonic_version.yml
 uname -a
 lsmod
 ```

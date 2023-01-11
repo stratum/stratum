@@ -17,8 +17,6 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
 
-DECLARE_bool(incompatible_enable_bfrt_legacy_bytestring_responses);
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -275,11 +273,8 @@ class BitBuffer {
   for (const auto& p : packetin_header_) {
     auto metadata = packet->add_metadata();
     metadata->set_metadata_id(p.first);
-    metadata->set_value(bit_buf.PopField(p.second));
-    if (!FLAGS_incompatible_enable_bfrt_legacy_bytestring_responses) {
-      *metadata->mutable_value() =
-          ByteStringToP4RuntimeByteString(metadata->value());
-    }
+    metadata->set_value(
+        ByteStringToP4RuntimeByteString(bit_buf.PopField(p.second)));
     VLOG(1) << "Encoded PacketIn metadata field with id " << p.first
             << " bitwidth " << p.second << " value 0x"
             << StringToHex(metadata->value());
@@ -314,9 +309,14 @@ class BitBuffer {
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<std::string>::Create(packet_receive_channel_);
+    if (!reader) return MAKE_ERROR(ERR_INTERNAL) << "Failed to create reader.";
   }
 
   while (true) {
+    {
+      absl::ReaderMutexLock l(&chassis_lock);
+      if (shutdown) break;
+    }
     std::string buffer;
     int code = reader->Read(&buffer, absl::InfiniteDuration()).error_code();
     if (code == ERR_CANCELLED) break;

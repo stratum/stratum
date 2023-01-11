@@ -38,7 +38,10 @@ do
   echo "Building using $KERNEL_HEADERS_TAR"
   KERNEL_HEADERS_PATH="$(mktemp -d /tmp/linux_headers.XXXXXX)"
   tar xf $KERNEL_HEADERS_TAR -C $KERNEL_HEADERS_PATH --strip-components 1
-  KERNEL_VERSION="$(cat $KERNEL_HEADERS_PATH/include/config/kernel.release)"
+  KERNEL_VERSION="$(awk 'match($0, /CONFIG_BUILD_SALT="([^"]+)"/, a) {print a[1]}' $KERNEL_HEADERS_PATH/.config)"
+  if [[ -z $KERNEL_VERSION ]]; then
+    KERNEL_VERSION="$(cat $KERNEL_HEADERS_PATH/include/config/kernel.release)"
+  fi
   build_kernel_module
   rm -rf $KERNEL_HEADERS_PATH
 done

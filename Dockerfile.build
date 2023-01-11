@@ -3,18 +3,22 @@
 
 ARG BAZELISK_VERSION=1.8.0
 ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
-ARG BMV2_COMMIT=b0fb01ecacbf3a7d7f0c01e2f149b0c6a957f779
+ARG BMV2_COMMIT=8e8a192fc58e2e994f4c82a34496ec6833bf0d50
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
-ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch-11 main"
+ARG LLVM_REPO_NAME="deb http://apt.llvm.org/buster/  llvm-toolchain-buster-11 main"
 
 # Reasonable for CI
 ARG JOBS=2
 
-FROM debian:9@sha256:d8ee86bf0afeb901de293c692a540307a670306cbdb7a06e2c840f17b0c35374
+FROM debian:buster@sha256:e82e10f0b9560e5947a16eb28c2992ec03121fc8c9659bce0cc94c5b7b6178c9
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum"
 
 ARG JOBS
+
+# zdata
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # bazelisk dependencies
 # + wget to download bazelisk binary
@@ -25,16 +29,18 @@ ARG JOBS
 # OpenNSA dependencies
 # + libelf-dev to build the kernel modules
 # BF SDE dependecies
-# + libelf-dev to build the kernel modules
+# + libelf-dev gawk to build the kernel modules
 # Tools and libraries for p4lang/target-syslibs and p4lang/target-utils
 # + cmake libedit-dev expat
-ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
+# Tools to patch the SONiC kernel headers
+# + rsync
+ENV PKG_DEPS pkg-config zip zlib1g-dev unzip wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
-    libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
+    libfl-dev libgmp-dev libi2c-dev python3-yaml libyaml-dev build-essential \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
-    gnupg2 software-properties-common python-pip python-dev python3-dev \
-    apt-transport-https libelf-dev cmake libedit-dev expat
+    gnupg2 software-properties-common python3-pip python3-dev \
+    apt-transport-https libelf-dev cmake libedit-dev expat libbz2-dev rsync gawk
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
@@ -44,14 +50,14 @@ ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang-format-11 clang-11
+    apt-get install -y --no-install-recommends clang-format-11 clang-11 llvm-11
 # Versioned LLVM releases don't come with the meta packages for the
-# clang -> clang-12 symlinks. We create them manually here.
+# clang -> clang-11 symlinks. We create them manually here.
 RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
 RUN ln -s ../lib/llvm-11/bin/clang++ /usr/bin/clang++
 RUN ln -s ../lib/llvm-11/bin/clang-format /usr/bin/clang-format
 
-# Install java and lcov for Bazel coverage
+# Install java for Bazel coverage report
 ARG JDK_URL
 ENV JAVA_HOME /usr/local/lib/jvm
 RUN wget --quiet $JDK_URL -O $HOME/jdk_11.0.2.tar.gz && \
@@ -72,7 +78,8 @@ RUN git clone https://github.com/p4lang/PI.git /tmp/PI && \
 
 ARG BMV2_COMMIT
 ENV BMV2_INSTALL /usr/local
-RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
+# TODO(max): switch back to upstream repo once merged
+RUN git clone https://github.com/pudelkoM/behavioral-model.git /tmp/bmv2 && \
     cd /tmp/bmv2 && git checkout ${BMV2_COMMIT} && \
     ./autogen.sh && \
     ./configure --without-targets --with-pi --disable-elogger \
@@ -95,8 +102,8 @@ RUN wget --quiet https://github.com/bazelbuild/bazelisk/releases/download/v${BAZ
     bazel version
 
 # Tools for style and license checking
-RUN pip install setuptools wheel && \
-    pip install 'cpplint==1.*'
+RUN pip3 install setuptools wheel && \
+    pip3 install 'cpplint==1.*'
 RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
 RUN chmod +x /usr/local/bin/buildifier
 
@@ -107,3 +114,6 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
+# Bazel uses "python" instead of "python3" for some cases.
+RUN ln -s /usr/bin/python3 /usr/bin/python
+

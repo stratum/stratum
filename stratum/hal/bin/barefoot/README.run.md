@@ -37,7 +37,7 @@ These containers include kernel modules for OpenNetworkLinux.
 **This is the recommended way to run Stratum.**
 
 Before deploing the container to the device, make sure you install Docker on the
-switch; we've tested with: **Docker 18.06.0-ce**
+switch; we've tested with: **Docker 18.09.8 community edition**
 
 No other dependencies are required.
 
@@ -93,7 +93,7 @@ __Note:__ This step only needs to be done once.
 [sudo] mount -t hugetlbfs nodev /mnt/huge
 ```
 
-If you re-image your switch (reload ONL via ONIE), you will need to run these commands again.
+If you re-image your switch (reload SONiC via ONIE), you will need to run these commands again.
 
 ### Upload start script to the switch
 
@@ -568,30 +568,22 @@ On some supported platforms the BSP-based implementation is chosen by default.
 This selection can be overwritten with the `-bf_switchd_cfg` flag:
 
 ```bash
-start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf [-enable_onlp=false]
+start-stratum.sh -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4.conf
 ```
-
-The optional `-enable_onlp=false` flag tells Stratum not to use the ONLP PHAL
-plugin. ONLP is disabled by default, but you can explicitly override this flag
-when using a vendor-provided BSP or running Stratum with the Tofino software
-model.
 
 ### Running the binary in BSP-less mode
 
 ```bash
-start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf -enable_onlp=true
+start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
 ```
 
-If ONLP support is available for your platform, you do not need to use a
-BSP. Instead the platform vendor can provide a JSON "port mapping" file (see
+The platform vendor can provide a JSON "port mapping" file (see
 this [example](platforms/x86-64-accton-wedge100bf-32x-r0.json) for the Wedge
-100bf-32x) and Stratum takes care of making the information exposed by ONLP
-available to the SDE as needed.
+100bf-32x) and Stratum takes care of making the information to the SDE as needed.
 
 To start Stratum in BSP-less mode, copy the JSON port mapping file for your
 platform to `/etc/stratum/<platform>/port_map.json` and run `start-stratum.sh` with
-`--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`. Make
-sure to include the `-enable_onlp=true` flag to activate the ONLP plugin.
+`--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`.
 
 Platforms with repeaters (such as the Wedge 100bf-65x) are not currently
 supported in BSP-less mode.
@@ -654,17 +646,6 @@ have entered the BF Shell, type `ucli` to access the BF CLI.
 To exit the BF CLI or the BF Shell, use `exit`. Note that using `Ctrl+C` will
 end the BF Shell without closing the telnet session. To exit the telnet session,
 press `Ctrl` and `]` to escape from the session and type `quit` to exit telnet.
-
-### P4Runtime canonical byte strings
-
-P4Runtime defines a [canonical byte string representation](https://s3-us-west-2.amazonaws.com/p4runtime/docs/master/P4Runtime-Spec.html#sec-bytestrings)
-for binary data in proto messages such as TableEntries and PacketIn/Outs. In
-short, it requires that the binary strings must not contain redundant bytes,
- i.e., `\x00\xab` vs `\xab`. For Stratum-bfrt the
-`-incompatible_enable_bfrt_legacy_bytestring_responses` flag toggles this
-behavior. **This flag will be removed in a future release and canonical byte
-strings will be the default.**
-
 
 ### Experimental P4Runtime translation support
 

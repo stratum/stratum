@@ -135,13 +135,6 @@ if [[ $EUID -ne 0 ]]; then
    sudo="sudo"
 fi
 
-# Install an older version of pyresistent before running the P4 studio
-# since the pip will try to install newer version of it when pip install
-# the jsonschema library. And the new version of pyresistent(0.17.x) requires
-# Python >= 3.5
-# TODO: Remove this once we move to Python3
-$sudo pip install pyrsistent==0.14.0
-
 # Set up SDE build directory in /tmp
 tmpdir="$(mktemp -d /tmp/bf_sde.XXXXXX)"
 export SDE=$tmpdir
@@ -169,7 +162,7 @@ $sudo ./install-p4studio-dependencies.sh
 sed -i 's/add_subdirectory(kdrv)/#add_subdirectory(kdrv)/g' $SDE/pkgsrc/bf-drivers/CMakeLists.txt
 # Build BF SDE
 ./p4studio dependencies install --source-packages bridge,libcli,thrift --jobs $JOBS
-./p4studio configure bfrt '^pi' '^tofino2h' '^thrift-driver' '^p4rt' tofino asic '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
+./p4studio configure 'bfrt' 'tofino' 'asic' '^pi' '^thrift-driver' '^p4rt' '^tofino2m' '^tofino2' '^grpc' $BSP_CMD
 ./p4studio build --jobs $JOBS
 popd
 

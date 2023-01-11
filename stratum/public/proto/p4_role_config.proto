@@ -1,0 +1,34 @@
+// Copyright 2022-present Open Networking Foundation
+// Copyright 2022 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum;
+
+// The P4RoleConfig message conists of these fields:
+//  exclusive_p4_ids - A list of P4 entities for which this role exclusivly may
+//      issue Write updates. Those entities are also filtered out of Read
+//      responses.
+//  shared_p4_ids - A list of P4 entities for which this role may issue Write
+//      updates. Access to those entities is shared with other roles. Those
+//      entities are also filtered out of Read responses.
+//  packet_in_filter - A single PacketFilter that is applied to incoming packets
+//      to determine whether this role should receive them. An empty list
+//      results in no filtering. This is a positive filter, a packet must
+//      contain the exact specified value to be forwarded.
+//  receives_packet_ins - A toggle to set if this role should receive PacketIns.
+//  can_push_pipeline - Determines if this role is allowed to push a pipeline.
+message P4RoleConfig {
+  message PacketFilter {
+    uint32 metadata_id = 1;  // Must match an ID in the P4Info.
+    bytes value = 2;         // Should be given in canonical form.
+  }
+  repeated uint32 exclusive_p4_ids = 1;
+  repeated uint32 shared_p4_ids = 2;
+  PacketFilter packet_in_filter = 3;
+  bool receives_packet_ins = 4;
+  bool can_push_pipeline = 5;
+}

@@ -90,9 +90,10 @@ pkg_deb(
     architecture = "amd64",
     data = ":stratum_bmv2_data",
     depends = [
-        "libboost-filesystem1.62.0",
-        "libboost-program-options1.62.0",
-        "libboost-thread1.62.0",
+        "libatomic1",
+        "libboost-filesystem1.67.0",
+        "libboost-program-options1.67.0",
+        "libboost-thread1.67.0",
         "libgmp10",
         "libjudydebian1",
         "libpcap-dev",

@@ -14,16 +14,16 @@ orbs:
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
     keys:
-      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
-      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
-      - v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
+      - v5-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v5-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v5-bazel-cache-{{ .Environment.CIRCLE_JOB }}-main
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
     # jobs where the bazel process was killed because it took too long or OOM.
     # Restart the job if you see the bazel server being terminated abruptly.
     when: always
-    key: v4-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+    key: v5-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
     paths:
       - /tmp/bazel-cache
       - /tmp/bazel-disk-cache
@@ -59,7 +59,7 @@ set_bazelrc: &set_bazelrc
     # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
     command: |
       cat .circleci/bazelrc >> .bazelrc
-      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
+      rm -rf /tmp/bazel-cache/output-root/install/ec7bc80570c57e35507fafa6aadd57b1
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -219,7 +219,7 @@ jobs:
           command: |
             docker run --entrypoint stratum_bmv2 $DOCKER_IMG -version
             docker run --entrypoint mn $DOCKER_IMG --version
-            docker run --rm --entrypoint python $DOCKER_IMG -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
+            docker run --rm --entrypoint python3 $DOCKER_IMG -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
       - *docker_push
       - *clean_bazel_cache
       - *save_bazel_cache
@@ -449,7 +449,7 @@ workflows:
             - publish-docker-build
           matrix:
             parameters:
-              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0"]
+              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0", "9.10.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build

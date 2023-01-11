@@ -194,7 +194,8 @@ pkg_deb(
     data = ":stratum_bcm_opennsa_all",
     depends = [
         "kmod",
-        "libboost-thread1.62.0",
+        "libatomic1",
+        "libboost-thread1.67.0",
         "libedit2",
         "libjudydebian1",
         "libssl1.1",
@@ -219,7 +220,8 @@ pkg_deb(
     data = ":stratum_bcm_sdklt_all",
     depends = [
         "kmod",
-        "libboost-thread1.62.0",
+        "libatomic1",
+        "libboost-thread1.67.0",
         "libedit2",
         "libjudydebian1",
         "libssl1.1",

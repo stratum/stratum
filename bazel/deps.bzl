@@ -10,8 +10,8 @@ load(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//bazel:workspace_rule.bzl", "remote_workspace")
 
-P4RUNTIME_VER = "1.4.0-rc.1"
-P4RUNTIME_SHA = "3a32a4781c02e8aa36d998046b350c32c12abc27d62feeebff4e1554f29f37ef"
+P4RUNTIME_VER = "1.4.0-rc.5"
+P4RUNTIME_SHA = "ba31fb9afce6e62ffe565b16bb909e144cd30d65d926cd90af25e99ee8de863a"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
@@ -251,8 +251,8 @@ def stratum_deps():
     if "com_github_opennetworkinglab_sdklt" not in native.existing_rules():
         http_archive(
             name = "com_github_opennetworkinglab_sdklt",
-            sha256 = "38a59fe2db5122dd76fcbed234c68c59ccfdb68890199b4b891aeb86817713f4",
-            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/r69/sdklt-4.14.49.tgz"],
+            sha256 = "dfe9d73fd52ad7f064837ccab4ef64effffa88a65b16dcbf8048d07c0a349de9",
+            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/r148/sdklt-4.19.0.tgz"],
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
@@ -266,8 +266,9 @@ def stratum_deps():
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.
             patch_cmds = [
-                "wget -qO- https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.0.1/linux-4.14.49-OpenNetworkLinux.tar.xz | tar xz",
-                "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=$(realpath ./linux-4.14.49-OpenNetworkLinux) && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
+                "wget -qO- https://github.com/stratum/sonic-base-image/releases/download/2022-08-12/linux-headers-4.19.0-12-2-merged.tar.xz | tar xJ",
+                "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=$(realpath ./linux-headers-4.19.0-12-2-merged) && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
+                "rm -rf ./linux-headers-4.19.0-12-2-merged",
             ],
         )
 

@@ -723,7 +723,7 @@ TEST_P(BcmChassisManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-      .Times(4)
+      .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               RegisterLinkscanEventWriter(
@@ -1479,7 +1479,7 @@ TEST_P(BcmChassisManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 1, _))
-      .Times(4)
+      .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               RegisterLinkscanEventWriter(
@@ -2316,8 +2316,7 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithTrunks) {
   EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 1, _))
-      .Times(3)
-      .WillRepeatedly(Return(::util::OkStatus()));
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               RegisterLinkscanEventWriter(
                   _, BcmSdkInterface::kLinkscanEventWriterPriorityHigh))
@@ -4528,8 +4527,7 @@ TEST_P(BcmChassisManagerTest, GetPortStateAfterConfigPushAndLinkEvent) {
   EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-      .Times(2)
-      .WillRepeatedly(Return(::util::OkStatus()));
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               RegisterLinkscanEventWriter(
                   _, BcmSdkInterface::kLinkscanEventWriterPriorityHigh))
@@ -5236,8 +5234,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
   }
 
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-      .Times(2)
-      .WillRepeatedly(Return(::util::OkStatus()));
+      .WillOnce(Return(::util::OkStatus()));
 
   ASSERT_OK(VerifyChassisConfig(config));
   ASSERT_OK(PushChassisConfig(config));

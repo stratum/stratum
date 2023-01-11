@@ -24,6 +24,7 @@ access P4 Studio SDE. Contact Intel for more details.*
  - 9.7.2 (recommended; LTS release)
  - 9.8.0 (experimental)
  - 9.9.0 (experimental)
+ - 9.10.0 (experimental)
 
 The rest of this guide depends on the BF SDE tarball, so you can export an
 environment variable that points to it:
@@ -46,8 +47,7 @@ Stratum release -- 2020-12.*
 If you plan to run Stratum on hardware, you will need to build the kernel
 module for your particular switch OS.
 
-If you are running Stratum on ONL (OpenNetworkLinux), you can download
-the [Linux kernel headers here][onl-linux-headers].
+We recommend running Stratum on SONiC, you can download the [Linux kernel headers here][sonic-linux-headers].
 
 You can also find the Linux headers package for your distro by using `apt-get`,
 for example:
@@ -59,9 +59,9 @@ for example:
 ### Docker
 
 If you plan to build Stratum using Docker or build the Stratum Docker container,
-we've tested with: **Docker 18.06.0-ce**
+we've tested with: **Docker 18.09.8 community edition**
 
-You can skip this depedency if you plan to build the Stratum Debian package
+You can skip this dependency if you plan to build the Stratum Debian package
 locally (Method 3 and Method 4).
 
 ## Building Stratum
@@ -98,7 +98,7 @@ You can also build the SDE to support multiple kernel modules, for example:
 
 ```bash
 stratum/hal/bin/barefoot/build-bf-sde.sh -t $SDE_TAR \
-  -k linux-4.9.75-OpenNetworkLinux.tar.xz \
+  -k linux-headers-4.19.0-12-2-merged.tar.xz \
   -k linux-4.14.49-OpenNetworkLinux.tar.xz
 ```
 
@@ -167,9 +167,7 @@ If you want to create a Docker image from the Debian package,
 
 ```bash
 export SDE_VERSION=9.7.2
-export STRATUM_TARGET=stratum_bfrt
 docker build -t stratumproject/stratum-bfrt:latest-$SDE_VERSION \
-  --build-arg STRATUM_TARGET="$STRATUM_TARGET" \
   -f stratum/hal/bin/barefoot/docker/Dockerfile \
   bazel-bin/stratum/hal/bin/barefoot
 ```
@@ -215,13 +213,10 @@ dependencies and builds the SDE with the appropriate flags. Feel free to
 customize the profile if needed; please refer to the P4Studio Build documentation.
 If you are using the
 reference BSP provided by Barefoot, you may also use P4Studio Build to
-install the BSP (see [below](#board-support-package-bsp-or-onlpv2)).
+install the BSP (see [below](#with-or-without-board-support-package-bsp)).
 
 Remember to download and pass the correct Kernel sources (`-kdir`) if you
 are building modules for a specific version other than the host's.
-
-As there are some issues with building the SDE on ONL switches, it's better to
-do that on a separate server.
 
 #### Step 2: Patching the BF SDE install directory
 
@@ -263,13 +258,13 @@ automatically by reading the `$SDE_INSTALL_TAR/share/VERSION` file.
 These are only available in
 [Method 4](#method-4:-build-the-sde-and-stratum-locally).
 
-### Board support package (BSP) or ONLPv2?
+### With or without Board Support Package (BSP)
 
 Stratum can be run on Tofino-based platforms in 2 different modes:
 
-**ONLPv2**
+**Without BSP**
 
-If your platform comes with ONLPv2 and a JSON "port mapping" file is provided
+If your platform comes with a JSON "port mapping" file provided
 by the platform vendor (see this
 [example](../../config/x86-64-accton-wedge100bf-32x-r0/port_map.json) for the
 Wedge 100bf-32x), you can use Stratum in "BSP-less mode". Refer to this
@@ -278,8 +273,8 @@ information. **This is the recommended mode. No changes to the SDE needed.**
 
 **BSP**
 
-Otherwise, you need to build & install the BSP. You will not be able to use
-the Stratum ONLP support. The exact instructions vary by the BSP vendor, here is
+Otherwise, you need to build & install the BSP.
+The exact instructions vary by the BSP vendor, here is
 how it works for the Wedge reference switch. Either set the `BSP` environment
 variable before running the
 [`build-stratum-bf-container.sh`](#method-1-build-with-docker-in-one-shot) script:
@@ -296,4 +291,4 @@ export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>.tgz
 ./p4studio configure ... --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
 ```
 
-[onl-linux-headers]: https://github.com/opennetworkinglab/OpenNetworkLinux/releases/tag/onlpv2-dev-1.0.1
+[sonic-linux-headers]: https://github.com/stratum/sonic-base-image/releases
