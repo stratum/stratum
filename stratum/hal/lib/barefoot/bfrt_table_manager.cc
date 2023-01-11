@@ -327,7 +327,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   if (!translated_table_entry.is_default_action()) {
     if (table.is_const_table()) {
       return MAKE_ERROR(ERR_PERMISSION_DENIED)
-             << "Can't write to table " << table.preamble().name()
+             << "Can't write to const table " << table.preamble().name()
              << " because it has const entries.";
     }
     ASSIGN_OR_RETURN(auto table_key,
@@ -362,7 +362,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     }
   } else {
     RET_CHECK(type == ::p4::v1::Update::MODIFY)
-        << "The table default entry can only be modified.";
+        << "The default table entry can only be modified.";
     RET_CHECK(translated_table_entry.match_size() == 0)
         << "Default action must not contain match fields.";
     RET_CHECK(translated_table_entry.priority() == 0)

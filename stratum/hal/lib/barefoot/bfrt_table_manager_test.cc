@@ -90,7 +90,7 @@ class BfrtTableManagerTest : public ::testing::Test {
           tables {
             preamble {
               id: 33597630
-              name: "Ingress.control.table2"
+              name: "Ingress.control.const_table1"
             }
             match_fields {
               id: 1
@@ -674,6 +674,7 @@ TEST_F(BfrtTableManagerTest, WriteTableEntryTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::INSERT, entry));
 }
@@ -706,6 +707,7 @@ TEST_F(BfrtTableManagerTest, ModifyTableEntryTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
@@ -737,6 +739,7 @@ TEST_F(BfrtTableManagerTest, DeleteTableEntryTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   EXPECT_OK(bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::DELETE, entry));
 }
@@ -758,16 +761,18 @@ TEST_F(BfrtTableManagerTest, RejectReadTableEntryWriteSessionNullTest) {
   auto session_mock = std::make_shared<SessionMock>();
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+
   ::util::Status ret =
       bfrt_table_manager_->ReadTableEntry(session_mock, entry, nullptr);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("Null writer."));
 }
 
 TEST_F(BfrtTableManagerTest, RejectWriteTableConstTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33597630;
-  constexpr int kBfRtTableId = 21;
+  constexpr int kBfRtTableId = 20;
   auto session_mock = std::make_shared<SessionMock>();
 
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
@@ -781,11 +786,12 @@ TEST_F(BfrtTableManagerTest, RejectWriteTableConstTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_PERMISSION_DENIED, ret.error_code());
-  EXPECT_THAT(ret.error_message(), HasSubstr("Can't write to table "));
+  EXPECT_THAT(ret.error_message(), HasSubstr("Can't write to const table"));
 }
 
 TEST_F(BfrtTableManagerTest, RejectWriteTableDefaultActionTest) {
@@ -808,15 +814,16 @@ TEST_F(BfrtTableManagerTest, RejectWriteTableDefaultActionTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::INSERT, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(),
-              HasSubstr("The table default entry can only be modified."));
+              HasSubstr("The default table entry can only be modified"));
 }
 
-TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSizeTest) {
+TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionWithMatchTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
   constexpr int kBfRtTableId = 20;
@@ -837,15 +844,16 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionMatchSizeTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(),
-              HasSubstr("Default action must not contain match fields."));
+              HasSubstr("Default action must not contain match fields"));
 }
 
-TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriorityTest) {
+TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionWithPriorityTest) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4TableId = 33583783;
   constexpr int kBfRtTableId = 20;
@@ -866,12 +874,13 @@ TEST_F(BfrtTableManagerTest, RejectModifyTableDefaultActionPriorityTest) {
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+
   ::util::Status ret = bfrt_table_manager_->WriteTableEntry(
       session_mock, ::p4::v1::Update::MODIFY, entry);
   ASSERT_FALSE(ret.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(),
-              HasSubstr("Default action must not contain a priority field."));
+              HasSubstr("Default action must not contain a priority field"));
 }
 
 TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
