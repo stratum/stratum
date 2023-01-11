@@ -2,8 +2,10 @@
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-# If not running in Docker,
-if ! cat /proc/1/cgroup | grep -q "/docker"; then
+# Mount huge pages, if not inside Docker.
+# Legacy `docker build` can be detected by the presence of .dockerenv,
+# the newer buildkit by the "docker" string in the cgroup.
+if ! cat /proc/1/cgroup | grep -q "docker" && ! [ -e /.dockerenv ]; then
   # Set up huge pages
   echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
   sysctl -p /etc/sysctl.conf

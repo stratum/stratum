@@ -11,11 +11,6 @@
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 
-DEFINE_bool(incompatible_enable_bfrt_legacy_bytestring_responses, false,
-            "Enables the legacy padded byte string format in P4Runtime "
-            "responses for Stratum-bfrt. The strings are left unchanged from "
-            "the underlying SDE.");
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -119,6 +114,11 @@ class BfSdeMock : public BfSdeInterface {
       ::util::Status(int device,
                      std::unique_ptr<ChannelWriter<std::string>> writer));
   MOCK_METHOD1(UnregisterPacketReceiveWriter, ::util::Status(int device));
+  MOCK_METHOD2(
+      RegisterDigestListWriter,
+      ::util::Status(int device,
+                     std::unique_ptr<ChannelWriter<DigestList>> writer));
+  MOCK_METHOD1(UnregisterDigestListWriter, ::util::Status(int device));
   MOCK_METHOD5(CreateMulticastNode,
                ::util::StatusOr<uint32>(
                    int device,
@@ -332,6 +332,27 @@ class BfSdeMock : public BfSdeInterface {
       ::util::Status(int device,
                      std::shared_ptr<BfSdeInterface::SessionInterface> session,
                      uint32 table_id, TableDataInterface* table_data));
+  MOCK_METHOD4(
+      InsertDigest,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::Duration max_timeout));
+  MOCK_METHOD4(
+      ModifyDigest,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, absl::Duration max_timeout));
+  MOCK_METHOD3(
+      DeleteDigest,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id));
+  MOCK_METHOD5(
+      ReadDigests,
+      ::util::Status(int device,
+                     std::shared_ptr<BfSdeInterface::SessionInterface> session,
+                     uint32 table_id, std::vector<uint32>* digest_ids,
+                     absl::Duration* max_timeout));
   MOCK_METHOD4(
       SynchronizeCounters,
       ::util::Status(int device,

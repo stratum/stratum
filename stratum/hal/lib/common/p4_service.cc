@@ -176,6 +176,20 @@ P4Service::~P4Service() {}
 
 namespace {
 
+// Run a command that returns a ::grpc::Status.  If the called code returns an
+// error status, return that status up out of this method too.
+//
+// Example:
+//   RETURN_IF_GRPC_ERROR(DoGrpcThings(4));
+#define RETURN_IF_GRPC_ERROR(expr)                                           \
+  do {                                                                       \
+    /* Using _status below to avoid capture problems if expr is "status". */ \
+    const ::grpc::Status _status = (expr);                                   \
+    if (ABSL_PREDICT_FALSE(!_status.ok())) {                                 \
+      return _status;                                                        \
+    }                                                                        \
+  } while (0)
+
 // TODO(unknown): This needs to be changed later per p4 runtime error
 // reporting scheme.
 ::grpc::Status ToGrpcStatus(const ::util::Status& status,
@@ -303,6 +317,13 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid device ID.");
   }
 
+  // Check that a forwarding config is present.
+  auto ret = DoGetForwardingPipelineConfig(node_id);
+  if (!ret.ok()) {
+    return ::grpc::Status(ToGrpcCode(ret.status().CanonicalCode()),
+                          ret.status().error_message());
+  }
+
   // Require valid election_id for Write.
   absl::uint128 election_id =
       absl::MakeUint128(req->election_id().high(), req->election_id().low());
@@ -312,10 +333,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   }
 
   // Verify the request comes from the primary connection.
-  if (!IsWritePermitted(node_id, *req)) {
-    return ::grpc::Status(::grpc::StatusCode::PERMISSION_DENIED,
-                          "Write from non-master is not permitted.");
-  }
+  RETURN_IF_GRPC_ERROR(IsWritePermitted(req->device_id(), *req));
 
   std::vector<::util::Status> results = {};
   absl::Time timestamp = absl::Now();
@@ -338,10 +356,36 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service, Read, context);
 
   if (!req->entities_size()) return ::grpc::Status::OK;
-  if (req->device_id() == 0) {
+  // device_id is nothing but the node_id specified in the config for the node.
+  uint64 node_id = req->device_id();
+  if (node_id == 0) {
     return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                           "Invalid device ID.");
   }
+
+  // Check that a forwarding config is present.
+  auto ret = DoGetForwardingPipelineConfig(node_id);
+  if (!ret.ok()) {
+    return ::grpc::Status(ToGrpcCode(ret.status().CanonicalCode()),
+                          ret.status().error_message());
+  }
+
+  // To allow role config read filtering in wildcard requests, we have to expand
+  // wildcard reads targeting all tables into individual table wildcards. At the
+  // same time, we must not include entities disallowed by the role config, else
+  // the request fill be denied erroneously later.
+  const ::p4::v1::ReadRequest* original_req = req;  // For later logging.
+  ::p4::v1::ReadRequest expanded_req;
+  if (!req->role().empty()) {
+    expanded_req =
+        ExpandWildcardsInReadRequest(*req, ret.ValueOrDie().p4info());
+    req = &expanded_req;
+    VLOG(1) << "Expanded wildcard read into "
+            << expanded_req.ShortDebugString();
+  }
+
+  // Verify the request only contains entities allowed by the role config.
+  RETURN_IF_GRPC_ERROR(IsReadPermitted(req->device_id(), *req));
 
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
   std::vector<::util::Status> details = {};
@@ -349,12 +393,12 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   ::util::Status status =
       switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
   if (!status.ok()) {
-    LOG(ERROR) << "Failed to read forwarding entries from node "
-               << req->device_id() << ": " << status.error_message();
+    LOG(ERROR) << "Failed to read forwarding entries from node " << node_id
+               << ": " << status.error_message();
   }
 
   // Log debug info for future debugging.
-  LogReadRequest(req->device_id(), *req, details, timestamp);
+  LogReadRequest(node_id, *original_req, details, timestamp);
 
   return ToGrpcStatus(status, details);
 }
@@ -386,13 +430,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
   // election_id and the role of the client matches those of the master.
   // According to the P4Runtime specification, only master can perform
   // SetForwardingPipelineConfig RPC.
-  if (!IsWritePermitted(node_id, *req)) {
-    return ::grpc::Status(
-        ::grpc::StatusCode::PERMISSION_DENIED,
-        absl::StrCat("SetForwardingPipelineConfig from non-master is not "
-                     "permitted for node ",
-                     node_id, "."));
-  }
+  RETURN_IF_GRPC_ERROR(IsWritePermitted(req->device_id(), *req));
 
   ::util::Status status = ::util::OkStatus();
   switch (req->action()) {
@@ -485,40 +523,32 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
                           "Invalid device ID.");
   }
 
-  absl::ReaderMutexLock l(&config_lock_);
-  if (forwarding_pipeline_configs_ == nullptr ||
-      forwarding_pipeline_configs_->node_id_to_config_size() == 0) {
-    return ::grpc::Status(::grpc::StatusCode::FAILED_PRECONDITION,
-                          "No valid forwarding pipeline config has been pushed "
-                          "for any node so far.");
+  auto status = DoGetForwardingPipelineConfig(node_id);
+  if (!status.ok()) {
+    return ::grpc::Status(ToGrpcCode(status.status().CanonicalCode()),
+                          status.status().error_message());
   }
-  auto it = forwarding_pipeline_configs_->node_id_to_config().find(node_id);
-  if (it == forwarding_pipeline_configs_->node_id_to_config().end()) {
-    return ::grpc::Status(::grpc::StatusCode::FAILED_PRECONDITION,
-                          absl::StrCat("Invalid node id or no valid forwarding "
-                                       "pipeline config has been pushed for "
-                                       "node ",
-                                       node_id, " yet."));
-  }
+  const ::p4::v1::ForwardingPipelineConfig& config = status.ValueOrDie();
 
   switch (req->response_type()) {
-    case p4::v1::GetForwardingPipelineConfigRequest::ALL: {
-      *resp->mutable_config() = it->second;
+    case ::p4::v1::GetForwardingPipelineConfigRequest::ALL: {
+      *resp->mutable_config() = config;
       break;
     }
-    case p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY: {
-      *resp->mutable_config()->mutable_cookie() = it->second.cookie();
+    case ::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY: {
+      *resp->mutable_config()->mutable_cookie() = config.cookie();
       break;
     }
-    case p4::v1::GetForwardingPipelineConfigRequest::P4INFO_AND_COOKIE: {
-      *resp->mutable_config()->mutable_p4info() = it->second.p4info();
-      *resp->mutable_config()->mutable_cookie() = it->second.cookie();
+    case ::p4::v1::GetForwardingPipelineConfigRequest::P4INFO_AND_COOKIE: {
+      *resp->mutable_config()->mutable_p4info() = config.p4info();
+      *resp->mutable_config()->mutable_cookie() = config.cookie();
       break;
     }
-    case p4::v1::GetForwardingPipelineConfigRequest::DEVICE_CONFIG_AND_COOKIE: {
+    case ::p4::v1::GetForwardingPipelineConfigRequest::
+        DEVICE_CONFIG_AND_COOKIE: {
       *resp->mutable_config()->mutable_p4_device_config() =
-          it->second.p4_device_config();
-      *resp->mutable_config()->mutable_cookie() = it->second.cookie();
+          config.p4_device_config();
+      *resp->mutable_config()->mutable_cookie() = config.cookie();
       break;
     }
     default:
@@ -673,7 +703,7 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
 }
 
 ::util::Status P4Service::AddOrModifyController(
-    uint64 node_id, const p4::v1::MasterArbitrationUpdate& update,
+    uint64 node_id, const ::p4::v1::MasterArbitrationUpdate& update,
     p4runtime::SdnConnection* controller) {
   // To be called by all the threads handling controller connections.
   absl::WriterMutexLock l(&controller_lock_);
@@ -721,7 +751,8 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
            << " controllers for node (aka device) with ID " << node_id << ".";
   }
 
-  grpc::Status status = it->second.HandleArbitrationUpdate(update, controller);
+  ::grpc::Status status =
+      it->second.HandleArbitrationUpdate(update, controller);
   if (!status.ok()) {
     return ::util::Status(static_cast<::util::error::Code>(status.error_code()),
                           status.error_message());
@@ -733,27 +764,43 @@ void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
 void P4Service::RemoveController(uint64 node_id,
                                  p4runtime::SdnConnection* connection) {
   absl::WriterMutexLock l(&controller_lock_);
+  --num_controller_connections_;
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return;
   it->second.Disconnect(connection);
-  --num_controller_connections_;
 }
 
-bool P4Service::IsWritePermitted(uint64 node_id,
-                                 const p4::v1::WriteRequest& req) const {
+::grpc::Status P4Service::IsWritePermitted(
+    uint64 node_id, const ::p4::v1::WriteRequest& req) const {
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
-  if (it == node_id_to_controller_manager_.end()) return false;
-  return it->second.AllowRequest(req).ok();
+  if (it == node_id_to_controller_manager_.end())
+    return ::grpc::Status(
+        grpc::StatusCode::PERMISSION_DENIED,
+        absl::StrCat("Write from non-master is not permitted for node ",
+                     node_id, "."));
+  return it->second.AllowRequest(req);
 }
 
-bool P4Service::IsWritePermitted(
+::grpc::Status P4Service::IsWritePermitted(
     uint64 node_id,
-    const p4::v1::SetForwardingPipelineConfigRequest& req) const {
+    const ::p4::v1::SetForwardingPipelineConfigRequest& req) const {
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controller_manager_.find(node_id);
-  if (it == node_id_to_controller_manager_.end()) return false;
-  return it->second.AllowRequest(req).ok();
+  if (it == node_id_to_controller_manager_.end())
+    return ::grpc::Status(
+        grpc::StatusCode::PERMISSION_DENIED,
+        absl::StrCat("Write from non-master is not permitted for node ",
+                     node_id, "."));
+  return it->second.AllowRequest(req);
+}
+
+::grpc::Status P4Service::IsReadPermitted(
+    uint64 node_id, const p4::v1::ReadRequest& req) const {
+  absl::ReaderMutexLock l(&controller_lock_);
+  auto it = node_id_to_controller_manager_.find(node_id);
+  if (it == node_id_to_controller_manager_.end()) return ::grpc::Status::OK;
+  return it->second.AllowRequest(req);
 }
 
 bool P4Service::IsMasterController(
@@ -763,6 +810,35 @@ bool P4Service::IsMasterController(
   auto it = node_id_to_controller_manager_.find(node_id);
   if (it == node_id_to_controller_manager_.end()) return false;
   return it->second.AllowRequest(role_name, election_id).ok();
+}
+
+::util::StatusOr<::p4::v1::ForwardingPipelineConfig>
+P4Service::DoGetForwardingPipelineConfig(uint64 node_id) const {
+  absl::ReaderMutexLock l(&config_lock_);
+  if (forwarding_pipeline_configs_ == nullptr ||
+      forwarding_pipeline_configs_->node_id_to_config_size() == 0) {
+    return MAKE_ERROR(ERR_FAILED_PRECONDITION)
+           << "No valid forwarding pipeline config has been pushed for any "
+           << "node so far.";
+  }
+  auto it = forwarding_pipeline_configs_->node_id_to_config().find(node_id);
+  if (it == forwarding_pipeline_configs_->node_id_to_config().end()) {
+    return MAKE_ERROR(ERR_FAILED_PRECONDITION)
+           << "Invalid node id or no valid forwarding pipeline config has been "
+           << "pushed for node " << node_id << " yet.";
+  }
+
+  return it->second;
+}
+
+p4::v1::ReadRequest P4Service::ExpandWildcardsInReadRequest(
+    const p4::v1::ReadRequest& req,
+    const p4::config::v1::P4Info& p4info) const {
+  absl::ReaderMutexLock l(&controller_lock_);
+
+  auto it = node_id_to_controller_manager_.find(req.device_id());
+  if (it == node_id_to_controller_manager_.end()) return req;
+  return it->second.ExpandWildcardsInReadRequest(req, p4info);
 }
 
 void* P4Service::StreamResponseReceiveThreadFunc(void* arg) {
