@@ -782,6 +782,87 @@ TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
               HasSubstr("Update type of DirectCounterEntry"));
 }
 
+TEST_F(BfrtTableManagerTest, ReadDirectCounterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  constexpr int kP4TableId = 33583783;
+  constexpr int kBfRtTableId = 20;
+  auto table_key_mock = absl::make_unique<TableKeyMock>();
+  auto table_data_mock = absl::make_unique<TableDataMock>();
+
+  {
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+        .WillOnce(Return(kBfRtTableId));
+
+    EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+        .WillOnce(
+            Return(ByMove(::util::StatusOr<
+                          std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+                std::move(table_key_mock)))));
+
+    EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
+        .WillOnce(
+            Return(ByMove(::util::StatusOr<
+                          std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+                std::move(table_data_mock)))));
+
+    const std::string kDirectCounterResponseText = R"pb(
+      entities {
+        direct_counter_entry {
+          table_entry {
+            table_id: 33583783
+            match {
+              field_id: 1
+              exact { value: "\001" }
+            }
+            match {
+              field_id: 2
+              ternary { value: "\x00" mask: "\x0f\xff" }
+            }
+            action { action { action_id: 1 } }
+            priority: 10
+          }
+          data {
+          }
+        }
+      }
+    )pb";
+    ::p4::v1::ReadResponse resp;
+    ASSERT_OK(ParseProtoFromString(kDirectCounterResponseText, &resp));
+    const auto& entry = resp.entities(0).direct_counter_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateDirectCounterEntry(EqualsProto(entry), false))
+        .WillOnce(
+            Return(::util::StatusOr<::p4::v1::DirectCounterEntry>(entry)));
+  }
+
+  const std::string kDirectCounterEntryText = R"pb(
+    table_entry {
+      table_id: 33583783
+      match {
+        field_id: 1
+        exact { value: "\001" }
+      }
+      match {
+        field_id: 2
+        ternary { value: "\x00" mask: "\x0f\xff" }
+      }
+      action { action { action_id: 1 } }
+      priority: 10
+    }
+    data {
+    }
+  )pb";
+
+  ::p4::v1::DirectCounterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDirectCounterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateDirectCounterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::DirectCounterEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->ReadDirectCounterEntry(session_mock, entry));
+}
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
