@@ -11,6 +11,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// Must be included after net/if.h because of re-defines.
+// TODO(max): these headers are linux only and prevent builds on MacOS
+#include <linux/if.h>
+#include <linux/if_tun.h>
+#include <sys/epoll.h>
+
 #include <deque>
 #include <string>
 
@@ -20,12 +26,6 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
-
-// Must be included after net/if.h because of re-defines.
-// TODO(max): these headers are linux only and prevent builds on MacOS
-#include <linux/if.h>
-#include <linux/if_tun.h>
-#include <sys/epoll.h>
 
 DEFINE_bool(experimental_enable_bfrt_tofino_virtual_cpu_interface, false,
             "enable exposure of a virtual CPU interface on Tofino switches.");
