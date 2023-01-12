@@ -3,7 +3,7 @@
 
 ARG BAZELISK_VERSION=1.8.0
 ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
-ARG BMV2_COMMIT=b0fb01ecacbf3a7d7f0c01e2f149b0c6a957f779
+ARG BMV2_COMMIT=8e8a192fc58e2e994f4c82a34496ec6833bf0d50
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
 ARG LLVM_REPO_NAME="deb http://apt.llvm.org/buster/  llvm-toolchain-buster-11 main"
 
@@ -50,7 +50,7 @@ ARG LLVM_REPO_NAME
 RUN wget --quiet -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends clang-format-11 clang-11
+    apt-get install -y --no-install-recommends clang-format-11 clang-11 llvm-11
 # Versioned LLVM releases don't come with the meta packages for the
 # clang -> clang-11 symlinks. We create them manually here.
 RUN ln -s ../lib/llvm-11/bin/clang /usr/bin/clang
@@ -78,7 +78,8 @@ RUN git clone https://github.com/p4lang/PI.git /tmp/PI && \
 
 ARG BMV2_COMMIT
 ENV BMV2_INSTALL /usr/local
-RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
+# TODO(max): switch back to upstream repo once merged
+RUN git clone https://github.com/pudelkoM/behavioral-model.git /tmp/bmv2 && \
     cd /tmp/bmv2 && git checkout ${BMV2_COMMIT} && \
     ./autogen.sh && \
     ./configure --without-targets --with-pi --disable-elogger \

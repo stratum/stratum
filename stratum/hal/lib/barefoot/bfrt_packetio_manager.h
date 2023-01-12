@@ -16,6 +16,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_global_vars.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"

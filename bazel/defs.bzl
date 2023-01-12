@@ -70,6 +70,7 @@ STRATUM_COMPILER_ERRORS_LLVM = [
     "-Xclang -coverage-version='800*'",  # Target correct gcov version
     "-Werror=implicit-fallthrough",  # TODO(max): move to common after gcc 7
     "-Werror=inconsistent-missing-destructor-override",
+    "-Werror=inconsistent-missing-override",
     "-Werror=overloaded-virtual",
     "-Werror=reorder-ctor",
     "-Werror=return-type",  # TODO(max): move to common after gcc update

@@ -168,7 +168,7 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
   auto status = ::util::OkStatus();
   // TODO(max): Check if we need to de-init the ASIC or SDE
   // TODO(max): Enable other Shutdown calls once implemented.
-  // APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, bfrt_table_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, bfrt_packetio_manager_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bfrt_pre_manager_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bfrt_counter_manager_->Shutdown());
@@ -241,9 +241,12 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
             session, update.type(), update.entity().meter_entry());
         break;
       }
+      case ::p4::v1::Entity::kDigestEntry:
+        status = bfrt_table_manager_->WriteDigestEntry(
+            session, update.type(), update.entity().digest_entry());
+        break;
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
-      case ::p4::v1::Entity::kDigestEntry:
       default:
         status = MAKE_ERROR(ERR_UNIMPLEMENTED)
                  << "Unsupported entity type: " << update.ShortDebugString();
@@ -349,9 +352,15 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
         details->push_back(status);
         break;
       }
+      case ::p4::v1::Entity::kDigestEntry: {
+        auto status = bfrt_table_manager_->ReadDigestEntry(
+            session, entity.digest_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
+        break;
+      }
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
-      case ::p4::v1::Entity::kDigestEntry:
       default: {
         success = false;
         details->push_back(MAKE_ERROR(ERR_UNIMPLEMENTED)
@@ -380,8 +389,17 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
       std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
                                                ::p4::v1::PacketIn>>(
           writer, &::p4::v1::StreamMessageResponse::mutable_packet);
+  RETURN_IF_ERROR(
+      bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer));
 
-  return bfrt_packetio_manager_->RegisterPacketReceiveWriter(packet_in_writer);
+  auto digest_list_writer =
+      std::make_shared<ProtoOneofWriterWrapper<::p4::v1::StreamMessageResponse,
+                                               ::p4::v1::DigestList>>(
+          writer, &::p4::v1::StreamMessageResponse::mutable_digest);
+  RETURN_IF_ERROR(
+      bfrt_table_manager_->RegisterDigestListWriter(digest_list_writer));
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtNode::UnregisterStreamMessageResponseWriter() {
@@ -404,6 +422,9 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     case ::p4::v1::StreamMessageRequest::kPacket: {
       return bfrt_packetio_manager_->TransmitPacket(req.packet());
     }
+    case ::p4::v1::StreamMessageRequest::kDigestAck:
+      // TODO(max): implement digest ack handling.
+      return ::util::OkStatus();
     default:
       return MAKE_ERROR(ERR_UNIMPLEMENTED)
              << "Unsupported StreamMessageRequest " << req.ShortDebugString()

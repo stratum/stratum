@@ -34,8 +34,10 @@ P4InfoManager::P4InfoManager(const ::p4::config::v1::P4Info& p4_info)
       counter_map_("Counter"),
       direct_counter_map_("Direct-Counter"),
       meter_map_("Meter"),
+      direct_meter_map_("Direct-Meter"),
       value_set_map_("ValueSet"),
-      register_map_("Register") {}
+      register_map_("Register"),
+      digest_map_("Digest") {}
 
 P4InfoManager::P4InfoManager()
     : table_map_("Table"),
@@ -44,8 +46,10 @@ P4InfoManager::P4InfoManager()
       counter_map_("Counter"),
       direct_counter_map_("Direct-Counter"),
       meter_map_("Meter"),
+      direct_meter_map_("Direct-Meter"),
       value_set_map_("ValueSet"),
-      register_map_("Register") {}
+      register_map_("Register"),
+      digest_map_("Digest") {}
 
 P4InfoManager::~P4InfoManager() {}
 
@@ -74,10 +78,14 @@ P4InfoManager::~P4InfoManager() {}
                                      p4_info_.direct_counters(), preamble_cb));
   APPEND_STATUS_IF_ERROR(status,
                          meter_map_.BuildMaps(p4_info_.meters(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(status, direct_meter_map_.BuildMaps(
+                                     p4_info_.direct_meters(), preamble_cb));
   APPEND_STATUS_IF_ERROR(
       status, value_set_map_.BuildMaps(p4_info_.value_sets(), preamble_cb));
   APPEND_STATUS_IF_ERROR(
       status, register_map_.BuildMaps(p4_info_.registers(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(
+      status, digest_map_.BuildMaps(p4_info_.digests(), preamble_cb));
 
   APPEND_STATUS_IF_ERROR(status, VerifyTableXrefs());
 
@@ -144,6 +152,16 @@ P4InfoManager::FindDirectCounterByName(const std::string& counter_name) const {
   return meter_map_.FindByName(meter_name);
 }
 
+::util::StatusOr<const ::p4::config::v1::DirectMeter>
+P4InfoManager::FindDirectMeterByID(uint32 meter_id) const {
+  return direct_meter_map_.FindByID(meter_id);
+}
+
+::util::StatusOr<const ::p4::config::v1::DirectMeter>
+P4InfoManager::FindDirectMeterByName(const std::string& meter_name) const {
+  return direct_meter_map_.FindByName(meter_name);
+}
+
 ::util::StatusOr<const ::p4::config::v1::ValueSet>
 P4InfoManager::FindValueSetByID(uint32 value_set_id) const {
   return value_set_map_.FindByID(value_set_id);
@@ -162,6 +180,16 @@ P4InfoManager::FindRegisterByID(uint32 register_id) const {
 ::util::StatusOr<const ::p4::config::v1::Register>
 P4InfoManager::FindRegisterByName(const std::string& register_name) const {
   return register_map_.FindByName(register_name);
+}
+
+::util::StatusOr<const ::p4::config::v1::Digest> P4InfoManager::FindDigestByID(
+    uint32 digest_id) const {
+  return digest_map_.FindByID(digest_id);
+}
+
+::util::StatusOr<const ::p4::config::v1::Digest>
+P4InfoManager::FindDigestByName(const std::string& digest_name) const {
+  return digest_map_.FindByName(digest_name);
 }
 
 ::util::StatusOr<P4Annotation> P4InfoManager::GetSwitchStackAnnotations(
@@ -273,8 +301,10 @@ void P4InfoManager::DumpNamesToIDs() const {
   counter_map_.DumpNamesToIDs();
   direct_counter_map_.DumpNamesToIDs();
   meter_map_.DumpNamesToIDs();
+  direct_meter_map_.DumpNamesToIDs();
   value_set_map_.DumpNamesToIDs();
   register_map_.DumpNamesToIDs();
+  digest_map_.DumpNamesToIDs();
 }
 
 ::util::Status P4InfoManager::VerifyRequiredObjects() {

@@ -13,6 +13,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_global_vars.h"
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
@@ -45,7 +46,7 @@ class BfrtNode {
   virtual ::util::Status CommitForwardingPipelineConfig() LOCKS_EXCLUDED(lock_);
   virtual ::util::Status VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) const;
-  virtual ::util::Status Shutdown() LOCKS_EXCLUDED(lock_);
+  virtual ::util::Status Shutdown() LOCKS_EXCLUDED(chassis_lock, lock_);
   virtual ::util::Status Freeze() LOCKS_EXCLUDED(lock_);
   virtual ::util::Status Unfreeze() LOCKS_EXCLUDED(lock_);
   virtual ::util::Status WriteForwardingEntries(

@@ -520,6 +520,7 @@ enum class PacketioPreHeader : char {
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<std::string>::Create(packet_receive_channel_);
+    if (!reader) return MAKE_ERROR(ERR_INTERNAL) << "Failed to create reader.";
     fd = tap_intf_fd_;
   }
 
@@ -527,6 +528,10 @@ enum class PacketioPreHeader : char {
       FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface;
 
   while (true) {
+    {
+      absl::ReaderMutexLock l(&chassis_lock);
+      if (shutdown) break;
+    }
     std::string buffer;
     int code = reader->Read(&buffer, absl::InfiniteDuration()).error_code();
     if (code == ERR_CANCELLED) break;
