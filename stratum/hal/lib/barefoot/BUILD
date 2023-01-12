@@ -695,6 +695,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:writer_interface",
+        "//stratum/hal/lib/p4:utils",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",

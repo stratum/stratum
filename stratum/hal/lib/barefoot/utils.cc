@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 
@@ -26,21 +27,13 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
                      [](const char c) { return c == '\x00'; });
 }
 
-namespace {
-// Strip leading zeros from a string, but keep at least one byte.
-std::string StripLeadingZeroBytes(std::string str) {
-  str.erase(0, std::min(str.find_first_not_of('\x00'), str.size() - 1));
-  return str;
-}
-}  // namespace
-
 // For BFRT we explicitly insert the "don't care" range match as the
 // [minimum, maximum] value range.
 // TODO(max): why are we not stripping the high bytes too?
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
                      int field_width) {
-  return StripLeadingZeroBytes(range.low()) ==
-             StripLeadingZeroBytes(RangeDefaultLow(field_width)) &&
+  return ByteStringToP4RuntimeByteString(range.low()) ==
+             ByteStringToP4RuntimeByteString(RangeDefaultLow(field_width)) &&
          range.high() == RangeDefaultHigh(field_width);
 }
 
