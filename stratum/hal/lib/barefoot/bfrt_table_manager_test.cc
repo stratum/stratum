@@ -147,6 +147,21 @@ class BfrtTableManagerTest : public ::testing::Test {
             }
             size: 500
           }
+          registers {
+            preamble {
+              id: 66666
+              name: "Ingress.control.my_register"
+              alias: "my_register"
+            }
+            type_spec {
+              bitstring {
+                bit {
+                  bitwidth: 8
+                }
+              }
+            }
+            size: 10
+          }
           digests {
             preamble {
               id: 401732455
@@ -915,6 +930,161 @@ TEST_F(BfrtTableManagerTest, RejectWriteDirectCounterEntryTypeInsertTest) {
   EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
   EXPECT_THAT(ret.error_message(),
               HasSubstr("Update type of DirectCounterEntry"));
+}
+
+TEST_F(BfrtTableManagerTest, WriteRegisterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4RegisterId = 66666;
+  constexpr int kBfRtTableId = 20;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4RegisterId))
+      .WillOnce(Return(kBfRtTableId));
+  const std::string kRegisterEntryText = R"pb(
+    register_id: 66666
+    index {
+      index: 1
+    }
+    data {
+      bitstring: "\x01"
+    }
+  )pb";
+  ::p4::v1::RegisterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kRegisterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateRegisterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::RegisterEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->WriteRegisterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteRegisterEntryTypeInsertTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  const std::string kRegisterEntryText = R"pb(
+    register_id: 66666
+    index {
+      index: 1
+    }
+    data {
+      bitstring: "\x01"
+    }
+  )pb";
+  ::p4::v1::RegisterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kRegisterEntryText, &entry));
+
+  ::util::Status ret = bfrt_table_manager_->WriteRegisterEntry(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("must be MODIFY"));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteRegisterEntryNoDataTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  const std::string kRegisterEntryText = R"pb(
+    register_id: 66666
+    index {
+      index: 1
+    }
+  )pb";
+  ::p4::v1::RegisterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kRegisterEntryText, &entry));
+
+  ::util::Status ret = bfrt_table_manager_->WriteRegisterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(), HasSubstr("must have data"));
+}
+
+TEST_F(BfrtTableManagerTest, RejectWriteRegisterEntryNoBitStringTest) {
+  ASSERT_OK(PushTestConfig());
+  auto session_mock = std::make_shared<SessionMock>();
+  const std::string kRegisterEntryText = R"pb(
+    register_id: 66666
+    index {
+      index: 1
+    }
+    data {
+      varbit: {
+        bitstring: "\x00"
+        bitwidth: 32
+      }
+    }
+  )pb";
+  ::p4::v1::RegisterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kRegisterEntryText, &entry));
+
+  ::util::Status ret = bfrt_table_manager_->WriteRegisterEntry(
+      session_mock, ::p4::v1::Update::MODIFY, entry);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Only bitstring registers data types are supported."));
+}
+
+TEST_F(BfrtTableManagerTest, ReadRegisterEntryTest) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4RegisterId = 66666;
+  constexpr int kRegisterIndex = 1;
+  constexpr int kBfRtTableId = 20;
+  auto session_mock = std::make_shared<SessionMock>();
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+
+  {
+    EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4RegisterId))
+        .WillOnce(Return(kBfRtTableId));
+    std::vector<uint32> register_indices = {kRegisterIndex};
+    std::vector<uint64> register_datas = {1};
+    EXPECT_CALL(*bf_sde_wrapper_mock_,
+                ReadRegisters(kDevice1, _, kBfRtTableId,
+                              Optional(kRegisterIndex), _, _, _))
+        .WillOnce(DoAll(SetArgPointee<4>(register_indices),
+                        SetArgPointee<5>(register_datas),
+                        Return(::util::OkStatus())));
+
+    const std::string kRegisterResponseText = R"pb(
+      entities {
+        register_entry {
+          register_id: 66666
+          index {
+            index: 1
+          }
+          data {
+            bitstring: "\x01"
+          }
+        }
+      }
+    )pb";
+    ::p4::v1::ReadResponse resp;
+    ASSERT_OK(ParseProtoFromString(kRegisterResponseText, &resp));
+    const auto& entry = resp.entities(0).register_entry();
+    EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+                TranslateRegisterEntry(EqualsProto(entry), false))
+        .WillOnce(Return(::util::StatusOr<::p4::v1::RegisterEntry>(entry)));
+    EXPECT_CALL(writer_mock, Write(EqualsProto(resp))).WillOnce(Return(true));
+  }
+
+  const std::string kRegisterEntryText = R"pb(
+    register_id: 66666
+    index {
+      index: 1
+    }
+    data {
+      bitstring: "\x01"
+    }
+  )pb";
+  ::p4::v1::RegisterEntry entry;
+  ASSERT_OK(ParseProtoFromString(kRegisterEntryText, &entry));
+  EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+              TranslateRegisterEntry(EqualsProto(entry), true))
+      .WillOnce(Return(::util::StatusOr<::p4::v1::RegisterEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->ReadRegisterEntry(session_mock, entry,
+                                                   &writer_mock));
 }
 
 }  // namespace barefoot
