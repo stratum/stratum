@@ -4,6 +4,8 @@
 #ifndef STRATUM_GLUE_PLATFORM_H_
 #define STRATUM_GLUE_PLATFORM_H_
 
+#include <signal.h>
+
 #ifdef __APPLE__
 
 // Fake missing error codes on MacOS. Note, that they still have to be unique

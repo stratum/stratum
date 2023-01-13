@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2022-present Intel
+# Copyright 2022-present Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 STRATUM_ROOT=$(cd $(dirname ${BASH_SOURCE[0]})/..; pwd)
