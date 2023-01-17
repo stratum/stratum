@@ -507,7 +507,7 @@ template <typename T>
   if (closed_) return MAKE_ERROR(ERR_CANCELLED) << "Channel is closed.";
   // Check for full internal buffer.
   if (queue_.size() == max_depth_) {
-    return MAKE_ERROR(ERR_NO_RESOURCE).without_logging() << "Channel is full.";
+    return MAKE_ERROR(ERR_NO_RESOURCE) << "Channel is full.";
   }
   // Queue size should never exceed maximum queue depth.
   if (queue_.size() > max_depth_) {
