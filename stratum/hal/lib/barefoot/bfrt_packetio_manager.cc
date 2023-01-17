@@ -20,9 +20,7 @@
 #include <deque>
 #include <string>
 
-#include "absl/strings/string_view.h"
 #include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"

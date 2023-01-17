@@ -106,16 +106,13 @@ class BfrtPacketioManager {
   ::util::Status HandleSdePacketRx()
       LOCKS_EXCLUDED(data_lock_, rx_writer_lock_);
 
+  // Handles a received packets and hands it over the registered receive writer.
   ::util::Status HandleVirtualCpuIntfPacketRx() LOCKS_EXCLUDED(data_lock_);
 
-  // Sends the buffer to the virtual TAP CPU port.
-  ::util::Status SendToVirtualCpuIntf(absl::string_view buffer) const
-      LOCKS_EXCLUDED(data_lock_);
-
-  // SDE cpu interface RX thread function.
+  // SDE CPU interface RX thread function.
   static void* SdeRxThreadFunc(void* arg);
 
-  // Virtual cpu interface RX thread function.
+  // Virtual CPU interface RX thread function.
   static void* VirtualCpuIntfRxThreadFunc(void* arg);
 
   // Mutex lock for protecting rx_writer_.
