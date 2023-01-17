@@ -28,8 +28,13 @@
 #include "stratum/lib/utils.h"
 
 DEFINE_bool(experimental_enable_bfrt_tofino_virtual_cpu_interface, false,
-            "enable exposure of a virtual CPU interface on Tofino switches.");
-DEFINE_int32(tap_rx_poll_timeout_ms, 100,
+            "Enable exposure of a virtual CPU interface on Tofino switches."
+            "This feature requires that the PacketIn metadata header has the "
+            "magic constant 0xBF01 at the 12th byte, like an ether type. "
+            "Incoming packets not having that value will be send out this TAP "
+            "interface. Packets sent to this TAP interface are delivered "
+            "verbatim to the pipeline over the PCIe CPU port.");
+DEFINE_int32(experimental_tap_rx_poll_timeout_ms, 100,
              "Polling timeout to check incoming packets from TAP RX sockets.");
 
 namespace stratum {
@@ -99,8 +104,6 @@ namespace {
   RET_CHECK(pthread_setname_np(pthread_self(), name.c_str()) == 0);
   return ::util::OkStatus();
 }
-
-std::string GetOwnThreadId() { return absl::StrCat(pthread_self()); }
 }  // namespace
 
 BfrtPacketioManager::BfrtPacketioManager(
@@ -421,50 +424,22 @@ class BitBuffer {
 
 namespace {
 
-// This enum defines the possible pre-header values on packets on the PCIe bus.
-enum class PacketioPreHeader : char {
-  INVALID = 0,
-  REGULAR_PACKETIO = 1,  // This is a regular P4Runtime PacketIn/Out.
-  VIRTUAL_CPU_INTF = 2,  // This packet is from/to the virtual CPU interface.
-};
-
-::util::Status IsVirtualCpuIntfTraffic(const std::string& buffer) {
-  if (buffer.length() < 1) {
+::util::Status HasPacketInMagicBytes(const std::string& buffer) {
+  if (buffer.length() < 14) {
     return MAKE_ERROR(ERR_INVALID_PARAM) << "Packet too short.";
   }
-  if (buffer[0] == static_cast<char>(PacketioPreHeader::VIRTUAL_CPU_INTF)) {
+  if (static_cast<uint8>(buffer[12]) == 0xbf &&
+      static_cast<uint8>(buffer[13]) == 0x01) {
     return ::util::OkStatus();
-  } else if (buffer[0] ==
-             static_cast<char>(PacketioPreHeader::REGULAR_PACKETIO)) {
-    return MAKE_ERROR(ERR_INVALID_PARAM).with_logging() << "Normal traffic.";
-  } else {
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown pre packet header.";
   }
+
+  return MAKE_ERROR(ERR_INVALID_PARAM).without_logging() << "Normal traffic.";
 }
 
 }  // namespace
 
-::util::Status BfrtPacketioManager::SendToVirtualCpuIntf(
-    absl::string_view buffer) const {
-  absl::ReaderMutexLock l(&data_lock_);
-  if (!FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
-    return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
-           << "Virtual CPU interface not enabled.";
-  }
-
-  if (tap_intf_fd_ < 0) {
-    return MAKE_ERROR(ERR_INTERNAL) << "TAP interface not initialized";
-  }
-
-  RET_CHECK(write(tap_intf_fd_, buffer.data(), buffer.size()) > 0)
-      << "write to TAP interface failed";
-
-  return ::util::OkStatus();
-}
-
 ::util::Status BfrtPacketioManager::HandleVirtualCpuIntfPacketRx() {
   SetOwnThreadName("HndlTapPktRx");
-  LOG(WARNING) << "HandleVirtualCpuIntfPacketRx tid: " << GetOwnThreadId();
   static constexpr size_t kMaxRxBufferSize = 32768;
 
   int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
@@ -495,14 +470,7 @@ enum class PacketioPreHeader : char {
            << "epoll_ctl() failed. errno: " << errno << ".";
   }
 
-  // Create buffer with fake Ethernet header already in place.
-  // Insert fake ethernet header to help parsing in P4 pipeline.
-  constexpr size_t kPreHeaderLength = 14;  // 6 + 6 + 2.
-  const std::string fake_mac("\x00\x00\x00\x00\x00\x00", 6);
-  const std::string fake_eth_type("\xbf\x02", 2);  // Reserved ether type.
-  std::string buf = absl::StrCat(fake_mac, fake_mac, fake_eth_type);
-  buf.resize(kMaxRxBufferSize);  // Pad with zeros.
-
+  std::string buf;
   while (true) {
     // This is the graceful shutdown check.
     {
@@ -511,28 +479,28 @@ enum class PacketioPreHeader : char {
     }
 
     struct epoll_event pevents[1];  // we care about one event at a time.
-    int ret = epoll_wait(efd, pevents, 1, FLAGS_tap_rx_poll_timeout_ms);
+    int ret =
+        epoll_wait(efd, pevents, 1, FLAGS_experimental_tap_rx_poll_timeout_ms);
     if (ret < 0) {
       VLOG(1) << "Error in epoll_wait(). errno: " << errno << ".";
       continue;  // let it retry
     } else if (ret > 0 && pevents[0].events & EPOLLIN) {
-      buf.resize(kMaxRxBufferSize);            // Pad with zeros.
-      char* buf_ptr = &buf[kPreHeaderLength];  // 1st byte after the header.
-      // The interface should now have data ready to be read and not block.
-      ret = read(fd, buf_ptr, kMaxRxBufferSize - kPreHeaderLength);
+      buf.resize(kMaxRxBufferSize);  // Pad with zeros.
+      ret = read(fd, &buf[0], buf.size());
       if (ret < 0) {
-        return MAKE_ERROR(ERR_INTERNAL)
-               << "Read from TAP interface failed: " << strerror(errno) << ".";
+        LOG(ERROR) << "Read from TAP interface failed: " << strerror(errno)
+                   << ".";
+        continue;
       }
       if (ret == 0) {
         LOG(ERROR) << "Read zero bytes TAP interface?";
         continue;
       }
-      buf.resize(kPreHeaderLength + ret);  // Trim trailing zero bytes.
+      buf.resize(ret);  // Trim trailing zero bytes.
       RETURN_IF_ERROR(bf_sde_interface_->TxPacket(device_, buf));
       VLOG(1)
           << "Read " << ret
-          << " bytes packet from TAP interface and sent it to PCIe CPU port.";
+          << " byte packet from TAP interface and sent it to PCIe CPU port.";
     }
   }
 
@@ -543,7 +511,6 @@ enum class PacketioPreHeader : char {
 
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
   SetOwnThreadName("HndlSdePktRx");
-  LOG(WARNING) << "HandleSdePacketRx tid: " << GetOwnThreadId();
   std::unique_ptr<ChannelReader<std::string>> reader;
   int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
   {
@@ -556,7 +523,7 @@ enum class PacketioPreHeader : char {
   }
 
   // Cache the flag.
-  bool virtual_cpu_interface_enabled =
+  const bool virtual_cpu_interface_enabled =
       FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface;
 
   while (true) {
@@ -573,23 +540,15 @@ enum class PacketioPreHeader : char {
     }
 
     // Check if this packet is to be forwarded to the virtual CPU interface.
-    if (virtual_cpu_interface_enabled && IsVirtualCpuIntfTraffic(buffer).ok()) {
-      // Skip pre header
-      // buffer.erase(0 /*position*/, 1 /*count*/);
-      // absl::string_view view(buffer.data() + 1, buffer.size() - 1);
-      // SendToVirtualCpuIntf(view);
-      // if (!status.ok()) {
-      //   LOG(ERROR) << "Failed to send to virtual cpu interface: " << status;
-      // }
-
-      int ret = write(fd, buffer.data() + 1, buffer.size() - 1);
+    if (virtual_cpu_interface_enabled && !HasPacketInMagicBytes(buffer).ok()) {
+      int ret = write(fd, buffer.data(), buffer.size());
       if (ret < 0) {
-        LOG(ERROR) << "write to TAP interface failed: " << ret;
+        LOG(ERROR) << "Write to TAP interface failed: " << ret;
+        continue;
       }
-
-      // VLOG(1) << "read buf from pcie cpu interface and sent to tap interface:
-      // "
-      //         << StringToHex(buffer) << ".";
+      VLOG(1)
+          << "Read " << buffer.size()
+          << " byte packet from PCIe CPU port and sent it to TAP interface.";
       continue;
     }
 
