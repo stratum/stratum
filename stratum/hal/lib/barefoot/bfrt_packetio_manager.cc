@@ -25,13 +25,14 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_bool(experimental_enable_bfrt_tofino_virtual_cpu_interface, false,
-            "Enable exposure of a virtual CPU interface on Tofino switches."
-            "This feature requires that the PacketIn metadata header has the "
-            "magic constant 0xBF01 at the 12th byte, like an ether type. "
-            "Incoming packets not having that value will be send out this TAP "
-            "interface. Packets sent to this TAP interface are delivered "
-            "verbatim to the pipeline over the PCIe CPU port.");
+DEFINE_string(
+    experimental_bfrt_tofino_virtual_cpu_interface_name, "",
+    "Enable exposure of a virtual CPU interface on Tofino switches by either "
+    "creating or binding to an existing TAP interface, given by name. This "
+    "feature requires that the PacketIn metadata header has the magic constant "
+    "0xBF01 at the 12th byte, like an ether type. Incoming packets not having "
+    "that value will be send out this TAP interface. Packets sent to this TAP "
+    "interface are delivered verbatim to the pipeline over the PCIe CPU port.");
 DEFINE_int32(experimental_tap_rx_poll_timeout_ms, 100,
              "Polling timeout to check incoming packets from TAP RX sockets.");
 
@@ -40,11 +41,24 @@ namespace hal {
 namespace barefoot {
 
 namespace {
-::util::StatusOr<int> CreateTapIntf(std::string name) {
+::util::StatusOr<int> CreateOrOpenTapIntf(std::string name) {
   // Note: During development we noticed that the canonical TUN device at
   //       /dev/net/tun fails to open. The SDE team created a copy of the tun
   //       driver, bf_tun, which is loaded by default and does work correctly.
-  int fd = open("/dev/net/bf_tun", O_RDWR);
+  //       In unit tests or with Tofino model however, only the canonical device
+  //       is present.
+  constexpr char canonical_tun_device_path[] = "/dev/net/tun";
+  constexpr char barefoot_tun_device_path[] = "/dev/net/bf_tun";
+
+  int fd = -1;
+  if (PathExists(barefoot_tun_device_path)) {
+    // We're on a Tofino switch. Use the patched TUN/TAP driver.
+    fd = open(barefoot_tun_device_path, O_RDWR);
+  } else {
+    // We're on a normal UNIX device. Use canonical TUN/TAP driver.
+    fd = open(canonical_tun_device_path, O_RDWR);
+  }
+
   RET_CHECK(fd >= 0) << "Failed to open: " << strerror(errno);
   struct ifreq ifr = {};
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
@@ -56,7 +70,8 @@ namespace {
            << strerror(errno) << ".";
   }
 
-  LOG(INFO) << "Created TAP interface with name " << ifr.ifr_name << ".";
+  LOG(INFO) << "Created or opened TAP interface with name " << ifr.ifr_name
+            << ".";
   CHECK_EQ(ifr.ifr_name, name) << "Actual and requested TAP intf name differ.";
 
   // Configure the new TAP interface.
@@ -173,9 +188,12 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     }
     RETURN_IF_ERROR(bf_sde_interface_->RegisterPacketReceiveWriter(
         device_, ChannelWriter<std::string>::Create(packet_receive_channel_)));
-    // Create TAP interface and start rx/tx handler.
-    if (FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
-      ASSIGN_OR_RETURN(tap_intf_fd_, CreateTapIntf("tapSwCpu"));
+    // Bind to provided interface and start rx/tx handler.
+    if (!FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name.empty()) {
+      ASSIGN_OR_RETURN(
+          tap_intf_fd_,
+          CreateOrOpenTapIntf(
+              FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name));
       if (virtual_cpu_intf_rx_thread_id_ == 0) {
         int ret = pthread_create(
             &virtual_cpu_intf_rx_thread_id_, nullptr,
@@ -235,7 +253,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
                              << "Failed to join thread " << sde_rx_thread_id_;
       APPEND_STATUS_IF_ERROR(status, error);
     }
-    if (FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
+    if (!FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name.empty()) {
       if (virtual_cpu_intf_rx_thread_id_ != 0 &&
           pthread_join(virtual_cpu_intf_rx_thread_id_, nullptr) != 0) {
         ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
@@ -445,7 +463,7 @@ namespace {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_)
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
-    if (!FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface) {
+    if (FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name.empty()) {
       return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
              << "Virtual CPU interface not enabled.";
     }
@@ -509,6 +527,11 @@ namespace {
 
 ::util::Status BfrtPacketioManager::HandleSdePacketRx() {
   SetOwnThreadName("HndlSdePktRx");
+
+  // Cache the flag.
+  const bool virtual_cpu_interface_enabled =
+      !FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name.empty();
+
   std::unique_ptr<ChannelReader<std::string>> reader;
   int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
   {
@@ -517,12 +540,11 @@ namespace {
       return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
     reader = ChannelReader<std::string>::Create(packet_receive_channel_);
     if (!reader) return MAKE_ERROR(ERR_INTERNAL) << "Failed to create reader.";
-    fd = tap_intf_fd_;
+    if (virtual_cpu_interface_enabled) {
+      RET_CHECK(tap_intf_fd_ > 0) << "TAP interface not initialized";
+      fd = tap_intf_fd_;
+    }
   }
-
-  // Cache the flag.
-  const bool virtual_cpu_interface_enabled =
-      FLAGS_experimental_enable_bfrt_tofino_virtual_cpu_interface;
 
   while (true) {
     {
