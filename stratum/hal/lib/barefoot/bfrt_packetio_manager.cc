@@ -14,7 +14,6 @@
 // Must be included after net/if.h because of re-defines.
 // TODO(max): these headers are linux only and prevent builds on MacOS
 #include <linux/if.h>
-#include <linux/if_packet.h>
 #include <linux/if_tun.h>
 #include <sys/epoll.h>
 
@@ -28,12 +27,12 @@
 
 DEFINE_string(
     experimental_bfrt_tofino_virtual_cpu_interface_name, "",
-    "Enable exposure of a virtual CPU interface on Tofino switches."
-    "This feature requires that the PacketIn metadata header has the "
-    "magic constant 0xBF01 at the 12th byte, like an ether type. "
-    "Incoming packets not having that value will be send out this TAP "
-    "interface. Packets sent to this TAP interface are delivered "
-    "verbatim to the pipeline over the PCIe CPU port.");
+    "Enable exposure of a virtual CPU interface on Tofino switches by either "
+    "creating or binding to an existing TAP interface, given by name. This "
+    "feature requires that the PacketIn metadata header has the magic constant "
+    "0xBF01 at the 12th byte, like an ether type. Incoming packets not having "
+    "that value will be send out this TAP interface. Packets sent to this TAP "
+    "interface are delivered verbatim to the pipeline over the PCIe CPU port.");
 DEFINE_int32(experimental_tap_rx_poll_timeout_ms, 100,
              "Polling timeout to check incoming packets from TAP RX sockets.");
 
@@ -109,48 +108,6 @@ namespace {
            << strerror(errno) << ".";
   }
   close(sock);
-
-  return fd;
-}
-
-::util::StatusOr<int> OpenSockets(std::string name) {
-  // At the last stage, create the socket for this interface for RX/TX. We
-  // create 2 separate sockets for TX and RX:
-  // - The TX socket is just a simple socket which is not bound to any KNET
-  //   interface at this stage. The interface index is used directly in the
-  //   message header when we send the packet out.
-  // - The RX socket however is configured fully here. We bind it to its KNET
-  //   interface, etc.
-  int fd = socket(AF_PACKET, SOCK_RAW, 0);
-  if (fd == -1) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Couldn't create socket.";
-  }
-
-  // Get interface ifindex
-  struct ifreq ifr;
-  memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ);
-  if (ioctl(fd, SIOCGIFINDEX, &ifr) == -1) {
-    close(fd);
-    return MAKE_ERROR(ERR_INTERNAL) << "Couldn't get ifindex for interface "
-                                    << name << ": " << strerror(errno) << ".";
-  }
-  int netif_index = ifr.ifr_ifindex;
-
-  // Now bind socket to the interface. To bind to the interface, we cannot use
-  // setsockopt(SO_BINDTODEVICE). Instead we use bind with netif_index.
-  struct sockaddr_ll addr;
-  memset(&addr, 0, sizeof(addr));
-  addr.sll_family = AF_PACKET;
-  addr.sll_protocol = htons(ETH_P_ALL);
-  addr.sll_ifindex = netif_index;
-  if (bind(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
-    close(fd);
-    return MAKE_ERROR(ERR_INTERNAL) << "Couldn't bind the socket for interface "
-                                    << name << ": " << strerror(errno) << ".";
-  }
-
-  LOG(INFO) << "Opened raw socket on interface " << name << ".";
 
   return fd;
 }
@@ -237,10 +194,6 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
           tap_intf_fd_,
           CreateOrOpenTapIntf(
               FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name));
-      // ASSIGN_OR_RETURN(
-      //     tap_intf_fd_,
-      //     OpenSockets(
-      //         FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name));
       if (virtual_cpu_intf_rx_thread_id_ == 0) {
         int ret = pthread_create(
             &virtual_cpu_intf_rx_thread_id_, nullptr,
@@ -505,7 +458,7 @@ namespace {
   SetOwnThreadName("HndlTapPktRx");
   static constexpr size_t kMaxRxBufferSize = 32768;
 
-  int rx_sock = -1;  // Copy the fd to avoid locking the mutex inside the loop.
+  int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_)
@@ -515,7 +468,7 @@ namespace {
              << "Virtual CPU interface not enabled.";
     }
     RET_CHECK(tap_intf_fd_ > 0) << "TAP interface not initialized";
-    rx_sock = tap_intf_fd_;
+    fd = tap_intf_fd_;
   }
 
   // Use the newest linux poll mechanism (epoll) to detect whether we have
@@ -526,9 +479,9 @@ namespace {
     return MAKE_ERROR(ERR_INTERNAL)
            << "epoll_create1() failed. errno: " << errno << ".";
   }
-  event.data.fd = rx_sock;  // not even used.
+  event.data.fd = fd;  // not even used.
   event.events = EPOLLIN;
-  if (epoll_ctl(efd, EPOLL_CTL_ADD, rx_sock, &event) != 0) {
+  if (epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event) != 0) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "epoll_ctl() failed. errno: " << errno << ".";
   }
@@ -549,7 +502,7 @@ namespace {
       continue;  // let it retry
     } else if (ret > 0 && pevents[0].events & EPOLLIN) {
       buf.resize(kMaxRxBufferSize);  // Pad with zeros.
-      ret = read(rx_sock, &buf[0], buf.size());
+      ret = read(fd, &buf[0], buf.size());
       if (ret < 0) {
         LOG(ERROR) << "Read from TAP interface failed: " << strerror(errno)
                    << ".";
@@ -580,7 +533,7 @@ namespace {
       !FLAGS_experimental_bfrt_tofino_virtual_cpu_interface_name.empty();
 
   std::unique_ptr<ChannelReader<std::string>> reader;
-  int tx_sock = -1;  // Copy the fd to avoid locking the mutex inside the loop.
+  int fd = -1;  // Copy the fd to avoid locking the mutex inside the loop.
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_)
@@ -589,7 +542,7 @@ namespace {
     if (!reader) return MAKE_ERROR(ERR_INTERNAL) << "Failed to create reader.";
     if (virtual_cpu_interface_enabled) {
       RET_CHECK(tap_intf_fd_ > 0) << "TAP interface not initialized";
-      tx_sock = tap_intf_fd_;
+      fd = tap_intf_fd_;
     }
   }
 
@@ -608,7 +561,7 @@ namespace {
 
     // Check if this packet is to be forwarded to the virtual CPU interface.
     if (virtual_cpu_interface_enabled && !HasPacketInMagicBytes(buffer).ok()) {
-      int ret = write(tx_sock, buffer.data(), buffer.size());
+      int ret = write(fd, buffer.data(), buffer.size());
       if (ret < 0) {
         LOG(ERROR) << "Write to TAP interface failed: " << ret;
         continue;
