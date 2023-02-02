@@ -1024,8 +1024,12 @@ BfrtTableManager::ReadDirectCounterEntry(
     const ::p4::v1::Update::Type type,
     const ::p4::v1::DigestEntry& digest_entry) {
   absl::ReaderMutexLock l(&lock_);
-  RET_CHECK(digest_entry.has_config()) << "Digest entry is missing its config: "
-                                       << digest_entry.ShortDebugString();
+  absl::Duration max_timeout;
+  if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
+    RET_CHECK(digest_entry.has_config()) << "Digest entry is missing its config: "
+                                         << digest_entry.ShortDebugString();
+    max_timeout = absl::Nanoseconds(digest_entry.config().max_timeout_ns());
+  }
   const auto& translated_digest_entry = digest_entry;
   // ASSIGN_OR_RETURN(const auto& translated_digest_entry,
   //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
@@ -1036,8 +1040,6 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
                                         translated_digest_entry.digest_id()));
-  absl::Duration max_timeout =
-      absl::Nanoseconds(digest_entry.config().max_timeout_ns());
   switch (type) {
     case ::p4::v1::Update::INSERT:
       RETURN_IF_ERROR(bf_sde_interface_->InsertDigest(

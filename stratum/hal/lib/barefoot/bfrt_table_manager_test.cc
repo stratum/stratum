@@ -532,6 +532,36 @@ TEST_F(BfrtTableManagerTest, InsertDigestEntrySuccess) {
       session_mock, ::p4::v1::Update::INSERT, entry));
 }
 
+TEST_F(BfrtTableManagerTest, InsertDigestEntryFailure) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(
+      *bf_sde_wrapper_mock_,
+      InsertDigest(kDevice1, _, kBfRtTableId, absl::Nanoseconds(1000000000)))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+  //             TranslateMeterEntry(EqualsProto(entry), true))
+  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
+
+  auto ret = bfrt_table_manager_->WriteDigestEntry(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Digest entry is missing its config"));
+}
+
 TEST_F(BfrtTableManagerTest, ModifyDigestEntrySuccess) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4DigestId = 401732455;
@@ -578,11 +608,6 @@ TEST_F(BfrtTableManagerTest, DeleteDigestEntrySuccess) {
 
   const std::string kDigestEntryText = R"pb(
     digest_id: 401732455
-    config {
-      ack_timeout_ns: 1000000000
-      max_timeout_ns: 1000000000
-      max_list_size: 100
-    }
   )pb";
   ::p4::v1::DigestEntry entry;
   ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
