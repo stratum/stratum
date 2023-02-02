@@ -1026,8 +1026,9 @@ BfrtTableManager::ReadDirectCounterEntry(
   absl::ReaderMutexLock l(&lock_);
   absl::Duration max_timeout;
   if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
-    RET_CHECK(digest_entry.has_config()) << "Digest entry is missing its config: "
-                                         << digest_entry.ShortDebugString();
+    RET_CHECK(digest_entry.has_config())
+        << "Digest entry is missing its config: "
+        << digest_entry.ShortDebugString();
     max_timeout = absl::Nanoseconds(digest_entry.config().max_timeout_ns());
   }
   const auto& translated_digest_entry = digest_entry;
