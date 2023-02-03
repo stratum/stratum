@@ -538,9 +538,6 @@ TEST_F(BfrtTableManagerTest, InsertDigestEntryFailure) {
   constexpr int kBfRtTableId = 11111;
   auto session_mock = std::make_shared<SessionMock>();
 
-  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
-      .WillOnce(Return(kBfRtTableId));
-
   const std::string kDigestEntryText = R"pb(
     digest_id: 401732455
   )pb";
