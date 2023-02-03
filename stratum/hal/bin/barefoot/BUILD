@@ -158,6 +158,7 @@ pkg_deb(
         "libssl1.1",
         "systemd",
         "telnet",
+        "uml-utilities",  # for `tunctl` and CPU port workaround
     ] + sde_bsp_debian_deps,
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
