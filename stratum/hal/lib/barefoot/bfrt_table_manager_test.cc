@@ -540,20 +540,12 @@ TEST_F(BfrtTableManagerTest, InsertDigestEntryFailure) {
 
   EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
       .WillOnce(Return(kBfRtTableId));
-  // TODO(max): figure out how to expect the session mock here.
-  EXPECT_CALL(
-      *bf_sde_wrapper_mock_,
-      InsertDigest(kDevice1, _, kBfRtTableId, absl::Nanoseconds(1000000000)))
-      .WillOnce(Return(::util::OkStatus()));
 
   const std::string kDigestEntryText = R"pb(
     digest_id: 401732455
   )pb";
   ::p4::v1::DigestEntry entry;
   ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
-  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
-  //             TranslateMeterEntry(EqualsProto(entry), true))
-  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
 
   auto ret = bfrt_table_manager_->WriteDigestEntry(
       session_mock, ::p4::v1::Update::INSERT, entry);
