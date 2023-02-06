@@ -532,6 +532,25 @@ TEST_F(BfrtTableManagerTest, InsertDigestEntrySuccess) {
       session_mock, ::p4::v1::Update::INSERT, entry));
 }
 
+TEST_F(BfrtTableManagerTest, InsertDigestEntryFailure) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+
+  auto ret = bfrt_table_manager_->WriteDigestEntry(
+      session_mock, ::p4::v1::Update::INSERT, entry);
+  EXPECT_EQ(ERR_INVALID_PARAM, ret.error_code());
+  EXPECT_THAT(ret.error_message(),
+              HasSubstr("Digest entry is missing its config"));
+}
+
 TEST_F(BfrtTableManagerTest, ModifyDigestEntrySuccess) {
   ASSERT_OK(PushTestConfig());
   constexpr int kP4DigestId = 401732455;
@@ -578,8 +597,35 @@ TEST_F(BfrtTableManagerTest, DeleteDigestEntrySuccess) {
 
   const std::string kDigestEntryText = R"pb(
     digest_id: 401732455
+  )pb";
+  ::p4::v1::DigestEntry entry;
+  ASSERT_OK(ParseProtoFromString(kDigestEntryText, &entry));
+  // EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
+  //             TranslateMeterEntry(EqualsProto(entry), true))
+  //     .WillOnce(Return(::util::StatusOr<::p4::v1::DigestEntry>(entry)));
+
+  EXPECT_OK(bfrt_table_manager_->WriteDigestEntry(
+      session_mock, ::p4::v1::Update::DELETE, entry));
+}
+
+// The P4Runtime specification does not explicitly say whether to omit or
+// include a digest config on deletes. For now we support both.
+TEST_F(BfrtTableManagerTest, DeleteDigestEntryWithConfigSuccess) {
+  ASSERT_OK(PushTestConfig());
+  constexpr int kP4DigestId = 401732455;
+  constexpr int kBfRtTableId = 11111;
+  auto session_mock = std::make_shared<SessionMock>();
+
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4DigestId))
+      .WillOnce(Return(kBfRtTableId));
+  // TODO(max): figure out how to expect the session mock here.
+  EXPECT_CALL(*bf_sde_wrapper_mock_, DeleteDigest(kDevice1, _, kBfRtTableId))
+      .WillOnce(Return(::util::OkStatus()));
+
+  const std::string kDigestEntryText = R"pb(
+    digest_id: 401732455
     config {
-      ack_timeout_ns: 1000000000
+      ack_timeout_ns: 2000000000
       max_timeout_ns: 1000000000
       max_list_size: 100
     }
