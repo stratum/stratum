@@ -25,8 +25,7 @@ cc_library(
         "lib/libtdi_pna.so*",
         "lib/libtdi.so*",
         # DPDK libs
-        "lib/x86_64-linux-gnu/dpdk/pmds-22.2/*.so*",
-        "lib/x86_64-linux-gnu/librte_*.so*",
+        "lib/x86_64-linux-gnu/**/*.so*",
     ]),
     hdrs = glob([
         "include/bf_pal/*.h",
@@ -70,8 +69,7 @@ pkg_tar_with_symlinks(
         "lib/libtdi_pna.so*",
         "lib/libtdi.so*",
         # DPDK libs
-        "lib/x86_64-linux-gnu/dpdk/pmds-22.2/*.so*",
-        "lib/x86_64-linux-gnu/librte_*.so*",
+        "lib/x86_64-linux-gnu/**/*.so*",
     ]),
     mode = "0644",
     package_dir = "/usr",

@@ -1,0 +1,25 @@
+diff --git a/src/lld/dpdk/Makefile.am b/src/lld/dpdk/Makefile.am
+index 8cc21b3..c0f5f17 100644
+--- a/src/lld/dpdk/Makefile.am
++++ b/src/lld/dpdk/Makefile.am
+@@ -3,9 +3,15 @@ all:
+ 	$(shell ./apply_patch.sh > /dev/null 2>&1)
+ 	stat dpdk_src/build > /dev/null 2>&1 || \
+         (cd dpdk_src && meson -Dprefix=$(prefix) -Dtests=false -Ddefault_library=shared \
+-	 -Dexamples='' -Denable_kmods=false -Denable_docs=false -Denable_driver_sdk=false \
++	 -Dexamples='' -Denable_kmods=false -Denable_docs=false -Denable_driver_sdk=false -Dcpu_instruction_set=nehalem \
+ 	 -Ddisable_drivers=dma/*,raw/*,compress/*,crypto/*,event/*,baseband/* -Dbuildtype=release build && \
+-	cd build && ninja -j4 && ninja install)
++	cd build && \
++    sed -e 's/RTE_CPUFLAG_AVX512BW\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_AVX512CD\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_AVX512DQ\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_AVX512F\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_AVX512VL\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_AVX512VL\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_PCLMULQDQ\,//' -i rte_build_config.h && \
++    sed -e 's/RTE_CPUFLAG_AVX\,//' -i rte_build_config.h && \
++	ninja -j4 && ninja install)
+ 	$(MAKE) -C infra install_dir=$(prefix)
+ 	cp infra/build/dpdk_infra.so $(libdir)/libdpdk_infra.so
+ install:

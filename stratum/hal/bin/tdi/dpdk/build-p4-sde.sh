@@ -51,6 +51,7 @@ python3 $tmpdir/p4-dpdk-target/tools/setup/install_dep.py
 
 cd $SDE/p4-dpdk-target
 git submodule update --init --recursive --force
+git apply --ignore-whitespace "$THIS_DIR"/patch/01-enable-generic-isa.patch
 ./autogen.sh
 autoreconf
 ./configure --prefix=$SDE_INSTALL
