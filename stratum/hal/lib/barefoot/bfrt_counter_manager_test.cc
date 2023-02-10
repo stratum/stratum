@@ -47,7 +47,7 @@ class BfrtCounterManagerTest : public ::testing::Test {
 
 constexpr int BfrtCounterManagerTest::kDevice1;
 
-TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
+TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterSuccessTest) {
   constexpr int kCounterId = 55;
   constexpr int kBfRtCounterId = 66;
   constexpr int kIndex = 100;
@@ -58,8 +58,11 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index {index: 100}
-    data {byte_count: 100 packet_count: 200}
+    index { index: 100 }
+    data {
+      byte_count: 100
+      packet_count: 200
+    }
   )pb";
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
@@ -71,7 +74,7 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterTest) {
       session_mock, ::p4::v1::Update::MODIFY, entry));
 }
 
-TEST_F(BfrtCounterManagerTest, RejectIndirectCounterTest) {
+TEST_F(BfrtCounterManagerTest, RejectIndirectCounterInsertTest) {
   constexpr int kCounterId = 55;
   constexpr int kBfRtCounterId = 66;
   constexpr int kIndex = 100;
@@ -79,8 +82,11 @@ TEST_F(BfrtCounterManagerTest, RejectIndirectCounterTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index {index: 100}
-    data {byte_count: 100 packet_count: 200}
+    index { index: 100 }
+    data {
+      byte_count: 100
+      packet_count: 200
+    }
   )pb";
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
@@ -103,7 +109,10 @@ TEST_F(BfrtCounterManagerTest, RejectIndirectCounterNoIndexTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    data {byte_count: 100 packet_count: 200}
+    data {
+      byte_count: 100
+      packet_count: 200
+    }
   )pb";
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
@@ -128,8 +137,11 @@ TEST_F(BfrtCounterManagerTest, RejectIndirectCounterIndexZeroTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index {index: -1}
-    data {byte_count: 100 packet_count: 200}
+    index { index: -1 }
+    data {
+      byte_count: 100
+      packet_count: 200
+    }
   )pb";
   ::p4::v1::CounterEntry entry;
   ASSERT_OK(ParseProtoFromString(kIndirectCounterEntryText, &entry));
