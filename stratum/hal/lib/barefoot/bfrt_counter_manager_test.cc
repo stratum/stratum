@@ -58,7 +58,9 @@ TEST_F(BfrtCounterManagerTest, ModifyIndirectCounterSuccessTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index { index: 100 }
+    index {
+      index: 100
+    }
     data {
       byte_count: 100
       packet_count: 200
@@ -82,7 +84,9 @@ TEST_F(BfrtCounterManagerTest, RejectIndirectCounterInsertTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index { index: 100 }
+    index {
+      index: 100
+    }
     data {
       byte_count: 100
       packet_count: 200
@@ -137,7 +141,9 @@ TEST_F(BfrtCounterManagerTest, RejectIndirectCounterIndexZeroTest) {
 
   const std::string kIndirectCounterEntryText = R"pb(
     counter_id: 55
-    index { index: -1 }
+    index {
+      index: -1
+    }
     data {
       byte_count: 100
       packet_count: 200
