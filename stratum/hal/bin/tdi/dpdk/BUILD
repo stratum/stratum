@@ -126,6 +126,7 @@ pkg_deb(
         "libpcap0.8",
         "libelf-dev",
         "libjansson-dev",
+        "gcc",
     ],
     description = "The Stratum package for the P4 DPDK software platform",
     homepage = "https://stratumproject.org/",
