@@ -32,8 +32,6 @@ namespace barefoot {
 using PortStatusEvent = BfSdeInterface::PortStatusEvent;
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
-ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
-
 /* static */
 constexpr int BfChassisManager::kMaxPortStatusEventDepth;
 /* static */
@@ -83,7 +81,18 @@ BfChassisManager::BfChassisManager()
       phal_interface_(nullptr),
       bf_sde_interface_(nullptr) {}
 
-BfChassisManager::~BfChassisManager() = default;
+BfChassisManager::~BfChassisManager() {
+  // NOTE: We should not detach any device or unregister any handler in the
+  // deconstructor as phal_interface_ or bf_sde_interface_ can be deleted before
+  // this class. Make sure you call Shutdown() before deleting the class
+  // instance.
+  if (initialized_) {
+    LOG(ERROR) << "Deleting BfChassisManager while initialized_ is still "
+               << "true. You did not call Shutdown() before deleting the class "
+               << "instance. This can lead to unexpected behavior.";
+  }
+  CleanupInternalState();
+}
 
 ::util::Status BfChassisManager::AddPortHelper(
     uint64 node_id, int device, uint32 sdk_port_id,
@@ -1228,10 +1237,9 @@ void BfChassisManager::ReadPortStatusEvents(
   PortStatusEvent event;
   do {
     // Check switch shutdown.
-    // TODO(max): This check should be on the shutdown variable.
     {
       absl::ReaderMutexLock l(&chassis_lock);
-      if (!initialized_) break;
+      if (shutdown) break;
     }
     // Block on the next linkscan event message from the Channel.
     int code = reader->Read(&event, absl::InfiniteDuration()).error_code();
@@ -1252,11 +1260,10 @@ void BfChassisManager::PortStatusEventHandler(int device, int port,
                                               PortState new_state,
                                               absl::Time time_last_changed) {
   absl::WriterMutexLock l(&chassis_lock);
-  // TODO(max): check for shutdown here
-  // if (shutdown) {
-  //   VLOG(1) << "The class is already shutdown. Exiting.";
-  //   return;
-  // }
+  if (shutdown) {
+    VLOG(1) << "The class is already shutdown. Exiting.";
+    return;
+  }
 
   // Update the state.
   const uint64* node_id = gtl::FindOrNull(device_to_node_id_, device);
@@ -1306,10 +1313,9 @@ void BfChassisManager::ReadTransceiverEvents(
     const std::unique_ptr<ChannelReader<TransceiverEvent>>& reader) {
   do {
     // Check switch shutdown.
-    // TODO(max): This check should be on the shutdown variable.
     {
       absl::ReaderMutexLock l(&chassis_lock);
-      if (!initialized_) break;
+      if (shutdown) break;
     }
     TransceiverEvent event;
     // Block on the next transceiver event message from the Channel.
@@ -1329,6 +1335,10 @@ void BfChassisManager::ReadTransceiverEvents(
 void BfChassisManager::TransceiverEventHandler(int slot, int port,
                                                HwState new_state) {
   absl::WriterMutexLock l(&chassis_lock);
+  if (shutdown) {
+    VLOG(1) << "The class is already shutdown. Exiting.";
+    return;
+  }
 
   PortKey xcvr_port_key(slot, port);
   LOG(INFO) << "Transceiver event for port " << xcvr_port_key.ToString() << ": "
@@ -1444,6 +1454,7 @@ void BfChassisManager::TransceiverEventHandler(int slot, int port,
              << "Failed to create transceiver event thread. Err: " << ret
              << ".";
     }
+
     // We don't care about the return value of the thread. It should exit once
     // the Channel is closed in UnregisterEventWriters().
     ret = pthread_detach(xcvr_event_reader_tid);

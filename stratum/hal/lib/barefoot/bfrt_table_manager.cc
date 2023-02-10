@@ -31,6 +31,7 @@ BfrtTableManager::BfrtTableManager(
     OperationMode mode, BfSdeInterface* bf_sde_interface,
     BfrtP4RuntimeTranslator* bfrt_p4runtime_translator, int device)
     : mode_(mode),
+      digest_rx_thread_id_(),
       bf_sde_interface_(ABSL_DIE_IF_NULL(bf_sde_interface)),
       bfrt_p4runtime_translator_(ABSL_DIE_IF_NULL(bfrt_p4runtime_translator)),
       p4_info_manager_(nullptr),
@@ -38,6 +39,7 @@ BfrtTableManager::BfrtTableManager(
 
 BfrtTableManager::BfrtTableManager()
     : mode_(OPERATION_MODE_STANDALONE),
+      digest_rx_thread_id_(),
       bf_sde_interface_(nullptr),
       bfrt_p4runtime_translator_(nullptr),
       p4_info_manager_(nullptr),
@@ -63,13 +65,79 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
   p4_info_manager_ = std::move(p4_info_manager);
 
+  if (digest_rx_thread_id_ == 0) {
+    digest_list_receive_channel_ =
+        Channel<BfSdeInterface::DigestList>::Create(128);
+    int ret = pthread_create(&digest_rx_thread_id_, nullptr,
+                             &BfrtTableManager::DigestListThreadFunc, this);
+    if (ret != 0) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to spawn digest list RX thread for device with ID "
+             << device_ << ". Err: " << ret << ".";
+    }
+    RETURN_IF_ERROR(bf_sde_interface_->RegisterDigestListWriter(
+        device_, ChannelWriter<BfSdeInterface::DigestList>::Create(
+                     digest_list_receive_channel_)));
+  }
+  // Create a new session for use in digest callbacks. For now we don't modify
+  // table entries in response to digests, that is up the the controller, but a
+  // valid and active session is still required for the callbacks.
+  ASSIGN_OR_RETURN(digest_list_session_, bf_sde_interface_->CreateSession());
+
   return ::util::OkStatus();
 }
 
 ::util::Status BfrtTableManager::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) const {
-  // TODO(unknown): Implement if needed.
+  for (const auto& digest : config.p4info().digests()) {
+    RET_CHECK(digest.type_spec().has_struct_())
+        << "Only struct-like digests type specs are supported: "
+        << digest.ShortDebugString();
+  }
+
   return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::Shutdown() {
+  ::util::Status status;
+  {
+    absl::WriterMutexLock l(&digest_list_writer_lock_);
+    digest_list_writer_ = nullptr;
+  }
+  {
+    absl::WriterMutexLock l(&lock_);
+    if (digest_rx_thread_id_ != 0) {
+      APPEND_STATUS_IF_ERROR(
+          status, bf_sde_interface_->UnregisterDigestListWriter(device_));
+      if (!digest_list_receive_channel_ ||
+          !digest_list_receive_channel_->Close()) {
+        ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                               << "Digest list channel is already closed.";
+        APPEND_STATUS_IF_ERROR(status, error);
+      }
+    }
+    digest_list_receive_channel_.reset();
+    digest_list_session_.reset();
+  }
+  // TODO(max): we release the locks between closing the channel and joining the
+  // thread to prevent deadlocks with the RX handler. But there might still be a
+  // bug hiding here.
+  {
+    absl::ReaderMutexLock l(&lock_);
+    if (digest_rx_thread_id_ != 0 &&
+        pthread_join(digest_rx_thread_id_, nullptr) != 0) {
+      ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
+                             << "Failed to join thread "
+                             << digest_rx_thread_id_;
+      APPEND_STATUS_IF_ERROR(status, error);
+    }
+  }
+  {
+    absl::WriterMutexLock l(&lock_);
+    digest_rx_thread_id_ = 0;
+  }
+
+  return status;
 }
 
 ::util::Status BfrtTableManager::BuildTableKey(
@@ -259,7 +327,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
   if (!translated_table_entry.is_default_action()) {
     if (table.is_const_table()) {
       return MAKE_ERROR(ERR_PERMISSION_DENIED)
-             << "Can't write to table " << table.preamble().name()
+             << "Can't write to const table " << table.preamble().name()
              << " because it has const entries.";
     }
     ASSIGN_OR_RETURN(auto table_key,
@@ -294,7 +362,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     }
   } else {
     RET_CHECK(type == ::p4::v1::Update::MODIFY)
-        << "The table default entry can only be modified.";
+        << "The default table entry can only be modified.";
     RET_CHECK(translated_table_entry.match_size() == 0)
         << "Default action must not contain match fields.";
     RET_CHECK(translated_table_entry.priority() == 0)
@@ -437,6 +505,33 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
       table_data->GetCounterData(&bytes, &packets).ok()) {
     result.mutable_counter_data()->set_byte_count(bytes);
     result.mutable_counter_data()->set_packet_count(packets);
+  }
+
+  return result;
+}
+
+::util::StatusOr<::p4::v1::DigestList> BfrtTableManager::BuildP4DigestList(
+    const BfSdeInterface::DigestList& digest_list) {
+  absl::ReaderMutexLock l(&lock_);
+  ::p4::v1::DigestList result;
+
+  ASSIGN_OR_RETURN(auto p4_digest_id,
+                   bf_sde_interface_->GetP4InfoId(digest_list.digest_id));
+
+  ASSIGN_OR_RETURN(auto digest, p4_info_manager_->FindDigestByID(p4_digest_id));
+
+  result.set_digest_id(p4_digest_id);
+  result.set_list_id(-1);  // currently not used, as digests are acked already.
+  result.set_timestamp(absl::ToUnixNanos(digest_list.timestamp));
+
+  // TODO(max): check that the digest conforms to its definition in P4Info.
+
+  // Transform the SDE digest into a P4RT struct-like digest.
+  for (const auto& digest_entry : digest_list.digests) {
+    ::p4::v1::P4Data* data = result.add_data();
+    for (const auto& field : digest_entry) {
+      data->mutable_struct_()->add_members()->set_bitstring(field);
+    }
   }
 
   return result;
@@ -924,6 +1019,91 @@ BfrtTableManager::ReadDirectCounterEntry(
   return ::util::OkStatus();
 }
 
+::util::Status BfrtTableManager::WriteDigestEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::DigestEntry& digest_entry) {
+  absl::ReaderMutexLock l(&lock_);
+  const auto& translated_digest_entry = digest_entry;
+  // ASSIGN_OR_RETURN(const auto& translated_digest_entry,
+  //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
+  //                      digest_entry, /*to_sdk=*/true));
+  RET_CHECK(translated_digest_entry.digest_id() != 0)
+      << "Missing digest id in DigestEntry "
+      << translated_digest_entry.ShortDebugString() << ".";
+  absl::Duration max_timeout;
+  if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
+    RET_CHECK(translated_digest_entry.has_config())
+        << "Digest entry is missing its config: "
+        << translated_digest_entry.ShortDebugString();
+    max_timeout =
+        absl::Nanoseconds(translated_digest_entry.config().max_timeout_ns());
+  }
+
+  ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
+                                        translated_digest_entry.digest_id()));
+  switch (type) {
+    case ::p4::v1::Update::INSERT:
+      RETURN_IF_ERROR(bf_sde_interface_->InsertDigest(
+          device_, digest_list_session_, table_id, max_timeout));
+      break;
+    case ::p4::v1::Update::MODIFY:
+      RETURN_IF_ERROR(bf_sde_interface_->ModifyDigest(
+          device_, digest_list_session_, table_id, max_timeout));
+      break;
+    case ::p4::v1::Update::DELETE:
+      RETURN_IF_ERROR(bf_sde_interface_->DeleteDigest(
+          device_, digest_list_session_, table_id));
+      break;
+    default:
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Unsupported update type: " << type << " in digest entry "
+             << translated_digest_entry.ShortDebugString() << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::ReadDigestEntry(
+    std::shared_ptr<BfSdeInterface::SessionInterface> session,
+    const ::p4::v1::DigestEntry& digest_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  const auto& translated_digest_entry = digest_entry;
+  // ASSIGN_OR_RETURN(const auto& translated_digest_entry,
+  //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
+  //                      digest_entry, /*to_sdk=*/true));
+  absl::ReaderMutexLock l(&lock_);
+  RET_CHECK(translated_digest_entry.digest_id() != 0)
+      << "Missing digest id in DigestEntry "
+      << translated_digest_entry.ShortDebugString() << ".";
+  ASSIGN_OR_RETURN(uint32 table_id, bf_sde_interface_->GetBfRtId(
+                                        translated_digest_entry.digest_id()));
+  std::vector<uint32> digest_ids;
+  absl::Duration max_timeout;
+  RETURN_IF_ERROR(bf_sde_interface_->ReadDigests(device_, session, table_id,
+                                                 &digest_ids, &max_timeout));
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = 0; i < digest_ids.size(); ++i) {
+    ASSIGN_OR_RETURN(auto p4_digest_id,
+                     bf_sde_interface_->GetP4InfoId(digest_ids[i]));
+    ::p4::v1::DigestEntry result;
+    result.set_digest_id(p4_digest_id);
+    result.mutable_config()->set_max_timeout_ns(
+        absl::ToInt64Nanoseconds(max_timeout));
+    // ASSIGN_OR_RETURN(*resp.add_entities()->mutable_digest_entry(),
+    //                  bfrt_p4runtime_translator_->TranslateDigestEntry(
+    //                      result, /*to_sdk=*/false));
+    *resp.add_entities()->mutable_digest_entry() = result;
+  }
+
+  VLOG(1) << "ReadDigestEntry resp " << resp.ShortDebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BfrtTableManager::WriteActionProfileMember(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::Update::Type type,
@@ -1145,6 +1325,77 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::RegisterDigestListWriter(
+    const std::shared_ptr<WriterInterface<::p4::v1::DigestList>>& writer) {
+  absl::WriterMutexLock l(&digest_list_writer_lock_);
+  digest_list_writer_ = writer;
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::UnregisterDigestListWriter() {
+  absl::WriterMutexLock l(&digest_list_writer_lock_);
+  digest_list_writer_ = nullptr;
+  return ::util::OkStatus();
+}
+
+void* BfrtTableManager::DigestListThreadFunc(void* arg) {
+  BfrtTableManager* mgr = reinterpret_cast<BfrtTableManager*>(arg);
+  ::util::Status status = mgr->HandleDigestList();
+  if (!status.ok()) {
+    LOG(ERROR) << "Non-OK exit of handler thread for digest lists.";
+  }
+
+  return nullptr;
+}
+
+::util::Status BfrtTableManager::HandleDigestList() {
+  std::unique_ptr<ChannelReader<BfSdeInterface::DigestList>> reader;
+  {
+    absl::ReaderMutexLock l(&lock_);
+    if (!digest_rx_thread_id_)
+      return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+    reader = ChannelReader<BfSdeInterface::DigestList>::Create(
+        digest_list_receive_channel_);
+    if (!reader) return MAKE_ERROR(ERR_INTERNAL) << "Failed to create reader.";
+  }
+
+  while (true) {
+    {
+      absl::ReaderMutexLock l(&chassis_lock);
+      if (shutdown) break;
+    }
+    BfSdeInterface::DigestList digest_list;
+    int code =
+        reader->Read(&digest_list, absl::InfiniteDuration()).error_code();
+    if (code == ERR_CANCELLED) break;
+    if (code == ERR_ENTRY_NOT_FOUND) {
+      LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
+      continue;
+    }
+
+    auto p4rt_digest_list = BuildP4DigestList(digest_list);
+    if (!p4rt_digest_list.ok()) {
+      LOG(ERROR) << "BuildP4DigestList failed: " << p4rt_digest_list.status();
+      continue;
+    }
+    // TODO(max): perform P4RT metadata translation
+    // const auto& translated_packet_in =
+    //     bfrt_p4runtime_translator_->TranslatePacketIn(packet_in);
+    // if (!translated_packet_in.ok()) {
+    //   LOG(ERROR) << "TranslatePacketIn failed: " << status;
+    //   continue;
+    // }
+    VLOG(1) << "Handled DigestList: "
+            << p4rt_digest_list.ValueOrDie().ShortDebugString();
+    {
+      absl::WriterMutexLock l(&digest_list_writer_lock_);
+      digest_list_writer_->Write(p4rt_digest_list.ConsumeValueOrDie());
+    }
   }
 
   return ::util::OkStatus();

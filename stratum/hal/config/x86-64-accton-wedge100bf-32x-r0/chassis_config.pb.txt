@@ -360,3 +360,27 @@ singleton_ports {
   }
   node: 1
 }
+singleton_ports {
+  id: 3300
+  name: "33/0"
+  slot: 1
+  port: 33
+  channel: 1
+  speed_bps: 10000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 3302
+  name: "33/2"
+  slot: 1
+  port: 33
+  channel: 3
+  speed_bps: 10000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}

@@ -113,6 +113,14 @@ BfrtSwitch::~BfrtSwitch() {}
 }
 
 ::util::Status BfrtSwitch::Shutdown() {
+  // The shutdown flag must be checked on all read or write accesses to
+  // state protected by chassis_lock, whether within RPC executions or
+  // event handler threads.
+  {
+    absl::WriterMutexLock l(&chassis_lock);
+    shutdown = true;
+  }
+
   ::util::Status status = ::util::OkStatus();
   for (const auto& entry : device_id_to_bfrt_node_) {
     BfrtNode* node = entry.second;
@@ -121,6 +129,7 @@ BfrtSwitch::~BfrtSwitch() {}
   APPEND_STATUS_IF_ERROR(status, bf_chassis_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, phal_interface_->Shutdown());
   // APPEND_STATUS_IF_ERROR(status, bf_sde_interface_->Shutdown());
+  node_id_to_bfrt_node_.clear();
 
   return status;
 }

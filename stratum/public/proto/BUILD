@@ -47,7 +47,7 @@ cc_proto_library(
 proto_library(
     name = "p4_role_config_proto",
     srcs = ["p4_role_config.proto"],
-    deps = ["@com_github_p4lang_p4runtime//:p4runtime_proto"],
+    visibility = ["//visibility:public"],
 )
 
 cc_proto_library(

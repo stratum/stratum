@@ -10,8 +10,8 @@ load(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//bazel:workspace_rule.bzl", "remote_workspace")
 
-P4RUNTIME_VER = "1.4.0-rc.1"
-P4RUNTIME_SHA = "3a32a4781c02e8aa36d998046b350c32c12abc27d62feeebff4e1554f29f37ef"
+P4RUNTIME_VER = "1.4.0-rc.5"
+P4RUNTIME_SHA = "ba31fb9afce6e62ffe565b16bb909e144cd30d65d926cd90af25e99ee8de863a"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
@@ -266,17 +266,9 @@ def stratum_deps():
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.
             patch_cmds = [
-                "wget --quiet -O linux-headers-4.19.0-12-2-common.deb 'https://github.com/stratum/sonic-base-image/releases/download/2022-07-28/linux-headers-4.19.0-12-2-common_4.19.152-1_all.deb'",
-                "wget --quiet -O linux-headers-4.19.0-12-2-amd64.deb 'https://github.com/stratum/sonic-base-image/releases/download/2022-07-28/linux-headers-4.19.0-12-2-amd64_4.19.152-1_amd64.deb'",
-                "sudo apt-get install -y --no-install-recommends ./linux-headers-4.19.0-12-2-common.deb",
-                "sudo apt-get install -y --no-install-recommends ./linux-headers-4.19.0-12-2-amd64.deb",
-                "rm ./linux-headers-4.19.0-12-2-common.deb ./linux-headers-4.19.0-12-2-amd64.deb",
-                "sudo mkdir -p /usr/src/linux-headers-4.19.0-12-2-merged",
-                "sudo rsync -ahPL /usr/src/linux-headers-4.19.0-12-2-common/ /usr/src/linux-headers-4.19.0-12-2-merged",
-                "sudo rsync -ahPL /usr/src/linux-headers-4.19.0-12-2-amd64/ /usr/src/linux-headers-4.19.0-12-2-merged",
-                "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=/usr/src/linux-headers-4.19.0-12-2-merged && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
-                "sudo apt-get remove -y linux-headers-4.19.0-12-2-amd64 linux-headers-4.19.0-12-2-common",
-                "sudo rm -rf /usr/src/linux-headers-4.19.0-12-2-merged",
+                "wget -qO- https://github.com/stratum/sonic-base-image/releases/download/2022-08-12/linux-headers-4.19.0-12-2-merged.tar.xz | tar xJ",
+                "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=$(realpath ./linux-headers-4.19.0-12-2-merged) && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
+                "rm -rf ./linux-headers-4.19.0-12-2-merged",
             ],
         )
 

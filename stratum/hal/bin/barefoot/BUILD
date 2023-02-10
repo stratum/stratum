@@ -121,6 +121,7 @@ pkg_tar(
         ":stratum_configs",
         ":stratum_shareable_files",
         ":systemd_service",
+        "@local_barefoot_bin//:bf_binary_files",
         "@local_barefoot_bin//:bf_library_files",
         "@local_barefoot_bin//:bf_shareable_files",
         "@local_barefoot_bin//:kernel_module",
@@ -151,11 +152,13 @@ pkg_deb(
     data = ":stratum_bfrt_data",
     depends = [
         "kmod",
+        "libatomic1",
         "libedit2",
         "libexpat1",
         "libssl1.1",
         "systemd",
         "telnet",
+        "uml-utilities",  # for `tunctl` and CPU port workaround
     ] + sde_bsp_debian_deps,
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",

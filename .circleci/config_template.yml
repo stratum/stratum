@@ -59,7 +59,7 @@ set_bazelrc: &set_bazelrc
     # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
     command: |
       cat .circleci/bazelrc >> .bazelrc
-      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
+      rm -rf /tmp/bazel-cache/output-root/install/ec7bc80570c57e35507fafa6aadd57b1
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -449,7 +449,7 @@ workflows:
             - publish-docker-build
           matrix:
             parameters:
-              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0"]
+              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0", "9.10.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build
