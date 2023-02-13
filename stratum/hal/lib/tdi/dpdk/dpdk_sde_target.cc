@@ -143,8 +143,8 @@ namespace {
             << " pipeline_in_name=" << port_attrs->pipe_in
             << " pipeline_out_name=" << port_attrs->pipe_out
             << " mempool_name=" << port_attrs->mempool_name
-            << " net_port = " << int(port_attrs->net_port)
-            << " sdk_port_id = " << port;
+            << " net_port=" << static_cast<int>(port_attrs->net_port)
+            << " sdk_port_id=" << port;
 
   if (port_attrs->port_type == BF_DPDK_LINK) {
     // Update LINK parameters

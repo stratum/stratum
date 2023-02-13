@@ -42,8 +42,6 @@ constexpr int DpdkChassisManager::kMaxXcvrEventDepth;
 constexpr int DpdkChassisManager::kSdkPortControlBase;
 constexpr int DpdkChassisManager::kDefaultMtu;
 constexpr int DpdkChassisManager::kMaxMtu;
-constexpr hal::PortConfigParams::PacketDirection
-    DpdkChassisManager::kDefaultPortPacketDirection;
 constexpr char DpdkChassisManager::kDefaultPipelineName[];
 constexpr char DpdkChassisManager::kDefaultMempoolName[];
 
@@ -139,7 +137,6 @@ DpdkChassisManager::~DpdkChassisManager() = default;
     LOG(INFO) << "Autocreating Control TAP port";
     // Packet direction for control port will always be host type
     sde_params.port_type = PortConfigParams::PORT_TYPE_TAP;
-    sde_params.packet_dir = kDefaultPortPacketDirection;
 
     /* sdk_ctl_port_id is uniquely derived from the kSdkPortControlBase range
      * and maps 1:1 to parent port's sdk_port_id.

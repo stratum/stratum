@@ -58,13 +58,6 @@ class TdiSdeInterface {
     HOTPLUG_MODE_DEL = 2,
   };
 
-  // Packet Direction type.
-  enum PacketDirection {
-    DIRECTION_HOST = 0,
-    DIRECTION_NETWORK = 1,
-    DIRECTION_NONE = 2,
-  };
-
   struct HotplugConfigParams {
     uint32 qemu_socket_port;
     uint64 qemu_vm_mac_address;
@@ -79,7 +72,7 @@ class TdiSdeInterface {
   struct PortConfigParams {
     hal::PortConfigParams::DpdkPortType port_type;
     hal::PortConfigParams::DpdkDeviceType device_type;
-    hal::PortConfigParams::PacketDirection packet_dir;
+    hal::PortConfigParams::DpdkPacketDirection packet_dir;
     int queues;
     int mtu;
     std::string socket_path;

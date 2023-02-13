@@ -276,8 +276,8 @@ message PortConfigParams {
     DEVICE_TYPE_VIRTIO_NET = 1;
     DEVICE_TYPE_VIRTIO_BLK = 2;
   }
-  // Packet Direction types
-  enum PacketDirection {
+  // DPDK packet direction types.
+  enum DpdkPacketDirection {
     DIRECTION_HOST = 0;
     DIRECTION_NETWORK = 1;
     DIRECTION_UNKNOWN = 2;
@@ -319,7 +319,7 @@ message PortConfigParams {
   // PCI BDF value to be used for the LINK port
   string pci_bdf = 18;
   // Packet direction
-  PacketDirection packet_dir = 19;
+  DpdkPacketDirection packet_dir = 19;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
