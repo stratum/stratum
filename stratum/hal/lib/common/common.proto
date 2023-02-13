@@ -280,7 +280,7 @@ message PortConfigParams {
   enum PacketDirection {
     DIRECTION_HOST = 0;
     DIRECTION_NETWORK = 1;
-    DIRECTION_NONE = 2;
+    DIRECTION_UNKNOWN = 2;
   };
   // The configured admin state for this port.
   AdminState admin_state = 1;
