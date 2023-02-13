@@ -108,3 +108,7 @@ License: Apache-2.0
 Files: NOTICE legal/NOTICE* legal/LICENSE*
 Copyright: No Copyright
 License: CC0-1.0
+
+Files: stratum/hal/bin/tdi/dpdk/patch/01-enable-generic-isa.patch
+Copyright: 2023-present Intel Corporation
+License: Apache-2.0
