@@ -278,9 +278,9 @@ message PortConfigParams {
   }
   // DPDK packet direction types.
   enum DpdkPacketDirection {
-    DIRECTION_HOST = 0;
-    DIRECTION_NETWORK = 1;
-    DIRECTION_UNKNOWN = 2;
+    DIRECTION_UNKNOWN = 0;
+    DIRECTION_HOST = 1;
+    DIRECTION_NETWORK = 2;
   };
   // The configured admin state for this port.
   AdminState admin_state = 1;

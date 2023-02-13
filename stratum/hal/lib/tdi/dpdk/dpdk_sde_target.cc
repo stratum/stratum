@@ -132,6 +132,8 @@ namespace {
   port_attrs->port_dir = PM_PORT_DIR_DEFAULT;
   port_attrs->port_in_id = port;
   port_attrs->port_out_id = port;
+  // From DPDK port_attributes_t header: "if [net_port is] set, port is network
+  // port, else host port".
   port_attrs->net_port =
       config.packet_dir == hal::PortConfigParams::DIRECTION_NETWORK ? 1 : 0;
 
