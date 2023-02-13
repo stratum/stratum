@@ -122,8 +122,8 @@ class DpdkChassisManager {
   // DPDK uses a L2 MTU including the Ethernet header.
   static constexpr int kDefaultMtu = 1514;
   static constexpr int kMaxMtu = 65535;
-  static constexpr TdiSdeInterface::PacketDirection
-      kDefaultPortPacketDirection = TdiSdeInterface::DIRECTION_HOST;
+  static constexpr hal::PortConfigParams::PacketDirection
+      kDefaultPortPacketDirection = hal::PortConfigParams::DIRECTION_HOST;
   static constexpr char kDefaultPipelineName[] = "pipe";
   static constexpr char kDefaultMempoolName[] = "MEMPOOL0";
 

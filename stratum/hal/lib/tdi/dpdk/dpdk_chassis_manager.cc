@@ -42,7 +42,7 @@ constexpr int DpdkChassisManager::kMaxXcvrEventDepth;
 constexpr int DpdkChassisManager::kSdkPortControlBase;
 constexpr int DpdkChassisManager::kDefaultMtu;
 constexpr int DpdkChassisManager::kMaxMtu;
-constexpr TdiSdeInterface::PacketDirection
+constexpr hal::PortConfigParams::PacketDirection
     DpdkChassisManager::kDefaultPortPacketDirection;
 constexpr char DpdkChassisManager::kDefaultPipelineName[];
 constexpr char DpdkChassisManager::kDefaultMempoolName[];
@@ -115,8 +115,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
   TdiSdeInterface::PortConfigParams sde_params;
   sde_params.port_type = config_params.port_type();
   sde_params.device_type = config->device_type;
-  sde_params.packet_dir =
-      config->packet_dir ? config->packet_dir : kDefaultPortPacketDirection;
+  sde_params.packet_dir = config_params.packet_dir();
   sde_params.queues = config->queues;
   sde_params.mtu = *config->mtu;
   sde_params.socket_path = config->socket_path;
@@ -133,7 +132,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
             << " (SDK Port " << sdk_port_id << ").";
 
   RETURN_IF_ERROR(sde_interface_->AddPort(
-      device, port_id, singleton_port.speed_bps(), sde_params));
+      device, port_id-1, singleton_port.speed_bps(), sde_params));
 
   // Check if Control Port Creation is opted in CLI.
   if (config->control_port.length()) {

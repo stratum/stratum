@@ -79,7 +79,7 @@ class TdiSdeInterface {
   struct PortConfigParams {
     hal::PortConfigParams::DpdkPortType port_type;
     hal::PortConfigParams::DpdkDeviceType device_type;
-    PacketDirection packet_dir;
+    hal::PortConfigParams::PacketDirection packet_dir;
     int queues;
     int mtu;
     std::string socket_path;
