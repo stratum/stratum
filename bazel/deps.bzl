@@ -278,7 +278,7 @@ def stratum_deps():
         http_archive(
             # name = "com_github_p4lang_p4_dpdk_target",
             name = "local_tdi_bin",
-            sha256 = "c58e7a3f13b12515bbcf0f784486125b9c605e54ca93fd920b262d18dbdac0cb",
+            sha256 = "5ae459cdd6ae60a4bb462cbbd815ec19dbe6596aedde8587aa4ee4d876ba393a",
             # TODO(max): host file somewhere more appropriate
             urls = ["https://github.com/stratum/sonic-base-image/releases/download/2022-08-12/p4-sde-0.1.0-install.tgz"],
             build_file = "@//bazel:external/dpdk.BUILD",

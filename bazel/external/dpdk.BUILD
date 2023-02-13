@@ -45,7 +45,6 @@ cc_library(
         "include/tdi_rt/**/*.hpp",
         "include/tdi/**/*.h",
         "include/tdi/**/*.hpp",
-
     ]),
     linkopts = [
         "-lpthread",
@@ -85,7 +84,7 @@ pkg_tar_with_symlinks(
         "share/bf_rt_shared/**",
         "share/cli/xml/**",
         "share/target_sys/**",
-        # rte_* hdrs are required to enable the SWX compile mode
+        # rte_* hdrs are required to enable the SWX compile mode.
         "include/rte_*.h",
         "include/generic/rte_*.h",
     ]),
