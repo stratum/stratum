@@ -132,7 +132,10 @@ namespace {
   port_attrs->port_dir = PM_PORT_DIR_DEFAULT;
   port_attrs->port_in_id = port;
   port_attrs->port_out_id = port;
-  port_attrs->net_port = config.packet_dir;
+  // From DPDK port_attributes_t header: "if [net_port is] set, port is network
+  // port, else host port".
+  port_attrs->net_port =
+      config.packet_dir == hal::PortConfigParams::DIRECTION_NETWORK ? 1 : 0;
 
   LOG(INFO) << "Parameters for backend are:"
             << " port_name=" << port_attrs->port_name
@@ -142,8 +145,8 @@ namespace {
             << " pipeline_in_name=" << port_attrs->pipe_in
             << " pipeline_out_name=" << port_attrs->pipe_out
             << " mempool_name=" << port_attrs->mempool_name
-            << " net_port=" << port_attrs->net_port
-            << " sdk_port_id = " << port;
+            << " net_port=" << static_cast<int>(port_attrs->net_port)
+            << " sdk_port_id=" << port;
 
   if (port_attrs->port_type == BF_DPDK_LINK) {
     // Update LINK parameters

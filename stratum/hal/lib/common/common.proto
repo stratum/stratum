@@ -276,6 +276,12 @@ message PortConfigParams {
     DEVICE_TYPE_VIRTIO_NET = 1;
     DEVICE_TYPE_VIRTIO_BLK = 2;
   }
+  // DPDK packet direction types.
+  enum DpdkPacketDirection {
+    DIRECTION_UNKNOWN = 0;
+    DIRECTION_HOST = 1;
+    DIRECTION_NETWORK = 2;
+  };
   // The configured admin state for this port.
   AdminState admin_state = 1;
   // The per port MTU (aka max frame size) for this port.
@@ -312,6 +318,8 @@ message PortConfigParams {
   string control_port = 17;
   // PCI BDF value to be used for the LINK port
   string pci_bdf = 18;
+  // Packet direction
+  DpdkPacketDirection packet_dir = 19;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,

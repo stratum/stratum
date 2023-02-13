@@ -98,7 +98,7 @@ class DpdkChassisManager {
 
     PortConfigParams::DpdkPortType port_type;
     PortConfigParams::DpdkDeviceType device_type;
-    TdiSdeInterface::PacketDirection packet_dir;
+    PortConfigParams::DpdkPacketDirection packet_dir;
     int32 queues;
     std::string socket_path;
     std::string host_name;
@@ -111,7 +111,7 @@ class DpdkChassisManager {
         : admin_state(ADMIN_STATE_UNKNOWN),
           port_type(PortConfigParams::PORT_TYPE_NONE),
           device_type(PortConfigParams::DEVICE_TYPE_NONE),
-          packet_dir(TdiSdeInterface::DIRECTION_HOST),
+          packet_dir(PortConfigParams::DIRECTION_HOST),
           queues(0) {}
   };
 
@@ -122,8 +122,6 @@ class DpdkChassisManager {
   // DPDK uses a L2 MTU including the Ethernet header.
   static constexpr int kDefaultMtu = 1514;
   static constexpr int kMaxMtu = 65535;
-  static constexpr TdiSdeInterface::PacketDirection
-      kDefaultPortPacketDirection = TdiSdeInterface::DIRECTION_HOST;
   static constexpr char kDefaultPipelineName[] = "pipe";
   static constexpr char kDefaultMempoolName[] = "MEMPOOL0";
 
