@@ -25,7 +25,7 @@ cc_library(
         "lib/libtdi_pna.so*",
         "lib/libtdi.so*",
         # DPDK libs
-        "lib/x86_64-linux-gnu/dpdk/pmds-22.2/*.so*",
+        "lib/x86_64-linux-gnu/dpdk/pmds-*/*.so*",
         "lib/x86_64-linux-gnu/librte_*.so*",
     ]),
     hdrs = glob([
@@ -70,7 +70,7 @@ pkg_tar_with_symlinks(
         "lib/libtdi_pna.so*",
         "lib/libtdi.so*",
         # DPDK libs
-        "lib/x86_64-linux-gnu/dpdk/pmds-22.2/*.so*",
+        "lib/x86_64-linux-gnu/dpdk/pmds-*/*.so*",
         "lib/x86_64-linux-gnu/librte_*.so*",
     ]),
     mode = "0644",
@@ -84,6 +84,9 @@ pkg_tar_with_symlinks(
         "share/bf_rt_shared/**",
         "share/cli/xml/**",
         "share/target_sys/**",
+        # rte_* hdrs are required to enable the SWX compile mode.
+        "include/rte_*.h",
+        "include/generic/rte_*.h",
     ]),
     mode = "0644",
     package_dir = "/usr",
