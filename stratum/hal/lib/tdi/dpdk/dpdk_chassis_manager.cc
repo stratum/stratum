@@ -132,7 +132,7 @@ DpdkChassisManager::~DpdkChassisManager() = default;
             << " (SDK Port " << sdk_port_id << ").";
 
   RETURN_IF_ERROR(sde_interface_->AddPort(
-      device, port_id-1, singleton_port.speed_bps(), sde_params));
+      device, port_id, singleton_port.speed_bps(), sde_params));
 
   // Check if Control Port Creation is opted in CLI.
   if (config->control_port.length()) {
