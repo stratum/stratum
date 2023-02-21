@@ -3,7 +3,7 @@
 
 ARG BAZELISK_VERSION=1.8.0
 ARG PI_COMMIT=a5fd855d4b3293e23816ef6154e83dc6621aed6a
-ARG BMV2_COMMIT=8e8a192fc58e2e994f4c82a34496ec6833bf0d50
+ARG BMV2_COMMIT=c67becf3f8f8b9af5a41f11e00eb9a473912e310
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
 ARG LLVM_REPO_NAME="deb http://apt.llvm.org/buster/  llvm-toolchain-buster-11 main"
 
