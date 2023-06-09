@@ -572,11 +572,6 @@ namespace {
       continue;
     }
 
-    if (rx_writer_ == nullptr) {
-      VLOG(1) << "Controller not connected, just skip PacketIn.";
-      continue;
-    }
-
     ::p4::v1::PacketIn packet_in;
     ::util::Status status = ParsePacketIn(buffer, &packet_in);
     if (!status.ok()) {
