@@ -591,8 +591,7 @@ namespace {
     }
     {
       absl::WriterMutexLock l(&rx_writer_lock_);
-      if (rx_writer_ != nullptr)
-        rx_writer_->Write(translated_packet_in.ValueOrDie());
+      rx_writer_->Write(translated_packet_in.ValueOrDie());
     }
     VLOG(1) << "Handled PacketIn: " << packet_in.ShortDebugString();
   }
