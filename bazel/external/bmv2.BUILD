@@ -1,8 +1,8 @@
 # Copyright 2020-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 load("@//bazel/rules:package_rule.bzl", "pkg_tar_with_symlinks")
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 
 package(
     default_visibility = ["//visibility:public"],

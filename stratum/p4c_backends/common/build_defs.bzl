@@ -128,7 +128,7 @@ p4_fpm_compile = rule(
             default = Label("@com_github_p4lang_p4c//:p4include/core.p4"),
         ),
         "_p4c_stratum_fpm_binary": attr.label(
-            cfg = "host",
+            cfg = "exec",
             executable = True,
             default = Label("//stratum/p4c_backends/fpm:p4c-fpm"),
         ),

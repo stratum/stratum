@@ -2,8 +2,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary", "stratum_license_tar")
 load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary", "stratum_license_tar")
 
 licenses(["notice"])  # Apache v2
 

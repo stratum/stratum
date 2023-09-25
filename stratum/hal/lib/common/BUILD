@@ -2,13 +2,13 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("//bazel:deps.bzl", "P4RUNTIME_VER")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
-load("//bazel:deps.bzl", "P4RUNTIME_VER")
 
 licenses(["notice"])  # Apache v2
 
