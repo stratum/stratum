@@ -504,6 +504,11 @@ class BfSdeWrapper : public BfSdeInterface {
       int device, std::shared_ptr<BfSdeInterface::SessionInterface> session)
       SHARED_LOCKS_REQUIRED(data_lock_);
 
+  // Helper function to read the current QoS related configuration from the
+  // ASIC.
+  ::util::StatusOr<std::string> DumpQosConfig(int device) const
+      SHARED_LOCKS_REQUIRED(data_lock_);
+
   // Synchronizes the driver cached register values with the current hardware
   // state for a given BfRt table.
   // TODO(max): consolidate with SynchronizeCounters
