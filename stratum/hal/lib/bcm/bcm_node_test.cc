@@ -96,6 +96,14 @@ class BcmNodeTest : public ::testing::Test {
     return bcm_node_->WriteForwardingEntries(req, results);
   }
 
+  ::util::Status ReadForwardingEntries(
+      const ::p4::v1::ReadRequest& req,
+      WriterInterface<::p4::v1::ReadResponse>* writer,
+      std::vector<::util::Status>* details) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->ReadForwardingEntries(req, writer, details);
+  }
+
   ::util::Status RegisterStreamMessageResponseWriter(
       const std::shared_ptr<WriterInterface<::p4::v1::StreamMessageResponse>>&
           writer) {
@@ -1667,6 +1675,53 @@ TEST_F(BcmNodeTest, TestUpdatePortState) {
   auto status = UpdatePortState(kPortId);
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(expected_error.ToString(), status.ToString());
+}
+
+TEST_F(BcmNodeTest, ReadForwardingEntriesFail_ChannelNull) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::WriteRequest wreq;
+  req.set_device_id(kNodeId);
+  req.add_entities()->table_entry();
+
+  std::vector<::util::Status> details = {};
+  ::util::Status status = ReadForwardingEntries(req, NULL, &details);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Channel writer must be non-null."));
+}
+
+TEST_F(BcmNodeTest, ReadForwardingEntriesFail_DetailsNull) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::WriteRequest wreq;
+  req.set_device_id(kNodeId);
+  req.add_entities()->table_entry();
+
+  ::util::Status status = ReadForwardingEntries(req, &writer_mock, NULL);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Details pointer must be non-null."));
+}
+
+TEST_F(BcmNodeTest, ReadForwardingEntriesFail_DevId) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::WriteRequest wreq;
+  req.set_device_id(0);
+  req.add_entities()->table_entry();
+
+  std::vector<::util::Status> details = {};
+  ::util::Status status = ReadForwardingEntries(req, &writer_mock, &details);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr("Request device id must be same as id of this BcmNode"));
 }
 
 // TODO(unknown): Complete unit test coverage.
