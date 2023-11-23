@@ -93,31 +93,30 @@ load("@io_bazel_rules_go//tests:grpc_repos.bzl", "grpc_dependencies")
 grpc_dependencies()
 
 # ---------------------------------------------------------------------------
-#       Overiride net, text, and sys Go modules to patch new Go update
+#       Pin select Go modules to specific versions 
 # ---------------------------------------------------------------------------
+# TODO: These can likely be removed if the version of go is updated
 
 go_repository(
     name = "org_golang_x_net",
     importpath = "golang.org/x/net",
-    sum = "h1:hZ/3BUoy5aId7sCpA/Tc5lt8DkFgdVS2onTpJsZ/fl0=",
-    version = "v0.1.0",
+    #sum = "h1:hZ/3BUoy5aId7sCpA/Tc5lt8DkFgdVS2onTpJsZ/fl0=",
+    version = "v0.17.0",
 )
 
 go_repository(
     name = "org_golang_x_text",
     importpath = "golang.org/x/text",
-    sum = "h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=",
-    version = "v0.3.0",
+    #sum = "h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=",
+    version = "v0.13.0",
 )
 
 go_repository(
     name = "org_golang_x_sys",
     importpath = "golang.org/x/sys",
-    sum = "h1:eG7RXZHdqOJ1i+0lgLgCpSXAp6M3LYlAo6osgSi0xOM=",
-    version = "v0.5.0",
+    #sum = "h1:eG7RXZHdqOJ1i+0lgLgCpSXAp6M3LYlAo6osgSi0xOM=",
+    version = "v0.13.0",
 )
-
-
 
 # ---------------------------------------------------------------------------
 #       Load CDLang dependencies.
