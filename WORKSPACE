@@ -100,8 +100,8 @@ grpc_dependencies()
 go_repository(
     name = "org_golang_x_net",
     importpath = "golang.org/x/net",
-    sum = "h1:pVaXccu2ozPjCXewfr1S7xza/zcXTity9cCdXQYSjIM=",
-    version = "v0.17.0",
+    sum = "h1:Nvo8UFsZ8X3BhAC9699Z1j7XQ3rsZnUUm7jfBEk1ueY=",
+    version = "v0.13.0",
 )
 
 go_repository(
