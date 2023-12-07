@@ -388,7 +388,7 @@ jobs:
 
   license-check:
     docker:
-      - image: fsfe/reuse:latest
+      - image: fsfe/reuse:1.1
     resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
