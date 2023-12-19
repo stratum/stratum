@@ -102,6 +102,24 @@ P4InfoManager::~P4InfoManager() {}
   return table_map_.FindByName(table_name);
 }
 
+::util::StatusOr<const ::p4::config::v1::MatchField>
+P4InfoManager::FindTableMatchFieldByID(uint32 table_id, uint32 field_id) const {
+  auto table = table_map_.FindByID(table_id);
+  if (!table.ok()) {
+    return table.status();
+  }
+
+  for (const auto& field : table.ValueOrDie().match_fields()) {
+    if (field.id() == field_id) {
+      return field;
+    }
+  }
+
+  return MAKE_ERROR(ERR_INVALID_P4_INFO)
+         << "P4Info field ID " << field_id << " of action "
+         << PrintP4ObjectID(table_id) << " is not found";
+}
+
 ::util::StatusOr<const ::p4::config::v1::Action> P4InfoManager::FindActionByID(
     uint32 action_id) const {
   return action_map_.FindByID(action_id);
@@ -110,6 +128,24 @@ P4InfoManager::~P4InfoManager() {}
 ::util::StatusOr<const ::p4::config::v1::Action>
 P4InfoManager::FindActionByName(const std::string& action_name) const {
   return action_map_.FindByName(action_name);
+}
+
+::util::StatusOr<const ::p4::config::v1::Action::Param>
+P4InfoManager::FindActionParamByID(uint32 action_id, uint32 param_id) const {
+  auto action = action_map_.FindByID(action_id);
+  if (!action.ok()) {
+    return action.status();
+  }
+
+  for (const auto& param : action.ValueOrDie().params()) {
+    if (param.id() == param_id) {
+      return param;
+    }
+  }
+
+  return MAKE_ERROR(ERR_INVALID_P4_INFO)
+         << "P4Info param ID " << param_id << " of action "
+         << PrintP4ObjectID(action_id) << " is not found";
 }
 
 ::util::StatusOr<const ::p4::config::v1::ActionProfile>

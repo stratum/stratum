@@ -254,6 +254,32 @@ proto_library(
     ],
 )
 
+stratum_cc_library(
+    name = "p4_proto_printer",
+    srcs = ["p4_proto_printer.cc"],
+    hdrs = ["p4_proto_printer.h"],
+    deps = [
+        ":p4_info_manager",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/lib:utils",
+        "//stratum/public/lib:error",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+    ],
+)
+
+stratum_cc_test(
+    name = "p4_proto_printer_test",
+    srcs = ["p4_proto_printer_test.cc"],
+    deps = [
+        ":p4_proto_printer",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/public/lib:error",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_proto_library(
     name = "p4_table_map_cc_proto",
     deps = [":p4_table_map_proto"],
