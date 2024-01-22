@@ -849,11 +849,11 @@ stratum_cc_library(
         ":sfp_adapter",
         ":sfp_configurator",
         ":switch_configurator_interface",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/synchronization",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/synchronization",
     ] + phal_deps,
 )
 

@@ -3,10 +3,10 @@
 # Copyright 2019-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_cc//cc:defs.bzl", "cc_proto_library")
-load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 
 licenses(["notice"])  # Apache v2
 

@@ -2,6 +2,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+
 # This file builds the switch-specific p4c_backends components.
 load(
     "//bazel:rules.bzl",
@@ -12,7 +14,6 @@ load(
     "//stratum/p4c_backends/test:build_defs.bzl",
     "p4c_save_ir",
 )
-load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
 
 licenses(["notice"])  # Apache v2
 

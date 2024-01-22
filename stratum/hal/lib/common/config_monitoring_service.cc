@@ -449,12 +449,14 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
         }
       }
       if (subscription.mode() == ::gnmi::SubscriptionMode::SAMPLE) {
-        uint64 sample_interval = subscription.sample_interval() == 0
-                                     ? kThousandMilliseconds
-                                     : subscription.sample_interval();
-        uint64 heartbeat_interval = subscription.heartbeat_interval() == 0
-                                        ? kThousandMilliseconds
-                                        : subscription.heartbeat_interval();
+        uint64 sample_interval =
+            subscription.sample_interval() == 0
+                ? kThousandMilliseconds
+                : subscription.sample_interval() / 1000 / 1000;
+        uint64 heartbeat_interval =
+            subscription.heartbeat_interval() == 0
+                ? kThousandMilliseconds
+                : subscription.heartbeat_interval() / 1000 / 1000;
         if (!subscription.suppress_redundant()) {
           status = publisher->SubscribePeriodic(
               Periodic(sample_interval), subscription.path(), stream, &h);
