@@ -86,7 +86,7 @@ p4c_save_ir = rule(
             default = Label("@com_github_p4lang_p4c//:p4include/core.p4"),  # FIXME
         ),
         "_p4c_ir_json_saver": attr.label(
-            cfg = "host",
+            cfg = "exec",
             executable = True,
             default = Label("//stratum/p4c_backends/test:p4c_ir_json_saver"),
         ),

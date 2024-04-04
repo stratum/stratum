@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@//bazel/rules:package_rule.bzl", "pkg_tar_with_symlinks")
+load("@bazel_skylib//rules:common_settings.bzl", "string_setting")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
-load("@bazel_skylib//rules:common_settings.bzl", "string_setting")
 
 package(
     default_visibility = ["//visibility:public"],

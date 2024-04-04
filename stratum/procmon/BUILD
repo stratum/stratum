@@ -2,6 +2,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
@@ -10,7 +11,6 @@ load(
     "stratum_cc_test",
     "stratum_package",
 )
-load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
 licenses(["notice"])  # Apache v2
 

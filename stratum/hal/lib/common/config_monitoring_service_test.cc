@@ -355,7 +355,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
         elem { name: "interface" key { key: "name" value: "*" } }
       }
       mode: SAMPLE
-      sample_interval: 1
+      sample_interval: 1000000000
     }
   }
   )pb";
@@ -391,7 +391,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
         elem { name: "blah" }
       }
       mode: SAMPLE
-      sample_interval: 1
+      sample_interval: 1000000000
     }
   }
   )pb";
@@ -446,7 +446,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
         elem { name: "blah" }
       }
       mode: SAMPLE
-      sample_interval: 1
+      sample_interval: 1000000000
     }
   }
   )pb";
@@ -545,7 +545,7 @@ TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
         elem { name: "interface" key { key: "name" value: "*" } }
       }
       mode: SAMPLE
-      sample_interval: 1
+      sample_interval: 1000000000
     }
   }
   )pb";
@@ -603,7 +603,7 @@ TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
         elem { name: "interface" key { key: "name" value: "*" } }
       }
       mode: SAMPLE
-      sample_interval: 1
+      sample_interval: 1000000000
     }
   }
   )pb";

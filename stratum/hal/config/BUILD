@@ -2,13 +2,13 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
 )
 load(":platform_config_test.bzl", "platform_config_test")
-load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 package(default_visibility = STRATUM_INTERNAL)
 

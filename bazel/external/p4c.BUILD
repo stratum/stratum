@@ -264,9 +264,9 @@ cc_library(
         "midend/*.cpp",
     ]),
     hdrs = [
-        "frontends/parsers/p4/p4lexer.hpp",
-        "frontends/parsers/p4/p4AnnotationLexer.hpp",
         "frontends/parsers/p4/abstractP4Lexer.hpp",
+        "frontends/parsers/p4/p4AnnotationLexer.hpp",
+        "frontends/parsers/p4/p4lexer.hpp",
         "frontends/parsers/p4/p4parser.hpp",
         "frontends/parsers/p4/stack.hh",
         "frontends/parsers/v1/stack.hh",
