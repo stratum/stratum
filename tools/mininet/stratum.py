@@ -102,11 +102,14 @@ class StratumBmv2Switch(Switch):
 
     def __init__(self, name, json=STRATUM_INIT_PIPELINE, loglevel="warn",
                  cpuport=DEFAULT_CPU_PORT, pipeconf=DEFAULT_PIPECONF,
-                 onosdevid=None, adminstate=True,
+                 onosdevid=None, adminstate=True, grpcPort=None,
                  **kwargs):
         Switch.__init__(self, name, **kwargs)
-        self.grpcPort = StratumBmv2Switch.nextGrpcPort
-        StratumBmv2Switch.nextGrpcPort += 1
+        if grpcPort is not None:
+          self.grpcPort = grpcPort
+        else:
+          self.grpcPort = StratumBmv2Switch.nextGrpcPort
+          StratumBmv2Switch.nextGrpcPort += 1
         self.cpuPort = cpuport
         self.json = json
         self.loglevel = loglevel
@@ -170,9 +173,8 @@ nodes {{
   index: 1
 }}\n""".format(name=self.name, nodeId=self.nodeId)
 
-        intf_number = 1
-        for intf_name in self.intfNames():
-            if intf_name == 'lo':
+        for port_num, intf in sorted(self.intfs.items()):
+            if intf.name == "lo":
                 continue
             config = config + """singleton_ports {{
   id: {intfNumber}
@@ -185,8 +187,7 @@ nodes {{
     admin_state: ADMIN_STATE_{adminState}
   }}
   node: {nodeId}
-}}\n""".format(intfName=intf_name, intfNumber=intf_number, nodeId=self.nodeId, adminState=self.adminState)
-            intf_number += 1
+}}\n""".format(intfName=intf.name, intfNumber=port_num, nodeId=self.nodeId, adminState=self.adminState)
 
         return config
 

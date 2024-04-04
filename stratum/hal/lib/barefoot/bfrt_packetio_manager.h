@@ -16,6 +16,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
+#include "stratum/hal/lib/barefoot/bf_global_vars.h"
 #include "stratum/hal/lib/barefoot/bf_sde_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_p4runtime_translator.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -105,8 +106,14 @@ class BfrtPacketioManager {
   ::util::Status HandleSdePacketRx()
       LOCKS_EXCLUDED(data_lock_, rx_writer_lock_);
 
-  // SDE cpu interface RX thread function.
+  // Handles a received packets and hands it over the registered receive writer.
+  ::util::Status HandleVirtualCpuIntfPacketRx() LOCKS_EXCLUDED(data_lock_);
+
+  // SDE CPU interface RX thread function.
   static void* SdeRxThreadFunc(void* arg);
+
+  // Virtual CPU interface RX thread function.
+  static void* VirtualCpuIntfRxThreadFunc(void* arg);
 
   // Mutex lock for protecting rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
@@ -132,8 +139,15 @@ class BfrtPacketioManager {
   std::shared_ptr<Channel<std::string>> packet_receive_channel_
       GUARDED_BY(data_lock_);
 
+  // File descriptor of the virtual TAP port used to simulate a CPU port.
+  int tap_intf_fd_ GUARDED_BY(data_lock_);
+
   // The ID of the RX thread which handles receiving packets from the SDE.
   pthread_t sde_rx_thread_id_ GUARDED_BY(data_lock_);
+
+  // The ID of the RX thread which handles receiving packets from the virtual
+  // CPU interface.
+  pthread_t virtual_cpu_intf_rx_thread_id_ GUARDED_BY(data_lock_);
 
   // Pointer to a BfSdeInterface implementation that wraps all the SDE calls.
   BfSdeInterface* bf_sde_interface_ = nullptr;  // not owned by this class.

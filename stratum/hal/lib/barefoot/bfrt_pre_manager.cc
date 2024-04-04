@@ -231,9 +231,9 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
                 }
                 return false;
               });
-    LOG(INFO) << "MulticastGroupEntry " << result.ShortDebugString();
     PreEntry entry;
     *entry.mutable_multicast_group_entry() = result;
+    VLOG(1) << "Read " << entry.ShortDebugString() << ".";
     ASSIGN_OR_RETURN(
         *resp.add_entities()->mutable_packet_replication_engine_entry(),
         bfrt_p4runtime_translator_->TranslatePacketReplicationEngineEntry(
@@ -338,9 +338,9 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
     replica->set_egress_port(egress_port);
     replica->set_instance(0);
 
-    LOG(INFO) << "CloneSessionEntry " << result.ShortDebugString();
     PreEntry entry;
     *entry.mutable_clone_session_entry() = result;
+    VLOG(1) << "Read " << entry.ShortDebugString() << ".";
     ASSIGN_OR_RETURN(
         *resp.add_entities()->mutable_packet_replication_engine_entry(),
         bfrt_p4runtime_translator_->TranslatePacketReplicationEngineEntry(

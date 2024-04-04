@@ -59,7 +59,7 @@ set_bazelrc: &set_bazelrc
     # Temporary workaround, see: https://github.com/stratum/stratum/pull/952
     command: |
       cat .circleci/bazelrc >> .bazelrc
-      rm -rf /tmp/bazel-cache/output-root/install/64841bf12de13c7518c7ada0994bafe2
+      rm -rf /tmp/bazel-cache/output-root/install/ec7bc80570c57e35507fafa6aadd57b1
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -67,11 +67,6 @@ docker_login: &docker_login
   run:
     name: Docker login
     command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-
-harbor_login: &harbor_login
-  run:
-    name: Harbor login
-    command: echo $AETHER_HARBOR_PWD | docker login -u $AETHER_HARBOR_LOGIN --password-stdin registry.aetherproject.org
 
 docker_build: &docker_build
   run:
@@ -88,20 +83,10 @@ docker_build: &docker_build
         --label build-machine=circle-ci \
         .
 
-harbor_tag: &harbor_tag
-  run:
-    name: Tag image for Harbor
-    command: docker tag $DOCKER_IMG registry.aetherproject.org/$HARBOR_IMG
-
 docker_push: &docker_push
   run:
     name: Push Docker image
     command: docker push $DOCKER_IMG
-
-harbor_push: &harbor_push
-  run:
-    name: Push Docker image to harbor
-    command: docker push registry.aetherproject.org/$HARBOR_IMG
 
 jobs:
 
@@ -219,7 +204,7 @@ jobs:
           command: |
             docker run --entrypoint stratum_bmv2 $DOCKER_IMG -version
             docker run --entrypoint mn $DOCKER_IMG --version
-            docker run --rm --entrypoint python $DOCKER_IMG -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
+            docker run --rm --entrypoint python3 $DOCKER_IMG -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
       - *docker_push
       - *clean_bazel_cache
       - *save_bazel_cache
@@ -339,7 +324,6 @@ jobs:
       - DOCKER_SCOPE: stratum/tools
       - DOCKER_FILE: Dockerfile.stratum_tools
       - DOCKER_IMG: stratumproject/stratum-tools
-      - HARBOR_IMG: tost/stratum-tools
       - CC: clang
       - CXX: clang++
     steps:
@@ -353,15 +337,12 @@ jobs:
             bazel build --config=release //stratum/tools:stratum_tools_deb
             cp bazel-bin/stratum/tools/stratum_tools_deb.deb $DOCKER_SCOPE
       - *docker_login
-      - *harbor_login
       - *docker_build
-      - *harbor_tag
       - run:
           name: Test stratum-tools Docker image
           command: |
             docker run $DOCKER_IMG
       - *docker_push
-      - *harbor_push
       - *clean_bazel_cache
       - *save_bazel_cache
 
@@ -388,7 +369,7 @@ jobs:
 
   license-check:
     docker:
-      - image: fsfe/reuse:latest
+      - image: fsfe/reuse:1.1
     resource_class: small  # 1 vCPU, 2GB RAM
     steps:
       - checkout
@@ -449,7 +430,7 @@ workflows:
             - publish-docker-build
           matrix:
             parameters:
-              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0"]
+              sde_version: ["9.7.0", "9.7.1", "9.7.2", "9.8.0", "9.9.0", "9.10.0"]
       - publish-docker-stratum-tools:
           requires:
             - publish-docker-build

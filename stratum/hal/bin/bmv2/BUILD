@@ -90,6 +90,7 @@ pkg_deb(
     architecture = "amd64",
     data = ":stratum_bmv2_data",
     depends = [
+        "libatomic1",
         "libboost-filesystem1.67.0",
         "libboost-program-options1.67.0",
         "libboost-thread1.67.0",

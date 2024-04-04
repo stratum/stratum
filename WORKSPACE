@@ -59,7 +59,7 @@ barefoot_configure(name = "local_barefoot_bin")
 load("//stratum/hal/bin/np4intel:np4intel.bzl", "np4intel_configure")
 np4intel_configure(name = "local_np4intel_bin")
 
-# PI NP4 dependancies
+# PI NP4 dependencies
 load("@com_github_p4lang_PI_np4//targets/np4:np4.bzl", "np4_configure")
 np4_configure(name = "local_np4_bin")
 
@@ -91,6 +91,33 @@ gazelle_dependencies(go_sdk = "go_sdk")
 
 load("@io_bazel_rules_go//tests:grpc_repos.bzl", "grpc_dependencies")
 grpc_dependencies()
+
+# ---------------------------------------------------------------------------
+#       Overiride net, text, and sys Go modules to patch new Go update
+# ---------------------------------------------------------------------------
+
+go_repository(
+    name = "org_golang_x_net",
+    importpath = "golang.org/x/net",
+    sum = "h1:hZ/3BUoy5aId7sCpA/Tc5lt8DkFgdVS2onTpJsZ/fl0=",
+    version = "v0.1.0",
+)
+
+go_repository(
+    name = "org_golang_x_text",
+    importpath = "golang.org/x/text",
+    sum = "h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=",
+    version = "v0.3.0",
+)
+
+go_repository(
+    name = "org_golang_x_sys",
+    importpath = "golang.org/x/sys",
+    sum = "h1:eG7RXZHdqOJ1i+0lgLgCpSXAp6M3LYlAo6osgSi0xOM=",
+    version = "v0.5.0",
+)
+
+
 
 # ---------------------------------------------------------------------------
 #       Load CDLang dependencies.
