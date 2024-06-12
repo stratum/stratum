@@ -29,6 +29,10 @@ Files: stratum/docs/gnmi/img/* stratum/docs/gnmi/imgsrc/*
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
+Files: stratum/docs/gnmi/hqos/img/* stratum/docs/gnmi/hqos/imgsrc/*
+Copyright: 2020-present Open Networking Foundation
+License: Apache-2.0
+
 Files: tools/mininet/**/*
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
