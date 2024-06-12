@@ -72,10 +72,14 @@ class P4InfoManager {
       uint32 table_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Table> FindTableByName(
       const std::string& table_name) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::MatchField>
+  FindTableMatchFieldByID(uint32 table_id, uint32 field_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Action> FindActionByID(
       uint32 action_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::Action> FindActionByName(
       const std::string& action_name) const;
+  virtual ::util::StatusOr<const ::p4::config::v1::Action::Param>
+  FindActionParamByID(uint32 action_id, uint32 param_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::ActionProfile>
   FindActionProfileByID(uint32 profile_id) const;
   virtual ::util::StatusOr<const ::p4::config::v1::ActionProfile>
