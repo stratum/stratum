@@ -106,19 +106,16 @@ class YangParseTreeTest : public ::testing::Test {
   }
 
   // A proxy for YangParseTree::AddSubtreeInterface().
-  void AddSubtreeInterface(const std::string& name,
-                           SingletonPort* singleton_p = nullptr) {
+  void AddSubtreeInterface(const std::string& name) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
 
     // Add one singleton port.
     SingletonPort singleton;
-    SingletonPort* singleton_ptr =
-        (singleton_p == nullptr) ? &singleton : singleton_p;
-    singleton_ptr->set_name(name);
-    singleton_ptr->set_node(kInterface1NodeId);
-    singleton_ptr->set_id(kInterface1PortId);
-    singleton_ptr->set_speed_bps(kTwentyFiveGigBps);
-    singleton_ptr->mutable_config_params()
+    singleton.set_name(name);
+    singleton.set_node(kInterface1NodeId);
+    singleton.set_id(kInterface1PortId);
+    singleton.set_speed_bps(kTwentyFiveGigBps);
+    singleton.mutable_config_params()
         ->mutable_mac_address()
         ->set_mac_address(kInterfaceMac);
     // Add one per port per queue stat for this interface.
@@ -134,7 +131,7 @@ class YangParseTreeTest : public ::testing::Test {
       entry->set_internal_priority(2);  // some internal priority
       entry->set_q_num(kInterface1QueueId);
     }
-    parse_tree_.AddSubtreeInterfaceFromSingleton(*singleton_ptr, node_config);
+    parse_tree_.AddSubtreeInterfaceFromSingleton(singleton, node_config);
   }
 
   // Create /components/component[name]/optical-channel subtree from the
@@ -382,9 +379,8 @@ class YangParseTreeTest : public ::testing::Test {
     // /interfaces/interface[name=*]/state/ifindex
     // /interfaces/interface[name=*]/state/name
 
-    ChassisConfig chassis_config;
     // The test requires one interface branch to be added.
-    AddSubtreeInterface("interface-1", chassis_config.add_singleton_ports());
+    AddSubtreeInterface("interface-1");
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
     // The test requires one optical interface branch to be added.
@@ -392,6 +388,7 @@ class YangParseTreeTest : public ::testing::Test {
     // The test requires the system branch to be added.
     AddSubtreeSystem();
     // Make a copy-on-write pointer to current chassis configuration.
+    ChassisConfig chassis_config;
     CopyOnWriteChassisConfig config(&chassis_config);
 
     // Expect the SetValue() call only if the 'req' is not nullptr.
