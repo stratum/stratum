@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/numeric/bits.h"
 #include "absl/strings/match.h"
 #include "absl/synchronization/notification.h"
 #include "gflags/gflags.h"
@@ -885,6 +886,39 @@ BfrtTableManager::ReadDirectCounterEntry(
   return ::util::OkStatus();
 }
 
+namespace {
+uint64 RoundToNearestMultiple(uint64 number, uint64 multiple) {
+  return ((number + multiple / 2) / multiple) * multiple;
+}
+
+uint64 RoundUpToNearestMultiple(uint64 number, uint64 multiple) {
+  return ((number + multiple - 1) / multiple) * multiple;
+}
+
+uint64 RoundDownToNearestMultiple(uint64 number, uint64 multiple) {
+  return (number / multiple) * multiple;
+}
+
+uint64 RoundMeterValue(uint64 value) {
+  // Floating point calculations don't work well with divisions and zero.
+  if (value == 0) {
+    return 0;
+  }
+  constexpr int64 kHighOrderDigitsToKeep = 3;
+  int64 digits = static_cast<int64>(floor(log10(value)) + 1);
+  uint64 insignificant_digits = std::max(digits - kHighOrderDigitsToKeep, 1L);
+  uint64 multiple = std::pow(10, insignificant_digits) * 2.5;
+  LOG(WARNING) << "kHighOrderDigitsToKeep " << kHighOrderDigitsToKeep;
+  LOG(WARNING) << "digits " << digits;
+  LOG(WARNING) << "insignificant_digits " << insignificant_digits;
+  uint64 r = RoundUpToNearestMultiple(value, multiple);
+  LOG(WARNING) << "Rounded " << value << " to nearest " << multiple << ": "
+               << r;
+
+  return r;
+}
+}  // namespace
+
 ::util::Status BfrtTableManager::ReadMeterEntry(
     std::shared_ptr<BfSdeInterface::SessionInterface> session,
     const ::p4::v1::MeterEntry& meter_entry,
@@ -942,10 +976,10 @@ BfrtTableManager::ReadDirectCounterEntry(
       // is not possible to just configure a subset of the four fields, we just
       // have to check the cir value.
     } else {
-      result.mutable_config()->set_cir(cirs[i]);
-      result.mutable_config()->set_cburst(cbursts[i]);
-      result.mutable_config()->set_pir(pirs[i]);
-      result.mutable_config()->set_pburst(pbursts[i]);
+      result.mutable_config()->set_cir(RoundMeterValue(cirs[i]));
+      result.mutable_config()->set_cburst(RoundMeterValue(cbursts[i]));
+      result.mutable_config()->set_pir(RoundMeterValue(pirs[i]));
+      result.mutable_config()->set_pburst(RoundMeterValue(pbursts[i]));
     }
 
     ASSIGN_OR_RETURN(*resp.add_entities()->mutable_meter_entry(),
