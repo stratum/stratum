@@ -233,6 +233,28 @@ TEST_F(BcmSwitchTest, PushChassisConfigFailureWhenNodePushFails) {
               DerivedFromStatus(DefaultError()));
 }
 
+TEST_F(BcmSwitchTest, SaveForwardingPipelineConfig) {
+  const ::p4::v1::ForwardingPipelineConfig config;
+  ::util::Status status =
+      bcm_switch_->SaveForwardingPipelineConfig(kNodeId, config);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_UNIMPLEMENTED, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr(
+          "SaveForwardingPipelineConfig not implemented for this target"));
+}
+
+TEST_F(BcmSwitchTest, CommitForwardingPipelineConfig) {
+  ::util::Status status = bcm_switch_->CommitForwardingPipelineConfig(kNodeId);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_UNIMPLEMENTED, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr(
+          "CommitForwardingPipelineConfig not implemented for this target"));
+}
+
 TEST_F(BcmSwitchTest, VerifyChassisConfigSuccess) {
   ChassisConfig config;
   config.add_nodes()->set_id(kNodeId);
