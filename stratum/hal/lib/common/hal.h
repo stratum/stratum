@@ -66,15 +66,15 @@ class Hal final {
   // Called when receiving a SIGINT or SIGTERM by the signal received callback.
   void HandleSignal(int value);
 
-  // Returns the list of errors HAL and all it's services have encountered.
+  // Returns the list of errors HAL and all its services have encountered.
   inline std::vector<::util::Status> GetErrors() const {
     return error_buffer_->GetErrors();
   }
 
-  // Clears the list of errors HAL and all it's services have encountered.
+  // Clears the list of errors HAL and all its services have encountered.
   inline void ClearErrors() const { return error_buffer_->ClearErrors(); }
 
-  // Returns true if HAL or any of it's services have encountered an error.
+  // Returns true if HAL or any of its services have encountered an error.
   inline bool ErrorExists() const { return error_buffer_->ErrorExists(); }
 
   // Creates the singleton instance. Expected to be called once to initialize

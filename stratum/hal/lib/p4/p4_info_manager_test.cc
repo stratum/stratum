@@ -762,7 +762,7 @@ TEST_F(P4InfoManagerTest, TestFindDirectCounterUnknownName) {
 }
 
 // All valid direct meters in p4_test_info_ should have successful name/ID
-// lookups, and the returned data should match the meter's original
+// lookups, and the returned data should match the direct meter's original
 // p4_test_info_ entry.
 TEST_F(P4InfoManagerTest, TestFindDirectMeter) {
   SetUpTestP4DirectMeters();

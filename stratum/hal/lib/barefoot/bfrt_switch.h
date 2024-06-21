@@ -125,7 +125,7 @@ class BfrtSwitch : public SwitchInterface {
   BfChassisManager* bf_chassis_manager_;  // not owned by the class.
 
   // Map from zero-based device_id number corresponding to a node/ASIC to a
-  // pointer to BfrtNode which contain all the per-node managers for that
+  // pointer to BfrtNode which contains all the per-node managers for that
   // node/ASIC. This map is initialized in the constructor and will not change
   // during the lifetime of the class.
   // Pointers not owned.
@@ -133,9 +133,9 @@ class BfrtSwitch : public SwitchInterface {
   const absl::flat_hash_map<int, BfrtNode*> device_id_to_bfrt_node_;
 
   // Map from the node ids to to a pointer to BfrtNode which contain all the
-  // per-node managers for that node/ASIC. Created everytime a config is
-  // pushed. At any point of time this map will contain a keys the ids of
-  // the nodes which had a successful config push.
+  // per-node managers for that node/ASIC. Created whenever a config is pushed.
+  // At any point in time, this map will contain as keys the ids of the nodes
+  // that had a successful config push.
   // Pointers not owned.
   // TODO(max): Does this need to be protected by chassis_lock?
   absl::flat_hash_map<uint64, BfrtNode*> node_id_to_bfrt_node_;

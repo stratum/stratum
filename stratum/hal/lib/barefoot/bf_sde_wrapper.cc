@@ -1585,39 +1585,39 @@ std::string GetBfChipFamilyAndType(int device) {
 #ifdef BF_DEV_BFNT10024D
     case BF_DEV_BFNT10024D:
       return "TOFINO_24D";
-#endif  // BF_DEV_BFNT10024D
+#endif
 #ifdef BF_DEV_BFNT10018Q
     case BF_DEV_BFNT10018Q:
       return "TOFINO_18Q";
-#endif  // BF_DEV_BFNT10018Q
+#endif
 #ifdef BF_DEV_BFNT10018D
     case BF_DEV_BFNT10018D:
       return "TOFINO_18D";
-#endif  // BF_DEV_BFNT10018D
+#endif
 #ifdef BF_DEV_BFNT10017D
     case BF_DEV_BFNT10017D:
       return "TOFINO_17D";
-#endif  // BF_DEV_BFNT10017D
+#endif
     case BF_DEV_BFNT20128Q:
       return "TOFINO2_128Q";
 #ifdef BF_DEV_BFNT20128QM
     case BF_DEV_BFNT20128QM:  // added in 9.3.0
       return "TOFINO2_128QM";
-#endif  // BF_DEV_BFNT20128QM
+#endif
 #ifdef BF_DEV_BFNT20128QH
     case BF_DEV_BFNT20128QH:  // added in 9.3.0
       return "TOFINO2_128QH";
-#endif  // BF_DEV_BFNT20128QH
+#endif
 #ifdef BF_DEV_BFNT20096T
     case BF_DEV_BFNT20096T:
       return "TOFINO2_96T";
-#endif  // BF_DEV_BFNT20096T
+#endif
     case BF_DEV_BFNT20080T:
       return "TOFINO2_80T";
 #ifdef BF_DEV_BFNT20080TM
     case BF_DEV_BFNT20080TM:  // added in 9.3.0
       return "TOFINO2_80TM";
-#endif  // BF_DEV_BFNT20080TM
+#endif
     case BF_DEV_BFNT20064Q:
       return "TOFINO2_64Q";
     case BF_DEV_BFNT20064D:
@@ -1625,27 +1625,27 @@ std::string GetBfChipFamilyAndType(int device) {
 #ifdef BF_DEV_BFNT20032D
     case BF_DEV_BFNT20032D:  // removed in 9.3.0
       return "TOFINO2_32D";
-#endif  // BF_DEV_BFNT20032D
+#endif
 #ifdef BF_DEV_BFNT20032S
     case BF_DEV_BFNT20032S:  // removed in 9.3.0
       return "TOFINO2_32S";
-#endif  // BF_DEV_BFNT20032S
+#endif
 #ifdef BF_DEV_BFNT20048D
     case BF_DEV_BFNT20048D:
       return "TOFINO2_48D";
-#endif  // BF_DEV_BFNT20048D
+#endif
 #ifdef BF_DEV_BFNT20036D
     case BF_DEV_BFNT20036D:  // removed in 9.3.0
       return "TOFINO2_36D";
-#endif  // BF_DEV_BFNT20036D
+#endif
 #ifdef BF_DEV_BFNT20032E
     case BF_DEV_BFNT20032E:  // removed in 9.3.0
       return "TOFINO2_32E";
-#endif  // BF_DEV_BFNT20032E
+#endif
 #ifdef BF_DEV_BFNT20064E
     case BF_DEV_BFNT20064E:  // removed in 9.3.0
       return "TOFINO2_64E";
-#endif  // BF_DEV_BFNT20064E
+#endif
     default:
       return "UNKNOWN";
   }

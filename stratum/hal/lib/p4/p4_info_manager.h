@@ -64,7 +64,7 @@ class P4InfoManager {
   // to validly defined P4 resources.
   virtual ::util::Status InitializeAndVerify();
 
-  // These methods lookup P4 resource information that corresponds to the input
+  // These methods look up P4 resource information that corresponds to the input
   // ID or name.  A successful lookup returns a copy of the resource data
   // from the P4Info.  The lookup fails and returns an error if the requested
   // resource does not exist.

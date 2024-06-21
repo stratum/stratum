@@ -179,7 +179,7 @@ GnmiPublisher::~GnmiPublisher() {}
            << "The path (" << path.ShortDebugString() << ") is unsupported!";
   }
   if (!(node->*all_leaves_support_mode)()) {
-    // Ooops... Not all leaves in this subtree support this mode!
+    // Oops... Not all leaves in this subtree support this mode!
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Not all leaves on the path (" << path.ShortDebugString()
            << ") support this mode!";
@@ -238,7 +238,7 @@ void GnmiPublisher::ReadGnmiEvents(
     int code = reader->Read(&event_ptr, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
-    // Read should never timeout.
+    // Read should never time out.
     if (code == ERR_ENTRY_NOT_FOUND) {
       LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
       continue;
