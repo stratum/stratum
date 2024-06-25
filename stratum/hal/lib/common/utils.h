@@ -85,8 +85,8 @@ class SingletonPortEqual {
 };
 
 // Functor for comparing two SingletonPort instances based on slot, port,
-// channel and speed_bps values in that order. Returns true if the first
-// argument precedes the second in order, false otherwise.
+// channel, and speed_bps values, in that order. Returns true if the first
+// argument precedes the second in order; false otherwise.
 class SingletonPortLess {
  public:
   // Returns true if the first argument precedes the second; false otherwise.
@@ -95,8 +95,8 @@ class SingletonPortLess {
   }
 
  private:
-  // Compares slot, port, channel and speed_bps in that order.
-  // Returns true if the first agrument precedes the second, false otherwise.
+  // Compares slot, port, channel, and speed_bps, in that order.
+  // Returns true if the first argument precedes the second; false otherwise.
   bool ComparePorts(const SingletonPort& x, const SingletonPort& y) const {
     if (x.slot() != y.slot()) {
       return x.slot() < y.slot();
@@ -121,9 +121,8 @@ std::string PrintTrunkPort(const TrunkPort& p);
 
 // A set of helper functions to print a superset of node/port/trunk properties
 // that are worth logging, in a consistent and readable way. These methods
-// check and ignores the invalid args passed to it when printing. Other
-// printer function make use of these helpers to not duplicate the priting
-// logic.
+// check and ignore the invalid args passed to them when printing. Other
+// printer functions make use of these helpers to avoid duplicating the logic.
 std::string PrintNodeProperties(uint64 id, int slot, int index);
 
 std::string PrintPortProperties(uint64 node_id, uint32 port_id, int slot,
@@ -163,52 +162,52 @@ PortLedConfig AggregatePortLedColorsStatePairs(
 // A set of helper methods used to convert enums to a format used by gNMI
 // collectors.
 
-// A helper function that convert Stratum hardware state enum to string.
+// A helper function that converts Stratum hardware state enum to string.
 std::string ConvertHwStateToString(const HwState& state);
 
-// A helper function that convert Stratum port state enum to string.
+// A helper function that converts Stratum port state enum to string.
 std::string ConvertPortStateToString(const PortState& state);
 
-// A helper function that convert Stratum admin state enum to string.
+// A helper function that converts Stratum admin state enum to string.
 std::string ConvertAdminStateToString(const AdminState& state);
 
-// A helper function that convert speed number to string format.
+// A helper function that converts speed number to string format.
 std::string ConvertSpeedBpsToString(const uint64& speed_bps);
 
-// A helper function that convert OpenConfig speed string to speed number.
+// A helper function that converts OpenConfig speed string to speed number.
 uint64 ConvertStringToSpeedBps(const std::string& speed_string);
 
-// A helper function that convert gRPC alarm severity enum to string.
+// A helper function that converts gRPC alarm severity enum to string.
 std::string ConvertAlarmSeverityToString(const Alarm::Severity& severity);
 
-// A helper function that convert Stratum health state to string.
+// A helper function that converts Stratum health state to string.
 std::string ConvertHealthStateToString(const HealthState& state);
 
-// A helper function that convert Stratum trunk member block state to boolean.
+// A helper function that converts Stratum trunk member block state to boolean.
 bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
 
-// A helper function that convert data received from the HAL into a format
+// A helper function that converts data received from the HAL into a format
 // expected by the gNMI interface (MAC addresses are expected to be
 // std::strings in the following format: "XX:XX:XX:XX:XX:XX").
 std::string MacAddressToYangString(const uint64& mac_address);
 
-// A helper function that convert data received from the gNMI interface into a
+// A helper function that converts data received from the gNMI interface into a
 // format expected by the HAL (MAC addresses are expected to be uint64).
 ::util::StatusOr<uint64> YangStringToMacAddress(const std::string& yang_string);
 
-// A helper function that check if autoneg state is enabled.
+// A helper function that checks if autoneg state is enabled.
 bool IsPortAutonegEnabled(const TriState& state);
 
-// A helper function that check if port admin state is enabled.
+// A helper function that checks if port admin state is enabled.
 bool IsAdminStateEnabled(const AdminState& admin_state);
 
-// A helper function that check if port loopback state is enabled.
+// A helper function that checks if port loopback state is enabled.
 bool IsLoopbackStateEnabled(const LoopbackState& loopback_state);
 
-// A helper function that convert Stratum MediaType to string.
+// A helper function that converts Stratum MediaType to string.
 std::string ConvertMediaTypeToString(const MediaType& type);
 
-// A helper function taht convert Stratum HwState to OpenConfig present
+// A helper function that converts Stratum HwState to OpenConfig present
 // state string (PRESENT, NOT_PRESENT)
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
 

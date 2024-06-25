@@ -302,7 +302,7 @@ std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
 
   if (table_entry.has_meter_config()) {
     return MAKE_ERROR(ERR_UNIMPLEMENTED)
-           << "Meter configs on TablesEntries are not supported.";
+           << "Meter configs on TableEntries are not supported.";
   }
 
   return ::util::OkStatus();

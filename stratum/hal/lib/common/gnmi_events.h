@@ -26,22 +26,23 @@ namespace hal {
 
 // Introduction to the contents of this file.
 //
-// There is a number of gNMI events defined below. The gNMI YANG model tree has
-// a lot of leafs and there is no way to guess which type of event should be
-// passed to a particular one. A brute-force approach of sending each received
-// event to every handler and let it decide if it should do something about it
-// works but is very time and CPU resources intensive. The hierarchy of
-// EventHandlerList<> templates solves this problem by keeping separate list of
-// handlers grouped by the type of event the handler is interested in. This
-// way the number of handlers an event is sent to is minimized to those that
+// There are a number of gNMI events defined below. The gNMI YANG model tree has
+// a lot of leaves and there is no way to guess which type of event should be
+// passed to a particular leaf. A brute-force approach of sending each received
+// event to every handler and letting it decide if it should do something about
+// it works, but is very time and CPU resource intensive. The hierarchy of
+// EventHandlerList<> templates solves this problem by keeping separate lists
+// of handlers grouped by the type of event the handler is interested in. This
+// way, the number of handlers an event is sent to is limited to those that
 // might want to learn about it.
 // The idea is simple:
-// - an handler knows what events it would like to receive, so, it can register
-//   itself with as many per-event lists as there is event types by calling
-//   Register() on correct lists.
-// - an event knows its type, so, it can call Process() method of correct event
-//   handler list, which in turn will call all handlers that are registered.
-// C++ template and inheritence magic is used to make the whole process as
+// - a handler knows what events it would like to receive, so it can register
+//   itself with as many per-event lists as there are event types by calling
+//   Register() on the correct lists.
+// - an event knows its type, so it can call the Process() method of the
+//   correct event handler list, which in turn will call all handlers that are
+//   registered.
+// C++ template and inheritance magic is used to make the whole process as
 // automatic (i.e. without explicit code) as possible.
 
 // A base class for all types of events the gNMI GnmiPublisher handles.
@@ -58,9 +59,9 @@ class GnmiEvent {
 };
 using GnmiEventPtr = std::shared_ptr<GnmiEvent>;
 
-// A helper class that provides implementation of the GnmiEvent::Process()
+// A helper class that provides an implementation of the GnmiEvent::Process()
 // method that finds an instance of the EventHandlerList<> class that holds
-// references to all handlers interested in this type of events and passes the
+// references to all handlers interested in this type of event and passes the
 // event to this instance for processing.
 // This approach shortens the list of handlers that are bothered to check if
 // they should do something due to reception of this event.
@@ -70,8 +71,8 @@ class GnmiEventProcess : public GnmiEvent {
   ::util::Status Process() const override;
 };
 
-// A Timer event. Only certain type of subscriptions, like interface statistics,
-// handle this type of events.
+// A Timer event. Only certain types of subscriptions, such as interface
+// statistics, handle this type of event.
 class TimerEvent : public GnmiEventProcess<TimerEvent> {};
 
 // A Poll event.
@@ -516,7 +517,7 @@ class CopyOnWriteChassisConfig {
   explicit CopyOnWriteChassisConfig(ChassisConfig* ptr)
       : copied_(false), delete_active_(false), original_(ptr), active_(ptr) {
     if (ptr == nullptr) {
-      // ative_ cannot be nullptr. If it is, allocate a new object.
+      // active_ cannot be nullptr. If it is, allocate a new object.
       active_ = new ChassisConfig();
       delete_active_ = true;
     }

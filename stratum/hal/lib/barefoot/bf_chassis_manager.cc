@@ -340,7 +340,7 @@ BfChassisManager::~BfChassisManager() {
              << "Invalid ChassisConfig, unknown node id " << node_id
              << " for port " << port_id << ".";
     }
-    // Reset port state to unknown, we'll update it on the first port status
+    // Reset port state to unknown. We'll update it on the first port status
     // event or when requested.
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
     // If (node_id, port_id) already exists as a key in any of
@@ -557,7 +557,7 @@ BfChassisManager::~BfChassisManager() {
     }
   }
 
-  // Remove ports which are no longer present in the ChassisConfig.
+  // Remove ports that are no longer present in the ChassisConfig.
   // Currently this code path is never hit, as we do not allow changes to the
   // port layout (adds or deletes) at runtime.
   for (const auto& node_ports_old : node_id_to_port_id_to_port_config_) {
