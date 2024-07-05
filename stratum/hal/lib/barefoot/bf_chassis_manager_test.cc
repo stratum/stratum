@@ -134,7 +134,7 @@ class BfChassisManagerTest : public ::testing::Test {
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
     bf_sde_mock_ = absl::make_unique<BfSdeMock>();
-    // TODO(max): create parametrized test suite over mode.
+    // TODO(max): create parameterized test suite over mode.
     bf_chassis_manager_ = BfChassisManager::CreateInstance(
         OPERATION_MODE_STANDALONE, phal_mock_.get(), bf_sde_mock_.get());
     ON_CALL(*bf_sde_mock_, IsValidPort(_, _))

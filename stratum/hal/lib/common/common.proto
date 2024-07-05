@@ -245,12 +245,12 @@ enum FecMode {
 
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
-  // Per port hash config. Most of the hash configuration is given per node.
+  // Per-port hash config. Most of the hash configuration is given per node.
   // This is the only hash config we need to provide per node, for ports that
   // are part of a trunk/lag or ECMP group.
   message HashConfig {
-    // TODO(unknown): Instead of hash_select, we need a better way. this is
-    // RTAG7 specific. Maybe based on the port type?
+    // TODO(unknown): We need a better way than hash_select.
+    // This is RTAG7 specific. Maybe based on the port type?
     int32 rtag7_ecmp_hash_select = 1;
     int32 rtag7_lag_hash_select = 2;
   }
@@ -332,7 +332,7 @@ message Node {
 message SingletonPort {
   // The unique ID of the singleton port. Used for operations which need a
   // single unique integer ID for each port (e.g. flow programming). Note that
-  // all the singleton and trunk ports use a common range of integer IDs. So,
+  // all the singleton and trunk ports use a common range of integer IDs, so
   // using the same integer ID for a singleton port and a trunk port is not
   // allowed.
   uint32 id = 1;  // required
@@ -340,16 +340,16 @@ message SingletonPort {
   // PARSED. Example: "ju1u1.xyz99.net.google.com:ce-1/32". Used only for
   // logging purposes.
   string name = 2;
-  // The 1-base index of the slot (aka linecard) of the port.
+  // The 1-based index of the slot (aka linecard) of the port.
   int32 slot = 3;  // required
-  // The 1-base index of the singleton port on the slot.
+  // The 1-based index of the singleton port on the slot.
   int32 port = 4;  // required
-  // The 1-base channel index (only if the port is channelized). Absence or
+  // The 1-based channel index (only if the port is channelized). Absence or
   // zero means non-channelized.
   int32 channel = 5;
   // The speed of the ports.
   uint64 speed_bps = 6;  // required
-  // The id of the corresponding node that the port belongs to.
+  // The id of the node that the port belongs to.
   uint64 node = 9;  // required
   // Flow-related parameters used when SingletonPort message is used in flow
   // programming related operations.
@@ -813,8 +813,8 @@ message VendorConfig {
 // Definition of the internal chassis config pushed to the managers.
 //------------------------------------------------------------------------------
 
-// ChassisConfig is the internal data structure that encapsulates the so called
-// "config" pushed to the entire chassis. The term "chassis" refers to the a
+// ChassisConfig is the internal data structure that encapsulates the so-called
+// "config" pushed to the entire chassis. The term "chassis" refers to a
 // switching box with one or more switching nodes managed by a mgmt interface.
 // The proto includes all the not-so-frequent settings that are required before
 // the switch can accept flow programming requests from the controller.

@@ -188,7 +188,7 @@ TEST_F(HalTest, SanityCheckFailureWhenPersistentConfigDirFlagNotGiven) {
   ASSERT_FALSE(status.ok());
   EXPECT_THAT(
       status.error_message(),
-      HasSubstr("persistent_config_dir flag needs to be explicitly give"));
+      HasSubstr("persistent_config_dir flag needs to be explicitly given"));
 }
 
 TEST_F(HalTest, ColdbootSetupSuccessForSavedConfigs) {

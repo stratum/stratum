@@ -116,7 +116,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
     bool warmboot, std::unique_ptr<ChassisConfig> config) {
   absl::WriterMutexLock l(&config_lock_);
   RETURN_IF_ERROR(VerifyChassisConfig(*config));
-  // Push the config to hardware only if it is a coltboot setup.
+  // Push the config to hardware only if it is a coldboot setup.
   if (!warmboot) {
     ::util::Status status = switch_interface_->PushChassisConfig(*config);
     if (!status.ok()) {
@@ -129,7 +129,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
   // Save running_chassis_config_ after everything went OK.
   running_chassis_config_ = std::move(config);
 
-  // Notify the gNMI GnmiPublisher that the config has changed.
+  // Notify GnmiPublisher that the config has changed.
   RETURN_IF_ERROR(gnmi_publisher_.HandleChange(
       ConfigHasBeenPushedEvent(*running_chassis_config_)));
 
@@ -138,7 +138,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 
 namespace {
 // Helper function to determine whether all protobuf messages in a container
-// have an unique name field.
+// have a unique name field.
 template <typename T>
 bool ContainsUniqueNames(const T& values) {
   absl::flat_hash_set<std::string> unique_names;
@@ -244,7 +244,7 @@ bool ContainsUniqueNames(const T& values) {
   }
 
   if (config.HasBeenChanged()) {
-    // ChassisConfig has changed, so, we need to push it now!
+    // ChassisConfig has changed, so we need to push it now!
     ::util::Status status = VerifyChassisConfig(*config);
     if (!status.ok()) {
       return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
@@ -268,7 +268,7 @@ bool ContainsUniqueNames(const T& values) {
     // Save running_chassis_config_ after everything went OK.
     running_chassis_config_.reset(config.PassOwnership());
 
-    // Notify the gNMI GnmiPublisher that the config has changed.
+    // Notify GnmiPublisher that the config has changed.
     APPEND_STATUS_IF_ERROR(
         status, gnmi_publisher_.HandleChange(
                     ConfigHasBeenPushedEvent(*running_chassis_config_)));
@@ -424,7 +424,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
   for (::gnmi::Subscription subscription : req.subscribe().subscription()) {
     // Note that 'subscription' is a non-const copy of the one stored in the
     // 'req' request. It has to be non-const in case it is a TARGET_DEFINED
-    // subscription mode request that has to me modified/augmented before bein
+    // subscription mode request that has to be modified/augmented before being
     // processed further down the loop.
     SubscriptionHandle h;
     if (req.subscribe().mode() == ::gnmi::SubscriptionList::STREAM) {
@@ -437,7 +437,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
         continue;
       }
       if (subscription.mode() == ::gnmi::SubscriptionMode::TARGET_DEFINED) {
-        // The client has left the decision to us, so, let's modify the
+        // The client has left the decision to us, so let's modify the
         // subscription request to be what is defined for this path.
         if (publisher->UpdateSubscriptionWithTargetSpecificModeSpecification(
                 subscription.path(), &subscription) != ::util::OkStatus()) {
@@ -466,7 +466,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
               subscription.path(), stream, &h);
         }
         if (status == ::util::OkStatus()) {
-          // A handle has to be saved, so, later we know what to unsubscribe.
+          // A handle has to be saved, so later we know what to unsubscribe.
           (*subscriptions)[subscription.path()] = h;
         } else {
           // Report error.
@@ -476,10 +476,10 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
       } else if (subscription.mode() == ::gnmi::SubscriptionMode::ON_CHANGE) {
         if ((status = publisher->SubscribeOnChange(subscription.path(), stream,
                                                    &h)) == ::util::OkStatus()) {
-          // A handle has to be saved, so, later we know what to unsubscribe.
+          // A handle has to be saved, so later we know what to unsubscribe.
           (*subscriptions)[subscription.path()] = h;
           // In ON_CHANGE subscription mode, before any updates can be sent, the
-          // switch has to sent the current state of the leaf/node, so, prepare
+          // switch has to send the current state of the leaf/node; so prepare
           // and transmit the data.
           if (publisher->SubscribePoll(subscription.path(), stream, &h) !=
               ::util::OkStatus()) {
@@ -507,7 +507,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
       // A poll subscribe request.
       VLOG(1) << "poll ";
       if (gtl::FindOrNull(*polls, subscription.path()) != nullptr) {
-        // An attempt to subscribe second time to the same path found!
+        // An attempt to subscribe a second time to the same path found!
         // Report error to the remote side.
         ReportError("Duplicated subscription received.", stream);
         ++problems_found;
@@ -515,7 +515,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
       }
       if (publisher->SubscribePoll(subscription.path(), stream, &h) ==
           ::util::OkStatus()) {
-        // A handle has to be saved, so, later we know what to unsubscribe
+        // A handle has to be saved, so later we know what to unsubscribe
         // from.
         (*polls)[subscription.path()] = h;
       } else {
