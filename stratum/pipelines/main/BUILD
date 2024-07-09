@@ -1,9 +1,9 @@
 # Copyright 2019-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-load("//stratum/p4c_backends/common:build_defs.bzl", "p4_fpm_compile")
-load("//bazel/rules:p4c_build_defs.bzl", "p4_bmv2_compile")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("//bazel/rules:p4c_build_defs.bzl", "p4_bmv2_compile")
+load("//stratum/p4c_backends/common:build_defs.bzl", "p4_fpm_compile")
 
 licenses(["notice"])  # Apache v2
 

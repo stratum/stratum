@@ -40,13 +40,13 @@ Currently supported architectures:
   x86
 """
 
-load("//tools/build_defs/label:def.bzl", "parse_label")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load(
     "//devtools/build_cleaner/skylark:build_defs.bzl",
     "register_extension_info",
 )
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("//tools/build_defs/label:def.bzl", "parse_label")
 
 # Generic path & label helpers. ============================================
 
