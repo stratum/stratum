@@ -1,0 +1,696 @@
+// Copyright 2019-present Open Networking Foundation
+// Copyright 2020-present Dell EMC
+// SPDX-License-Identifier: Apache-2.0
+module openconfig-qos-stratum {
+
+  yang-version "1";
+
+  // namespace
+  namespace "http://opennetworking.org/yang/openconfig-qos-stratum";
+
+  prefix "oc-qos-stm";
+
+  import openconfig-qos-types { prefix oc-qos-types; }
+  import openconfig-types { prefix oc-types; }
+  import openconfig-qos { prefix oc-qos; }
+
+  // meta
+  organization "Open Networking Foundation";
+
+  contact
+    "Open Networking Foundation
+    https://lists.stratumproject.org/listinfo/stratum-announce";
+
+  description
+    "Model of augmentations and deviations to openconfig-qos
+    specifically for Stratum";
+
+  revision "2020-10-15" {
+      description
+          "Add OpenConfig module metadata extensions.";
+      reference "0.1.0";
+  }
+
+  // QoS Class IDs
+  identity QOS_CLASS_ID_TYPE {
+    description
+      "Base  identity for class IDs";
+  }
+
+  identity IPP0 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 0";
+  }
+
+  identity IPP1 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 1";
+  }
+
+  identity IPP2 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 2";
+  }
+
+  identity IPP3 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 3";
+  }
+
+  identity IPP4 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 4";
+  }
+
+  identity IPP5 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 5";
+  }
+
+  identity IPP6 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 6";
+  }
+
+  identity IPP7 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "IP Precedence 7";
+  }
+
+  identity CS0 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 0";
+  }
+
+  identity CS1 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 1";
+  }
+
+  identity CS2 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 2";
+  }
+
+  identity CS3 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 3";
+  }
+
+  identity CS4 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 4";
+  }
+
+  identity CS5 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 5";
+  }
+
+  identity CS6 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 6";
+  }
+
+  identity CS7 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Class Selector 7";
+  }
+
+  identity AF11 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 11";
+  }
+
+  identity AF12 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 12";
+  }
+
+  identity AF13 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 13";
+  }
+
+  identity AF21 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 21";
+  }
+
+  identity AF22 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 22";
+  }
+
+  identity AF23 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 23";
+  }
+
+  identity AF31 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 31";
+  }
+
+  identity AF32 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 32";
+  }
+
+  identity AF33 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 33";
+  }
+
+  identity AF41 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 41";
+  }
+
+  identity AF42 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 42";
+  }
+
+  identity AF43 {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Assured Forwarding 43";
+  }
+
+  identity EF {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Expedited Forwarding";
+  }
+
+  identity BE {
+    base QOS_CLASS_ID_TYPE;
+    description
+      "DSCP Best Effort";
+  }
+
+  grouping qos-drop-profile-config {
+    description
+      "Configuration parameters relating to the drop profile";
+
+    leaf name {
+      type string;
+      description
+        "Name of the drop profile";
+    }
+
+    leaf queue-type {
+      type identityref {
+        base oc-qos-types:QOS_QUEUE_TYPE;
+      }
+      description
+        "Sets the type of the queue";
+    }
+
+    leaf max-queue-depth-packets {
+      type uint32;
+      units packets;
+      description
+        "The maximum depth of the queue in packets.";
+    }
+  }
+
+  grouping qos-drop-profile-red-config {
+    description
+      "Configuration data for drop profiles managed with RED";
+
+    leaf minth {
+      type uint64;
+      units bytes;
+      description
+        "The mininum threshold parameter for a RED-managed queue.
+        When the average queue length is less than minth, all
+        packets are admitted to the queue.";
+    }
+
+    leaf maxth {
+      type uint64;
+      units bytes;
+      description
+        "The maximum threshold parameter for a RED-managed queue.
+        When the average queue length exceeds the maxth value, all
+        packets are dropped (or marked if ECN is enabled).";
+    }
+
+    leaf maxprob {
+      type oc-types:percentage;
+      description
+        "The RED maximum probability percentage.";
+    }
+  }
+
+  grouping qos-drop-profile-red-top {
+    description
+      "Top-level grouping for RED drop-profile";
+
+    container red {
+      description
+        "Top-level container for data related to RED-managed queues";
+
+      container config {
+        description
+          "Configuration data for RED queues";
+
+        uses qos-drop-profile-red-config;
+      }
+    }
+  }
+
+  grouping qos-drop-profile-wred-top {
+    description
+      "Top-level grouping for Weighted RED queues";
+
+    container wred {
+      description
+        "Top-level container for data related to Weighted RED queues";
+
+      container traffic-classes {
+        description
+          "A list of Weighted RED class confgurations for QoS queues";
+
+        list traffic-class {
+          key "name";
+          description "List of classes";
+
+          leaf name {
+            type leafref {
+              path "../config/name";
+            }
+            description
+              "Reference to the class name list key.";
+          }
+        
+          container config {
+            description
+              "Configuration data for WRED queues";
+
+            leaf "name" {
+              type string;
+              description
+                "Descriptive name and key for the class";
+            }
+
+            leaf "id" {
+              type identityref {
+                base oc-qos-stm:QOS_CLASS_ID_TYPE;
+              }
+              description
+                "This is the WRED class id and will correlate to a 
+                 IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+                 etc).";
+            }
+
+            uses qos-drop-profile-red-config;
+          }
+        }
+      }
+    }
+  }
+
+  grouping qos-drop-profile-top {
+    description
+      "Top-level grouping for drop profiles";
+
+    container drop-profiles {
+      description
+        "Enclosing container for the list of configured drop profiles.";
+
+      list drop-profile {
+        key "name";
+
+        description
+          "List of drop profiles. A drop profile only holds the configuration
+           information for the drop profile and is referenced from the 
+           queue leaf node.  This allows for a smaller set of drop profiles
+           than queues to be configured which is normally the case in a
+           HQoS configuration for say a BNG use case.";
+
+        leaf name {
+          type leafref {
+            path "../config/name";
+          }
+          description
+            "Refernce to the name of the drop profile";
+        }
+
+        container config {
+          description
+            "Configuration parameters relating to the drop profile.";
+          uses qos-drop-profile-config;
+        }
+
+        uses qos-drop-profile-red-top {
+          when "./config/queue-type = 'oc-qos-types:RED'" {
+            description
+              "RED configuration is valid when the queue-type
+              is set accordingly.";
+          }
+        }
+
+        uses qos-drop-profile-wred-top {
+          when "./config/queue-type = 'oc-qos-types:WRED'" {
+            description
+              "WRED configuration is valid when the queue-type
+              is set accordingly.";
+          }
+        }
+      }
+    }
+  }
+
+  augment "/oc-qos:qos" {
+      description "Add drop profiles";
+
+      uses qos-drop-profile-top;
+  }
+
+  grouping qos-queue-config {
+    description
+      "Enhanced Configuration data for QoS queues";
+
+    leaf drop-profile {
+      type leafref {
+        path "../../../../drop-profiles/drop-profile/config/name";
+      }
+      description
+        "References the drop profile for this queue";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:config" {
+    description 
+      "Add drop profile pointer to QoS queue.
+
+       Note: this should be merged back into the standard OpenConfig model";
+
+    uses qos-queue-config;
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:state" {
+    description 
+      "Add drop profile pointer to QoS queue.
+
+       Note: this should be merged back into the standard OpenConfig model";
+
+    uses oc-qos:qos-interface-queue-state;
+  }
+
+  grouping qos-queue-red-config {
+    description
+      "Enhanced Configuration data for queues managed by RED";
+
+    leaf maxprob {
+      type oc-types:percentage;
+      description
+        "The RED maximum probability percentage.";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:red/oc-qos:config" {
+    description 
+      "Add RED max probability to RED config.
+
+       Note: this should be merged back into the standard OpenConfig model";
+
+    uses qos-queue-red-config;
+  }
+
+  grouping qos-queue-red-state {
+    description
+      "Operational state data for queues managed with RED";
+    
+    leaf random-dropped-pkts {
+      type uint32;
+      units packets;
+      description
+        "The number of random drop packets.";
+    }
+
+    leaf random-dropped-octets {
+      type uint64;
+      units bytes;
+      description
+        "The number of random drop bytes.";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:red/oc-qos:state" {
+    description 
+      "Add RED stats to state container.
+
+       Note: this should be merged back into the standard OpenConfig model";
+
+    uses qos-queue-red-state;
+  }
+
+  grouping qos-queue-traffic-classes {
+    description
+      "Add WRED classes to QoS queues";
+
+    container traffic-classes {
+      description
+        "A list of classes for Weighted RED QoS queues";
+
+      list traffic-class {
+        key "name";
+        description "List of classes";
+
+        leaf name {
+          type leafref {
+            path "../config/name";
+          }
+          description
+            "Reference to the class name list key.";
+        }
+        
+        container config {
+          description
+            "Configuration data for WRED queues";
+
+          leaf "name" {
+            type string;
+            description
+              "Descriptive name and key for the class";
+          }
+
+          leaf "id" {
+            type identityref {
+              base oc-qos-stm:QOS_CLASS_ID_TYPE;
+            }
+            description
+              "This is the WRED class id and will correlate to a 
+               IP Precedence or DSCP name (i.e. CS0, CS1, AF11, EF,
+               etc).";
+          }
+
+          uses oc-qos:qos-queue-red-config;
+          uses qos-queue-red-config;
+        }
+
+        container state {
+          config false;
+          description
+            "Operational state data for WRED";
+
+          uses oc-qos:qos-queue-red-config;
+          uses qos-queue-red-config;
+          uses qos-queue-red-state;
+        }
+      }
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:wred" {
+    description 
+      "Add Weighted RED Classes to QoS queues.
+
+       Note: this should be merged back into the standard OpenConfig model";
+
+    uses qos-queue-traffic-classes;
+  }
+
+  grouping qos-scheduler-config {
+    description
+      "Add a scheduler name to the scheduler config";
+
+    leaf name {
+      type string;
+      description
+        "Name for this scheduler
+
+         Note: it would probably make more sense to have this as the
+               key rather than the sequeunce number as it allows a 
+               more flexible way to name and index the schedulers.";
+    }
+
+    leaf level {
+      type uint8;
+      description
+        "The level of the scheduler with the root node scheduler starting
+         at level 0 and then the siblings being greater than parent.";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:scheduler-policies/oc-qos:scheduler-policy/" +
+          "oc-qos:schedulers/oc-qos:scheduler/oc-qos:config" {
+
+    description 
+      "Add a scheduler name to the scheduler config";
+
+    uses qos-scheduler-config;
+  }
+
+  grouping qos-scheduler-policy-config {
+    description
+      "Add a leafref to last scheduler in the policy (i.e. scheduler
+       associated with interface for egress QoS)";
+
+    leaf root-scheduler {
+      type leafref {
+        path "../../oc-qos:schedulers/" +
+             "oc-qos:scheduler/oc-qos:config/oc-qos:sequence";
+      }
+      description
+        "This is the root scheduler in a Hierarchical QoS model
+         and helps in identifying which scheduler in a scheduler
+         policy is associated with an interface.";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:scheduler-policies/oc-qos:scheduler-policy/" +
+          "oc-qos:config" {
+
+    description 
+      "Add last-scheduler leafref to the last scheduler in a
+       scheduler policy.";
+
+    uses qos-scheduler-policy-config;
+  }
+
+  grouping qos-scheduler-inputs-config {
+    description
+      "Add a pointer to the input scheduler and priority";
+
+    leaf priority {
+      type uint64;
+      description
+        "For priority schedulers, this indicates the priority of
+         the corresponding input.  Higher values indicate higher
+         priority.  For weighted round-robin schedulers, this leaf
+         indicates the weight of the corresponding input.";
+    }
+
+    leaf input-scheduler {
+      type leafref {
+        path "../../../../../../oc-qos:schedulers/" +
+             "oc-qos:scheduler/oc-qos:config/oc-qos:sequence";
+      }
+      when "../oc-qos:input-type[.='IN-PROFILE' or .='OUT-PROFILE']" {
+        description
+          "The input-scheduler leaf is only valid when the
+           input type of the scheduler is either IN-PROFILE
+           or OUT-PROFILE (i.e. a scheduler)";
+      }
+      description
+        "When the scheduler input type is scheduler, this leaf
+         provides a reference to the upstream scheduler policy.
+         
+         Note: the scheduler list should really use a 'name' string
+               as the key instead of a sequence number.
+
+         Note 2: The OpenConfig HQoS model has got the parent
+               child concept backwards in regards to the schedulers
+               and input/output.  In other words, the 'parent' scheduler
+               should be the scheduler closest to the interface and as
+               such should be on the 'output' configuration of the
+               scheduler.  While the 'child' schedulers should be closest
+               to the 'queues' and as such on the 'input' configuration 
+               of the scheduler. 
+               
+               To avoid confusion we're using the name 'input-scheduler'
+               here and deleted the 'child-scheduler' leaf in
+               the output container";
+    }
+  }
+
+  augment "/oc-qos:qos/oc-qos:scheduler-policies/oc-qos:scheduler-policy/" +
+          "oc-qos:schedulers/oc-qos:scheduler/oc-qos:inputs/oc-qos:input/" +
+          "oc-qos:config" {
+
+    description 
+      "Add input scheduler pointers for Hierarchical QoS.
+      
+       Note: this should be merged back into the OpenConfig QoS
+             yang model";
+
+    uses qos-scheduler-inputs-config;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:scheduler-policies/oc-qos:scheduler-policy/" +
+          "oc-qos:schedulers/oc-qos:scheduler/oc-qos:output/oc-qos:config/" +
+          "oc-qos:child-scheduler" {
+
+    description 
+      "The child-scheduler is confusing and not needed because the 
+       input-scheduler references should be sufficient.  See
+       comments above in the input-scheduler definition.  We could
+       add support for an output-scheduler similar to the input-scheduler
+       in the qos-scheduler-inputs-config grouping above if required";
+
+    deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:input" {
+      description "Stratum does not support qos/interfaces/interface/input";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:classifiers" {
+      description "Stratum does not support qos/interfaces/interface/output/classifers";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:classifiers" {
+      description "Stratum does not support qos/classifiers";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:forwarding-groups" {
+      description "Stratum does not support qos/forwarding-groups";
+      deviate not-supported;
+  }
+
+}

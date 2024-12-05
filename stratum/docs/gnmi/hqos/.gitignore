@@ -1,0 +1,11 @@
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+# BroadbandForum yang models
+BroadbandForum/
+
+# IETF yang models
+ietf/
+
+# OpenConfig yang models
+OpenConfig/
