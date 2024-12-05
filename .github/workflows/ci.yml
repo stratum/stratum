@@ -1,0 +1,50 @@
+on: [push]
+
+jobs:
+  lint-and-style:
+    name: Lint and Style Checks
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: fail
+        uses: ./.github/actions/stratum-builder
+        with:
+          continue-on-failure: true
+
+      - name: success
+        uses: ./.github/actions/stratum-builder
+        if: ${{ always() }}
+        with:
+          command: 'exit 0'
+
+      - name: Run clang-format script
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: '.circleci/check-cpp-format.sh'
+
+      - name: Run cpplint script
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: '.circleci/check-cpplint.sh'
+
+      - name: Run buildifier script
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: '.circleci/check-bazel-format.sh'
+
+      - name: success
+        uses: ./.github/actions/stratum-builder
+        continue-on-error: true
+        with:
+          command: 'exit 0'
+      
+      - if: ${{ contains(steps.*.outputs.status, 'success') }}
+        run: exit 1
+      
+      - name: foo
+        run: echo "${{toJSON(steps)}}"
