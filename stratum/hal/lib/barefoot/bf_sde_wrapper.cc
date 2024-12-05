@@ -1328,7 +1328,270 @@ namespace {
   }
 }
 
+std::string BfColorLimitToString(bf_tm_queue_color_limit_t limit) {
+  switch (limit) {
+    case BF_TM_Q_COLOR_LIMIT_12_POINT_5_PERCENT:
+      return "12.5%";
+    case BF_TM_Q_COLOR_LIMIT_25_PERCENT:
+      return "25%";
+    case BF_TM_Q_COLOR_LIMIT_37_POINT_5_PERCENT:
+      return "37.5%";
+    case BF_TM_Q_COLOR_LIMIT_50_PERCENT:
+      return "50%";
+    case BF_TM_Q_COLOR_LIMIT_62_POINT_5_PERCENT:
+      return "62.5%";
+    case BF_TM_Q_COLOR_LIMIT_75_PERCENT:
+      return "75%";
+    case BF_TM_Q_COLOR_LIMIT_100_PERCENT:
+      return "100%";
+    default:
+      return "unknown color limit";
+  }
+}
+
+std::string BfPoolToString(bf_tm_app_pool_t pool) {
+  switch (pool) {
+    case BF_TM_IG_APP_POOL_0:
+      return "ingress app pool 0";
+    case BF_TM_IG_APP_POOL_1:
+      return "ingress app pool 1";
+    case BF_TM_IG_APP_POOL_2:
+      return "ingress app pool 2";
+    case BF_TM_IG_APP_POOL_3:
+      return "ingress app pool 3";
+    case BF_TM_EG_APP_POOL_0:
+      return "egress app pool 0";
+    case BF_TM_EG_APP_POOL_1:
+      return "egress app pool 1";
+    case BF_TM_EG_APP_POOL_2:
+      return "egress app pool 2";
+    case BF_TM_EG_APP_POOL_3:
+      return "egress app pool 3";
+    default:
+      return "unknown app pool";
+  }
+}
+
+std::string BfBafToString(bf_tm_ppg_baf_t baf) {
+  switch (baf) {
+    case BF_TM_PPG_BAF_1_POINT_5_PERCENT:
+      return "1.5%";
+    case BF_TM_PPG_BAF_3_PERCENT:
+      return "3%";
+    case BF_TM_PPG_BAF_6_PERCENT:
+      return "6%";
+    case BF_TM_PPG_BAF_11_PERCENT:
+      return "11%";
+    case BF_TM_PPG_BAF_20_PERCENT:
+      return "20%";
+    case BF_TM_PPG_BAF_33_PERCENT:
+      return "33%";
+    case BF_TM_PPG_BAF_50_PERCENT:
+      return "50%";
+    case BF_TM_PPG_BAF_66_PERCENT:
+      return "66%";
+    case BF_TM_PPG_BAF_80_PERCENT:
+      return "80%";
+    case BF_TM_PPG_BAF_DISABLE:
+      return "0%";
+    default:
+      return "unknown baf";
+  }
+}
+
+std::string BfBafToString(bf_tm_queue_baf_t baf) {
+  switch (baf) {
+    case BF_TM_Q_BAF_1_POINT_5_PERCENT:
+      return "1.5%";
+    case BF_TM_Q_BAF_3_PERCENT:
+      return "3%";
+    case BF_TM_Q_BAF_6_PERCENT:
+      return "6%";
+    case BF_TM_Q_BAF_11_PERCENT:
+      return "11%";
+    case BF_TM_Q_BAF_20_PERCENT:
+      return "20%";
+    case BF_TM_Q_BAF_33_PERCENT:
+      return "33%";
+    case BF_TM_Q_BAF_50_PERCENT:
+      return "50%";
+    case BF_TM_Q_BAF_66_PERCENT:
+      return "66%";
+    case BF_TM_Q_BAF_80_PERCENT:
+      return "80%";
+    case BF_TM_Q_BAF_DISABLE:
+      return "0%";
+    default:
+      return "unknown baf";
+  }
+}
+
 }  // namespace
+
+::util::StatusOr<std::string> BfSdeWrapper::DumpQosConfig(int device) const {
+  std::string qos_config_str =
+      absl::StrCat("Current QoS configuration for device ", device, ": ");
+  // General configuration.
+  uint32 total_cells = 0;
+  RETURN_IF_BFRT_ERROR(bf_tm_total_cell_count_get(device, &total_cells));
+  absl::StrAppend(&qos_config_str, "total cell count: ", total_cells);
+  uint32 cell_size_bytes = 0;
+  RETURN_IF_BFRT_ERROR(bf_tm_cell_size_in_bytes_get(device, &cell_size_bytes));
+  absl::StrAppend(&qos_config_str, ", cell size in bytes: ", cell_size_bytes);
+  int free_cells = 0;
+  RETURN_IF_BFRT_ERROR(
+      bf_tm_total_unassigned_cell_count_get(device, &free_cells));
+  absl::StrAppend(&qos_config_str, ", free cell count: ", free_cells);
+
+  // Pipe related configuration.
+  uint32 num_pipes;
+  RETURN_IF_BFRT_ERROR(pipe_mgr_get_num_pipelines(device, &num_pipes));
+  for (int i = 0; i < num_pipes; ++i) {
+  }
+
+  // Pool related configuration.
+  for (bf_tm_app_pool_t pool : {
+           BF_TM_IG_APP_POOL_0,
+           BF_TM_IG_APP_POOL_1,
+           BF_TM_IG_APP_POOL_2,
+           BF_TM_IG_APP_POOL_3,
+           BF_TM_EG_APP_POOL_0,
+           BF_TM_EG_APP_POOL_1,
+           BF_TM_EG_APP_POOL_2,
+           BF_TM_EG_APP_POOL_3,
+       }) {
+    absl::StrAppend(&qos_config_str, ",\n", BfPoolToString(pool));
+    uint32 total_cells;
+    RETURN_IF_BFRT_ERROR(bf_tm_pool_size_get(device, pool, &total_cells));
+    absl::StrAppend(&qos_config_str, ", pool size cells: ", total_cells);
+    bool color_drop_enabled = true;
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_pool_color_drop_state_get(device, pool, &color_drop_enabled));
+    absl::StrAppend(&qos_config_str,
+                    ", color drop enabled: ", color_drop_enabled);
+    if (color_drop_enabled) {
+      uint32 green_limit, yellow_limit, red_limit;
+      RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_get(
+          device, pool, BF_TM_COLOR_GREEN, &green_limit));
+      RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_get(
+          device, pool, BF_TM_COLOR_YELLOW, &yellow_limit));
+      RETURN_IF_BFRT_ERROR(bf_tm_pool_color_drop_limit_get(
+          device, pool, BF_TM_COLOR_RED, &red_limit));
+      absl::StrAppend(&qos_config_str, ", green limit: ", green_limit,
+                      ", yellow limit: ", yellow_limit,
+                      ", red limit: ", red_limit);
+    }
+  }
+
+  // PPG related configuration.
+  if (auto* ppg_handles = gtl::FindOrNull(device_to_ppg_handles_, device)) {
+    for (auto const& ppg : *ppg_handles) {
+      uint32 base_use_limit;
+      bf_tm_ppg_baf_t baf = BF_TM_PPG_BAF_DISABLE;
+      uint32 hysteresis;
+      RETURN_IF_BFRT_ERROR(bf_tm_ppg_app_pool_usage_get(
+          device, ppg, /*pool is ignored*/ BF_TM_IG_APP_POOL_0, &base_use_limit,
+          &baf, &hysteresis));
+      absl::StrAppend(
+          &qos_config_str, ",\nppg ", ppg, ": base use limit: ", base_use_limit,
+          ", baf: ", BfBafToString(baf), ", hysteresis: ", hysteresis);
+      uint32 gmin_limit;
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_guaranteed_min_limit_get(device, ppg, &gmin_limit));
+      absl::StrAppend(&qos_config_str,
+                      ", guaranteed min (green) limit: ", gmin_limit);
+      uint8 icos_bitmap;
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_icos_mapping_get(device, ppg, &icos_bitmap));
+      absl::StrAppend(&qos_config_str, ", icos bitmap: 0x",
+                      absl::Hex(icos_bitmap));
+    }
+  }
+
+  // Port-related configuration.
+  bf_dev_port_t port;
+  RETURN_IF_BFRT_ERROR(bf_pal_port_get_first(device, &port));
+  do {
+    uint8 num_queues = 0;
+    uint8 queue_mapping[kMaxQueuesPerPort] = {};
+    RETURN_IF_BFRT_ERROR(
+        bf_tm_port_q_mapping_get(device, port, &num_queues, queue_mapping));
+    std::vector<bf_tm_queue_t> q_m(queue_mapping, queue_mapping + num_queues);
+    absl::StrAppend(&qos_config_str, ",\nqueue mapping port ", port, ": ",
+                    PrintVector(q_m, ","));
+    for (bf_tm_queue_t q : q_m) {
+      absl::StrAppend(&qos_config_str, ",\n  queue ", q);
+      bool color_drop_enabled = true;
+#if defined(SDE_9_5_0)
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_q_color_drop_get(device, port, q, &color_drop_enabled));
+      absl::StrAppend(&qos_config_str,
+                      ", color drop enabled: ", color_drop_enabled);
+#endif
+      if (color_drop_enabled) {
+        uint32 gmin_limit = 0;
+        bf_tm_queue_color_limit_t yellow_limit, red_limit;
+        RETURN_IF_BFRT_ERROR(
+            bf_tm_q_guaranteed_min_limit_get(device, port, q, &gmin_limit));
+        RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_get(
+            device, port, q, BF_TM_COLOR_YELLOW, &yellow_limit));
+        RETURN_IF_BFRT_ERROR(bf_tm_q_color_limit_get(
+            device, port, q, BF_TM_COLOR_RED, &red_limit));
+        absl::StrAppend(&qos_config_str,
+                        ", guaranteed min (green) limit: ", gmin_limit,
+                        ", yellow limit: ", BfColorLimitToString(yellow_limit),
+                        ", red limit: ", BfColorLimitToString(red_limit));
+      }
+      bf_tm_app_pool_t pool = BF_TM_IG_APP_POOL_0;
+      uint32 base_use_limit = 0;
+      bf_tm_queue_baf_t baf = BF_TM_Q_BAF_DISABLE;
+      uint32 hysteresis = 0;
+      RETURN_IF_BFRT_ERROR(bf_tm_q_app_pool_usage_get(
+          device, port, q, &pool, &base_use_limit, &baf, &hysteresis));
+      absl::StrAppend(&qos_config_str, ", pool: ", BfPoolToString(pool),
+                      ", base use limit: ", base_use_limit,
+                      ", baf: ", BfBafToString(baf),
+                      ", hysteresis: ", hysteresis);
+#if defined(SDE_9_5_0)
+      bool tail_drop_enabled = true;
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_q_tail_drop_get(device, port, q, &tail_drop_enabled));
+      absl::StrAppend(&qos_config_str,
+                      ", tail drop enabled: ", tail_drop_enabled);
+#endif
+    }
+    // Read default ppg.
+    {
+      bf_tm_ppg_hdl default_ppg;
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_defaultppg_get(device, port, &default_ppg));
+      uint32 base_use_limit;
+      bf_tm_ppg_baf_t baf = BF_TM_PPG_BAF_DISABLE;
+      uint32 hysteresis;
+      RETURN_IF_BFRT_ERROR(bf_tm_ppg_app_pool_usage_get(
+          device, default_ppg, /*pool is ignored*/ BF_TM_IG_APP_POOL_0,
+          &base_use_limit, &baf, &hysteresis));
+      absl::StrAppend(&qos_config_str, ",\ndefault ppg (", default_ppg,
+                      ") port ", port, ": base use limit: ", base_use_limit,
+                      ", baf: ", BfBafToString(baf),
+                      ", hysteresis: ", hysteresis);
+      uint32 gmin_limit;
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_guaranteed_min_limit_get(device, default_ppg, &gmin_limit));
+      absl::StrAppend(&qos_config_str,
+                      ", guaranteed min (green) limit: ", gmin_limit);
+      uint8 icos_bitmap;
+      RETURN_IF_BFRT_ERROR(
+          bf_tm_ppg_icos_mapping_get(device, default_ppg, &icos_bitmap));
+      absl::StrAppend(&qos_config_str, ", icos bitmap: 0x",
+                      absl::Hex(icos_bitmap));
+    }
+  } while (bf_pal_port_get_next_added(device, port, &port) == BF_SUCCESS &&
+           port != -1);
+
+  absl::StrAppend(&qos_config_str, ".");
+  return qos_config_str;
+}
 
 ::util::Status BfSdeWrapper::ConfigureQos(
     int device, const TofinoConfig::TofinoQosConfig& qos_config) {
@@ -1521,6 +1784,11 @@ namespace {
         device, sdk_port, queue_config.queue_mapping_size(),
         /*queue_mapping*/ nullptr));
   }
+
+  // TODO(max): Check if we need a sync here
+  // bf_tm_complete_operations
+
+  VLOG(1) << DumpQosConfig(device).ValueOr("Could not dump QoS configuration.");
 
   return ::util::OkStatus();
 }
