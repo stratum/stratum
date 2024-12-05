@@ -676,17 +676,6 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
   auto session_mock = std::make_shared<SessionMock>();
   WriterMock<::p4::v1::ReadResponse> writer_mock;
 
-  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
-      .WillOnce(Return(kBfRtTableId));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
-      .WillOnce(Return(ByMove(
-          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
-              std::move(table_key_mock)))));
-  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
-      .WillOnce(Return(ByMove(
-          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
-              std::move(table_data_mock)))));
-
   const std::string kTableEntryText = R"pb(
     table_id: 33583783
     match {
@@ -697,9 +686,20 @@ TEST_F(BfrtTableManagerTest, RejectTableEntryWithDontCareRangeMatch) {
   )pb";
   ::p4::v1::TableEntry entry;
   ASSERT_OK(ParseProtoFromString(kTableEntryText, &entry));
+
   EXPECT_CALL(*bfrt_p4runtime_translator_mock_,
               TranslateTableEntry(EqualsProto(entry), true))
       .WillOnce(Return(::util::StatusOr<::p4::v1::TableEntry>(entry)));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, GetBfRtId(kP4TableId))
+      .WillOnce(Return(kBfRtTableId));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableKey(kBfRtTableId))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableKeyInterface>>(
+              std::move(table_key_mock)))));
+  EXPECT_CALL(*bf_sde_wrapper_mock_, CreateTableData(kBfRtTableId, _))
+      .WillOnce(Return(ByMove(
+          ::util::StatusOr<std::unique_ptr<BfSdeInterface::TableDataInterface>>(
+              std::move(table_data_mock)))));
 
   ::util::Status ret =
       bfrt_table_manager_->ReadTableEntry(session_mock, entry, &writer_mock);
