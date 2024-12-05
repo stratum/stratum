@@ -107,6 +107,9 @@ RUN pip3 install setuptools wheel && \
 RUN wget --quiet -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/4.0.0/buildifier
 RUN chmod +x /usr/local/bin/buildifier
 
+# Tools for docs.
+RUN pip install sphinx=3.5.4 myst-parser=0.14.0
+
 # Docker CLI for CI builds
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 RUN add-apt-repository \
