@@ -1620,6 +1620,32 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteMulticastGroupEntry) {
   EXPECT_EQ(1U, results.size());
 }
 
+TEST_F(BcmNodeTest, WriteForwardingEntriesFail_NullPointer) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  auto* update = req.add_updates();
+  ::util::Status status = WriteForwardingEntries(req, NULL);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Results pointer must be non-null"));
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesFail_NodeIdError) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(0);
+  auto* update = req.add_updates();
+  std::vector<::util::Status> results = {};
+  ::util::Status status = WriteForwardingEntries(req, &results);
+  ASSERT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr("Request device id must be same as id of this BcmNode."));
+}
+
 // RegisterStreamMessageResponseWriter() should forward the call to
 // BcmPacketioManager and return success or error based on the returned result.
 TEST_F(BcmNodeTest, RegisterStreamMessageResponseWriter) {
